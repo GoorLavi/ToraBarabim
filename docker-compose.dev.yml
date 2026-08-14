@@ -1,0 +1,73 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: torabarabim-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required, see .env.example}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required, see .env.example}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required, see .env.example}
+    ports:
+      # Host 5433, not 5432: this project never assumes it owns the host's
+      # default Postgres port.
+      - '5433:5432'
+    volumes:
+      - torabarabim_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      # Explicit -U/-d: pg_isready with no arguments probes as the
+      # container's own OS user, which logs a harmless but scary
+      # 'FATAL: role "root" does not exist' on every check.
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 2s
+      timeout: 3s
+      retries: 20
+      # First run initialises the data directory and restarts Postgres
+      # internally; give that room before a slow start counts as unhealthy.
+      start_period: 30s
+
+  minio:
+    image: minio/minio
+    container_name: torabarabim-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${STORAGE_ACCESS_KEY_ID:?STORAGE_ACCESS_KEY_ID is required, see .env.example}
+      MINIO_ROOT_PASSWORD: ${STORAGE_SECRET_ACCESS_KEY:?STORAGE_SECRET_ACCESS_KEY is required, see .env.example}
+    ports:
+      # Host 9010/9011, not MinIO's default 9000/9001: this project never
+      # assumes it owns a host port another local MinIO may already hold.
+      # 9010 is the S3 API, 9011 is the web console.
+      - '9010:9000'
+      - '9011:9001'
+    volumes:
+      - torabarabim_minio_data:/data
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 2s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+  minio-init:
+    image: minio/mc
+    container_name: torabarabim-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      STORAGE_ACCESS_KEY_ID: ${STORAGE_ACCESS_KEY_ID:?STORAGE_ACCESS_KEY_ID is required, see .env.example}
+      STORAGE_SECRET_ACCESS_KEY: ${STORAGE_SECRET_ACCESS_KEY:?STORAGE_SECRET_ACCESS_KEY is required, see .env.example}
+      STORAGE_BUCKET: ${STORAGE_BUCKET:?STORAGE_BUCKET is required, see .env.example}
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 \"$$STORAGE_ACCESS_KEY_ID\" \"$$STORAGE_SECRET_ACCESS_KEY\" &&
+      mc mb -p local/\"$$STORAGE_BUCKET\" &&
+      mc anonymous set download local/\"$$STORAGE_BUCKET\"
+      "
+    restart: 'no'
+
+volumes:
+  torabarabim_postgres_data:
+    name: torabarabim_postgres_data
+  torabarabim_minio_data:
+    name: torabarabim_minio_data

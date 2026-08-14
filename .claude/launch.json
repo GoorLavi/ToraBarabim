@@ -1,0 +1,23 @@
+{
+  "version": "1.0",
+  "configurations": [
+    {
+      "name": "server",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--workspace", "server"],
+      "port": 3000
+    },
+    {
+      "name": "client",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--workspace", "client"],
+      "port": 5173
+    },
+    {
+      "name": "storybook",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "storybook", "--workspace", "client"],
+      "port": 6006
+    }
+  ]
+}

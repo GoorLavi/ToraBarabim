@@ -36,9 +36,20 @@ src/
     models.ts           zod schemas and the domain's types
     consts.ts           thresholds, page sizes, limits
     errors.ts           named Error subclasses for this domain's failures
+  db/
+    client.ts           the one Drizzle instance
+    schema/             table definitions, the source of truth for the enums
+    seed/               seed entry points
   convertors/           row or record to the shape the client receives
   plugins/              cross-cutting Fastify plugins
 ```
+
+**No entry point loads the environment itself.** `dev`, `start`, `db:generate`,
+`db:migrate`, and `db:seed` all pass the root `.env` with `--env-file`, so `process.env`
+is populated before any module, including the database client, is even loaded. A
+`dotenv.config()` call written above an import is not a fix: the bundler hoists every
+`import`-derived `require` above interleaved top-level statements, so the import would
+still win the race.
 
 - **A route never touches the data layer.** It parses input, calls one service,
   converts the result, and maps errors. A query hidden in a route cannot be reused and
@@ -107,11 +118,8 @@ detail.
 
 ## Data
 
-There is no database yet. Seed data lives behind the service layer, so the routes and
-the client never learn where the data came from and swapping in a real store touches
-one layer.
-
-When a database arrives:
+Postgres 16 in `docker-compose.dev.yml`, accessed through Drizzle. **Host port 5433, not
+5432**, so this project never assumes it owns the machine's default Postgres port.
 
 - **Exactly one client instance**, exported as a singleton with a dev-reload guard. A
   second instance opens a second connection pool and nothing warns you: it surfaces
@@ -119,7 +127,26 @@ When a database arrives:
 - **A write spanning more than one row that must not half-apply runs in a transaction.**
   Without it a mid-sequence failure leaves orphaned rows with nothing marking them
   broken.
-- Migrations go to the human to apply. Root rulebook, Data and Migrations.
+- **Migrations go to the human to apply.** Generate with `db:generate` and stop. Root
+  rulebook, Data and Migrations.
+- **The schema holds the same invariants the types do.** A discriminated union in
+  TypeScript gets a matching `CHECK` constraint in Postgres, or the database becomes the
+  place where illegal states creep back in. A row that TypeScript could never build must
+  also be a row Postgres will never store.
+- **The enum tuples live in `db/schema/enums.ts` and everyone else reads them.** The Zod
+  schemas and the Postgres enums are generated from the same literals, so a value added
+  in one place cannot go missing in the other.
+
+**Reference data is fetched, not vendored.** The locality list comes from the official
+data.gov.il dataset at seed time and is keyed on the official code, so re-running the
+seed updates rather than duplicates. A 1,300-row reference table belongs in the database,
+not in git.
+
+**Never query inside the recurrence expansion.** A lesson search is a fixed small number
+of queries no matter how many results come back: load the reference tables and the
+matching lessons and their exceptions, then expand in memory. The expansion stays pure
+and needs no database to be exercised. This is the single easiest place in this codebase
+to accidentally write a query per row.
 
 ## Notes
 

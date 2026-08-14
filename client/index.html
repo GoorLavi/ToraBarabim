@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>תורה ברבים</title>
+    <!--
+      Assistant, weights 400/600/700 only (design-system.md, Type): the family's
+      thin weights fail this audience, so the `wght` range below excludes them.
+      Linked rather than self-hosted: the site is read mostly on phones, so the
+      request goes through a font host's shared, already-warm cache and CDN
+      rather than adding font binaries and subsetting to this repo's build.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

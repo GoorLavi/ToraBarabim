@@ -1,0 +1,7 @@
+{
+  "name": "@torabarabim/common",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Wire types shared between the server and the client, types only, no runtime code",
+  "types": "src/index.ts"
+}

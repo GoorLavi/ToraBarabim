@@ -8,3 +8,7 @@ npm-debug.log*
 .env.local
 .vite/
 coverage/
+
+# Scraper: downloaded pages/images and run output, never committed
+scraper/.cache/
+scraper/output/

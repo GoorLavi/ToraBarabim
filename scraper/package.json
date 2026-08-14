@@ -1,0 +1,26 @@
+{
+  "name": "scraper",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Collects Torah lesson listings from rabbis' websites into a JSON file shaped for database import",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "tsx --env-file=../.env src/index.ts",
+    "schedule": "tsx --env-file=../.env src/index.ts --schedule",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.117.1",
+    "@torabarabim/common": "*",
+    "cheerio": "^1.2.0",
+    "drizzle-orm": "^0.45.2",
+    "postgres": "^3.4.9",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "tsx": "^4.23.12",
+    "typescript": "^7.0.2"
+  }
+}

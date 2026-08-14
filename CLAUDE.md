@@ -111,14 +111,26 @@ Review-blocking, not preferences.
   should never exist.
 
 **Comments**
-- **Write no comment by default.** Code that needs prose to be understood usually needs
-  rewriting: a clearer name, a smaller function, an extracted step. Reach for that
-  first.
-- **The exception is genuine complexity**, where a competent, attentive reader would
-  still be stuck: a non-obvious algorithm, an ordering that looks arbitrary but is not,
-  a workaround for someone else's bug. Then write the thing the code cannot say: the
-  constraint, the rejected alternative, or the consequence that is not visible locally.
-  Never what the next line does.
+- **Write no comment by default.** Code that needs prose to be understood is usually
+  code that needs rewriting: a clearer name, a smaller function, an extracted step.
+  Reach for that first. A running commentary on what the code does is noise, it goes
+  stale silently, and it trains the next reader to skim.
+- **The exception is genuine complexity**, where a reader who is competent and attentive
+  would still be stuck: a non-obvious algorithm, an ordering that looks arbitrary but is
+  not, a workaround for someone else's bug. Then write one comment that says the thing
+  the code cannot: the constraint, the rejected alternative, or the consequence that is
+  not visible locally. Never what the next line does.
+- **A few places require a comment** and are not subject to the default above: an
+  approved workaround at its site, a fail-open or fail-closed choice next to the
+  dependency it governs, a `createGlobalStyle` block naming what put that DOM out of
+  reach, and a hand-mirrored constant naming its source. Each is a decision that leaves
+  no other trace in the code.
+- **A comment that restates a house rule is noise.** The rule already lives in this
+  rulebook, where it is read once and applies everywhere. Writing "the only place that
+  converts a row" above the convertor, or "never log a secret" above the redaction
+  config, adds a line that has to be maintained and teaches the reader nothing they
+  would not get from the rulebook. Comment the thing that is true *here* and nowhere
+  else.
 - Delete dead and commented-out code rather than leaving it behind.
 - A `TODO` names the condition that would resolve it. Without one it is a wish.
 
