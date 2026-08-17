@@ -1,0 +1,5 @@
+cdk.out/
+dist/
+# Caches context CDK looks up at synth time, including this project's AWS
+# account id (see availability-zones lookups). Never committed.
+cdk.context.json

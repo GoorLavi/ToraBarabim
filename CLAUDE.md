@@ -1,8 +1,14 @@
 # ToraBarabim: Project Rules
 
-The rulebook every agent follows. Design rules and tokens are in
+The rulebook every agent follows. What the product is and who it serves is in
+[docs/product.md](docs/product.md). Why past choices were made, and what was rejected,
+is in [docs/decisions](docs/decisions/README.md). Design rules and tokens are in
 [.claude/design-system.md](.claude/design-system.md). How work moves from idea to
 shipped is in [.claude/README.md](.claude/README.md).
+
+Four places, four jobs, and no sentence lives in two of them: **this file** says what to
+do, **the decisions folder** says why and what it cost, **the product page** says what
+the thing is, **the design system** says what it looks like.
 
 This project is young. The rules here are the ones that pay for themselves on day one;
 they will grow, but only when a real correction earns a new line.
@@ -30,6 +36,21 @@ because the next person reads it as the intended pattern and copies it.
   failure, not the compromise.
 - This binds every agent. Being blocked is a normal outcome to report, never a reason
   to improvise.
+
+## Recording Decisions
+
+A choice that is hard to reverse, costs something real, or will make someone ask "why is
+it like this?" gets a file in [docs/decisions](docs/decisions/README.md). Anything
+destructive, anything about money, anything about who can do what, and any gap we are
+accepting on purpose all qualify. A naming choice, a refactor, or a bug fix does not.
+
+- **Specialist agents never write a decision record.** When your work produces or reveals
+  one, name it in your report and let the orchestrator and the human decide. A record
+  written by whoever happened to touch the file is a record nobody agreed to.
+- **A record is never edited once accepted**, only superseded by a new one. Reversing a
+  documented decision is a new record, never a quiet edit to the old.
+- **Link, never restate.** A rule that follows from a decision lives here; the record
+  links to it. The same sentence in two files will drift, and then one of them is a lie.
 
 ## Hebrew and Right-to-Left
 

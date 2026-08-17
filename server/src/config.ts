@@ -17,11 +17,20 @@ const envSchema = z.object({
   STORAGE_ENDPOINT: z.url().optional().or(z.literal('')),
   STORAGE_REGION: z.string().min(1).default('us-east-1'),
   STORAGE_BUCKET: z.string().min(1),
-  STORAGE_ACCESS_KEY_ID: z.string().min(1),
-  STORAGE_SECRET_ACCESS_KEY: z.string().min(1),
+  // Required for MinIO, which has no notion of an IAM role. Optional for
+  // real S3, where the Fargate task's own IAM role authenticates instead,
+  // so no long-lived key has to exist for someone to leak.
+  STORAGE_ACCESS_KEY_ID: z.string().min(1).optional(),
+  STORAGE_SECRET_ACCESS_KEY: z.string().min(1).optional(),
   STORAGE_PUBLIC_BASE_URL: z.url(),
   MAX_UPLOAD_BYTES: z.coerce.number().int().positive().default(5_000_000),
-});
+}).refine(
+  (data) => !data.STORAGE_ENDPOINT || (data.STORAGE_ACCESS_KEY_ID && data.STORAGE_SECRET_ACCESS_KEY),
+  {
+    message: 'STORAGE_ACCESS_KEY_ID and STORAGE_SECRET_ACCESS_KEY are required when STORAGE_ENDPOINT is set',
+    path: ['STORAGE_ACCESS_KEY_ID'],
+  },
+);
 
 export interface Config {
   port: number;
@@ -34,8 +43,8 @@ export interface Config {
   storageEndpoint: string | undefined;
   storageRegion: string;
   storageBucket: string;
-  storageAccessKeyId: string;
-  storageSecretAccessKey: string;
+  storageAccessKeyId: string | undefined;
+  storageSecretAccessKey: string | undefined;
   storagePublicBaseUrl: string;
   maxUploadBytes: number;
 }

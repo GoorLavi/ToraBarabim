@@ -1,8 +1,6 @@
 import type { LessonFilters } from './models';
 
-// Falls back to the server's own default dev port when no build-time
-// override is supplied; there is no client .env yet.
-export const API_BASE_URL: string = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+export { API_BASE_URL } from '~/config';
 
 export const DATE_OPTION_PARAM = 'when';
 export const CUSTOM_DATE_PARAM = 'date';

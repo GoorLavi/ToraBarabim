@@ -123,8 +123,10 @@ do not know who they are.
 The word `בהפרדה` is also not used. The three values above already carry that meaning
 for this audience, and appending it is redundant.
 
-When the audience field is not filled in, nothing is shown. There is no default and no
-guess. The lesson still appears; only the unverified claim is withheld.
+**Audience is required.** The admin schema is an enum with no empty case, so a lesson
+without an audience cannot exist and no surface needs to render one. An earlier version
+of this section described a hide-when-empty behaviour; the implementation settled the
+question the other way and this file follows the code.
 
 ### Themes and the token contract
 Three color themes ship together as styled-components themes, so they can be compared

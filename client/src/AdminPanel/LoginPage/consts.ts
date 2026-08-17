@@ -1,0 +1,10 @@
+export const WORDMARK = 'תורה ברבים';
+export const ADMIN_BADGE_LABEL = 'ניהול';
+export const HEADING = 'כניסה לניהול';
+export const SUBTEXT = 'הכניסה מיועדת למנהלי האתר בלבד.';
+export const EMAIL_LABEL = 'אימייל';
+export const PASSWORD_LABEL = 'סיסמה';
+export const SUBMIT_LABEL = 'כניסה';
+export const SUBMIT_PENDING_LABEL = 'מתחברים...';
+export const FORGOT_PASSWORD_NOTE = 'שכחתם סיסמה? המשתמשים נוצרים ידנית, ולכן איפוס עצמי נעשה מול מי שהקים לכם את המשתמש.';
+export const INVALID_CREDENTIALS_MESSAGE = 'אימייל או סיסמה שגויים';
