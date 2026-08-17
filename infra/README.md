@@ -11,9 +11,16 @@ unrelated project as its default profile, in a different account. Every `cdk` co
 below **must** be run with `--profile torabarabim`, e.g.:
 
 ```bash
-npx --prefix infra cdk synth --profile torabarabim
-npx --prefix infra cdk deploy TorabarabimNetwork --profile torabarabim
+npm run synth -w infra -- --profile torabarabim
+npm run deploy -w infra -- TorabarabimNetwork --profile torabarabim
 ```
+
+**Always run these through the `infra` workspace's npm scripts (`npm run <script> -w
+infra -- ...`), never `npx --prefix infra cdk ...`.** `--prefix` only tells npx where to
+find the `cdk` binary; it does not change the working directory, so `cdk` still runs from
+the repo root, never finds `infra/cdk.json`, and fails with "--app is required either in
+command-line, in cdk.json or in ~/.cdk.json". An npm workspace script runs with its own
+package directory as the working directory, which is what makes `cdk.json` resolve.
 
 The account id and region live only in the repo root `.env` (gitignored, never
 committed): `TORABARABIM_AWS_ACCOUNT` and `TORABARABIM_AWS_REGION`, see `.env.example`.
@@ -154,14 +161,8 @@ Only `eu-central-1` needs bootstrapping for the no-domain flow: `us-east-1` is o
 by `TorabarabimCertificate`, which does not exist yet in this mode.
 
 ```bash
-npx cdk bootstrap aws://<ACCOUNT_ID>/eu-central-1 -w infra --app "npx tsx bin/infra.ts" --profile torabarabim
-```
-
-Or, equivalently, from the repo root using the workspace's own CDK CLI:
-
-```bash
-npm run -w infra synth -- --profile torabarabim   # sanity check first
-npx --prefix infra cdk bootstrap aws://<ACCOUNT_ID>/eu-central-1 --profile torabarabim
+npm run synth -w infra -- --profile torabarabim   # sanity check first
+npm run bootstrap -w infra -- aws://<ACCOUNT_ID>/eu-central-1 --profile torabarabim
 ```
 
 ### 2. Deploy the three step-one stacks
@@ -172,7 +173,7 @@ git. `CorsOrigins` is a placeholder here, same as the storage parameters: the re
 is CloudFront's own address, only known after `TorabarabimSite` deploys in step 5.
 
 ```bash
-npx --prefix infra cdk deploy TorabarabimNetwork TorabarabimDatabase TorabarabimServer \
+npm run deploy -w infra -- TorabarabimNetwork TorabarabimDatabase TorabarabimServer \
   --profile torabarabim \
   --parameters TorabarabimServer:CorsOrigins=<placeholder-until-step-6> \
   --parameters TorabarabimServer:AlertEmail=<your-email> \
@@ -203,7 +204,7 @@ aws ecs run-task \
   --network-configuration "awsvpcConfiguration={subnets=[<one id from PublicSubnetIds output>],securityGroups=[<ServerSecurityGroupId output>],assignPublicIp=ENABLED}"
 ```
 
-Watch it finish in the ECS console or via `aws ecs describe-tasks`, then check the
+Watch it finish in the ECS console or via `aws ecs describe-tasks --profile torabarabim`, then check the
 `migrate` log stream in the `ServerLogGroup` CloudWatch log group for `drizzle-kit`'s
 output. Re-run this exact command for every future migration; it always runs the
 `server/drizzle` SQL files baked into the image that was deployed most recently.
@@ -271,10 +272,55 @@ the task's own role and see everything the container can see, including reading
 admin user exists, consider turning it off by setting `enableExecuteCommand: false` on
 the service and redeploying.
 
+### 4a. Seed the official locality list, over ECS Exec
+
+`GET /v1/cities` returns nothing and the public search cannot work until the roughly
+1,300 official Israeli localities are in the database. There are two seed scripts and
+they are not interchangeable: `db:seed` also invents sample lessons for local
+development and must **never** run against production (decision
+[0001](../docs/decisions/0001-lessons-are-admin-entered.md): a lesson that is not really
+happening is worse than a lesson that is missing). `db:seed:cities-only` seeds the
+locality table alone and nothing else, and is safe to run here.
+
+It fetches the locality and population datasets live from `data.gov.il`, so it needs
+outbound internet; the task already has it (see "Why no ALB, why no NAT gateway" above).
+It upserts on the official locality code, so running it again later, when the source
+data updates, updates rows in place instead of duplicating them.
+
+Find the running task and open the shell exactly as in step 4:
+
+```bash
+aws ecs list-tasks \
+  --profile torabarabim \
+  --cluster <ClusterName output> \
+  --service-name <ServiceName output> \
+  --desired-status RUNNING
+
+aws ecs execute-command \
+  --profile torabarabim \
+  --cluster <ClusterName output> \
+  --task <task id from the command above> \
+  --container Server \
+  --interactive \
+  --command "/bin/sh"
+```
+
+Inside the shell, run the compiled script directly (same reasoning as step 4: the
+production image has no `tsx`, only the built `dist/`):
+
+```sh
+node dist/db/seed-cities-only.js
+```
+
+It prints how many localities it inserted or updated (about 1,310) and exits. If the
+fetch from `data.gov.il` fails, it exits non-zero and writes nothing: it runs inside a
+single transaction, so a failed fetch or a failed upsert never leaves the table half
+filled.
+
 ### 5. Deploy `TorabarabimSite` (eu-central-1), no domain
 
 ```bash
-npx --prefix infra cdk deploy TorabarabimSite \
+npm run deploy -w infra -- TorabarabimSite \
   --profile torabarabim \
   --parameters TorabarabimSite:ServerTaskRoleArn=<TaskRoleArn output on TorabarabimServer>
 ```
@@ -289,7 +335,7 @@ outputs for the next step.
 ### 6. Feed the photo bucket and the real site address back into `TorabarabimServer`, and redeploy it
 
 ```bash
-npx --prefix infra cdk deploy TorabarabimServer \
+npm run deploy -w infra -- TorabarabimServer \
   --profile torabarabim \
   --parameters TorabarabimServer:CorsOrigins=<SiteUrl output> \
   --parameters TorabarabimServer:AlertEmail=<your-email> \
@@ -312,10 +358,16 @@ Not part of this CDK app; decision 0006 puts automatic deploys from `main` on Gi
 Actions, not yet built. Until that workflow exists, by hand from the repo root:
 
 ```bash
-npm run build -w client
+VITE_API_URL=<ApiUrl output on TorabarabimServer> npm run build -w client
 aws s3 sync client/dist s3://<ClientBucketName output> --delete --profile torabarabim
 aws cloudfront create-invalidation --distribution-id <DistributionId output> --paths "/*" --profile torabarabim
 ```
+
+**`VITE_API_URL` is baked into the built files at this build step, not read at
+runtime.** The site must be rebuilt and re-uploaded every time that URL changes. Vite
+now fails this build outright if `VITE_API_URL` is missing, on purpose: without that
+check the build succeeds silently and ships a site whose every API call targets the
+visitor's own machine (`http://localhost:3000`) instead of the real API.
 
 The invalidation matters: CloudFront's default cache policy on the client behavior would
 otherwise keep serving the previous build's `index.html` for a while after a new one is
@@ -334,22 +386,22 @@ never replaced).
 ### A. Register `torahbarabim.com` in Route 53
 
 Done once, by hand, in the Route 53 console or with `aws route53domains
-register-domain`, outside this CDK app. Registration auto-creates a public hosted zone;
-note its id (`aws route53 list-hosted-zones-by-name --dns-name torahbarabim.com`), needed
-as `HostedZoneId` in the next two steps.
+register-domain --profile torabarabim`, outside this CDK app. Registration auto-creates a
+public hosted zone; note its id (`aws route53 list-hosted-zones-by-name --dns-name
+torahbarabim.com --profile torabarabim`), needed as `HostedZoneId` in the next two steps.
 
 ### B. Bootstrap `us-east-1`
 
 Only needed now, because `TorabarabimCertificate` deploys there and did not exist before.
 
 ```bash
-npx cdk bootstrap aws://<ACCOUNT_ID>/us-east-1 -w infra --app "npx tsx bin/infra.ts" --profile torabarabim
+npm run bootstrap -w infra -- aws://<ACCOUNT_ID>/us-east-1 --profile torabarabim
 ```
 
 ### C. Deploy `TorabarabimCertificate` (us-east-1)
 
 ```bash
-npx --prefix infra cdk deploy TorabarabimCertificate \
+npm run deploy -w infra -- TorabarabimCertificate \
   --profile torabarabim \
   -c domain=torahbarabim.com \
   --parameters TorabarabimCertificate:HostedZoneId=<zone id from step A>
@@ -365,7 +417,7 @@ the next step.
 ### D. Redeploy `TorabarabimSite` (eu-central-1), now with the domain
 
 ```bash
-npx --prefix infra cdk deploy TorabarabimSite \
+npm run deploy -w infra -- TorabarabimSite \
   --profile torabarabim \
   -c domain=torahbarabim.com \
   --parameters TorabarabimSite:CertificateArn=<CertificateArn output> \
@@ -382,7 +434,7 @@ and everything already uploaded to them are untouched.
 ### E. Redeploy `TorabarabimServer` with the real `CorsOrigins`
 
 ```bash
-npx --prefix infra cdk deploy TorabarabimServer \
+npm run deploy -w infra -- TorabarabimServer \
   --profile torabarabim \
   --parameters TorabarabimServer:CorsOrigins=https://torahbarabim.com \
   --parameters TorabarabimServer:AlertEmail=<your-email> \

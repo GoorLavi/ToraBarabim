@@ -82,6 +82,16 @@ export class ServerStack extends Stack {
     // reference resolves at deploy time, so the connection string is never
     // written as plaintext into the template. This is the AWS-documented way
     // to compose a JDBC-style URL from a generated RDS secret.
+    //
+    // sslmode=require is here because RDS enforces TLS by default
+    // (rds.force_ssl) and refuses any plaintext connection outright. This
+    // encrypts the connection but does not verify the server's certificate
+    // against a certificate authority, so it stops passive eavesdropping,
+    // not an active attacker already inside the VPC between the task and the
+    // database. Verifying properly would mean sslmode=verify-full plus
+    // shipping the RDS CA bundle in the image; not done here, only decided
+    // against without asking, so flagging: worth it if that threat matters
+    // more than the added image/cert-rotation upkeep.
     const databaseUrlSecret = new secretsmanager.Secret(this, 'DatabaseUrlSecret', {
       description: 'Full postgres:// connection string for the API server',
       secretObjectValue: {
@@ -89,7 +99,8 @@ export class ServerStack extends Stack {
           `postgres://${databaseCredentials.secretValueFromJson('username').unsafeUnwrap()}` +
             `:${databaseCredentials.secretValueFromJson('password').unsafeUnwrap()}` +
             `@${props.database.instanceEndpoint.hostname}:${props.database.instanceEndpoint.port}` +
-            `/${databaseCredentials.secretValueFromJson('dbname').unsafeUnwrap()}`,
+            `/${databaseCredentials.secretValueFromJson('dbname').unsafeUnwrap()}` +
+            `?sslmode=require`,
         ),
       },
     });
@@ -149,7 +160,7 @@ export class ServerStack extends Stack {
         operatingSystemFamily: ecs.OperatingSystemFamily.LINUX,
       },
     });
-    taskDefinition.addContainer('Server', {
+    const serverContainer = taskDefinition.addContainer('Server', {
       image: runtimeImage,
       environment: sharedEnvironment,
       secrets: sharedSecrets,
@@ -179,10 +190,25 @@ export class ServerStack extends Stack {
       vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
       assignPublicIp: true,
       securityGroups: [serverSecurityGroup],
+      // SRV, not A: with awsvpc networking ECS only publishes AWS_INSTANCE_PORT
+      // on an SRV registration. An A record carries the task's address with no
+      // port, and the API Gateway VPC Link integration then has nowhere to
+      // route, which fails every request with a bare API Gateway 500 that
+      // never reaches this container.
+      //
+      // The name changed from the original 'api' to 'api-srv' on purpose: a
+      // Cloud Map service's record type cannot be changed in place while a
+      // task is registered against it (ECS rejects the in-place update with
+      // "does not require a value for 'containerPort'", confirmed against the
+      // live account). Naming it differently forces CloudFormation to create
+      // a new SRV-typed service and delete the old A-typed one, instead of
+      // trying to mutate a resource that will not accept the change.
       cloudMapOptions: {
         cloudMapNamespace: namespace,
-        name: 'api',
-        dnsRecordType: servicediscovery.DnsRecordType.A,
+        name: 'api-srv',
+        dnsRecordType: servicediscovery.DnsRecordType.SRV,
+        container: serverContainer,
+        containerPort: CONTAINER_PORT,
       },
       circuitBreaker: { rollback: true },
       minHealthyPercent: 100,
