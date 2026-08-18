@@ -7,6 +7,18 @@ import { Construct } from 'constructs';
 // the repository is ever renamed or transferred.
 const GITHUB_REPOSITORY = 'GoorLavi/ToraBarabim';
 
+// GitHub has begun issuing OIDC tokens whose `sub` claim carries immutable
+// numeric ids alongside the names (`GoorLavi@22860912/ToraBarabim@1333545947`),
+// so a trust condition written only against the name form is rejected with a
+// bare "Not authorized to perform sts:AssumeRoleWithWebIdentity" that names
+// nothing. Both forms are listed below because which one arrives is GitHub's
+// choice, not ours, and it changed once already. Read the current prefix with:
+//   gh api repos/<org>/<repo>/actions/oidc/customization/sub
+// These are exact strings, never a wildcard over the owner or repository:
+// `repo:GoorLavi*` would also match a `GoorLaviSomethingElse` owned by someone
+// else entirely.
+const GITHUB_REPOSITORY_WITH_IDS = 'GoorLavi@22860912/ToraBarabim@1333545947';
+
 // Must match the GitHub Environment name the human creates by hand (see
 // infra/README.md) and the `environment:` key on the migration job in
 // .github/workflows/deploy.yml. GitHub replaces the OIDC token's `sub` claim
@@ -59,6 +71,8 @@ export class GitHubDeployRoleStack extends Stack {
           'token.actions.githubusercontent.com:sub': [
             `repo:${GITHUB_REPOSITORY}:ref:refs/heads/main`,
             `repo:${GITHUB_REPOSITORY}:environment:${MIGRATION_ENVIRONMENT_NAME}`,
+            `repo:${GITHUB_REPOSITORY_WITH_IDS}:ref:refs/heads/main`,
+            `repo:${GITHUB_REPOSITORY_WITH_IDS}:environment:${MIGRATION_ENVIRONMENT_NAME}`,
           ],
         },
       }),
