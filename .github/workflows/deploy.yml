@@ -1,0 +1,328 @@
+name: Deploy
+
+# Only the application deploys automatically: the server image and the
+# client site (decision 0006, refined by the brief this workflow
+# implements). Nothing here runs `cdk deploy`, so the network, database, or
+# any stack's own shape never changes as a side effect of a push. Those stay
+# a human, running the commands in infra/README.md, by hand.
+on:
+  push:
+    branches: [main]
+
+# A deploy already in flight finishes before the next one starts, so two
+# pushes to `main` in quick succession never race each other's ECS service
+# update or S3 sync.
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: eu-central-1
+  AWS_PAGER: ''
+  SERVER_STACK: TorabarabimServer
+  SITE_STACK: TorabarabimSite
+  # Must match the environment name in infra/lib/github-deploy-role-stack.ts
+  # (the OIDC trust condition) and the one-time GitHub Environment the human
+  # creates, see infra/README.md.
+  MIGRATION_ENVIRONMENT: production-migrations
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    outputs:
+      api-url: ${{ steps.server-outputs.outputs.ApiUrl }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      # Covers server, client, and scraper. A broken build must never reach
+      # production; this is the one gate every later job in this workflow
+      # depends on, directly or transitively.
+      - run: npm run typecheck
+
+      - run: npm run build --workspace server
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Read TorabarabimServer stack outputs
+        id: server-outputs
+        run: |
+          OUTPUTS=$(aws cloudformation describe-stacks --stack-name "$SERVER_STACK" --query 'Stacks[0].Outputs' --output json)
+          for key in ApiUrl; do
+            value=$(echo "$OUTPUTS" | jq -r --arg k "$key" '.[] | select(.OutputKey==$k) | .OutputValue')
+            echo "$key=$value" >> "$GITHUB_OUTPUT"
+          done
+
+      # The real API address, not a placeholder: this is the one client
+      # build this workflow ships. VITE_API_URL is baked in at this step,
+      # never read at runtime by the deployed site (see infra/README.md).
+      - name: Build client
+        run: npm run build --workspace client
+        env:
+          VITE_API_URL: ${{ steps.server-outputs.outputs.ApiUrl }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: client-dist
+          path: client/dist
+          retention-days: 7
+
+  detect-migration:
+    needs: build
+    runs-on: ubuntu-latest
+    outputs:
+      has-new-migration: ${{ steps.detect.outputs.has_new_migration }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect added server/drizzle/*.sql files since the previous commit on main
+        id: detect
+        run: |
+          BEFORE="${{ github.event.before }}"
+          # All-zero SHA means there is no previous commit to diff against
+          # (first push creating the branch). Treat any migration file
+          # present in this commit as new rather than silently skip it.
+          if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            FILES=$(git show --name-status --diff-filter=A "${{ github.sha }}" -- 'server/drizzle/*.sql' | cut -f2)
+          else
+            FILES=$(git diff --name-status --diff-filter=A "$BEFORE" "${{ github.sha }}" -- 'server/drizzle/*.sql' | cut -f2)
+          fi
+          if [ -n "$FILES" ]; then
+            echo "New migration file(s): $FILES"
+            echo "has_new_migration=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_new_migration=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # Gated behind the production-migrations GitHub Environment: the run
+  # pauses here until the human approves it, and only then continues. This
+  # is what keeps "a migration is never applied without a human" true even
+  # though the pipeline is what runs it. Skipped cleanly, with no approval
+  # to wait on, when this push carries no new migration file.
+  migrate:
+    needs: [build, detect-migration]
+    if: needs.detect-migration.outputs.has-new-migration == 'true'
+    environment: production-migrations
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: aws-actions/amazon-ecr-login@v2
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Read TorabarabimServer stack outputs
+        id: server-outputs
+        run: |
+          OUTPUTS=$(aws cloudformation describe-stacks --stack-name "$SERVER_STACK" --query 'Stacks[0].Outputs' --output json)
+          for key in MigrationTaskDefinitionArn ClusterName PublicSubnetIds ServerSecurityGroupId; do
+            value=$(echo "$OUTPUTS" | jq -r --arg k "$key" '.[] | select(.OutputKey==$k) | .OutputValue')
+            echo "$key=$value" >> "$GITHUB_OUTPUT"
+          done
+
+      # The target repository is the one the currently-deployed migration
+      # task definition already names (the same repository `cdk deploy`
+      # pushes image assets to); read from it rather than assumed, so this
+      # step needs no knowledge of the CDK bootstrap naming convention.
+      - name: Resolve the ECR repository from the current migration task definition
+        id: ecr-repo
+        run: |
+          TASK_DEF=$(aws ecs describe-task-definition \
+            --task-definition "${{ steps.server-outputs.outputs.MigrationTaskDefinitionArn }}" \
+            --query 'taskDefinition')
+          IMAGE=$(echo "$TASK_DEF" | jq -r '.containerDefinitions[] | select(.name=="Migrate") | .image')
+          echo "uri=${IMAGE%%:*}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push the migrate image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: server/Dockerfile
+          target: migrate
+          platforms: linux/arm64
+          push: true
+          tags: ${{ format('{0}:migrate-{1}', steps.ecr-repo.outputs.uri, github.sha) }}
+
+      - name: Register a new migration task definition revision with the fresh image
+        id: register
+        run: |
+          IMAGE="${{ steps.ecr-repo.outputs.uri }}:migrate-${{ github.sha }}"
+          aws ecs describe-task-definition \
+            --task-definition "${{ steps.server-outputs.outputs.MigrationTaskDefinitionArn }}" \
+            --query 'taskDefinition' > raw-task-def.json
+          jq --arg image "$IMAGE" '
+            .containerDefinitions = [.containerDefinitions[] | if .name == "Migrate" then .image = $image else . end]
+            | del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy, .deregisteredAt)
+          ' raw-task-def.json > new-task-def.json
+          NEW_ARN=$(aws ecs register-task-definition --cli-input-json file://new-task-def.json --query 'taskDefinition.taskDefinitionArn' --output text)
+          echo "task-definition-arn=$NEW_ARN" >> "$GITHUB_OUTPUT"
+
+      - name: Run the migration task and wait for it to finish
+        run: |
+          SUBNET=$(echo "${{ steps.server-outputs.outputs.PublicSubnetIds }}" | cut -d',' -f1)
+          TASK_ARN=$(aws ecs run-task \
+            --cluster "${{ steps.server-outputs.outputs.ClusterName }}" \
+            --task-definition "${{ steps.register.outputs.task-definition-arn }}" \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[$SUBNET],securityGroups=[${{ steps.server-outputs.outputs.ServerSecurityGroupId }}],assignPublicIp=ENABLED}" \
+            --query 'tasks[0].taskArn' --output text)
+          echo "Migration task: $TASK_ARN"
+          aws ecs wait tasks-stopped --cluster "${{ steps.server-outputs.outputs.ClusterName }}" --tasks "$TASK_ARN"
+          EXIT_CODE=$(aws ecs describe-tasks \
+            --cluster "${{ steps.server-outputs.outputs.ClusterName }}" --tasks "$TASK_ARN" \
+            --query 'tasks[0].containers[0].exitCode' --output text)
+          echo "Migration exit code: $EXIT_CODE"
+          if [ "$EXIT_CODE" != "0" ]; then
+            echo "Migration task failed (exit code $EXIT_CODE); see the migrate log stream in ServerLogGroup." >&2
+            exit 1
+          fi
+
+  # Updates only the running service with a new image; never runs
+  # `cdk deploy` and never changes the stack's own shape.
+  deploy-server:
+    needs: [build, detect-migration, migrate]
+    if: |
+      always() &&
+      needs.build.result == 'success' &&
+      needs.detect-migration.result == 'success' &&
+      (needs.migrate.result == 'success' || needs.migrate.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: aws-actions/amazon-ecr-login@v2
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Read TorabarabimServer stack outputs
+        id: server-outputs
+        run: |
+          OUTPUTS=$(aws cloudformation describe-stacks --stack-name "$SERVER_STACK" --query 'Stacks[0].Outputs' --output json)
+          for key in ClusterName ServiceName; do
+            value=$(echo "$OUTPUTS" | jq -r --arg k "$key" '.[] | select(.OutputKey==$k) | .OutputValue')
+            echo "$key=$value" >> "$GITHUB_OUTPUT"
+          done
+
+      - name: Resolve the ECR repository from the running service's task definition
+        id: ecr-repo
+        run: |
+          CURRENT_TASK_DEF=$(aws ecs describe-services \
+            --cluster "${{ steps.server-outputs.outputs.ClusterName }}" \
+            --services "${{ steps.server-outputs.outputs.ServiceName }}" \
+            --query 'services[0].taskDefinition' --output text)
+          echo "arn=$CURRENT_TASK_DEF" >> "$GITHUB_OUTPUT"
+          IMAGE=$(aws ecs describe-task-definition --task-definition "$CURRENT_TASK_DEF" --query 'taskDefinition' \
+            | jq -r '.containerDefinitions[] | select(.name=="Server") | .image')
+          echo "uri=${IMAGE%%:*}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push the runtime image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: server/Dockerfile
+          target: runtime
+          platforms: linux/arm64
+          push: true
+          tags: ${{ format('{0}:server-{1}', steps.ecr-repo.outputs.uri, github.sha) }}
+
+      - name: Register a new task definition revision with the fresh image
+        id: register
+        run: |
+          IMAGE="${{ steps.ecr-repo.outputs.uri }}:server-${{ github.sha }}"
+          aws ecs describe-task-definition --task-definition "${{ steps.ecr-repo.outputs.arn }}" \
+            --query 'taskDefinition' > raw-task-def.json
+          jq --arg image "$IMAGE" '
+            .containerDefinitions = [.containerDefinitions[] | if .name == "Server" then .image = $image else . end]
+            | del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy, .deregisteredAt)
+          ' raw-task-def.json > new-task-def.json
+          NEW_ARN=$(aws ecs register-task-definition --cli-input-json file://new-task-def.json --query 'taskDefinition.taskDefinitionArn' --output text)
+          echo "task-definition-arn=$NEW_ARN" >> "$GITHUB_OUTPUT"
+
+      - name: Update the service and wait for it to stabilize
+        run: |
+          aws ecs update-service \
+            --cluster "${{ steps.server-outputs.outputs.ClusterName }}" \
+            --service "${{ steps.server-outputs.outputs.ServiceName }}" \
+            --task-definition "${{ steps.register.outputs.task-definition-arn }}" > /dev/null
+          aws ecs wait services-stable \
+            --cluster "${{ steps.server-outputs.outputs.ClusterName }}" \
+            --services "${{ steps.server-outputs.outputs.ServiceName }}"
+
+  deploy-client:
+    needs: [build, deploy-server]
+    if: always() && needs.build.result == 'success' && needs.deploy-server.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: client-dist
+          path: client-dist
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Read TorabarabimSite stack outputs
+        id: site-outputs
+        run: |
+          OUTPUTS=$(aws cloudformation describe-stacks --stack-name "$SITE_STACK" --query 'Stacks[0].Outputs' --output json)
+          for key in ClientBucketName DistributionId; do
+            value=$(echo "$OUTPUTS" | jq -r --arg k "$key" '.[] | select(.OutputKey==$k) | .OutputValue')
+            echo "$key=$value" >> "$GITHUB_OUTPUT"
+          done
+
+      - name: Sync the client build to the client bucket
+        run: |
+          aws s3 sync client-dist "s3://${{ steps.site-outputs.outputs.ClientBucketName }}" --delete
+
+      # Without this, CloudFront's cache policy on the client behavior keeps
+      # serving the previous build's index.html for a while after the new
+      # one lands in the bucket.
+      - name: Invalidate the CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ steps.site-outputs.outputs.DistributionId }}" \
+            --paths "/*"

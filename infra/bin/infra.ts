@@ -4,6 +4,7 @@ import { App } from 'aws-cdk-lib';
 
 import { CertificateStack } from '../lib/certificate-stack';
 import { DatabaseStack } from '../lib/database-stack';
+import { GitHubDeployRoleStack } from '../lib/github-deploy-role-stack';
 import { NetworkStack } from '../lib/network-stack';
 import { ServerStack } from '../lib/server-stack';
 import { SiteStack } from '../lib/site-stack';
@@ -83,3 +84,10 @@ new SiteStack(app, 'TorabarabimSite', {
   domain,
   serverHttpApi: server.httpApi,
 });
+
+// Independent of every other stack: only reads TorabarabimServer's and
+// TorabarabimSite's outputs at GitHub Actions runtime, never at synth or
+// deploy time, so it has no CDK-level dependency on either. Deployed once,
+// by hand, per infra/README.md; never touched by the automated pipeline it
+// grants access to.
+new GitHubDeployRoleStack(app, 'TorabarabimGitHubDeployRole', { env });

@@ -21,6 +21,7 @@
     "db:generate": "npm run db:generate --workspace server",
     "db:migrate": "npm run db:migrate --workspace server",
     "db:seed": "npm run db:seed --workspace server",
+    "db:tunnel": "bash infra/scripts/db-tunnel.sh",
     "scrape": "npm run start --workspace scraper",
     "scrape:schedule": "npm run schedule --workspace scraper"
   },

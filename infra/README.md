@@ -46,7 +46,7 @@ environment with the right '--trust', using the latest version of the CDK CLI.
 If you see this, you forgot `--profile torabarabim`. It is not a bug and not a sign
 the account needs re-bootstrapping.
 
-Four or five stacks, deployed together, depending on the mode below:
+Five or six stacks total, depending on the mode below.
 
 **Step one**, region `eu-central-1`:
 
@@ -68,6 +68,12 @@ Four or five stacks, deployed together, depending on the mode below:
 - `TorabarabimSite`, region `eu-central-1`: the private client bucket, the public photo
   bucket, the one CloudFront distribution, and, only with a domain, the Route 53 alias
   records.
+
+**Deployed once, independently of the other two steps:**
+
+- `TorabarabimGitHubDeployRole`, region `eu-central-1`: the GitHub OIDC identity provider
+  and the one IAM role GitHub Actions assumes to deploy. See "Automatic deploys from
+  `main`" below.
 
 ## Two modes: with or without a domain
 
@@ -354,8 +360,9 @@ server's own logs.
 
 ### 7. Get the client build into the bucket
 
-Not part of this CDK app; decision 0006 puts automatic deploys from `main` on GitHub
-Actions, not yet built. Until that workflow exists, by hand from the repo root:
+This step is now automatic: see "Automatic deploys from `main`" below. It is documented
+here, by hand, only for the one time before that pipeline's one-time setup is done, or if
+it ever needs to be reproduced manually:
 
 ```bash
 VITE_API_URL=<ApiUrl output on TorabarabimServer> npm run build -w client
@@ -374,6 +381,134 @@ otherwise keep serving the previous build's `index.html` for a while after a new
 uploaded.
 
 The site is now live at the `SiteUrl` output.
+
+## Automatic deploys from `main`
+
+Decision [0006](../docs/decisions/0006-production-on-aws-with-cdk.md) promised automatic
+deploys from `main`; `.github/workflows/deploy.yml` (push to `main`) and
+`.github/workflows/ci.yml` (every pull request) are that pipeline. This section is what a
+human needs to know to set it up once, approve a migration, and recover from a failed run.
+
+### What deploys automatically, and what stays manual
+
+**Automatic, on every push to `main`:**
+- Type check and build every workspace. A broken build stops here and nothing below it
+  runs.
+- Build the server's `runtime` Docker image from that commit, push it to the same ECR
+  repository `cdk deploy` already uses, register a new revision of the **already
+  deployed** ECS task definition pointing at it, and update the running service, waiting
+  for it to stabilize.
+- If, and only if, the commit added a new file under `server/drizzle/*.sql`: build the
+  `migrate` Docker image the same way, register a new revision of the **already
+  deployed** migration task definition, and run it exactly the way step 3 above does,
+  after a human approves it (see "Approving a migration" below). Runs before the server
+  update, so the new code is never running against a database it does not expect yet.
+- Build the client with `VITE_API_URL` set to the live `ApiUrl` stack output, sync it to
+  the client bucket, and invalidate the CloudFront cache.
+
+**Stays manual, on purpose, per the brief this pipeline implements:** every `cdk deploy`
+of `TorabarabimNetwork`, `TorabarabimDatabase`, `TorabarabimServer`, `TorabarabimSite`, or
+`TorabarabimCertificate` itself. The pipeline only ever swaps the image inside an
+already-deployed ECS task definition; it never touches a stack's own shape (the VPC, the
+database, the alarms, the API Gateway wiring, the CloudFront behaviors). A network,
+database, or infrastructure change is rare and a mistake in it is expensive, so it keeps
+requiring the same steps 1 to 6 above, run by hand.
+
+**On every pull request** (`.github/workflows/ci.yml`), nothing deploys and no AWS
+credentials are used at all: every workspace is type-checked, the server is built, and
+the client is built once against a placeholder API URL, purely to prove the build itself
+succeeds. A pull request that adds a file under `server/drizzle/*.sql` gets a comment on
+the PR itself, naming the files: the loudest of the options the brief allowed, since it
+appears in the conversation without a reviewer needing to remember to open the Checks tab.
+
+### How GitHub authenticates: no stored keys
+
+`TorabarabimGitHubDeployRole` (`infra/lib/github-deploy-role-stack.ts`) is an IAM OIDC
+identity provider for `token.actions.githubusercontent.com` plus one role,
+`TorabarabimGitHubDeploy`, that only this repository's workflows can assume, and only in
+one of two situations:
+
+- a workflow job running directly on a push to `main`
+  (`repo:GoorLavi/ToraBarabim:ref:refs/heads/main`)
+- a workflow job gated behind the `production-migrations` GitHub Environment, whose `sub`
+  claim GitHub replaces with the environment form instead of the ref form
+  (`repo:GoorLavi/ToraBarabim:environment:production-migrations`)
+
+No AWS access key is ever created or stored in GitHub. A pull request, a branch other than
+`main`, or any other repository can never produce a token matching either condition.
+
+### One-time setup, by hand
+
+1. Deploy the role stack once, the same way as any other stack:
+   ```bash
+   npm run deploy -w infra -- TorabarabimGitHubDeployRole --profile torabarabim
+   ```
+   Read the `RoleArn` output.
+2. In the GitHub repository's Settings > Secrets and variables > Actions > Variables, add
+   a repository variable named `AWS_DEPLOY_ROLE_ARN` set to that output. It is a role ARN,
+   not a credential: knowing it grants nothing without also meeting the trust conditions
+   above, so a plain (non-secret) repository variable is enough.
+3. In Settings > Environments, create an environment named exactly `production-migrations`
+   (must match `MIGRATION_ENVIRONMENT_NAME` in `infra/lib/github-deploy-role-stack.ts` and
+   the `environment:` key on the `migrate` job in `deploy.yml`) and add yourself as a
+   required reviewer. This is what makes the migration step in the pipeline pause for a
+   real approval instead of running unattended.
+
+### Approving a migration
+
+When a push to `main` includes a new file under `server/drizzle/*.sql`, the `migrate` job
+in the Actions run for that push waits in "Waiting" state for the `production-migrations`
+environment's required reviewer. Open the run, review what changed (the PR that introduced
+it already carried a comment naming the files, per "On every pull request" above), and
+approve or reject it from the run's page. Nothing after it (the server update, the client
+deploy) starts until this is resolved one way or the other. When a push carries no new
+migration file, this job is skipped entirely and nothing waits on anyone.
+
+### Recovering from a deploy that failed halfway
+
+Every job downstream of a failure simply does not run; nothing rolls back automatically.
+
+- **Build or type check failed:** nothing was pushed or touched. Fix the code and push
+  again.
+- **Migration task failed** (nonzero exit code): the server is not updated and the client
+  is not deployed, so production keeps running the previous release against the
+  previous schema. Read the `migrate` log stream in the `ServerLogGroup` CloudWatch log
+  group (same place step 3 above points at) for `drizzle-kit`'s output, fix the migration,
+  and push again.
+- **Server update failed or the service never stabilized:** the ECS circuit breaker
+  (`minHealthyPercent: 100`, `maxHealthyPercent: 200`, set on the service in
+  `TorabarabimServer`) rolls the service back to the previous task definition revision on
+  its own; a failed deploy here should self-heal within a few minutes without losing
+  traffic. Confirm in the ECS console or `aws ecs describe-services`.
+- **Client sync or invalidation failed after the server already updated:** the API is on
+  the new code, the client bucket may be mid-sync or the CloudFront cache not yet
+  invalidated. Re-run the `deploy-client` job from the failed workflow run (Actions >
+  the run > Re-run failed jobs); it rebuilds nothing new, it re-syncs the same artifact.
+
+### What a visitor sees mid-deploy
+
+- **While the server updates:** the ECS circuit breaker keeps the previous task running
+  alongside the new one until the new one passes its health check, so a visitor's request
+  is never dropped; it lands on whichever task is currently healthy. There is no
+  zero-downtime guarantee stronger than that (a request mid-flight to a task that is being
+  drained could still see a connection reset), but there is no window where the API is
+  fully down.
+- **Between the server update finishing and the client deploy finishing:** none, in
+  practice, for a change that only touches the server. The client bundle does not embed
+  server response shapes at build time beyond what it already expects; a client built
+  against yesterday's API and a server already running today's code coexist safely as
+  long as the API response shape did not change in a way the deployed client cannot
+  handle. **This is the one real gap:** the pipeline has no mechanism to detect or block
+  an API response shape change that is not backward compatible with whatever client build
+  is still live in CloudFront for however long the deploy takes. Keep server API changes
+  additive, the same "add before you remove" discipline the root rulebook already asks of
+  a migration.
+- **While the client syncs and the CloudFront invalidation runs:** a visitor loading the
+  site can, for a few seconds to a couple of minutes, receive either the previous or the
+  new `index.html` depending on which edge cache location answers and whether the
+  invalidation has reached it yet. Both versions of the client work against the API that
+  is live at that moment (see above), so this is a brief inconsistency in which static
+  bundle a visitor gets, not a broken page.
 
 ## Attaching the domain later, once the support case resolves
 
@@ -468,6 +603,78 @@ stack file. Omit it for today's no-domain deploy; supply it once the domain is b
 attached, see "Attaching the domain later" above. `HostedZoneId` and `CertificateArn` are
 not declared on `TorabarabimSite` at all without it, so there is nothing to pass a
 placeholder for in no-domain mode.
+
+## Connecting a local database client (DBeaver) to production
+
+The database has no route to the internet at all (see "Why no ALB, why no NAT gateway"
+above) and that stays true here: nothing is opened publicly and no bastion host is
+added. Instead, the tunnel goes through the running server task itself, which already
+has [ECS Exec](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-exec.html)
+enabled. AWS Systems Manager can port-forward through that task to any host the task can
+reach, including the RDS endpoint in its isolated subnet, using the
+`AWS-StartPortForwardingSessionToRemoteHost` session document. Nothing new is created in
+AWS to make this work.
+
+**One command, from the repo root:**
+
+```bash
+npm run db:tunnel
+```
+
+`infra/scripts/db-tunnel.sh` does the rest: checks the AWS CLI and the Session Manager
+plugin are installed, checks the `torabarabim` profile's credentials are live, finds the
+currently running server task and its container runtime id, reads the database endpoint
+from the `TorabarabimDatabase` stack, and opens the tunnel. Nothing it uses is
+hardcoded: the cluster, service, task, and database endpoint are all read live from AWS
+each time, since every one of them can change on a redeploy or a failover.
+
+**What DBeaver needs typed into a new PostgreSQL connection**, while the script is
+running:
+
+| Field | Value |
+| --- | --- |
+| Host | `localhost` |
+| Port | `5434` |
+| Database | printed by the script (currently `torabarabim`) |
+| User | printed by the script (currently `torabarabim_app`) |
+| Password | see below, never printed by the script |
+
+**Port 5434 is deliberate, not 5432 or 5433.** Local development Postgres already
+listens on 5433. A tunnel that quietly reused 5432 or 5433 would let a query meant for a
+local database land on production instead, or the reverse, with nothing to notice until
+data is gone. The script prints a loud banner every time it starts, naming the port and
+saying plainly that it points at production.
+
+**The password is never printed by the script.** It comes from Secrets Manager; the
+script prints the exact command, with the correct secret ARN already filled in, once it
+has resolved the database:
+
+```bash
+aws secretsmanager get-secret-value --secret-id <printed by the script> \
+  --profile torabarabim --region eu-central-1 --query SecretString --output text
+```
+
+Running that command puts a live production credential in plain text on your screen and,
+depending on your shell's history settings, in your shell history. Read it, paste it into
+DBeaver, and clear your terminal scrollback and history entry for that line afterward if
+that machine is shared or backed up anywhere.
+
+**Closing the tunnel:** `Ctrl+C` in the terminal running `npm run db:tunnel`. It is a
+foreground SSM session; there is nothing else to clean up, and no AWS resource was
+created that needs tearing down.
+
+**If your session has expired**, which happens often, the script fails immediately with
+the raw AWS CLI error and tells you to re-authenticate the `torabarabim` profile before
+trying again, rather than failing deep inside the AWS CLI with a stack trace.
+
+**This is a live production database with no undo.** Decision
+[0004](../docs/decisions/0004-deleting-cascades-deliberately.md) makes deleting a rabbi
+or a place cascade to every lesson and exception that depends on it, in one transaction,
+with no soft delete and no recycle bin. A wrong `DELETE` or `UPDATE` run by hand through
+this tunnel is exactly as permanent as one run through the admin panel. The only recovery
+is a database restore from the seven days of automated backup RDS keeps (see "What the
+human does" step 2 above), which loses every change made since the backup. Treat every
+query typed through this connection as if it cannot be undone, because it cannot.
 
 ## Estimated monthly cost (US dollars)
 

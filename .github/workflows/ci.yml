@@ -1,0 +1,96 @@
+name: CI
+
+# Every check here runs against a pull request, before anything reaches
+# `main`. Nothing in this workflow deploys or needs AWS credentials: that
+# only happens in deploy.yml, on a push to `main`.
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  typecheck-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      # Covers server, client, and scraper: a broken build in any workspace
+      # must block the PR before it can reach `main`, since `main` deploys
+      # automatically on every push (see deploy.yml).
+      - run: npm run typecheck
+
+      - run: npm run build --workspace server
+
+      # A placeholder, never the real API address: this build's only output
+      # here is proof the build succeeds, and the artifact is discarded at
+      # the end of the job. deploy.yml rebuilds the client with the real
+      # `VITE_API_URL`, read from the stack outputs, before anything is
+      # uploaded.
+      - run: npm run build --workspace client
+        env:
+          VITE_API_URL: https://ci-placeholder.invalid
+
+  # Named so it reads as a statement on its own in the PR's checks list,
+  # without anyone having to open it to learn what it found. A comment on
+  # the PR is the louder of the two signals the brief allows for: it shows
+  # up in the conversation itself, not only in the Checks tab a reviewer has
+  # to remember to open, which is exactly the class of thing this check
+  # exists to stop being forgettable.
+  migration-check:
+    name: "Migration check: does this PR add a migration?"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect added server/drizzle/*.sql files
+        id: detect
+        run: |
+          FILES=$(git diff --name-status --diff-filter=A \
+            "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}" \
+            -- 'server/drizzle/*.sql' | cut -f2)
+          {
+            echo "files<<EOF"
+            echo "$FILES"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          if [ -n "$FILES" ]; then
+            echo "has_migration=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_migration=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Comment on the pull request
+        if: steps.detect.outputs.has_migration == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const files = `${{ steps.detect.outputs.files }}`.trim().split('\n').filter(Boolean);
+            const list = files.map((file) => `- \`${file}\``).join('\n');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body:
+                '**This pull request adds a database migration.**\n\n' +
+                'On merge, `main`\'s deploy will pause for the `production-migrations` ' +
+                'GitHub Environment approval before applying it. Files:\n\n' +
+                list,
+            });
