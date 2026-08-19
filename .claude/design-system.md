@@ -93,10 +93,20 @@ results, then widens the search itself along the one axis available and shows re
 lessons, rather than handing back a list of buttons. A screen that only announces
 failure is not finished.
 
-On the home page that axis is the date: no lessons in this city tonight becomes lessons
-in this city on the next day that has any. When even that is empty, the screen says so
-in a designed way and still shows real lessons below it, so the person is never left
-looking at nothing.
+**This applies to the filtered home page**, the mode a person reaches by choosing a
+date, a city, or a search term. There the axis is the date: no lessons in this city
+tonight becomes lessons in this city on the next day that has any. When even that is
+empty, the screen says so in a designed way and still shows real lessons below it, so
+the person is never left looking at nothing.
+
+**When the filter is a city or a search term and not a date**, there is no date axis to
+widen along. That screen names the constraint and offers the way back instead: an action
+that clears the filter and returns to the rows.
+
+**The rows themselves have no empty state.** A row with nothing in it is never sent, so
+there is never a heading over an empty rail. The only empty case is a page with no rows
+at all, which with no filter applied means the site itself is empty, and it is written
+as exactly that.
 
 ### Feel
 Warm and trustworthy, quietly modern. Generous type, calm color, plenty of breathing
@@ -268,6 +278,11 @@ In a two-column poster grid on a phone the card is roughly 173px wide, and the c
 title steps down to 15 / 21 with its supporting lines at 14 / 20. That is the floor, not
 a licence to shrink further.
 
+**The step is measured against the card's own width, never the screen's.** A card 200px
+wide on a 375px phone gets the full size; the same component in a 173px grid cell keeps
+the floor. Reading the viewport instead was a real defect: it shrank the type on a card
+that had plenty of room, because a narrow screen was mistaken for a narrow card.
+
 ### Spacing
 Base 4.
 
@@ -275,6 +290,17 @@ Base 4.
 
 Screen side gutter is `lg` (16) on a phone and `xl` (24) from 768 up. Vertical space
 between home page sections is `section` (64) on a phone and 80 on desktop.
+
+**Rails are the exception, and it is deliberate.** Between one rail and the next the
+space is `xxl` (32) on a phone and `xxxl` (48) from 768 up, tighter than the 64 and 80
+above. Four rails at section spacing read as four separate pages rather than one browsing
+surface. Rails are sub-sections of a single block; the 64 and 80 still apply between that
+whole block and whatever follows it.
+
+**A horizontally scrolling row runs full width inside a page that has side gutters.** It
+cancels the gutter and re-applies the same value as its own inline padding, so the first
+card lines up under its heading and the last card still gets trailing space. Nothing about
+this may be written as a left or a right.
 
 ### Radii
 Four values, and no others.
@@ -300,7 +326,31 @@ gets uncomfortable to read.
 
 Lesson cards are two columns on a phone, and three at the 1120 content width. Not four:
 at four the cells fall to roughly 262px and a long rabbi name wraps in every other cell.
-Four columns only above 1280.
+Four columns only above 1280. **This describes the filtered page only.** The rows use a
+fixed card width and never reflow into a grid; see below.
+
+### Horizontal rails
+The unfiltered home page is rows of cards that scroll sideways, each row a different cut
+of the same lessons.
+
+- **Card width is fixed, not a fraction:** 200 on a phone, 220 from 768, 240 from 1024.
+  A fraction makes the peek depend on the screen, and the peek is the whole point.
+- **Gap** `md` (12) on a phone, `lg` (16) from 768. Heading to cards `lg` (16).
+- **The peek is the signal.** At a phone width one card sits whole and the next is
+  visibly cut, so the row reads as continuing rather than ending.
+- **Rails stay rails at every width.** They never become a grid on a desktop: the order
+  is a ranking, and a wrapping grid destroys it and turns the first row into a page.
+- Above 1024, previous and next buttons at the row's inline edges, 48 by 48, `surface`
+  fill with `border` and `shadow.card`, centred on the poster rather than the whole card.
+  At the ends they go **disabled, never hidden**, so the row does not shift.
+- **Snap by proximity, never mandatorily.** Mandatory snapping fights a fast flick and
+  feels grabby, which is the opposite of what this site is for.
+- A flick must not navigate the browser backwards.
+- The scrollbar is hidden on touch and thin on a pointer device.
+- **Direction is inherited, never declared.** The first card sits at the inline start,
+  which is the right; "more" is to the left. This is free as long as nothing names a
+  side. Scrolling a rail from code must derive its direction rather than assume a sign,
+  because browsers disagree about what a scroll offset means in a right to left page.
 
 ## Open (not decided yet)
 
@@ -355,3 +405,17 @@ or otherwise) to make the header look populated on first load.
 `עכשיו` and `הערב` are the same day and do not need to be two chips. The row is
 **`היום` / `מחר` / `בשבת`**, plus the calendar button for any other date. `היום` shows
 the whole day, not only what has not started yet.
+
+### No default date (2026-08-19)
+The sibling of "no default city", and it arrived the same way. **No chip is selected on
+first load**, because a visitor who has chosen nothing has not asked about today.
+
+A chip is a toggle: **tapping the selected chip clears it** and returns to the unfiltered
+rows. The affordance is a small `×` inside the same pill, at the label's weight so it is
+still visible outdoors and to an older reader. The pill stays one 48px target, and its
+accessible name gains `הסרת הסינון`. No hint line, no tooltip, no fourth chip.
+
+The chips **do not reorder when one is selected**. A row that rearranges itself under the
+thumb costs more than the tidier hierarchy is worth. A long chosen date drops its weekday
+and shows the day and month only, so the pill does not wrap; the full date still reads in
+the heading below.

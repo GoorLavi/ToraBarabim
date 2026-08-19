@@ -1,3 +1,4 @@
+import type { RabbiProminence } from './home';
 import type { LessonException } from './lesson-exception';
 import type { Lesson } from './lesson';
 import type { Place } from './place';
@@ -10,9 +11,11 @@ export interface AdminUser {
   name: string;
 }
 
-export type CreateRabbiRequest = Omit<Rabbi, 'id'>;
+// `prominence` is an admin-only field: it drives home-row sort order and
+// must never appear on the public `Rabbi` type or any public response.
+export type CreateRabbiRequest = Omit<Rabbi, 'id'> & { prominence?: RabbiProminence };
 export type UpdateRabbiRequest = Partial<CreateRabbiRequest>;
-export type RabbiResponse = Rabbi;
+export type RabbiResponse = Rabbi & { prominence: RabbiProminence };
 
 export interface CreatePlaceRequest extends Omit<Place, 'id' | 'city' | 'area'> {
   cityId: string; // references City.id; server resolves city name and area from it
@@ -41,7 +44,7 @@ export interface DeleteImpactPreview {
 }
 
 export interface RabbiListResponse {
-  items: Rabbi[];
+  items: RabbiResponse[];
   page: number;
   pageSize: number;
   total: number;

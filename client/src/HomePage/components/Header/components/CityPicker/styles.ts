@@ -35,6 +35,20 @@ export const CityPicker = css(
       inline-size: 16px;
       block-size: 16px;
     }
+
+    /* The path only fills half of its 24-unit viewBox, so a 28px box
+       renders the glyph itself at roughly 14px, matched to the label's
+       weight rather than reading as a faint afterthought (design review,
+       item 7). */
+    > .clearGlyph {
+      flex-shrink: 0;
+      inline-size: 28px;
+      block-size: 28px;
+    }
+
+    &.selected {
+      color: ${theme.colors.primaryStrong};
+    }
   }
 
   > .popover {

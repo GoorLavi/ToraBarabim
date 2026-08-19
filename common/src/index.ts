@@ -1,6 +1,7 @@
 export * from './admin';
 export * from './area';
 export * from './city';
+export * from './home';
 export * from './rabbi';
 export * from './place';
 export * from './lesson';

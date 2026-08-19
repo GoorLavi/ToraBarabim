@@ -1,4 +1,4 @@
-import type { Lesson, LessonException, Rabbi } from '@torabarabim/common';
+import type { Lesson, LessonException, Rabbi, RabbiProminence } from '@torabarabim/common';
 import { inArray, sql } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
 
@@ -11,18 +11,22 @@ const placeInsertSchema = createInsertSchema(places);
 const lessonInsertSchema = createInsertSchema(lessons);
 const exceptionInsertSchema = createInsertSchema(lessonExceptions);
 
-const RABBIS: Rabbi[] = [
-  { id: 'rabbi-1', name: 'הרב אברהם כהן', title: 'ראש ישיבה', bio: 'ראש ישיבת "אור התורה" ומגידי השיעור הוותיקים בעיר.' },
-  { id: 'rabbi-2', name: 'הרב משה לוי', title: 'רב שכונה' },
-  { id: 'rabbi-3', name: 'הרב יעקב מזרחי', title: 'דיין', bio: 'דיין בבית הדין הרבני ומרצה בנושאי הלכה בת ימינו.' },
-  { id: 'rabbi-4', name: 'הרב שלמה אביטן' },
-  { id: 'rabbi-5', name: 'הרב דוד עמאר', title: 'רב קהילה' },
-  { id: 'rabbi-6', name: 'הרב יצחק פרץ', title: 'ראש כולל', bio: 'ראש כולל אברכים ומחבר ספרים בענייני מוסר.' },
-  { id: 'rabbi-7', name: 'הרב אליהו וקנין' },
-  { id: 'rabbi-8', name: 'הרב רפאל בן שושן', title: 'מגיד שיעור' },
-  { id: 'rabbi-9', name: 'הרבנית שרה גולדברג', title: 'מרצה', bio: 'מרצה לפרשת שבוע ומחשבת ישראל לנשים.' },
-  { id: 'rabbi-10', name: 'הרב נתן צבי אשכנזי', title: 'רב בית כנסת' },
-  { id: 'rabbi-11', name: 'הרב שמעון אזולאי' },
+type RabbiSeed = Rabbi & { prominence: RabbiProminence };
+
+// A spread of tiers so the home rails sort into something other than
+// insertion order when tested locally.
+const RABBIS: RabbiSeed[] = [
+  { id: 'rabbi-1', name: 'הרב אברהם כהן', title: 'ראש ישיבה', bio: 'ראש ישיבת "אור התורה" ומגידי השיעור הוותיקים בעיר.', prominence: 'sought' },
+  { id: 'rabbi-2', name: 'הרב משה לוי', title: 'רב שכונה', prominence: 'local' },
+  { id: 'rabbi-3', name: 'הרב יעקב מזרחי', title: 'דיין', bio: 'דיין בבית הדין הרבני ומרצה בנושאי הלכה בת ימינו.', prominence: 'known' },
+  { id: 'rabbi-4', name: 'הרב שלמה אביטן', prominence: 'local' },
+  { id: 'rabbi-5', name: 'הרב דוד עמאר', title: 'רב קהילה', prominence: 'known' },
+  { id: 'rabbi-6', name: 'הרב יצחק פרץ', title: 'ראש כולל', bio: 'ראש כולל אברכים ומחבר ספרים בענייני מוסר.', prominence: 'sought' },
+  { id: 'rabbi-7', name: 'הרב אליהו וקנין', prominence: 'local' },
+  { id: 'rabbi-8', name: 'הרב רפאל בן שושן', title: 'מגיד שיעור', prominence: 'known' },
+  { id: 'rabbi-9', name: 'הרבנית שרה גולדברג', title: 'מרצה', bio: 'מרצה לפרשת שבוע ומחשבת ישראל לנשים.', prominence: 'sought' },
+  { id: 'rabbi-10', name: 'הרב נתן צבי אשכנזי', title: 'רב בית כנסת', prominence: 'local' },
+  { id: 'rabbi-11', name: 'הרב שמעון אזולאי', prominence: 'known' },
 ];
 
 interface PlaceSeed {
@@ -146,10 +150,13 @@ const toExceptionInsert = (exception: LessonException): typeof lessonExceptions.
 
 const SEED_LESSON_IDS = LESSONS.map((lesson) => lesson.id);
 
+export const SEED_RABBI_IDS = RABBIS.map((rabbi) => rabbi.id);
+
 export const seedLessons = async (
   tx: Tx,
   cityCodeByName: Map<string, number>,
   todayIso: string,
+  photoUrlByRabbiId: Map<string, string>,
 ): Promise<void> => {
   const placeRows = PLACES.map((place) => {
     const cityId = cityCodeByName.get(place.cityName);
@@ -161,7 +168,7 @@ export const seedLessons = async (
 
   await tx
     .insert(rabbis)
-    .values(RABBIS.map((rabbi) => rabbiInsertSchema.parse(rabbi)))
+    .values(RABBIS.map((rabbi) => rabbiInsertSchema.parse({ ...rabbi, photoUrl: photoUrlByRabbiId.get(rabbi.id) })))
     .onConflictDoUpdate({
       target: rabbis.id,
       set: {
@@ -169,6 +176,7 @@ export const seedLessons = async (
         title: sql`excluded.title`,
         photoUrl: sql`excluded.photo_url`,
         bio: sql`excluded.bio`,
+        prominence: sql`excluded.prominence`,
       },
     });
 

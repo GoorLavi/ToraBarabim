@@ -4,21 +4,25 @@ import { CityGrid } from './components/CityGrid/CityGrid';
 import { ContactCta } from './components/ContactCta/ContactCta';
 import { Footer } from './components/Footer/Footer';
 import { Header } from './components/Header/Header';
+import { HomeRails } from './components/HomeRails/HomeRails';
 import { LessonsSection } from './components/LessonsSection/LessonsSection';
 import { RabbiRow } from './components/RabbiRow/RabbiRow';
 import { LESSON_WINDOW_DAYS, LESSON_WINDOW_PAGE_SIZE } from './consts';
-import { addDays, resolveTargetDate } from './helpers';
+import { addDays, contextLine, flattenHomeRows, resolveHomeMode, resolveTargetDate } from './helpers';
 import type { HomePageProps, LessonFilters } from './models';
 import * as styles from './styles';
 import { useDateFilter } from './useDateFilter';
+import { useHomeRows } from './useHomeRows';
 import { useLessonSearch } from './useLessonSearch';
 import { useSearchQuery } from './useSearchQuery';
 import { useSelectedCity } from './useSelectedCity';
 
 export const HomePage = styled(({ className }: HomePageProps) => {
-  const { option, customDate, selectOption, selectCustomDate } = useDateFilter();
-  const { city, select: selectCity } = useSelectedCity();
+  const { option, customDate, selectOption, selectCustomDate, clearDate } = useDateFilter();
+  const { city, select: selectCity, clear: clearCity } = useSelectedCity();
   const { query, setQuery } = useSearchQuery();
+
+  const mode = resolveHomeMode(option, city, query);
 
   const targetDate = resolveTargetDate(option, customDate);
   const filters: LessonFilters = {
@@ -29,8 +33,12 @@ export const HomePage = styled(({ className }: HomePageProps) => {
     q: query || undefined,
   };
 
-  const lessonsQuery = useLessonSearch(filters);
-  const isBrowseLoading = lessonsQuery.isPending;
+  const lessonsQuery = useLessonSearch(filters, mode === 'filtered');
+  const homeRowsQuery = useHomeRows(mode === 'rail');
+
+  const browseItems = mode === 'rail' ? flattenHomeRows(homeRowsQuery.data) : lessonsQuery.data?.items;
+  const isBrowseLoading = mode === 'rail' ? homeRowsQuery.isPending : lessonsQuery.isPending;
+  const browseContextLine = contextLine(mode, query);
 
   return (
     <div className={className}>
@@ -39,18 +47,32 @@ export const HomePage = styled(({ className }: HomePageProps) => {
         customDate={customDate}
         onSelectOption={selectOption}
         onSelectCustomDate={selectCustomDate}
+        onClearDate={clearDate}
         city={city}
         onSelectCity={selectCity}
+        onClearCity={clearCity}
         searchQuery={query}
         onSearchQueryChange={setQuery}
       />
 
       <main className="content">
-        <LessonsSection query={lessonsQuery} targetDate={targetDate} city={city} searchQuery={query} />
+        <div className="browse">
+          {browseContextLine && (
+            <p className="context" dir="auto">
+              {browseContextLine}
+            </p>
+          )}
 
-        <RabbiRow items={lessonsQuery.data?.items} isLoading={isBrowseLoading} />
+          {mode === 'rail' ? (
+            <HomeRails query={homeRowsQuery} />
+          ) : (
+            <LessonsSection query={lessonsQuery} targetDate={targetDate} city={city} searchQuery={query} />
+          )}
+        </div>
 
-        <CityGrid items={lessonsQuery.data?.items} isLoading={isBrowseLoading} onSelectCity={selectCity} />
+        <RabbiRow items={browseItems} isLoading={isBrowseLoading} />
+
+        <CityGrid items={browseItems} isLoading={isBrowseLoading} onSelectCity={selectCity} />
 
         <ContactCta />
       </main>

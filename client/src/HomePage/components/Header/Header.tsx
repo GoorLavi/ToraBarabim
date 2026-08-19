@@ -14,8 +14,10 @@ export const Header = styled(
     customDate,
     onSelectOption,
     onSelectCustomDate,
+    onClearDate,
     city,
     onSelectCity,
+    onClearCity,
     searchQuery,
     onSearchQueryChange,
   }: HeaderProps) => (
@@ -26,10 +28,10 @@ export const Header = styled(
         </span>
         <DateFilterChips
           className="chips"
-          {...{ option, customDate, onSelectOption, onSelectCustomDate }}
+          {...{ option, customDate, onSelectOption, onSelectCustomDate, onClearDate }}
         />
         <SearchField className="search" value={searchQuery} onChange={onSearchQueryChange} />
-        <CityPicker className="city" {...{ city, onSelectCity }} />
+        <CityPicker className="city" {...{ city, onSelectCity, onClearCity }} />
       </div>
     </header>
   ),
