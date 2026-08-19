@@ -28,6 +28,7 @@ const toRecord = (row: RabbiRow): RabbiRecord => ({
   title: row.title ?? undefined,
   photoUrl: row.photoUrl ?? undefined,
   bio: row.bio ?? undefined,
+  prominence: row.prominence,
 });
 
 export const list = async (query: RabbiListQuery): Promise<RabbiListResult> => {
@@ -57,7 +58,7 @@ export const getById = async (id: string): Promise<RabbiRecord> => {
 export const create = async (input: CreateRabbiInput): Promise<RabbiRecord> => {
   const [row] = await db
     .insert(rabbis)
-    .values({ id: nanoid(), name: input.name, title: input.title, bio: input.bio })
+    .values({ id: nanoid(), name: input.name, title: input.title, bio: input.bio, prominence: input.prominence })
     .returning();
   if (!row) throw new Error('insert into rabbis returned no row');
   return toRecord(row);

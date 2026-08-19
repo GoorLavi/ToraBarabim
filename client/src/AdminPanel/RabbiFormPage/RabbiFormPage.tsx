@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import type { RabbiProminence } from '@torabarabim/common';
 import styled from 'styled-components';
 
 import { ADMIN_ROUTES } from '~/AdminPanel/consts';
@@ -16,7 +17,7 @@ import { useExistingRabbi } from './useExistingRabbi';
 import { usePhotoPreviewUrl } from './usePhotoPreviewUrl';
 import { useSaveRabbi } from './useSaveRabbi';
 
-const emptyForm: RabbiFormState = { name: '', photoFile: undefined, existingPhotoUrl: undefined };
+const emptyForm: RabbiFormState = { name: '', photoFile: undefined, existingPhotoUrl: undefined, prominence: 'local' };
 
 export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
   const { id } = useParams<{ id: string }>();
@@ -31,7 +32,12 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
 
   useEffect(() => {
     if (existingRabbi.data && !isLoadedFromExisting) {
-      setForm({ name: existingRabbi.data.name, photoFile: undefined, existingPhotoUrl: existingRabbi.data.photoUrl });
+      setForm({
+        name: existingRabbi.data.name,
+        photoFile: undefined,
+        existingPhotoUrl: existingRabbi.data.photoUrl,
+        prominence: existingRabbi.data.prominence,
+      });
       setIsLoadedFromExisting(true);
     }
   }, [existingRabbi.data, isLoadedFromExisting]);
@@ -110,6 +116,22 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
             <input type="text" dir="auto" value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} />
             <span className="helper">{consts.NAME_HELPER}</span>
             {nameError && <span className="error">{nameError}</span>}
+          </label>
+
+          <label className="field">
+            <span className="label">{consts.PROMINENCE_LABEL}</span>
+            <select
+              dir="auto"
+              value={form.prominence}
+              onChange={(event) => setForm((prev) => ({ ...prev, prominence: event.target.value as RabbiProminence }))}
+            >
+              {consts.PROMINENCE_OPTIONS.map((value) => (
+                <option key={value} value={value}>
+                  {consts.PROMINENCE_LABELS[value]}
+                </option>
+              ))}
+            </select>
+            <span className="helper">{consts.PROMINENCE_HELPER}</span>
           </label>
 
           <div className="field">

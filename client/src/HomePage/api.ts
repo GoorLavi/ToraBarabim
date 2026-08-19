@@ -1,4 +1,4 @@
-import type { City, LessonSearchResponse } from '@torabarabim/common';
+import type { City, HomeResponse, LessonSearchResponse } from '@torabarabim/common';
 
 import type { LessonFilters } from './models';
 
@@ -60,4 +60,26 @@ export const fetchCities = async (q: string): Promise<{ items: City[] }> => {
   }
 
   return (await response.json()) as { items: City[] };
+};
+
+// GET /v1/home, no query parameters.
+// 200 with HomeResponse: rows arrive in display order, each with 3 to 12
+// items, `title` already built server-side (render it as given, never
+// recompute or decorate it).
+// 5xx for a server or upstream failure.
+export const fetchHomeRows = async (): Promise<HomeResponse> => {
+  const url = new URL('/v1/home', window.location.origin);
+
+  let response: Response;
+  try {
+    response = await fetch(url);
+  } catch (error) {
+    throw new HomeApiError(0, `failed to reach ${url.toString()}: ${String(error)}`);
+  }
+
+  if (!response.ok) {
+    throw new HomeApiError(response.status, `GET ${url.toString()} returned ${response.status}`);
+  }
+
+  return (await response.json()) as HomeResponse;
 };

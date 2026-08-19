@@ -8,6 +8,7 @@ export const toRabbiResponse = (record: RabbiRecord): RabbiResponse => ({
   title: record.title,
   photoUrl: record.photoUrl,
   bio: record.bio,
+  prominence: record.prominence,
 });
 
 export const toRabbiListResponse = (result: RabbiListResult): RabbiListResponse => ({

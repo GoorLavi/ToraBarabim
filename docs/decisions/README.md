@@ -79,3 +79,5 @@ The real alternatives and why each lost. If there was no alternative, say so.
 | [0009](0009-scraped-lessons-stay-out.md) | Scraped lessons do not reach the site yet | accepted |
 | [0010](0010-production-shape-traded-for-cost.md) | The production shape, and what was traded for cost | accepted |
 | [0011](0011-deploys-are-automatic-migrations-are-not.md) | Deploys run themselves, migrations wait for a human | accepted |
+| [0012](0012-the-home-page-is-composed-by-the-server.md) | The home page is composed by the server | accepted |
+| [0013](0013-rabbis-carry-a-manually-set-prominence.md) | Rabbis carry a manually set prominence | accepted |

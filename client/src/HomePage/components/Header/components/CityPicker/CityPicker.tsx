@@ -8,7 +8,10 @@ import type { CityPickerProps } from './models';
 import * as styles from './styles';
 import { useCitySearchResults } from './useCitySearchResults';
 
-export const CityPicker = styled(({ className, city, onSelectCity }: CityPickerProps) => {
+// A city, once chosen, turns the pill into a toggle like the date chips:
+// tapping it clears the selection and returns to "כל הארץ" rather than
+// reopening the popover (explicit, from the human).
+export const CityPicker = styled(({ className, city, onSelectCity, onClearCity }: CityPickerProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const results = useCitySearchResults(query);
@@ -19,7 +22,15 @@ export const CityPicker = styled(({ className, city, onSelectCity }: CityPickerP
 
   return (
     <div className={classNames(className, { open: isOpen })} onBlur={close}>
-      <button type="button" className="pill" aria-haspopup="listbox" aria-expanded={isOpen} onClick={() => setIsOpen((open) => !open)}>
+      <button
+        type="button"
+        className={classNames('pill', { selected: Boolean(city) })}
+        aria-haspopup={city ? undefined : 'listbox'}
+        aria-expanded={city ? undefined : isOpen}
+        aria-pressed={city ? true : undefined}
+        aria-label={city ? consts.clearCityLabel(city.name) : undefined}
+        onClick={() => (city ? onClearCity() : setIsOpen((open) => !open))}
+      >
         <svg className="pin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path
             d="M12 21s7-6.1 7-11.5A7 7 0 0 0 5 9.5C5 14.9 12 21 12 21Z"
@@ -32,9 +43,15 @@ export const CityPicker = styled(({ className, city, onSelectCity }: CityPickerP
         <span className="label" dir="auto">
           {city?.name ?? consts.ALL_AREAS_LABEL}
         </span>
-        <svg className="chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M7 10l5 5 5-5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        {city ? (
+          <svg className="clearGlyph" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+        ) : (
+          <svg className="chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M7 10l5 5 5-5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        )}
       </button>
 
       {isOpen && (

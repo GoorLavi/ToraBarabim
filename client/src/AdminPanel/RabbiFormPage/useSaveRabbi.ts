@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import type { Rabbi } from '@torabarabim/common';
+import type { RabbiResponse } from '@torabarabim/common';
 
 import { AdminApiError, createAdminRabbi, updateAdminRabbi, uploadAdminRabbiPhoto } from '~/AdminPanel/api';
 
@@ -19,7 +19,7 @@ export interface SaveRabbiResult {
   // (client/CLAUDE.md: `POST /v1/admin/rabbis` and the photo upload are two
   // separate calls, not one atomic "create with photo" endpoint).
   pendingRabbiId: string | undefined;
-  save: (form: RabbiFormState, existingId: string | undefined) => Promise<Rabbi | undefined>;
+  save: (form: RabbiFormState, existingId: string | undefined) => Promise<RabbiResponse | undefined>;
 }
 
 export const useSaveRabbi = (): SaveRabbiResult => {
@@ -28,15 +28,17 @@ export const useSaveRabbi = (): SaveRabbiResult => {
   const [stepError, setStepError] = useState<SaveRabbiStepError | undefined>();
   const [pendingRabbiId, setPendingRabbiId] = useState<string | undefined>();
 
-  const save = async (form: RabbiFormState, existingId: string | undefined): Promise<Rabbi | undefined> => {
+  const save = async (form: RabbiFormState, existingId: string | undefined): Promise<RabbiResponse | undefined> => {
     setStepError(undefined);
     setIsSaving(true);
 
     const rabbiId = existingId ?? pendingRabbiId;
-    let rabbi: Rabbi;
+    let rabbi: RabbiResponse;
 
     try {
-      rabbi = rabbiId ? await updateAdminRabbi(rabbiId, { name: form.name.trim() }) : await createAdminRabbi({ name: form.name.trim() });
+      rabbi = rabbiId
+        ? await updateAdminRabbi(rabbiId, { name: form.name.trim(), prominence: form.prominence })
+        : await createAdminRabbi({ name: form.name.trim(), prominence: form.prominence });
       if (!rabbiId) setPendingRabbiId(rabbi.id);
     } catch (error) {
       setIsSaving(false);

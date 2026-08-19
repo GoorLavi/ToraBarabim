@@ -1,5 +1,7 @@
+import type { RabbiProminence } from '@torabarabim/common';
 import { z } from 'zod';
 
+import { RABBI_PROMINENCES } from '../../db/schema/enums';
 import { DEFAULT_ADMIN_PAGE, DEFAULT_ADMIN_PAGE_SIZE, MAX_ADMIN_PAGE_SIZE } from '../admin-shared/consts';
 
 export const rabbiIdParamSchema = z.object({
@@ -19,6 +21,7 @@ export const createRabbiSchema = z.object({
   name: z.string().trim().min(1),
   title: z.string().trim().min(1).optional(),
   bio: z.string().trim().min(1).optional(),
+  prominence: z.enum(RABBI_PROMINENCES).optional(),
 });
 export type CreateRabbiInput = z.infer<typeof createRabbiSchema>;
 
@@ -43,6 +46,7 @@ export interface RabbiRecord {
   title?: string;
   photoUrl?: string;
   bio?: string;
+  prominence: RabbiProminence;
 }
 
 export interface RabbiListResult {

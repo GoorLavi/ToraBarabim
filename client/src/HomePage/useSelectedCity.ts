@@ -6,6 +6,7 @@ import type { SelectedCity } from './models';
 export interface SelectedCityState {
   city: SelectedCity | undefined;
   select: (city: SelectedCity) => void;
+  clear: () => void;
 }
 
 // No geolocation and no assumed home city (design-system.md, "No default
@@ -25,9 +26,20 @@ export const useSelectedCity = (): SelectedCityState => {
     });
   };
 
+  // Tapping the selected city pill clears it and returns to "all areas"
+  // (explicit, from the human, the same toggle as the date chips).
+  const clear = (): void => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete(CITY_ID_PARAM);
+      next.delete(CITY_NAME_PARAM);
+      return next;
+    });
+  };
+
   if (cityId && cityName) {
-    return { city: { id: cityId, name: cityName }, select };
+    return { city: { id: cityId, name: cityName }, select, clear };
   }
 
-  return { city: undefined, select };
+  return { city: undefined, select, clear };
 };

@@ -5,7 +5,12 @@ export const NETWORK_ERROR_MESSAGE = 'לא הצלחנו להתחבר לשרת, �
 export const INVALID_REQUEST_MESSAGE = 'לא הצלחנו לבצע את החיפוש, נסו לרענן את הדף';
 export const SERVER_ERROR_MESSAGE = 'אירעה שגיאה בטעינת השיעורים, נסו שוב מאוחר יותר';
 
-export const SEE_ALL_TODAY_LABEL = 'לכל השיעורים היום';
+// No date in the label itself: the heading directly above already states
+// the day (and city), so a custom date once repeated here either produced
+// broken Hebrew (a bare date needs a "ב" preposition English word order
+// doesn't) or wrapped the row at narrow widths. Static text stays correct
+// for every day (design review round 2, B2/P1).
+export const SEE_ALL_LABEL = 'לכל השיעורים';
 
 // A terminal empty state: nothing found in the whole widened window
 // (HomePage/consts.ts, LESSON_WINDOW_DAYS). Named as a real dead end rather

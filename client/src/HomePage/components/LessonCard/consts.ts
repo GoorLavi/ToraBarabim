@@ -24,6 +24,13 @@ export const LESSON_TOPIC_LABELS: Record<LessonTopic, string> = {
   other: 'כללי',
 };
 
+// The floor from design-system.md, Type ("the card title steps down to
+// 15 / 21... in a two-column poster grid on a phone, roughly 173px wide")
+// is a property of the card's own rendered width, not of the viewport: a
+// rail card can be 200px wide on the same 375px phone. Stepped with
+// `@container` in styles.ts instead of a viewport media query.
+export const CARD_WIDE_THRESHOLD = '190px';
+
 const weekdayFormatter = new Intl.DateTimeFormat('he-IL', { weekday: 'short', timeZone: 'Asia/Jerusalem' });
 
 export const cardWeekday = (isoDate: string): string => weekdayFormatter.format(new Date(`${isoDate}T00:00:00Z`));

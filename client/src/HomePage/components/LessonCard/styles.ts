@@ -1,7 +1,10 @@
 import { css } from 'styled-components';
 
+import { CARD_WIDE_THRESHOLD } from './consts';
+
 export const LessonCard = css(
   ({ theme }) => `
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -38,6 +41,7 @@ export const LessonCard = css(
       align-items: center;
       padding-block: ${theme.spacing.xs};
       padding-inline: ${theme.spacing.sm};
+      border: 1px solid ${theme.colors.accentOnDark};
       border-radius: ${theme.radii.sm};
       background: ${theme.colors.primary};
       color: ${theme.colors.textOnPrimary};
@@ -73,7 +77,7 @@ export const LessonCard = css(
       -webkit-box-orient: vertical;
       overflow: hidden;
 
-      @media (min-width: ${theme.breakpoints.md}) {
+      @container (min-inline-size: ${CARD_WIDE_THRESHOLD}) {
         font-size: ${theme.typography.cardTitle.phone.fontSize};
         line-height: ${theme.typography.cardTitle.phone.lineHeight};
         font-weight: ${theme.typography.cardTitle.fontWeight};
@@ -85,7 +89,7 @@ export const LessonCard = css(
       line-height: ${theme.typography.secondaryCompact.phone.lineHeight};
       overflow-wrap: break-word;
 
-      @media (min-width: ${theme.breakpoints.md}) {
+      @container (min-inline-size: ${CARD_WIDE_THRESHOLD}) {
         font-size: ${theme.typography.secondary.phone.fontSize};
         line-height: ${theme.typography.secondary.phone.lineHeight};
       }
@@ -106,7 +110,7 @@ export const LessonCard = css(
       line-height: ${theme.typography.secondaryCompact.phone.lineHeight};
       overflow-wrap: break-word;
 
-      @media (min-width: ${theme.breakpoints.md}) {
+      @container (min-inline-size: ${CARD_WIDE_THRESHOLD}) {
         font-size: ${theme.typography.secondary.phone.fontSize};
         line-height: ${theme.typography.secondary.phone.lineHeight};
       }
@@ -137,7 +141,7 @@ export const LessonCard = css(
       font-size: ${theme.typography.secondaryCompact.phone.fontSize};
       line-height: ${theme.typography.secondaryCompact.phone.lineHeight};
 
-      @media (min-width: ${theme.breakpoints.md}) {
+      @container (min-inline-size: ${CARD_WIDE_THRESHOLD}) {
         font-size: ${theme.typography.secondary.phone.fontSize};
         line-height: ${theme.typography.secondary.phone.lineHeight};
       }

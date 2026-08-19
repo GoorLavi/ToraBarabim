@@ -6,6 +6,7 @@ import { registerAdminRoutes } from './api/admin';
 import { registerAdminAuthRoutes } from './api/admin/auth';
 import { registerCityRoutes } from './api/cities';
 import { registerHealthRoutes } from './api/health';
+import { registerHomeRoutes } from './api/home';
 import { registerLessonRoutes } from './api/lessons';
 import { loadConfig } from './config';
 import { registerCookies } from './plugins/cookies';
@@ -39,6 +40,7 @@ const start = async (): Promise<void> => {
   await app.register(multipart);
   await registerHealthRoutes(app);
   await registerLessonRoutes(app);
+  await registerHomeRoutes(app);
   await registerCityRoutes(app);
   await registerAdminAuthRoutes(app);
   await registerAdminRoutes(app);

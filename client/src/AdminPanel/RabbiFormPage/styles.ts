@@ -100,7 +100,8 @@ export const RabbiFormPage = css(
           line-height: ${theme.typography.secondary.phone.lineHeight};
         }
 
-        > input {
+        > input,
+        > select {
           inline-size: 100%;
           min-block-size: 48px;
           padding-inline: ${theme.spacing.md};

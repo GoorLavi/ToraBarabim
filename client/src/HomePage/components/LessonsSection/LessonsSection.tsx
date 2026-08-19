@@ -10,14 +10,6 @@ import type { LessonsSectionProps } from './models';
 import * as styles from './styles';
 
 export const LessonsSection = styled(({ className, query, targetDate, city, searchQuery }: LessonsSectionProps) => {
-  if (query.isPending) {
-    return (
-      <div className={classNames(className, 'state', 'loading')} aria-live="polite">
-        <p className="message">{consts.LOADING_MESSAGE}</p>
-      </div>
-    );
-  }
-
   if (query.isError) {
     return (
       <div className={classNames(className, 'state', 'error')} role="alert">
@@ -25,6 +17,14 @@ export const LessonsSection = styled(({ className, query, targetDate, city, sear
         <button type="button" className="retry" onClick={() => query.refetch()}>
           {consts.RETRY_LABEL}
         </button>
+      </div>
+    );
+  }
+
+  if (query.isPending) {
+    return (
+      <div className={classNames(className, 'state', 'loading')} aria-live="polite">
+        <p className="message">{consts.LOADING_MESSAGE}</p>
       </div>
     );
   }
