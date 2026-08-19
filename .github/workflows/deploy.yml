@@ -33,10 +33,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
       contents: read
-    outputs:
-      api-url: ${{ steps.server-outputs.outputs.ApiUrl }}
     steps:
       - uses: actions/checkout@v4
 
@@ -54,28 +51,13 @@ jobs:
 
       - run: npm run build --workspace server
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Read TorabarabimServer stack outputs
-        id: server-outputs
-        run: |
-          OUTPUTS=$(aws cloudformation describe-stacks --stack-name "$SERVER_STACK" --query 'Stacks[0].Outputs' --output json)
-          for key in ApiUrl; do
-            value=$(echo "$OUTPUTS" | jq -r --arg k "$key" '.[] | select(.OutputKey==$k) | .OutputValue')
-            echo "$key=$value" >> "$GITHUB_OUTPUT"
-          done
-
-      # The real API address, not a placeholder: this is the one client
-      # build this workflow ships. VITE_API_URL is baked in at this step,
-      # never read at runtime by the deployed site (see infra/README.md).
-      - name: Build client
-        run: npm run build --workspace client
-        env:
-          VITE_API_URL: ${{ steps.server-outputs.outputs.ApiUrl }}
+      # No API address is supplied, and none may be: the built site calls
+      # `/v1/...` against whatever origin served it, which CloudFront
+      # forwards to the API. Handing this build a fixed address is what
+      # broke admin login, since a site served from one host and calling
+      # another cannot hold a `SameSite=Lax` session cookie, and it would
+      # break again for whichever hostname the address is not.
+      - run: npm run build --workspace client
 
       - uses: actions/upload-artifact@v4
         with:

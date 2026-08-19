@@ -1,7 +1,5 @@
 import type { LessonFilters } from './models';
 
-export { API_BASE_URL } from '~/config';
-
 export const DATE_OPTION_PARAM = 'when';
 export const CUSTOM_DATE_PARAM = 'date';
 export const CITY_ID_PARAM = 'cityId';

@@ -34,14 +34,7 @@ jobs:
 
       - run: npm run build --workspace server
 
-      # A placeholder, never the real API address: this build's only output
-      # here is proof the build succeeds, and the artifact is discarded at
-      # the end of the job. deploy.yml rebuilds the client with the real
-      # `VITE_API_URL`, read from the stack outputs, before anything is
-      # uploaded.
       - run: npm run build --workspace client
-        env:
-          VITE_API_URL: https://ci-placeholder.invalid
 
   # Named so it reads as a statement on its own in the PR's checks list,
   # without anyone having to open it to learn what it found. A comment on

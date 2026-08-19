@@ -16,7 +16,6 @@ import type {
   UpdateRabbiRequest,
 } from '@torabarabim/common';
 
-import { API_BASE_URL } from './consts';
 import type { AdminLessonFilters, AdminPlaceFilters, AdminRabbiFilters } from './models';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
@@ -66,7 +65,7 @@ const request = async <T>(url: string, init?: RequestInit): Promise<T> => {
   return (await response.json()) as T;
 };
 
-const url = (path: string): URL => new URL(path, API_BASE_URL);
+const url = (path: string): URL => new URL(path, window.location.origin);
 
 // POST /v1/admin/login
 // 200 with AdminUser on success, sets the session cookie.

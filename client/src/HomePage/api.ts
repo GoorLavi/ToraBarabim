@@ -1,6 +1,5 @@
 import type { City, LessonSearchResponse } from '@torabarabim/common';
 
-import { API_BASE_URL } from './consts';
 import type { LessonFilters } from './models';
 
 // Carries the HTTP status so a caller can map it to Hebrew copy without
@@ -18,7 +17,7 @@ export class HomeApiError extends Error {
 // 400 for an invalid query (bad date range, page size over the max).
 // 5xx for a server or upstream failure.
 export const fetchLessons = async (filters: LessonFilters): Promise<LessonSearchResponse> => {
-  const url = new URL('/v1/lessons', API_BASE_URL);
+  const url = new URL('/v1/lessons', window.location.origin);
   url.searchParams.set('from', filters.from);
   url.searchParams.set('to', filters.to);
   if (filters.city) url.searchParams.set('city', filters.city);
@@ -46,7 +45,7 @@ export const fetchLessons = async (filters: LessonFilters): Promise<LessonSearch
 // 400 for an invalid query.
 // 5xx for a server or upstream failure.
 export const fetchCities = async (q: string): Promise<{ items: City[] }> => {
-  const url = new URL('/v1/cities', API_BASE_URL);
+  const url = new URL('/v1/cities', window.location.origin);
   url.searchParams.set('q', q);
 
   let response: Response;

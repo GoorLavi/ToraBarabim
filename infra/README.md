@@ -385,16 +385,19 @@ here, by hand, only for the one time before that pipeline's one-time setup is do
 it ever needs to be reproduced manually:
 
 ```bash
-VITE_API_URL=<ApiUrl output on TorabarabimServer> npm run build -w client
+npm run build -w client
 aws s3 sync client/dist s3://<ClientBucketName output> --delete --profile torabarabim
 aws cloudfront create-invalidation --distribution-id <DistributionId output> --paths "/*" --profile torabarabim
 ```
 
-**`VITE_API_URL` is baked into the built files at this build step, not read at
-runtime.** The site must be rebuilt and re-uploaded every time that URL changes. Vite
-now fails this build outright if `VITE_API_URL` is missing, on purpose: without that
-check the build succeeds silently and ships a site whose every API call targets the
-visitor's own machine (`http://localhost:3000`) instead of the real API.
+**No API address is supplied to this build, and none may be.** The client calls
+`/v1/...` against whatever origin served it, which the distribution's `/v1/*` behavior
+forwards to the API. This is what keeps the admin session cookie same-site, and it is
+what makes the build correct on the apex, on `www`, and on the `*.cloudfront.net`
+address alike, with no value to keep in sync. An earlier version of this step baked the
+`ApiUrl` output into the bundle; that shipped a site the admin panel could not log in
+to, because a `SameSite=Lax` cookie set by a cross-site response is discarded by the
+browser.
 
 The invalidation matters: CloudFront's default cache policy on the client behavior would
 otherwise keep serving the previous build's `index.html` for a while after a new one is
@@ -423,8 +426,9 @@ human needs to know to set it up once, approve a migration, and recover from a f
   deployed** migration task definition, and run it exactly the way step 3 above does,
   after a human approves it (see "Approving a migration" below). Runs before the server
   update, so the new code is never running against a database it does not expect yet.
-- Build the client with `VITE_API_URL` set to the live `ApiUrl` stack output, sync it to
-  the client bucket, and invalidate the CloudFront cache.
+- Build the client, sync it to the client bucket, and invalidate the CloudFront cache.
+  The build reads no stack output and needs no AWS credentials: the site calls the API
+  on its own origin, so there is no address to look up.
 
 **Stays manual, on purpose, per the brief this pipeline implements:** every `cdk deploy`
 of `TorabarabimNetwork`, `TorabarabimDatabase`, `TorabarabimServer`, `TorabarabimSite`, or

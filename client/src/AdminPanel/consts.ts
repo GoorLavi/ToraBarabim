@@ -1,5 +1,3 @@
-export { API_BASE_URL } from '~/config';
-
 import type { AdminLessonFilters, AdminPlaceFilters, AdminRabbiFilters } from './models';
 
 // Mirrors `server/src/service/admin-shared/consts.ts`'s `MAX_ADMIN_PAGE_SIZE`.
