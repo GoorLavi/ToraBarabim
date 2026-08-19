@@ -10,10 +10,10 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 
 interface SiteStackProps extends StackProps {
-  // Optional: the domain registration is stuck on an unresolved AWS support
-  // case. Without a domain this stack skips the certificate, the hosted
-  // zone lookup, and the Route 53 records entirely, and CloudFront serves
-  // the site on its own generated *.cloudfront.net address instead.
+  // Optional. torahbarabim.com is live, but the site shipped without it
+  // first and must stay able to: without a domain this stack skips the
+  // certificate, the hosted zone lookup, and the Route 53 records entirely,
+  // and CloudFront serves on its own generated *.cloudfront.net address.
   domain: string | undefined;
   serverHttpApi: apigwv2.HttpApi;
 }

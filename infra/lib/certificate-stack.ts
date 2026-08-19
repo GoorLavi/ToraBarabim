@@ -19,15 +19,15 @@ export class CertificateStack extends Stack {
 
     const { domain } = props;
 
-    // torahbarabim.com is registered inside Route 53 directly, which
-    // provisions its own hosted zone automatically as part of registration.
-    // That zone is imported by id here, not created: creating a second zone
-    // for the same domain name would produce different name servers than
-    // the ones the domain registration already points at, and a domain
-    // silently served by the wrong zone is a failure that takes hours to
-    // notice. The id is supplied as a parameter rather than resolved with
-    // `fromLookup`, which would call the real AWS account at synth time and
-    // break `cdk synth` before any account exists.
+    // torahbarabim.com is registered at Porkbun, not at AWS, so no hosted
+    // zone came with it: the zone was created by hand and its four name
+    // servers pasted at the registrar once. That zone is imported by id
+    // here, never created, because a second zone for the same name would
+    // publish different name servers than the registrar points at, and a
+    // domain served by the wrong zone fails in a way that takes hours to
+    // notice. The id is a parameter rather than a `fromLookup`, which would
+    // call the real account at synth time and break `cdk synth` before any
+    // account exists.
     const hostedZoneId = new CfnParameter(this, 'HostedZoneId', {
       type: 'String',
       description: 'Hosted zone id Route 53 created automatically when the domain was registered',

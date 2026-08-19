@@ -77,20 +77,40 @@ Five or six stacks total, depending on the mode below.
 
 ## Two modes: with or without a domain
 
-The intended domain is `torahbarabim.com`, but its registration failed inside AWS and is
-sitting on a support case with no known resolution date. Rather than block going live on
-that, the domain is optional CDK context (`-c domain=torahbarabim.com`), and the app has
-two coherent modes instead of one working mode plus a stuck one:
+The site runs on `torahbarabim.com`. Registering it inside AWS failed and sat on a
+support case with no resolution date, so it was bought at **Porkbun** instead and the
+hosted zone was created here by hand. Registrar and DNS are separate jobs: AWS serves
+the records regardless of who sold the name.
 
-- **No domain (today's mode).** Omit `-c domain=...` entirely. `TorabarabimCertificate`
-  is never instantiated, `TorabarabimSite` declares no `CertificateArn` or `HostedZoneId`
+The domain stays optional CDK context (`-c domain=torahbarabim.com`) because the site
+shipped without it first, and because that is the path any future domain change repeats:
+
+- **No domain.** Omit `-c domain=...` entirely. `TorabarabimCertificate` is never
+  instantiated, `TorabarabimSite` declares no `CertificateArn` or `HostedZoneId`
   parameter, requests no hosted zone, and writes no Route 53 record. CloudFront issues
-  its own `*.cloudfront.net` name and serves on its default certificate. The site is
-  fully live and usable, just at an ugly address. This is the mode to use **right now**.
-- **With a domain.** Supply `-c domain=torahbarabim.com` (or the equivalent in a
-  gitignored `cdk.context.json`). Exactly today's original behaviour: certificate plus
-  alias records for the apex and `www`. Use this once the AWS support case resolves and
-  the domain registration exists.
+  its own `*.cloudfront.net` name and serves on its default certificate. Fully live and
+  usable, just at an ugly address.
+- **With a domain (today's mode).** Supply `-c domain=torahbarabim.com` (or the
+  equivalent in a gitignored `cdk.context.json`): certificate plus alias records for the
+  apex and `www`.
+
+### The one thing that is not in code
+
+The hosted zone was created with `aws route53 create-hosted-zone`, not by CDK, and its
+four name servers were pasted at Porkbun by hand. This is deliberate: a zone described in
+CDK would be destroyed and recreated with **different** name servers by any change that
+replaces it, silently breaking the domain until someone pasted the new ones at the
+registrar. The zone is therefore imported by id everywhere it is used.
+
+Read the current zone id and its name servers with:
+
+```bash
+aws route53 list-hosted-zones-by-name --dns-name torahbarabim.com --profile torabarabim
+```
+
+Both certificates renew themselves against this zone with no further action. That
+automatic renewal is the reason the domain is served from Route 53 rather than from the
+registrar's own DNS.
 
 There is no third, half-configured mode: a domain is either fully wired (certificate,
 both alias records) or entirely absent from the stack. `bin/infra.ts` accepts a missing

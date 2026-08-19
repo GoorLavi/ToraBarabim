@@ -43,10 +43,9 @@ const CERTIFICATE_REGION = 'us-east-1';
 const app = new App();
 
 // Never hardcode a domain: it comes from CDK context, supplied with
-// `-c domain=...` or in a (gitignored) cdk.context.json. The domain is
-// optional: the human's registration failed inside AWS and is stuck on an
-// unresolved support case, so the site must be able to go live at its own
-// generated *.cloudfront.net address first and gain the domain later.
+// `-c domain=...` or in a (gitignored) cdk.context.json. It stays optional
+// because the site went live without one and had the domain attached
+// afterwards, which is the path any future domain change repeats.
 const domainContext: unknown = app.node.tryGetContext('domain');
 if (domainContext !== undefined && (typeof domainContext !== 'string' || domainContext.length === 0)) {
   throw new Error("CDK context value 'domain', if supplied, must be a non-empty string.");
