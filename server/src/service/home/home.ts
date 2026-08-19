@@ -169,7 +169,9 @@ const chooseArea = (occurrences: ResolvedHomeOccurrence[]): Area | undefined => 
 // in this module reads the clock directly.
 export const getHome = async (now: Date): Promise<HomeResult> => {
   const from = todayInIsrael(now);
-  const to = addDays(from, HOME_WINDOW_DAYS);
+  // `expandLesson` treats `to` as inclusive, so the last day of the window
+  // is `HOME_WINDOW_DAYS - 1` days after today for a window that counts today.
+  const to = addDays(from, HOME_WINDOW_DAYS - 1);
 
   const [rabbiRows, placeRows, lessonRows] = await Promise.all([
     db.select().from(rabbis),

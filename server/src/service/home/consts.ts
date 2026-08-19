@@ -1,6 +1,6 @@
 import type { Area, RabbiProminence } from '@torabarabim/common';
 
-// Today through today + HOME_WINDOW_DAYS, inclusive.
+// The length of the home window in days, counting today as day one.
 export const HOME_WINDOW_DAYS = 14;
 
 export const MAX_ITEMS_PER_ROW = 12;

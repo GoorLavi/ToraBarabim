@@ -74,9 +74,7 @@ export const LessonRail = css(
       }
     }
 
-    > .scroller {
-      display: flex;
-      gap: ${theme.spacing.md};
+    > .scrollerGroup {
       overflow-x: auto;
       overscroll-behavior-inline: contain;
       scroll-snap-type: inline proximity;
@@ -85,35 +83,8 @@ export const LessonRail = css(
       scrollbar-width: none;
 
       @media (min-width: ${theme.breakpoints.md}) {
-        gap: ${theme.spacing.lg};
         padding-inline: ${theme.spacing.xl};
         scroll-padding-inline-start: ${theme.spacing.xl};
-      }
-
-      /* Below \`lg\` the scroller reaches the true viewport edge, so the cut
-         card already reads as "more off-screen". Above it, \`.scrollerWrap\`
-         stops at the 1120px content column and a card can be sliced with
-         page background on both sides, which reads as a rendering fault
-         rather than an intentional edge (design review, item 4). The fade
-         is a mirror-symmetric transparent/opaque/opaque/transparent stop
-         sequence, so the physical "to right" keyword below renders
-         identically regardless of direction; it does not encode left or
-         right, only where along the row the fade sits. */
-      @media (min-width: ${theme.breakpoints.lg}) {
-        -webkit-mask-image: linear-gradient(
-          to right,
-          transparent,
-          black ${theme.spacing.xxl},
-          black calc(100% - ${theme.spacing.xxl}),
-          transparent
-        );
-        mask-image: linear-gradient(
-          to right,
-          transparent,
-          black ${theme.spacing.xxl},
-          black calc(100% - ${theme.spacing.xxl}),
-          transparent
-        );
       }
 
       &::-webkit-scrollbar {
@@ -134,16 +105,25 @@ export const LessonRail = css(
         }
       }
 
-      > li {
-        flex: 0 0 ${CARD_WIDTH_PHONE};
-        scroll-snap-align: start;
+      > .scroller {
+        display: flex;
+        gap: ${theme.spacing.md};
 
         @media (min-width: ${theme.breakpoints.md}) {
-          flex-basis: ${CARD_WIDTH_MD};
+          gap: ${theme.spacing.lg};
         }
 
-        @media (min-width: ${theme.breakpoints.lg}) {
-          flex-basis: ${CARD_WIDTH_LG};
+        > li {
+          flex: 0 0 ${CARD_WIDTH_PHONE};
+          scroll-snap-align: start;
+
+          @media (min-width: ${theme.breakpoints.md}) {
+            flex-basis: ${CARD_WIDTH_MD};
+          }
+
+          @media (min-width: ${theme.breakpoints.lg}) {
+            flex-basis: ${CARD_WIDTH_LG};
+          }
         }
       }
     }

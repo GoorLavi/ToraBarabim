@@ -12,10 +12,11 @@ import { useScrollEdges } from './useScrollEdges';
 // Nothing inside `LessonCard` is focusable yet (no lesson page exists to
 // link a card to), so a horizontal scroller would otherwise be unreachable
 // by keyboard. This is an approved workaround, ratified by the human:
-// `tabindex=0` and `role=group` on the scroller stand in until the card is
-// a real link, which is what would make this unnecessary.
+// `tabindex=0` and `role=group` sit on a wrapping div, not on the `<ul>`
+// itself, so the list keeps its real list semantics. This stands in until
+// the card is a real link, which is what would make it unnecessary.
 export const LessonRail = styled(({ className, title, items }: LessonRailProps) => {
-  const scrollerRef = useRef<HTMLUListElement>(null);
+  const scrollerRef = useRef<HTMLDivElement>(null);
   const { atStart, atEnd } = useScrollEdges(scrollerRef);
 
   const scroll = (direction: 'prev' | 'next'): void => {
@@ -35,13 +36,15 @@ export const LessonRail = styled(({ className, title, items }: LessonRailProps) 
           </svg>
         </button>
 
-        <ul className="scroller" ref={scrollerRef} tabIndex={0} role="group" aria-label={title}>
-          {items.map((item) => (
-            <li key={`${item.lessonId}-${item.date}`}>
-              <LessonCard lesson={item} />
-            </li>
-          ))}
-        </ul>
+        <div className="scrollerGroup" ref={scrollerRef} tabIndex={0} role="group" aria-label={title}>
+          <ul className="scroller">
+            {items.map((item) => (
+              <li key={`${item.lessonId}-${item.date}`}>
+                <LessonCard lesson={item} />
+              </li>
+            ))}
+          </ul>
+        </div>
 
         <button type="button" className="arrow next" disabled={atEnd} onClick={() => scroll('next')} aria-label={consts.NEXT_LABEL}>
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
