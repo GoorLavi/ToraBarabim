@@ -157,7 +157,13 @@ export class SiteStack extends Stack {
           // specific to the caller, and a cached response here would be
           // served back to the next visitor regardless of who they are.
           cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
+          // Everything except `Host`, which must stay CloudFront's own. API
+          // Gateway matches the incoming `Host` against its execute-api
+          // domain and answers anything else with a bare 403, so forwarding
+          // the viewer's `Host` (what ALL_VIEWER does) breaks every request
+          // through this behavior while the API answers fine when called
+          // directly.
+          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
         },
       },
     });
