@@ -237,6 +237,10 @@ Revisit this once there is enough behavior worth protecting.
 - Only the orchestrator (`/tora`) may commit, and only on an explicit per-time
   go-ahead. Specialist agents never stage or commit.
 - Run `git status` and review what is included before staging.
+- **Every change reaches `main` through a pull request.** Never commit to `main`
+  directly and never merge without being asked. Merging is a deploy
+  ([0011](docs/decisions/0011-deploys-are-automatic-migrations-are-not.md)), so the
+  merge is always the human's, and the branch is where the work waits until then.
 
 ## Data and Migrations
 
