@@ -13,8 +13,8 @@ its weight until one variant survived legibly at every size the product needs, f
 16px favicon up to a marketing banner. The human picked that variant.
 
 Separately, the site ships three interchangeable color themes
-([0012-adjacent design-system rule](../../.claude/design-system.md), "Themes and the
-token contract"), where every token resolves to a different value per theme and no
+([design-system.md, "Themes and the token contract"](../../.claude/design-system.md)),
+where every token resolves to a different value per theme and no
 component may assume one theme's color. The logo mark is built from two of those
 tokens, `color.primary` and `color.accent`, which raised the question of whether the
 logo should recolor when the theme changes.

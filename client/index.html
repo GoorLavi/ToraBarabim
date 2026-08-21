@@ -3,8 +3,38 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>תורה ברבים</title>
+    <title>תורה ברבים | שיעורי תורה לפי רב, מקום ותאריך</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta
+      name="description"
+      content="כל שיעורי התורה במקום אחד. חיפוש לפי רב, לפי עיר ולפי תאריך, ומה נמסר הערב קרוב אליכם."
+    />
+    <!--
+      index.html is served for every path (see CloudFront rewrite in the
+      infra config), so this canonical always points at the home page. That
+      is correct only while `/` is the single public URL, and must become
+      per-page once server-rendered city and rabbi pages arrive.
+    -->
+    <link rel="canonical" href="%SITE_ORIGIN%/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="תורה ברבים" />
+    <meta property="og:title" content="תורה ברבים | שיעורי תורה לפי רב, מקום ותאריך" />
+    <meta
+      property="og:description"
+      content="כל שיעורי התורה במקום אחד. חיפוש לפי רב, לפי עיר ולפי תאריך, ומה נמסר הערב קרוב אליכם."
+    />
+    <meta property="og:url" content="%SITE_ORIGIN%/" />
+    <meta property="og:locale" content="he_IL" />
+    <meta name="twitter:card" content="summary" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "תורה ברבים",
+        "url": "%SITE_ORIGIN%/",
+        "inLanguage": "he"
+      }
+    </script>
     <!--
       Assistant, weights 400/600/700 only (design-system.md, Type): the family's
       thin weights fail this audience, so the `wght` range below excludes them.
