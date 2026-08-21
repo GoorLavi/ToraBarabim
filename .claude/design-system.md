@@ -117,6 +117,30 @@ animation.
 Carousels and any other moving element are driven by the person, never on a timer.
 Arrows and dots are fine. A slide that advances by itself is not.
 
+### The logo
+`תורה ברבים` paired with an abstract Beit HaMikdash mark: a flat beam, two solid
+columns, an arched entrance, and a base step, fully symmetrical so it needs no mirroring
+for RTL. See [0014](../docs/decisions/0014-the-logo-is-a-fixed-mark-not-a-theme-token.md)
+for why this shape and not the alternatives explored alongside it.
+
+**The mark is always rendered in fixed brand colors, never the active theme's
+tokens.** Structural shapes `#6B2436`, the arched opening `#B8862B`; on a `primary`
+field, `#FFFFFF` and `#E0B45E`. This holds in all three themes. It is the one
+deliberate exception to "tokens are named for their role, never for their color":
+comment the exception at the implementation site so it is not read as a bug and pointed
+back at the active theme.
+
+Geometry on a 100x100 grid: top beam `9,8,82,7`; main beam `3,16,94,11`; columns
+`14,30,19,50` and `67,30,19,50`; arched opening `40,38,20,42` with the top corners
+radius 10; base `2,85,96,10`. Full spec, sizing, and safe-area guidance live in the
+Figma file referenced by 0014.
+
+The mark needs **two cuts, not one asset scaled down**: a hand-tuned 16px favicon cut
+(single beam, grid-snapped) for favicon and app-icon sizes, and the general shape above
+for the header size and up. At 16px the mark occupies 11px inside the icon tile, not a
+smaller fraction. The mark never appears without the wordmark below header size: alone,
+it reads as an institution's crest rather than a listings site.
+
 ### Audience wording
 A lesson's audience is one of exactly three values, written exactly this way:
 
@@ -360,8 +384,6 @@ of the same lessons.
   edits it, and how a new city gets added, is not decided.
 - **Iconography.** Icons are drawn ad hoc per screen today. No set, no stroke weight, and
   no source has been chosen.
-- **The wordmark.** `תורה ברבים` is set type with no mark. Whether it stays that way is
-  undecided.
 - **An audience filter on the home page.** Deliberately deferred: the tag on the card
   does the work for now. If most lessons in a given area turn out to be for one audience,
   this decision is wrong and needs revisiting.
