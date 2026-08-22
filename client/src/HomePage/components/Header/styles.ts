@@ -13,7 +13,7 @@ export const Header = css(
     padding-inline: ${theme.spacing.lg};
     display: grid;
     grid-template-areas:
-      'wordmark city'
+      'logo city'
       'chips chips'
       'search search';
     grid-template-columns: auto auto;
@@ -22,12 +22,18 @@ export const Header = css(
 
     @media (min-width: ${theme.breakpoints.md}) {
       padding-inline: ${theme.spacing.xl};
-      grid-template-areas: 'wordmark chips search city';
+      grid-template-areas: 'logo chips search city';
       grid-template-columns: auto auto 1fr auto;
     }
 
-    > .wordmark {
-      grid-area: wordmark;
+    > .logo {
+      grid-area: logo;
+      display: flex;
+      align-items: center;
+      gap: ${theme.spacing.sm};
+    }
+
+    > .logo > .wordmark {
       color: ${theme.colors.textOnPrimary};
       font-weight: ${theme.typography.fontWeight.bold};
       font-size: ${theme.typography.sectionHeading.phone.fontSize};
