@@ -3,15 +3,15 @@ import { and, eq } from 'drizzle-orm';
 import postgres from 'postgres';
 
 import { db } from '../../db/client';
-import { lessonExceptions, lessons, places, rabbis } from '../../db/schema';
+import { cities, lessonExceptions, lessons, rabbis } from '../../db/schema';
 import { weekdayOf } from '../lesson/israel-time';
 import {
   DateNotInRecurrenceError,
   DuplicateExceptionError,
   ExceptionNotFoundError,
   LessonNotFoundError,
-  ReferencedPlaceNotFoundError,
   ReferencedRabbiNotFoundError,
+  UnknownCityError,
 } from './errors';
 import type { LessonExceptionInput, LessonExceptionRecord } from './models';
 
@@ -25,9 +25,31 @@ const isUniqueViolation = (error: unknown): boolean => {
   return cause instanceof postgres.PostgresError && cause.code === UNIQUE_VIOLATION;
 };
 
-type ExceptionRow = typeof lessonExceptions.$inferSelect;
+// A left join, unlike the lesson's own city: a 'modified' exception's place
+// override is optional, so its `cityCode` (and therefore `cityName`) is
+// null whenever there is no override, not just when the row is 'cancelled'.
+const exceptionSelection = {
+  id: lessonExceptions.id,
+  lessonId: lessonExceptions.lessonId,
+  date: lessonExceptions.date,
+  kind: lessonExceptions.kind,
+  reason: lessonExceptions.reason,
+  startTime: lessonExceptions.startTime,
+  placeName: lessonExceptions.placeName,
+  placeStreet: lessonExceptions.placeStreet,
+  placeFloor: lessonExceptions.placeFloor,
+  cityCode: lessonExceptions.cityCode,
+  cityName: cities.nameHe,
+  substituteRabbiId: lessonExceptions.substituteRabbiId,
+  note: lessonExceptions.note,
+};
 
-const toRecord = (row: ExceptionRow): LessonExceptionRecord =>
+const baseExceptionQuery = () =>
+  db.select(exceptionSelection).from(lessonExceptions).leftJoin(cities, eq(lessonExceptions.cityCode, cities.code));
+
+type JoinedExceptionRow = Awaited<ReturnType<typeof baseExceptionQuery>>[number];
+
+const toRecord = (row: JoinedExceptionRow): LessonExceptionRecord =>
   row.kind === 'cancelled'
     ? { id: row.id, lessonId: row.lessonId, date: row.date, kind: 'cancelled', reason: row.reason ?? undefined }
     : {
@@ -36,10 +58,20 @@ const toRecord = (row: ExceptionRow): LessonExceptionRecord =>
         date: row.date,
         kind: 'modified',
         startTime: row.startTime ?? undefined,
-        placeId: row.placeId ?? undefined,
+        place:
+          row.placeName !== null && row.placeStreet !== null && row.cityCode !== null && row.cityName !== null
+            ? { name: row.placeName, street: row.placeStreet, floor: row.placeFloor ?? undefined, cityCode: row.cityCode, cityName: row.cityName }
+            : undefined,
         substituteRabbiId: row.substituteRabbiId ?? undefined,
         note: row.note ?? undefined,
       };
+
+const getResolvedById = async (id: number): Promise<LessonExceptionRecord> => {
+  const rows = await baseExceptionQuery().where(eq(lessonExceptions.id, id)).limit(1);
+  const row = rows[0];
+  if (!row) throw new Error(`expected lesson exception '${id}' to exist right after being written`);
+  return toRecord(row);
+};
 
 const getLessonOrThrow = async (lessonId: string) => {
   const rows = await db.select().from(lessons).where(eq(lessons.id, lessonId)).limit(1);
@@ -62,32 +94,42 @@ const assertDateInRecurrence = (lesson: Awaited<ReturnType<typeof getLessonOrThr
 const verifyModifiedReferences = async (input: LessonExceptionInput): Promise<void> => {
   if (input.kind !== 'modified') return;
 
-  const [rabbiRows, placeRows] = await Promise.all([
+  const [rabbiRows, cityRows] = await Promise.all([
     input.substituteRabbiId
       ? db.select({ id: rabbis.id }).from(rabbis).where(eq(rabbis.id, input.substituteRabbiId)).limit(1)
       : Promise.resolve(undefined),
-    input.placeId ? db.select({ id: places.id }).from(places).where(eq(places.id, input.placeId)).limit(1) : Promise.resolve(undefined),
+    input.place
+      ? db.select({ code: cities.code }).from(cities).where(eq(cities.code, input.place.cityCode)).limit(1)
+      : Promise.resolve(undefined),
   ]);
 
   if (input.substituteRabbiId && !rabbiRows?.[0]) throw new ReferencedRabbiNotFoundError(input.substituteRabbiId);
-  if (input.placeId && !placeRows?.[0]) throw new ReferencedPlaceNotFoundError(input.placeId);
+  if (input.place && !cityRows?.[0]) throw new UnknownCityError(input.place.cityCode);
 };
 
 export const listForLesson = async (lessonId: string): Promise<LessonExceptionRecord[]> => {
   await getLessonOrThrow(lessonId);
-  const rows = await db.select().from(lessonExceptions).where(eq(lessonExceptions.lessonId, lessonId));
+  const rows = await baseExceptionQuery().where(eq(lessonExceptions.lessonId, lessonId));
   return rows.map(toRecord);
 };
 
+// Every optional field is explicitly `null` when absent, never left as
+// `undefined`: this is a full-replacement write (the caller always sends
+// the whole exception, not a merge), and Drizzle's `.set()` skips a column
+// entirely when its value is `undefined`, which on an update would
+// silently keep whatever was there before instead of clearing it.
 const insertValues = (lessonId: string, input: LessonExceptionInput) => ({
   lessonId,
   date: input.date,
   kind: input.kind,
-  reason: input.kind === 'cancelled' ? input.reason : null,
-  startTime: input.kind === 'modified' ? input.startTime : null,
-  placeId: input.kind === 'modified' ? input.placeId : null,
-  substituteRabbiId: input.kind === 'modified' ? input.substituteRabbiId : null,
-  note: input.kind === 'modified' ? input.note : null,
+  reason: input.kind === 'cancelled' ? (input.reason ?? null) : null,
+  startTime: input.kind === 'modified' ? (input.startTime ?? null) : null,
+  placeName: input.kind === 'modified' ? (input.place?.name ?? null) : null,
+  placeStreet: input.kind === 'modified' ? (input.place?.street ?? null) : null,
+  placeFloor: input.kind === 'modified' ? (input.place?.floor ?? null) : null,
+  cityCode: input.kind === 'modified' ? (input.place?.cityCode ?? null) : null,
+  substituteRabbiId: input.kind === 'modified' ? (input.substituteRabbiId ?? null) : null,
+  note: input.kind === 'modified' ? (input.note ?? null) : null,
 });
 
 export const create = async (lessonId: string, input: LessonExceptionInput): Promise<LessonExceptionRecord> => {
@@ -96,9 +138,9 @@ export const create = async (lessonId: string, input: LessonExceptionInput): Pro
   await verifyModifiedReferences(input);
 
   try {
-    const [row] = await db.insert(lessonExceptions).values(insertValues(lessonId, input)).returning();
+    const [row] = await db.insert(lessonExceptions).values(insertValues(lessonId, input)).returning({ id: lessonExceptions.id });
     if (!row) throw new Error('insert into lesson_exceptions returned no row');
-    return toRecord(row);
+    return getResolvedById(row.id);
   } catch (error) {
     if (isUniqueViolation(error)) {
       throw new DuplicateExceptionError(lessonId, input.date);
@@ -117,9 +159,9 @@ export const update = async (lessonId: string, exceptionId: number, input: Lesso
       .update(lessonExceptions)
       .set({ ...insertValues(lessonId, input), updatedAt: new Date() })
       .where(and(eq(lessonExceptions.id, exceptionId), eq(lessonExceptions.lessonId, lessonId)))
-      .returning();
+      .returning({ id: lessonExceptions.id });
     if (!row) throw new ExceptionNotFoundError(exceptionId, lessonId);
-    return toRecord(row);
+    return getResolvedById(row.id);
   } catch (error) {
     if (isUniqueViolation(error)) {
       throw new DuplicateExceptionError(lessonId, input.date);

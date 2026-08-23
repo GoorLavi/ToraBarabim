@@ -1,8 +1,8 @@
-import type { Lesson, LessonException, Place, Rabbi, Weekday } from '@torabarabim/common';
-import { and, eq, gte, inArray, lte, or } from 'drizzle-orm';
+import type { Area, Lesson, LessonException, LessonPlace, Place, Rabbi, Weekday } from '@torabarabim/common';
+import { and, eq, gte, inArray, lte } from 'drizzle-orm';
 
 import { db } from '../../db/client';
-import { cities, lessonExceptions, lessons, places, rabbis } from '../../db/schema';
+import { cities, lessonExceptions, lessons, rabbis } from '../../db/schema';
 import { DEFAULT_RANGE_DAYS, MAX_RANGE_DAYS } from './consts';
 import { InvalidDateRangeError } from './errors';
 import { addDays, compareIsoDates, daysBetween, todayInIsrael } from './israel-time';
@@ -50,13 +50,18 @@ const resolveRange = (query: LessonSearchQuery, now: Date): ResolvedLessonSearch
 
 type LessonRow = typeof lessons.$inferSelect;
 type ExceptionRow = typeof lessonExceptions.$inferSelect;
-type PlaceRow = { id: string; name: string; address: string; cityId: number; cityName: string; area: Place['area'] };
+type CityRow = { code: number; nameHe: string; area: Area };
 
 const toLessonDomain = (row: LessonRow): Lesson => ({
   id: row.id,
   title: row.title ?? undefined,
   rabbiId: row.rabbiId,
-  placeId: row.placeId,
+  place: {
+    name: row.placeName,
+    street: row.placeStreet,
+    floor: row.placeFloor ?? undefined,
+    cityCode: row.cityCode,
+  },
   topic: row.topic ?? undefined,
   audience: row.audience,
   // The `lessons_recurrence_shape` check constraint guarantees weekdays is
@@ -78,18 +83,24 @@ const toExceptionDomain = (row: ExceptionRow): LessonException =>
         lessonId: row.lessonId,
         date: row.date,
         startTime: row.startTime ?? undefined,
-        placeId: row.placeId ?? undefined,
+        place:
+          row.placeName !== null && row.placeStreet !== null && row.cityCode !== null
+            ? { name: row.placeName, street: row.placeStreet, floor: row.placeFloor ?? undefined, cityCode: row.cityCode }
+            : undefined,
         substituteRabbiId: row.substituteRabbiId ?? undefined,
         note: row.note ?? undefined,
       };
 
-const toPlace = (row: PlaceRow): Place => ({
-  id: row.id,
-  name: row.name,
-  address: row.address,
-  city: row.cityName,
-  area: row.area,
-});
+// Resolves a lesson's (or an exception's override) `LessonPlace` into the
+// public `Place` shape by looking up its city, the one join a venue ever
+// needs since it carries everything else as its own text.
+const toPlace = (place: LessonPlace, cityByCode: Map<number, CityRow>): Place => {
+  const city = cityByCode.get(place.cityCode);
+  if (!city) {
+    throw new Error(`data inconsistency: a lesson references unknown city code ${place.cityCode}`);
+  }
+  return { name: place.name, street: place.street, floor: place.floor, city: city.nameHe, area: city.area };
+};
 
 type RabbiRow = typeof rabbis.$inferSelect;
 
@@ -118,15 +129,11 @@ const compareOccurrences = (a: ResolvedOccurrence, b: ResolvedOccurrence): numbe
 const resolveRecord = (
   occurrence: ResolvedOccurrence,
   rabbiById: Map<string, Rabbi>,
-  placeById: Map<string, Place>,
+  cityByCode: Map<number, CityRow>,
 ): ResolvedLessonOccurrence => {
   const rabbi = rabbiById.get(occurrence.lesson.rabbiId);
-  const place = placeById.get(occurrence.placeId);
   if (!rabbi) {
     throw new Error(`data inconsistency: lesson ${occurrence.lesson.id} references unknown rabbi ${occurrence.lesson.rabbiId}`);
-  }
-  if (!place) {
-    throw new Error(`data inconsistency: lesson ${occurrence.lesson.id} references unknown place ${occurrence.placeId}`);
   }
 
   return {
@@ -139,7 +146,7 @@ const resolveRecord = (
     topic: occurrence.lesson.topic,
     audience: occurrence.lesson.audience,
     rabbi,
-    place,
+    place: toPlace(occurrence.place, cityByCode),
     substituteRabbi: occurrence.substituteRabbiId
       ? rabbiById.get(occurrence.substituteRabbiId)
       : undefined,
@@ -153,60 +160,38 @@ const resolveRecord = (
 export const search = async (rawQuery: LessonSearchQuery, now: Date): Promise<LessonSearchResult> => {
   const query = resolveRange(rawQuery, now);
 
-  // Rabbis and places are small reference tables, loaded whole so that
-  // resolving a substitute rabbi or an exception's overridden place never
+  // Rabbis and cities are small reference tables, loaded whole so that
+  // resolving a substitute rabbi or an exception's overridden venue never
   // needs a second round trip per occurrence.
-  const [rabbiRows, placeRows] = await Promise.all([
+  const [rabbiRows, cityRows] = await Promise.all([
     db.select().from(rabbis),
-    db
-      .select({
-        id: places.id,
-        name: places.name,
-        address: places.address,
-        cityId: places.cityId,
-        cityName: cities.nameHe,
-        area: cities.area,
-      })
-      .from(places)
-      .innerJoin(cities, eq(places.cityId, cities.code)),
+    db.select({ code: cities.code, nameHe: cities.nameHe, area: cities.area }).from(cities),
   ]);
 
   const rabbiById = new Map(rabbiRows.map((row) => [row.id, toRabbi(row)] as const));
-  const placeById = new Map(placeRows.map((row) => [row.id, toPlace(row)] as const));
+  const cityByCode = new Map(cityRows.map((row) => [row.code, row] as const));
 
-  const eligiblePlaceIds =
-    query.city !== undefined || query.area !== undefined
-      ? placeRows
-          .filter(
-            (row) =>
-              (query.city === undefined || row.cityId === query.city) &&
-              (query.area === undefined || row.area === query.area),
-          )
-          .map((row) => row.id)
-      : undefined;
+  const eligibleCityCodes =
+    query.area !== undefined ? cityRows.filter((row) => row.area === query.area).map((row) => row.code) : undefined;
 
-  if (eligiblePlaceIds?.length === 0) {
+  if (eligibleCityCodes?.length === 0) {
     return { items: [], page: query.page, pageSize: query.pageSize, total: 0 };
   }
 
-  // `q` searches the rabbi's name, the place's name, and the city's Hebrew
-  // name, OR'd together, then combined with every other filter as AND. Rabbis
-  // and places are already loaded whole above, so matching happens against
-  // those in-memory rows rather than a further round trip.
+  // `q` searches the rabbi's name, the lesson's own venue name, and the
+  // city's Hebrew name, OR'd together, then combined with every other
+  // filter as AND. Rabbis and cities are already loaded whole above, so
+  // matching a rabbi or a city happens against those in-memory rows.
   const q = query.q || undefined;
   const matchingRabbiIds = q ? rabbiRows.filter((row) => includesQuery(row.name, q)).map((row) => row.id) : undefined;
-  const matchingPlaceIds = q
-    ? placeRows.filter((row) => includesQuery(row.name, q) || includesQuery(row.cityName, q)).map((row) => row.id)
-    : undefined;
+  const matchingCityCodes = q ? cityRows.filter((row) => includesQuery(row.nameHe, q)).map((row) => row.code) : undefined;
 
   const conditions = [
     query.rabbiId ? eq(lessons.rabbiId, query.rabbiId) : undefined,
     query.topic ? eq(lessons.topic, query.topic) : undefined,
     query.audience ? eq(lessons.audience, query.audience) : undefined,
-    eligiblePlaceIds ? inArray(lessons.placeId, eligiblePlaceIds) : undefined,
-    matchingRabbiIds && matchingPlaceIds
-      ? or(inArray(lessons.rabbiId, matchingRabbiIds), inArray(lessons.placeId, matchingPlaceIds))
-      : undefined,
+    query.city !== undefined ? eq(lessons.cityCode, query.city) : undefined,
+    eligibleCityCodes ? inArray(lessons.cityCode, eligibleCityCodes) : undefined,
   ].filter((condition) => condition !== undefined);
 
   const lessonRows = await db
@@ -214,7 +199,16 @@ export const search = async (rawQuery: LessonSearchQuery, now: Date): Promise<Le
     .from(lessons)
     .where(conditions.length ? and(...conditions) : undefined);
 
-  const lessonDomainById = new Map(lessonRows.map((row) => [row.id, toLessonDomain(row)] as const));
+  const matchingRows = q
+    ? lessonRows.filter(
+        (row) =>
+          (matchingRabbiIds?.includes(row.rabbiId) ?? false) ||
+          includesQuery(row.placeName, q) ||
+          (matchingCityCodes?.includes(row.cityCode) ?? false),
+      )
+    : lessonRows;
+
+  const lessonDomainById = new Map(matchingRows.map((row) => [row.id, toLessonDomain(row)] as const));
   const lessonIds = [...lessonDomainById.keys()];
 
   const exceptionRows = lessonIds.length
@@ -243,7 +237,7 @@ export const search = async (rawQuery: LessonSearchQuery, now: Date): Promise<Le
   const start = (query.page - 1) * query.pageSize;
   const items = occurrences
     .slice(start, start + query.pageSize)
-    .map((occurrence) => resolveRecord(occurrence, rabbiById, placeById));
+    .map((occurrence) => resolveRecord(occurrence, rabbiById, cityByCode));
 
   return { items, page: query.page, pageSize: query.pageSize, total };
 };

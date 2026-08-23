@@ -25,7 +25,20 @@ export const createRabbiSchema = z.object({
 });
 export type CreateRabbiInput = z.infer<typeof createRabbiSchema>;
 
-export const updateRabbiSchema = createRabbiSchema.partial();
+// A partial patch, not `createRabbiSchema.partial()`: `title` and `bio`
+// are nullable columns, so the update contract needs three states, not
+// two. Omitting the key leaves the column as is (the key is then absent
+// from the parsed object, and the service's `.set({ ...input })` never
+// mentions that column, which Drizzle interprets as "do not touch"). An
+// explicit `null` clears it. An empty string is rejected by `min(1)`,
+// exactly as it is on create, so there is exactly one way to say "clear
+// this field" and it is never confused with "leave it alone".
+export const updateRabbiSchema = z.object({
+  name: z.string().trim().min(1).optional(),
+  title: z.string().trim().min(1).nullable().optional(),
+  bio: z.string().trim().min(1).nullable().optional(),
+  prominence: z.enum(RABBI_PROMINENCES).optional(),
+});
 export type UpdateRabbiInput = z.infer<typeof updateRabbiSchema>;
 
 // `z.coerce.boolean()` would treat the string 'false' as truthy (it just

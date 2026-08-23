@@ -1,8 +1,8 @@
 import { sql } from 'drizzle-orm';
 import { check, date, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
+import { cities } from './cities';
 import { lessonAudienceEnum, lessonTopicEnum, recurrenceKindEnum } from './enums';
-import { places } from './places';
 import { rabbis } from './rabbis';
 
 export const lessons = pgTable(
@@ -13,9 +13,16 @@ export const lessons = pgTable(
     rabbiId: text('rabbi_id')
       .notNull()
       .references(() => rabbis.id),
-    placeId: text('place_id')
+    // The venue is free text on the lesson, not a registered entity: a
+    // rabbi must never be blocked from adding a lesson because its venue
+    // is not recognised. `cityCode` stays structured, since the home page
+    // and the city/area filters depend on it.
+    placeName: text('place_name').notNull(),
+    placeStreet: text('place_street').notNull(),
+    placeFloor: text('place_floor'),
+    cityCode: integer('city_code')
       .notNull()
-      .references(() => places.id),
+      .references(() => cities.code),
     topic: lessonTopicEnum('topic'),
     audience: lessonAudienceEnum('audience').notNull(),
     recurrenceKind: recurrenceKindEnum('recurrence_kind').notNull(),

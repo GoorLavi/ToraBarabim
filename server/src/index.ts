@@ -8,6 +8,8 @@ import { registerCityRoutes } from './api/cities';
 import { registerHealthRoutes } from './api/health';
 import { registerHomeRoutes } from './api/home';
 import { registerLessonRoutes } from './api/lessons';
+import { registerRabbiRoutes } from './api/rabbi';
+import { registerRabbiAuthRoutes } from './api/rabbi/auth';
 import { loadConfig } from './config';
 import { registerCookies } from './plugins/cookies';
 import { registerCors } from './plugins/cors';
@@ -44,6 +46,8 @@ const start = async (): Promise<void> => {
   await registerCityRoutes(app);
   await registerAdminAuthRoutes(app);
   await registerAdminRoutes(app);
+  await registerRabbiAuthRoutes(app);
+  await registerRabbiRoutes(app);
   registerErrorHandler(app);
 
   try {

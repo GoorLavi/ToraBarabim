@@ -2,13 +2,23 @@ import type { RabbiProminence } from '@torabarabim/common';
 
 export const BACK_TO_LIST_LABEL = '→ חזרה לרשימת הרבנים';
 export const NEW_RABBI_HEADING = 'רב חדש';
+// Name and photo are the only required fields; title and bio are optional.
 // The exact captured wording repeats itself in the brief handed to this
 // slice, so it could not be confirmed; written fresh, honestly, in its
 // place (see the report for this slice).
-export const TWO_FIELDS_NOTE = 'שני פרטים בלבד: שם ותמונה. אי אפשר לשמור רב בלי תמונה, כי באתר אין כרטיס בלי תמונה.';
+export const TWO_FIELDS_NOTE = 'שם ותמונה הם שדות חובה. אי אפשר לשמור רב בלי תמונה, כי באתר אין כרטיס בלי תמונה. תואר ותקציר אינם חובה.';
 
 export const NAME_LABEL = 'שם הרב';
-export const NAME_HELPER = 'כפי שיופיע באתר, כולל התואר אם יש.';
+export const NAME_HELPER = 'כפי שיופיע באתר.';
+
+export const TITLE_LABEL = 'תואר';
+export const TITLE_PLACEHOLDER = 'למשל: רב בית הכנסת אהל יוסף';
+export const TITLE_HELPER = 'לא חובה. מופיע בשורה קטנה מתחת לשם.';
+
+// Labelled for someone editing another person's record, not the rabbi's
+// own first-person "קצת עליי" (see the report for this slice).
+export const BIO_LABEL = 'קצת על הרב';
+export const BIO_HELPER = 'לא חובה. מוצג בעמוד הרב באתר.';
 
 // Admin-only: drives the home page's rail order and is never shown to a
 // visitor (design-system.md has no public surface for it).
@@ -32,11 +42,6 @@ export const PROMINENCE_OPTIONS: readonly RabbiProminence[] = Object.keys(
 ) as RabbiProminence[];
 
 export const PHOTO_LABEL = 'תמונת הרב';
-export const PHOTO_CHOOSE_LABEL = 'בחירת קובץ';
-export const PHOTO_REPLACE_LABEL = 'החלפת התמונה';
-export const PHOTO_HELP_TYPE = 'JPG או PNG, עד 5MB';
-export const PHOTO_HELP_SIZE = 'לפחות 800 על 1200 פיקסלים';
-export const PHOTO_HELP_CROP = 'התמונה נחתכת ליחס 2:3 לצורך הכרטיס, אז עדיף שהפנים יהיו במרכז ולא בקצה.';
 
 export const CANCEL_LABEL = 'ביטול';
 export const SAVE_AND_ADD_LESSON_LABEL = 'שמירת הרב והוספת שיעור ראשון';

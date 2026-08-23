@@ -4,7 +4,7 @@ import { ZodError } from 'zod';
 import { toLessonListResponse, toLessonResponse } from '../../../convertors/admin-lesson';
 import { requireAdminAuth } from '../../../plugins/admin-guard';
 import * as adminLessonService from '../../../service/admin-lesson/admin-lesson';
-import { LessonNotFoundError, ReferencedPlaceNotFoundError, ReferencedRabbiNotFoundError } from '../../../service/admin-lesson/errors';
+import { LessonNotFoundError, ReferencedRabbiNotFoundError, UnknownCityError } from '../../../service/admin-lesson/errors';
 import { createLessonSchema, lessonIdParamSchema, lessonListQuerySchema, updateLessonSchema } from '../../../service/admin-lesson/models';
 
 const GENERIC_ERROR_MESSAGE = 'אירעה שגיאה בשרת, נסו שוב מאוחר יותר';
@@ -23,8 +23,8 @@ const handleError = (reply: FastifyReply, error: unknown, routeLabel: string): F
     return reply.status(400).send({ error: 'unknown_rabbi', message: `הרב שנבחר אינו קיים: '${error.rabbiId}'` });
   }
 
-  if (error instanceof ReferencedPlaceNotFoundError) {
-    return reply.status(400).send({ error: 'unknown_place', message: `המקום שנבחר אינו קיים: '${error.placeId}'` });
+  if (error instanceof UnknownCityError) {
+    return reply.status(400).send({ error: 'unknown_city', message: `העיר שנבחרה אינה קיימת: '${error.cityCode}'` });
   }
 
   reply.request.log.error({ err: error }, `unhandled error in ${routeLabel}`);

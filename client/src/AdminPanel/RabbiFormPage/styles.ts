@@ -101,7 +101,8 @@ export const RabbiFormPage = css(
         }
 
         > input,
-        > select {
+        > select,
+        > textarea {
           inline-size: 100%;
           min-block-size: 48px;
           padding-inline: ${theme.spacing.md};
@@ -111,6 +112,13 @@ export const RabbiFormPage = css(
           color: ${theme.colors.text};
           font-size: ${theme.typography.body.phone.fontSize};
           line-height: ${theme.typography.body.phone.lineHeight};
+        }
+
+        > textarea {
+          min-block-size: 96px;
+          padding-block: ${theme.spacing.sm};
+          resize: vertical;
+          font-family: inherit;
         }
 
         > .helper {

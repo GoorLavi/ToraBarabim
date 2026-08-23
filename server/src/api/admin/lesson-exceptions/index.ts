@@ -9,8 +9,8 @@ import {
   DuplicateExceptionError,
   ExceptionNotFoundError,
   LessonNotFoundError,
-  ReferencedPlaceNotFoundError,
   ReferencedRabbiNotFoundError,
+  UnknownCityError,
 } from '../../../service/admin-lesson-exception/errors';
 import { exceptionIdParamSchema, lessonExceptionSchema, lessonIdParamSchema } from '../../../service/admin-lesson-exception/models';
 
@@ -43,8 +43,8 @@ const handleError = (reply: FastifyReply, error: unknown, routeLabel: string): F
     return reply.status(400).send({ error: 'unknown_rabbi', message: `הרב הממלא מקום שנבחר אינו קיים: '${error.rabbiId}'` });
   }
 
-  if (error instanceof ReferencedPlaceNotFoundError) {
-    return reply.status(400).send({ error: 'unknown_place', message: `המקום שנבחר אינו קיים: '${error.placeId}'` });
+  if (error instanceof UnknownCityError) {
+    return reply.status(400).send({ error: 'unknown_city', message: `העיר שנבחרה אינה קיימת: '${error.cityCode}'` });
   }
 
   reply.request.log.error({ err: error }, `unhandled error in ${routeLabel}`);

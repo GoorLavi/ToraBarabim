@@ -1,14 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
-import type { City, Lesson, Place, Rabbi } from '@torabarabim/common';
+import type { LessonResponse, Rabbi } from '@torabarabim/common';
 
-import { AdminApiError, fetchAdminCities, fetchAdminLesson, fetchAdminPlace, fetchAdminRabbi } from '~/AdminPanel/api';
+import { AdminApiError, fetchAdminLesson, fetchAdminRabbi } from '~/AdminPanel/api';
 import { ADMIN_QUERY_KEYS } from '~/AdminPanel/consts';
+import type { SelectedCity } from '~/components/CitySelect/models';
 
 export interface ExistingLessonData {
-  lesson: Lesson;
+  lesson: LessonResponse;
   rabbi: Rabbi | undefined;
-  place: Place | undefined;
-  city: City | undefined;
+  city: SelectedCity | undefined;
 }
 
 export type ExistingLessonState =
@@ -17,10 +17,10 @@ export type ExistingLessonState =
   | { status: 'error'; error: AdminApiError; retry: () => void }
   | { status: 'success'; data: ExistingLessonData };
 
-// Four dependent-but-parallelizable reads for edit mode: the lesson first
-// resolves `rabbiId`/`placeId`, which unlock the rabbi and place reads, and
-// the place's `city` (a name only, see the report for this slice) unlocks
-// a `GET /v1/cities` lookup to recover the id the `CitySelect` needs.
+// The venue is on the lesson itself now (`lesson.place`), so no place fetch
+// is needed to load an existing lesson: just the lesson, then the rabbi it
+// unlocks. `LessonResponse.place` already carries the resolved `cityName`,
+// so no separate city lookup is needed either.
 export const useExistingLesson = (id: string | undefined): ExistingLessonState => {
   const lessonQuery = useQuery({
     queryKey: ADMIN_QUERY_KEYS.lesson(id ?? ''),
@@ -29,24 +29,11 @@ export const useExistingLesson = (id: string | undefined): ExistingLessonState =
   });
 
   const rabbiId = lessonQuery.data?.rabbiId;
-  const placeId = lessonQuery.data?.placeId;
 
   const rabbiQuery = useQuery({
     queryKey: ADMIN_QUERY_KEYS.rabbi(rabbiId ?? ''),
     queryFn: () => fetchAdminRabbi(rabbiId as string),
     enabled: Boolean(rabbiId),
-  });
-  const placeQuery = useQuery({
-    queryKey: ADMIN_QUERY_KEYS.place(placeId ?? ''),
-    queryFn: () => fetchAdminPlace(placeId as string),
-    enabled: Boolean(placeId),
-  });
-
-  const cityName = placeQuery.data?.city;
-  const cityQuery = useQuery({
-    queryKey: ADMIN_QUERY_KEYS.cities(cityName ?? ''),
-    queryFn: () => fetchAdminCities(cityName as string),
-    enabled: Boolean(cityName),
   });
 
   if (!id) return { status: 'idle' };
@@ -55,21 +42,17 @@ export const useExistingLesson = (id: string | undefined): ExistingLessonState =
     void lessonQuery.refetch();
   };
 
-  const firstError = lessonQuery.error ?? rabbiQuery.error ?? placeQuery.error ?? cityQuery.error;
+  const firstError = lessonQuery.error ?? rabbiQuery.error;
   if (firstError instanceof AdminApiError) return { status: 'error', error: firstError, retry };
 
-  const isPending =
-    lessonQuery.isPending ||
-    (Boolean(rabbiId) && rabbiQuery.isPending) ||
-    (Boolean(placeId) && placeQuery.isPending) ||
-    (Boolean(cityName) && cityQuery.isPending);
+  const isPending = lessonQuery.isPending || (Boolean(rabbiId) && rabbiQuery.isPending);
 
   if (isPending || !lessonQuery.data) return { status: 'pending' };
 
-  const city = cityQuery.data?.items.find((item) => item.name === cityName);
+  const city: SelectedCity = { id: String(lessonQuery.data.place.cityCode), name: lessonQuery.data.place.cityName };
 
   return {
     status: 'success',
-    data: { lesson: lessonQuery.data, rabbi: rabbiQuery.data, place: placeQuery.data, city },
+    data: { lesson: lessonQuery.data, rabbi: rabbiQuery.data, city },
   };
 };

@@ -20,7 +20,7 @@ const baseLesson: LessonOccurrence = {
   topic: 'parasha',
   audience: 'mixed',
   rabbi: { id: 'rabbi-1', name: 'הרב יעקב מזרחי', title: 'דיין', photoUrl: PLACEHOLDER_PHOTO },
-  place: { id: 'place-1', name: 'בית הכנסת המרכזי', address: 'רחוב ויצמן 45', city: 'נתניה', area: 'sharon' },
+  place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'נתניה', area: 'sharon' },
 };
 
 const meta: Meta<typeof LessonCard> = {
@@ -80,7 +80,7 @@ export const MissingTitleAndTopic: Story = {
       status: 'scheduled',
       audience: 'men',
       rabbi: { id: 'rabbi-4', name: 'הרב שלמה אביטן' },
-      place: { id: 'place-8', name: 'בית הכנסת "אור החיים"', address: 'רחוב טרומפלדור 5', city: 'באר שבע', area: 'south' },
+      place: { name: 'בית הכנסת "אור החיים"', street: 'רחוב טרומפלדור 5', city: 'באר שבע', area: 'south' },
     },
   },
 };
@@ -103,9 +103,8 @@ export const VeryLongCityName: Story = {
     lesson: {
       ...baseLesson,
       place: {
-        id: 'place-long',
         name: 'בית הכנסת הגדול "היכל התורה והתפילה"',
-        address: 'רחוב הרב קוק הראשי',
+        street: 'רחוב הרב קוק הראשי',
         city: 'קריית מלאכי והמושבים הסמוכים לה בעוטף עזה',
         area: 'south',
       },

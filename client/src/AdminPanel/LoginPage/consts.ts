@@ -6,5 +6,5 @@ export const EMAIL_LABEL = 'אימייל';
 export const PASSWORD_LABEL = 'סיסמה';
 export const SUBMIT_LABEL = 'כניסה';
 export const SUBMIT_PENDING_LABEL = 'מתחברים...';
-export const FORGOT_PASSWORD_NOTE = 'שכחתם סיסמה? המשתמשים נוצרים ידנית, ולכן איפוס עצמי נעשה מול מי שהקים לכם את המשתמש.';
+export const FORGOT_PASSWORD_NOTE = 'שכחת סיסמה? המשתמשים נוצרים ידנית, ולכן איפוס עצמי נעשה מול מי שהקים לך את המשתמש.';
 export const INVALID_CREDENTIALS_MESSAGE = 'אימייל או סיסמה שגויים';

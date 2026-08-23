@@ -3,15 +3,15 @@ import type { RefObject } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { CitySelect } from '~/AdminPanel/components/CitySelect/CitySelect';
 import { AdminApiError } from '~/AdminPanel/api';
 import { ADMIN_ROUTES } from '~/AdminPanel/consts';
 import { adminErrorMessage } from '~/AdminPanel/helpers';
+import { AudiencePicker } from '~/components/AudiencePicker/AudiencePicker';
+import { CitySelect } from '~/components/CitySelect/CitySelect';
+import { RecurrenceFields } from '~/components/RecurrenceFields/RecurrenceFields';
 
-import { AudiencePicker } from './components/AudiencePicker/AudiencePicker';
 import { LessonPreviewCard } from './components/LessonPreviewCard/LessonPreviewCard';
 import { RabbiPicker } from './components/RabbiPicker/RabbiPicker';
-import { RecurrenceFields } from './components/RecurrenceFields/RecurrenceFields';
 import * as consts from './consts';
 import { initialFormState, lessonToFormState, pageHeading, previewWeekdayLabel, validateLessonForm } from './helpers';
 import type { LessonFormErrors, LessonFormPageProps, LessonFormState } from './models';
@@ -47,7 +47,7 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
 
   useEffect(() => {
     if (existing.status === 'success' && !isLoadedFromExisting) {
-      setForm(lessonToFormState(existing.data.lesson, existing.data.rabbi, existing.data.place, existing.data.city));
+      setForm(lessonToFormState(existing.data.lesson, existing.data.rabbi, existing.data.city));
       setIsLoadedFromExisting(true);
     }
   }, [existing, isLoadedFromExisting]);
@@ -82,16 +82,15 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
     );
   }
 
-  const existingPlaceId = existing.status === 'success' ? existing.data.place?.id : undefined;
   const saveErrorCode = saveLesson.error instanceof AdminApiError ? saveLesson.error.code : undefined;
   const generalSaveError =
-    saveLesson.isError && !['unknown_rabbi', 'unknown_place', 'unknown_city'].includes(saveErrorCode ?? '')
+    saveLesson.isError && !['unknown_rabbi', 'unknown_city'].includes(saveErrorCode ?? '')
       ? adminErrorMessage(saveLesson.error)
       : undefined;
 
   const rabbiError = fieldErrors.rabbi ?? (saveErrorCode === 'unknown_rabbi' ? consts.UNKNOWN_RABBI_ERROR : undefined);
   const cityError = fieldErrors.city ?? (saveErrorCode === 'unknown_city' ? consts.UNKNOWN_CITY_ERROR : undefined);
-  const placeNameError = fieldErrors.placeName ?? (saveErrorCode === 'unknown_place' ? consts.UNKNOWN_PLACE_ERROR : undefined);
+  const placeNameError = fieldErrors.placeName;
 
   const failingSections = consts.SECTION_DEFS.filter((section) => section.fields.some((field) => fieldErrors[field]));
 
@@ -107,7 +106,7 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
     }
 
     saveLesson.mutate(
-      { form, existingLessonId: id, existingPlaceId },
+      { form, existingLessonId: id },
       {
         onSuccess: () => {
           if (afterSave === 'list') {
@@ -210,15 +209,20 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
             </label>
 
             <label className="field">
-              <span className="label">{consts.PLACE_ADDRESS_LABEL}</span>
+              <span className="label">{consts.STREET_LABEL}</span>
               <input
                 type="text"
                 dir="auto"
-                value={form.placeAddress}
-                onChange={(event) => setForm((prev) => ({ ...prev, placeAddress: event.target.value }))}
+                value={form.street}
+                onChange={(event) => setForm((prev) => ({ ...prev, street: event.target.value }))}
               />
-              <span className="helper">{consts.PLACE_ADDRESS_HELPER}</span>
-              {fieldErrors.placeAddress && <span className="error">{fieldErrors.placeAddress}</span>}
+              <span className="helper">{consts.STREET_HELPER}</span>
+              {fieldErrors.street && <span className="error">{fieldErrors.street}</span>}
+            </label>
+
+            <label className="field">
+              <span className="label">{consts.FLOOR_LABEL}</span>
+              <input type="text" dir="auto" value={form.floor} onChange={(event) => setForm((prev) => ({ ...prev, floor: event.target.value }))} />
             </label>
           </section>
 
