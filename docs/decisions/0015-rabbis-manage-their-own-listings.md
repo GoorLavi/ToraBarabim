@@ -1,4 +1,4 @@
-# 0014: Rabbis manage their own listings
+# 0015: Rabbis manage their own listings
 
 - **Status:** accepted
 - **Date:** 2026-08-23

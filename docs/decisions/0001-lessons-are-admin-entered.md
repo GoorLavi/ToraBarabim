@@ -1,6 +1,6 @@
 # 0001: Lessons are entered by administrators, not the public
 
-- **Status:** superseded by [0014](0014-rabbis-manage-their-own-listings.md)
+- **Status:** superseded by [0015](0015-rabbis-manage-their-own-listings.md)
 - **Date:** 2026-08-14
 - **Decided by:** project owner
 

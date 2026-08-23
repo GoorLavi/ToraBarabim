@@ -1,4 +1,4 @@
-# 0015: A venue is a field of the lesson, not an entity
+# 0016: A venue is a field of the lesson, not an entity
 
 - **Status:** accepted
 - **Date:** 2026-08-23
@@ -15,7 +15,7 @@ So the table bought us nothing a listing site needs. Nobody browses venues, nobo
 venue to be recognised, and two lessons at the same synagogue sharing one row is a
 property no screen ever used. What it did buy was a way for a person entering a lesson to
 be blocked because their venue was not registered, which is intolerable once rabbis enter
-their own lessons ([0014](0014-rabbis-manage-their-own-listings.md)).
+their own lessons ([0015](0015-rabbis-manage-their-own-listings.md)).
 
 The city is different. The home page's city grid, the city filter and the area filter all
 depend on the city being a chosen code rather than typed text. `ירושלים`, `י-ם` and
