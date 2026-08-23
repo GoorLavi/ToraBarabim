@@ -1,4 +1,4 @@
-import type { CreateLessonExceptionRequest, LessonExceptionListResponse, LessonExceptionResponse, LessonListResponse, LessonResponse } from './admin';
+import type { CreateLessonExceptionRequest, LessonExceptionListResponse, LessonExceptionResponse, LessonResponse } from './admin';
 import type { Lesson } from './lesson';
 import type { LessonOccurrence } from './lesson-occurrence';
 import type { Rabbi } from './rabbi';
@@ -31,7 +31,14 @@ export type UpdateRabbiProfileRequest = Partial<Pick<Rabbi, 'name'>> & {
 export type RabbiCreateLessonRequest = Omit<Lesson, 'id' | 'rabbiId'>;
 export type RabbiUpdateLessonRequest = RabbiCreateLessonRequest;
 export type RabbiLessonResponse = LessonResponse;
-export type RabbiLessonListResponse = LessonListResponse;
+
+// A rabbi has a handful of lessons, never hundreds: this list is
+// deliberately unpaginated, matching `RabbiOccurrenceListResponse` below.
+// `GET /v1/rabbi/lessons` takes no query parameters and returns every one
+// of the signed-in rabbi's lessons in a single plain list.
+export interface RabbiLessonListResponse {
+  items: RabbiLessonResponse[];
+}
 
 export type RabbiCreateLessonExceptionRequest = CreateLessonExceptionRequest;
 export type RabbiUpdateLessonExceptionRequest = CreateLessonExceptionRequest;

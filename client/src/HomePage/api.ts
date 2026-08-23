@@ -18,8 +18,8 @@ export class HomeApiError extends Error {
 // 5xx for a server or upstream failure.
 export const fetchLessons = async (filters: LessonFilters): Promise<LessonSearchResponse> => {
   const url = new URL('/v1/lessons', window.location.origin);
-  url.searchParams.set('from', filters.from);
-  url.searchParams.set('to', filters.to);
+  if (filters.from) url.searchParams.set('from', filters.from);
+  if (filters.to) url.searchParams.set('to', filters.to);
   if (filters.city) url.searchParams.set('city', filters.city);
   if (filters.pageSize) url.searchParams.set('pageSize', String(filters.pageSize));
   if (filters.q) url.searchParams.set('q', filters.q);

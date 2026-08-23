@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { fetchLessons, fetchOccurrences, RabbiApiError } from '~/RabbiPanel/api';
-import { RABBI_LESSON_PAGE_SIZE, RABBI_QUERY_KEYS } from '~/RabbiPanel/consts';
+import { RABBI_QUERY_KEYS } from '~/RabbiPanel/consts';
 
 import { groupByDay, withDerivedFields } from './helpers';
 import type { UpcomingState } from './models';
@@ -15,7 +15,7 @@ export const useUpcomingOccurrences = (): UpcomingState => {
   const occurrencesQuery = useQuery({ queryKey: RABBI_QUERY_KEYS.occurrences(), queryFn: fetchOccurrences });
   const lessonsQuery = useQuery({
     queryKey: RABBI_QUERY_KEYS.lessons(),
-    queryFn: () => fetchLessons({ page: 1, pageSize: RABBI_LESSON_PAGE_SIZE }),
+    queryFn: fetchLessons,
   });
 
   const retry = (): void => {
@@ -28,7 +28,7 @@ export const useUpcomingOccurrences = (): UpcomingState => {
 
   if (!occurrencesQuery.data || !lessonsQuery.data) return { status: 'pending' };
 
-  if (lessonsQuery.data.total === 0) return { status: 'emptyFirst' };
+  if (lessonsQuery.data.items.length === 0) return { status: 'emptyFirst' };
   if (occurrencesQuery.data.items.length === 0) return { status: 'emptyWindow' };
 
   const lessonsById = new Map(lessonsQuery.data.items.map((lesson) => [lesson.id, lesson] as const));

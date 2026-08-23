@@ -5,7 +5,7 @@ import { ZodError } from 'zod';
 import { toRabbiLessonListResponse, toRabbiLessonResponse } from '../../../convertors/rabbi-lesson';
 import { requireRabbiAuth } from '../../../plugins/rabbi-guard';
 import { LessonNotFoundError, UnknownCityError } from '../../../service/rabbi-lesson/errors';
-import { createRabbiLessonSchema, lessonIdParamSchema, rabbiLessonListQuerySchema, updateRabbiLessonSchema } from '../../../service/rabbi-lesson/models';
+import { createRabbiLessonSchema, lessonIdParamSchema, updateRabbiLessonSchema } from '../../../service/rabbi-lesson/models';
 import * as rabbiLessonService from '../../../service/rabbi-lesson/rabbi-lesson';
 
 const GENERIC_ERROR_MESSAGE = 'אירעה שגיאה בשרת, נסו שוב מאוחר יותר';
@@ -32,11 +32,13 @@ const handleError = (reply: FastifyReply, error: unknown, routeLabel: string): F
 };
 
 export const registerRabbiLessonRoutes = async (app: FastifyInstance): Promise<void> => {
+  // Unpaginated: a rabbi has a handful of lessons, never hundreds. No
+  // query schema is declared, so a stray `page` or `pageSize` from an
+  // older client is silently ignored rather than rejected.
   app.get('/v1/rabbi/lessons', { preHandler: requireRabbiAuth }, async (request, reply) => {
     try {
       if (!request.rabbiUser) return reply;
-      const query = rabbiLessonListQuerySchema.parse(request.query);
-      const result = await rabbiLessonService.list(request.rabbiUser.rabbiId, query);
+      const result = await rabbiLessonService.list(request.rabbiUser.rabbiId);
       return reply.send(toRabbiLessonListResponse(result));
     } catch (error) {
       return handleError(reply, error, 'GET /v1/rabbi/lessons');

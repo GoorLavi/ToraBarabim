@@ -13,8 +13,6 @@ import type {
   UpdateRabbiProfileRequest,
 } from '@torabarabim/common';
 
-import type { RabbiLessonListFilters } from './models';
-
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
 // Carries the HTTP status and, when the server sent one, its `error` code,
@@ -99,13 +97,9 @@ export const uploadProfilePhoto = (file: File): Promise<RabbiProfileResponse> =>
 };
 
 // GET /v1/rabbi/lessons
-// 200 with RabbiLessonListResponse, including an empty items array.
-export const fetchLessons = (filters: RabbiLessonListFilters): Promise<RabbiLessonListResponse> => {
-  const target = url('/v1/rabbi/lessons');
-  target.searchParams.set('page', String(filters.page));
-  target.searchParams.set('pageSize', String(filters.pageSize));
-  return request(target.toString());
-};
+// 200 with RabbiLessonListResponse, including an empty items array. Not
+// paginated: a rabbi has a handful of lessons, never hundreds.
+export const fetchLessons = (): Promise<RabbiLessonListResponse> => request(url('/v1/rabbi/lessons').toString());
 
 // GET /v1/rabbi/lessons/:id
 // 200 with RabbiLessonResponse. 404 if the lesson does not exist or belongs to another rabbi.

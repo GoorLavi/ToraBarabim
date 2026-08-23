@@ -3,7 +3,7 @@ import { and, eq, gte, inArray, lte } from 'drizzle-orm';
 
 import { db } from '../../db/client';
 import { cities, lessonExceptions, lessons, rabbis } from '../../db/schema';
-import { DEFAULT_RANGE_DAYS, MAX_RANGE_DAYS } from './consts';
+import { DEFAULT_RANGE_DAYS, MAX_RANGE_DAYS, TEXT_SEARCH_RANGE_DAYS } from './consts';
 import { InvalidDateRangeError } from './errors';
 import { addDays, compareIsoDates, daysBetween, todayInIsrael } from './israel-time';
 import type {
@@ -32,7 +32,12 @@ const addMinutes = (startTime: string, minutes: number): string => {
 const resolveRange = (query: LessonSearchQuery, now: Date): ResolvedLessonSearchQuery => {
   const today = todayInIsrael(now);
   const from = query.from ?? today;
-  const to = query.to ?? addDays(from, DEFAULT_RANGE_DAYS);
+  // A text search with no caller-picked `to` widens to the project's
+  // two-week window instead of the ordinary default, so typing a rabbi's
+  // name surfaces his lessons across the next two weeks rather than just
+  // whatever the date filter happened to be set to.
+  const defaultRangeDays = query.q ? TEXT_SEARCH_RANGE_DAYS : DEFAULT_RANGE_DAYS;
+  const to = query.to ?? addDays(from, defaultRangeDays);
 
   if (compareIsoDates(to, from) < 0) {
     throw new InvalidDateRangeError(`expected 'to' on or after 'from', got from=${from} to=${to}`);

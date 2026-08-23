@@ -25,9 +25,13 @@ export const HomePage = styled(({ className }: HomePageProps) => {
   const mode = resolveHomeMode(option, city, query);
 
   const targetDate = resolveTargetDate(option, customDate);
+  // 'all' is "nothing chosen": omit `from`/`to` entirely so the server's own
+  // default range applies (a plain week, or two weeks when `q` is set,
+  // per the search-widens-for-a-name decision) instead of the client
+  // re-asserting "today" on the user's behalf. Any explicit chip or custom
+  // date still narrows the request and wins over that default.
   const filters: LessonFilters = {
-    from: targetDate,
-    to: addDays(targetDate, LESSON_WINDOW_DAYS),
+    ...(option !== 'all' && { from: targetDate, to: addDays(targetDate, LESSON_WINDOW_DAYS) }),
     city: city?.id,
     pageSize: LESSON_WINDOW_PAGE_SIZE,
     q: query || undefined,

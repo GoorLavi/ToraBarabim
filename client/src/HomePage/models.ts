@@ -10,9 +10,12 @@ export type DateFilterOption = 'all' | 'today' | 'tomorrow' | 'shabbat' | 'custo
 // state (resolveHomeMode in helpers.ts is the one place that decides).
 export type HomeMode = 'rail' | 'filtered';
 
+// `from`/`to` are omitted entirely when the date filter is untouched
+// (HomePage.tsx), so the server's own default range applies instead of the
+// client silently re-asserting "today" on its behalf.
 export interface LessonFilters {
-  from: string;
-  to: string;
+  from?: string;
+  to?: string;
   city?: string;
   pageSize?: number;
   q?: string;

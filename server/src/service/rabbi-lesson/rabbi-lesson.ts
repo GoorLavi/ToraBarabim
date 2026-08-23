@@ -1,5 +1,5 @@
 import type { Area, Lesson, LessonException, LessonPlace, LessonOccurrence as WireLessonOccurrence, Place, Rabbi, Weekday } from '@torabarabim/common';
-import { and, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, lte } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
 import { db } from '../../db/client';
@@ -8,7 +8,7 @@ import { addDays, todayInIsrael } from '../lesson/israel-time';
 import { applyException, expandLesson, type ResolvedOccurrence } from '../lesson/occurrence';
 import { UPCOMING_OCCURRENCE_WINDOW_DAYS } from './consts';
 import { LessonNotFoundError, UnknownCityError } from './errors';
-import type { CreateRabbiLessonInput, RabbiLessonListQuery, RabbiLessonListResult, RabbiLessonRecord, UpdateRabbiLessonInput } from './models';
+import type { CreateRabbiLessonInput, RabbiLessonListResult, RabbiLessonRecord, UpdateRabbiLessonInput } from './models';
 
 const lessonSelection = {
   id: lessons.id,
@@ -63,19 +63,12 @@ const verifyCity = async (cityCode: number): Promise<void> => {
   if (!rows[0]) throw new UnknownCityError(cityCode);
 };
 
-export const list = async (rabbiId: string, query: RabbiLessonListQuery): Promise<RabbiLessonListResult> => {
-  const whereClause = eq(lessons.rabbiId, rabbiId);
-
-  const [rows, totalRows] = await Promise.all([
-    baseLessonQuery()
-      .where(whereClause)
-      .orderBy(desc(lessons.updatedAt))
-      .limit(query.pageSize)
-      .offset((query.page - 1) * query.pageSize),
-    db.select({ count: sql<number>`count(*)::int` }).from(lessons).where(whereClause),
-  ]);
-
-  return { items: rows.map(toRecord), page: query.page, pageSize: query.pageSize, total: totalRows[0]?.count ?? 0 };
+// A rabbi has a handful of lessons, never hundreds: this list is
+// deliberately unpaginated. See the comment on `RabbiLessonListResponse`
+// in `@torabarabim/common` for the full reasoning.
+export const list = async (rabbiId: string): Promise<RabbiLessonListResult> => {
+  const rows = await baseLessonQuery().where(eq(lessons.rabbiId, rabbiId)).orderBy(desc(lessons.updatedAt));
+  return { items: rows.map(toRecord) };
 };
 
 export const getOwnById = async (rabbiId: string, id: string): Promise<RabbiLessonRecord> => {
