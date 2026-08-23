@@ -25,5 +25,5 @@ export const NO_RABBIS_HINT = 'הוספת הרב הראשון תפתח כאן א
 export const ADD_FIRST_RABBI_LABEL = 'הוספת רב ראשון';
 
 export const NO_MATCHING_RABBIS_HEADLINE = 'לא נמצאו רבנים תואמים';
-export const NO_MATCHING_RABBIS_HINT = 'נסו חיפוש אחר.';
+export const NO_MATCHING_RABBIS_HINT = 'נסה חיפוש אחר.';
 export const CLEAR_SEARCH_LABEL = 'ניקוי החיפוש';

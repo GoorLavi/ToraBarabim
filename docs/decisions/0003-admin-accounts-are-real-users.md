@@ -1,6 +1,6 @@
 # 0003: Admins are real accounts, created by a script
 
-- **Status:** accepted
+- **Status:** accepted; the "no roles" decision is superseded by [0014](0014-rabbis-manage-their-own-listings.md)
 - **Date:** 2026-08-14
 - **Decided by:** project owner
 

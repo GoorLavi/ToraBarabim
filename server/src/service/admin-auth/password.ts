@@ -49,6 +49,22 @@ export const getDummyPasswordHash = (): Promise<string> => {
   return dummyPasswordHash;
 };
 
+// Unambiguous alphabet: no 0/O or 1/I/l, since this is read out loud over
+// the phone by an administrator, per the "no email, ever" decision.
+const TEMPORARY_PASSWORD_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const TEMPORARY_PASSWORD_LENGTH = 12;
+
+export const generateTemporaryPassword = (): string => {
+  const bytes = randomBytes(TEMPORARY_PASSWORD_LENGTH);
+  let password = '';
+  for (let index = 0; index < TEMPORARY_PASSWORD_LENGTH; index += 1) {
+    const byte = bytes[index];
+    if (byte === undefined) continue;
+    password += TEMPORARY_PASSWORD_ALPHABET[byte % TEMPORARY_PASSWORD_ALPHABET.length];
+  }
+  return password;
+};
+
 export const verifyPassword = async (password: string, storedHash: string): Promise<boolean> => {
   const parts = storedHash.split(':');
   if (parts.length !== 6) return false;

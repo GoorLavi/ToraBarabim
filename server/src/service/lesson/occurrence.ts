@@ -1,4 +1,4 @@
-import type { Lesson, LessonException, Weekday } from '@torabarabim/common';
+import type { Lesson, LessonException, LessonPlace, Weekday } from '@torabarabim/common';
 
 import { addDays, compareIsoDates, weekdayOf } from './israel-time';
 
@@ -34,7 +34,7 @@ export interface ResolvedOccurrence {
   lesson: Lesson;
   date: string;
   startTime: string;
-  placeId: string;
+  place: LessonPlace;
   status: 'scheduled' | 'cancelled';
   substituteRabbiId?: string;
   cancellationReason?: string;
@@ -51,7 +51,7 @@ export const applyException = (
     lesson: occurrence.lesson,
     date: occurrence.date,
     startTime: occurrence.lesson.startTime,
-    placeId: occurrence.lesson.placeId,
+    place: occurrence.lesson.place,
     status: 'scheduled',
   };
 
@@ -64,7 +64,7 @@ export const applyException = (
   return {
     ...base,
     startTime: exception.startTime ?? base.startTime,
-    placeId: exception.placeId ?? base.placeId,
+    place: exception.place ?? base.place,
     substituteRabbiId: exception.substituteRabbiId,
     note: exception.note,
   };

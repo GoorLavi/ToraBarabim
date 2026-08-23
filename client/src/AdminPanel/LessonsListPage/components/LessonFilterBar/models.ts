@@ -1,4 +1,4 @@
-import type { SelectedCity } from '~/AdminPanel/components/CitySelect/models';
+import type { SelectedCity } from '~/components/CitySelect/models';
 import type { RecurrenceFilter } from '~/AdminPanel/LessonsListPage/models';
 
 export interface LessonFilterBarProps {

@@ -14,6 +14,18 @@ export const validateRabbiForm = (form: RabbiFormState): RabbiFormErrors => {
   return errors;
 };
 
+// An update omits a key to mean "leave as is" and sends `null` to mean
+// "clear" (`common/src/admin.ts`, `UpdateRabbiRequest`): the two are
+// indistinguishable from an empty string alone, so this also needs the
+// value as it was loaded from the server. A field that was always blank
+// and still is has nothing to clear, so it stays omitted rather than
+// sending a needless `null`.
+export const nullableTextField = (currentValue: string, existingValue: string | undefined): string | null | undefined => {
+  const trimmed = currentValue.trim();
+  if (trimmed) return trimmed;
+  return existingValue === undefined ? undefined : null;
+};
+
 const ACCEPTED_PHOTO_TYPES = ['image/jpeg', 'image/png'];
 
 // A basic type/size check before upload, not a substitute for the

@@ -1,4 +1,4 @@
-import type { LessonAudience, Weekday } from '@torabarabim/common';
+import type { Weekday } from '@torabarabim/common';
 
 import type { LessonFormField } from './models';
 
@@ -22,44 +22,21 @@ export const TITLE_LABEL = 'שם השיעור';
 export const TITLE_HELPER = 'אם לא ימולא, יוצג במקומו שם הרב.';
 
 export const WHEN_SECTION_HEADING = 'מתי מתקיים השיעור';
-export const RECURRING_OPTION_LABEL = 'שיעור קבוע, כל שבוע';
-export const ONE_TIME_OPTION_LABEL = 'שיעור חד־פעמי';
-export const WEEKDAYS_LABEL = 'ימים בשבוע';
-export const DATE_LABEL = 'תאריך';
-export const START_TIME_LABEL = 'שעת התחלה';
-// Not named in the brief's field list, but `Lesson.durationMinutes` is a
-// required, positive-integer field on the wire (see the report for this
-// slice): a lesson cannot be saved without one.
-export const DURATION_LABEL = 'משך השיעור (בדקות)';
 export const WEEKDAY_LABELS_FULL = ['יום ראשון', 'יום שני', 'יום שלישי', 'יום רביעי', 'יום חמישי', 'יום שישי', 'שבת'];
-
-// The literal array has exactly 7 entries, one per `Weekday` (0-6), so the
-// index is a genuine `Weekday`; the cast is centralized here rather than
-// repeated at every call site.
-const WEEKDAY_SHORT_LABELS = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
-export const WEEKDAY_OPTIONS: { value: Weekday; label: string }[] = WEEKDAY_SHORT_LABELS.map((label, index) => ({
-  value: index as Weekday,
-  label,
-}));
 
 export const WHERE_SECTION_HEADING = 'איפה מתקיים השיעור';
 export const CITY_LABEL = 'עיר';
 export const CITY_HELPER = 'בוחרים מהרשימה. העיר קובעת גם את האזור.';
 export const CITY_PLACEHOLDER = 'בחירת עיר';
-// The brief describes these two as optional, but `POST /v1/admin/places`
-// requires both a non-empty `name` and `address` to create the place a
-// lesson's `placeId` must point to (see the report for this slice).
 export const PLACE_NAME_LABEL = 'שם המקום';
-export const PLACE_ADDRESS_LABEL = 'רחוב ומספר';
-export const PLACE_ADDRESS_HELPER = 'הכתובת המלאה תוצג בעמוד השיעור עצמו בלבד.';
+export const STREET_LABEL = 'רחוב ומספר';
+export const STREET_HELPER = 'הכתובת המלאה תוצג בעמוד השיעור עצמו בלבד.';
+// Optional: a floor or arrival note, for a lesson held in a building where
+// finding the right door or floor is not obvious from the street address alone.
+export const FLOOR_LABEL = 'קומה / הערת הגעה';
 
 export const AUDIENCE_SECTION_HEADING = 'קהל היעד';
 export const AUDIENCE_HELPER = 'יש לבחור אחת מהאפשרויות.';
-export const AUDIENCE_LABELS: Record<LessonAudience, string> = {
-  men: 'גברים',
-  women: 'נשים',
-  mixed: 'גם גברים וגם נשים',
-};
 
 export const CANCEL_LABEL = 'ביטול';
 export const SAVE_AND_ADD_ANOTHER_LABEL = 'שמירה והוספת שיעור נוסף';
@@ -69,7 +46,7 @@ export const SAVING_LABEL = 'שומרים...';
 export const REQUIRED_RABBI_ERROR = 'יש לבחור רב';
 export const REQUIRED_CITY_ERROR = 'יש לבחור עיר';
 export const REQUIRED_PLACE_NAME_ERROR = 'יש למלא שם מקום';
-export const REQUIRED_PLACE_ADDRESS_ERROR = 'יש למלא כתובת';
+export const REQUIRED_STREET_ERROR = 'יש למלא כתובת';
 export const REQUIRED_AUDIENCE_ERROR = 'יש לבחור קהל יעד';
 export const REQUIRED_START_TIME_ERROR = 'יש למלא שעת התחלה';
 export const REQUIRED_DURATION_ERROR = 'יש למלא משך שיעור תקין (בדקות)';
@@ -83,7 +60,7 @@ export const REQUIRED_DATE_ERROR = 'יש לבחור תאריך';
 export const SECTION_DEFS: { fields: LessonFormField[]; heading: string }[] = [
   { fields: ['rabbi'], heading: RABBI_SECTION_HEADING },
   { fields: ['recurrence', 'startTime', 'durationMinutes'], heading: WHEN_SECTION_HEADING },
-  { fields: ['city', 'placeName', 'placeAddress'], heading: WHERE_SECTION_HEADING },
+  { fields: ['city', 'placeName', 'street'], heading: WHERE_SECTION_HEADING },
   { fields: ['audience'], heading: AUDIENCE_SECTION_HEADING },
 ];
 
@@ -93,9 +70,8 @@ export const LOAD_ERROR_MESSAGE = 'לא הצלחנו לטעון את השיעו�
 export const RETRY_LABEL = 'ניסיון נוסף';
 export const LOADING_MESSAGE = 'טוענים...';
 
-export const UNKNOWN_RABBI_ERROR = 'הרב שנבחר אינו קיים יותר. בחרו רב אחר';
-export const UNKNOWN_PLACE_ERROR = 'אירעה שגיאה בשמירת המקום. נסו שוב';
-export const UNKNOWN_CITY_ERROR = 'העיר שנבחרה אינה קיימת יותר. בחרו עיר אחרת';
+export const UNKNOWN_RABBI_ERROR = 'הרב שנבחר אינו קיים יותר. בחר רב אחר';
+export const UNKNOWN_CITY_ERROR = 'העיר שנבחרה אינה קיימת יותר. בחר עיר אחרת';
 
 export const DEFAULT_DURATION_MINUTES = '60';
 

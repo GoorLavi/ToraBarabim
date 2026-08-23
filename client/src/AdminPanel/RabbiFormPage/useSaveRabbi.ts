@@ -4,6 +4,7 @@ import type { RabbiResponse } from '@torabarabim/common';
 
 import { AdminApiError, createAdminRabbi, updateAdminRabbi, uploadAdminRabbiPhoto } from '~/AdminPanel/api';
 
+import { nullableTextField } from './helpers';
 import type { RabbiFormState, SaveRabbiStep } from './models';
 
 export interface SaveRabbiStepError {
@@ -36,9 +37,23 @@ export const useSaveRabbi = (): SaveRabbiResult => {
     let rabbi: RabbiResponse;
 
     try {
+      // A create has nothing to clear yet, so a blank title/bio is simply
+      // omitted; an update tells "leave as is" (omit) apart from "clear"
+      // (`null`) via `nullableTextField`, per `common/src/admin.ts`'s
+      // `UpdateRabbiRequest` (see the report for this slice).
       rabbi = rabbiId
-        ? await updateAdminRabbi(rabbiId, { name: form.name.trim(), prominence: form.prominence })
-        : await createAdminRabbi({ name: form.name.trim(), prominence: form.prominence });
+        ? await updateAdminRabbi(rabbiId, {
+            name: form.name.trim(),
+            title: nullableTextField(form.title, form.existingTitle),
+            bio: nullableTextField(form.bio, form.existingBio),
+            prominence: form.prominence,
+          })
+        : await createAdminRabbi({
+            name: form.name.trim(),
+            title: form.title.trim() || undefined,
+            bio: form.bio.trim() || undefined,
+            prominence: form.prominence,
+          });
       if (!rabbiId) setPendingRabbiId(rabbi.id);
     } catch (error) {
       setIsSaving(false);

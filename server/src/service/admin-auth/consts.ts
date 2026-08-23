@@ -8,3 +8,8 @@ export const LOGIN_RATE_LIMIT_MAX = 20;
 export const LOGIN_RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
 
 export const SESSION_COOKIE_NAME = 'tb_admin_session';
+// A distinct cookie, not just a role check on the same cookie, so an
+// administrator's browser and a rabbi's browser session are two separate
+// cookies by construction: nothing about a rabbi login can ever populate
+// the cookie an admin route reads, or the reverse.
+export const RABBI_SESSION_COOKIE_NAME = 'tb_rabbi_session';

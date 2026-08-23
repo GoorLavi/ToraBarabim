@@ -52,7 +52,7 @@ export const LessonsTable = styled(({ className, rows }: LessonsTableProps) => (
           <span className="tag">{row.lesson.recurrence.kind === 'weekly' ? parentConsts.RECURRING_TAG_LABEL : parentConsts.ONE_TIME_TAG_LABEL}</span>
         </span>
         <span className="city" role="cell" dir="auto">
-          {row.place?.city ?? parentConsts.UNKNOWN_PLACE_FALLBACK}
+          {row.lesson.place.cityName}
         </span>
         <span className="audience" role="cell" dir="auto">
           {parentConsts.LESSON_AUDIENCE_LABELS[row.lesson.audience]}

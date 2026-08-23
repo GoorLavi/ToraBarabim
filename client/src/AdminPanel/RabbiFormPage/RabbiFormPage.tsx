@@ -5,9 +5,10 @@ import styled from 'styled-components';
 
 import { ADMIN_ROUTES } from '~/AdminPanel/consts';
 import { adminErrorMessage } from '~/AdminPanel/helpers';
+import { PhotoPicker } from '~/components/PhotoPicker/PhotoPicker';
 
 import { DeleteRabbiButton } from './components/DeleteRabbiButton/DeleteRabbiButton';
-import { PhotoPicker } from './components/PhotoPicker/PhotoPicker';
+import { RabbiAccountSection } from './components/RabbiAccountSection/RabbiAccountSection';
 import { RabbiPreviewCard } from './components/RabbiPreviewCard/RabbiPreviewCard';
 import * as consts from './consts';
 import { pageHeading, validatePhotoFile, validateRabbiForm } from './helpers';
@@ -17,7 +18,16 @@ import { useExistingRabbi } from './useExistingRabbi';
 import { usePhotoPreviewUrl } from './usePhotoPreviewUrl';
 import { useSaveRabbi } from './useSaveRabbi';
 
-const emptyForm: RabbiFormState = { name: '', photoFile: undefined, existingPhotoUrl: undefined, prominence: 'local' };
+const emptyForm: RabbiFormState = {
+  name: '',
+  title: '',
+  bio: '',
+  existingTitle: undefined,
+  existingBio: undefined,
+  photoFile: undefined,
+  existingPhotoUrl: undefined,
+  prominence: 'local',
+};
 
 export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
   const { id } = useParams<{ id: string }>();
@@ -34,6 +44,10 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
     if (existingRabbi.data && !isLoadedFromExisting) {
       setForm({
         name: existingRabbi.data.name,
+        title: existingRabbi.data.title ?? '',
+        bio: existingRabbi.data.bio ?? '',
+        existingTitle: existingRabbi.data.title,
+        existingBio: existingRabbi.data.bio,
         photoFile: undefined,
         existingPhotoUrl: existingRabbi.data.photoUrl,
         prominence: existingRabbi.data.prominence,
@@ -119,6 +133,28 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
           </label>
 
           <label className="field">
+            <span className="label">{consts.TITLE_LABEL}</span>
+            <input
+              type="text"
+              dir="auto"
+              placeholder={consts.TITLE_PLACEHOLDER}
+              value={form.title}
+              onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
+            />
+            <span className="helper">{consts.TITLE_HELPER}</span>
+          </label>
+
+          <label className="field">
+            <span className="label">{consts.BIO_LABEL}</span>
+            <textarea
+              dir="auto"
+              value={form.bio}
+              onChange={(event) => setForm((prev) => ({ ...prev, bio: event.target.value }))}
+            />
+            <span className="helper">{consts.BIO_HELPER}</span>
+          </label>
+
+          <label className="field">
             <span className="label">{consts.PROMINENCE_LABEL}</span>
             <select
               dir="auto"
@@ -143,6 +179,8 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
               errorMessage={photoError}
             />
           </div>
+
+          <RabbiAccountSection rabbiId={id} />
 
           <div className="footer">
             <Link className="cancel" to={ADMIN_ROUTES.rabbis}>

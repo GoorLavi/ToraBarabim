@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { timeOfDaySchema } from '../admin-lesson/models';
+import { lessonPlaceSchema, timeOfDaySchema, type LessonPlaceRecord } from '../admin-lesson/models';
 
 export const lessonIdParamSchema = z.object({
   lessonId: z.string().trim().min(1),
@@ -24,7 +24,7 @@ export const lessonExceptionSchema = z.discriminatedUnion('kind', [
     kind: z.literal('modified'),
     date: z.iso.date(),
     startTime: timeOfDaySchema.optional(),
-    placeId: z.string().trim().min(1).optional(),
+    place: lessonPlaceSchema.optional(),
     substituteRabbiId: z.string().trim().min(1).optional(),
     note: z.string().trim().min(1).optional(),
   }),
@@ -38,7 +38,7 @@ export interface LessonExceptionRecord {
   kind: 'cancelled' | 'modified';
   reason?: string;
   startTime?: string;
-  placeId?: string;
+  place?: LessonPlaceRecord;
   substituteRabbiId?: string;
   note?: string;
 }

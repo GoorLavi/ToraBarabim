@@ -6,7 +6,7 @@ export const toLessonResponse = (record: LessonRecord): LessonResponse => ({
   id: record.id,
   title: record.title,
   rabbiId: record.rabbiId,
-  placeId: record.placeId,
+  place: record.place,
   topic: record.topic,
   audience: record.audience,
   recurrence: record.recurrence,

@@ -36,6 +36,27 @@
       "when": 1787137083075,
       "tag": "0004_last_deadpool",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1787426717700,
+      "tag": "0005_careless_exiles",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1787428074732,
+      "tag": "0006_talented_sugar_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1787431158742,
+      "tag": "0007_needy_jetstream",
+      "breakpoints": true
     }
   ]
 }

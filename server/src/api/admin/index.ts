@@ -2,14 +2,15 @@ import type { FastifyInstance } from 'fastify';
 
 import { registerAdminLessonExceptionRoutes } from './lesson-exceptions';
 import { registerAdminLessonRoutes } from './lessons';
-import { registerAdminPlaceRoutes } from './places';
+import { registerAdminRabbiAccountRoutes } from './rabbi-accounts';
 import { registerAdminRabbiRoutes } from './rabbis';
 
-// Registers the four admin CRUD route groups (auth is registered
-// separately by index.ts, unchanged from slice 2).
+// Registers the admin CRUD route groups (auth is registered separately by
+// index.ts, unchanged from slice 2). There is no places group: a venue is
+// free text on a lesson, not an entity with its own admin screen.
 export const registerAdminRoutes = async (app: FastifyInstance): Promise<void> => {
   await registerAdminRabbiRoutes(app);
-  await registerAdminPlaceRoutes(app);
+  await registerAdminRabbiAccountRoutes(app);
   await registerAdminLessonRoutes(app);
   await registerAdminLessonExceptionRoutes(app);
 };

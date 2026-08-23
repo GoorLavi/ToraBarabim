@@ -1,6 +1,6 @@
 import { useSearchParams } from 'react-router-dom';
 
-import type { SelectedCity } from '~/AdminPanel/components/CitySelect/models';
+import type { SelectedCity } from '~/components/CitySelect/models';
 
 import * as consts from './consts';
 import type { LessonListUrlFilters, RecurrenceFilter } from './models';

@@ -20,6 +20,14 @@ export const requireAdminAuth = async (request: FastifyRequest, reply: FastifyRe
 
   try {
     const user = await authService.resolveSession(unsignedToken.value);
+    // Defense in depth: the admin and rabbi login flows use distinct
+    // cookies, so a rabbi's session should never even reach here, but a
+    // role check at the guard means a future bug in cookie handling still
+    // cannot let a rabbi's session pass as an administrator's.
+    if (user.role !== 'admin') {
+      reply.status(401).send({ error: 'unauthenticated', message: UNAUTHENTICATED_MESSAGE });
+      return;
+    }
     request.adminUser = { id: user.id, email: user.email, name: user.name };
   } catch (error) {
     if (error instanceof SessionInvalidError) {
