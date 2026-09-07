@@ -84,3 +84,4 @@ The real alternatives and why each lost. If there was no alternative, say so.
 | [0014](0014-the-logo-is-a-fixed-mark-not-a-theme-token.md) | The logo is a fixed mark, not a theme token | accepted |
 | [0015](0015-rabbis-manage-their-own-listings.md) | Rabbis manage their own listings | accepted |
 | [0016](0016-a-venue-is-a-field-of-the-lesson.md) | A venue is a field of the lesson, not an entity | accepted |
+| [0017](0017-one-colour-scheme-argaman-vezahav.md) | The site ships one colour scheme, ארגמן וזהב | accepted |

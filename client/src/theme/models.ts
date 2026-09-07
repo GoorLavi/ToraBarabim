@@ -1,6 +1,4 @@
-// Thirteen color tokens, identical keys across every theme (design-system.md,
-// "Themes and the token contract"). A token missing from one theme and
-// present in another must be a type error, not a runtime surprise.
+// Thirteen color tokens (design-system.md, "The theme and the token contract").
 export interface ThemeColors {
   bg: string;
   surface: string;
@@ -88,5 +86,3 @@ export interface Theme {
   shadows: ThemeShadows;
   breakpoints: ThemeBreakpoints;
 }
-
-export type ThemeName = 'ארגמן וזהב' | 'אבן וזית' | 'אבן ותכלת';
