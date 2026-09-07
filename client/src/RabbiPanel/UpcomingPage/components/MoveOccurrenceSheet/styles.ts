@@ -5,10 +5,10 @@ import { css } from 'styled-components';
 export const MoveOccurrenceSheet = css(
   ({ theme }) => `
   > .panel {
-    // Overrides the shared shell's own scroll/height rule (see the comment
-    // above this file): this sheet's content can grow past 90vh once the
-    // place fields and their validation errors are showing, and only the
-    // form should scroll, never the save button along with it.
+    /* Overrides the shared shell's own scroll/height rule (see the comment
+       above this file): this sheet's content can grow past 90vh once the
+       place fields and their validation errors are showing, and only the
+       form should scroll, never the save button along with it. */
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -30,9 +30,9 @@ export const MoveOccurrenceSheet = css(
       flex-direction: column;
       gap: ${theme.spacing.md};
 
-      // Grouped rather than duplicated: a field inside the "elsewhere"
-      // group below gets exactly the same label/input/error treatment as
-      // one directly in the form, not a second, drifting copy of it.
+      /* Grouped rather than duplicated: a field inside the "elsewhere"
+         group below gets exactly the same label/input/error treatment as
+         one directly in the form, not a second, drifting copy of it. */
       > .field,
       > .placeFields > .field {
         display: flex;
@@ -56,11 +56,11 @@ export const MoveOccurrenceSheet = css(
           font-size: ${theme.typography.body.phone.fontSize};
           line-height: ${theme.typography.body.phone.lineHeight};
 
-          // A native time input's value sits at its own inline end
-          // regardless of document direction, stranded across a
-          // full-width field once every neighbouring field is
-          // right-aligned. Sizing to content keeps it beside its label
-          // instead of floating alone.
+          /* A native time input's value sits at its own inline end
+             regardless of document direction, stranded across a
+             full-width field once every neighbouring field is
+             right-aligned. Sizing to content keeps it beside its label
+             instead of floating alone. */
           &[type='time'] {
             inline-size: fit-content;
             min-inline-size: 160px;
@@ -92,9 +92,9 @@ export const MoveOccurrenceSheet = css(
         }
       }
 
-      // An inline-start border rather than a tinted panel: it reads as
-      // "these fields belong to the toggle above them", which a soft
-      // background fill on its own does not say.
+      /* An inline-start border rather than a tinted panel: it reads as
+         "these fields belong to the toggle above them", which a soft
+         background fill on its own does not say. */
       > .placeFields {
         display: flex;
         flex-direction: column;
@@ -120,9 +120,9 @@ export const MoveOccurrenceSheet = css(
       flex-shrink: 0;
       margin-block-start: ${theme.spacing.xl};
       padding-block-start: ${theme.spacing.md};
-      // Clears the iOS home indicator once the sheet's own bottom padding
-      // isn't enough: the shared shell's .panel padding covers a plain
-      // sheet, but this one pins its actions to the true bottom edge.
+      /* Clears the iOS home indicator once the sheet's own bottom padding
+         isn't enough: the shared shell's .panel padding covers a plain
+         sheet, but this one pins its actions to the true bottom edge. */
       padding-block-end: max(${theme.spacing.md}, env(safe-area-inset-bottom));
       border-block-start: 1px solid ${theme.colors.border};
       display: flex;
