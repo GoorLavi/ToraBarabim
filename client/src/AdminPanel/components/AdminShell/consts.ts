@@ -6,4 +6,4 @@ export const RABBIS_TAB_LABEL = 'רבנים';
 export const LOGOUT_LABEL = 'יציאה';
 export const ADMIN_NAME_FALLBACK = 'מנהל המערכת';
 
-export const LOGOUT_ERROR_MESSAGE = 'היציאה נכשלה, נסו שוב';
+export const LOGOUT_ERROR_MESSAGE = 'היציאה נכשלה, נסה שוב';
