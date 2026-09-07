@@ -14,7 +14,7 @@ import * as styles from './styles';
 // component's entry in the client builder's report). No date in it either
 // (LessonsSection/consts.ts, SEE_ALL_LABEL): the heading right above already
 // states the day.
-export const DayLessons = styled(({ className, headingLabel, items, showSeeAllLink, moreLabel }: DayLessonsProps) => {
+export const DayLessons = styled(({ className, headingLabel, items, showSeeAllLink, moreLabel, countLabel }: DayLessonsProps) => {
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT);
   const visibleItems = items.slice(0, visibleCount);
   const hasMore = items.length > visibleCount;
@@ -25,6 +25,8 @@ export const DayLessons = styled(({ className, headingLabel, items, showSeeAllLi
         <h2 dir="auto">{headingLabel}</h2>
         {showSeeAllLink && <span className="seeAll">{SEE_ALL_LABEL}</span>}
       </div>
+
+      {countLabel && <p className="count">{countLabel}</p>}
 
       <ul className="grid">
         {visibleItems.map((item) => (

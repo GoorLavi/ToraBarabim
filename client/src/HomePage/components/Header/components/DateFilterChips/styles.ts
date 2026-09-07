@@ -4,7 +4,10 @@ export const DateFilterChips = css(
   ({ theme }) => `
   display: flex;
   flex-wrap: wrap;
-  gap: ${theme.spacing.sm};
+  /* spacing.sm (8px), the tap-target minimum, measured 7px in the browser:
+     bumped to the next token so the row clears the floor with margin
+     rather than sitting exactly on it (design review nit). */
+  gap: ${theme.spacing.md};
 
   > .chip {
     display: flex;
@@ -77,9 +80,11 @@ export const DateFilterChips = css(
 
     > .dateInput {
       position: absolute;
-      inset: 0;
-      inline-size: 100%;
-      block-size: 100%;
+      /* inset: 0 sits at the padding edge, inside the chip's own 1px
+         border, so the invisible tap target measured 46x46 inside a 48x48
+         chip (design review nit). -1px extends it back out over that same
+         border so the tap target matches the visible pill exactly. */
+      inset: -1px;
       opacity: 0;
       cursor: pointer;
     }

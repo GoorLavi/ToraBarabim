@@ -1,5 +1,7 @@
 import { css } from 'styled-components';
 
+import { POSTER_ASPECT_RATIO } from '~/HomePage/consts';
+
 import { CARD_WIDTH_LG, CARD_WIDTH_MD, CARD_WIDTH_PHONE } from './consts';
 
 export const LessonRail = css(
@@ -41,12 +43,12 @@ export const LessonRail = css(
         justify-content: center;
         position: absolute;
         z-index: 1;
-        /* Centred on the poster (aspect-ratio 3/4 at \`${CARD_WIDTH_LG}\`
+        /* Centred on the poster (\`POSTER_ASPECT_RATIO\` at \`${CARD_WIDTH_LG}\`
            wide, the card width at this breakpoint), not on the whole card:
            50% of \`.scrollerWrap\` centred on the card's text body too and
            landed the arrows in the poster's lower third (design review,
            item 11). */
-        inset-block-start: calc(${CARD_WIDTH_LG} * 4 / 3 / 2 - 24px);
+        inset-block-start: calc(${CARD_WIDTH_LG} / ${POSTER_ASPECT_RATIO} / 2 - 24px);
         inline-size: 48px;
         block-size: 48px;
         border: 1px solid ${theme.colors.border};
@@ -79,6 +81,11 @@ export const LessonRail = css(
       overscroll-behavior-inline: contain;
       scroll-snap-type: inline proximity;
       padding-inline: ${theme.spacing.lg};
+      /* The card is a real link now, and its keyboard focus ring (outline
+         2px, offset 2px) sits outside the card's own box. Without this the
+         ring is clipped: setting overflow-x here computes overflow-block to
+         auto too, so anything beyond the card's block box gets cut. */
+      padding-block: ${theme.spacing.xs};
       scroll-padding-inline-start: ${theme.spacing.lg};
       scrollbar-width: none;
 

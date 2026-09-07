@@ -28,3 +28,21 @@ export const HOME_QUERY_KEYS = {
 // Rail mode's context line (helpers.ts, contextLine): the honest first-load
 // state, no city or date assumed (design-system.md, "No default city").
 export const RAIL_CONTEXT_LINE = 'שיעורים בכל הארץ בשבועיים הקרובים';
+
+// Mirrors the real `LessonCard` body block's rough height (title, meta and
+// city lines plus padding), so a loading skeleton's card does not jump in
+// block-size once real data replaces it. Shared by LessonCardSkeleton, the
+// one skeleton card both HomeRails/components/RailSkeleton and
+// LessonsSection/components/DayLessonsSkeleton render, which is why it
+// lives here rather than under either one.
+export const SKELETON_BODY_HEIGHT = '104px';
+
+// The poster's width-to-height ratio, as a plain number so CSS `aspect-ratio`
+// can read it directly. The one place this ratio is written: LessonCard,
+// LessonCardSkeleton and LessonRail's arrow-centring calc all read it from
+// here, so a future change to the ratio cannot leave one of them stale
+// (design review, item: "the poster aspect ratio is written in three
+// places"). Stays 3:4, not the 2:3 the design doc states elsewhere; the
+// human chose the shipped code over the doc, and the doc is being corrected
+// separately.
+export const POSTER_ASPECT_RATIO = 3 / 4;

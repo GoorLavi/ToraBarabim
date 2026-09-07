@@ -39,6 +39,10 @@ export const CityGrid = css(
     line-height: ${theme.typography.body.phone.lineHeight};
   }
 
+  > .state.error {
+    color: ${theme.colors.danger};
+  }
+
   > .grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);

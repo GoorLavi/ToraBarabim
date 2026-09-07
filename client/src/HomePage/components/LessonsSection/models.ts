@@ -17,9 +17,17 @@ export interface LessonSearchQueryState {
 export interface LessonsSectionProps {
   className?: string;
   query: LessonSearchQueryState;
+  // Whether a date chip (or the calendar) is actually selected. When it
+  // is not, there is no date axis to widen along, and the section renders
+  // a flat, dateless list instead of day sections (design-system.md, "Every
+  // data screen has three states").
+  hasDateFilter: boolean;
   targetDate: string;
   city: SelectedCity | undefined;
   searchQuery: string;
+  // The way back out of a dateless, empty result: clears city and search
+  // query and returns to the unfiltered rows (design review, Group A).
+  onClearFilters: () => void;
 }
 
 export interface DaySection {

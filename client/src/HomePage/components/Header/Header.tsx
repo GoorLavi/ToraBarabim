@@ -37,23 +37,27 @@ export const Header = styled(
   }: HeaderProps) => (
     <header className={className}>
       <div className="bar">
-        <Link
-          to="/"
-          className="logo"
-          aria-label={consts.HOME_LINK_LABEL}
-          onClick={scrollToTopOnPlainClick}
-        >
-          <LogoMark className="mark" size={consts.LOGO_MARK_SIZE} variant="onDark" />
-          <span className="wordmark" dir="auto">
-            {consts.WORDMARK}
-          </span>
-        </Link>
-        <DateFilterChips
-          className="chips"
-          {...{ option, customDate, onSelectOption, onSelectCustomDate, onClearDate }}
-        />
-        <SearchField className="search" value={searchQuery} onChange={onSearchQueryChange} />
-        <CityPicker className="city" {...{ city, onSelectCity, onClearCity }} />
+        <div className="row1">
+          <Link
+            to="/"
+            className="logo"
+            aria-label={consts.HOME_LINK_LABEL}
+            onClick={scrollToTopOnPlainClick}
+          >
+            <LogoMark className="mark" size={consts.LOGO_MARK_SIZE} variant="onDark" />
+            <span className="wordmark" dir="auto">
+              {consts.WORDMARK}
+            </span>
+          </Link>
+          <SearchField className="search" value={searchQuery} onChange={onSearchQueryChange} />
+        </div>
+        <div className="row2">
+          <DateFilterChips
+            className="chips"
+            {...{ option, customDate, onSelectOption, onSelectCustomDate, onClearDate }}
+          />
+          <CityPicker className="city" {...{ city, onSelectCity, onClearCity }} />
+        </div>
       </div>
     </header>
   ),

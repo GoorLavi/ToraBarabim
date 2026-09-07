@@ -4,7 +4,7 @@ import { and, eq, gte, inArray, lte } from 'drizzle-orm';
 import { db } from '../../db/client';
 import { cities, lessonExceptions, lessons, rabbis } from '../../db/schema';
 import { DEFAULT_RANGE_DAYS, MAX_RANGE_DAYS } from './consts';
-import { InvalidDateRangeError } from './errors';
+import { InvalidDateRangeError, LessonNotFoundError, LessonOccurrenceNotFoundError } from './errors';
 import { addDays, compareIsoDates, daysBetween, todayInIsrael } from './israel-time';
 import type {
   LessonSearchQuery,
@@ -240,4 +240,47 @@ export const search = async (rawQuery: LessonSearchQuery, now: Date): Promise<Le
     .map((occurrence) => resolveRecord(occurrence, rabbiById, cityByCode));
 
   return { items, page: query.page, pageSize: query.pageSize, total };
+};
+
+// Resolves one lesson's recurrence rule for a single date, with any
+// exception for that date applied. Reuses `expandLesson`/`applyException`
+// so the recurrence rule is only ever expanded in one place; a second
+// expansion here would drift from the search route's, exception handling
+// most of all.
+export const getOccurrence = async (lessonId: string, date: string): Promise<ResolvedLessonOccurrence> => {
+  const [lessonRow] = await db.select().from(lessons).where(eq(lessons.id, lessonId)).limit(1);
+  if (!lessonRow) {
+    throw new LessonNotFoundError(lessonId);
+  }
+
+  const lesson = toLessonDomain(lessonRow);
+  const [raw] = expandLesson(lesson, date, date);
+  if (!raw) {
+    throw new LessonOccurrenceNotFoundError(lessonId, date);
+  }
+
+  const [exceptionRow] = await db
+    .select()
+    .from(lessonExceptions)
+    .where(and(eq(lessonExceptions.lessonId, lessonId), eq(lessonExceptions.date, date)))
+    .limit(1);
+
+  const occurrence = applyException(raw, exceptionRow ? toExceptionDomain(exceptionRow) : undefined);
+
+  const rabbiIds = [lesson.rabbiId, occurrence.substituteRabbiId].filter(
+    (id): id is string => id !== undefined,
+  );
+
+  const [rabbiRows, cityRows] = await Promise.all([
+    db.select().from(rabbis).where(inArray(rabbis.id, rabbiIds)),
+    db
+      .select({ code: cities.code, nameHe: cities.nameHe, area: cities.area })
+      .from(cities)
+      .where(eq(cities.code, occurrence.place.cityCode)),
+  ]);
+
+  const rabbiById = new Map(rabbiRows.map((row) => [row.id, toRabbi(row)] as const));
+  const cityByCode = new Map(cityRows.map((row) => [row.code, row] as const));
+
+  return resolveRecord(occurrence, rabbiById, cityByCode);
 };

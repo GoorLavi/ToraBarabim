@@ -100,9 +100,20 @@ export const flattenHomeRows = (data: HomeResponse | undefined): LessonOccurrenc
 // line there only earns its place when it carries something the heading
 // does not: the search term. Otherwise it would just repeat the heading in
 // a smaller size (design review, item 6).
-export const contextLine = (mode: HomeMode, searchQuery: string): string | undefined => {
+//
+// `total` is the count from `GET /v1/lessons`, which spans the whole
+// widened window (LESSON_WINDOW_DAYS), not a single day. That is exactly
+// the scope a free-text search asks about, unlike a date or city filter
+// which is already scoped to one day by the heading below, so it belongs
+// here and nowhere else. Left undefined while the query has not resolved
+// yet, and left out entirely at zero: the empty state under it already
+// names the search term, and repeating "0" above it would only be noise.
+export const contextLine = (mode: HomeMode, searchQuery: string, total?: number): string | undefined => {
   if (mode === 'rail') return RAIL_CONTEXT_LINE;
   if (!searchQuery) return undefined;
+  if (total === undefined) return `שיעורים לפי החיפוש ״${searchQuery}״`;
+  if (total === 0) return undefined;
+  if (total === 1) return `שיעור אחד לפי החיפוש ״${searchQuery}״ בשבועיים הקרובים`;
 
-  return `שיעורים לפי החיפוש "${searchQuery}"`;
+  return `${total} שיעורים לפי החיפוש ״${searchQuery}״ בשבועיים הקרובים`;
 };

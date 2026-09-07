@@ -39,11 +39,45 @@ export const RabbiRow = css(
     line-height: ${theme.typography.body.phone.lineHeight};
   }
 
+  > .state.error {
+    color: ${theme.colors.danger};
+  }
+
   > .row {
     display: flex;
     gap: ${theme.spacing.lg};
     overflow-x: auto;
-    padding-block-end: ${theme.spacing.xs};
+    overscroll-behavior-inline: contain;
+    /* Cancels the page gutter and re-applies it as end padding, so the row
+       runs full-bleed while the first avatar still lines up under the
+       heading and the last one keeps trailing space (design-system.md,
+       "A horizontally scrolling row runs full width"). */
+    margin-inline: calc(-1 * ${theme.spacing.lg});
+    padding-inline: ${theme.spacing.lg};
+    scrollbar-width: none;
+
+    @media (min-width: ${theme.breakpoints.md}) {
+      margin-inline: calc(-1 * ${theme.spacing.xl});
+      padding-inline: ${theme.spacing.xl};
+    }
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    @media (pointer: fine) {
+      scrollbar-width: thin;
+
+      &::-webkit-scrollbar {
+        display: block;
+        block-size: 6px;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: ${theme.colors.border};
+        border-radius: ${theme.radii.pill};
+      }
+    }
   }
 `,
 );

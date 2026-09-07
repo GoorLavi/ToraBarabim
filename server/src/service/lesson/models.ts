@@ -25,6 +25,13 @@ export const lessonSearchQuerySchema = z.object({
 
 export type LessonSearchQuery = z.infer<typeof lessonSearchQuerySchema>;
 
+export const lessonOccurrenceParamsSchema = z.object({
+  lessonId: z.string().trim().min(1),
+  date: z.iso.date(),
+});
+
+export type LessonOccurrenceParams = z.infer<typeof lessonOccurrenceParamsSchema>;
+
 export interface ResolvedLessonSearchQuery extends LessonSearchQuery {
   from: string;
   to: string;

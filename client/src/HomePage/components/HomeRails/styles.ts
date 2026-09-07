@@ -19,6 +19,9 @@ export const HomeRails = css(
     white-space: nowrap;
   }
 
+  /* A black heading, a calm body line, and a retry: the one error shape
+     shared with LessonsSection and the lesson page (design review, Group
+     B: this surface was red where the other two were not). */
   &.error {
     display: flex;
     flex-direction: column;
@@ -30,7 +33,7 @@ export const HomeRails = css(
     background: ${theme.colors.surface};
 
     > .headline {
-      color: ${theme.colors.danger};
+      color: ${theme.colors.text};
       font-weight: ${theme.typography.fontWeight.semiBold};
       font-size: ${theme.typography.body.phone.fontSize};
       line-height: ${theme.typography.body.phone.lineHeight};
@@ -45,7 +48,7 @@ export const HomeRails = css(
     > .retry {
       min-block-size: 48px;
       padding-inline: ${theme.spacing.lg};
-      border-radius: ${theme.radii.pill};
+      border-radius: ${theme.radii.md};
       background: ${theme.colors.primary};
       color: ${theme.colors.textOnPrimary};
       font-weight: ${theme.typography.fontWeight.semiBold};

@@ -10,6 +10,11 @@ export const SearchField = css(
   border-radius: ${theme.radii.md};
   background: ${theme.colors.surface};
 
+  &:focus-within {
+    outline: 2px solid ${theme.colors.primary};
+    outline-offset: 2px;
+  }
+
   > .icon {
     flex-shrink: 0;
     inline-size: 20px;
@@ -21,6 +26,14 @@ export const SearchField = css(
     flex: 1;
     min-inline-size: 0;
     block-size: 48px;
+    /* A \`type="search"\` input carries the browser's own chrome (a grey
+       inset border, square corners) unless reset: the pill above is the
+       field, this is only the text itself (design review, Group C). */
+    appearance: none;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    outline: none;
     color: ${theme.colors.text};
     font-size: ${theme.typography.body.phone.fontSize};
     line-height: ${theme.typography.body.phone.lineHeight};
@@ -29,7 +42,8 @@ export const SearchField = css(
       color: ${theme.colors.textSecondary};
     }
 
-    &::-webkit-search-cancel-button {
+    &::-webkit-search-cancel-button,
+    &::-webkit-search-decoration {
       display: none;
     }
   }

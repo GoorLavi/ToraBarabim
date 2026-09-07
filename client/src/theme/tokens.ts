@@ -34,6 +34,24 @@ export const TYPOGRAPHY: ThemeTypography = {
     desktop: { fontSize: '20px', lineHeight: '24px' },
     fontWeight: 600,
   },
+  // See ThemeTypography.ticketTime in models.ts for why this exists.
+  ticketTime: {
+    phone: { fontSize: '44px', lineHeight: '48px' },
+    desktop: { fontSize: '36px', lineHeight: '40px' },
+    fontWeight: 700,
+  },
+  // See ThemeTypography.ticketDate in models.ts for why this exists.
+  ticketDate: {
+    phone: { fontSize: '56px', lineHeight: '56px' },
+    desktop: { fontSize: '64px', lineHeight: '64px' },
+    fontWeight: 700,
+  },
+  // See ThemeTypography.ticketVenue in models.ts for why this exists.
+  ticketVenue: {
+    phone: { fontSize: '18px', lineHeight: '26px' },
+    desktop: { fontSize: '20px', lineHeight: '28px' },
+    fontWeight: 600,
+  },
   body: {
     phone: { fontSize: '17px', lineHeight: '26px' },
     desktop: { fontSize: '17px', lineHeight: '26px' },

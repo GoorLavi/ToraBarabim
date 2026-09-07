@@ -96,7 +96,7 @@ const terminalEmptyQuery: LessonSearchQueryState = {
 const meta: Meta<typeof LessonsSection> = {
   title: 'HomePage/LessonsSection',
   component: LessonsSection,
-  args: { targetDate: TODAY, city, searchQuery: '' },
+  args: { hasDateFilter: true, targetDate: TODAY, city, searchQuery: '', onClearFilters: () => {} },
 };
 
 export default meta;
@@ -139,4 +139,18 @@ export const SearchResults: Story = {
 // screen as if their search was silently ignored.
 export const SearchNoResults: Story = {
   args: { query: terminalEmptyQuery, searchQuery: 'שם שלא קיים' },
+};
+
+// A search term with no date chip selected: there is no date axis to widen
+// along, so the whole window's matches render as one flat list instead of
+// day sections (design-system.md, "Every data screen has three states").
+export const FilterOnlyResults: Story = {
+  args: { query: populatedQuery, hasDateFilter: false, searchQuery: 'מזרחי' },
+};
+
+// The same dateless filter with nothing found: names only the filters
+// actually applied and offers the way back, rather than narrowing to a day
+// nobody chose (design review, Group A, items 1, 3 and 4).
+export const FilterOnlyNoResults: Story = {
+  args: { query: terminalEmptyQuery, hasDateFilter: false, searchQuery: 'שם שלא קיים' },
 };

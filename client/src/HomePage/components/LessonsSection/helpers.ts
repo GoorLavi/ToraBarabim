@@ -3,9 +3,9 @@ import type { LessonOccurrence } from '@torabarabim/common';
 import type { HomeApiError } from '~/HomePage/api';
 
 import {
-  INVALID_REQUEST_MESSAGE,
-  NETWORK_ERROR_MESSAGE,
-  SERVER_ERROR_MESSAGE,
+  INVALID_REQUEST_HINT,
+  NETWORK_ERROR_HINT,
+  SERVER_ERROR_HINT,
 } from './consts';
 import type { DaySection } from './models';
 
@@ -16,11 +16,14 @@ export const dayHeadingLabel = (dayLabel: string, cityName: string | undefined):
 
 // Status-aware: reads `error.status`, never the raw message the server
 // sent, so a network failure with no status still gets sensible Hebrew copy.
-export const getErrorMessage = (error: HomeApiError | null): string => {
-  if (!error) return SERVER_ERROR_MESSAGE;
-  if (error.status === 0) return NETWORK_ERROR_MESSAGE;
-  if (error.status === 400) return INVALID_REQUEST_MESSAGE;
-  return SERVER_ERROR_MESSAGE;
+// Returns the calm hint line under the fixed ERROR_HEADLINE, never the
+// headline itself (design review, Group B: one heading, one hint, one
+// retry, everywhere an error appears).
+export const getErrorHint = (error: HomeApiError | null): string => {
+  if (!error) return SERVER_ERROR_HINT;
+  if (error.status === 0) return NETWORK_ERROR_HINT;
+  if (error.status === 400) return INVALID_REQUEST_HINT;
+  return SERVER_ERROR_HINT;
 };
 
 // The ratified empty state (design-system.md, "Every data screen has three
