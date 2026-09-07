@@ -3,6 +3,8 @@ import type { FocusEvent } from 'react';
 import classNames from 'classnames';
 import styled from 'styled-components';
 
+import { directionForValue } from '~/helpers';
+
 import * as consts from './consts';
 import type { CitySelectProps } from './models';
 import * as styles from './styles';
@@ -48,7 +50,7 @@ export const CitySelect = styled(({ className, city, onSelectCity, placeholderLa
             placeholder={consts.SEARCH_PLACEHOLDER}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            dir="auto"
+            dir={directionForValue(query)}
           />
 
           {query.trim().length === 0 && <p className="hint">{consts.SEARCH_HINT}</p>}

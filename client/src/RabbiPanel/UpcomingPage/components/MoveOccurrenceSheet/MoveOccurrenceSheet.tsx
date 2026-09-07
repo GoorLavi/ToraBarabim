@@ -2,6 +2,7 @@ import { useState } from 'react';
 import styled from 'styled-components';
 
 import { CitySelect } from '~/components/CitySelect/CitySelect';
+import { directionForValue } from '~/helpers';
 import { ResponsiveSheet } from '~/RabbiPanel/components/ResponsiveSheet/ResponsiveSheet';
 import { rabbiErrorMessage } from '~/RabbiPanel/helpers';
 import * as parentConsts from '~/RabbiPanel/UpcomingPage/consts';
@@ -67,7 +68,7 @@ export const MoveOccurrenceSheet = styled(({ className, occurrence, onDismiss }:
               <span className="label">{parentConsts.MOVE_PLACE_NAME_LABEL}</span>
               <input
                 type="text"
-                dir="auto"
+                dir={directionForValue(form.placeName)}
                 value={form.placeName}
                 onChange={(event) => setForm((prev) => ({ ...prev, placeName: event.target.value }))}
               />
@@ -78,7 +79,7 @@ export const MoveOccurrenceSheet = styled(({ className, occurrence, onDismiss }:
               <span className="label">{parentConsts.MOVE_STREET_LABEL}</span>
               <input
                 type="text"
-                dir="auto"
+                dir={directionForValue(form.street)}
                 value={form.street}
                 onChange={(event) => setForm((prev) => ({ ...prev, street: event.target.value }))}
               />
