@@ -13,4 +13,9 @@ export interface CitySelectProps {
   onSelectCity: (city: SelectedCity | undefined) => void;
   placeholderLabel: string;
   allowClear?: boolean;
+  // A stacked form field wants the control to span its row like every
+  // sibling input. A filter bar wants it to stay a compact pill among
+  // other controls. Off by default so an existing caller's layout never
+  // changes underneath it.
+  fullWidth?: boolean;
 }

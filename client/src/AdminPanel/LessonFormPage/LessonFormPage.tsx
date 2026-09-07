@@ -192,6 +192,7 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
                 city={form.city}
                 onSelectCity={(city) => setForm((prev) => ({ ...prev, city }))}
                 placeholderLabel={consts.CITY_PLACEHOLDER}
+                fullWidth
               />
               <span className="helper">{consts.CITY_HELPER}</span>
               {cityError && <span className="error">{cityError}</span>}
