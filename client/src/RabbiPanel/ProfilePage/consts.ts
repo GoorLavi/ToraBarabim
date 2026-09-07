@@ -12,7 +12,7 @@ export const TITLE_PLACEHOLDER = 'למשל: רב בית הכנסת אהל יוס
 export const TITLE_HELPER = 'לא חובה. מופיע בשורה קטנה מתחת לשם.';
 
 export const BIO_LABEL = 'קצת עליי';
-export const BIO_HELPER = 'לא חובה. כמה שורות שיעזרו למי שלא מכיר להחליט לבוא.';
+export const BIO_HELPER = 'לא חובה. כמה שורות על הרב למי שלא מכיר את פועלו.';
 
 export const LIVE_NOTE = 'מה שתשמור כאן יופיע באתר מיד.';
 export const SAVE_LABEL = 'שמירת הפרטים';
