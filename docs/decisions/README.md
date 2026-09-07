@@ -82,3 +82,4 @@ The real alternatives and why each lost. If there was no alternative, say so.
 | [0012](0012-the-home-page-is-composed-by-the-server.md) | The home page is composed by the server | accepted |
 | [0013](0013-rabbis-carry-a-manually-set-prominence.md) | Rabbis carry a manually set prominence | accepted |
 | [0014](0014-the-logo-is-a-fixed-mark-not-a-theme-token.md) | The logo is a fixed mark, not a theme token | accepted |
+| [0015](0015-one-colour-scheme-argaman-vezahav.md) | The site ships one colour scheme, ארגמן וזהב | accepted |

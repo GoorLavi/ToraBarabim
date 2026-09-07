@@ -1,7 +1,5 @@
-import { evenVeTcheletColors } from './colors/evenVeTchelet';
-import { evenVeZayitColors } from './colors/evenVeZayit';
 import { argamanVeZahavColors } from './colors/argamanVeZahav';
-import type { Theme, ThemeName } from './models';
+import type { Theme } from './models';
 import { BREAKPOINTS, RADII, SHADOWS, SPACING, TYPOGRAPHY } from './tokens';
 
 const sharedTokens = {
@@ -12,10 +10,4 @@ const sharedTokens = {
   breakpoints: BREAKPOINTS,
 };
 
-// Three color themes shipping together so they can be compared in the
-// running app (design-system.md, "Themes and the token contract").
-export const THEMES: Record<ThemeName, Theme> = {
-  'ארגמן וזהב': { ...sharedTokens, colors: argamanVeZahavColors },
-  'אבן וזית': { ...sharedTokens, colors: evenVeZayitColors },
-  'אבן ותכלת': { ...sharedTokens, colors: evenVeTcheletColors },
-};
+export const ARGAMAN_VE_ZAHAV_THEME: Theme = { ...sharedTokens, colors: argamanVeZahavColors };

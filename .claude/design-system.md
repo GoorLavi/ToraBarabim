@@ -6,9 +6,8 @@ ends up looking like. **Open** decisions have not been made yet: the designer
 written down here. Do not invent a value for an open decision and treat it as a token.
 
 Once the code has real tokens, the code is the source of truth and this file is the
-human-readable mirror. Keep the two in sync. **The client does not exist yet, so for now
-this file is the only record of the ratified values.** The moment the styled-components
-themes land, those themes become canonical and this file follows them.
+human-readable mirror. Keep the two in sync. The styled-components theme in code is
+canonical, and this file follows it.
 
 ## Settled
 
@@ -125,10 +124,9 @@ for why this shape and not the alternatives explored alongside it.
 
 **The mark is always rendered in fixed brand colors, never the active theme's
 tokens.** Structural shapes `#6B2436`, the arched opening `#B8862B`; on a `primary`
-field, `#FFFFFF` and `#E0B45E`. This holds in all three themes. It is the one
-deliberate exception to "tokens are named for their role, never for their color":
-comment the exception at the implementation site so it is not read as a bug and pointed
-back at the active theme.
+field, `#FFFFFF` and `#E0B45E`. It is the one deliberate exception to "tokens are
+named for their role, never for their color": comment the exception at the
+implementation site so it is not read as a bug and pointed back at the theme.
 
 Geometry on a 100x100 grid: top beam `9,8,82,7`; main beam `3,16,94,11`; columns
 `14,30,19,50` and `67,30,19,50`; arched opening `40,38,20,42` with the top corners
@@ -162,25 +160,18 @@ without an audience cannot exist and no surface needs to render one. An earlier 
 of this section described a hide-when-empty behaviour; the implementation settled the
 question the other way and this file follows the code.
 
-### Themes and the token contract
-Three color themes ship together as styled-components themes, so they can be compared
-in the running app. **`ארגמן וזהב` is the default.**
+### The theme and the token contract
+The site ships one color scheme, `ארגמן וזהב`, as a single styled-components theme.
 
-Two rules bind every theme, and they are the reason three can coexist safely:
+**Tokens are named for their role, never for their color.** `color.primary`, never
+`color.plum`. `color.accent`, never `color.gold`. A color word inside a token name is
+a bug: it stops meaning the thing it says the moment the value behind it changes.
 
-1. **Identical token names across all three themes.** Same keys, same semantic meaning,
-   only the values differ. No token may exist in one theme and not another. A component
-   that reaches for a token present in only one theme breaks silently the moment someone
-   switches, and nobody notices for a month.
-2. **Tokens are named for their role, never for their color.** `color.primary`, never
-   `color.plum`. `color.accent`, never `color.gold`. A color word inside a token name is
-   a bug, because the next theme makes it a lie.
-
-Type, spacing, radii, shadows and breakpoints are shared by all three themes. Only color
-varies.
+Type, spacing, radii, shadows and breakpoints live alongside color in the same theme
+object. All are tokens, none are raw values in a component.
 
 ### Color: the token set
-Thirteen color tokens. Every theme defines all thirteen.
+Thirteen color tokens. The theme defines all thirteen.
 
 | Token | Role |
 |---|---|
@@ -198,16 +189,15 @@ Thirteen color tokens. Every theme defines all thirteen.
 | `color.border` | Hairlines, card and field outlines |
 | `color.danger` | Error text. Text only, never a fill |
 
-**Contrast rule for `accent`.** In some themes the accent does not reach 4.5:1 against
-`surface`, so it is reserved for graphic elements and large numerals and is never used
-for body-size text. The default theme is the case that forces this: `#B8862B` on white
-is 3.24:1, which is fine for the large time in a date medallion and wrong for a 14px
-label.
+**Contrast rule for `accent`.** The accent does not reach 4.5:1 against `surface`, so it
+is reserved for graphic elements and large numerals and is never used for body-size text:
+`#B8862B` on white is 3.24:1, which is fine for the large time in a date medallion and
+wrong for a 14px label.
 
-Where the accent has to appear on a dark field, use `accentOnDark`. It is tuned per
-theme to clear 3:1 against that theme's `primary`.
+Where the accent has to appear on a dark field, use `accentOnDark`. It is tuned to clear
+3:1 against `primary`.
 
-### Color: theme `ארגמן וזהב` (default)
+### Color: `ארגמן וזהב`
 Ceremonial and dignified. Deep plum and gold on a warm neutral, closest to a book
 binding or a parochet.
 
@@ -225,45 +215,6 @@ binding or a parochet.
 | `color.textSecondary` | `#6B6165` |
 | `color.textOnPrimary` | `#FFFFFF` |
 | `color.border` | `#E6DEDF` |
-| `color.danger` | `#A32A22` |
-
-### Color: theme `אבן וזית`
-Local and grounded. Jerusalem limestone, olive green, terracotta.
-
-| Token | Value |
-|---|---|
-| `color.bg` | `#F5F2EC` |
-| `color.surface` | `#FFFFFF` |
-| `color.primary` | `#3D5A45` |
-| `color.primaryStrong` | `#2E4534` |
-| `color.primarySoft` | `#E8EDE7` |
-| `color.accent` | `#B4552F` |
-| `color.accentSoft` | `#F7E9E1` |
-| `color.accentOnDark` | `#EAA983` |
-| `color.text` | `#22201C` |
-| `color.textSecondary` | `#6E6A62` |
-| `color.textOnPrimary` | `#FFFFFF` |
-| `color.border` | `#E3DED3` |
-| `color.danger` | `#9B2C22` |
-
-### Color: theme `אבן ותכלת`
-Clear and civic. A single hue: cool grey ground, slate, tekhelet. No second color
-anywhere.
-
-| Token | Value |
-|---|---|
-| `color.bg` | `#F3F5F7` |
-| `color.surface` | `#FFFFFF` |
-| `color.primary` | `#2E4057` |
-| `color.primaryStrong` | `#223146` |
-| `color.primarySoft` | `#E6EBF1` |
-| `color.accent` | `#1A6FBB` |
-| `color.accentSoft` | `#E2EEF9` |
-| `color.accentOnDark` | `#7FB8E8` |
-| `color.text` | `#1A1F26` |
-| `color.textSecondary` | `#616B76` |
-| `color.textOnPrimary` | `#FFFFFF` |
-| `color.border` | `#DCE2E8` |
 | `color.danger` | `#A32A22` |
 
 ### Type
@@ -333,8 +284,8 @@ Four values, and no others.
 chips and avatars.
 
 ### Shadows
-Two. The shadow color is a near-black at low alpha and does not change per theme,
-because a tinted shadow reads as a smudge.
+Two. The shadow color is a near-black at low alpha, because a tinted shadow reads as a
+smudge.
 
 - `shadow.card`: `0 1px 2px rgba(28,26,23,0.04), 0 1px 3px rgba(28,26,23,0.06)`
 - `shadow.raised`: `0 4px 16px rgba(28,26,23,0.10)`, for the sticky search bar only
