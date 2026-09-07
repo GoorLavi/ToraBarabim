@@ -59,11 +59,15 @@ jobs:
       # break again for whichever hostname the address is not.
       - run: npm run build --workspace client
 
+      # The `migrate` job below can sit at its approval gate indefinitely,
+      # so this artifact has to outlive however long a human takes. At seven
+      # days it expired under an approval that came fifteen days later, and
+      # `deploy-client` failed with nothing left to download.
       - uses: actions/upload-artifact@v4
         with:
           name: client-dist
           path: client/dist
-          retention-days: 7
+          retention-days: 90
 
   detect-migration:
     needs: build
@@ -143,7 +147,26 @@ jobs:
           IMAGE=$(echo "$TASK_DEF" | jq -r '.containerDefinitions[] | select(.name=="Migrate") | .image')
           echo "uri=${IMAGE%%:*}" >> "$GITHUB_OUTPUT"
 
+      # The tag is the commit, and the CDK asset repository refuses to
+      # overwrite a tag, so re-running a deploy that already pushed its image
+      # fails here every time and takes the rest of the run with it. An
+      # existing tag for this commit is already the image this step would
+      # build, so there is nothing to do.
+      - name: Skip the build when this commit's migrate image is already pushed
+        id: migrate-image
+        run: |
+          REPOSITORY="${{ steps.ecr-repo.outputs.uri }}"
+          if aws ecr describe-images \
+               --repository-name "${REPOSITORY##*/}" \
+               --image-ids "imageTag=migrate-${{ github.sha }}" > /dev/null 2>&1; then
+            echo 'Image already in the repository; not rebuilding.'
+            echo 'already-pushed=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'already-pushed=false' >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build and push the migrate image
+        if: steps.migrate-image.outputs.already-pushed != 'true'
         uses: docker/build-push-action@v6
         with:
           context: .
