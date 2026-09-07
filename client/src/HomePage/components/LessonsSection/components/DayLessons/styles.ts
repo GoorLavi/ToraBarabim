@@ -12,7 +12,7 @@ export const DayLessons = css(
     justify-content: space-between;
     gap: ${theme.spacing.md};
 
-    > h2 {
+    > .title {
       font-size: ${theme.typography.sectionHeading.phone.fontSize};
       line-height: ${theme.typography.sectionHeading.phone.lineHeight};
       font-weight: ${theme.typography.sectionHeading.fontWeight};
@@ -56,10 +56,10 @@ export const DayLessons = css(
        card link inside was only ever as tall as its own content, so two
        cards in the same row could still differ in visible height whenever
        one title wrapped to a second line (design review: "ragged bottom
-       edge in the grid"). Making the <li> a grid parent too stretches that
-       single child to the <li>'s full inline and block size, so every card
+       edge in the grid"). Making the cell a grid parent too stretches that
+       single child to the cell's full inline and block size, so every card
        in a row shares both the row's width and its height. */
-    > li {
+    > .cell {
       display: grid;
     }
   }

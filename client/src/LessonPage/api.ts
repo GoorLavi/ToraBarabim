@@ -27,6 +27,11 @@ export const fetchLessonOccurrence = async (lessonId: string, date: string, sign
   try {
     response = await fetch(url, { signal });
   } catch (error) {
+    // An abort is TanStack Query cancelling its own in-flight request, not a
+    // failure to reach the server. Rethrowing it unwrapped lets the query
+    // settle as cancelled; wrapping it would flash the error screen on
+    // navigation away from the page.
+    if (error instanceof DOMException && error.name === 'AbortError') throw error;
     throw new LessonPageApiError(0, `failed to reach ${url.toString()}: ${String(error)}`);
   }
 

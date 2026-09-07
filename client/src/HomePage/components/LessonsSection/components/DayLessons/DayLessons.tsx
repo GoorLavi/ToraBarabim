@@ -22,7 +22,7 @@ export const DayLessons = styled(({ className, headingLabel, items, showSeeAllLi
   return (
     <section className={className}>
       <div className="heading">
-        <h2 dir="auto">{headingLabel}</h2>
+        <h2 className="title" dir="auto">{headingLabel}</h2>
         {showSeeAllLink && <span className="seeAll">{SEE_ALL_LABEL}</span>}
       </div>
 
@@ -30,7 +30,7 @@ export const DayLessons = styled(({ className, headingLabel, items, showSeeAllLi
 
       <ul className="grid">
         {visibleItems.map((item) => (
-          <li key={`${item.lessonId}-${item.date}`}>
+          <li className="cell" key={`${item.lessonId}-${item.date}`}>
             <LessonCard lesson={item} />
           </li>
         ))}

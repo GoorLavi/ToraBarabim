@@ -12,7 +12,7 @@ import * as styles from './styles';
 // text rather than a placeholder bar.
 export const DayLessonsSkeleton = styled(({ className, headingLabel }: DayLessonsSkeletonProps) => (
   <section className={className} aria-hidden="true">
-    <h2 dir="auto">{headingLabel}</h2>
+    <h2 className="title" dir="auto">{headingLabel}</h2>
     <div className="grid">
       {consts.CARD_KEYS.map((key) => (
         <LessonCardSkeleton key={key} />

@@ -9,7 +9,7 @@ export const DayLessonsSkeleton = css(
   flex-direction: column;
   gap: ${theme.spacing.lg};
 
-  > h2 {
+  > .title {
     font-size: ${theme.typography.sectionHeading.phone.fontSize};
     line-height: ${theme.typography.sectionHeading.phone.lineHeight};
     font-weight: ${theme.typography.sectionHeading.fontWeight};
