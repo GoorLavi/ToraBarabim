@@ -28,13 +28,27 @@ export const Header = css(
 
     > .logo {
       grid-area: logo;
+      justify-self: start;
       display: flex;
       align-items: center;
       gap: ${theme.spacing.sm};
+      min-block-size: 48px;
+      border-radius: ${theme.radii.sm};
+      color: ${theme.colors.textOnPrimary};
+      text-decoration: none;
+
+      &:hover,
+      &:active {
+        opacity: 0.9;
+      }
+
+      &:focus-visible {
+        outline: 2px solid ${theme.colors.textOnPrimary};
+        outline-offset: 2px;
+      }
     }
 
     > .logo > .wordmark {
-      color: ${theme.colors.textOnPrimary};
       font-weight: ${theme.typography.fontWeight.bold};
       font-size: ${theme.typography.sectionHeading.phone.fontSize};
       line-height: ${theme.typography.sectionHeading.phone.lineHeight};

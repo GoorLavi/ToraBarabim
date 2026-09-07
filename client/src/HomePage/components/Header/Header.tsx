@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { CityPicker } from './components/CityPicker/CityPicker';
@@ -24,12 +25,17 @@ export const Header = styled(
   }: HeaderProps) => (
     <header className={className}>
       <div className="bar">
-        <div className="logo">
+        <Link
+          to="/"
+          className="logo"
+          aria-label={consts.HOME_LINK_LABEL}
+          onClick={() => window.scrollTo({ top: 0, behavior: 'auto' })}
+        >
           <LogoMark className="mark" size={consts.LOGO_MARK_SIZE} variant="onDark" />
           <span className="wordmark" dir="auto">
             {consts.WORDMARK}
           </span>
-        </div>
+        </Link>
         <DateFilterChips
           className="chips"
           {...{ option, customDate, onSelectOption, onSelectCustomDate, onClearDate }}
