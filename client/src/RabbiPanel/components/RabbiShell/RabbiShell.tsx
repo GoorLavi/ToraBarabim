@@ -48,6 +48,12 @@ export const RabbiShell = styled(({ className }: RabbiShellProps) => {
             </button>
           </div>
         </div>
+
+        {logout.isError && (
+          <p className="logoutError" role="alert">
+            {consts.LOGOUT_ERROR_MESSAGE}
+          </p>
+        )}
       </header>
 
       <main className="content">
