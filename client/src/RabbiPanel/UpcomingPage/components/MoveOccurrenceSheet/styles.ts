@@ -5,7 +5,16 @@ import { css } from 'styled-components';
 export const MoveOccurrenceSheet = css(
   ({ theme }) => `
   > .panel {
+    /* Overrides the shared shell's own scroll/height rule (see the comment
+       above this file): this sheet's content can grow past 90vh once the
+       place fields and their validation errors are showing, and only the
+       form should scroll, never the save button along with it. */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
     > .heading {
+      flex-shrink: 0;
       color: ${theme.colors.text};
       font-weight: ${theme.typography.fontWeight.bold};
       font-size: ${theme.typography.sectionHeading.phone.fontSize};
@@ -13,12 +22,19 @@ export const MoveOccurrenceSheet = css(
     }
 
     > .form {
+      flex: 1;
+      min-block-size: 0;
+      overflow-y: auto;
       margin-block-start: ${theme.spacing.md};
       display: flex;
       flex-direction: column;
       gap: ${theme.spacing.md};
 
-      > .field {
+      /* Grouped rather than duplicated: a field inside the "elsewhere"
+         group below gets exactly the same label/input/error treatment as
+         one directly in the form, not a second, drifting copy of it. */
+      > .field,
+      > .placeFields > .field {
         display: flex;
         flex-direction: column;
         gap: ${theme.spacing.xs};
@@ -39,6 +55,17 @@ export const MoveOccurrenceSheet = css(
           color: ${theme.colors.text};
           font-size: ${theme.typography.body.phone.fontSize};
           line-height: ${theme.typography.body.phone.lineHeight};
+
+          /* A native time input's value sits at its own inline end
+             regardless of document direction, stranded across a
+             full-width field once every neighbouring field is
+             right-aligned. Sizing to content keeps it beside its label
+             instead of floating alone. */
+          &[type='time'] {
+            inline-size: fit-content;
+            min-inline-size: 160px;
+            text-align: start;
+          }
         }
 
         > .error {
@@ -61,16 +88,19 @@ export const MoveOccurrenceSheet = css(
         > input {
           inline-size: 20px;
           block-size: 20px;
+          accent-color: ${theme.colors.primary};
         }
       }
 
+      /* An inline-start border rather than a tinted panel: it reads as
+         "these fields belong to the toggle above them", which a soft
+         background fill on its own does not say. */
       > .placeFields {
         display: flex;
         flex-direction: column;
         gap: ${theme.spacing.md};
-        padding: ${theme.spacing.md};
-        border-radius: ${theme.radii.md};
-        background: ${theme.colors.bg};
+        padding-inline-start: ${theme.spacing.md};
+        border-inline-start: 2px solid ${theme.colors.primarySoft};
       }
 
       > .scopeNote {
@@ -87,7 +117,14 @@ export const MoveOccurrenceSheet = css(
     }
 
     > .actions {
+      flex-shrink: 0;
       margin-block-start: ${theme.spacing.xl};
+      padding-block-start: ${theme.spacing.md};
+      /* Clears the iOS home indicator once the sheet's own bottom padding
+         isn't enough: the shared shell's .panel padding covers a plain
+         sheet, but this one pins its actions to the true bottom edge. */
+      padding-block-end: max(${theme.spacing.md}, env(safe-area-inset-bottom));
+      border-block-start: 1px solid ${theme.colors.border};
       display: flex;
       flex-direction: column;
       gap: ${theme.spacing.sm};

@@ -12,7 +12,7 @@ import { useCitySearch } from './useCitySearch';
 // counterpart to the public site's `CityPicker`, kept as its own component
 // since it needs a "clear" affordance the public picker does not
 // (client/CLAUDE.md).
-export const CitySelect = styled(({ className, city, onSelectCity, placeholderLabel, allowClear }: CitySelectProps) => {
+export const CitySelect = styled(({ className, city, onSelectCity, placeholderLabel, allowClear, fullWidth }: CitySelectProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const results = useCitySearch(query);
@@ -22,7 +22,7 @@ export const CitySelect = styled(({ className, city, onSelectCity, placeholderLa
   };
 
   return (
-    <div className={classNames(className, { open: isOpen })} onBlur={close}>
+    <div className={classNames(className, { open: isOpen, fullWidth })} onBlur={close}>
       <button type="button" className="control" aria-haspopup="listbox" aria-expanded={isOpen} onClick={() => setIsOpen((open) => !open)}>
         <span className="label" dir="auto">
           {city?.name ?? placeholderLabel}

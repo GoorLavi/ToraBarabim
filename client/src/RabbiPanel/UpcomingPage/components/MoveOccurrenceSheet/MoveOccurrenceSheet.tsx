@@ -59,6 +59,7 @@ export const MoveOccurrenceSheet = styled(({ className, occurrence, onDismiss }:
                 city={form.city}
                 onSelectCity={(city) => setForm((prev) => ({ ...prev, city }))}
                 placeholderLabel={parentConsts.MOVE_CITY_PLACEHOLDER}
+                fullWidth
               />
               {fieldErrors.city && <span className="error">{fieldErrors.city}</span>}
             </div>
