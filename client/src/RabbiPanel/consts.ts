@@ -1,7 +1,8 @@
 // A rabbi's own lesson list never grows past a handful of records (design
 // doc, section 4: "יש לו שלושה שיעורים, לא שלוש מאות"), so one page is
-// always the whole list. This is the one place that page size is decided;
-// every screen that lists a rabbi's lessons reads it from here.
+// always the whole list. Mirrors `server/src/service/rabbi-lesson/consts.ts`'s
+// `MAX_RABBI_PAGE_SIZE`; every screen that lists a rabbi's lessons reads
+// the value from here.
 export const RABBI_LESSON_PAGE_SIZE = 100;
 
 export const GENERIC_ERROR_MESSAGE = 'אירעה שגיאה, נסה שוב מאוחר יותר';
