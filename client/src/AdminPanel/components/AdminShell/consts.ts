@@ -5,3 +5,5 @@ export const LESSONS_TAB_LABEL = 'שיעורים';
 export const RABBIS_TAB_LABEL = 'רבנים';
 export const LOGOUT_LABEL = 'יציאה';
 export const ADMIN_NAME_FALLBACK = 'מנהל המערכת';
+
+export const LOGOUT_ERROR_MESSAGE = 'היציאה נכשלה, נסו שוב';

@@ -13,6 +13,7 @@ import { registerRabbiAuthRoutes } from './api/rabbi/auth';
 import { loadConfig } from './config';
 import { registerCookies } from './plugins/cookies';
 import { registerCors } from './plugins/cors';
+import { registerEmptyBodySupport } from './plugins/empty-body';
 import { registerErrorHandler } from './plugins/error-handler';
 
 const config = loadConfig(process.env);
@@ -40,6 +41,8 @@ const start = async (): Promise<void> => {
   // No global limits: the rabbi photo route passes its own per-request
   // `fileSize` limit from config, so the plugin default never applies.
   await app.register(multipart);
+  // After multipart, so its own parser keeps precedence over the catch-all.
+  registerEmptyBodySupport(app);
   await registerHealthRoutes(app);
   await registerLessonRoutes(app);
   await registerHomeRoutes(app);

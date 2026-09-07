@@ -43,6 +43,12 @@ export const AdminShell = styled(({ className }: AdminShellProps) => {
             </button>
           </div>
         </div>
+
+        {logout.isError && (
+          <p className="logoutError" role="alert">
+            {consts.LOGOUT_ERROR_MESSAGE}
+          </p>
+        )}
       </header>
 
       <main className="content">

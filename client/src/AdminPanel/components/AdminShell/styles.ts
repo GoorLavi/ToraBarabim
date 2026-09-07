@@ -108,6 +108,20 @@ export const AdminShell = css(
         }
       }
     }
+
+    > .logoutError {
+      max-inline-size: 1120px;
+      margin-inline: auto;
+      padding-inline: ${theme.spacing.lg};
+      padding-block-start: ${theme.spacing.sm};
+      color: ${theme.colors.accentOnDark};
+      font-size: ${theme.typography.secondary.phone.fontSize};
+      line-height: ${theme.typography.secondary.phone.lineHeight};
+
+      @media (min-width: ${theme.breakpoints.md}) {
+        padding-inline: ${theme.spacing.xl};
+      }
+    }
   }
 
   > .content {
