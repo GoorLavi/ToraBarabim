@@ -4,6 +4,7 @@ import styled from 'styled-components';
 
 import * as parentConsts from '~/AdminPanel/LessonsListPage/consts';
 import { CitySelect } from '~/components/CitySelect/CitySelect';
+import { directionForValue } from '~/helpers';
 
 import type { LessonFilterBarProps } from './models';
 import * as styles from './styles';
@@ -50,7 +51,7 @@ export const LessonFilterBar = styled(
           <input
             type="search"
             className="search"
-            dir="auto"
+            dir={directionForValue(search)}
             aria-label={parentConsts.SEARCH_LABEL}
             placeholder={parentConsts.SEARCH_PLACEHOLDER}
             value={search}

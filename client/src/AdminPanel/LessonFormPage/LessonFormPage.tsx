@@ -9,6 +9,7 @@ import { adminErrorMessage } from '~/AdminPanel/helpers';
 import { AudiencePicker } from '~/components/AudiencePicker/AudiencePicker';
 import { CitySelect } from '~/components/CitySelect/CitySelect';
 import { RecurrenceFields } from '~/components/RecurrenceFields/RecurrenceFields';
+import { directionForValue } from '~/helpers';
 
 import { LessonPreviewCard } from './components/LessonPreviewCard/LessonPreviewCard';
 import { RabbiPicker } from './components/RabbiPicker/RabbiPicker';
@@ -155,7 +156,12 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
             <h2 className="sectionHeading">{consts.DETAILS_SECTION_HEADING}</h2>
             <label className="field">
               <span className="label">{consts.TITLE_LABEL}</span>
-              <input type="text" dir="auto" value={form.title} onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))} />
+              <input
+                type="text"
+                dir={directionForValue(form.title)}
+                value={form.title}
+                onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
+              />
               <span className="helper">{consts.TITLE_HELPER}</span>
             </label>
           </section>
@@ -202,7 +208,7 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
               <span className="label">{consts.PLACE_NAME_LABEL}</span>
               <input
                 type="text"
-                dir="auto"
+                dir={directionForValue(form.placeName)}
                 value={form.placeName}
                 onChange={(event) => setForm((prev) => ({ ...prev, placeName: event.target.value }))}
               />
@@ -213,7 +219,7 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
               <span className="label">{consts.STREET_LABEL}</span>
               <input
                 type="text"
-                dir="auto"
+                dir={directionForValue(form.street)}
                 value={form.street}
                 onChange={(event) => setForm((prev) => ({ ...prev, street: event.target.value }))}
               />
@@ -223,7 +229,12 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
 
             <label className="field">
               <span className="label">{consts.FLOOR_LABEL}</span>
-              <input type="text" dir="auto" value={form.floor} onChange={(event) => setForm((prev) => ({ ...prev, floor: event.target.value }))} />
+              <input
+                type="text"
+                dir={directionForValue(form.floor)}
+                value={form.floor}
+                onChange={(event) => setForm((prev) => ({ ...prev, floor: event.target.value }))}
+              />
             </label>
           </section>
 

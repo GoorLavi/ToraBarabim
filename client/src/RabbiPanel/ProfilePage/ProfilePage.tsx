@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { PhotoPicker } from '~/components/PhotoPicker/PhotoPicker';
+import { directionForValue } from '~/helpers';
 import { RABBI_ROUTES } from '~/RabbiPanel/consts';
 import { rabbiErrorMessage } from '~/RabbiPanel/helpers';
 import { useRabbiProfile } from '~/RabbiPanel/useRabbiProfile';
@@ -106,7 +107,12 @@ export const ProfilePage = styled(({ className }: ProfilePageProps) => {
 
         <label className="field">
           <span className="label">{consts.NAME_LABEL}</span>
-          <input type="text" dir="auto" value={form.name} onChange={(event) => setForm((prev) => prev && { ...prev, name: event.target.value })} />
+          <input
+            type="text"
+            dir={directionForValue(form.name)}
+            value={form.name}
+            onChange={(event) => setForm((prev) => prev && { ...prev, name: event.target.value })}
+          />
           <span className="helper">{consts.NAME_HELPER}</span>
           {fieldErrors.name && <span className="error">{fieldErrors.name}</span>}
         </label>
@@ -115,7 +121,7 @@ export const ProfilePage = styled(({ className }: ProfilePageProps) => {
           <span className="label">{consts.TITLE_LABEL}</span>
           <input
             type="text"
-            dir="auto"
+            dir={directionForValue(form.title)}
             placeholder={consts.TITLE_PLACEHOLDER}
             value={form.title}
             onChange={(event) => setForm((prev) => prev && { ...prev, title: event.target.value })}
@@ -125,7 +131,11 @@ export const ProfilePage = styled(({ className }: ProfilePageProps) => {
 
         <label className="field">
           <span className="label">{consts.BIO_LABEL}</span>
-          <textarea dir="auto" value={form.bio} onChange={(event) => setForm((prev) => prev && { ...prev, bio: event.target.value })} />
+          <textarea
+            dir={directionForValue(form.bio)}
+            value={form.bio}
+            onChange={(event) => setForm((prev) => prev && { ...prev, bio: event.target.value })}
+          />
           <span className="helper">{consts.BIO_HELPER}</span>
         </label>
 

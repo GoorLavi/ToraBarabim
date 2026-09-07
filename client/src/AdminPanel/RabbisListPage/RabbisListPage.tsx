@@ -3,6 +3,7 @@ import styled from 'styled-components';
 
 import { ADMIN_ROUTES } from '~/AdminPanel/consts';
 import { adminErrorMessage } from '~/AdminPanel/helpers';
+import { directionForValue } from '~/helpers';
 
 import { RabbiCard } from './components/RabbiCard/RabbiCard';
 import * as consts from './consts';
@@ -32,7 +33,7 @@ export const RabbisListPage = styled(({ className }: RabbisListPageProps) => {
         <input
           type="search"
           className="search"
-          dir="auto"
+          dir={directionForValue(search)}
           aria-label={consts.SEARCH_LABEL}
           placeholder={consts.SEARCH_PLACEHOLDER}
           value={search}

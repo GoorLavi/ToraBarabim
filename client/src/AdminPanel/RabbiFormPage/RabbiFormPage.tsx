@@ -6,6 +6,7 @@ import styled from 'styled-components';
 import { ADMIN_ROUTES } from '~/AdminPanel/consts';
 import { adminErrorMessage } from '~/AdminPanel/helpers';
 import { PhotoPicker } from '~/components/PhotoPicker/PhotoPicker';
+import { directionForValue } from '~/helpers';
 
 import { DeleteRabbiButton } from './components/DeleteRabbiButton/DeleteRabbiButton';
 import { RabbiAccountSection } from './components/RabbiAccountSection/RabbiAccountSection';
@@ -127,7 +128,12 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
 
           <label className="field">
             <span className="label">{consts.NAME_LABEL}</span>
-            <input type="text" dir="auto" value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} />
+            <input
+              type="text"
+              dir={directionForValue(form.name)}
+              value={form.name}
+              onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
+            />
             <span className="helper">{consts.NAME_HELPER}</span>
             {nameError && <span className="error">{nameError}</span>}
           </label>
@@ -136,7 +142,7 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
             <span className="label">{consts.TITLE_LABEL}</span>
             <input
               type="text"
-              dir="auto"
+              dir={directionForValue(form.title)}
               placeholder={consts.TITLE_PLACEHOLDER}
               value={form.title}
               onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
@@ -147,7 +153,7 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
           <label className="field">
             <span className="label">{consts.BIO_LABEL}</span>
             <textarea
-              dir="auto"
+              dir={directionForValue(form.bio)}
               value={form.bio}
               onChange={(event) => setForm((prev) => ({ ...prev, bio: event.target.value }))}
             />
