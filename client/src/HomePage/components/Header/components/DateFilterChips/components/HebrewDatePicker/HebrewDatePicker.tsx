@@ -25,10 +25,10 @@ export const HebrewDatePicker = styled(
     const cellRefs = useRef(new Map<string, HTMLButtonElement>());
     const maxSelectableIso = helpers.maxSelectableIso(todayIso);
 
-    // Runs once on mount, which is exactly "on open" since the parent only
-    // mounts this component while the panel is open: the chosen day (or
-    // today, when nothing is chosen) receives focus without a separate
-    // effect keyed to an "isOpen" flag.
+    // Roving tabindex keeps one cell focusable, so DOM focus has to follow
+    // `focusedIso` on every move, not just on mount. The first run doubles as
+    // the on-open focus, since the parent mounts this only while the panel is
+    // open, which is why there is no separate "isOpen" effect.
     useEffect(() => {
       cellRefs.current.get(focusedIso)?.focus();
     }, [focusedIso]);
