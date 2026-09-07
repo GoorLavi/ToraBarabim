@@ -1,5 +1,5 @@
 // A rabbi's own lesson list never grows past a handful of records (design
-// doc, section 4: "יש לו שלושה שיעורים, לא שלוש מאות"), so one page is
+// doc, section 4: he has three lessons, not three hundred), so one page is
 // always the whole list. Mirrors `server/src/service/rabbi-lesson/consts.ts`'s
 // `MAX_RABBI_PAGE_SIZE`; every screen that lists a rabbi's lessons reads
 // the value from here.
