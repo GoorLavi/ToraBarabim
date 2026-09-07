@@ -50,6 +50,13 @@ the anchor itself, never through a larger font, a taller line-height, or a bare 
 text that happens to sit in a roomy row. Section-head links and footer links are links,
 and they are the ones that get forgotten.
 
+**The 8px separation may be carried optically, and only in a grid of identical cells
+such as a date picker.** Adjacent day cells touch: the mark that reads as the day is
+40px inside a 48px cell, and the 8px lives in that margin. The target is still a full
+48 by 48. This bends the separation, never the size, and it does not travel: two
+different actions side by side, especially where one of them removes something, still
+take a real 8px.
+
 ### Layout must survive real data
 Every layout is tested against a long rabbi name, a long place name, a missing photo,
 and a lesson with almost no detail filled in. Fixed widths that only fit the sample
