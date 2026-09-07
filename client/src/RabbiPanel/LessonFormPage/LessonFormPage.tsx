@@ -6,6 +6,7 @@ import styled from 'styled-components';
 import { AudiencePicker } from '~/components/AudiencePicker/AudiencePicker';
 import { CitySelect } from '~/components/CitySelect/CitySelect';
 import { RecurrenceFields } from '~/components/RecurrenceFields/RecurrenceFields';
+import { directionForValue } from '~/helpers';
 import { RabbiApiError } from '~/RabbiPanel/api';
 import { RABBI_ROUTES } from '~/RabbiPanel/consts';
 import { rabbiErrorMessage } from '~/RabbiPanel/helpers';
@@ -126,7 +127,12 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
           <section className="section">
             <label className="field">
               <span className="label">{consts.TITLE_LABEL}</span>
-              <input type="text" dir="auto" value={form.title} onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))} />
+              <input
+                type="text"
+                dir={directionForValue(form.title)}
+                value={form.title}
+                onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
+              />
               <span className="helper">{consts.TITLE_HELPER}</span>
             </label>
           </section>
@@ -163,6 +169,7 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
                 city={form.city}
                 onSelectCity={(city) => setForm((prev) => ({ ...prev, city }))}
                 placeholderLabel={consts.CITY_PLACEHOLDER}
+                fullWidth
               />
               <span className="helper">{consts.CITY_HELPER}</span>
               {cityError && <span className="error">{cityError}</span>}
@@ -172,7 +179,7 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
               <span className="label">{consts.PLACE_NAME_LABEL}</span>
               <input
                 type="text"
-                dir="auto"
+                dir={directionForValue(form.placeName)}
                 value={form.placeName}
                 onChange={(event) => setForm((prev) => ({ ...prev, placeName: event.target.value }))}
               />
@@ -183,7 +190,7 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
               <span className="label">{consts.STREET_LABEL}</span>
               <input
                 type="text"
-                dir="auto"
+                dir={directionForValue(form.street)}
                 value={form.street}
                 onChange={(event) => setForm((prev) => ({ ...prev, street: event.target.value }))}
               />
@@ -193,7 +200,12 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
 
             <label className="field">
               <span className="label">{consts.FLOOR_LABEL}</span>
-              <input type="text" dir="auto" value={form.floor} onChange={(event) => setForm((prev) => ({ ...prev, floor: event.target.value }))} />
+              <input
+                type="text"
+                dir={directionForValue(form.floor)}
+                value={form.floor}
+                onChange={(event) => setForm((prev) => ({ ...prev, floor: event.target.value }))}
+              />
             </label>
           </section>
 

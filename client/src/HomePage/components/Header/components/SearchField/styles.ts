@@ -10,9 +10,16 @@ export const SearchField = css(
   border-radius: ${theme.radii.md};
   background: ${theme.colors.surface};
 
+  /* The pill, not the native input, is what a reader perceives as the field,
+     so the focus ring is drawn on the container instead of letting Chrome
+     draw its own square-cornered ring inside a rounded box. The offset is
+     negative, pulling the ring onto the white pill rather than out onto the
+     header band: the band is painted this same primary token in every theme,
+     so a ring drawn outside the pill would sit on a background of its own
+     colour and vanish. */
   &:focus-within {
     outline: 2px solid ${theme.colors.primary};
-    outline-offset: 2px;
+    outline-offset: -${theme.spacing.sm};
   }
 
   > .icon {
@@ -26,17 +33,16 @@ export const SearchField = css(
     flex: 1;
     min-inline-size: 0;
     block-size: 48px;
-    /* A \`type="search"\` input carries the browser's own chrome (a grey
-       inset border, square corners) unless reset: the pill above is the
-       field, this is only the text itself (design review, Group C). */
-    appearance: none;
     border: none;
-    border-radius: 0;
     background: transparent;
-    outline: none;
     color: ${theme.colors.text};
+    font-family: inherit;
     font-size: ${theme.typography.body.phone.fontSize};
     line-height: ${theme.typography.body.phone.lineHeight};
+
+    &:focus {
+      outline: none;
+    }
 
     &::placeholder {
       color: ${theme.colors.textSecondary};

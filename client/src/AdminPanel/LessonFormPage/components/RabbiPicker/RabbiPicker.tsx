@@ -6,6 +6,7 @@ import styled from 'styled-components';
 
 import { ADMIN_ROUTES } from '~/AdminPanel/consts';
 import * as parentConsts from '~/AdminPanel/LessonFormPage/consts';
+import { directionForValue } from '~/helpers';
 
 import type { RabbiPickerProps } from './models';
 import * as styles from './styles';
@@ -47,7 +48,7 @@ export const RabbiPicker = styled(({ className, rabbi, onSelectRabbi, errorMessa
             placeholder={parentConsts.RABBI_SEARCH_PLACEHOLDER}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            dir="auto"
+            dir={directionForValue(query)}
           />
 
           {results.items.length > 0 && (

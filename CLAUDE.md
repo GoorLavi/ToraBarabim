@@ -244,11 +244,15 @@ Revisit this once there is enough behavior worth protecting.
 
 ## Data and Migrations
 
-There is no database yet. When one arrives:
-
 - **Never run a migration on your own.** Change the schema, regenerate types, and hand
   the migration to the human to apply.
 - Migrations are backward-compatible: add before you remove.
+- **A removal ships in its own deploy, after the code that stopped needing the old
+  shape is already live.** The migration finishes before the new server does, so for
+  the length of the deploy the *old* server is running against the *new* schema. On
+  2026-09-07 a dropped table took the public site down for the several minutes that
+  window lasted. Add the new shape, ship the code that no longer reads the old one,
+  and only then, in a later deploy, remove it.
 
 ## Project Layout and npm
 

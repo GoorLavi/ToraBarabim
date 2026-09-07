@@ -21,7 +21,8 @@ export const CitySelect = css(
     line-height: ${theme.typography.body.phone.lineHeight};
 
     > .label {
-      max-inline-size: 160px;
+      min-inline-size: 0;
+      flex: 1;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -31,6 +32,15 @@ export const CitySelect = css(
       flex-shrink: 0;
       inline-size: 16px;
       block-size: 16px;
+    }
+  }
+
+  &.fullWidth {
+    inline-size: 100%;
+
+    > .control {
+      flex: 1;
+      min-inline-size: 0;
     }
   }
 

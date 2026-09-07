@@ -31,9 +31,12 @@ export const GlobalStyle = createGlobalStyle(
     list-style: none;
   }
 
-  button {
+  button, input, select, textarea {
     font: inherit;
     color: inherit;
+  }
+
+  button {
     background: none;
     border: none;
     cursor: pointer;

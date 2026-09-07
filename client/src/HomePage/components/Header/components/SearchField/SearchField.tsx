@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import styled from 'styled-components';
 
+import { directionForValue } from '~/helpers';
+
 import * as consts from './consts';
 import type { SearchFieldProps } from './models';
 import * as styles from './styles';
@@ -42,7 +44,7 @@ export const SearchField = styled(({ className, value, onChange }: SearchFieldPr
         value={draft}
         maxLength={consts.MAX_LENGTH}
         onChange={(event) => setDraft(event.target.value)}
-        dir="auto"
+        dir={directionForValue(draft)}
       />
       {draft.length > 0 && (
         <button type="button" className="clear" aria-label={consts.CLEAR_LABEL} onClick={clear}>
