@@ -3,15 +3,15 @@ import { z } from 'zod';
 
 import { lessonPlaceSchema, recurrenceSchema, timeOfDaySchema, type LessonPlaceRecord } from '../admin-lesson/models';
 import { LESSON_AUDIENCES, LESSON_TOPICS } from '../../db/schema/enums';
-import { DEFAULT_ADMIN_PAGE, DEFAULT_ADMIN_PAGE_SIZE, MAX_ADMIN_PAGE_SIZE } from '../admin-shared/consts';
+import { DEFAULT_RABBI_PAGE, DEFAULT_RABBI_PAGE_SIZE, MAX_RABBI_PAGE_SIZE } from './consts';
 
 export const lessonIdParamSchema = z.object({
   id: z.string().trim().min(1),
 });
 
 export const rabbiLessonListQuerySchema = z.object({
-  page: z.coerce.number().int().min(1).default(DEFAULT_ADMIN_PAGE),
-  pageSize: z.coerce.number().int().min(1).max(MAX_ADMIN_PAGE_SIZE).default(DEFAULT_ADMIN_PAGE_SIZE),
+  page: z.coerce.number().int().min(1).default(DEFAULT_RABBI_PAGE),
+  pageSize: z.coerce.number().int().min(1).max(MAX_RABBI_PAGE_SIZE).default(DEFAULT_RABBI_PAGE_SIZE),
 });
 export type RabbiLessonListQuery = z.infer<typeof rabbiLessonListQuerySchema>;
 
