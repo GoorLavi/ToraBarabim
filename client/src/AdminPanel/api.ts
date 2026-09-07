@@ -1,22 +1,22 @@
 import type {
   AdminUser,
-  City,
   CreateLessonRequest,
-  CreatePlaceRequest,
+  CreateRabbiAccountRequest,
   CreateRabbiRequest,
   DeleteImpactPreview,
   LessonListResponse,
   LessonResponse,
-  PlaceListResponse,
-  PlaceResponse,
+  RabbiAccountCreatedResponse,
+  RabbiAccountResponse,
   RabbiListResponse,
   RabbiResponse,
+  ResetRabbiPasswordResponse,
   UpdateLessonRequest,
-  UpdatePlaceRequest,
+  UpdateRabbiAccountRequest,
   UpdateRabbiRequest,
 } from '@torabarabim/common';
 
-import type { AdminLessonFilters, AdminPlaceFilters, AdminRabbiFilters } from './models';
+import type { AdminLessonFilters, AdminRabbiFilters } from './models';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
@@ -128,13 +128,38 @@ export const uploadAdminRabbiPhoto = (id: string, file: File): Promise<RabbiResp
   return request(url(`/v1/admin/rabbis/${id}/photo`).toString(), { method: 'POST', body: formData });
 };
 
+// GET /v1/admin/rabbis/:id/account
+// 200 with RabbiAccountResponse. 404 'not_found' if the rabbi does not
+// exist, 404 'account_not_found' if the rabbi has no account yet (a normal
+// state, not an error to surface).
+export const fetchRabbiAccount = (rabbiId: string): Promise<RabbiAccountResponse> =>
+  request(url(`/v1/admin/rabbis/${rabbiId}/account`).toString());
+
+// POST /v1/admin/rabbis/:id/account
+// 201 with RabbiAccountCreatedResponse, whose `temporaryPassword` is
+// returned only this once. 404 if the rabbi does not exist. 409
+// 'account_already_exists'. 400 on invalid input.
+export const createRabbiAccount = (rabbiId: string, body: CreateRabbiAccountRequest): Promise<RabbiAccountCreatedResponse> =>
+  request(url(`/v1/admin/rabbis/${rabbiId}/account`).toString(), { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(body) });
+
+// PATCH /v1/admin/rabbis/:id/account
+// 200 with RabbiAccountResponse. 404 if the rabbi or its account does not
+// exist.
+export const updateRabbiAccount = (rabbiId: string, body: UpdateRabbiAccountRequest): Promise<RabbiAccountResponse> =>
+  request(url(`/v1/admin/rabbis/${rabbiId}/account`).toString(), { method: 'PATCH', headers: JSON_HEADERS, body: JSON.stringify(body) });
+
+// POST /v1/admin/rabbis/:id/account/reset-password
+// 200 with ResetRabbiPasswordResponse, whose `temporaryPassword` is
+// returned only this once. 404 if the rabbi or its account does not exist.
+export const resetRabbiPassword = (rabbiId: string): Promise<ResetRabbiPasswordResponse> =>
+  request(url(`/v1/admin/rabbis/${rabbiId}/account/reset-password`).toString(), { method: 'POST' });
+
 // GET /v1/admin/lessons
 // 200 with LessonListResponse, including an empty items array.
 export const fetchAdminLessons = (filters: AdminLessonFilters): Promise<LessonListResponse> => {
   const target = url('/v1/admin/lessons');
   if (filters.cityId) target.searchParams.set('cityId', filters.cityId);
   if (filters.rabbiId) target.searchParams.set('rabbiId', filters.rabbiId);
-  if (filters.placeId) target.searchParams.set('placeId', filters.placeId);
   target.searchParams.set('page', String(filters.page ?? 1));
   target.searchParams.set('pageSize', String(filters.pageSize ?? 50));
   return request(target.toString());
@@ -145,51 +170,12 @@ export const fetchAdminLessons = (filters: AdminLessonFilters): Promise<LessonLi
 export const fetchAdminLesson = (id: string): Promise<LessonResponse> => request(url(`/v1/admin/lessons/${id}`).toString());
 
 // POST /v1/admin/lessons
-// 201 with LessonResponse. 400 invalid_request / unknown_rabbi / unknown_place.
+// 201 with LessonResponse. 400 invalid_request / unknown_rabbi / unknown_city.
 export const createAdminLesson = (body: CreateLessonRequest): Promise<LessonResponse> =>
   request(url('/v1/admin/lessons').toString(), { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(body) });
 
 // PATCH /v1/admin/lessons/:id
-// 200 with LessonResponse. 400 invalid_request / unknown_rabbi / unknown_place.
+// 200 with LessonResponse. 400 invalid_request / unknown_rabbi / unknown_city.
 // 404 if the lesson does not exist.
 export const updateAdminLesson = (id: string, body: UpdateLessonRequest): Promise<LessonResponse> =>
   request(url(`/v1/admin/lessons/${id}`).toString(), { method: 'PATCH', headers: JSON_HEADERS, body: JSON.stringify(body) });
-
-// GET /v1/admin/places
-// 200 with PlaceListResponse, including an empty items array. Used to join
-// a lesson's place onto its row for display, never to build a places
-// management screen (out of scope for this slice).
-export const fetchAdminPlaces = (filters: AdminPlaceFilters): Promise<PlaceListResponse> => {
-  const target = url('/v1/admin/places');
-  if (filters.q) target.searchParams.set('q', filters.q);
-  if (filters.cityId) target.searchParams.set('cityId', filters.cityId);
-  target.searchParams.set('page', String(filters.page ?? 1));
-  target.searchParams.set('pageSize', String(filters.pageSize ?? 50));
-  return request(target.toString());
-};
-
-// GET /v1/admin/places/:id
-// 200 with PlaceResponse. 404 if the place does not exist.
-export const fetchAdminPlace = (id: string): Promise<PlaceResponse> => request(url(`/v1/admin/places/${id}`).toString());
-
-// POST /v1/admin/places
-// 201 with PlaceResponse. 400 invalid_request / unknown_city.
-export const createAdminPlace = (body: CreatePlaceRequest): Promise<PlaceResponse> =>
-  request(url('/v1/admin/places').toString(), { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(body) });
-
-// PATCH /v1/admin/places/:id
-// 200 with PlaceResponse. 400 invalid_request / unknown_city. 404 if the place does not exist.
-export const updateAdminPlace = (id: string, body: UpdatePlaceRequest): Promise<PlaceResponse> =>
-  request(url(`/v1/admin/places/${id}`).toString(), { method: 'PATCH', headers: JSON_HEADERS, body: JSON.stringify(body) });
-
-// GET /v1/cities (the public endpoint, not admin-guarded)
-// 200, including an empty result set.
-// A deliberate small duplicate of `HomePage/api.ts`'s `fetchCities`: the
-// two features are siblings, not ancestor/descendant, so importing across
-// them would break the folder-ownership tree (client/CLAUDE.md, Component
-// Tree). Lift both into a shared module if a third caller appears.
-export const fetchAdminCities = (q: string): Promise<{ items: City[] }> => {
-  const target = url('/v1/cities');
-  target.searchParams.set('q', q);
-  return request(target.toString());
-};

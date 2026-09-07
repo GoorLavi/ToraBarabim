@@ -1,16 +1,13 @@
-import type { Lesson, LessonListResponse, Place, RabbiListResponse, Weekday } from '@torabarabim/common';
+import type { Lesson, LessonListResponse, RabbiListResponse, Weekday } from '@torabarabim/common';
 
 import * as consts from './consts';
 import type { AdminLessonRow, RecurrenceFilter } from './models';
 
-export const joinLessonRows = (
-  lessons: LessonListResponse['items'],
-  rabbis: RabbiListResponse['items'],
-  places: Place[],
-): AdminLessonRow[] => {
+// The venue lives on the lesson itself now, so joining a row is just
+// attaching its rabbi; there is no separate place record to look up.
+export const joinLessonRows = (lessons: LessonListResponse['items'], rabbis: RabbiListResponse['items']): AdminLessonRow[] => {
   const rabbiMap = new Map(rabbis.map((rabbi) => [rabbi.id, rabbi]));
-  const placeMap = new Map(places.map((place) => [place.id, place]));
-  return lessons.map((lesson) => ({ lesson, rabbi: rabbiMap.get(lesson.rabbiId), place: placeMap.get(lesson.placeId) }));
+  return lessons.map((lesson) => ({ lesson, rabbi: rabbiMap.get(lesson.rabbiId) }));
 };
 
 const israeliDateFormatter = new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Jerusalem' });
@@ -113,7 +110,10 @@ const rowMatchesRecurrence = (row: AdminLessonRow, filter: RecurrenceFilter): bo
 const rowMatchesSearch = (row: AdminLessonRow, search: string): boolean => {
   const query = search.trim().toLowerCase();
   if (!query) return true;
-  const haystack = [row.lesson.title, row.rabbi?.name, row.place?.name, row.place?.city].filter(Boolean).join(' ').toLowerCase();
+  const haystack = [row.lesson.title, row.rabbi?.name, row.lesson.place.name, row.lesson.place.street, row.lesson.place.cityName]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
   return haystack.includes(query);
 };
 

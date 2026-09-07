@@ -25,7 +25,6 @@ export const RECURRING_TAG_LABEL = 'קבוע';
 export const ONE_TIME_TAG_LABEL = 'חד־פעמי';
 export const EDIT_LABEL = 'עריכה';
 export const UNTITLED_RABBI_FALLBACK = 'רב לא ידוע';
-export const UNKNOWN_PLACE_FALLBACK = 'מקום לא ידוע';
 
 export const LESSON_AUDIENCE_LABELS: Record<LessonAudience, string> = {
   men: 'גברים',
@@ -64,7 +63,7 @@ export const ERROR_MESSAGE = 'לא הצלחנו לטעון את השיעורים
 export const NO_LESSONS_HEADLINE = 'עוד אין שיעורים במערכת';
 export const NO_LESSONS_HINT = 'הוספת השיעור הראשון תפתח כאן את רשימת השיעורים.';
 export const NO_MATCHING_LESSONS_HEADLINE = 'לא נמצאו שיעורים תואמים';
-export const NO_MATCHING_LESSONS_HINT = 'נסו לצמצם את הסינון או לנקות אותו כדי לראות את כל השיעורים.';
+export const NO_MATCHING_LESSONS_HINT = 'נסה לצמצם את הסינון או לנקות אותו כדי לראות את כל השיעורים.';
 
 // The server returns `total` across the whole system but this screen loads
 // only one page of it (see `useAdminLessonsList`), so the honest subheading

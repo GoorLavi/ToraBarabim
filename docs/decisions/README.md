@@ -68,10 +68,10 @@ The real alternatives and why each lost. If there was no alternative, say so.
 
 | # | Decision | Status |
 | --- | --- | --- |
-| [0001](0001-lessons-are-admin-entered.md) | Lessons are entered by administrators, not the public | accepted |
+| [0001](0001-lessons-are-admin-entered.md) | Lessons are entered by administrators, not the public | superseded by [0015](0015-rabbis-manage-their-own-listings.md) |
 | [0002](0002-hebrew-only-rtl.md) | Hebrew only, right to left, with no translation layer | accepted |
-| [0003](0003-admin-accounts-are-real-users.md) | Admins are real accounts, created by a script | accepted |
-| [0004](0004-deleting-cascades-deliberately.md) | Deleting a rabbi or place destroys their lessons | accepted |
+| [0003](0003-admin-accounts-are-real-users.md) | Admins are real accounts, created by a script | accepted, in part superseded by [0015](0015-rabbis-manage-their-own-listings.md) |
+| [0004](0004-deleting-cascades-deliberately.md) | Deleting a rabbi or place destroys their lessons | accepted for rabbis, place half void since [0016](0016-a-venue-is-a-field-of-the-lesson.md) |
 | [0005](0005-s3-compatible-storage-one-code-path.md) | Images use one S3-compatible code path, MinIO locally | accepted |
 | [0006](0006-production-on-aws-with-cdk.md) | Production runs on AWS, defined in CDK | accepted |
 | [0007](0007-admin-panel-lives-in-the-same-app.md) | The admin panel is a section of the same app | accepted |
@@ -82,4 +82,6 @@ The real alternatives and why each lost. If there was no alternative, say so.
 | [0012](0012-the-home-page-is-composed-by-the-server.md) | The home page is composed by the server | accepted |
 | [0013](0013-rabbis-carry-a-manually-set-prominence.md) | Rabbis carry a manually set prominence | accepted |
 | [0014](0014-the-logo-is-a-fixed-mark-not-a-theme-token.md) | The logo is a fixed mark, not a theme token | accepted |
-| [0015](0015-one-colour-scheme-argaman-vezahav.md) | The site ships one colour scheme, ארגמן וזהב | accepted |
+| [0015](0015-rabbis-manage-their-own-listings.md) | Rabbis manage their own listings | accepted |
+| [0016](0016-a-venue-is-a-field-of-the-lesson.md) | A venue is a field of the lesson, not an entity | accepted |
+| [0017](0017-one-colour-scheme-argaman-vezahav.md) | The site ships one colour scheme, ארגמן וזהב | accepted |

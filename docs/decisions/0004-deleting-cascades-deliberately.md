@@ -1,6 +1,6 @@
 # 0004: Deleting a rabbi or place destroys their lessons
 
-- **Status:** accepted
+- **Status:** accepted for rabbis; the place half is void since [0016](0016-a-venue-is-a-field-of-the-lesson.md) removed places
 - **Date:** 2026-08-14
 - **Decided by:** project owner
 

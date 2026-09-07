@@ -1,4 +1,4 @@
-// Thirteen color tokens (design-system.md, "Themes and the token contract").
+// Thirteen color tokens (design-system.md, "The theme and the token contract").
 export interface ThemeColors {
   bg: string;
   surface: string;

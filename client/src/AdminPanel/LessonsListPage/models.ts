@@ -1,6 +1,6 @@
-import type { Lesson, Place, Rabbi } from '@torabarabim/common';
+import type { LessonResponse, Rabbi } from '@torabarabim/common';
 
-import type { SelectedCity } from '~/AdminPanel/components/CitySelect/models';
+import type { SelectedCity } from '~/components/CitySelect/models';
 
 export interface LessonsListPageProps {
   className?: string;
@@ -18,7 +18,6 @@ export interface LessonListUrlFilters {
 }
 
 export interface AdminLessonRow {
-  lesson: Lesson;
+  lesson: LessonResponse;
   rabbi: Rabbi | undefined;
-  place: Place | undefined;
 }

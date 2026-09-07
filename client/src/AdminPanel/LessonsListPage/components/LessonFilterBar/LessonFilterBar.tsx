@@ -2,8 +2,8 @@ import { useState } from 'react';
 import classNames from 'classnames';
 import styled from 'styled-components';
 
-import { CitySelect } from '~/AdminPanel/components/CitySelect/CitySelect';
 import * as parentConsts from '~/AdminPanel/LessonsListPage/consts';
+import { CitySelect } from '~/components/CitySelect/CitySelect';
 
 import type { LessonFilterBarProps } from './models';
 import * as styles from './styles';

@@ -4,6 +4,7 @@ import { ThemeProvider } from 'styled-components';
 
 import { AdminPanel } from '~/AdminPanel/AdminPanel';
 import { HomePage } from '~/HomePage/HomePage';
+import { RabbiPanel } from '~/RabbiPanel/RabbiPanel';
 import { GlobalStyle } from '~/styles/GlobalStyle';
 import { ARGAMAN_VE_ZAHAV_THEME } from '~/theme/themes';
 
@@ -23,6 +24,7 @@ export const App = () => {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/admin/*" element={<AdminPanel />} />
+              <Route path="/rabbi/*" element={<RabbiPanel />} />
             </Routes>
           </ErrorBoundary>
         </BrowserRouter>

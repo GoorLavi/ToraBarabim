@@ -1,4 +1,6 @@
-import type { City, CreateLessonRequest, Lesson, Place, Rabbi } from '@torabarabim/common';
+import type { CreateLessonRequest, Lesson, Rabbi } from '@torabarabim/common';
+
+import type { SelectedCity } from '~/components/CitySelect/models';
 
 import * as consts from './consts';
 import type { LessonFormErrors, LessonFormState } from './models';
@@ -13,11 +15,12 @@ export const initialFormState = (preselectedRabbi: Rabbi | undefined): LessonFor
   durationMinutes: consts.DEFAULT_DURATION_MINUTES,
   city: undefined,
   placeName: '',
-  placeAddress: '',
+  street: '',
+  floor: '',
   audience: undefined,
 });
 
-export const lessonToFormState = (lesson: Lesson, rabbi: Rabbi | undefined, place: Place | undefined, city: City | undefined): LessonFormState => ({
+export const lessonToFormState = (lesson: Lesson, rabbi: Rabbi | undefined, city: SelectedCity | undefined): LessonFormState => ({
   rabbi,
   title: lesson.title ?? '',
   recurrenceKind: lesson.recurrence.kind,
@@ -26,8 +29,9 @@ export const lessonToFormState = (lesson: Lesson, rabbi: Rabbi | undefined, plac
   startTime: lesson.startTime,
   durationMinutes: String(lesson.durationMinutes),
   city,
-  placeName: place?.name ?? '',
-  placeAddress: place?.address ?? '',
+  placeName: lesson.place.name,
+  street: lesson.place.street,
+  floor: lesson.place.floor ?? '',
   audience: lesson.audience,
 });
 
@@ -39,7 +43,7 @@ export const validateLessonForm = (form: LessonFormState): LessonFormErrors => {
   if (!form.rabbi) errors.rabbi = consts.REQUIRED_RABBI_ERROR;
   if (!form.city) errors.city = consts.REQUIRED_CITY_ERROR;
   if (!form.placeName.trim()) errors.placeName = consts.REQUIRED_PLACE_NAME_ERROR;
-  if (!form.placeAddress.trim()) errors.placeAddress = consts.REQUIRED_PLACE_ADDRESS_ERROR;
+  if (!form.street.trim()) errors.street = consts.REQUIRED_STREET_ERROR;
   if (!form.audience) errors.audience = consts.REQUIRED_AUDIENCE_ERROR;
   if (!form.startTime) errors.startTime = consts.REQUIRED_START_TIME_ERROR;
 
@@ -66,18 +70,22 @@ export const previewWeekdayLabel = (form: LessonFormState): string | undefined =
   return consts.WEEKDAY_LABELS_FULL[weekday];
 };
 
-// Assumes the caller already resolved a `placeId` (creating or updating
-// the place from `form.city`/`placeName`/`placeAddress`) and already
-// validated the form, so `form.rabbi`/`city`/`audience` are known present.
-export const buildLessonPayload = (form: LessonFormState, placeId: string): CreateLessonRequest => {
-  if (!form.rabbi || !form.audience) {
+// Assumes the form already passed validation, so `form.rabbi`/`city`/
+// `audience` are known present.
+export const buildLessonPayload = (form: LessonFormState): CreateLessonRequest => {
+  if (!form.rabbi || !form.city || !form.audience) {
     throw new Error('buildLessonPayload called before the form passed validation');
   }
 
   return {
     title: form.title.trim() || undefined,
     rabbiId: form.rabbi.id,
-    placeId,
+    place: {
+      name: form.placeName.trim(),
+      street: form.street.trim(),
+      floor: form.floor.trim() || undefined,
+      cityCode: Number(form.city.id),
+    },
     audience: form.audience,
     recurrence:
       form.recurrenceKind === 'weekly' ? { kind: 'weekly', weekdays: form.weekdays } : { kind: 'once', date: form.date },

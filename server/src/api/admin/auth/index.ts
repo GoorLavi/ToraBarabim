@@ -65,7 +65,7 @@ export const registerAdminAuthRoutes = async (app: FastifyInstance): Promise<voi
     async (request, reply) => {
       try {
         const body = loginRequestSchema.parse(request.body);
-        const { user, session } = await authService.login(body);
+        const { user, session } = await authService.login(body, 'admin');
         setSessionCookie(reply, session.token);
         return reply.send(toAdminUser(user));
       } catch (error) {

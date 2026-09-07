@@ -34,7 +34,7 @@ export const LessonsCardList = styled(({ className, rows }: LessonsCardListProps
           <span className="tag">{row.lesson.recurrence.kind === 'weekly' ? parentConsts.RECURRING_TAG_LABEL : parentConsts.ONE_TIME_TAG_LABEL}</span>
           <span className="tag audience">{parentConsts.LESSON_AUDIENCE_LABELS[row.lesson.audience]}</span>
           <span className="tag city" dir="auto">
-            {row.place?.city ?? parentConsts.UNKNOWN_PLACE_FALLBACK}
+            {row.lesson.place.cityName}
           </span>
         </div>
 

@@ -42,10 +42,11 @@ export class ReferencedRabbiNotFoundError extends Error {
   }
 }
 
-// Fires when a 'modified' exception names an override place that does not exist. Maps to 400.
-export class ReferencedPlaceNotFoundError extends Error {
-  constructor(public readonly placeId: string) {
-    super(`Expected an existing place, found none with id '${placeId}'`);
-    this.name = 'ReferencedPlaceNotFoundError';
+// Fires when a 'modified' exception's place override names a cityCode that
+// does not resolve to a row in `cities`. Maps to 400.
+export class UnknownCityError extends Error {
+  constructor(public readonly cityCode: number) {
+    super(`Expected a known city code, got '${cityCode}'`);
+    this.name = 'UnknownCityError';
   }
 }
