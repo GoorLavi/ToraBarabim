@@ -8,6 +8,7 @@ export interface AdminUser {
   id: string;
   email: string;
   name: string;
+  isSuper: boolean;
 }
 
 // `prominence` is an admin-only field: it drives home-row sort order and
@@ -115,6 +116,7 @@ export interface AdminUserListItem {
   email: string;
   username?: string;
   isActive: boolean;
+  isSuper: boolean;
 }
 
 export interface AdminUserListResponse {

@@ -64,6 +64,13 @@
       "when": 1788865437079,
       "tag": "0008_real_ben_parker",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1788874445210,
+      "tag": "0009_slippery_rocket_racer",
+      "breakpoints": true
     }
   ]
 }

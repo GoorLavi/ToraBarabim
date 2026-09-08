@@ -44,6 +44,7 @@ export const login = async ({ identifier, password }: LoginRequest, expectedRole
     role: row.role,
     rabbiId: row.rabbiId ?? undefined,
     isActive: row.isActive,
+    isSuper: row.isSuper,
     passwordHash: row.passwordHash,
   };
 

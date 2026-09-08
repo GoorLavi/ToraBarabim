@@ -85,4 +85,6 @@ The real alternatives and why each lost. If there was no alternative, say so.
 | [0015](0015-rabbis-manage-their-own-listings.md) | Rabbis manage their own listings | accepted |
 | [0016](0016-a-venue-is-a-field-of-the-lesson.md) | A venue is a field of the lesson, not an entity | accepted |
 | [0017](0017-one-colour-scheme-argaman-vezahav.md) | The site ships one colour scheme, ארגמן וזהב | accepted |
-| [0018](0018-admins-can-create-admins.md) | Admins can create admins from the panel | accepted |
+| [0018](0018-admins-can-create-admins.md) | Admins can create admins from the panel | accepted, roles/tiers part superseded by [0020](0020-one-super-admin-gates-admin-management.md) |
+| [0019](0019-lower-the-admin-password-minimum-and-drop-the-bootstrap-script.md) | Lower the admin password minimum, and drop the bootstrap script | accepted (on a separate, unmerged branch) |
+| [0020](0020-one-super-admin-gates-admin-management.md) | One super admin gates admin management | accepted |

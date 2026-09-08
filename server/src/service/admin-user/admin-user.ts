@@ -6,7 +6,15 @@ import { db } from '../../db/client';
 import { adminUsers } from '../../db/schema';
 import { MIN_PASSWORD_LENGTH } from '../admin-auth/consts';
 import { hashPassword } from '../admin-auth/password';
-import { AdminUserNotFoundError, CannotDeactivateSelfError, DuplicateEmailError, DuplicateUsernameError, WeakPasswordError } from './errors';
+import {
+  AdminUserNotFoundError,
+  AdminUserStillActiveError,
+  CannotDeactivateSelfError,
+  CannotModifySuperAdminError,
+  DuplicateEmailError,
+  DuplicateUsernameError,
+  WeakPasswordError,
+} from './errors';
 import type { AdminUserListQuery, AdminUserListResult, AdminUserRecord, CreateAdminUserInput } from './models';
 
 const UNIQUE_VIOLATION = '23505';
@@ -29,6 +37,7 @@ const toRecord = (row: AdminUserRow): AdminUserRecord => ({
   email: row.email,
   username: row.username ?? undefined,
   isActive: row.isActive,
+  isSuper: row.isSuper,
 });
 
 export const list = async (query: AdminUserListQuery): Promise<AdminUserListResult> => {
@@ -80,9 +89,47 @@ export const create = async (input: CreateAdminUserInput): Promise<AdminUserReco
 export const setActive = async (id: string, isActive: boolean, requestingAdminId: string): Promise<AdminUserRecord> => {
   if (id === requestingAdminId && !isActive) throw new CannotDeactivateSelfError();
 
+  const rows = await db
+    .select()
+    .from(adminUsers)
+    .where(and(eq(adminUsers.id, id), eq(adminUsers.role, 'admin')))
+    .limit(1);
+  const existing = rows[0];
+  if (!existing) throw new AdminUserNotFoundError(id);
+  if (existing.isSuper) throw new CannotModifySuperAdminError();
+
   const [row] = await db
     .update(adminUsers)
     .set({ isActive, updatedAt: new Date() })
+    .where(and(eq(adminUsers.id, id), eq(adminUsers.role, 'admin')))
+    .returning();
+  if (!row) throw new AdminUserNotFoundError(id);
+
+  return toRecord(row);
+};
+
+export const remove = async (id: string): Promise<void> => {
+  const rows = await db
+    .select()
+    .from(adminUsers)
+    .where(and(eq(adminUsers.id, id), eq(adminUsers.role, 'admin')))
+    .limit(1);
+  const row = rows[0];
+  if (!row) throw new AdminUserNotFoundError(id);
+  if (row.isSuper) throw new CannotModifySuperAdminError();
+  if (row.isActive) throw new AdminUserStillActiveError(id);
+
+  await db.delete(adminUsers).where(eq(adminUsers.id, id));
+};
+
+export const setPassword = async (id: string, newPassword: string): Promise<AdminUserRecord> => {
+  if (newPassword.length < MIN_PASSWORD_LENGTH) throw new WeakPasswordError(MIN_PASSWORD_LENGTH);
+
+  const passwordHash = await hashPassword(newPassword);
+
+  const [row] = await db
+    .update(adminUsers)
+    .set({ passwordHash, updatedAt: new Date() })
     .where(and(eq(adminUsers.id, id), eq(adminUsers.role, 'admin')))
     .returning();
   if (!row) throw new AdminUserNotFoundError(id);
