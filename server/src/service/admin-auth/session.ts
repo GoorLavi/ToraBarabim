@@ -49,6 +49,7 @@ export const resolveSession = async (token: string): Promise<AuthenticatedAdminU
       role: adminUsers.role,
       rabbiId: adminUsers.rabbiId,
       isActive: adminUsers.isActive,
+      isSuper: adminUsers.isSuper,
       passwordHash: adminUsers.passwordHash,
     })
     .from(adminSessions)
@@ -73,6 +74,7 @@ export const resolveSession = async (token: string): Promise<AuthenticatedAdminU
     role: row.role,
     rabbiId: row.rabbiId ?? undefined,
     isActive: row.isActive,
+    isSuper: row.isSuper,
     passwordHash: row.passwordHash,
   };
 };

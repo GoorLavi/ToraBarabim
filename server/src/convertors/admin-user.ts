@@ -8,6 +8,7 @@ export const toAdminUserListItem = (record: AdminUserRecord): AdminUserListItem 
   email: record.email,
   username: record.username,
   isActive: record.isActive,
+  isSuper: record.isSuper,
 });
 
 export const toAdminUserListResponse = (result: AdminUserListResult): AdminUserListResponse => ({

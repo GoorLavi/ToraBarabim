@@ -70,7 +70,7 @@ The real alternatives and why each lost. If there was no alternative, say so.
 | --- | --- | --- |
 | [0001](0001-lessons-are-admin-entered.md) | Lessons are entered by administrators, not the public | superseded by [0015](0015-rabbis-manage-their-own-listings.md) |
 | [0002](0002-hebrew-only-rtl.md) | Hebrew only, right to left, with no translation layer | accepted |
-| [0003](0003-admin-accounts-are-real-users.md) | Admins are real accounts, created by a script | accepted, in part superseded by [0015](0015-rabbis-manage-their-own-listings.md) and [0018](0018-admins-can-create-admins.md) |
+| [0003](0003-admin-accounts-are-real-users.md) | Admins are real accounts, created by a script | accepted, in part superseded by [0015](0015-rabbis-manage-their-own-listings.md), [0018](0018-admins-can-create-admins.md) and [0019](0019-lower-the-admin-password-minimum-and-drop-the-bootstrap-script.md) |
 | [0004](0004-deleting-cascades-deliberately.md) | Deleting a rabbi or place destroys their lessons | accepted for rabbis, place half void since [0016](0016-a-venue-is-a-field-of-the-lesson.md) |
 | [0005](0005-s3-compatible-storage-one-code-path.md) | Images use one S3-compatible code path, MinIO locally | accepted |
 | [0006](0006-production-on-aws-with-cdk.md) | Production runs on AWS, defined in CDK | accepted |
@@ -85,4 +85,6 @@ The real alternatives and why each lost. If there was no alternative, say so.
 | [0015](0015-rabbis-manage-their-own-listings.md) | Rabbis manage their own listings | accepted |
 | [0016](0016-a-venue-is-a-field-of-the-lesson.md) | A venue is a field of the lesson, not an entity | accepted |
 | [0017](0017-one-colour-scheme-argaman-vezahav.md) | The site ships one colour scheme, ארגמן וזהב | accepted |
-| [0018](0018-admins-can-create-admins.md) | Admins can create admins from the panel | accepted |
+| [0018](0018-admins-can-create-admins.md) | Admins can create admins from the panel | accepted, script/bootstrap part superseded by [0019](0019-lower-the-admin-password-minimum-and-drop-the-bootstrap-script.md), roles/tiers part superseded by [0020](0020-one-super-admin-gates-admin-management.md) |
+| [0019](0019-lower-the-admin-password-minimum-and-drop-the-bootstrap-script.md) | Lower the admin password minimum, and drop the bootstrap script | accepted |
+| [0020](0020-one-super-admin-gates-admin-management.md) | One super admin gates admin management | accepted |

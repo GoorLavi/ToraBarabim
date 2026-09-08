@@ -1,6 +1,6 @@
 # 0003: Admins are real accounts, created by a script
 
-- **Status:** accepted; the "no roles" decision is superseded by [0015](0015-rabbis-manage-their-own-listings.md); the "created by a script" / "no signup page" framing is superseded in part by [0018](0018-admins-can-create-admins.md)
+- **Status:** accepted; the "no roles" decision is superseded by [0015](0015-rabbis-manage-their-own-listings.md); the "created by a script" / "no signup page" framing is superseded in part by [0018](0018-admins-can-create-admins.md); the script itself and the 12-character minimum are superseded by [0019](0019-lower-the-admin-password-minimum-and-drop-the-bootstrap-script.md)
 - **Date:** 2026-08-14
 - **Decided by:** project owner
 

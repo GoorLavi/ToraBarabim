@@ -3,7 +3,6 @@ import styled from 'styled-components';
 
 import { ADMIN_ROUTES } from '~/AdminPanel/consts';
 import { adminErrorMessage } from '~/AdminPanel/helpers';
-import { useAdminSession } from '~/AdminPanel/useAdminSession';
 
 import { AdminCard } from './components/AdminCard/AdminCard';
 import * as consts from './consts';
@@ -12,7 +11,6 @@ import * as styles from './styles';
 import { useAdminUsersList } from './useAdminUsersList';
 
 export const AdminsListPage = styled(({ className }: AdminsListPageProps) => {
-  const session = useAdminSession();
   const state = useAdminUsersList();
 
   return (
@@ -67,7 +65,7 @@ export const AdminsListPage = styled(({ className }: AdminsListPageProps) => {
       {state.status === 'success' && state.items.length > 0 && (
         <div className="list">
           {state.items.map((admin) => (
-            <AdminCard key={admin.id} admin={admin} isSelf={admin.id === session.data?.id} />
+            <AdminCard key={admin.id} admin={admin} />
           ))}
         </div>
       )}

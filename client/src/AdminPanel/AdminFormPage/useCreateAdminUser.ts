@@ -3,11 +3,12 @@ import type { UseMutationResult } from '@tanstack/react-query';
 import type { AdminUserListItem, CreateAdminUserRequest } from '@torabarabim/common';
 
 import { AdminApiError, createAdminUser } from '~/AdminPanel/api';
+import { ADMIN_QUERY_KEYS } from '~/AdminPanel/consts';
 
 export const useCreateAdminUser = (): UseMutationResult<AdminUserListItem, AdminApiError, CreateAdminUserRequest> => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createAdminUser,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'admin-users'] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.adminUsers({}) }),
   });
 };

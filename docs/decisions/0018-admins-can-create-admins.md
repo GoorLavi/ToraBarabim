@@ -1,6 +1,9 @@
 # 0018: Admins can create admins from the panel
 
-- **Status:** accepted
+- **Status:** accepted; the CLI script named below as the bootstrap/recovery path is
+  removed by [0019](0019-lower-the-admin-password-minimum-and-drop-the-bootstrap-script.md),
+  which accepts the resulting gap; the "no roles or tiers among admins" part is
+  superseded by [0020](0020-one-super-admin-gates-admin-management.md)
 - **Date:** 2026-09-08
 - **Decided by:** project owner
 - **Supersedes:** the "created by a script" and "no signup page" framing in

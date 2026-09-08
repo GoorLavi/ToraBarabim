@@ -1,14 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { UseMutationResult } from '@tanstack/react-query';
-import type { AdminUserListItem } from '@torabarabim/common';
 
-import { setAdminUserActive } from '~/AdminPanel/api';
+import { deleteAdminUser } from '~/AdminPanel/api';
 import { ADMIN_QUERY_KEYS } from '~/AdminPanel/consts';
 
-export const useSetAdminUserActive = (id: string): UseMutationResult<AdminUserListItem, Error, boolean> => {
+export const useDeleteAdminUser = (id: string): UseMutationResult<void, Error, void> => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (isActive: boolean) => setAdminUserActive(id, { isActive }),
+    mutationFn: () => deleteAdminUser(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.adminUsers({}) }),
   });
 };
