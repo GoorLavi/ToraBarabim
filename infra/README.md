@@ -273,7 +273,7 @@ outbound internet; the task already has it (see "Why no ALB, why no NAT gateway"
 It upserts on the official locality code, so running it again later, when the source
 data updates, updates rows in place instead of duplicating them.
 
-Find the running task and open the shell exactly as in step 4:
+Find the running task, then open the shell:
 
 ```bash
 aws ecs list-tasks \
@@ -291,8 +291,8 @@ aws ecs execute-command \
   --command "/bin/sh"
 ```
 
-Inside the shell, run the compiled script directly (same reasoning as step 4: the
-production image has no `tsx`, only the built `dist/`):
+Inside the shell, run the compiled script directly (the production image has no `tsx`,
+only the built `dist/`):
 
 ```sh
 node dist/db/seed-cities-only.js

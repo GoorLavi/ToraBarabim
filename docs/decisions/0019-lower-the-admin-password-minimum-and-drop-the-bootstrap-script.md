@@ -18,7 +18,7 @@ script's own `ALLOW_WEAK_ADMIN_PASSWORD` escape hatch would become meaningless a
 point (its floor was already 6), asked to remove the script entirely rather than leave
 dead code behind. Told plainly that the script was the only documented way to create a
 first admin on a fresh database and the only recovery path if every admin account is
-ever deactivated (see [4](../infra/README.md#4-create-the-admin-user) in `infra/README.md`,
+ever deactivated (see [4](../../infra/README.md#4-create-the-admin-user) in `infra/README.md`,
 which ran this exact script over ECS Exec in production), the owner chose to remove it
 anyway and accept the gap.
 
