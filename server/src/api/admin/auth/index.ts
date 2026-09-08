@@ -12,10 +12,11 @@ import { loginRequestSchema } from '../../../service/admin-auth/models';
 const GENERIC_ERROR_MESSAGE = 'אירעה שגיאה בשרת, נסו שוב מאוחר יותר';
 const INVALID_CREDENTIALS_MESSAGE = 'אימייל או סיסמה שגויים';
 
-const toAdminUser = (user: { id: string; email: string; name: string }): AdminUser => ({
+const toAdminUser = (user: { id: string; email: string; name: string; isSuper: boolean }): AdminUser => ({
   id: user.id,
   email: user.email,
   name: user.name,
+  isSuper: user.isSuper,
 });
 
 const handleError = (reply: FastifyReply, error: unknown, routeLabel: string): FastifyReply => {

@@ -5,6 +5,14 @@ import type { AdminLessonFilters, AdminRabbiFilters, AdminUserFilters } from './
 // reads (root CLAUDE.md, Async and data access), not for user-facing paging.
 export const MAX_ADMIN_PAGE_SIZE = 50;
 
+// Mirrors the server's `MIN_PASSWORD_LENGTH` (server/src/service/admin-auth/consts.ts).
+// The common ancestor of AdminFormPage's create-admin form and AdminCard's
+// set-password dialog, both of which validate a password against it (root
+// CLAUDE.md, Scope and Boundaries: a threshold lives in one place).
+export const MIN_PASSWORD_LENGTH = 6;
+export const PASSWORD_TOO_SHORT_ERROR = `הסיסמה חייבת להכיל לפחות ${MIN_PASSWORD_LENGTH} תווים`;
+export const PASSWORD_MISMATCH_ERROR = 'הסיסמאות אינן תואמות';
+
 export const GENERIC_ERROR_MESSAGE = 'אירעה שגיאה, נסה שוב מאוחר יותר';
 export const NETWORK_ERROR_MESSAGE = 'לא ניתן להתחבר לשרת. בדוק את החיבור ונסה שוב';
 export const UNAUTHENTICATED_MESSAGE = 'תוקף ההתחברות פג. יש להתחבר מחדש';

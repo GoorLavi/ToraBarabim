@@ -1,0 +1,3 @@
+ALTER TABLE "admin_users" ADD COLUMN "is_super" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+CREATE UNIQUE INDEX "admin_users_single_super_admin" ON "admin_users" USING btree ("is_super") WHERE "admin_users"."is_super" = true;--> statement-breakpoint
+ALTER TABLE "admin_users" ADD CONSTRAINT "admin_users_super_requires_admin_role" CHECK ("admin_users"."is_super" = false OR "admin_users"."role" = 'admin');

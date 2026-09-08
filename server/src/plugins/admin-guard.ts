@@ -28,12 +28,24 @@ export const requireAdminAuth = async (request: FastifyRequest, reply: FastifyRe
       reply.status(401).send({ error: 'unauthenticated', message: UNAUTHENTICATED_MESSAGE });
       return;
     }
-    request.adminUser = { id: user.id, email: user.email, name: user.name };
+    request.adminUser = { id: user.id, email: user.email, name: user.name, isSuper: user.isSuper };
   } catch (error) {
     if (error instanceof SessionInvalidError) {
       reply.status(401).send({ error: 'unauthenticated', message: UNAUTHENTICATED_MESSAGE });
       return;
     }
     throw error;
+  }
+};
+
+const SUPER_ADMIN_REQUIRED_MESSAGE = 'רק מנהל-על יכול לגשת לפעולה זו';
+
+// Attach after `requireAdminAuth` in the same `preHandler` array. Relies on
+// `requireAdminAuth` having already populated `request.adminUser`; it does
+// not authenticate on its own.
+export const requireSuperAdmin = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+  if (!request.adminUser?.isSuper) {
+    reply.status(403).send({ error: 'super_admin_required', message: SUPER_ADMIN_REQUIRED_MESSAGE });
+    return;
   }
 };

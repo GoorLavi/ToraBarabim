@@ -28,12 +28,20 @@ export const updateAdminUserSchema = z.object({
 });
 export type UpdateAdminUserInput = z.infer<typeof updateAdminUserSchema>;
 
+// `password`'s length is checked in the service against `MIN_PASSWORD_LENGTH`,
+// not here, same as `createAdminUserSchema`.
+export const setAdminUserPasswordSchema = z.object({
+  password: z.string(),
+});
+export type SetAdminUserPasswordInput = z.infer<typeof setAdminUserPasswordSchema>;
+
 export interface AdminUserRecord {
   id: string;
   name: string;
   email: string;
   username?: string;
   isActive: boolean;
+  isSuper: boolean;
 }
 
 export interface AdminUserListResult {

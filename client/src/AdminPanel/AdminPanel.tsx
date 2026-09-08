@@ -4,6 +4,7 @@ import { AdminFormPage } from './AdminFormPage/AdminFormPage';
 import { AdminsListPage } from './AdminsListPage/AdminsListPage';
 import { AdminShell } from './components/AdminShell/AdminShell';
 import { RequireAdminSession } from './components/RequireAdminSession/RequireAdminSession';
+import { RequireSuperAdmin } from './components/RequireSuperAdmin/RequireSuperAdmin';
 import { LessonFormPage } from './LessonFormPage/LessonFormPage';
 import { LessonsListPage } from './LessonsListPage/LessonsListPage';
 import { LoginPage } from './LoginPage/LoginPage';
@@ -26,8 +27,10 @@ export const AdminPanel = () => (
         <Route path="rabbis" element={<RabbisListPage />} />
         <Route path="rabbis/new" element={<RabbiFormPage />} />
         <Route path="rabbis/:id" element={<RabbiFormPage />} />
-        <Route path="admins" element={<AdminsListPage />} />
-        <Route path="admins/new" element={<AdminFormPage />} />
+        <Route element={<RequireSuperAdmin />}>
+          <Route path="admins" element={<AdminsListPage />} />
+          <Route path="admins/new" element={<AdminFormPage />} />
+        </Route>
       </Route>
     </Route>
   </Routes>

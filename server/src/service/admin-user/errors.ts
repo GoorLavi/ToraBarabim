@@ -39,3 +39,23 @@ export class WeakPasswordError extends Error {
     this.name = 'WeakPasswordError';
   }
 }
+
+// Fires when a deactivation or a delete targets the super admin, regardless
+// of who is asking. Maps to 409: the super admin can never be deactivated
+// or deleted, by anyone, under any circumstance.
+export class CannotModifySuperAdminError extends Error {
+  constructor() {
+    super('The super admin account can never be deactivated or deleted');
+    this.name = 'CannotModifySuperAdminError';
+  }
+}
+
+// Fires when a delete is attempted on an admin whose account is still
+// active. Maps to 409: an admin must be deactivated first, so a delete is
+// never the first action taken against a live account.
+export class AdminUserStillActiveError extends Error {
+  constructor(id: string) {
+    super(`Admin user '${id}' must be deactivated before it can be deleted`);
+    this.name = 'AdminUserStillActiveError';
+  }
+}

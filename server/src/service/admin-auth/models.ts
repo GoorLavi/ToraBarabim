@@ -18,5 +18,6 @@ export interface AuthenticatedAdminUser {
   role: AdminRole;
   rabbiId?: string;
   isActive: boolean;
+  isSuper: boolean;
   passwordHash: string;
 }

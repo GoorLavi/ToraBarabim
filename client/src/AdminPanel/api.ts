@@ -187,6 +187,7 @@ export const updateAdminLesson = (id: string, body: UpdateLessonRequest): Promis
 
 // GET /v1/admin/admin-users
 // 200 with AdminUserListResponse, including an empty items array.
+// 403 super_admin_required.
 export const fetchAdminUsers = (filters: AdminUserFilters): Promise<AdminUserListResponse> => {
   const target = url('/v1/admin/admin-users');
   target.searchParams.set('page', String(filters.page ?? 1));
@@ -196,12 +197,27 @@ export const fetchAdminUsers = (filters: AdminUserFilters): Promise<AdminUserLis
 
 // POST /v1/admin/admin-users
 // 201 with AdminUserListItem. 400 invalid_request / weak_password.
-// 409 duplicate_email / duplicate_username.
+// 409 duplicate_email / duplicate_username. 403 super_admin_required.
 export const createAdminUser = (body: CreateAdminUserRequest): Promise<AdminUserListItem> =>
   request(url('/v1/admin/admin-users').toString(), { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(body) });
 
 // PATCH /v1/admin/admin-users/:id
 // 200 with AdminUserListItem. 404 if the admin user does not exist.
-// 409 cannot_deactivate_self.
+// 409 cannot_deactivate_self / cannot_modify_super_admin. 403 super_admin_required.
 export const setAdminUserActive = (id: string, body: UpdateAdminUserRequest): Promise<AdminUserListItem> =>
   request(url(`/v1/admin/admin-users/${id}`).toString(), { method: 'PATCH', headers: JSON_HEADERS, body: JSON.stringify(body) });
+
+// DELETE /v1/admin/admin-users/:id
+// 204 on success. 404 not_found. 409 admin_user_still_active (must
+// deactivate before deleting). 409 cannot_modify_super_admin. 403
+// super_admin_required.
+export const deleteAdminUser = (id: string): Promise<void> => request(url(`/v1/admin/admin-users/${id}`).toString(), { method: 'DELETE' });
+
+// PATCH /v1/admin/admin-users/:id/password
+// 200 with AdminUserListItem. 400 weak_password. 404 not_found. 403 super_admin_required.
+export const setAdminUserPassword = (id: string, password: string): Promise<AdminUserListItem> =>
+  request(url(`/v1/admin/admin-users/${id}/password`).toString(), {
+    method: 'PATCH',
+    headers: JSON_HEADERS,
+    body: JSON.stringify({ password }),
+  });
