@@ -46,5 +46,6 @@ const SUPER_ADMIN_REQUIRED_MESSAGE = 'רק מנהל-על יכול לגשת לפ�
 export const requireSuperAdmin = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
   if (!request.adminUser?.isSuper) {
     reply.status(403).send({ error: 'super_admin_required', message: SUPER_ADMIN_REQUIRED_MESSAGE });
+    return;
   }
 };

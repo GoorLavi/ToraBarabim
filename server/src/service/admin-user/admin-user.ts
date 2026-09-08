@@ -96,7 +96,10 @@ export const setActive = async (id: string, isActive: boolean, requestingAdminId
     .limit(1);
   const existing = rows[0];
   if (!existing) throw new AdminUserNotFoundError(id);
-  if (existing.isSuper) throw new CannotModifySuperAdminError();
+  // Only deactivating the super admin is blocked: reactivating one is the
+  // recovery path if it was ever disabled out of band (direct database
+  // access), and blocking that too would remove the only way back.
+  if (existing.isSuper && !isActive) throw new CannotModifySuperAdminError();
 
   const [row] = await db
     .update(adminUsers)
