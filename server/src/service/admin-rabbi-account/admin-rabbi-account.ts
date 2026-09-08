@@ -5,17 +5,19 @@ import postgres from 'postgres';
 import { db } from '../../db/client';
 import { adminUsers, rabbis } from '../../db/schema';
 import { generateTemporaryPassword, hashPassword } from '../admin-auth/password';
-import { DuplicateEmailError, RabbiAccountAlreadyExistsError, RabbiAccountNotFoundError, RabbiNotFoundError } from './errors';
+import { DuplicateEmailError, DuplicateUsernameError, RabbiAccountAlreadyExistsError, RabbiAccountNotFoundError, RabbiNotFoundError } from './errors';
 import type { CreatedRabbiAccountRecord, CreateRabbiAccountInput, RabbiAccountRecord } from './models';
 
 const UNIQUE_VIOLATION = '23505';
+const EMAIL_UNIQUE_CONSTRAINT = 'admin_users_email_unique';
+const USERNAME_UNIQUE_CONSTRAINT = 'admin_users_username_unique';
 
 // drizzle-orm's postgres-js driver wraps the driver error in its own
 // `DrizzleQueryError`, with the real `PostgresError` (and its SQLSTATE
 // `code`) on `.cause`, not on the thrown error itself.
-const isUniqueViolation = (error: unknown): boolean => {
+const asUniqueViolation = (error: unknown): postgres.PostgresError | undefined => {
   const cause = error instanceof Error ? error.cause : undefined;
-  return cause instanceof postgres.PostgresError && cause.code === UNIQUE_VIOLATION;
+  return cause instanceof postgres.PostgresError && cause.code === UNIQUE_VIOLATION ? cause : undefined;
 };
 
 type AccountRow = typeof adminUsers.$inferSelect;
@@ -24,7 +26,7 @@ const toRecord = (row: AccountRow): RabbiAccountRecord => {
   // Guaranteed by the `admin_users_role_rabbi_id_shape` CHECK constraint:
   // a 'rabbi' row always carries a `rabbiId`. TS cannot see a DB constraint.
   if (!row.rabbiId) throw new Error(`data inconsistency: rabbi account '${row.id}' has role 'rabbi' but no rabbiId`);
-  return { id: row.id, email: row.email, rabbiId: row.rabbiId, isActive: row.isActive };
+  return { id: row.id, email: row.email, username: row.username ?? undefined, rabbiId: row.rabbiId, isActive: row.isActive };
 };
 
 const assertRabbiExists = async (rabbiId: string): Promise<void> => {
@@ -57,6 +59,7 @@ export const create = async (rabbiId: string, input: CreateRabbiAccountInput): P
       .values({
         id: nanoid(),
         email: input.email,
+        username: input.username,
         passwordHash,
         name: rabbi.name,
         role: 'rabbi',
@@ -67,7 +70,9 @@ export const create = async (rabbiId: string, input: CreateRabbiAccountInput): P
     if (!row) throw new Error('insert into admin_users returned no row');
     return { ...toRecord(row), temporaryPassword };
   } catch (error) {
-    if (isUniqueViolation(error)) throw new DuplicateEmailError(input.email);
+    const violation = asUniqueViolation(error);
+    if (violation?.constraint_name === EMAIL_UNIQUE_CONSTRAINT) throw new DuplicateEmailError(input.email);
+    if (violation?.constraint_name === USERNAME_UNIQUE_CONSTRAINT) throw new DuplicateUsernameError(input.username ?? '');
     throw error;
   }
 };

@@ -32,6 +32,9 @@ export const AdminShell = styled(({ className }: AdminShellProps) => {
             <NavLink to={ADMIN_ROUTES.rabbis} className={({ isActive }) => classNames('tab', { active: isActive })}>
               {consts.RABBIS_TAB_LABEL}
             </NavLink>
+            <NavLink to={ADMIN_ROUTES.admins} className={({ isActive }) => classNames('tab', { active: isActive })}>
+              {consts.ADMINS_TAB_LABEL}
+            </NavLink>
           </nav>
 
           <div className="account">

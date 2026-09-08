@@ -1,5 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 
+import { AdminFormPage } from './AdminFormPage/AdminFormPage';
+import { AdminsListPage } from './AdminsListPage/AdminsListPage';
 import { AdminShell } from './components/AdminShell/AdminShell';
 import { RequireAdminSession } from './components/RequireAdminSession/RequireAdminSession';
 import { LessonFormPage } from './LessonFormPage/LessonFormPage';
@@ -24,6 +26,8 @@ export const AdminPanel = () => (
         <Route path="rabbis" element={<RabbisListPage />} />
         <Route path="rabbis/new" element={<RabbiFormPage />} />
         <Route path="rabbis/:id" element={<RabbiFormPage />} />
+        <Route path="admins" element={<AdminsListPage />} />
+        <Route path="admins/new" element={<AdminFormPage />} />
       </Route>
     </Route>
   </Routes>

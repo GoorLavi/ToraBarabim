@@ -3,6 +3,6 @@ export interface LoginPageProps {
 }
 
 export interface LoginFormState {
-  email: string;
+  identifier: string;
   password: string;
 }

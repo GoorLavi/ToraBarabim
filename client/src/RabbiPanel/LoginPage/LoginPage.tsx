@@ -16,7 +16,7 @@ export const LoginPage = styled(({ className }: LoginPageProps) => {
   const session = useRabbiSession();
   const location = useLocation();
   const login = useRabbiLogin();
-  const [form, setForm] = useState<LoginFormState>({ email: '', password: '' });
+  const [form, setForm] = useState<LoginFormState>({ identifier: '', password: '' });
 
   // Already signed in (e.g. followed a stale link to /rabbi/login): go
   // straight back to wherever the guard would have sent them.
@@ -27,7 +27,7 @@ export const LoginPage = styled(({ className }: LoginPageProps) => {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
-    login.mutate({ email: form.email, password: form.password });
+    login.mutate({ identifier: form.identifier, password: form.password });
   };
 
   const from = (location.state as { from?: string } | null)?.from;
@@ -54,15 +54,14 @@ export const LoginPage = styled(({ className }: LoginPageProps) => {
           )}
 
           <label className="field">
-            <span className="label">{consts.EMAIL_LABEL}</span>
+            <span className="label">{consts.IDENTIFIER_LABEL}</span>
             <input
-              type="email"
-              autoComplete="email"
-              inputMode="email"
+              type="text"
+              autoComplete="username"
               required
               dir="auto"
-              value={form.email}
-              onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
+              value={form.identifier}
+              onChange={(event) => setForm((prev) => ({ ...prev, identifier: event.target.value }))}
             />
           </label>
 

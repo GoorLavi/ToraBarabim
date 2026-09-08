@@ -5,9 +5,9 @@ import { nanoid } from 'nanoid';
 
 import { db } from '../db/client';
 import { adminUsers } from '../db/schema';
+import { MIN_PASSWORD_LENGTH } from '../service/admin-auth/consts';
 import { hashPassword } from '../service/admin-auth/password';
 
-const MIN_PASSWORD_LENGTH = 12;
 const WEAK_PASSWORD_FLOOR = 6;
 
 // Password is never a CLI argument: an argument would be written to the

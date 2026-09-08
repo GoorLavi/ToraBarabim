@@ -1,6 +1,6 @@
 # 0003: Admins are real accounts, created by a script
 
-- **Status:** accepted; the "no roles" decision is superseded by [0015](0015-rabbis-manage-their-own-listings.md)
+- **Status:** accepted; the "no roles" decision is superseded by [0015](0015-rabbis-manage-their-own-listings.md); the "created by a script" / "no signup page" framing is superseded in part by [0018](0018-admins-can-create-admins.md)
 - **Date:** 2026-08-14
 - **Decided by:** project owner
 

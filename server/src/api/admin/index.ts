@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 
+import { registerAdminUserRoutes } from './admin-users';
 import { registerAdminLessonExceptionRoutes } from './lesson-exceptions';
 import { registerAdminLessonRoutes } from './lessons';
 import { registerAdminRabbiAccountRoutes } from './rabbi-accounts';
@@ -11,6 +12,7 @@ import { registerAdminRabbiRoutes } from './rabbis';
 export const registerAdminRoutes = async (app: FastifyInstance): Promise<void> => {
   await registerAdminRabbiRoutes(app);
   await registerAdminRabbiAccountRoutes(app);
+  await registerAdminUserRoutes(app);
   await registerAdminLessonRoutes(app);
   await registerAdminLessonExceptionRoutes(app);
 };

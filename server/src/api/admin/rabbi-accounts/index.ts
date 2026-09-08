@@ -6,6 +6,7 @@ import { requireAdminAuth } from '../../../plugins/admin-guard';
 import * as adminRabbiAccountService from '../../../service/admin-rabbi-account/admin-rabbi-account';
 import {
   DuplicateEmailError,
+  DuplicateUsernameError,
   RabbiAccountAlreadyExistsError,
   RabbiAccountNotFoundError,
   RabbiNotFoundError,
@@ -36,6 +37,10 @@ const handleError = (reply: FastifyReply, error: unknown, routeLabel: string): F
 
   if (error instanceof DuplicateEmailError) {
     return reply.status(409).send({ error: 'duplicate_email', message: `כתובת האימייל '${error.email}' כבר בשימוש` });
+  }
+
+  if (error instanceof DuplicateUsernameError) {
+    return reply.status(409).send({ error: 'duplicate_username', message: `שם המשתמש '${error.username}' כבר בשימוש` });
   }
 
   reply.request.log.error({ err: error }, `unhandled error in ${routeLabel}`);

@@ -5,7 +5,7 @@ import type { AdminUser } from '@torabarabim/common';
 import { AdminApiError, login } from '~/AdminPanel/api';
 import { ADMIN_QUERY_KEYS } from '~/AdminPanel/consts';
 
-export const useAdminLogin = (): UseMutationResult<AdminUser, AdminApiError, { email: string; password: string }> => {
+export const useAdminLogin = (): UseMutationResult<AdminUser, AdminApiError, { identifier: string; password: string }> => {
   const queryClient = useQueryClient();
 
   return useMutation({
