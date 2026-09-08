@@ -9,7 +9,7 @@ export const MAX_ADMIN_PAGE_SIZE = 50;
 // The common ancestor of AdminFormPage's create-admin form and AdminCard's
 // set-password dialog, both of which validate a password against it (root
 // CLAUDE.md, Scope and Boundaries: a threshold lives in one place).
-export const MIN_PASSWORD_LENGTH = 12;
+export const MIN_PASSWORD_LENGTH = 6;
 export const PASSWORD_TOO_SHORT_ERROR = `הסיסמה חייבת להכיל לפחות ${MIN_PASSWORD_LENGTH} תווים`;
 export const PASSWORD_MISMATCH_ERROR = 'הסיסמאות אינן תואמות';
 
