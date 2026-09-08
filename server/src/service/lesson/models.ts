@@ -2,7 +2,8 @@ import type { LessonAudience, LessonTopic, Place, Rabbi } from '@torabarabim/com
 import { z } from 'zod';
 
 import { AREAS, LESSON_AUDIENCES, LESSON_TOPICS } from '../../db/schema/enums';
-import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, MAX_SEARCH_QUERY_LENGTH } from './consts';
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '../shared/consts';
+import { MAX_SEARCH_QUERY_LENGTH } from './consts';
 
 // `from`/`to` stay optional here: the service resolves their defaults
 // against Israel time, which a static schema cannot know at definition time.

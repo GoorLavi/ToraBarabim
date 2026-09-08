@@ -1,7 +1,11 @@
 import { css } from 'styled-components';
 
 // A reading page, not a dashboard: the content column caps at 880, not the
-// site's usual 1120 (design spec, "Desktop").
+// site's usual 1280 (design spec, "Desktop"). The 880 is the ticket's own
+// band, excluding the column's side padding: capping `.content` itself at
+// 880 left the ticket at 880 - 48 = 832, so the cap here is the band plus
+// twice the desktop inline padding, the same formula the site-wide content
+// band uses for theme.layout.contentMaxWidth.
 export const LessonPage = css(
   ({ theme }) => `
   display: flex;
@@ -9,7 +13,7 @@ export const LessonPage = css(
   min-block-size: 100%;
 
   > .content {
-    max-inline-size: 880px;
+    max-inline-size: calc(880px + ${theme.spacing.xl} * 2);
     inline-size: 100%;
     margin-inline: auto;
     padding-inline: ${theme.spacing.lg};

@@ -10,6 +10,7 @@ import { registerHomeRoutes } from './api/home';
 import { registerLessonRoutes } from './api/lessons';
 import { registerRabbiRoutes } from './api/rabbi';
 import { registerRabbiAuthRoutes } from './api/rabbi/auth';
+import { registerRabbiDirectoryRoutes } from './api/rabbis';
 import { loadConfig } from './config';
 import { registerCookies } from './plugins/cookies';
 import { registerCors } from './plugins/cors';
@@ -47,6 +48,7 @@ const start = async (): Promise<void> => {
   await registerLessonRoutes(app);
   await registerHomeRoutes(app);
   await registerCityRoutes(app);
+  await registerRabbiDirectoryRoutes(app);
   await registerAdminAuthRoutes(app);
   await registerAdminRoutes(app);
   await registerRabbiAuthRoutes(app);

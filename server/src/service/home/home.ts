@@ -6,7 +6,8 @@ import { db } from '../../db/client';
 import { cities, lessonExceptions, lessons, rabbis } from '../../db/schema';
 import { applyException, expandLesson, type ResolvedOccurrence } from '../lesson/occurrence';
 import { addDays, compareIsoDates, todayInIsrael } from '../lesson/israel-time';
-import { AREA_NAMES_HE, HOME_WINDOW_DAYS, MAX_ITEMS_PER_ROW, MIN_ITEMS_PER_ROW, PROMINENCE_RANK } from './consts';
+import { AREA_NAMES_HE } from '../shared/consts';
+import { HOME_WINDOW_DAYS, MAX_ITEMS_PER_ROW, MIN_ITEMS_PER_ROW, PROMINENCE_RANK } from './consts';
 import type { HomeResult, HomeRowResult, ResolvedHomeOccurrence } from './models';
 
 const MINUTES_PER_DAY = 24 * 60;

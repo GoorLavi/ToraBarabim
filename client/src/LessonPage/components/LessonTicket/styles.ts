@@ -1,15 +1,19 @@
 import { css } from 'styled-components';
 
 import {
+  CARD_MAX_INLINE_SIZE_NO_POSTER_DESKTOP,
+  CARD_MIN_BLOCK_SIZE_DESKTOP,
   NOTCH_DIAMETER,
-  PANEL_BLOCK_PADDING,
+  PANEL_BLOCK_PADDING_PHONE,
   PERFORATION_DASH,
   PERFORATION_GAP,
   PERFORATION_THICKNESS,
-  POSTER_TOP_OFFSET_DESKTOP,
   POSTER_WIDTH_DESKTOP,
   POSTER_WIDTH_PHONE,
   STUB_DIVIDER_LENGTH_DESKTOP,
+  STUB_WHEN_ROW_GAP_DESKTOP,
+  TEXT_COLUMN_INLINE_PADDING_DESKTOP,
+  TICKET_FINE_GAP,
 } from './consts';
 
 // The ticket's full look: split in two, one perforation line, two circular
@@ -38,6 +42,15 @@ export const TicketShell = css(
     margin-inline: 0;
   }
 
+  /* With no poster the main panel is text only, so the card stays narrow
+     rather than stretching into a wide, mostly empty band (design spec,
+     "No photo"). */
+  &.noPoster {
+    @media (min-width: ${theme.breakpoints.lg}) {
+      max-inline-size: ${CARD_MAX_INLINE_SIZE_NO_POSTER_DESKTOP};
+    }
+  }
+
   > .cancelledBanner {
     padding: ${theme.spacing.md} ${theme.spacing.lg};
     background: ${theme.colors.surface};
@@ -61,29 +74,24 @@ export const TicketShell = css(
     }
   }
 
-  /* The dim belongs to the content standing in for a live ticket, never to
-     the notches: they fake a hole through to the page background, and
-     dimming them turns the hole into a pale pink dot glued to the edge. */
-  &.cancelled > .ticketRow {
-    > .stub {
-      > .kicker,
-      > .whenRow {
-        opacity: 0.55;
-      }
-
-      &::after {
-        opacity: 0.55;
-      }
-
-      /* Gold is the one accent colour on the whole card, reserved for a live
-         start time; a cancelled one is not that (design spec, "Cancelled"). */
-      > .whenRow > .timeCol > .time {
-        color: ${theme.colors.textOnPrimary};
+  /* A cancelled ticket no longer dims its own text: the white banner above
+     already carries the message, and 'textOnPrimaryMuted' at the old 0.55
+     opacity falls under the 3:1 contrast floor on a screen whose whole job
+     is to be screenshotted (design review). Gold still steps aside to white,
+     since gold is reserved for a live start time. */
+  &.cancelled > .ticketRow > .stub {
+    /* The top notch on desktop sits directly beneath the cancellation
+       banner, so the hole it fakes has to read as a hole through to the
+       banner's own white, not through to the page background behind the
+       rest of the card. */
+    > .notch.start {
+      @media (min-width: ${theme.breakpoints.lg}) {
+        background: ${theme.colors.surface};
       }
     }
 
-    > .body {
-      opacity: 0.55;
+    > .whenRow > .timeCol > .time {
+      color: ${theme.colors.textOnPrimary};
     }
   }
 
@@ -93,6 +101,10 @@ export const TicketShell = css(
 
     @media (min-width: ${theme.breakpoints.lg}) {
       flex-direction: row;
+      /* The card hugs its own content and never stretches, but it does not
+         shrink below this either (design spec, "Height hugs content with a
+         floor of 380"). */
+      min-block-size: ${CARD_MIN_BLOCK_SIZE_DESKTOP};
     }
 
     > .stub {
@@ -103,14 +115,18 @@ export const TicketShell = css(
       align-items: stretch;
       gap: ${theme.spacing.lg};
       padding-inline: ${theme.spacing.xl};
-      padding-block: ${PANEL_BLOCK_PADDING};
+      padding-block: ${PANEL_BLOCK_PADDING_PHONE};
 
       @media (min-width: ${theme.breakpoints.lg}) {
-        min-inline-size: 200px;
+        /* Fixed, never fluid: every pixel the card gains belongs to the
+           main panel, not the stub (design spec). */
+        flex: 0 0 200px;
+        justify-content: center;
+        padding-block: ${theme.spacing.xxl};
       }
 
       /* The perforation itself: a repeating gradient, not a dashed border,
-         which cannot hold a 2px dash and a 5px gap this precisely across
+         which cannot hold a 2px dash and a 6px gap this precisely across
          browsers. The gradient's own direction keyword does not encode a
          layout side: the pattern is periodic, so it tiles identically
          read from either end. */
@@ -200,7 +216,7 @@ export const TicketShell = css(
           flex-direction: column;
           align-items: flex-start;
           justify-content: flex-start;
-          gap: ${theme.spacing.sm};
+          gap: ${STUB_WHEN_ROW_GAP_DESKTOP};
         }
 
         > .dateCol,
@@ -276,17 +292,43 @@ export const TicketShell = css(
     > .body {
       flex: 1;
       min-inline-size: 0;
+      /* The desktop poster is positioned absolutely against this box, so it
+         can span the panel's full height (see \`.poster\` below) while
+         staying nested beside the teacher text it needs to sit next to on a
+         phone, where it is not absolutely positioned. */
+      position: relative;
       display: flex;
       flex-direction: column;
-      gap: ${theme.spacing.lg};
+      gap: ${theme.spacing.xl};
       padding-inline: ${theme.spacing.xl};
-      padding-block: ${PANEL_BLOCK_PADDING};
+      padding-block: ${PANEL_BLOCK_PADDING_PHONE};
+
+      @media (min-width: ${theme.breakpoints.lg}) {
+        flex: 1 1 auto;
+        /* Centres the place block, the hairline and the teacher block as one
+           unit, so any slack the 380 floor leaves splits evenly above and
+           below the whole stack instead of opening a gap inside it (design
+           spec, "not space-between: this is the other half of the fix"). */
+        justify-content: center;
+        padding-inline: ${TEXT_COLUMN_INLINE_PADDING_DESKTOP} calc(${POSTER_WIDTH_DESKTOP} + ${TEXT_COLUMN_INLINE_PADDING_DESKTOP});
+        padding-block: ${theme.spacing.xxl};
+      }
+
+      &.noPoster {
+        @media (min-width: ${theme.breakpoints.lg}) {
+          padding-inline-end: ${TEXT_COLUMN_INLINE_PADDING_DESKTOP};
+        }
+      }
 
       > .place {
         display: flex;
         flex-direction: column;
         align-items: flex-start;
         gap: ${theme.spacing.xs};
+
+        @media (min-width: ${theme.breakpoints.lg}) {
+          gap: 0;
+        }
       }
 
       > .place > .venue {
@@ -299,6 +341,7 @@ export const TicketShell = css(
         @media (min-width: ${theme.breakpoints.lg}) {
           font-size: ${theme.typography.ticketVenue.desktop.fontSize};
           line-height: ${theme.typography.ticketVenue.desktop.lineHeight};
+          margin-block-end: ${theme.spacing.xs};
         }
       }
 
@@ -307,6 +350,10 @@ export const TicketShell = css(
         font-size: ${theme.typography.secondary.phone.fontSize};
         line-height: ${theme.typography.secondary.phone.lineHeight};
         overflow-wrap: break-word;
+
+        @media (min-width: ${theme.breakpoints.lg}) {
+          margin-block-end: ${theme.spacing.lg};
+        }
       }
 
       /* An address never wraps: a Hebrew line with digits in it can flip a
@@ -321,6 +368,10 @@ export const TicketShell = css(
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+
+        @media (min-width: ${theme.breakpoints.lg}) {
+          margin-block-end: ${TICKET_FINE_GAP};
+        }
       }
 
       /* A classification, styled as a small raised block: it earns the pill
@@ -328,7 +379,7 @@ export const TicketShell = css(
       > .place > .audienceTag {
         display: inline-flex;
         width: fit-content;
-        padding-block: 2px;
+        padding-block: ${TICKET_FINE_GAP};
         padding-inline: ${theme.spacing.sm};
         border-radius: ${theme.radii.sm};
         background: ${theme.colors.surfaceOnPrimary};
@@ -338,9 +389,19 @@ export const TicketShell = css(
         line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
       }
 
+      /* The rule that replaces the old gap between the audience tag and the
+         teacher block: a deliberate line, not an ambiguous void (design
+         spec, phone correction 2; desktop, "what replaces the canyon"). */
+      > .hairline {
+        flex: 0 0 auto;
+        inline-size: 100%;
+        block-size: 1px;
+        background: ${theme.colors.borderOnPrimary};
+      }
+
       > .teacherRow {
         display: flex;
-        align-items: flex-end;
+        align-items: flex-start;
         gap: ${theme.spacing.lg};
       }
 
@@ -351,6 +412,10 @@ export const TicketShell = css(
         flex-direction: column;
         align-items: flex-start;
         gap: ${theme.spacing.xs};
+
+        @media (min-width: ${theme.breakpoints.lg}) {
+          gap: 0;
+        }
       }
 
       /* With no poster the teacher block is the only content in its row: it
@@ -365,6 +430,10 @@ export const TicketShell = css(
         font-weight: ${theme.typography.tagAndCaption.fontWeight};
         font-size: ${theme.typography.tagAndCaption.phone.fontSize};
         line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
+
+        @media (min-width: ${theme.breakpoints.lg}) {
+          margin-block-end: ${theme.spacing.xs};
+        }
       }
 
       /* A clarification, not a classification: plain text beside the role
@@ -373,18 +442,24 @@ export const TicketShell = css(
         color: ${theme.colors.textOnPrimaryMuted};
         font-size: ${theme.typography.tagAndCaption.phone.fontSize};
         line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
+
+        @media (min-width: ${theme.breakpoints.lg}) {
+          margin-block-end: ${theme.spacing.xs};
+        }
       }
 
+      /* Card title, not Section heading: the venue above is the one line a
+         person going out tonight actually needs, and a louder rabbi name
+         would outrank it (design spec). */
       > .teacherRow > .teacher > .name {
         color: ${theme.colors.textOnPrimary};
-        font-weight: ${theme.typography.sectionHeading.fontWeight};
-        font-size: ${theme.typography.sectionHeading.phone.fontSize};
-        line-height: ${theme.typography.sectionHeading.phone.lineHeight};
+        font-weight: ${theme.typography.cardTitle.fontWeight};
+        font-size: ${theme.typography.cardTitle.phone.fontSize};
+        line-height: ${theme.typography.cardTitle.phone.lineHeight};
         overflow-wrap: break-word;
 
         @media (min-width: ${theme.breakpoints.lg}) {
-          font-size: ${theme.typography.sectionHeading.desktop.fontSize};
-          line-height: ${theme.typography.sectionHeading.desktop.lineHeight};
+          margin-block-end: ${TICKET_FINE_GAP};
         }
       }
 
@@ -396,20 +471,29 @@ export const TicketShell = css(
       }
 
       /* Bleeds past the panel's own padding to the card's inline-end and
-         block-end edges, clipped into the rounded corner by the shell's own
-         \`overflow: hidden\` (design spec, "the poster is inside the
-         silhouette"). */
+         block-end edges on a phone, clipped into the rounded corner by the
+         shell's own \`overflow: hidden\`. On desktop it bleeds to all three
+         outer edges instead (top, bottom, inline-end) and spans the panel's
+         full height, which a phone-style fixed aspect ratio cannot do: the
+         poster does not contribute to the card's height, so it is taken out
+         of flow and sized against \`.body\` directly (design spec, "The
+         poster does not contribute to H"). */
       > .teacherRow > .poster {
         flex: 0 0 auto;
         inline-size: ${POSTER_WIDTH_PHONE};
         aspect-ratio: 3 / 4;
         object-fit: cover;
         margin-inline-end: calc(-1 * ${theme.spacing.xl});
-        margin-block-end: calc(-1 * ${PANEL_BLOCK_PADDING});
+        margin-block-end: calc(-1 * ${PANEL_BLOCK_PADDING_PHONE});
 
         @media (min-width: ${theme.breakpoints.lg}) {
+          position: absolute;
+          inset-block: 0;
+          inset-inline-end: 0;
           inline-size: ${POSTER_WIDTH_DESKTOP};
-          margin-block-start: ${POSTER_TOP_OFFSET_DESKTOP};
+          block-size: 100%;
+          object-position: center top;
+          margin: 0;
         }
       }
     }

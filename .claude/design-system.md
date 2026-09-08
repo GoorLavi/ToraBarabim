@@ -335,13 +335,35 @@ shadow.
 ### Breakpoints and content width
 Min-width, narrow to wide: `sm 480`, `md 768`, `lg 1024`, `xl 1280`.
 
-**Maximum content width 1120px.** Blocks of running text cap at 640px so a line never
-gets uncomfortable to read.
+**Maximum content width 1280px.** One value, and it binds every page: no page gets its
+own width. Blocks of running text still cap at 640px, so widening the container costs no
+readability anywhere. At a 1280 viewport the 24px side gutter leaves a 1232 band; from
+1328 up the band caps at 1280 and the page centres. Wider than that, only the margins
+grow.
 
-Lesson cards are two columns on a phone, and three at the 1120 content width. Not four:
-at four the cells fall to roughly 262px and a long rabbi name wraps in every other cell.
-Four columns only above 1280. **This describes the filtered page only.** The rows use a
-fixed card width and never reflow into a grid; see below.
+**The lesson grid steps: two columns on a phone, three from `md` 768, four from `xl`
+1280.** Every step down is real and must be built, not treated as a wide-screen
+afterthought: a small laptop lands on three columns, not a squeezed four. The cell is
+296px in the 1232 band and 308px in the full 1280 band, with the 3:4 poster following the
+cell.
+
+Not five. The reason is the poster, not the text: measured in Assistant, the widest line a
+card carries is the audience and topic line at 172px, and the longest rabbi name in the
+data is 143px, so every line still fits in a 243px cell. What five columns breaks is the
+poster, at 243 by 324, which is a thumbnail. An earlier version of this paragraph claimed
+four columns broke long names at 262px; that was an estimate, it was measured and found
+wrong, and it is gone.
+
+**This describes every lesson grid:** the filtered home page, `/lessons`, and the city
+page. The rows use a fixed card width and never reflow into a grid; see below.
+
+**A column count is set by the longest real string, never by the container.** The
+all-rabbis index stays at two columns even in the wider band: its longest meta line
+measures 294px, and a third column would leave it 281px.
+
+A day group holding fewer lessons than the row has columns leaves an empty cell at the
+end. That is ordinary wrapping-grid behaviour and is accepted, not a defect to design
+around.
 
 ### Horizontal rails
 The unfiltered home page is rows of cards that scroll sideways, each row a different cut

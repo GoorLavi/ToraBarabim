@@ -3,6 +3,7 @@ import classNames from 'classnames';
 import styled from 'styled-components';
 
 import { fetchCities } from '~/HomePage/api';
+import { TextLink } from '~/HomePage/components/TextLink/TextLink';
 
 import * as consts from './consts';
 import { uniqueCityNames } from './helpers';
@@ -37,7 +38,9 @@ export const CityGrid = styled(({ className, items, isLoading, isError, onSelect
     <section className={className}>
       <div className="heading">
         <h2>{consts.HEADING}</h2>
-        <span className="seeAll">{consts.SEE_ALL_LABEL}</span>
+        <TextLink className="seeAll" to="/cities" withChevron>
+          {consts.SEE_ALL_LABEL}
+        </TextLink>
       </div>
 
       {isError && (

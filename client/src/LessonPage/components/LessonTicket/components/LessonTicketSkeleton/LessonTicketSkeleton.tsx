@@ -44,6 +44,8 @@ export const LessonTicketSkeleton = styled(({ className }: LessonTicketSkeletonP
           <span className="bar tag" />
         </div>
 
+        <span className="hairline" />
+
         <div className="teacherRow">
           <div className="teacher">
             <span className="bar role" />

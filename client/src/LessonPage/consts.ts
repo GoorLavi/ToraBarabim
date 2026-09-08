@@ -17,6 +17,7 @@ export const SERVER_ERROR_EXPLANATION = 'משהו השתבש בדרך אלינו
 export const RETRY_LABEL = 'נסו שוב';
 
 export const ALL_LESSONS_LABEL = 'לכל השיעורים';
+export const BACK_TO_ALL_LESSONS_LABEL = 'חזרה לכל השיעורים';
 
 // The label above the rabbi's name in the ticket's lower panel (LessonTicket):
 // the ordinary role label, and what it becomes when a substitute is teaching.

@@ -27,7 +27,8 @@ export const LessonRail = css(
     position: relative;
     /* Cancels .content's own padding-inline exactly, so the scroller reaches
        the same edge .content itself reaches: the viewport edge below the
-       1120px content cap, the content column's edge above it. */
+       site's content cap (theme.layout.contentMaxWidth), the content
+       column's edge above it. */
     margin-inline: calc(-1 * ${theme.spacing.lg});
 
     @media (min-width: ${theme.breakpoints.md}) {
