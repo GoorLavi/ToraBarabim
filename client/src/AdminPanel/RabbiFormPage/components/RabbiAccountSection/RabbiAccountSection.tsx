@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import classNames from 'classnames';
 import styled from 'styled-components';
 
 import { AdminApiError } from '~/AdminPanel/api';
-import { adminErrorMessage } from '~/AdminPanel/helpers';
+import { adminErrorMessage, suggestUsername } from '~/AdminPanel/helpers';
 
 import * as consts from './consts';
 import type { RabbiAccountSectionProps, RevealedPassword } from './models';
@@ -19,12 +19,24 @@ import { useSetRabbiAccountActive } from './useSetRabbiAccountActive';
 // only in `revealed`, local component state, never in the query cache,
 // never in the URL, and it is dropped as soon as the admin confirms it was
 // delivered (see the report for this slice).
-export const RabbiAccountSection = styled(({ className, rabbiId }: RabbiAccountSectionProps) => {
+export const RabbiAccountSection = styled(({ className, rabbiId, rabbiName }: RabbiAccountSectionProps) => {
   const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
+  const [isUsernameEdited, setIsUsernameEdited] = useState(false);
   const [emailError, setEmailError] = useState<string | undefined>();
+  const [usernameError, setUsernameError] = useState<string | undefined>();
   const [revealed, setRevealed] = useState<RevealedPassword | undefined>();
   const [isCopied, setIsCopied] = useState(false);
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+
+  // Keeps the username suggestion following the rabbi's name for as long as
+  // the admin has not typed into the username field themselves: the name
+  // field lives on the parent page and can still change while this section
+  // is visible, before the account is ever created.
+  useEffect(() => {
+    if (isUsernameEdited) return;
+    setUsername(suggestUsername(rabbiName));
+  }, [rabbiName, isUsernameEdited]);
 
   const account = useRabbiAccount(rabbiId);
   const createAccount = useCreateRabbiAccount(rabbiId ?? '');
@@ -41,17 +53,23 @@ export const RabbiAccountSection = styled(({ className, rabbiId }: RabbiAccountS
   }
 
   const submitCreate = (): void => {
-    if (!email.trim()) {
-      setEmailError(consts.REQUIRED_EMAIL_ERROR);
-      return;
-    }
-    setEmailError(undefined);
-    createAccount.mutate(email.trim(), {
-      onSuccess: (created) => {
-        setRevealed({ email: created.email, temporaryPassword: created.temporaryPassword });
-        setEmail('');
+    const hasEmail = Boolean(email.trim());
+    const hasUsername = Boolean(username.trim());
+    setEmailError(hasEmail ? undefined : consts.REQUIRED_EMAIL_ERROR);
+    setUsernameError(hasUsername ? undefined : consts.REQUIRED_USERNAME_ERROR);
+    if (!hasEmail || !hasUsername) return;
+
+    createAccount.mutate(
+      { email: email.trim(), username: username.trim() },
+      {
+        onSuccess: (created) => {
+          setRevealed({ email: created.email, temporaryPassword: created.temporaryPassword });
+          setEmail('');
+          setUsername('');
+          setIsUsernameEdited(false);
+        },
       },
-    });
+    );
   };
 
   const rabbiAccount = account.data;
@@ -132,10 +150,35 @@ export const RabbiAccountSection = styled(({ className, rabbiId }: RabbiAccountS
               }}
             />
             {emailError && <span className="error">{emailError}</span>}
-            {createAccount.isError && createAccount.error instanceof AdminApiError && (
+            {createAccount.isError && createAccount.error instanceof AdminApiError && createAccount.error.code !== 'duplicate_username' && (
               <span className="error">{adminErrorMessage(createAccount.error)}</span>
             )}
           </label>
+
+          <label className="field">
+            <span className="label">{consts.USERNAME_LABEL}</span>
+            <input
+              type="text"
+              dir="auto"
+              value={username}
+              onChange={(event) => {
+                setIsUsernameEdited(true);
+                setUsername(event.target.value);
+              }}
+              // Same reasoning as the email field above: this input lives
+              // inside `RabbiFormPage`'s own outer `<form>`.
+              onKeyDown={(event) => {
+                if (event.key !== 'Enter') return;
+                event.preventDefault();
+                submitCreate();
+              }}
+            />
+            {usernameError ? <span className="error">{usernameError}</span> : <span className="helper">{consts.USERNAME_HELPER}</span>}
+            {createAccount.isError && createAccount.error instanceof AdminApiError && createAccount.error.code === 'duplicate_username' && (
+              <span className="error">{adminErrorMessage(createAccount.error)}</span>
+            )}
+          </label>
+
           <button type="button" className="submit" disabled={createAccount.isPending} onClick={submitCreate}>
             {createAccount.isPending ? consts.CREATING_ACCOUNT_LABEL : consts.CREATE_ACCOUNT_LABEL}
           </button>
@@ -150,6 +193,14 @@ export const RabbiAccountSection = styled(({ className, rabbiId }: RabbiAccountS
               {rabbiAccount.email}
             </span>
           </div>
+          {rabbiAccount.username && (
+            <div className="row">
+              <span className="label">{consts.ACCOUNT_USERNAME_LABEL}</span>
+              <span className="value" dir="auto">
+                {rabbiAccount.username}
+              </span>
+            </div>
+          )}
           <div className="row">
             <span className="label">{consts.ACCOUNT_STATUS_LABEL}</span>
             <span className={classNames('statusPill', { inactive: !rabbiAccount.isActive })}>

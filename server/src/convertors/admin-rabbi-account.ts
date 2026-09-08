@@ -5,6 +5,7 @@ import type { CreatedRabbiAccountRecord, RabbiAccountRecord } from '../service/a
 export const toRabbiAccountResponse = (record: RabbiAccountRecord): RabbiAccountResponse => ({
   id: record.id,
   email: record.email,
+  username: record.username,
   rabbiId: record.rabbiId,
   isActive: record.isActive,
 });
@@ -12,6 +13,7 @@ export const toRabbiAccountResponse = (record: RabbiAccountRecord): RabbiAccount
 export const toRabbiAccountCreatedResponse = (record: CreatedRabbiAccountRecord): RabbiAccountCreatedResponse => ({
   id: record.id,
   email: record.email,
+  username: record.username,
   rabbiId: record.rabbiId,
   isActive: record.isActive,
   temporaryPassword: record.temporaryPassword,

@@ -12,3 +12,9 @@ export interface AdminRabbiFilters {
   page?: number;
   pageSize?: number;
 }
+
+// Server-side filters, sent as query params on GET /v1/admin/admin-users.
+export interface AdminUserFilters {
+  page?: number;
+  pageSize?: number;
+}

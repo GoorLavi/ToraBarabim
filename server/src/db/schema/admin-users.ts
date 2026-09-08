@@ -9,6 +9,10 @@ export const adminUsers = pgTable(
   {
     id: text('id').primaryKey(),
     email: text('email').notNull().unique(),
+    // Optional alternate login handle. Nullable and unique among non-null
+    // values, same reasoning as `rabbiId` below: Postgres never conflicts
+    // two nulls, so "no username set" is not "username taken".
+    username: text('username'),
     passwordHash: text('password_hash').notNull(),
     name: text('name').notNull(),
     role: adminRoleEnum('role').notNull().default('admin'),
@@ -23,6 +27,7 @@ export const adminUsers = pgTable(
   },
   (table) => [
     unique('admin_users_rabbi_id_unique').on(table.rabbiId),
+    unique('admin_users_username_unique').on(table.username),
     check(
       'admin_users_role_rabbi_id_shape',
       sql`(${table.role} = 'rabbi' AND ${table.rabbiId} IS NOT NULL) OR (${table.role} = 'admin' AND ${table.rabbiId} IS NULL)`,

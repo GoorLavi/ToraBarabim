@@ -9,11 +9,15 @@ export const RETRY_LABEL = 'ניסיון נוסף';
 export const NO_ACCOUNT_NOTE = 'לרב הזה אין עדיין חשבון כניסה. יצירת חשבון מייצרת סיסמה זמנית שיש למסור לרב בטלפון.';
 export const EMAIL_LABEL = 'אימייל להתחברות';
 export const REQUIRED_EMAIL_ERROR = 'יש למלא כתובת אימייל';
+export const USERNAME_LABEL = 'שם משתמש להתחברות';
+export const REQUIRED_USERNAME_ERROR = 'יש למלא שם משתמש';
+export const USERNAME_HELPER = 'אפשר להתחבר גם עם שם המשתמש במקום האימייל.';
 export const CREATE_ACCOUNT_LABEL = 'יצירת חשבון כניסה';
 export const CREATING_ACCOUNT_LABEL = 'יוצרים חשבון...';
 
 // Has-account state.
 export const ACCOUNT_EMAIL_LABEL = 'אימייל להתחברות';
+export const ACCOUNT_USERNAME_LABEL = 'שם משתמש להתחברות';
 export const ACCOUNT_STATUS_LABEL = 'סטטוס הכניסה';
 export const ACCOUNT_ACTIVE_LABEL = 'פעיל';
 export const ACCOUNT_INACTIVE_LABEL = 'מושבת';

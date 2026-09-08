@@ -30,3 +30,11 @@ export class DuplicateEmailError extends Error {
     this.name = 'DuplicateEmailError';
   }
 }
+
+// Fires when the given username is already used by another account. Maps to 409.
+export class DuplicateUsernameError extends Error {
+  constructor(public readonly username: string) {
+    super(`An account with username '${username}' already exists`);
+    this.name = 'DuplicateUsernameError';
+  }
+}

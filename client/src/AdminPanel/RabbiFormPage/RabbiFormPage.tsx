@@ -186,7 +186,7 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
             />
           </div>
 
-          <RabbiAccountSection rabbiId={id} />
+          <RabbiAccountSection rabbiId={id} rabbiName={form.name} />
 
           <div className="footer">
             <Link className="cancel" to={ADMIN_ROUTES.rabbis}>

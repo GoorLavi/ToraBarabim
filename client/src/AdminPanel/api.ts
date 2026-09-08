@@ -1,5 +1,8 @@
 import type {
   AdminUser,
+  AdminUserListItem,
+  AdminUserListResponse,
+  CreateAdminUserRequest,
   CreateLessonRequest,
   CreateRabbiAccountRequest,
   CreateRabbiRequest,
@@ -11,12 +14,13 @@ import type {
   RabbiListResponse,
   RabbiResponse,
   ResetRabbiPasswordResponse,
+  UpdateAdminUserRequest,
   UpdateLessonRequest,
   UpdateRabbiAccountRequest,
   UpdateRabbiRequest,
 } from '@torabarabim/common';
 
-import type { AdminLessonFilters, AdminRabbiFilters } from './models';
+import type { AdminLessonFilters, AdminRabbiFilters, AdminUserFilters } from './models';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
@@ -68,9 +72,10 @@ const request = async <T>(url: string, init?: RequestInit): Promise<T> => {
 const url = (path: string): URL => new URL(path, window.location.origin);
 
 // POST /v1/admin/login
-// 200 with AdminUser on success, sets the session cookie.
+// 200 with AdminUser on success, sets the session cookie. `identifier` is
+// either the account's email or its username.
 // 401 on bad credentials. 429 when rate limited.
-export const login = (body: { email: string; password: string }): Promise<AdminUser> =>
+export const login = (body: { identifier: string; password: string }): Promise<AdminUser> =>
   request(url('/v1/admin/login').toString(), { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(body) });
 
 // POST /v1/admin/logout
@@ -179,3 +184,24 @@ export const createAdminLesson = (body: CreateLessonRequest): Promise<LessonResp
 // 404 if the lesson does not exist.
 export const updateAdminLesson = (id: string, body: UpdateLessonRequest): Promise<LessonResponse> =>
   request(url(`/v1/admin/lessons/${id}`).toString(), { method: 'PATCH', headers: JSON_HEADERS, body: JSON.stringify(body) });
+
+// GET /v1/admin/admin-users
+// 200 with AdminUserListResponse, including an empty items array.
+export const fetchAdminUsers = (filters: AdminUserFilters): Promise<AdminUserListResponse> => {
+  const target = url('/v1/admin/admin-users');
+  target.searchParams.set('page', String(filters.page ?? 1));
+  target.searchParams.set('pageSize', String(filters.pageSize ?? 50));
+  return request(target.toString());
+};
+
+// POST /v1/admin/admin-users
+// 201 with AdminUserListItem. 400 invalid_request / weak_password.
+// 409 duplicate_email / duplicate_username.
+export const createAdminUser = (body: CreateAdminUserRequest): Promise<AdminUserListItem> =>
+  request(url('/v1/admin/admin-users').toString(), { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(body) });
+
+// PATCH /v1/admin/admin-users/:id
+// 200 with AdminUserListItem. 404 if the admin user does not exist.
+// 409 cannot_deactivate_self.
+export const setAdminUserActive = (id: string, body: UpdateAdminUserRequest): Promise<AdminUserListItem> =>
+  request(url(`/v1/admin/admin-users/${id}`).toString(), { method: 'PATCH', headers: JSON_HEADERS, body: JSON.stringify(body) });
