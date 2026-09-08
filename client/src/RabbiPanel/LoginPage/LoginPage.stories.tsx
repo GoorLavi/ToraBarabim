@@ -5,11 +5,12 @@ import { LoginPage } from './LoginPage';
 
 // No live API in Storybook's own preview server: every route this page
 // calls is answered here instead. Chains onto whatever `window.fetch`
-// already is, matching RabbiPage.stories.tsx.
+// already is, and installs/restores through `beforeEach` so the mock
+// never leaks into a story outside this file.
 const jsonResponse = (status: number, body: unknown): Response =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 
-const installMockFetch = (respond: (url: URL) => Response | Promise<Response> | null): void => {
+const installMockFetch = (respond: (url: URL) => Response | Promise<Response> | null): (() => void) => {
   const previousFetch = window.fetch;
   window.fetch = (async (input, init) => {
     const url = input instanceof Request ? new URL(input.url) : new URL(input.toString(), window.location.origin);
@@ -17,18 +18,23 @@ const installMockFetch = (respond: (url: URL) => Response | Promise<Response> | 
     if (result) return result;
     return previousFetch(input, init);
   }) as typeof fetch;
+  return () => {
+    window.fetch = previousFetch;
+  };
 };
-
-installMockFetch((url) => {
-  // Not logged in, so the login form renders instead of redirecting.
-  if (url.pathname === '/v1/rabbi/me') return jsonResponse(401, { error: 'unauthenticated', message: 'לא מחובר' });
-  if (url.pathname === '/v1/rabbi/login') return jsonResponse(401, { error: 'invalid_credentials', message: 'אימייל, שם משתמש או סיסמה שגויים' });
-  return null;
-});
 
 const meta: Meta<typeof LoginPage> = {
   title: 'RabbiPanel/LoginPage',
   component: LoginPage,
+  beforeEach: () =>
+    installMockFetch((url) => {
+      // Not logged in, so the login form renders instead of redirecting.
+      if (url.pathname === '/v1/rabbi/me') return jsonResponse(401, { error: 'unauthenticated', message: 'לא מחובר' });
+      if (url.pathname === '/v1/rabbi/login') {
+        return jsonResponse(401, { error: 'invalid_credentials', message: 'אימייל, שם משתמש או סיסמה שגויים' });
+      }
+      return null;
+    }),
 };
 
 export default meta;
