@@ -9,7 +9,7 @@ export const PASSWORD_LABEL = 'סיסמה';
 export const CONFIRM_PASSWORD_LABEL = 'אימות סיסמה';
 
 // Mirrors the server's `MIN_PASSWORD_LENGTH` (server/src/service/admin-auth/consts.ts).
-export const MIN_PASSWORD_LENGTH = 12;
+export const MIN_PASSWORD_LENGTH = 6;
 export const PASSWORD_HELPER = `לפחות ${MIN_PASSWORD_LENGTH} תווים.`;
 
 export const REQUIRED_NAME_ERROR = 'יש למלא שם';

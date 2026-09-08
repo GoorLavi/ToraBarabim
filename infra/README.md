@@ -235,68 +235,28 @@ Watch it finish in the ECS console or via `aws ecs describe-tasks --profile tora
 output. Re-run this exact command for every future migration; it always runs the
 `server/drizzle` SQL files baked into the image that was deployed most recently.
 
-### 4. Create the admin user, over ECS Exec
+### 4. Create the admin user
 
-The server task has [ECS Exec](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-exec.html)
-enabled (`enableExecuteCommand: true` on the service), so the human can open an
-interactive shell inside the running container and run the same `admin:create` script
-used locally. This is deliberate, not a shortcut: the script prompts for the password
-with terminal echo off when it has a TTY (`server/src/scripts/create-admin.ts`), so the
-password is never a CLI argument, never an environment variable, and never a task
-definition override. A `run-task` with the password passed in as an override would put a
-live admin credential into the task definition's revision history and into CloudTrail,
-both of which are retained; typing it at an interactive prompt avoids that entirely.
+**There is currently no documented way to create the first admin user in production.**
+The `admin:create` CLI script this section used to describe (run over ECS Exec, the
+same way [4a](#4a-seed-the-official-locality-list-over-ecs-exec) still runs the city
+seed) was removed; see
+[0019](../docs/decisions/0019-lower-the-admin-password-minimum-and-drop-the-bootstrap-script.md)
+for why and what this leaves unresolved. Once an admin panel session exists, every
+further admin is created from the panel itself (`/admin/admins`); getting the very
+first one into a fresh environment, or recovering one if every admin account is ever
+deactivated, has no answer yet. Closing this is unstarted work, not a known procedure
+omitted from this doc: read 0019 before running anything ad hoc against a production
+database to work around it.
 
-Find the running task, then open the shell:
-
-```bash
-aws ecs list-tasks \
-  --profile torabarabim \
-  --cluster <ClusterName output> \
-  --service-name <ServiceName output> \
-  --desired-status RUNNING
-
-aws ecs execute-command \
-  --profile torabarabim \
-  --cluster <ClusterName output> \
-  --task <task id from the command above> \
-  --container Server \
-  --interactive \
-  --command "/bin/sh"
-```
-
-Inside the shell, run the compiled script directly (the production image has no `tsx`,
-only the built `dist/`; `DATABASE_URL` is already in the container's environment from
-Secrets Manager):
-
-```sh
-node dist/scripts/create-admin.js <email> <name>
-```
-
-It prompts for the password twice, with the terminal not echoing what is typed.
-
-**On the session log:** ECS Exec sends the session transcript to the same
-`ServerLogGroup` CloudWatch log group as the server's own logs, at the same one-month
-retention (set via the cluster's `executeCommandConfiguration`, instead of the
-AWS-managed, unbounded-retention default). The password prompt's raw-mode input
-suppresses the terminal's own character echo (`stdin.setRawMode(true)`, confirmed in the
-script's own comments), and ECS Exec's CloudWatch logging is a recording of the session's
-*output* stream, the same thing a person watching the screen would see, not a separate
-raw keystroke logger of the input channel. On that basis the typed password should not
-land in the session log. This has not been verified against a live session, since there
-is no AWS account yet to test against: **the first time this is used, check the
-`ServerLogGroup` session log stream immediately afterward and confirm the password did
-not appear before relying on this for a real credential.** If it did appear, that changes
-the recommendation and this section needs a rewrite before it is used again.
-
-**Standing exposure:** ECS Exec is a permanent door into the running container for
-anyone with `ecs:ExecuteCommand` IAM permission on this cluster, not a one-time
-mechanism that closes itself. It does not open anything to the public internet, but it
-does let any human or automation with that IAM permission get an interactive shell with
-the task's own role and see everything the container can see, including reading
-`DATABASE_URL` and the other secrets straight out of its environment. Once the first
-admin user exists, consider turning it off by setting `enableExecuteCommand: false` on
-the service and redeploying.
+ECS Exec (`enableExecuteCommand: true` on the service) is still enabled and still the
+mechanism [4a](#4a-seed-the-official-locality-list-over-ecs-exec) below uses. **Standing
+exposure:** it is a permanent door into the running container for anyone with
+`ecs:ExecuteCommand` IAM permission on this cluster, not a one-time mechanism that
+closes itself. It does not open anything to the public internet, but it does let any
+human or automation with that IAM permission get an interactive shell with the task's
+own role and see everything the container can see, including reading `DATABASE_URL` and
+the other secrets straight out of its environment.
 
 ### 4a. Seed the official locality list, over ECS Exec
 
