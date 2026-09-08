@@ -19,14 +19,14 @@ still requires an existing, authenticated admin session. It is a second, in-app 
 do the same thing the script does, not a public door.
 
 Separately, both admin and rabbi accounts now support logging in with a username in
-addition to email, set optionally at account-creation time by whoever creates the
-account. Existing accounts, all created via the script, have no username and keep
-logging in with email until someone sets one for them.
+addition to email, required and unique whenever a new account is created, chosen by
+whoever creates the account. Existing accounts, all created via the script, have no
+username and keep logging in with email until someone sets one for them.
 
 ## Decision
 
 An authenticated admin can create another admin from the admin panel, choosing that
-new admin's name, email, optional username, and password directly. The password is
+new admin's name, email, required unique username, and password directly. The password is
 never auto-generated for this flow, unlike a rabbi's account: the creating admin picks
 it and hands it to the new admin out of band, the same way a rabbi's temporary
 password is communicated today.
@@ -48,9 +48,10 @@ password is communicated today.
   admin accounts can now be created by more than one person acting independently, with
   nothing recording who created whom beyond the seven day database backup 0003 already
   named as the (poor) answer to "who did this."
-- A username is optional and unverified: nothing stops two admins from picking
-  confusing or similar usernames, and nothing checks that a username is actually
-  memorable or meaningful. It is a convenience, not an identity system.
+- A username is required and unique on creation, but unverified otherwise: nothing
+  stops two admins from picking confusing or non-memorable usernames, and nothing
+  checks that it means anything to anyone but its owner. It is a convenience, not an
+  identity system.
 - There is still no self-service password reset or change for an admin account. A
   forgotten password is still resolved exactly as 0003 describes: someone with server
   access re-runs the script's flow (against a different email, since the row already
