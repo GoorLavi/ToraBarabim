@@ -70,7 +70,11 @@ a ragged bottom edge across the row, and it is detail nobody needs while scannin
 Every rabbi has one and it is required, so it is structural rather than decorative.
 
 **Aspect ratio 3:4, portrait.** This is not negotiable downstream: the public card is
-built at 3:4, so any other ratio arrives cropped or padded. Minimum 800 by 1200. JPG or
+built at 3:4, so any other ratio arrives cropped or padded. Minimum 900 by 1200. This line previously read 800 by 1200, which is 2:3 and
+contradicted the 3:4 in the sentence above it. The seed portraits were drawn to 2:3 and
+the card rendered 2:3 in consequence, adding a sixth of the card's height on every screen
+at every width. The ratio is 3:4 and the card crops to it, which is what the vertical crop
+control exists for. JPG or
 PNG, up to 5MB. The admin form offers a vertical crop control, because a portrait
 photograph is usually taller than the frame and the face has to survive the crop.
 

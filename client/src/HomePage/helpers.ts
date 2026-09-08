@@ -1,7 +1,9 @@
 import type { HomeResponse, LessonOccurrence } from '@torabarabim/common';
 
+import type { DateFilterOption, SelectedCity } from '~/hooks/models';
+
 import { RAIL_CONTEXT_LINE } from './consts';
-import type { DateFilterOption, HomeMode, SelectedCity } from './models';
+import type { HomeMode } from './models';
 
 const ISRAEL_TIME_ZONE = 'Asia/Jerusalem';
 const SATURDAY = 6;
@@ -60,6 +62,12 @@ const compactDateFormatter = new Intl.DateTimeFormat('he-IL', {
   timeZone: ISRAEL_TIME_ZONE,
 });
 
+const numericDateFormatter = new Intl.DateTimeFormat('he-IL', {
+  day: 'numeric',
+  month: 'numeric',
+  timeZone: ISRAEL_TIME_ZONE,
+});
+
 // היום / מחר / בשבת stand in for the date itself regardless of which
 // formatter the caller otherwise wants, so both `dayLabel` and
 // `compactDayLabel` resolve through this first.
@@ -82,6 +90,13 @@ export const dayLabel = (isoDate: string): string =>
 // `dayLabel`, so the date still reads in full somewhere on the page.
 export const compactDayLabel = (isoDate: string): string =>
   namedDayLabel(isoDate) ?? compactDateFormatter.format(new Date(`${isoDate}T00:00:00Z`));
+
+// The selected-date chip's short numeric form (`8.9`), narrower than
+// `compactDayLabel`'s month name so the chip stops wrapping at 375 as a
+// normal state (design-system.md, header spec item 2). Also feeds the
+// pinned bar's filter summary pill.
+export const numericDayLabel = (isoDate: string): string =>
+  namedDayLabel(isoDate) ?? numericDateFormatter.format(new Date(`${isoDate}T00:00:00Z`));
 
 // The one place the two page modes are decided: rail (nothing chosen, so
 // render whatever the server sends) versus filtered (the existing single

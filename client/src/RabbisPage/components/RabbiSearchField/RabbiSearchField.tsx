@@ -9,7 +9,7 @@ import * as styles from './styles';
 // Purely local: the list is already loaded in full, so every keystroke
 // filters in memory with no debounce and no network call (design spec,
 // "the search field is local").
-export const RabbiSearchField = styled(({ className, value, onChange }: RabbiSearchFieldProps) => (
+export const RabbiSearchField = styled(({ className, id, value, onChange }: RabbiSearchFieldProps) => (
   <form className={className} role="search" onSubmit={(event) => event.preventDefault()}>
     <svg className="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" strokeWidth="1.6" />
@@ -17,6 +17,7 @@ export const RabbiSearchField = styled(({ className, value, onChange }: RabbiSea
     </svg>
     <input
       type="search"
+      id={id}
       className="input"
       aria-label={consts.LABEL}
       placeholder={consts.PLACEHOLDER}

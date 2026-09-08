@@ -2,7 +2,7 @@ import type { LessonOccurrence } from '@torabarabim/common';
 
 import { LESSON_WINDOW_DAYS, LESSON_WINDOW_PAGE_SIZE } from '~/HomePage/consts';
 import { addDays, compactDayLabel, resolveTargetDate, todayInIsrael } from '~/HomePage/helpers';
-import type { DateFilterOption, SelectedCity } from '~/HomePage/models';
+import type { DateFilterOption, SelectedCity } from '~/hooks/models';
 
 import { COMPLETE_LIST_RANGE_DAYS, INVALID_REQUEST_HINT, NETWORK_ERROR_HINT, PAGE_SIZE, SERVER_ERROR_HINT, TITLE_UNFILTERED } from './consts';
 import type { LessonsApiError } from './api';

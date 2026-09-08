@@ -35,6 +35,7 @@ export const LessonCard = css(
 
   > .poster {
     position: relative;
+    overflow: hidden;
     aspect-ratio: ${POSTER_ASPECT_RATIO};
     background: ${theme.colors.primarySoft};
 

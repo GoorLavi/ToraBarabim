@@ -3,7 +3,6 @@ import { Link, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { BackLink } from '~/components/BackLink/BackLink';
-import { LessonPageHeader } from '~/components/LessonPageHeader/LessonPageHeader';
 import { QuietButton } from '~/components/QuietButton/QuietButton';
 import { StateCard } from '~/components/StateCard/StateCard';
 
@@ -46,101 +45,97 @@ export const CityPage = styled(({ className }: CityPageProps) => {
 
   return (
     <div className={className}>
-      <LessonPageHeader />
+      <BackLink to="/cities" label={consts.BACK_TO_ALL_CITIES_LABEL} />
 
-      <div className="content">
-        <BackLink to="/cities" label={consts.BACK_TO_ALL_CITIES_LABEL} />
+      {cityQuery.isPending && (
+        <>
+          <TitleSkeleton />
+          <RabbiRailSkeleton />
+          <DayGroupSkeleton />
+        </>
+      )}
 
-        {cityQuery.isPending && (
-          <>
-            <TitleSkeleton />
-            <RabbiRailSkeleton />
-            <DayGroupSkeleton />
-          </>
-        )}
+      {errorCopy?.kind === 'not-found' && (
+        <StateCard
+          variant="surface"
+          headingLevel="h1"
+          heading={errorCopy.heading}
+          body={errorCopy.body}
+          action={{ actionLabel: consts.ALL_CITIES_LABEL, actionStyle: 'primary', actionTo: '/cities' }}
+        />
+      )}
 
-        {errorCopy?.kind === 'not-found' && (
-          <StateCard
-            variant="surface"
-            headingLevel="h1"
-            heading={errorCopy.heading}
-            body={errorCopy.body}
-            action={{ actionLabel: consts.ALL_CITIES_LABEL, actionStyle: 'primary', actionTo: '/cities' }}
-          />
-        )}
+      {errorCopy?.kind === 'error' && (
+        <StateCard
+          variant="surface"
+          headingLevel="h1"
+          heading={errorCopy.heading}
+          body={errorCopy.body}
+          action={{ actionLabel: consts.RETRY_LABEL, actionStyle: 'primary', onAction: () => cityQuery.refetch() }}
+        />
+      )}
 
-        {errorCopy?.kind === 'error' && (
-          <StateCard
-            variant="surface"
-            headingLevel="h1"
-            heading={errorCopy.heading}
-            body={errorCopy.body}
-            action={{ actionLabel: consts.RETRY_LABEL, actionStyle: 'primary', onAction: () => cityQuery.refetch() }}
-          />
-        )}
+      {city && (
+        <>
+          <div className="title">
+            <h1 className="heading" dir="auto">
+              {consts.cityHeading(city.name)}
+            </h1>
 
-        {city && (
-          <>
-            <div className="title">
-              <h1 className="heading" dir="auto">
-                {consts.cityHeading(city.name)}
-              </h1>
-
-              {canShowSubheading && lessonsQuery.data && (
-                <>
-                  <p className="sub">{consts.citySubheading(lessonsQuery.data.total)}</p>
-                  <Link className="areaLink" to={`/lessons?area=${city.area}`}>
-                    <svg className="chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    <span dir="auto">{consts.areaLinkLabel(areaName)}</span>
-                  </Link>
-                </>
-              )}
-            </div>
-
-            {canShowRail && <RabbiRail cityName={city.name} rabbis={city.rabbis} />}
-
-            {lessonsQuery.isPending && <DayGroupSkeleton />}
-
-            {!lessonsQuery.isPending && lessonsQuery.isError && (
-              <StateCard
-                variant="surface"
-                headingLevel="h2"
-                heading={consts.ERROR_HEADING}
-                body={consts.ERROR_BODY}
-                action={{ actionLabel: consts.RETRY_LABEL, actionStyle: 'primary', onAction: () => lessonsQuery.refetch() }}
-              />
-            )}
-
-            {!lessonsQuery.isPending && !lessonsQuery.isError && isCityResolvedEmpty && (
-              <CityEmptyState
-                cityName={city.name}
-                areaName={areaName}
-                areaItems={areaQuery.data?.items}
-                isAreaPending={areaQuery.isPending}
-                isAreaError={areaQuery.isError}
-              />
-            )}
-
-            {!lessonsQuery.isPending && !lessonsQuery.isError && !isCityResolvedEmpty && (
+            {canShowSubheading && lessonsQuery.data && (
               <>
-                {dayGroups.map((group) => (
-                  <DayGroup key={group.date} heading={dayGroupHeading(group.date)} items={group.items} />
-                ))}
-
-                {hasMore && (
-                  <QuietButton
-                    className="loadMore"
-                    label={consts.loadMoreLabel(city.name)}
-                    onClick={() => setPageSize((current) => current + consts.CITY_LESSONS_PAGE_SIZE)}
-                  />
-                )}
+                <p className="sub">{consts.citySubheading(lessonsQuery.data.total)}</p>
+                <Link className="areaLink" to={`/lessons?area=${city.area}`}>
+                  <svg className="chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span dir="auto">{consts.areaLinkLabel(areaName)}</span>
+                </Link>
               </>
             )}
-          </>
-        )}
-      </div>
+          </div>
+
+          {canShowRail && <RabbiRail cityName={city.name} rabbis={city.rabbis} />}
+
+          {lessonsQuery.isPending && <DayGroupSkeleton />}
+
+          {!lessonsQuery.isPending && lessonsQuery.isError && (
+            <StateCard
+              variant="surface"
+              headingLevel="h2"
+              heading={consts.ERROR_HEADING}
+              body={consts.ERROR_BODY}
+              action={{ actionLabel: consts.RETRY_LABEL, actionStyle: 'primary', onAction: () => lessonsQuery.refetch() }}
+            />
+          )}
+
+          {!lessonsQuery.isPending && !lessonsQuery.isError && isCityResolvedEmpty && (
+            <CityEmptyState
+              cityName={city.name}
+              areaName={areaName}
+              areaItems={areaQuery.data?.items}
+              isAreaPending={areaQuery.isPending}
+              isAreaError={areaQuery.isError}
+            />
+          )}
+
+          {!lessonsQuery.isPending && !lessonsQuery.isError && !isCityResolvedEmpty && (
+            <>
+              {dayGroups.map((group) => (
+                <DayGroup key={group.date} heading={dayGroupHeading(group.date)} items={group.items} />
+              ))}
+
+              {hasMore && (
+                <QuietButton
+                  className="loadMore"
+                  label={consts.loadMoreLabel(city.name)}
+                  onClick={() => setPageSize((current) => current + consts.CITY_LESSONS_PAGE_SIZE)}
+                />
+              )}
+            </>
+          )}
+        </>
+      )}
     </div>
   );
 })`

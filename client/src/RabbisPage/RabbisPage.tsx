@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import styled from 'styled-components';
 
-import { Footer } from '~/HomePage/components/Footer/Footer';
-import { LessonPageHeader } from '~/components/LessonPageHeader/LessonPageHeader';
 import { StateCard } from '~/components/StateCard/StateCard';
 
 import { RabbiListRow } from './components/RabbiListRow/RabbiListRow';
@@ -26,90 +24,87 @@ export const RabbisPage = styled(({ className }: RabbisPageProps) => {
 
   return (
     <div className={className}>
-      <LessonPageHeader />
+      <div className="titleBlock">
+        {query.isPending ? (
+          <>
+            <span className="headingBar" />
+            <span className="subBar" />
+          </>
+        ) : (
+          <>
+            <h1 className="heading">{consts.PAGE_TITLE}</h1>
+            {!query.isError && !isBoardEmpty && (
+              <p className="sub">
+                {hasNoResults ? consts.NO_RESULTS_SUBLINE : `${rabbiCountLabel(rabbis.length)} · ${consts.ORDER_LABEL}`}
+              </p>
+            )}
+          </>
+        )}
+      </div>
 
-      <div className="content">
-        <div className="titleBlock">
-          {query.isPending ? (
-            <>
-              <span className="headingBar" />
-              <span className="subBar" />
-            </>
-          ) : (
-            <>
-              <h1 className="heading">{consts.PAGE_TITLE}</h1>
-              {!query.isError && !isBoardEmpty && (
-                <p className="sub">
-                  {hasNoResults ? consts.NO_RESULTS_SUBLINE : `${rabbiCountLabel(rabbis.length)} · ${consts.ORDER_LABEL}`}
-                </p>
-              )}
-            </>
-          )}
+      {!query.isPending && !query.isError && !isBoardEmpty && (
+        <div className="searchField">
+          <label className="searchLabel" htmlFor={consts.SEARCH_FIELD_ID}>
+            {consts.SEARCH_FIELD_LABEL}
+          </label>
+          <RabbiSearchField id={consts.SEARCH_FIELD_ID} className="search" value={search} onChange={setSearch} />
         </div>
+      )}
 
-        {!query.isPending && !query.isError && !isBoardEmpty && (
-          <RabbiSearchField className="search" value={search} onChange={setSearch} />
-        )}
+      {query.isPending && (
+        <ul className="skeletonList">
+          {consts.ROW_SKELETON_KEYS.map((key) => (
+            <li key={key}>
+              <RabbiListRowSkeleton />
+            </li>
+          ))}
+        </ul>
+      )}
 
-        {query.isPending && (
-          <ul className="skeletonList">
-            {consts.ROW_SKELETON_KEYS.map((key) => (
-              <li key={key}>
-                <RabbiListRowSkeleton />
-              </li>
-            ))}
-          </ul>
-        )}
+      {query.isError && (
+        <StateCard
+          variant="surface"
+          headingLevel="h2"
+          heading={consts.LOAD_ERROR_HEADING}
+          body={consts.LOAD_ERROR_BODY}
+          action={{ actionLabel: consts.RETRY_LABEL, actionStyle: 'primary', onAction: () => query.refetch() }}
+        />
+      )}
 
-        {query.isError && (
-          <StateCard
-            variant="surface"
-            headingLevel="h2"
-            heading={consts.LOAD_ERROR_HEADING}
-            body={consts.LOAD_ERROR_BODY}
-            action={{ actionLabel: consts.RETRY_LABEL, actionStyle: 'primary', onAction: () => query.refetch() }}
-          />
-        )}
+      {query.isSuccess && isBoardEmpty && (
+        <StateCard
+          variant="empty"
+          headingLevel="h2"
+          heading={consts.BOARD_EMPTY_HEADING}
+          body={consts.BOARD_EMPTY_BODY}
+          action={{ actionLabel: consts.CONTACT_US_LABEL, actionStyle: 'primary', actionTo: '/contact' }}
+        />
+      )}
 
-        {query.isSuccess && isBoardEmpty && (
-          <StateCard
-            variant="empty"
-            headingLevel="h2"
-            heading={consts.BOARD_EMPTY_HEADING}
-            body={consts.BOARD_EMPTY_BODY}
-            action={{ actionLabel: consts.CONTACT_US_LABEL, actionStyle: 'primary', actionTo: '/contact' }}
-          />
-        )}
+      {query.isSuccess && !isBoardEmpty && hasNoResults && (
+        <StateCard
+          variant="surface"
+          headingLevel="h2"
+          heading={
+            <>
+              {consts.NO_RESULTS_HEADING_PREFIX}
+              <span dir="auto">{trimmedSearch}</span>
+            </>
+          }
+          body={consts.NO_RESULTS_BODY}
+          action={{ actionLabel: consts.CLEAR_SEARCH_LABEL, actionStyle: 'quiet', onAction: () => setSearch('') }}
+        />
+      )}
 
-        {query.isSuccess && !isBoardEmpty && hasNoResults && (
-          <StateCard
-            variant="surface"
-            headingLevel="h2"
-            heading={
-              <>
-                {consts.NO_RESULTS_HEADING_PREFIX}
-                <span dir="auto">{trimmedSearch}</span>
-              </>
-            }
-            body={consts.NO_RESULTS_BODY}
-            action={{ actionLabel: consts.CLEAR_SEARCH_LABEL, actionStyle: 'quiet', onAction: () => setSearch('') }}
-          />
-        )}
-
-        {query.isSuccess && !isBoardEmpty && !hasNoResults && (
-          <ul className="list">
-            {filteredRabbis.map((rabbi) => (
-              <li key={rabbi.id}>
-                <RabbiListRow rabbi={rabbi} />
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      <div className="footer">
-        <Footer />
-      </div>
+      {query.isSuccess && !isBoardEmpty && !hasNoResults && (
+        <ul className="list">
+          {filteredRabbis.map((rabbi) => (
+            <li key={rabbi.id} className="cell">
+              <RabbiListRow rabbi={rabbi} />
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 })`
