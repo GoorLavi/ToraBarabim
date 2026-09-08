@@ -12,6 +12,17 @@ export const GlobalStyle = createGlobalStyle(
     height: 100%;
   }
 
+  html {
+    /* 64 matches PinnedHeaderBar's own height below lg, 80 matches the
+       sticky header's height at lg and up, so a focused field or an
+       anchor never lands under either bar. */
+    scroll-padding-block-start: 64px;
+
+    @media (min-width: ${theme.breakpoints.lg}) {
+      scroll-padding-block-start: 80px;
+    }
+  }
+
   body {
     margin: 0;
     background: ${theme.colors.bg};

@@ -1,7 +1,7 @@
 import type { LessonOccurrence, LessonSearchResponse } from '@torabarabim/common';
 
 import type { HomeApiError } from '~/HomePage/api';
-import type { SelectedCity } from '~/HomePage/models';
+import type { SelectedCity } from '~/hooks/models';
 
 // The slice of TanStack Query's `UseQueryResult` this component actually
 // reads. Keeping it narrow means a story can hand this component a plain

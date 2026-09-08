@@ -2,16 +2,13 @@ import type { ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { LessonPageHeader } from '~/components/LessonPageHeader/LessonPageHeader';
 import { QuietButton } from '~/components/QuietButton/QuietButton';
 import { StateCard } from '~/components/StateCard/StateCard';
-import { Footer } from '~/HomePage/components/Footer/Footer';
 import { dayLabel } from '~/HomePage/helpers';
 import { useDateFilter } from '~/hooks/useDateFilter';
 import { useSearchQuery } from '~/hooks/useSearchQuery';
 import { useSelectedCity } from '~/hooks/useSelectedCity';
 
-import { FilterBand } from './components/FilterBand/FilterBand';
 import { LessonsGrid } from './components/LessonsGrid/LessonsGrid';
 import { LessonsSkeleton } from './components/LessonsSkeleton/LessonsSkeleton';
 import * as consts from './consts';
@@ -179,9 +176,9 @@ const renderContent = ({
 };
 
 export const LessonsPage = styled(({ className }: LessonsPageProps) => {
-  const { option, customDate, selectOption, selectCustomDate, clearDate } = useDateFilter();
-  const { city, select: selectCity, clear: clearCity } = useSelectedCity();
-  const { query, setQuery } = useSearchQuery();
+  const { option, customDate } = useDateFilter();
+  const { city } = useSelectedCity();
+  const { query } = useSearchQuery();
   const [searchParams, setSearchParams] = useSearchParams();
   const passThrough = readPassThroughFilters(searchParams);
 
@@ -206,41 +203,18 @@ export const LessonsPage = styled(({ className }: LessonsPageProps) => {
   const clearFilters = (): void => setSearchParams({});
 
   return (
-    <div className={className}>
-      <LessonPageHeader />
-
-      <FilterBand
-        {...{
-          option,
-          customDate,
-          onSelectOption: selectOption,
-          onSelectCustomDate: selectCustomDate,
-          onClearDate: clearDate,
-          city,
-          onSelectCity: selectCity,
-          onClearCity: clearCity,
-          searchQuery: query,
-          onSearchQueryChange: setQuery,
-        }}
-      />
-
-      <main className="content">
-        {renderContent({
-          listQuery,
-          hasDateFilter: range.hasDateFilter,
-          targetDate: range.from,
-          title,
-          cityName: city?.name,
-          query,
-          hasAnyFilter,
-          onClearFilters: clearFilters,
-        })}
-      </main>
-
-      <div className="footer">
-        <Footer />
-      </div>
-    </div>
+    <main className={className}>
+      {renderContent({
+        listQuery,
+        hasDateFilter: range.hasDateFilter,
+        targetDate: range.from,
+        title,
+        cityName: city?.name,
+        query,
+        hasAnyFilter,
+        onClearFilters: clearFilters,
+      })}
+    </main>
   );
 })`
   ${styles.LessonsPage}

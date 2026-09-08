@@ -11,6 +11,12 @@ export const RABBI_DIRECTORY_PAGE_SIZE = 50;
 export const PAGE_TITLE = 'כל הרבנים';
 export const ORDER_LABEL = 'לפי סדר האלף־בית';
 
+// Distinct from the header's own search field, which navigates away rather
+// than filtering this list in place: the two sit close together on this
+// page and neither was labelled (build spec, item 5).
+export const SEARCH_FIELD_LABEL = 'חיפוש בתוך הרבנים';
+export const SEARCH_FIELD_ID = 'rabbis-search-field';
+
 // Off the 4px spacing scale (design spec, "content column": "gap between
 // blocks... 20 on the all-rabbis and all-lessons pages").
 export const CONTENT_GAP = '20px';

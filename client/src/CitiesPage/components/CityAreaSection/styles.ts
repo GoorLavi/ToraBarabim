@@ -40,13 +40,8 @@ export const CityAreaSection = css(
       grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 
-    /* A grid row's own block-size already stretches to its tallest cell;
-       this makes the cell's own chip fill that cell rather than hugging its
-       own content, so a wrapped city name's neighbour keeps a level bottom
-       edge (design spec, "let the chip grow... the row's other chip
-       stretches to match"). */
-    > li {
-      display: flex;
+    > .cell {
+      display: block;
     }
   }
 `,

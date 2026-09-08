@@ -8,122 +8,115 @@ const TITLE_SKELETON_GAP = '10px';
 
 export const RabbisPage = css(
   ({ theme }) => `
+  /* The band caps at theme.layout.contentMaxWidth (1280) and centres from
+     1328px up: a 1280px band plus the 24px gutter on both sides is 1328px,
+     so that is the container's own max width, not 1280
+     (design-system.md, "Breakpoints and content width"). */
+  max-inline-size: calc(${theme.layout.contentMaxWidth} + ${theme.spacing.xl} * 2);
+  inline-size: 100%;
+  margin-inline: auto;
+  padding-inline: ${theme.spacing.lg};
+  padding-block-start: ${theme.spacing.xl};
+  padding-block-end: ${theme.spacing.xxl};
   display: flex;
   flex-direction: column;
-  min-block-size: 100%;
+  gap: ${CONTENT_GAP};
 
-  > .content {
-    /* The band caps at theme.layout.contentMaxWidth (1280) and centres from
-       1328px up: a 1280px band plus the 24px gutter on both sides is 1328px,
-       so that is the container's own max width, not 1280
-       (design-system.md, "Breakpoints and content width"). */
-    max-inline-size: calc(${theme.layout.contentMaxWidth} + ${theme.spacing.xl} * 2);
-    inline-size: 100%;
-    margin-inline: auto;
-    padding-inline: ${theme.spacing.lg};
-    padding-block-start: ${theme.spacing.xl};
-    padding-block-end: ${theme.spacing.xxl};
+  @media (min-width: ${theme.breakpoints.md}) {
+    padding-inline: ${theme.spacing.xl};
+    padding-block-end: ${theme.spacing.xxxl};
+  }
+
+  > .titleBlock {
     display: flex;
     flex-direction: column;
-    gap: ${CONTENT_GAP};
 
-    @media (min-width: ${theme.breakpoints.md}) {
-      padding-inline: ${theme.spacing.xl};
-      padding-block-end: ${theme.spacing.xxxl};
+    > .heading {
+      color: ${theme.colors.text};
+      font-weight: ${theme.typography.pageHeading.fontWeight};
+      font-size: ${theme.typography.pageHeading.phone.fontSize};
+      line-height: ${theme.typography.pageHeading.phone.lineHeight};
+
+      @media (min-width: ${theme.breakpoints.md}) {
+        font-size: ${theme.typography.pageHeading.desktop.fontSize};
+        line-height: ${theme.typography.pageHeading.desktop.lineHeight};
+      }
     }
 
-    > .titleBlock {
-      display: flex;
-      flex-direction: column;
+    > .sub {
+      margin-block-start: ${TITLE_GAP};
+      color: ${theme.colors.textSecondary};
+      font-size: ${theme.typography.secondary.phone.fontSize};
+      line-height: ${theme.typography.secondary.phone.lineHeight};
 
-      > .heading {
-        color: ${theme.colors.text};
-        font-weight: ${theme.typography.pageHeading.fontWeight};
-        font-size: ${theme.typography.pageHeading.phone.fontSize};
-        line-height: ${theme.typography.pageHeading.phone.lineHeight};
-
-        @media (min-width: ${theme.breakpoints.md}) {
-          font-size: ${theme.typography.pageHeading.desktop.fontSize};
-          line-height: ${theme.typography.pageHeading.desktop.lineHeight};
-        }
+      @media (min-width: ${theme.breakpoints.md}) {
+        font-size: ${theme.typography.body.desktop.fontSize};
+        line-height: ${theme.typography.body.desktop.lineHeight};
       }
+    }
 
-      > .sub {
-        margin-block-start: ${TITLE_GAP};
-        color: ${theme.colors.textSecondary};
-        font-size: ${theme.typography.secondary.phone.fontSize};
-        line-height: ${theme.typography.secondary.phone.lineHeight};
+    > .headingBar {
+      inline-size: 180px;
+      block-size: 32px;
+    }
 
-        @media (min-width: ${theme.breakpoints.md}) {
-          font-size: ${theme.typography.body.desktop.fontSize};
-          line-height: ${theme.typography.body.desktop.lineHeight};
-        }
-      }
+    > .subBar {
+      inline-size: 240px;
+      block-size: 20px;
+      margin-block-start: ${TITLE_SKELETON_GAP};
+    }
 
-      > .headingBar {
-        inline-size: 180px;
-        block-size: 32px;
-      }
+    > .headingBar,
+    > .subBar {
+      border-radius: ${theme.radii.sm};
+      background: ${theme.colors.border};
+    }
+  }
 
-      > .subBar {
-        inline-size: 240px;
-        block-size: 20px;
-        margin-block-start: ${TITLE_SKELETON_GAP};
-      }
+  > .searchField {
+    display: flex;
+    flex-direction: column;
+    gap: ${theme.spacing.xs};
+    inline-size: 100%;
 
-      > .headingBar,
-      > .subBar {
-        border-radius: ${theme.radii.sm};
-        background: ${theme.colors.border};
-      }
+    @media (min-width: ${theme.breakpoints.md}) {
+      max-inline-size: 480px;
+      align-self: flex-start;
+    }
+
+    > .searchLabel {
+      color: ${theme.colors.text};
+      font-weight: ${theme.typography.fontWeight.semiBold};
+      font-size: ${theme.typography.secondary.phone.fontSize};
+      line-height: ${theme.typography.secondary.phone.lineHeight};
     }
 
     > .search {
       inline-size: 100%;
-
-      @media (min-width: ${theme.breakpoints.md}) {
-        max-inline-size: 480px;
-        align-self: flex-start;
-      }
-    }
-
-    > .list {
-      display: flex;
-      flex-direction: column;
-      gap: ${theme.spacing.sm};
-
-      @media (min-width: ${theme.breakpoints.md}) {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: ${theme.spacing.lg};
-        align-items: stretch;
-
-        /* A grid row's own block-size already stretches to its tallest cell;
-           this makes the row's own link fill that cell rather than hugging
-           its own content, so a wrapped meta line's neighbour keeps a level
-           bottom edge (design spec, "Rows stretch inside their grid row"). */
-        > li {
-          display: flex;
-        }
-      }
-    }
-
-    > .skeletonList {
-      display: flex;
-      flex-direction: column;
-      gap: ${theme.spacing.xl};
     }
   }
 
-  > .footer {
-    max-inline-size: calc(${theme.layout.contentMaxWidth} + ${theme.spacing.xl} * 2);
-    inline-size: 100%;
-    margin-inline: auto;
-    padding-inline: ${theme.spacing.lg};
+  > .list {
+    display: flex;
+    flex-direction: column;
+    gap: ${theme.spacing.sm};
 
     @media (min-width: ${theme.breakpoints.md}) {
-      padding-inline: ${theme.spacing.xl};
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: ${theme.spacing.lg};
+      align-items: stretch;
+
+      > .cell {
+        display: block;
+      }
     }
+  }
+
+  > .skeletonList {
+    display: flex;
+    flex-direction: column;
+    gap: ${theme.spacing.xl};
   }
 `,
 );
