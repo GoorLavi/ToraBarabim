@@ -26,11 +26,12 @@ export const LessonTicket = styled(({ className, occurrence }: LessonTicketProps
   const isCancelled = occurrence.status === 'cancelled';
   const isSubstitute = Boolean(occurrence.substituteRabbi);
   const teachingRabbi = teachingRabbiOf(occurrence);
+  const isNoPoster = !teachingRabbi.photoUrl;
   const kicker = kickerLabel(occurrence);
   const duration = computeDurationMinutes(occurrence.startTime, occurrence.endTime);
 
   return (
-    <div className={classNames(className, { cancelled: isCancelled })}>
+    <div className={classNames(className, { cancelled: isCancelled, noPoster: isNoPoster })}>
       {isCancelled && (
         <p className="cancelledBanner" role="status">
           <span className="heading" dir="auto">
@@ -82,7 +83,7 @@ export const LessonTicket = styled(({ className, occurrence }: LessonTicketProps
           </div>
         </div>
 
-        <div className={classNames('body', { noPoster: !teachingRabbi.photoUrl })}>
+        <div className={classNames('body', { noPoster: isNoPoster })}>
           <div className="place">
             <p className="venue" dir="auto">
               {occurrence.place.name}
@@ -98,6 +99,8 @@ export const LessonTicket = styled(({ className, occurrence }: LessonTicketProps
               {LESSON_AUDIENCE_LABELS[occurrence.audience]}
             </span>
           </div>
+
+          <span className="hairline" aria-hidden="true" />
 
           <div className="teacherRow">
             <div className="teacher">

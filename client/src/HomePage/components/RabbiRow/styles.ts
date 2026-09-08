@@ -26,10 +26,6 @@ export const RabbiRow = css(
 
     > .seeAll {
       flex-shrink: 0;
-      color: ${theme.colors.primary};
-      font-weight: ${theme.typography.fontWeight.semiBold};
-      font-size: ${theme.typography.secondary.phone.fontSize};
-      line-height: ${theme.typography.secondary.phone.lineHeight};
     }
   }
 

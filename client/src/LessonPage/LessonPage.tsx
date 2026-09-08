@@ -1,10 +1,10 @@
 import { Link, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { BackLink } from '~/components/BackLink/BackLink';
 import { LessonPageHeader } from '~/components/LessonPageHeader/LessonPageHeader';
 import { NotFoundScreen } from '~/components/NotFoundScreen/NotFoundScreen';
 
-import { BackLink } from './components/BackLink/BackLink';
 import { LessonDetails } from './components/LessonDetails/LessonDetails';
 import { LessonDetailsSkeleton } from './components/LessonDetailsSkeleton/LessonDetailsSkeleton';
 import { LessonTicket } from './components/LessonTicket/LessonTicket';
@@ -26,7 +26,7 @@ export const LessonPage = styled(({ className }: LessonPageProps) => {
       <LessonPageHeader />
 
       <div className="content">
-        <BackLink />
+        <BackLink to="/" label={consts.BACK_TO_ALL_LESSONS_LABEL} />
 
         {query.isPending && (
           <>
@@ -52,7 +52,7 @@ export const LessonPage = styled(({ className }: LessonPageProps) => {
                 onAction={() => query.refetch()}
               />
             )}
-            <BackLink />
+            <BackLink to="/" label={consts.BACK_TO_ALL_LESSONS_LABEL} />
           </>
         )}
 
@@ -71,7 +71,7 @@ export const LessonPage = styled(({ className }: LessonPageProps) => {
 
             <LessonDetails bio={teachingRabbiOf(occurrence).bio} note={occurrence.note} />
 
-            <BackLink />
+            <BackLink to="/" label={consts.BACK_TO_ALL_LESSONS_LABEL} />
           </>
         )}
       </div>

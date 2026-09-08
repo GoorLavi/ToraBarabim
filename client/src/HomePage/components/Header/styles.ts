@@ -1,5 +1,7 @@
 import { css } from 'styled-components';
 
+import { contentBandCap, contentGutterInline } from '~/HomePage/styles';
+
 // Full-bleed primary band: the header owns its own background edge to edge,
 // independent of the page's centred, max-width content column.
 export const Header = css(
@@ -8,9 +10,8 @@ export const Header = css(
   padding-block: ${theme.spacing.lg};
 
   > .bar {
-    max-inline-size: 1120px;
-    margin-inline: auto;
-    padding-inline: ${theme.spacing.lg};
+    ${contentGutterInline(theme)}
+    ${contentBandCap(theme)}
     display: grid;
     grid-template-areas:
       'logo city'
@@ -29,7 +30,6 @@ export const Header = css(
        wordmark and the search field share row one, the date chips and the
        city pill share row two. */
     @media (min-width: ${theme.breakpoints.md}) {
-      padding-inline: ${theme.spacing.xl};
       grid-template-areas:
         'row1'
         'row2';

@@ -1,37 +1,27 @@
-import { Link } from 'react-router-dom';
-import styled from 'styled-components';
+import { StateCard } from '~/components/StateCard/StateCard';
 
 import type { NotFoundScreenProps } from './models';
-import * as styles from './styles';
 
-// Shared by the lesson page's "lesson not found" / "could not load" states
-// and the app-wide catch-all route: a `surface` card with a heading, an
-// explanation line and a 48-high button, so a dead end always reads the
-// same way and always offers a way back (design spec, "Error and not found").
-export const NotFoundScreen = styled((props: NotFoundScreenProps) => {
+// A thin adapter over the shared StateCard: always the bordered `surface`
+// fill with a primary-styled action, for the two facts this renders (a
+// missing route, a missing lesson occurrence) rather than a transient
+// error's retry-styled quiet option. Both call sites render it as the
+// page's only heading, so it always asks for `h1`.
+export const NotFoundScreen = (props: NotFoundScreenProps) => {
   const { className, heading, explanation, actionLabel } = props;
 
   return (
-    <div className={className}>
-      <div className="card">
-        <h1 className="heading" dir="auto">
-          {heading}
-        </h1>
-        <p className="explanation" dir="auto">
-          {explanation}
-        </p>
-        {'actionTo' in props ? (
-          <Link to={props.actionTo} className="action">
-            {actionLabel}
-          </Link>
-        ) : (
-          <button type="button" className="action" onClick={props.onAction}>
-            {actionLabel}
-          </button>
-        )}
-      </div>
-    </div>
+    <StateCard
+      className={className}
+      variant="surface"
+      headingLevel="h1"
+      heading={heading}
+      body={explanation}
+      action={
+        'actionTo' in props
+          ? { actionLabel, actionStyle: 'primary', actionTo: props.actionTo }
+          : { actionLabel, actionStyle: 'primary', onAction: props.onAction }
+      }
+    />
   );
-})`
-  ${styles.NotFoundScreen}
-`;
+};

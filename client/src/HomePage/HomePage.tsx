@@ -69,32 +69,34 @@ export const HomePage = styled(({ className }: HomePageProps) => {
       />
 
       <main className="content">
-        <div className="browse">
-          {browseContextLine && (
-            <p className="context" dir="auto">
-              {browseContextLine}
-            </p>
-          )}
+        <div className="band">
+          <div className="browse">
+            {browseContextLine && (
+              <p className="context" dir="auto">
+                {browseContextLine}
+              </p>
+            )}
 
-          {mode === 'rail' ? (
-            <HomeRails query={homeRowsQuery} />
-          ) : (
-            <LessonsSection
-              query={lessonsQuery}
-              hasDateFilter={hasDateFilter}
-              targetDate={targetDate}
-              city={city}
-              searchQuery={query}
-              onClearFilters={clearFilters}
-            />
-          )}
+            {mode === 'rail' ? (
+              <HomeRails query={homeRowsQuery} />
+            ) : (
+              <LessonsSection
+                query={lessonsQuery}
+                hasDateFilter={hasDateFilter}
+                targetDate={targetDate}
+                city={city}
+                searchQuery={query}
+                onClearFilters={clearFilters}
+              />
+            )}
+          </div>
+
+          <RabbiRow items={browseItems} isLoading={isBrowseLoading} isError={isBrowseError} />
+
+          <CityGrid items={browseItems} isLoading={isBrowseLoading} isError={isBrowseError} onSelectCity={selectCity} />
+
+          <ContactCta />
         </div>
-
-        <RabbiRow items={browseItems} isLoading={isBrowseLoading} isError={isBrowseError} />
-
-        <CityGrid items={browseItems} isLoading={isBrowseLoading} isError={isBrowseError} onSelectCity={selectCity} />
-
-        <ContactCta />
       </main>
 
       <div className="footer">

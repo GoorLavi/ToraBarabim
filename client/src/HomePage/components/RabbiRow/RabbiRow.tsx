@@ -1,6 +1,8 @@
 import classNames from 'classnames';
 import styled from 'styled-components';
 
+import { TextLink } from '~/HomePage/components/TextLink/TextLink';
+
 import { RabbiAvatar } from './components/RabbiAvatar/RabbiAvatar';
 import * as consts from './consts';
 import { uniqueRabbis } from './helpers';
@@ -19,7 +21,9 @@ export const RabbiRow = styled(({ className, items, isLoading, isError }: RabbiR
     <section className={className}>
       <div className="heading">
         <h2>{consts.HEADING}</h2>
-        <span className="seeAll">{consts.SEE_ALL_LABEL}</span>
+        <TextLink className="seeAll" to="/rabbis" withChevron>
+          {consts.SEE_ALL_LABEL}
+        </TextLink>
       </div>
 
       {isError && (

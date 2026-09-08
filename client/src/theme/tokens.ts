@@ -1,4 +1,4 @@
-import type { ThemeBreakpoints, ThemeRadii, ThemeShadows, ThemeSpacing, ThemeTypography } from './models';
+import type { ThemeBreakpoints, ThemeLayout, ThemeRadii, ThemeShadows, ThemeSpacing, ThemeTypography } from './models';
 
 // Type, spacing, radii, shadows and breakpoints are shared by every theme:
 // only color varies (design-system.md, "Themes and the token contract").
@@ -112,4 +112,11 @@ export const BREAKPOINTS: ThemeBreakpoints = {
   md: '768px',
   lg: '1024px',
   xl: '1280px',
+};
+
+// One value binds every public page (design-system.md, "Breakpoints and
+// content width"; 08-content-width-1280.md). A page's own container reads
+// this rather than retyping 1280.
+export const LAYOUT: ThemeLayout = {
+  contentMaxWidth: '1280px',
 };

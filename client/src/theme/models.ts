@@ -104,6 +104,12 @@ export interface ThemeBreakpoints {
   xl: string;
 }
 
+export interface ThemeLayout {
+  // The site's one content band (design-system.md, "Breakpoints and content
+  // width"): every page reads this rather than keeping its own copy.
+  contentMaxWidth: string;
+}
+
 export interface Theme {
   colors: ThemeColors;
   typography: ThemeTypography;
@@ -111,4 +117,5 @@ export interface Theme {
   radii: ThemeRadii;
   shadows: ThemeShadows;
   breakpoints: ThemeBreakpoints;
+  layout: ThemeLayout;
 }

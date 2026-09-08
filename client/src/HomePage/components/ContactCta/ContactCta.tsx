@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 import * as consts from './consts';
@@ -7,9 +8,9 @@ import * as styles from './styles';
 export const ContactCta = styled(({ className }: ContactCtaProps) => (
   <section className={className}>
     <p className="message">{consts.MESSAGE}</p>
-    <a className="cta" href={`mailto:${consts.CONTACT_EMAIL}`}>
+    <Link className="cta" to="/contact">
       {consts.CTA_LABEL}
-    </a>
+    </Link>
   </section>
 ))`
   ${styles.ContactCta}
