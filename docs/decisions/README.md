@@ -88,3 +88,4 @@ The real alternatives and why each lost. If there was no alternative, say so.
 | [0018](0018-admins-can-create-admins.md) | Admins can create admins from the panel | accepted, script/bootstrap part superseded by [0019](0019-lower-the-admin-password-minimum-and-drop-the-bootstrap-script.md), roles/tiers part superseded by [0020](0020-one-super-admin-gates-admin-management.md) |
 | [0019](0019-lower-the-admin-password-minimum-and-drop-the-bootstrap-script.md) | Lower the admin password minimum, and drop the bootstrap script | accepted |
 | [0020](0020-one-super-admin-gates-admin-management.md) | One super admin gates admin management | accepted |
+| [0021](0021-agents-read-aws-as-their-own-identity.md) | Agents read AWS as their own identity, never as the owner | accepted |

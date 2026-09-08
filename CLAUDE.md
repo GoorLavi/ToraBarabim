@@ -230,6 +230,28 @@ Revisit this once there is enough behavior worth protecting.
 - Before staging anything, look at what is included. If a file might carry a secret,
   open it, even if the name looks innocent.
 
+## AWS Access
+
+Agents read AWS as their own identity, `claude-readonly`, never as the owner
+([0021](docs/decisions/0021-agents-read-aws-as-their-own-identity.md)).
+
+- **The profile is `claude-ro`, and it is already the default.** `.claude/settings.json`
+  sets `AWS_PROFILE`, so plain `aws` commands are read only. Do not pass `--profile`.
+- **The owner's `torabarabim` profile is off limits.** A hook blocks it, in both the
+  `--profile` and the `AWS_PROFILE=` form. Being blocked is the expected outcome, not a
+  fault to work around.
+- **That hook matches the text of any shell command, deliberately fail closed.** So a
+  command that merely quotes the admin profile, a commit message or a PR body naming it,
+  is blocked too. That is the intended trade: a false block costs a rewording, while a
+  miss would defeat the check. Reword, never loosen the hook.
+- **It can see the infrastructure, never the data inside it.** Stacks, services, the
+  database configuration, log contents, secret names. Not S3 objects, not secret values,
+  not parameter values. Those are denied explicitly and will stay denied.
+- **Everything lives in `eu-central-1`**, except the certificate, which must be in
+  `us-east-1`.
+- A write, a deploy, or anything the read-only user cannot do is handed to the human
+  with the exact command. Never worked around.
+
 ## Git
 
 - **Never stage or commit on your own.** Do not run `git add`, `git commit`, or
