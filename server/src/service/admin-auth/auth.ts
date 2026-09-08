@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, or } from 'drizzle-orm';
 
 import type { AdminRole } from '../../db/schema/enums';
 import { db } from '../../db/client';
@@ -18,8 +18,12 @@ export interface LoginResult {
 // other role fails with the exact same `InvalidCredentialsError` as a
 // wrong password, so neither login route ever reveals that an email is
 // registered under the other role.
-export const login = async ({ email, password }: LoginRequest, expectedRole: AdminRole): Promise<LoginResult> => {
-  const rows = await db.select().from(adminUsers).where(eq(adminUsers.email, email)).limit(1);
+export const login = async ({ identifier, password }: LoginRequest, expectedRole: AdminRole): Promise<LoginResult> => {
+  const rows = await db
+    .select()
+    .from(adminUsers)
+    .where(or(eq(adminUsers.email, identifier), eq(adminUsers.username, identifier)))
+    .limit(1);
   const row = rows[0];
 
   // Always run a verification, even for an unknown email, against a dummy

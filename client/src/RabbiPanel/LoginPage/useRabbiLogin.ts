@@ -5,7 +5,7 @@ import type { RabbiSessionUser } from '@torabarabim/common';
 import { login, RabbiApiError } from '~/RabbiPanel/api';
 import { RABBI_QUERY_KEYS } from '~/RabbiPanel/consts';
 
-export const useRabbiLogin = (): UseMutationResult<RabbiSessionUser, RabbiApiError, { email: string; password: string }> => {
+export const useRabbiLogin = (): UseMutationResult<RabbiSessionUser, RabbiApiError, { identifier: string; password: string }> => {
   const queryClient = useQueryClient();
 
   return useMutation({

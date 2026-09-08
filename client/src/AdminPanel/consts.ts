@@ -1,4 +1,4 @@
-import type { AdminLessonFilters, AdminRabbiFilters } from './models';
+import type { AdminLessonFilters, AdminRabbiFilters, AdminUserFilters } from './models';
 
 // Mirrors `server/src/service/admin-shared/consts.ts`'s `MAX_ADMIN_PAGE_SIZE`.
 // Used as the page size for "fetch the whole list once and join in memory"
@@ -22,6 +22,7 @@ export const ADMIN_QUERY_KEYS = {
   rabbiAccount: (id: string) => ['admin', 'rabbis', id, 'account'] as const,
   lessons: (filters: AdminLessonFilters) => ['admin', 'lessons', 'search', filters] as const,
   lesson: (id: string) => ['admin', 'lessons', id] as const,
+  adminUsers: (filters: AdminUserFilters) => ['admin', 'admin-users', 'search', filters] as const,
 };
 
 export const ADMIN_ROUTES = {
@@ -32,4 +33,6 @@ export const ADMIN_ROUTES = {
   rabbis: '/admin/rabbis',
   rabbiNew: '/admin/rabbis/new',
   rabbiEdit: (id: string) => `/admin/rabbis/${id}`,
+  admins: '/admin/admins',
+  adminNew: '/admin/admins/new',
 };

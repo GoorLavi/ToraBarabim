@@ -1,6 +1,11 @@
 import { AdminApiError } from './api';
 import * as consts from './consts';
 
+// Used to prefill a new account's username field from the account's full
+// name (e.g. "Yogev Malka" -> "yogevmalka"). The admin can still edit the
+// result before submitting.
+export const suggestUsername = (name: string): string => name.toLowerCase().replace(/\s+/g, '');
+
 // Status-aware, with per-call overrides keyed by the server's `error` code
 // first and its HTTP status second, so a caller can surface e.g.
 // 'unknown_rabbi' against a specific field while everything else falls

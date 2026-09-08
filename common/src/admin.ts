@@ -85,12 +85,14 @@ export interface LessonExceptionListResponse {
 export interface RabbiAccountResponse {
   id: string;
   email: string;
+  username?: string;
   rabbiId: string;
   isActive: boolean;
 }
 
 export type CreateRabbiAccountRequest = {
   email: string;
+  username: string;
 };
 
 export type RabbiAccountCreatedResponse = RabbiAccountResponse & {
@@ -102,5 +104,35 @@ export interface ResetRabbiPasswordResponse {
 }
 
 export type UpdateRabbiAccountRequest = {
+  isActive: boolean;
+};
+
+// An administrator's view of another admin account. Never carries
+// `passwordHash`.
+export interface AdminUserListItem {
+  id: string;
+  name: string;
+  email: string;
+  username?: string;
+  isActive: boolean;
+}
+
+export interface AdminUserListResponse {
+  items: AdminUserListItem[];
+  page: number;
+  pageSize: number;
+  total: number;
+}
+
+// The creating admin chooses the new admin's password directly, unlike a
+// rabbi account where the server generates a one-time temporary one.
+export type CreateAdminUserRequest = {
+  name: string;
+  email: string;
+  username: string;
+  password: string;
+};
+
+export type UpdateAdminUserRequest = {
   isActive: boolean;
 };
