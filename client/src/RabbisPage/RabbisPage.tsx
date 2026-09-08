@@ -23,7 +23,7 @@ export const RabbisPage = styled(({ className }: RabbisPageProps) => {
   const hasNoResults = query.isSuccess && !isBoardEmpty && trimmedSearch !== '' && filteredRabbis.length === 0;
 
   return (
-    <div className={className}>
+    <main className={className}>
       <div className="titleBlock">
         {query.isPending ? (
           <>
@@ -105,7 +105,7 @@ export const RabbisPage = styled(({ className }: RabbisPageProps) => {
           ))}
         </ul>
       )}
-    </div>
+    </main>
   );
 })`
   ${styles.RabbisPage}

@@ -32,7 +32,7 @@ export const RabbiPage = styled(({ className }: RabbiPageProps) => {
   const errorCopy = rabbiQuery.error ? rabbiErrorCopy(rabbiQuery.error) : null;
 
   return (
-    <div className={className}>
+    <main className={className}>
       <BackLink to="/rabbis" label={consts.BACK_TO_ALL_RABBIS_LABEL} />
 
       {rabbiQuery.isPending && (
@@ -93,7 +93,7 @@ export const RabbiPage = styled(({ className }: RabbiPageProps) => {
           )}
         </>
       )}
-    </div>
+    </main>
   );
 })`
   ${styles.RabbiPage}

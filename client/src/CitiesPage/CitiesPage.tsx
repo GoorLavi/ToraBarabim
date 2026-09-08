@@ -17,7 +17,7 @@ export const CitiesPage = styled(({ className }: CitiesPageProps) => {
   const isBoardEmpty = query.isSuccess && areas.length === 0;
 
   return (
-    <div className={className}>
+    <main className={className}>
       <div className="titleBlock">
         {query.isPending ? (
           <>
@@ -60,7 +60,7 @@ export const CitiesPage = styled(({ className }: CitiesPageProps) => {
       {query.isSuccess &&
         !isBoardEmpty &&
         areas.map((areaGroup) => <CityAreaSection key={areaGroup.area} areaGroup={areaGroup} />)}
-    </div>
+    </main>
   );
 })`
   ${styles.CitiesPage}

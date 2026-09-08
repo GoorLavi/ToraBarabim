@@ -44,7 +44,7 @@ export const CityPage = styled(({ className }: CityPageProps) => {
   const canShowSubheading = Boolean(!isCityResolvedEmpty && lessonsQuery.data);
 
   return (
-    <div className={className}>
+    <main className={className}>
       <BackLink to="/cities" label={consts.BACK_TO_ALL_CITIES_LABEL} />
 
       {cityQuery.isPending && (
@@ -136,7 +136,7 @@ export const CityPage = styled(({ className }: CityPageProps) => {
           )}
         </>
       )}
-    </div>
+    </main>
   );
 })`
   ${styles.CityPage}

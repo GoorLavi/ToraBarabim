@@ -37,9 +37,9 @@ export const Layout = styled(({ className }: LayoutProps) => {
         }}
       />
 
-      <main className="body">
+      <div className="body">
         <Outlet />
-      </main>
+      </div>
 
       <Footer className="footer" />
     </div>

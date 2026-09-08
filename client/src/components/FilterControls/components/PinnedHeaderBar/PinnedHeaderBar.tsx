@@ -7,6 +7,7 @@ import { SiteLogoLink } from '~/components/SiteLogoLink/SiteLogoLink';
 
 import { FilterFieldsGrid } from '../FilterFieldsGrid/FilterFieldsGrid';
 import { FilterSummaryPill } from './components/FilterSummaryPill/FilterSummaryPill';
+import * as consts from './consts';
 import { filterSummaryLabel } from './helpers';
 import type { PinnedHeaderBarProps } from './models';
 import * as styles from './styles';
@@ -101,7 +102,13 @@ export const PinnedHeaderBar = styled(({ className, isVisible, ...fieldsProps }:
           {/* Transparent: swallows the first outside tap so it only closes
               the panel instead of also activating whatever is underneath. */}
           <div className="catcher" aria-hidden="true" onClick={() => setIsExpanded(false)} />
-          <div className="expandedPanel" onKeyDown={handleKeyDown}>
+          <div
+            className="expandedPanel"
+            role="dialog"
+            aria-modal="false"
+            aria-label={consts.FILTER_PANEL_LABEL}
+            onKeyDown={handleKeyDown}
+          >
             <FilterFieldsGrid className="fields" {...expandedFieldsProps} />
           </div>
         </>

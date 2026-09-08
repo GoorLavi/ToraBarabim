@@ -4,8 +4,6 @@ import { useTheme } from 'styled-components';
 
 import * as consts from './consts';
 
-const parsePx = (value: string): number => Number.parseInt(value, 10);
-
 // The pinned bar is a `lg`-and-below concern only: at `lg` and up the
 // header is sticky instead and never collapses.
 const useIsBelowLg = (): boolean => {
@@ -58,7 +56,7 @@ const useHeaderHeight = (headerRef: RefObject<HTMLElement | null>, fallbackPx: n
     }
 
     const observer = new ResizeObserver(([entry]) => {
-      if (entry) setHeight(entry.borderBoxSize[0]?.blockSize ?? entry.contentRect.height);
+      if (entry) setHeight(entry.borderBoxSize?.[0]?.blockSize ?? entry.contentRect.height);
     });
     observer.observe(element);
     return () => observer.disconnect();

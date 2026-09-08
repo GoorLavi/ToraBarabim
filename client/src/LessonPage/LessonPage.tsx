@@ -21,7 +21,7 @@ export const LessonPage = styled(({ className }: LessonPageProps) => {
   const errorCopy = query.error ? lessonErrorCopy(query.error) : null;
 
   return (
-    <div className={className}>
+    <main className={className}>
       <BackLink to="/" label={consts.BACK_TO_ALL_LESSONS_LABEL} />
 
       {query.isPending && (
@@ -70,7 +70,7 @@ export const LessonPage = styled(({ className }: LessonPageProps) => {
           <BackLink to="/" label={consts.BACK_TO_ALL_LESSONS_LABEL} />
         </>
       )}
-    </div>
+    </main>
   );
 })`
   ${styles.LessonPage}
