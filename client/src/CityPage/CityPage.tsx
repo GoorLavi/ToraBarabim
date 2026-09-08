@@ -38,7 +38,7 @@ export const CityPage = styled(({ className }: CityPageProps) => {
   const isCityResolvedEmpty = lessonsQuery.data?.items.length === 0;
   const areaQuery = useAreaLessons(city?.area, Boolean(isCityResolvedEmpty));
 
-  const areaName = city ? consts.AREA_LABELS[city.area] : '';
+  const areaName = city?.areaName ?? '';
   const dayGroups = lessonsQuery.data ? groupByDay(lessonsQuery.data.items) : [];
   const hasMore = Boolean(lessonsQuery.data && lessonsQuery.data.items.length < lessonsQuery.data.total);
   const canShowRail = Boolean(city && !isCityResolvedEmpty && city.rabbis.length > 0);
@@ -62,6 +62,7 @@ export const CityPage = styled(({ className }: CityPageProps) => {
         {errorCopy?.kind === 'not-found' && (
           <StateCard
             variant="surface"
+            headingLevel="h1"
             heading={errorCopy.heading}
             body={errorCopy.body}
             action={{ actionLabel: consts.ALL_CITIES_LABEL, actionStyle: 'primary', actionTo: '/cities' }}
@@ -71,6 +72,7 @@ export const CityPage = styled(({ className }: CityPageProps) => {
         {errorCopy?.kind === 'error' && (
           <StateCard
             variant="surface"
+            headingLevel="h1"
             heading={errorCopy.heading}
             body={errorCopy.body}
             action={{ actionLabel: consts.RETRY_LABEL, actionStyle: 'primary', onAction: () => cityQuery.refetch() }}
@@ -104,6 +106,7 @@ export const CityPage = styled(({ className }: CityPageProps) => {
             {!lessonsQuery.isPending && lessonsQuery.isError && (
               <StateCard
                 variant="surface"
+                headingLevel="h2"
                 heading={consts.ERROR_HEADING}
                 body={consts.ERROR_BODY}
                 action={{ actionLabel: consts.RETRY_LABEL, actionStyle: 'primary', onAction: () => lessonsQuery.refetch() }}

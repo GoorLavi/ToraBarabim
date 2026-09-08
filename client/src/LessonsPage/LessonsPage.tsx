@@ -77,6 +77,7 @@ const renderContent = ({
         {titleHeading(title)}
         <StateCard
           variant="surface"
+          headingLevel="h2"
           heading={consts.ERROR_HEADLINE}
           body={getErrorHint(listQuery.error)}
           action={{ actionLabel: consts.RETRY_LABEL, actionStyle: 'primary', onAction: () => listQuery.refetch() }}
@@ -95,7 +96,7 @@ const renderContent = ({
       return (
         <>
           {titleHeading(title)}
-          <StateCard variant="empty" heading={consts.SITE_EMPTY_HEADLINE} body={consts.SITE_EMPTY_BODY} />
+          <StateCard variant="empty" headingLevel="h2" heading={consts.SITE_EMPTY_HEADLINE} body={consts.SITE_EMPTY_BODY} />
         </>
       );
     }
@@ -106,6 +107,7 @@ const renderContent = ({
           {titleHeading(title)}
           <StateCard
             variant="empty"
+            headingLevel="h2"
             heading={noFilteredLessonsHeadline(cityName, query)}
             action={{ actionLabel: consts.CLEAR_FILTERS_LABEL, actionStyle: 'quiet', onAction: onClearFilters }}
           />
@@ -153,7 +155,7 @@ const renderContent = ({
     return (
       <>
         {titleHeading(title)}
-        <StateCard variant="empty" heading={noLessonsHeadline(cityName, targetDayWord)} body={noLessonsWidenedHint(cityName)} />
+        <StateCard variant="empty" headingLevel="h2" heading={noLessonsHeadline(cityName, targetDayWord)} body={noLessonsWidenedHint(cityName)} />
         <h2 className="dayHeading" dir="auto">
           {dayLabel(fallbackDate)}
         </h2>
@@ -167,6 +169,7 @@ const renderContent = ({
       {titleHeading(title)}
       <StateCard
         variant="empty"
+        headingLevel="h2"
         heading={noLessonsHeadline(cityName, targetDayWord)}
         body={noLessonsNoFallbackBody(cityName)}
         action={{ actionLabel: consts.CLEAR_FILTERS_LABEL, actionStyle: 'quiet', onAction: onClearFilters }}

@@ -36,5 +36,6 @@ export interface CityDirectoryResult {
 }
 
 export interface CityDetailResult extends ResolvedCity {
+  areaName: string;
   rabbis: Rabbi[];
 }

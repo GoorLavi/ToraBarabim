@@ -35,5 +35,6 @@ export const toCityDirectoryResponse = (result: CityDirectoryResult): CityDirect
 
 export const toCityDetailResponse = (result: CityDetailResult): CityDetailResponse => ({
   ...toCity(result),
+  areaName: result.areaName,
   rabbis: result.rabbis,
 });

@@ -25,6 +25,7 @@ export const RabbiEmptyLessons = styled(
       <div className={className}>
         <StateCard
           variant="empty"
+          headingLevel="h2"
           heading={noLessonsHeading(rabbiName)}
           body={pageConsts.NO_LESSONS_BODY}
           action={{ actionLabel: pageConsts.CONTACT_US_LABEL, actionStyle: 'primary', actionTo: '/contact' }}

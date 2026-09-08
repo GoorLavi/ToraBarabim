@@ -93,6 +93,7 @@ export const resolveByName = async (name: string): Promise<CityDetailResult> => 
 
   return {
     ...cityRow,
+    areaName: AREA_NAMES_HE[cityRow.area],
     rabbis: distinctRabbis.sort((a, b) => collator.compare(a.name, b.name)),
   };
 };

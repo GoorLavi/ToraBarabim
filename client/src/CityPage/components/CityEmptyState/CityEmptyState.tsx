@@ -25,6 +25,7 @@ export const CityEmptyState = styled(
       <div className={className}>
         <StateCard
           variant="empty"
+          headingLevel="h2"
           heading={pageConsts.noLessonsHeading(cityName)}
           body={body}
           action={{ actionLabel: pageConsts.CONTACT_US_LABEL, actionStyle: 'primary', actionTo: '/contact' }}

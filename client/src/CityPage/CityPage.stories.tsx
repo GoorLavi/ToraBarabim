@@ -25,6 +25,7 @@ const cityDetail = (overrides: Partial<CityDetailResponse>): CityDetailResponse 
   id: '4000',
   name: 'חיפה',
   area: 'haifa',
+  areaName: 'חיפה והקריות',
   rabbis: [
     { id: 'r1', name: 'הרב אברהם כהן', title: 'ראש ישיבה', photoUrl: 'https://example.invalid/r1.jpg' },
     { id: 'r2', name: 'הרב משה לוי' },
@@ -56,7 +57,7 @@ installMockFetch((url) => {
 
   if (pathname === '/v1/cities/עיר-מלאה') return jsonResponse(200, cityDetail({ name: 'עיר-מלאה' }));
   if (pathname === '/v1/cities/עיר-ריקה') {
-    return jsonResponse(200, cityDetail({ id: '46', name: 'עיר-ריקה', area: 'north', rabbis: [] }));
+    return jsonResponse(200, cityDetail({ id: '46', name: 'עיר-ריקה', area: 'north', areaName: 'הצפון', rabbis: [] }));
   }
   if (pathname === '/v1/cities/שם-עיר-לא-קיים') return jsonResponse(404, { error: 'city_not_found', message: 'לא נמצאה' });
   if (pathname === '/v1/cities/עיר-שגיאה') return jsonResponse(500, { error: 'internal_error', message: 'שגיאה' });

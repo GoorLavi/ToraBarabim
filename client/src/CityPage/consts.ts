@@ -19,21 +19,6 @@ export const CITY_PAGE_RETRY_LIMIT = 1;
 export const CITY_LESSONS_PAGE_SIZE = 24;
 export const AREA_LESSONS_PAGE_SIZE = 24;
 
-// The server resolves a city's `Area` enum value but not its Hebrew label
-// (that only exists on the city directory's grouped response). Mirrors
-// server/src/service/shared/consts.ts's AREA_NAMES_HE, which is server-only
-// and not on the wire: kept in exact sync by hand, named here as its source.
-export const AREA_LABELS: Record<Area, string> = {
-  north: 'הצפון',
-  haifa: 'חיפה והקריות',
-  sharon: 'השרון',
-  center: 'המרכז',
-  telAviv: 'תל אביב',
-  jerusalem: 'ירושלים',
-  shfela: 'השפלה',
-  south: 'הדרום',
-};
-
 export const WHO_TEACHES_HEADING_PREFIX = 'מי מלמד ב';
 
 export const ERROR_HEADING = 'לא הצלחנו לטעון את השיעורים בעיר';

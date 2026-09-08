@@ -49,6 +49,7 @@ export const RabbiPage = styled(({ className }: RabbiPageProps) => {
         {errorCopy?.kind === 'not-found' && (
           <StateCard
             variant="surface"
+            headingLevel="h1"
             heading={errorCopy.heading}
             body={errorCopy.body}
             action={{ actionLabel: consts.ALL_RABBIS_LABEL, actionStyle: 'primary', actionTo: '/rabbis' }}
@@ -58,6 +59,7 @@ export const RabbiPage = styled(({ className }: RabbiPageProps) => {
         {errorCopy?.kind === 'error' && (
           <StateCard
             variant="surface"
+            headingLevel="h1"
             heading={errorCopy.heading}
             body={errorCopy.body}
             action={{ actionLabel: consts.RETRY_LABEL, actionStyle: 'primary', onAction: () => rabbiQuery.refetch() }}

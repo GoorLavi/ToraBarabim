@@ -13,14 +13,15 @@ import * as styles from './styles';
 // page in this round measured 700, so the lighter weight is read as a
 // one-off measurement rather than a real variant.
 export const StateCard = styled((props: StateCardProps) => {
-  const { className, variant, heading, body, action } = props;
+  const { className, variant, headingLevel, heading, body, action } = props;
   const ActionButton = action?.actionStyle === 'quiet' ? QuietButton : PrimaryButton;
+  const Heading = headingLevel;
 
   return (
     <div className={classNames(className, variant)} role={variant === 'surface' ? 'alert' : undefined}>
-      <h2 className="heading" dir="auto">
+      <Heading className="heading" dir="auto">
         {heading}
-      </h2>
+      </Heading>
       {body && (
         <p className="body" dir="auto">
           {body}

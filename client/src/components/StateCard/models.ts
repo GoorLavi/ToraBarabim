@@ -15,6 +15,10 @@ export interface StateCardProps {
   // fact. 'empty': the ratified empty-state fill, no border
   // (00-shared-shell.md, "The state card").
   variant: 'surface' | 'empty';
+  // 'h1' when this card is the page's only heading (a route or a record
+  // that never resolved, with no other heading rendered on screen). 'h2'
+  // when it sits under a heading the page already rendered.
+  headingLevel: 'h1' | 'h2';
   heading: ReactNode;
   body?: ReactNode;
   action?: StateCardAction;

@@ -5,7 +5,8 @@ import type { NotFoundScreenProps } from './models';
 // A thin adapter over the shared StateCard: always the bordered `surface`
 // fill with a primary-styled action, for the two facts this renders (a
 // missing route, a missing lesson occurrence) rather than a transient
-// error's retry-styled quiet option.
+// error's retry-styled quiet option. Both call sites render it as the
+// page's only heading, so it always asks for `h1`.
 export const NotFoundScreen = (props: NotFoundScreenProps) => {
   const { className, heading, explanation, actionLabel } = props;
 
@@ -13,6 +14,7 @@ export const NotFoundScreen = (props: NotFoundScreenProps) => {
     <StateCard
       className={className}
       variant="surface"
+      headingLevel="h1"
       heading={heading}
       body={explanation}
       action={

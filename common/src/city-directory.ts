@@ -21,9 +21,11 @@ export interface CityDirectoryResponse {
   areas: CityAreaGroup[];
 }
 
-// A city page, resolved by the city's name: its area, and the distinct
-// rabbis teaching there. `id` is the city's official code, the same value
-// `GET /v1/lessons`'s `city` filter expects.
+// A city page, resolved by the city's name: its area (with the area's
+// Hebrew label resolved server-side, same as `CityAreaGroup`), and the
+// distinct rabbis teaching there. `id` is the city's official code, the
+// same value `GET /v1/lessons`'s `city` filter expects.
 export interface CityDetailResponse extends City {
+  areaName: string;
   rabbis: Rabbi[];
 }

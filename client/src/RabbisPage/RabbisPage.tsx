@@ -64,6 +64,7 @@ export const RabbisPage = styled(({ className }: RabbisPageProps) => {
         {query.isError && (
           <StateCard
             variant="surface"
+            headingLevel="h2"
             heading={consts.LOAD_ERROR_HEADING}
             body={consts.LOAD_ERROR_BODY}
             action={{ actionLabel: consts.RETRY_LABEL, actionStyle: 'primary', onAction: () => query.refetch() }}
@@ -73,6 +74,7 @@ export const RabbisPage = styled(({ className }: RabbisPageProps) => {
         {query.isSuccess && isBoardEmpty && (
           <StateCard
             variant="empty"
+            headingLevel="h2"
             heading={consts.BOARD_EMPTY_HEADING}
             body={consts.BOARD_EMPTY_BODY}
             action={{ actionLabel: consts.CONTACT_US_LABEL, actionStyle: 'primary', actionTo: '/contact' }}
@@ -82,6 +84,7 @@ export const RabbisPage = styled(({ className }: RabbisPageProps) => {
         {query.isSuccess && !isBoardEmpty && hasNoResults && (
           <StateCard
             variant="surface"
+            headingLevel="h2"
             heading={
               <>
                 {consts.NO_RESULTS_HEADING_PREFIX}
