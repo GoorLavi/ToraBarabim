@@ -12,7 +12,7 @@ export const DayLessons = css(
     justify-content: space-between;
     gap: ${theme.spacing.md};
 
-    > h2 {
+    > .title {
       font-size: ${theme.typography.sectionHeading.phone.fontSize};
       line-height: ${theme.typography.sectionHeading.phone.lineHeight};
       font-weight: ${theme.typography.sectionHeading.fontWeight};
@@ -33,6 +33,12 @@ export const DayLessons = css(
     }
   }
 
+  > .count {
+    color: ${theme.colors.textSecondary};
+    font-size: ${theme.typography.secondary.phone.fontSize};
+    line-height: ${theme.typography.secondary.phone.lineHeight};
+  }
+
   > .grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -44,6 +50,17 @@ export const DayLessons = css(
 
     @media (min-width: ${theme.breakpoints.xl}) {
       grid-template-columns: repeat(4, 1fr);
+    }
+
+    /* Grid stretches the <li> to the row's own height by default, but the
+       card link inside was only ever as tall as its own content, so two
+       cards in the same row could still differ in visible height whenever
+       one title wrapped to a second line (design review: "ragged bottom
+       edge in the grid"). Making the cell a grid parent too stretches that
+       single child to the cell's full inline and block size, so every card
+       in a row shares both the row's width and its height. */
+    > .cell {
+      display: grid;
     }
   }
 

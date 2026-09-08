@@ -6,5 +6,6 @@ export interface CityGridProps {
   className?: string;
   items: LessonOccurrence[] | undefined;
   isLoading: boolean;
+  isError: boolean;
   onSelectCity: (city: SelectedCity) => void;
 }

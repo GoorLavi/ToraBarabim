@@ -1,9 +1,13 @@
 export const LOADING_MESSAGE = 'טוען שיעורים...';
 export const RETRY_LABEL = 'נסו שוב';
 
-export const NETWORK_ERROR_MESSAGE = 'לא הצלחנו להתחבר לשרת, בדקו את החיבור לרשת ונסו שוב';
-export const INVALID_REQUEST_MESSAGE = 'לא הצלחנו לבצע את החיפוש, נסו לרענן את הדף';
-export const SERVER_ERROR_MESSAGE = 'אירעה שגיאה בטעינת השיעורים, נסו שוב מאוחר יותר';
+// Heading and hint stay apart so the frame is the same shape everywhere on
+// the site an error appears: a black heading naming what failed, a calm
+// status-aware line under it, one retry (design review, Group B).
+export const ERROR_HEADLINE = 'אירעה שגיאה בטעינת השיעורים';
+export const NETWORK_ERROR_HINT = 'לא הצלחנו להתחבר לשרת, בדקו את החיבור לרשת ונסו שוב';
+export const INVALID_REQUEST_HINT = 'לא הצלחנו לבצע את החיפוש, נסו לרענן את הדף';
+export const SERVER_ERROR_HINT = 'נסו שוב מאוחר יותר';
 
 // No date in the label itself: the heading directly above already states
 // the day (and city), so a custom date once repeated here either produced
@@ -20,7 +24,7 @@ export const SEE_ALL_LABEL = 'לכל השיעורים';
 // if the search was silently dropped.
 export const noLessonsHeadline = (dayLabel: string, cityName: string | undefined, searchQuery: string): string => {
   const where = cityName ? ` ב${cityName}` : '';
-  if (searchQuery) return `לא נמצאו שיעורים התואמים לחיפוש "${searchQuery}" ${dayLabel}${where}`;
+  if (searchQuery) return `לא נמצאו שיעורים התואמים לחיפוש ״${searchQuery}״ ${dayLabel}${where}`;
   return `אין שיעורים ${dayLabel}${where}`;
 };
 
@@ -38,8 +42,8 @@ export const nextDayCountLabel = (
   const where = cityName ? ` ב${cityName}` : '';
   const matchingQuery = searchQuery
     ? count === 1
-      ? ` שתואם לחיפוש "${searchQuery}"`
-      : ` שתואמים לחיפוש "${searchQuery}"`
+      ? ` שתואם לחיפוש ״${searchQuery}״`
+      : ` שתואמים לחיפוש ״${searchQuery}״`
     : '';
   return count === 1
     ? `יש שיעור אחד ${dayLabel}${where}${matchingQuery}`
@@ -47,3 +51,37 @@ export const nextDayCountLabel = (
 };
 
 export const moreLessonsLabel = (dayLabel: string): string => `עוד שיעורים ${dayLabel}`;
+
+// Counts the day's own items, never `total` from the response (that covers
+// the whole widened window, LESSON_WINDOW_DAYS): otherwise someone filtering
+// to a small city has no honest way to tell whether the grid shows
+// everything or a fraction of it.
+export const dayLessonCountLabel = (count: number): string => (count === 1 ? 'שיעור אחד' : `${count} שיעורים`);
+
+// The heading when the filter is a city or a search term and not a date:
+// there is no single day to name, so the heading names the city (or "כל
+// הארץ") and the search term instead (design-system.md, "Every data screen
+// has three states").
+export const filterOnlyHeadingLabel = (cityName: string | undefined, searchQuery: string): string => {
+  const where = cityName ? `שיעורים ב${cityName}` : 'שיעורים בכל הארץ';
+  return searchQuery ? `${where} לפי החיפוש ״${searchQuery}״` : where;
+};
+
+export const MORE_FILTERED_LESSONS_LABEL = 'עוד שיעורים';
+
+// The dateless empty state: there is no date axis to widen along (the human
+// ratified this split explicitly), so this names only the filters actually
+// set, in the same window the found line above already uses, rather than
+// narrowing to a single day nobody chose (design review, Group A, items 1
+// and 4).
+export const noFilteredLessonsHeadline = (cityName: string | undefined, searchQuery: string): string => {
+  const where = cityName ? ` ב${cityName}` : '';
+  const query = searchQuery ? ` לפי החיפוש ״${searchQuery}״` : '';
+  return `לא נמצאו שיעורים${where}${query} בשבועיים הקרובים`;
+};
+
+// The way back from the state that carries the most weight on this site
+// (design-system.md): clears whichever filter produced zero results and
+// returns to the unfiltered rows, an action to press rather than prose
+// advice with nothing to press (design review, Group A, item 3).
+export const CLEAR_FILTERS_LABEL = 'ניקוי הסינון וחזרה לכל השיעורים';

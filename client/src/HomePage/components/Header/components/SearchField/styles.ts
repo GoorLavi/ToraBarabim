@@ -48,7 +48,8 @@ export const SearchField = css(
       color: ${theme.colors.textSecondary};
     }
 
-    &::-webkit-search-cancel-button {
+    &::-webkit-search-cancel-button,
+    &::-webkit-search-decoration {
       display: none;
     }
   }

@@ -1,8 +1,9 @@
 import classNames from 'classnames';
+import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 import * as consts from './consts';
-import { descriptionLabel } from './helpers';
+import { cardAriaLabel, descriptionLabel, lessonCardHref } from './helpers';
 import type { LessonCardProps } from './models';
 import * as styles from './styles';
 
@@ -16,7 +17,11 @@ export const LessonCard = styled(({ className, lesson }: LessonCardProps) => {
   const description = descriptionLabel(lesson);
 
   return (
-    <article className={classNames(className, { cancelled: lesson.status === 'cancelled' })}>
+    <Link
+      to={lessonCardHref(lesson)}
+      aria-label={cardAriaLabel(lesson)}
+      className={classNames(className, { cancelled: lesson.status === 'cancelled' })}
+    >
       <div className="poster">
         {teachingRabbi.photoUrl ? (
           <img className="image" src={teachingRabbi.photoUrl} alt="" />
@@ -60,7 +65,7 @@ export const LessonCard = styled(({ className, lesson }: LessonCardProps) => {
           </p>
         )}
       </div>
-    </article>
+    </Link>
   );
 })`
   ${styles.LessonCard}

@@ -4,7 +4,10 @@ export const DateFilterChips = css(
   ({ theme }) => `
   display: flex;
   flex-wrap: wrap;
-  gap: ${theme.spacing.sm};
+  /* spacing.sm (8px), the tap-target minimum, measured 7px in the browser:
+     bumped to the next token so the row clears the floor with margin
+     rather than sitting exactly on it (design review nit). */
+  gap: ${theme.spacing.md};
 
   > .chip {
     display: flex;

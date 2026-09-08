@@ -9,12 +9,6 @@ import type { LessonRailProps } from './models';
 import * as styles from './styles';
 import { useScrollEdges } from './useScrollEdges';
 
-// Nothing inside `LessonCard` is focusable yet (no lesson page exists to
-// link a card to), so a horizontal scroller would otherwise be unreachable
-// by keyboard. This is an approved workaround, ratified by the human:
-// `tabindex=0` and `role=group` sit on a wrapping div, not on the `<ul>`
-// itself, so the list keeps its real list semantics. This stands in until
-// the card is a real link, which is what would make it unnecessary.
 export const LessonRail = styled(({ className, title, items }: LessonRailProps) => {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const { atStart, atEnd } = useScrollEdges(scrollerRef);
@@ -36,7 +30,7 @@ export const LessonRail = styled(({ className, title, items }: LessonRailProps) 
           </svg>
         </button>
 
-        <div className="scrollerGroup" ref={scrollerRef} tabIndex={0} role="group" aria-label={title}>
+        <div className="scrollerGroup" ref={scrollerRef}>
           <ul className="scroller">
             {items.map((item) => (
               <li key={`${item.lessonId}-${item.date}`}>

@@ -4,6 +4,7 @@ export interface RabbiRowProps {
   className?: string;
   items: LessonOccurrence[] | undefined;
   isLoading: boolean;
+  isError: boolean;
 }
 
 export type { Rabbi };

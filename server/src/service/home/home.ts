@@ -152,6 +152,24 @@ const buildRow = (
   return items.length >= MIN_ITEMS_PER_ROW ? { id, title, items } : undefined;
 };
 
+// The four rows filter on different, overlapping axes (area, day, audience,
+// recurrence), so the same lesson easily qualifies for two or three of
+// them. A lesson already shown in an earlier row is excluded from every
+// later one, so a reader scrolling down never sees the same card twice; a
+// row that drops below MIN_ITEMS_PER_ROW after that exclusion is dropped
+// entirely by `buildRow`, never sent half-empty.
+const buildRowExcluding = (
+  usedLessonIds: Set<string>,
+  id: HomeRowResult['id'],
+  title: string,
+  matches: ResolvedHomeOccurrence[],
+): HomeRowResult | undefined => {
+  const eligible = matches.filter((occurrence) => !usedLessonIds.has(occurrence.lessonId));
+  const row = buildRow(id, title, eligible);
+  row?.items.forEach((item) => usedLessonIds.add(item.lessonId));
+  return row;
+};
+
 // Iterates `AREAS` in its declared order and only replaces on a strictly
 // greater count, so a tie deterministically picks the earlier area.
 const chooseArea = (occurrences: ResolvedHomeOccurrence[]): Area | undefined => {
@@ -212,12 +230,30 @@ export const getHome = async (now: Date): Promise<HomeResult> => {
 
   const area = chooseArea(resolved);
   const today = from;
+  const usedLessonIds = new Set<string>();
 
   const rows = [
-    area ? buildRow('area', `שיעורים באזור ${AREA_NAMES_HE[area]}`, resolved.filter((o) => o.place.area === area)) : undefined,
-    buildRow('today', 'שיעורים היום', resolved.filter((o) => o.date === today)),
-    buildRow('bothAudiences', 'שיעורים לגברים ולנשים', resolved.filter((o) => o.audience === 'mixed')),
-    buildRow('weekly', 'שיעורים קבועים כל שבוע', resolved.filter((o) => o.recurrenceKind === 'weekly')),
+    area
+      ? buildRowExcluding(
+          usedLessonIds,
+          'area',
+          `שיעורים באזור ${AREA_NAMES_HE[area]}`,
+          resolved.filter((o) => o.place.area === area),
+        )
+      : undefined,
+    buildRowExcluding(usedLessonIds, 'today', 'שיעורים היום', resolved.filter((o) => o.date === today)),
+    buildRowExcluding(
+      usedLessonIds,
+      'bothAudiences',
+      'שיעורים לגברים ולנשים',
+      resolved.filter((o) => o.audience === 'mixed'),
+    ),
+    buildRowExcluding(
+      usedLessonIds,
+      'weekly',
+      'שיעורים קבועים כל שבוע',
+      resolved.filter((o) => o.recurrenceKind === 'weekly'),
+    ),
   ].filter((row): row is HomeRowResult => row !== undefined);
 
   return { rows };

@@ -1,5 +1,7 @@
 import { css } from 'styled-components';
 
+import { POSTER_ASPECT_RATIO } from '~/HomePage/consts';
+
 import { CARD_WIDE_THRESHOLD } from './consts';
 
 export const LessonCard = css(
@@ -12,6 +14,20 @@ export const LessonCard = css(
   border-radius: ${theme.radii.lg};
   background: ${theme.colors.surface};
   box-shadow: ${theme.shadows.card};
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 150ms ease;
+
+  &:focus-visible {
+    outline: 2px solid ${theme.colors.primary};
+    outline-offset: 2px;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      border-color: ${theme.colors.primary};
+    }
+  }
 
   &.cancelled {
     opacity: 0.7;
@@ -19,7 +35,7 @@ export const LessonCard = css(
 
   > .poster {
     position: relative;
-    aspect-ratio: 3 / 4;
+    aspect-ratio: ${POSTER_ASPECT_RATIO};
     background: ${theme.colors.primarySoft};
 
     > .image {
@@ -95,7 +111,9 @@ export const LessonCard = css(
       }
 
       > .audience {
-        color: ${theme.colors.primary};
+        /* Not \`primary\`: that is the same color as every real link on the
+           page, and this tag is not tappable (design review nit). */
+        color: ${theme.colors.text};
         font-weight: ${theme.typography.fontWeight.semiBold};
       }
 

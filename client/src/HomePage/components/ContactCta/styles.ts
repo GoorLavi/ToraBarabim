@@ -29,6 +29,10 @@ export const ContactCta = css(
     font-weight: ${theme.typography.fontWeight.semiBold};
     font-size: ${theme.typography.body.phone.fontSize};
     line-height: ${theme.typography.body.phone.lineHeight};
+    /* An anchor, not a button, so it carries the browser's own underline by
+       default: the bordered pill is the chosen treatment, so the underline
+       is dropped rather than stacking both (design review nit). */
+    text-decoration: none;
   }
 `,
 );

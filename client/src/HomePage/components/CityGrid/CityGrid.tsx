@@ -13,7 +13,11 @@ import * as styles from './styles';
 // already fetched (helpers.ts); the numeric id `GET /v1/lessons` needs for
 // its `city` filter is resolved through the real city search on click,
 // rather than inventing one.
-export const CityGrid = styled(({ className, items, isLoading, onSelectCity }: CityGridProps) => {
+//
+// A row with nothing in it renders nothing at all, heading included: this
+// site never puts a heading over an empty rail (design-system.md, "Every
+// data screen has three states").
+export const CityGrid = styled(({ className, items, isLoading, isError, onSelectCity }: CityGridProps) => {
   const resolveCity = useMutation({ mutationFn: (name: string) => fetchCities(name) });
 
   const selectByName = (name: string): void => {
@@ -27,6 +31,8 @@ export const CityGrid = styled(({ className, items, isLoading, onSelectCity }: C
 
   const cityNames = items ? uniqueCityNames(items) : [];
 
+  if (!isLoading && !isError && cityNames.length === 0) return null;
+
   return (
     <section className={className}>
       <div className="heading">
@@ -34,15 +40,19 @@ export const CityGrid = styled(({ className, items, isLoading, onSelectCity }: C
         <span className="seeAll">{consts.SEE_ALL_LABEL}</span>
       </div>
 
-      {isLoading && (
+      {isError && (
+        <p className={classNames('state', 'error')} role="alert">
+          {consts.ERROR_MESSAGE}
+        </p>
+      )}
+
+      {!isError && isLoading && (
         <p className={classNames('state', 'loading')} aria-live="polite">
           {consts.LOADING_MESSAGE}
         </p>
       )}
 
-      {!isLoading && cityNames.length === 0 && <p className="state">{consts.EMPTY_MESSAGE}</p>}
-
-      {!isLoading && cityNames.length > 0 && (
+      {!isError && !isLoading && (
         <ul className="grid">
           {cityNames.map((name) => (
             <li key={name}>

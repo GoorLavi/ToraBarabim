@@ -6,4 +6,5 @@ export interface DayLessonsProps {
   items: LessonOccurrence[];
   showSeeAllLink: boolean;
   moreLabel: string;
+  countLabel?: string;
 }

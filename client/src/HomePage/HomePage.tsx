@@ -23,6 +23,7 @@ export const HomePage = styled(({ className }: HomePageProps) => {
   const { query, setQuery } = useSearchQuery();
 
   const mode = resolveHomeMode(option, city, query);
+  const hasDateFilter = option !== 'all';
 
   const targetDate = resolveTargetDate(option, customDate);
   const filters: LessonFilters = {
@@ -38,7 +39,19 @@ export const HomePage = styled(({ className }: HomePageProps) => {
 
   const browseItems = mode === 'rail' ? flattenHomeRows(homeRowsQuery.data) : lessonsQuery.data?.items;
   const isBrowseLoading = mode === 'rail' ? homeRowsQuery.isPending : lessonsQuery.isPending;
-  const browseContextLine = contextLine(mode, query);
+  const isBrowseError = mode === 'rail' ? homeRowsQuery.isError : lessonsQuery.isError;
+  const browseContextLine = contextLine(mode, query, lessonsQuery.data?.total);
+
+  // The way back out of the dateless empty state (design-system.md, "Every
+  // data screen has three states"): clears every filter and returns to the
+  // unfiltered rows. Clearing the date too is harmless when it was never
+  // set, and keeps this one function correct regardless of which filters
+  // happen to be active when it is pressed.
+  const clearFilters = (): void => {
+    clearDate();
+    clearCity();
+    setQuery('');
+  };
 
   return (
     <div className={className}>
@@ -66,13 +79,20 @@ export const HomePage = styled(({ className }: HomePageProps) => {
           {mode === 'rail' ? (
             <HomeRails query={homeRowsQuery} />
           ) : (
-            <LessonsSection query={lessonsQuery} targetDate={targetDate} city={city} searchQuery={query} />
+            <LessonsSection
+              query={lessonsQuery}
+              hasDateFilter={hasDateFilter}
+              targetDate={targetDate}
+              city={city}
+              searchQuery={query}
+              onClearFilters={clearFilters}
+            />
           )}
         </div>
 
-        <RabbiRow items={browseItems} isLoading={isBrowseLoading} />
+        <RabbiRow items={browseItems} isLoading={isBrowseLoading} isError={isBrowseError} />
 
-        <CityGrid items={browseItems} isLoading={isBrowseLoading} onSelectCity={selectCity} />
+        <CityGrid items={browseItems} isLoading={isBrowseLoading} isError={isBrowseError} onSelectCity={selectCity} />
 
         <ContactCta />
       </main>

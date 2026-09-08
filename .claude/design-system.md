@@ -69,8 +69,8 @@ a ragged bottom edge across the row, and it is detail nobody needs while scannin
 ### The poster image
 Every rabbi has one and it is required, so it is structural rather than decorative.
 
-**Aspect ratio 2:3, portrait.** This is not negotiable downstream: the public card is
-built at 2:3, so any other ratio arrives cropped or padded. Minimum 800 by 1200. JPG or
+**Aspect ratio 3:4, portrait.** This is not negotiable downstream: the public card is
+built at 3:4, so any other ratio arrives cropped or padded. Minimum 800 by 1200. JPG or
 PNG, up to 5MB. The admin form offers a vertical crop control, because a portrait
 photograph is usually taller than the frame and the face has to survive the crop.
 
@@ -178,7 +178,7 @@ Type, spacing, radii, shadows and breakpoints live alongside color in the same t
 object. All are tokens, none are raw values in a component.
 
 ### Color: the token set
-Thirteen color tokens. The theme defines all thirteen.
+Sixteen color tokens. The theme defines all sixteen.
 
 | Token | Role |
 |---|---|
@@ -193,7 +193,10 @@ Thirteen color tokens. The theme defines all thirteen.
 | `color.text` | Primary text |
 | `color.textSecondary` | Secondary text: city, supporting lines |
 | `color.textOnPrimary` | Text sitting on a `primary` fill |
+| `color.textOnPrimaryMuted` | Secondary text on a `primary` fill. White at 76%, the on-dark counterpart of `textSecondary` |
 | `color.border` | Hairlines, card and field outlines |
+| `color.borderOnPrimary` | Hairlines and perforations on a `primary` fill. White at 30% |
+| `color.surfaceOnPrimary` | A quiet raised block on a `primary` fill, such as a tag on the lesson ticket. White at 12% |
 | `color.danger` | Error text. Text only, never a fill |
 
 **Contrast rule for `accent`.** The accent does not reach 4.5:1 against `surface`, so it
@@ -203,6 +206,10 @@ wrong for a 14px label.
 
 Where the accent has to appear on a dark field, use `accentOnDark`. It is tuned to clear
 3:1 against `primary`.
+
+The three on-primary tokens are alpha over the fill rather than opaque values, so they
+hold if `primary` ever changes. They are only valid on a `primary` or `primarySoft`
+field; on `surface` they are invisible.
 
 ### Color: `ארגמן וזהב`
 Ceremonial and dignified. Deep plum and gold on a warm neutral, closest to a book
@@ -221,7 +228,10 @@ binding or a parochet.
 | `color.text` | `#201B1D` |
 | `color.textSecondary` | `#6B6165` |
 | `color.textOnPrimary` | `#FFFFFF` |
+| `color.textOnPrimaryMuted` | `rgba(255, 255, 255, 0.76)` |
 | `color.border` | `#E6DEDF` |
+| `color.borderOnPrimary` | `rgba(255, 255, 255, 0.3)` |
+| `color.surfaceOnPrimary` | `rgba(255, 255, 255, 0.12)` |
 | `color.danger` | `#A32A22` |
 
 ### Type
@@ -242,12 +252,34 @@ Verify style names with `listAvailableFontsAsync` rather than guessing.
 | Section heading | 20 / 28 | 24 / 32 | 700 |
 | Card title | 18 / 26 | 18 / 26 | 600 |
 | Time in a card | 20 / 24 | 20 / 24 | 600 |
+| Ticket time | 44 / 48 | 36 / 40 | 700 |
+| Ticket date | 56 / 56 | 64 / 64 | 700 |
+| Ticket venue | 18 / 26 | 20 / 28 | 600 |
 | Body | 17 / 26 | 17 / 26 | 400 |
 | Secondary | 15 / 22 | 15 / 22 | 400 |
 | Tag and caption | 14 / 20 | 14 / 20 | 600 |
 
 Body is 17 and not 16 deliberately: the audience spans a wide age range and reads this
-outdoors. **No text anywhere goes below 14, with exactly one exemption.**
+outdoors.
+
+**Ticket time is the one role that gets smaller on a wider screen.** On a phone the start
+time carries the lesson ticket on its own, so it is set at 44 / 48. On desktop the ticket
+turns and the date hero sits beside it, so the time steps down to 36 / 40. The number has
+not become less important; it has stopped standing alone. This is the only inversion in
+the scale, and it applies to exactly one thing: the start time on the lesson ticket,
+always in `color.accentOnDark`. Do not cite it anywhere else.
+
+The other two ticket roles do not invert. **Ticket date** is the day numeral on the stub.
+It is the hero the time steps aside for on a wide screen, so it grows from 56 on a phone
+to 64 on desktop while the time shrinks. On a phone it must stay quieter than the gold
+start time, not louder: at 64 the white numeral out-shouts the one accent on the card,
+which is the thing the single-gold rule exists to protect. **Ticket venue** is the place
+name in the ticket's lower panel, and it is a
+role rather than a reuse of `Card title` because it is the one line a person going out
+tonight actually needs: it has to outrank the street, the city and the rabbi's title,
+which all sit at `Secondary` around it.
+
+**No text anywhere goes below 14, with exactly one exemption.**
 
 The exemption is the small line inside the date medallion, which is 12 / 16. It is named
 here rather than left as drift, and it is bounded on purpose: it applies only where the
@@ -374,6 +406,13 @@ either, the card shows a plain, soft placeholder background: no icon, no initial
 silhouette.** This replaces an earlier, stricter design-doc entry that assumed the admin
 form would always require a photo and so no fallback should exist at all. That entry was
 wrong; a rabbi without a photo is a real state the product must render, calmly.
+
+**The lesson page is the one exception, and it goes the other way: the poster slot closes
+entirely and the text takes the full width.** The rule above holds wherever a card sits in
+a grid or a rail and needs a uniform height. The lesson page has no grid to keep even, and
+a blank 132 by 176 panel in the middle of a plum field reads worse than no panel at all.
+Ratified 2026-09-07 after the lesson page was designed. This exemption is bounded to that
+one screen; anywhere else, the soft placeholder stands.
 
 ### No default city
 A first-time visitor sees lessons across **all areas**, not one default city. There is
