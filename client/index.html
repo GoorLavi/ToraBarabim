@@ -52,5 +52,11 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <!--
+      Cloudflare Web Analytics, injected by the analytics-beacon plugin in
+      vite.config.ts and only in a production build. See that plugin for why
+      a dev server must not carry it.
+    -->
+    %ANALYTICS_BEACON%
   </body>
 </html>
