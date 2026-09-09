@@ -89,3 +89,4 @@ The real alternatives and why each lost. If there was no alternative, say so.
 | [0019](0019-lower-the-admin-password-minimum-and-drop-the-bootstrap-script.md) | Lower the admin password minimum, and drop the bootstrap script | accepted |
 | [0020](0020-one-super-admin-gates-admin-management.md) | One super admin gates admin management | accepted |
 | [0021](0021-agents-read-aws-as-their-own-identity.md) | Agents read AWS as their own identity, never as the owner | accepted |
+| [0022](0022-visits-are-measured-by-cloudflare-web-analytics.md) | Visits are measured by Cloudflare Web Analytics, cookieless and without events | accepted |
