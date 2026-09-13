@@ -8,31 +8,22 @@ import { StateCard } from '~/components/StateCard/StateCard';
 import * as rabbiPageConsts from '~/RabbiPage/consts';
 import { RabbiPage } from '~/RabbiPage/RabbiPage';
 
-import { toRabbiDetailResponse } from '../../../../server/src/convertors/rabbi-directory';
-import { RabbiNotFoundError } from '../../../../server/src/service/rabbi/errors';
-import * as rabbiService from '../../../../server/src/service/rabbi/rabbi';
 import { SITE_ORIGIN } from '../../../consts';
 import * as consts from './consts';
+import { loadRabbiDetail } from './rabbi-detail.server';
 
 // The one loader in this migration that calls a service directly: same
 // process, same config and database connection the rest of the API uses,
 // no HTTP round trip back to this app's own server. Every other route
-// still fetches client-side through react-query, unchanged.
+// still fetches client-side through react-query, unchanged. The service
+// call itself lives in the sibling `.server` module (see there for why).
 export const loader = async ({ params }: LoaderFunctionArgs): Promise<RabbiDetailResponse> => {
   const { rabbiId } = params;
   if (!rabbiId) {
-    throw new Response('רב לא נמצא', { status: 404 });
+    throw new Response('רב לא נמצא', { status: 404, headers: { 'Cache-Control': 'no-store' } });
   }
 
-  try {
-    const record = await rabbiService.getById(rabbiId);
-    return toRabbiDetailResponse(record);
-  } catch (error) {
-    if (error instanceof RabbiNotFoundError) {
-      throw new Response('רב לא נמצא', { status: 404 });
-    }
-    throw error;
-  }
+  return loadRabbiDetail(rabbiId);
 };
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
@@ -55,10 +46,14 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 
 // Behind the CDN with a short, revalidated max-age: a rabbi's lesson count
 // and photo change rarely, so caching this for a minute keeps most requests
-// off this container without serving stale data for long.
-export const headers: HeadersFunction = () => ({
-  'Cache-Control': 'public, max-age=60, stale-while-revalidate=300',
-});
+// off this container without serving stale data for long. `errorHeaders`
+// carries whatever headers the loader's thrown Response set (React Router's
+// own signal that this match errored), which is why every throw in the
+// loader and in `rabbi-detail.server.ts` sets `Cache-Control: no-store`
+// itself: a transient failure such as the database being unreachable must
+// never sit in the CDN with the success caching below.
+export const headers: HeadersFunction = ({ errorHeaders }) =>
+  errorHeaders ?? { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300' };
 
 export default function RabbiRoute({ loaderData }: { loaderData: RabbiDetailResponse }) {
   // A scratch QueryClient, used only to build the payload `HydrationBoundary`
