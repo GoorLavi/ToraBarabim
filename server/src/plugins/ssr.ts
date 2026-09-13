@@ -64,16 +64,25 @@ export const registerSsr = async (app: FastifyInstance): Promise<void> => {
 
   const handleCatchAll = async (request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> => {
     const pathname = (request.raw.url ?? '/').split('?')[0] ?? '/';
-    if (request.method === 'GET' && STATIC_ASSET_PATTERN.test(pathname)) {
+    if ((request.method === 'GET' || request.method === 'HEAD') && STATIC_ASSET_PATTERN.test(pathname)) {
       return reply.sendFile(decodeURIComponent(pathname.replace(/^\//, '')));
     }
 
     const response = await handleDocumentRequest(toFetchRequest(request));
 
     reply.status(response.status);
+    // `Headers.forEach` joins repeated headers with a comma, which corrupts
+    // `Set-Cookie` (this app sets both an admin and a rabbi session cookie).
+    // `getSetCookie()` recovers the individual values; Fastify sends an array
+    // header value as one header line per entry rather than joining it.
     response.headers.forEach((value, key) => {
+      if (key.toLowerCase() === 'set-cookie') return;
       reply.header(key, value);
     });
+    const setCookies = response.headers.getSetCookie();
+    if (setCookies.length > 0) {
+      reply.header('set-cookie', setCookies);
+    }
 
     if (!response.body) {
       return reply.send();

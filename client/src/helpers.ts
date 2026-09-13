@@ -8,9 +8,11 @@ import type { Rabbi } from '@torabarabim/common';
 // Latin value (a Latin place name) rendering LTR.
 export const directionForValue = (value: string): 'rtl' | 'auto' => (value.trim() ? 'auto' : 'rtl');
 
-// Shared by every place that links to a rabbi's public page (RabbisPage's
-// index row, the home page rail, and the city page rail): the id alone
-// still resolves and redirects to the canonical URL server side, so an
-// empty slug falls back to it rather than producing a trailing slash.
+// The one place a rabbi's public path is built, from the id React Router
+// matches on and the slug that decorates it for a reader and for search
+// results. Hebrew is not ASCII on the wire, so both segments are
+// percent-encoded here; a caller never encodes either a second time. `Rabbi`
+// (common/src/rabbi.ts) guarantees `slug` is never empty, so there is no
+// bare-id fallback to fall back to.
 export const rabbiPath = (rabbi: Pick<Rabbi, 'id' | 'slug'>): string =>
-  rabbi.slug ? `/rabbis/${rabbi.id}/${encodeURIComponent(rabbi.slug)}` : `/rabbis/${rabbi.id}`;
+  `/rabbis/${encodeURIComponent(rabbi.id)}/${encodeURIComponent(rabbi.slug)}`;

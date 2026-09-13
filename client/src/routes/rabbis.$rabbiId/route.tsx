@@ -5,13 +5,13 @@ import type { HeadersFunction, LoaderFunctionArgs, MetaFunction } from 'react-ro
 import { isRouteErrorResponse, redirect, useRouteError } from 'react-router';
 
 import { StateCard } from '~/components/StateCard/StateCard';
+import { rabbiPath } from '~/helpers';
 import * as rabbiPageConsts from '~/RabbiPage/consts';
 import { RabbiPage } from '~/RabbiPage/RabbiPage';
 
 import { SITE_ORIGIN } from '../../../consts';
 import { PUBLIC_CACHE_HEADERS, UNCACHEABLE_ERROR_HEADERS } from '../consts';
 import * as consts from './consts';
-import { rabbiPagePath } from './helpers';
 import { loadRabbiDetail } from './rabbi-detail.server';
 
 // The one loader in this migration that calls a service directly: same
@@ -35,7 +35,7 @@ export const loader = async ({ params }: LoaderFunctionArgs): Promise<RabbiDetai
   // path. `headers()` is not consulted for a redirect (React Router returns
   // it before rendering), so the caching decision is made here instead.
   if (slug !== data.slug) {
-    throw redirect(rabbiPagePath(data.id, data.slug), { status: 301, headers: PUBLIC_CACHE_HEADERS });
+    throw redirect(rabbiPath(data), { status: 301, headers: PUBLIC_CACHE_HEADERS });
   }
 
   return data;
@@ -44,7 +44,7 @@ export const loader = async ({ params }: LoaderFunctionArgs): Promise<RabbiDetai
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   if (!data) return [];
 
-  const url = `${SITE_ORIGIN}${rabbiPagePath(data.id, data.slug)}`;
+  const url = `${SITE_ORIGIN}${rabbiPath(data)}`;
   const title = consts.pageTitle(data.name);
   const description = consts.pageDescription(data);
 
