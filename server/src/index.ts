@@ -4,6 +4,7 @@ import Fastify from 'fastify';
 
 import { registerAdminRoutes } from './api/admin';
 import { registerAdminAuthRoutes } from './api/admin/auth';
+import { registerAreaRoutes } from './api/areas';
 import { registerCityRoutes } from './api/cities';
 import { registerHealthRoutes } from './api/health';
 import { registerHomeRoutes } from './api/home';
@@ -48,6 +49,7 @@ const start = async (): Promise<void> => {
   await registerLessonRoutes(app);
   await registerHomeRoutes(app);
   await registerCityRoutes(app);
+  await registerAreaRoutes(app);
   await registerRabbiDirectoryRoutes(app);
   await registerAdminAuthRoutes(app);
   await registerAdminRoutes(app);

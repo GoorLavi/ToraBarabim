@@ -1,5 +1,6 @@
 export * from './admin';
 export * from './area';
+export * from './area-directory';
 export * from './city';
 export * from './city-directory';
 export * from './home';

@@ -18,7 +18,7 @@ export const toCityList = (records: ResolvedCity[]): { items: City[] } => ({
   items: records.map(toCity),
 });
 
-const toCityWithLessonCount = (record: CityWithLessonCountResult): CityWithLessonCount => ({
+export const toCityWithLessonCount = (record: CityWithLessonCountResult): CityWithLessonCount => ({
   ...toCity(record),
   lessonCount: record.lessonCount,
 });

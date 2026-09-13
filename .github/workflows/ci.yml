@@ -36,6 +36,82 @@ jobs:
 
       - run: npm run build --workspace client
 
+  # A sibling job rather than a step of typecheck-and-build: it needs its
+  # own Postgres and MinIO, and keeping it separate means a slow seed never
+  # delays the type-check/build feedback, and the two run in parallel.
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: torabarabim
+          POSTGRES_PASSWORD: torabarabim
+          POSTGRES_DB: torabarabim_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U torabarabim -d torabarabim_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      PORT: 3000
+      HOST: 0.0.0.0
+      CORS_ORIGINS: http://localhost:5173
+      LOG_LEVEL: error
+      DATABASE_URL: postgres://torabarabim:torabarabim@localhost:5432/torabarabim_test
+      SESSION_SECRET: ci-only-session-secret-at-least-32-characters-long
+      SESSION_TTL_HOURS: 168
+      STORAGE_ENDPOINT: http://localhost:9000
+      STORAGE_REGION: us-east-1
+      STORAGE_BUCKET: torabarabim-ci
+      STORAGE_ACCESS_KEY_ID: ci-test-access-key
+      STORAGE_SECRET_ACCESS_KEY: ci-test-secret-key
+      STORAGE_PUBLIC_BASE_URL: http://localhost:9000/torabarabim-ci
+      MAX_UPLOAD_BYTES: 5000000
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      # `db:migrate`/`db:seed` read the repo-root `.env` via `--env-file`
+      # (server/CLAUDE.md, "No entry point loads the environment itself"),
+      # so this job's own env above is written out to that file, letting the
+      # exact same scripts run here as on a developer machine.
+      - name: Write .env for the migration and seed scripts
+        run: |
+          env | grep -E '^(PORT|HOST|CORS_ORIGINS|LOG_LEVEL|DATABASE_URL|SESSION_SECRET|SESSION_TTL_HOURS|STORAGE_[A-Z_]+|MAX_UPLOAD_BYTES)=' > .env
+
+      # The `services:` block above cannot pass MinIO's required `server
+      # /data` command, so it is started by hand on the runner's own network,
+      # reachable at localhost:9000 exactly like docker-compose.dev.yml does
+      # locally.
+      - name: Start MinIO
+        run: |
+          docker run -d --name minio --network host \
+            -e MINIO_ROOT_USER="$STORAGE_ACCESS_KEY_ID" \
+            -e MINIO_ROOT_PASSWORD="$STORAGE_SECRET_ACCESS_KEY" \
+            minio/minio server /data
+          until curl -sf http://localhost:9000/minio/health/live; do sleep 1; done
+
+      - name: Create the MinIO bucket
+        run: |
+          export AWS_ACCESS_KEY_ID="$STORAGE_ACCESS_KEY_ID"
+          export AWS_SECRET_ACCESS_KEY="$STORAGE_SECRET_ACCESS_KEY"
+          aws --endpoint-url "$STORAGE_ENDPOINT" s3 mb "s3://$STORAGE_BUCKET"
+
+      - run: npm run db:migrate -w server
+
+      - run: npm run db:seed -w server
+
+      - run: npm test -w server
+
   # Named so it reads as a statement on its own in the PR's checks list,
   # without anyone having to open it to learn what it found. A comment on
   # the PR is the louder of the two signals the brief allows for: it shows
