@@ -37,8 +37,8 @@ jobs:
       - run: npm run build --workspace client
 
   # A sibling job rather than a step of typecheck-and-build: it needs its
-  # own Postgres and MinIO, and keeping it separate means a slow seed never
-  # delays the type-check/build feedback, and the two run in parallel.
+  # own Postgres, and keeping it separate means a slow seed never delays the
+  # type-check/build feedback, and the two run in parallel.
   test:
     runs-on: ubuntu-latest
     services:
@@ -88,27 +88,14 @@ jobs:
         run: |
           env | grep -E '^(PORT|HOST|CORS_ORIGINS|LOG_LEVEL|DATABASE_URL|SESSION_SECRET|SESSION_TTL_HOURS|STORAGE_[A-Z_]+|MAX_UPLOAD_BYTES)=' > .env
 
-      # The `services:` block above cannot pass MinIO's required `server
-      # /data` command, so it is started by hand on the runner's own network,
-      # reachable at localhost:9000 exactly like docker-compose.dev.yml does
-      # locally.
-      - name: Start MinIO
-        run: |
-          docker run -d --name minio --network host \
-            -e MINIO_ROOT_USER="$STORAGE_ACCESS_KEY_ID" \
-            -e MINIO_ROOT_PASSWORD="$STORAGE_SECRET_ACCESS_KEY" \
-            minio/minio server /data
-          until curl -sf http://localhost:9000/minio/health/live; do sleep 1; done
-
-      - name: Create the MinIO bucket
-        run: |
-          export AWS_ACCESS_KEY_ID="$STORAGE_ACCESS_KEY_ID"
-          export AWS_SECRET_ACCESS_KEY="$STORAGE_SECRET_ACCESS_KEY"
-          aws --endpoint-url "$STORAGE_ENDPOINT" s3 mb "s3://$STORAGE_BUCKET"
-
       - run: npm run db:migrate -w server
 
-      - run: npm run db:seed -w server
+      # No object storage in this job (see db:seed:no-photos in
+      # server/package.json): the public-api suite never uploads or fetches
+      # an image, so every seeded rabbi uses the missing-photo fallback
+      # instead. The STORAGE_* env above is still required for config.ts to
+      # validate at boot, even though nothing calls storage.put here.
+      - run: npm run db:seed:no-photos -w server
 
       - run: npm test -w server
 

@@ -13,6 +13,7 @@
     "db:generate": "node --env-file=../.env ../node_modules/.bin/drizzle-kit generate",
     "db:migrate": "node --env-file=../.env ../node_modules/.bin/drizzle-kit migrate",
     "db:seed": "tsx --env-file=../.env src/db/seed.ts",
+    "db:seed:no-photos": "tsx --env-file=../.env src/db/seed.ts --skip-portraits",
     "db:seed:cities-only": "tsx --env-file=../.env src/db/seed-cities-only.ts",
     "admin:promote-super": "tsx --env-file=../.env src/scripts/promote-super-admin.ts"
   },
