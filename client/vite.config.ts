@@ -1,9 +1,9 @@
 import { fileURLToPath } from 'node:url';
 
-import react from '@vitejs/plugin-react';
+import { reactRouter } from '@react-router/dev/vite';
 import { defineConfig, type Plugin } from 'vite';
 
-import { CLOUDFLARE_ANALYTICS_TOKEN, SITE_ORIGIN } from './consts';
+import { SITE_ORIGIN } from './consts';
 
 const robotsTxt = `User-agent: *
 Allow: /
@@ -22,36 +22,31 @@ const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
 
 // Placeholder sitemap: one entry because one public URL exists today. Grows
 // to one entry per city and per rabbi page once those routes ship.
+// `%SITE_ORIGIN%` text substitution is gone with index.html: root.tsx and
+// each route's `meta` now interpolate SITE_ORIGIN directly in JS.
 const seoFiles = (): Plugin => ({
   name: 'seo-files',
-  transformIndexHtml: (html) => html.replaceAll('%SITE_ORIGIN%', SITE_ORIGIN),
   generateBundle() {
     this.emitFile({ type: 'asset', fileName: 'robots.txt', source: robotsTxt });
     this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: sitemapXml });
   },
 });
 
-// `spa: true` is required rather than optional: after the first document load
-// every navigation is a history.pushState, and without the flag the beacon
-// reports only the URL the reader entered on, so the top-pages report
-// collapses to a single row.
-const beaconTag = `<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "${CLOUDFLARE_ANALYTICS_TOKEN}", "spa": true}'></script>`;
-
-// Fail closed in dev: `ctx.server` is set only while Vite is serving, and
-// there the placeholder resolves to nothing. The token is the production
-// site's, so a tag left in a dev server would report localhost page views
-// into the real dashboard.
-const analyticsBeacon = (): Plugin => ({
-  name: 'analytics-beacon',
-  transformIndexHtml: (html, ctx) => html.replaceAll('%ANALYTICS_BEACON%', ctx.server ? '' : beaconTag),
-});
-
 export default defineConfig({
-  plugins: [react(), seoFiles(), analyticsBeacon()],
+  plugins: [reactRouter(), seoFiles()],
   resolve: {
     alias: {
       '~': fileURLToPath(new URL('./src', import.meta.url)),
     },
+  },
+  ssr: {
+    // styled-components ships old-style dual entry points (`main` for CJS,
+    // `module` for ESM) with no `exports` map. Left external, Vite's server
+    // bundle resolves it one way for its own analysis and requires it
+    // another way at runtime, so the default-export interop breaks
+    // (`styled.default.div is not a function`). Bundling it here routes both
+    // through Vite's own, consistent interop instead.
+    noExternal: ['styled-components'],
   },
   server: {
     port: 5173,
