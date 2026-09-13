@@ -6,6 +6,7 @@ import { loadConfig } from '../../config';
 import { db } from '../../db/client';
 import { lessonExceptions, lessons, rabbis } from '../../db/schema';
 import storage from '../../storage/storage';
+import { toRabbiSummary } from '../shared/rabbi-summary';
 import { PhotoTooLargeError, RabbiDeleteConfirmationRequiredError, RabbiNotFoundError, UnsupportedPhotoTypeError } from './errors';
 import type {
   CreateRabbiInput,
@@ -23,11 +24,7 @@ const escapeLikePattern = (value: string): string => value.replace(/[\\%_]/g, (c
 type RabbiRow = typeof rabbis.$inferSelect;
 
 const toRecord = (row: RabbiRow): RabbiRecord => ({
-  id: row.id,
-  name: row.name,
-  title: row.title ?? undefined,
-  photoUrl: row.photoUrl ?? undefined,
-  bio: row.bio ?? undefined,
+  ...toRabbiSummary(row),
   prominence: row.prominence,
 });
 

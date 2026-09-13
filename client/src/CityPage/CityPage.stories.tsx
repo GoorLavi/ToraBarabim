@@ -2,6 +2,8 @@ import type { CityDetailResponse, LessonOccurrence } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Route, Routes } from 'react-router-dom';
 
+import { rabbiFixture } from '~/rabbiFixture';
+
 import { CityPage } from './CityPage';
 
 // No live API in Storybook's own preview server: see RabbiPage.stories.tsx
@@ -27,9 +29,9 @@ const cityDetail = (overrides: Partial<CityDetailResponse>): CityDetailResponse 
   area: 'haifa',
   areaName: 'חיפה והקריות',
   rabbis: [
-    { id: 'r1', name: 'הרב אברהם כהן', title: 'ראש ישיבה', photoUrl: 'https://example.invalid/r1.jpg' },
-    { id: 'r2', name: 'הרב משה לוי' },
-    { id: 'r3', name: 'הרב נתן צבי אשכנזי הכהן', photoUrl: 'https://example.invalid/r3.jpg' },
+    rabbiFixture({ id: 'r1', name: 'הרב אברהם כהן', title: 'ראש ישיבה', photoUrl: 'https://example.invalid/r1.jpg' }),
+    rabbiFixture({ id: 'r2', name: 'הרב משה לוי' }),
+    rabbiFixture({ id: 'r3', name: 'הרב נתן צבי אשכנזי הכהן', photoUrl: 'https://example.invalid/r3.jpg' }),
   ],
   ...overrides,
 });
@@ -43,7 +45,7 @@ const lesson = (overrides: Partial<LessonOccurrence>): LessonOccurrence => ({
   title: 'עיונים בפרשת השבוע',
   topic: 'parasha',
   audience: 'mixed',
-  rabbi: { id: 'r1', name: 'הרב אברהם כהן' },
+  rabbi: rabbiFixture({ id: 'r1', name: 'הרב אברהם כהן' }),
   place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'חיפה', area: 'haifa' },
   ...overrides,
 });
@@ -68,7 +70,7 @@ installMockFetch((url) => {
       return jsonResponse(200, {
         items: [
           lesson({ lessonId: 'l1', date: '2026-09-10', startTime: '20:30' }),
-          lesson({ lessonId: 'l2', date: '2026-09-10', startTime: '06:00', rabbi: { id: 'r2', name: 'הרב משה לוי' } }),
+          lesson({ lessonId: 'l2', date: '2026-09-10', startTime: '06:00', rabbi: rabbiFixture({ id: 'r2', name: 'הרב משה לוי' }) }),
           lesson({ lessonId: 'l3', date: '2026-09-13', startTime: '19:00', audience: 'women', title: undefined, topic: undefined }),
         ],
         page: 1,
@@ -81,7 +83,13 @@ installMockFetch((url) => {
     }
     if (url.searchParams.get('area') === 'north') {
       return jsonResponse(200, {
-        items: [lesson({ lessonId: 'a1', rabbi: { id: 'r9', name: 'הרב שמעון אזולאי' }, place: { name: 'בית מדרש', street: 'הרצל 1', city: 'טבריה', area: 'north' } })],
+        items: [
+          lesson({
+            lessonId: 'a1',
+            rabbi: rabbiFixture({ id: 'r9', name: 'הרב שמעון אזולאי' }),
+            place: { name: 'בית מדרש', street: 'הרצל 1', city: 'טבריה', area: 'north' },
+          }),
+        ],
         page: 1,
         pageSize: 24,
         total: 1,

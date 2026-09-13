@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { rabbiPath } from '~/helpers';
+
 import type { RabbiAvatarProps } from './models';
 import * as styles from './styles';
 
@@ -12,7 +14,7 @@ import * as styles from './styles';
 // nothing else, so the photo is decorative (`alt=""`) rather than repeating
 // the name a screen reader already announces from the link text.
 export const RabbiAvatar = styled(({ className, rabbi }: RabbiAvatarProps) => (
-  <Link to={`/rabbis/${rabbi.id}`} className={className}>
+  <Link to={rabbiPath(rabbi)} className={className}>
     {rabbi.photoUrl ? (
       <img className="photo" src={rabbi.photoUrl} alt="" />
     ) : (

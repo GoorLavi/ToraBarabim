@@ -3,6 +3,7 @@ import type { RabbiDetailResponse } from '@torabarabim/common';
 import { toRabbiDetailResponse } from '../../../../server/src/convertors/rabbi-directory';
 import { RabbiNotFoundError } from '../../../../server/src/service/rabbi/errors';
 import * as rabbiService from '../../../../server/src/service/rabbi/rabbi';
+import { UNCACHEABLE_ERROR_HEADERS } from '../consts';
 
 // The `.server` suffix is React Router's build-time boundary: a module named
 // this way cannot be imported into a client bundle without a build error, so
@@ -11,9 +12,8 @@ import * as rabbiService from '../../../../server/src/service/rabbi/rabbi';
 
 // A bare thrown Error carries no headers, so the route's `headers()` export
 // (which reads `errorHeaders`) has nothing to read on that path; both
-// failures here are thrown as a Response carrying this header instead, so an
-// error response never sits behind the CDN's success caching.
-const UNCACHEABLE_ERROR_HEADERS = { 'Cache-Control': 'no-store' };
+// failures here are thrown as a Response carrying `UNCACHEABLE_ERROR_HEADERS`
+// instead, so an error response never sits behind the CDN's success caching.
 
 export const loadRabbiDetail = async (rabbiId: string): Promise<RabbiDetailResponse> => {
   try {

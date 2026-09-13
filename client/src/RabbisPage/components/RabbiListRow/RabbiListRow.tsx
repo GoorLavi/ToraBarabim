@@ -2,6 +2,8 @@ import classNames from 'classnames';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { rabbiPath } from '~/helpers';
+
 import { rabbiMetaLine } from './helpers';
 import type { RabbiListRowProps } from './models';
 import * as styles from './styles';
@@ -10,7 +12,7 @@ import * as styles from './styles';
 // data), so it renders exactly as given: never prepended, never re-sorted
 // (design spec, "all-rabbis, the index").
 export const RabbiListRow = styled(({ className, rabbi }: RabbiListRowProps) => (
-  <Link to={`/rabbis/${rabbi.id}`} className={className}>
+  <Link to={rabbiPath(rabbi)} className={className}>
     <div className={classNames('avatar', { placeholder: !rabbi.photoUrl })}>
       {rabbi.photoUrl && <img className="photo" src={rabbi.photoUrl} alt="" />}
     </div>

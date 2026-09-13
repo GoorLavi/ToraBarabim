@@ -12,6 +12,7 @@ import { registerRabbiDirectoryRoutes } from '../src/api/rabbis';
 import { db } from '../src/db/client';
 import { registerErrorHandler } from '../src/plugins/error-handler';
 import { nextDateOnWeekday, todayInIsrael } from '../src/service/lesson/israel-time';
+import { toSlug } from '../src/service/shared/slug';
 
 // `db`'s exported type (`server/src/db/client.ts`) is annotated as
 // `PostgresJsDatabase`, which omits `$client`, but drizzle-orm's postgres-js
@@ -61,6 +62,7 @@ const SUNDAY_TO_THURSDAY_LESSON_ID = 'lesson-1';
 const SEEDED_CITY_NAME = 'ירושלים';
 const SEEDED_CITY_PREFIX = 'ירוש';
 const SEEDED_CITY_RABBI_ID = 'rabbi-3';
+const SEEDED_CITY_RABBI_NAME = 'הרב יעקב מזרחי';
 
 describe('public API', () => {
   let app: FastifyInstance;
@@ -150,6 +152,10 @@ describe('public API', () => {
       assert.equal(body.lessonId, SUNDAY_TO_THURSDAY_LESSON_ID);
       assert.equal(body.date, date);
       assert.equal(body.rabbi.id, 'rabbi-1');
+      // A `Rabbi` embedded in another response (here, a lesson occurrence)
+      // carries `slug` too, not only the standalone rabbi endpoints.
+      assert.equal(body.rabbi.name, SEEDED_RABBI_NAME);
+      assert.equal(body.rabbi.slug, toSlug(SEEDED_RABBI_NAME));
     });
 
     test('a genuinely missing lesson returns 404', async () => {
@@ -222,10 +228,16 @@ describe('public API', () => {
       const res = await app.inject({ method: 'GET', url: `/v1/cities/${encodeURIComponent(SEEDED_CITY_NAME)}` });
       assert.equal(res.statusCode, 200);
 
-      const body = res.json() as { name: string; areaName: string; rabbis: { id: string }[] };
+      const body = res.json() as { name: string; areaName: string; rabbis: { id: string; name: string; slug: string }[] };
       assert.equal(body.name, SEEDED_CITY_NAME);
       assert.equal(typeof body.areaName, 'string');
-      assert.ok(body.rabbis.some((rabbi) => rabbi.id === SEEDED_CITY_RABBI_ID));
+
+      const rabbi = body.rabbis.find((candidate) => candidate.id === SEEDED_CITY_RABBI_ID);
+      assert.ok(rabbi);
+      // A `Rabbi` embedded in another response (here, a city's rabbi list)
+      // carries `slug` too, not only the standalone rabbi endpoints.
+      assert.equal(rabbi.name, SEEDED_CITY_RABBI_NAME);
+      assert.equal(rabbi.slug, toSlug(SEEDED_CITY_RABBI_NAME));
     });
 
     test('a genuinely missing city returns 404', async () => {
@@ -248,6 +260,9 @@ describe('public API', () => {
       assert.ok(rabbi);
       assert.ok(rabbi.lessonCount > 0);
       assert.ok(rabbi.cities.length > 0);
+      assert.equal(typeof rabbi.slug, 'string');
+      assert.ok(rabbi.slug.length > 0);
+      assert.equal(rabbi.slug, toSlug(SEEDED_RABBI_NAME));
     });
 
     test('rejects a non-numeric page size', async () => {
@@ -265,6 +280,9 @@ describe('public API', () => {
       assert.equal(body.id, SEEDED_RABBI_ID);
       assert.equal(body.name, SEEDED_RABBI_NAME);
       assert.ok(body.lessonCount > 0);
+      assert.equal(typeof body.slug, 'string');
+      assert.ok(body.slug.length > 0);
+      assert.equal(body.slug, toSlug(SEEDED_RABBI_NAME));
     });
 
     test('a genuinely missing rabbi returns 404', async () => {

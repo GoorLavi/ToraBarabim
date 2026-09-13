@@ -6,6 +6,7 @@ import { loadConfig } from '../../config';
 import { db } from '../../db/client';
 import { rabbis } from '../../db/schema';
 import storage from '../../storage/storage';
+import { toRabbiSummary } from '../shared/rabbi-summary';
 import { PhotoTooLargeError, RabbiNotFoundError, UnsupportedPhotoTypeError } from './errors';
 import type { RabbiProfileRecord, UpdateRabbiProfileInput } from './models';
 
@@ -13,13 +14,7 @@ type RabbiRow = typeof rabbis.$inferSelect;
 
 // Never includes `prominence`: this is the rabbi's own view of himself,
 // and that field must not appear on any response he can see.
-const toRecord = (row: RabbiRow): RabbiProfileRecord => ({
-  id: row.id,
-  name: row.name,
-  title: row.title ?? undefined,
-  photoUrl: row.photoUrl ?? undefined,
-  bio: row.bio ?? undefined,
-});
+const toRecord = (row: RabbiRow): RabbiProfileRecord => toRabbiSummary(row);
 
 export const getOwn = async (rabbiId: string): Promise<RabbiProfileRecord> => {
   const rows = await db.select().from(rabbis).where(eq(rabbis.id, rabbiId)).limit(1);

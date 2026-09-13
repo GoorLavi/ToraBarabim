@@ -2,14 +2,16 @@ import { useState } from 'react';
 import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query';
 import type { RabbiDetailResponse } from '@torabarabim/common';
 import type { HeadersFunction, LoaderFunctionArgs, MetaFunction } from 'react-router';
-import { isRouteErrorResponse, useRouteError } from 'react-router';
+import { isRouteErrorResponse, redirect, useRouteError } from 'react-router';
 
 import { StateCard } from '~/components/StateCard/StateCard';
 import * as rabbiPageConsts from '~/RabbiPage/consts';
 import { RabbiPage } from '~/RabbiPage/RabbiPage';
 
 import { SITE_ORIGIN } from '../../../consts';
+import { PUBLIC_CACHE_HEADERS, UNCACHEABLE_ERROR_HEADERS } from '../consts';
 import * as consts from './consts';
+import { rabbiPagePath } from './helpers';
 import { loadRabbiDetail } from './rabbi-detail.server';
 
 // The one loader in this migration that calls a service directly: same
@@ -18,18 +20,31 @@ import { loadRabbiDetail } from './rabbi-detail.server';
 // still fetches client-side through react-query, unchanged. The service
 // call itself lives in the sibling `.server` module (see there for why).
 export const loader = async ({ params }: LoaderFunctionArgs): Promise<RabbiDetailResponse> => {
-  const { rabbiId } = params;
+  const { rabbiId, slug } = params;
   if (!rabbiId) {
-    throw new Response('רב לא נמצא', { status: 404, headers: { 'Cache-Control': 'no-store' } });
+    throw new Response('רב לא נמצא', { status: 404, headers: UNCACHEABLE_ERROR_HEADERS });
   }
 
-  return loadRabbiDetail(rabbiId);
+  const data = await loadRabbiDetail(rabbiId);
+
+  // Resolution is by id alone; the slug is decoration for the reader and
+  // for search results. A bare-id link, a typo, or a rabbi whose name (and
+  // therefore slug) changed since a link was shared all land here with a
+  // slug that does not match the current one, and all get the same
+  // permanent redirect to the current canonical URL, never a second render
+  // path. `headers()` is not consulted for a redirect (React Router returns
+  // it before rendering), so the caching decision is made here instead.
+  if (slug !== data.slug) {
+    throw redirect(rabbiPagePath(data.id, data.slug), { status: 301, headers: PUBLIC_CACHE_HEADERS });
+  }
+
+  return data;
 };
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   if (!data) return [];
 
-  const url = `${SITE_ORIGIN}/rabbis/${encodeURIComponent(data.id)}`;
+  const url = `${SITE_ORIGIN}${rabbiPagePath(data.id, data.slug)}`;
   const title = consts.pageTitle(data.name);
   const description = consts.pageDescription(data);
 
@@ -52,8 +67,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 // loader and in `rabbi-detail.server.ts` sets `Cache-Control: no-store`
 // itself: a transient failure such as the database being unreachable must
 // never sit in the CDN with the success caching below.
-export const headers: HeadersFunction = ({ errorHeaders }) =>
-  errorHeaders ?? { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300' };
+export const headers: HeadersFunction = ({ errorHeaders }) => errorHeaders ?? PUBLIC_CACHE_HEADERS;
 
 export default function RabbiRoute({ loaderData }: { loaderData: RabbiDetailResponse }) {
   // A scratch QueryClient, used only to build the payload `HydrationBoundary`

@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { HomeApiError } from '~/HomePage/api';
 import { addDays, todayInIsrael } from '~/HomePage/helpers';
+import { rabbiFixture } from '~/rabbiFixture';
 
 import { LessonsSection } from './LessonsSection';
 import type { LessonSearchQueryState } from './models';
@@ -20,7 +21,7 @@ const todayItems: LessonOccurrence[] = [
     title: 'עיונים בפרשת השבוע',
     topic: 'parasha',
     audience: 'mixed',
-    rabbi: { id: 'rabbi-1', name: 'הרב יעקב מזרחי', title: 'דיין' },
+    rabbi: rabbiFixture({ id: 'rabbi-1', name: 'הרב יעקב מזרחי', title: 'דיין' }),
     place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'נתניה', area: 'sharon' },
   },
   {
@@ -32,7 +33,7 @@ const todayItems: LessonOccurrence[] = [
     title: 'דף יומי',
     topic: 'gemara',
     audience: 'men',
-    rabbi: { id: 'rabbi-2', name: 'הרב אברהם כהן', title: 'ראש ישיבה' },
+    rabbi: rabbiFixture({ id: 'rabbi-2', name: 'הרב אברהם כהן', title: 'ראש ישיבה' }),
     place: { name: 'בית הכנסת "אוהל יעקב"', street: 'רחוב הרב קוק 12', city: 'נתניה', area: 'sharon' },
   },
 ];
@@ -47,7 +48,7 @@ const futureDayItems: LessonOccurrence[] = [
     title: 'שיעור פתוח',
     topic: 'other',
     audience: 'women',
-    rabbi: { id: 'rabbi-4', name: 'הרב שלמה אביטן' },
+    rabbi: rabbiFixture({ id: 'rabbi-4', name: 'הרב שלמה אביטן' }),
     place: { name: 'בית הכנסת "אור החיים"', street: 'רחוב טרומפלדור 5', city: 'נתניה', area: 'south' },
   },
 ];

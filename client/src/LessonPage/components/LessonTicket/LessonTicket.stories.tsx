@@ -1,6 +1,8 @@
 import type { LessonOccurrence } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
+import { rabbiFixture } from '~/rabbiFixture';
+
 import { LessonTicket } from './LessonTicket';
 
 // A minimal, valid SVG portrait so every photo story stays off the network.
@@ -19,7 +21,7 @@ const baseOccurrence: LessonOccurrence = {
   title: 'עיונים בפרשת השבוע',
   topic: 'parasha',
   audience: 'mixed',
-  rabbi: { id: 'rabbi-1', name: 'הרב יעקב מזרחי', title: 'דיין', photoUrl: PLACEHOLDER_PHOTO },
+  rabbi: rabbiFixture({ id: 'rabbi-1', name: 'הרב יעקב מזרחי', title: 'דיין', photoUrl: PLACEHOLDER_PHOTO }),
   place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'נתניה', area: 'sharon' },
 };
 
@@ -44,7 +46,7 @@ export const RequiredOnly: Story = {
       endTime: '19:45',
       status: 'scheduled',
       audience: 'men',
-      rabbi: { id: 'rabbi-4', name: 'הרב שלמה אביטן' },
+      rabbi: rabbiFixture({ id: 'rabbi-4', name: 'הרב שלמה אביטן' }),
       place: { name: 'בית מדרש אור החיים', street: 'רחוב טרומפלדור 5', city: 'באר שבע', area: 'south' },
     },
   },
@@ -70,14 +72,14 @@ export const SubstituteRabbi: Story = {
   args: {
     occurrence: {
       ...baseOccurrence,
-      substituteRabbi: { id: 'rabbi-7', name: 'הרב אליהו וקנין', photoUrl: PLACEHOLDER_PHOTO },
+      substituteRabbi: rabbiFixture({ id: 'rabbi-7', name: 'הרב אליהו וקנין', photoUrl: PLACEHOLDER_PHOTO }),
     },
   },
 };
 
 export const NoPhoto: Story = {
   args: {
-    occurrence: { ...baseOccurrence, rabbi: { id: 'rabbi-2', name: 'הרב שלמה אביטן' } },
+    occurrence: { ...baseOccurrence, rabbi: rabbiFixture({ id: 'rabbi-2', name: 'הרב שלמה אביטן' }) },
   },
 };
 
@@ -85,12 +87,12 @@ export const LongNames: Story = {
   args: {
     occurrence: {
       ...baseOccurrence,
-      rabbi: {
+      rabbi: rabbiFixture({
         id: 'rabbi-long',
         name: 'הרב פרופסור יהודה אריה לייב הכהן שוורצנברג-אייזנשטיין מבית מדרשם של רבותינו הראשונים',
         title: 'ראש ישיבה וחבר בית הדין הגדול',
         photoUrl: PLACEHOLDER_PHOTO,
-      },
+      }),
       place: {
         name: 'בית הכנסת הגדול "היכל התורה והתפילה"',
         street: 'רחוב הרב קוק הראשי 128',

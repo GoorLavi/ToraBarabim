@@ -3,6 +3,7 @@ import { and, eq, gte, inArray, lte } from 'drizzle-orm';
 
 import { db } from '../../db/client';
 import { cities, lessonExceptions, lessons, rabbis } from '../../db/schema';
+import { toRabbiSummary as toRabbi } from '../shared/rabbi-summary';
 import { DEFAULT_RANGE_DAYS, MAX_RANGE_DAYS } from './consts';
 import { InvalidDateRangeError, LessonNotFoundError, LessonOccurrenceNotFoundError } from './errors';
 import { addDays, compareIsoDates, daysBetween, todayInIsrael } from './israel-time';
@@ -101,16 +102,6 @@ const toPlace = (place: LessonPlace, cityByCode: Map<number, CityRow>): Place =>
   }
   return { name: place.name, street: place.street, floor: place.floor, city: city.nameHe, area: city.area };
 };
-
-type RabbiRow = typeof rabbis.$inferSelect;
-
-const toRabbi = (row: RabbiRow): Rabbi => ({
-  id: row.id,
-  name: row.name,
-  title: row.title ?? undefined,
-  photoUrl: row.photoUrl ?? undefined,
-  bio: row.bio ?? undefined,
-});
 
 const STATUS_ORDER = { scheduled: 0, cancelled: 1 } as const;
 
