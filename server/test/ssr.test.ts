@@ -1,78 +1,16 @@
 import assert from 'node:assert/strict';
-import { readdir } from 'node:fs/promises';
 import { after, before, describe, test } from 'node:test';
 
 import type { CityDirectoryResponse } from '@torabarabim/common';
-import Fastify, { type FastifyInstance } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 
-import { registerCityRoutes } from '../src/api/cities';
-import { registerHealthRoutes } from '../src/api/health';
 import { HEALTH_RENDER_PROBE_PATH } from '../src/api/health/consts';
-import { registerHomeRoutes } from '../src/api/home';
-import { registerLessonRoutes } from '../src/api/lessons';
-import { registerRabbiDirectoryRoutes } from '../src/api/rabbis';
-import { db } from '../src/db/client';
-import { registerErrorHandler } from '../src/plugins/error-handler';
-import { CLIENT_BUILD_DIR, registerSsr } from '../src/plugins/ssr';
 
 // Read-only: the one constant this suite needs from the client workspace, to
 // assert a document's canonical against the same origin the route modules
 // build it from rather than a second, hand-typed copy of the domain.
 import { SITE_ORIGIN } from '../../client/consts';
-
-// Same guards, same rationale, same shape as public-api.test.ts: a missing
-// or unreachable Postgres, or a missing client build, must fail this whole
-// suite loudly with a fix in hand rather than as a wall of unrelated
-// timeouts. Duplicated rather than imported from that file because the brief
-// for this suite is explicit that it mirrors, rather than shares, that
-// file's shape; see this repo's Scope and Boundaries rule on lifting
-// duplication once a second caller exists, which now applies here and is
-// worth the human's judgment on whether to extract a `server/test/` helper.
-type RawPostgresClient = (strings: TemplateStringsArray, ...values: unknown[]) => Promise<unknown>;
-const rawClient = (db as unknown as { $client: RawPostgresClient & { end: (options?: { timeout?: number }) => Promise<void> } }).$client;
-
-const assertDatabaseReachable = async (): Promise<void> => {
-  try {
-    await rawClient`select 1`;
-  } catch (cause) {
-    throw new Error(
-      'Expected a reachable, seeded Postgres at DATABASE_URL for the SSR suite. ' +
-        'Run `npm run db:up && npm run db:migrate -w server && npm run db:seed -w server` first.',
-      { cause },
-    );
-  }
-};
-
-const assertClientBuilt = async (): Promise<void> => {
-  try {
-    const entries = await readdir(CLIENT_BUILD_DIR);
-    if (entries.length === 0) throw new Error('client build directory is empty');
-  } catch (cause) {
-    throw new Error(
-      `Expected a built client at ${CLIENT_BUILD_DIR}. Run \`npm run build -w client\` first.`,
-      { cause },
-    );
-  }
-};
-
-// Mirrors public-api.test.ts's buildApp, including the SSR plugin mounted
-// last: this suite is entirely about the catch-all it registers, so there is
-// no version of this file that could skip it. A test build that mounted a
-// health route without also mounting SSR is exactly how the health check
-// passed once for the wrong reason (see the `/health` suite below): the
-// probe path matched nothing, Fastify answered its own 404, and the check
-// never proved a render happened.
-const buildApp = async (): Promise<FastifyInstance> => {
-  const app = Fastify({ logger: false });
-  await registerHealthRoutes(app);
-  await registerLessonRoutes(app);
-  await registerHomeRoutes(app);
-  await registerCityRoutes(app);
-  await registerRabbiDirectoryRoutes(app);
-  await registerSsr(app);
-  registerErrorHandler(app);
-  return app;
-};
+import { assertClientBuilt, assertDatabaseReachable, buildApp, rawClient } from './app-harness';
 
 const extractTitle = (html: string): string => {
   const match = /<title>([^<]*)<\/title>/.exec(html);
@@ -91,6 +29,12 @@ describe('SSR rendering seam', () => {
 
   before(async () => {
     await Promise.all([assertDatabaseReachable(), assertClientBuilt()]);
+    // `buildApp` mounts the SSR plugin last, which this suite depends on
+    // entirely: it is the catch-all route under test. A build that mounted a
+    // health route without also mounting SSR is exactly how the health check
+    // passed once for the wrong reason (see the `/health` suite below): the
+    // probe path matched nothing, Fastify answered its own 404, and the check
+    // never proved a render happened.
     app = await buildApp();
   });
 

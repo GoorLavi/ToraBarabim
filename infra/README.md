@@ -117,13 +117,19 @@ both alias records) or entirely absent from the stack. `bin/infra.ts` accepts a 
 `domain` context value but rejects an empty string, so an empty `-c domain=` cannot
 silently produce a half-built site.
 
-**Attaching the domain later is an in-place update, not a rebuild.** `domainNames` and
-`certificate` are plain, mutable properties of `AWS::CloudFront::Distribution`; adding
-them updates the existing distribution (same distribution id, same cache, same CloudFront
-address keeps working) rather than replacing it. Nothing about the client bucket, the
-photo bucket, the API behavior, or the OAC wiring changes between modes. The one thing
-that is genuinely different, and that the human will hit, is `CorsOrigins`: see
-"Attaching the domain later" below.
+**Attaching the domain is an in-place update, not a rebuild**, which is how it was done
+here. `domainNames` and `certificate` are plain, mutable properties of
+`AWS::CloudFront::Distribution`; adding them updates the existing distribution (same
+distribution id, same cache, same CloudFront address keeps working) rather than
+replacing it. Nothing about the client bucket, the photo bucket, the API behavior, or
+the OAC wiring changes between modes. The one thing that is genuinely different, and
+that the human will hit, is `CorsOrigins`: see "Attaching the domain" below.
+
+**Removing the context does not detach the domain gracefully, it destroys it.** The same
+in-place property that made attaching cheap makes omitting `-c domain=` a destructive
+diff: the records, the aliases and the certificate all disappear from the synthesised
+template. This is not a mode you can wander into safely, which is why every operational
+command has to carry the context.
 
 **What the no-domain mode does not give you:** no `www.` alias (there is no domain to
 alias), TLS is pinned to whatever security policy CloudFront's default certificate uses
@@ -176,10 +182,24 @@ values above.
 
 All commands run from the repo root. Nothing here is run by an agent.
 
-**This is the no-domain flow, today's mode**, since the domain registration is stuck on
-an AWS support case. None of these commands pass `-c domain=...`. Once the support case
-resolves, come back to "Attaching the domain later" below; nothing here needs to be
-undone first.
+**The domain is attached.** These numbered steps are the original bring-up, kept as the
+record of how the account was built and as the order to repeat if it is ever rebuilt
+from nothing, so they are written in no-domain mode and none of them pass
+`-c domain=...`. The domain was added afterwards by "Attaching the domain" below.
+
+**Two things that follow from that, and both have already cost an afternoon:**
+
+**Every `cdk` command you run against the live stacks must pass
+`-c domain=torahbarabim.com`.** The domain is CDK context, not state in the stack, so
+without it the app synthesises no-domain mode and `cdk diff` proposes **destroying all
+four Route 53 records, removing the distribution's aliases, and removing its TLS
+certificate**. That diff looks like a normal diff. Read it before every deploy and stop
+if it names a Route 53 record.
+
+**Pass `--exclusively` when you mean one stack.** `cdk deploy TorabarabimSite` also
+deploys the stacks it depends on if they have changes, and `TorabarabimServer` almost
+always does: its image assets are rebuilt from your working tree, so an infrastructure
+deploy would quietly push whatever code you happen to have checked out.
 
 ### 1. Bootstrap the account (once per account)
 
@@ -522,9 +542,13 @@ request (0023), so this is a different, and more coupled, picture than a static 
   mid-session). Keep server API changes additive, the same "add before you remove"
   discipline the root rulebook already asks of a migration.
 
-## Attaching the domain later, once the support case resolves
+## Attaching the domain, done on 2026-09-13
 
-None of the above needs to be torn down first. These steps update the stacks already
+This has already been done: `torahbarabim.com` serves the live site. The steps are kept
+because they are the procedure any future domain change repeats, and because the
+`-c domain=` context they introduce is what every later `cdk` command has to carry.
+
+None of the above needed to be torn down first. These steps update the stacks already
 deployed; the CloudFront distribution, its cache, and its existing `*.cloudfront.net`
 address keep working throughout (the `*.cloudfront.net` address stops resolving to the
 distribution once you point DNS at the new one in step D, but the distribution itself is
@@ -606,11 +630,16 @@ admin-panel requests blocked by CORS.
 | `CertificateArn` | `TorabarabimSite` | no | Domain mode only. Output of `TorabarabimCertificate` |
 | `ServerTaskRoleArn` | `TorabarabimSite` | no | The `TaskRoleArn` output on `TorabarabimServer` |
 
-CDK context `domain` (`-c domain=torahbarabim.com`) is optional, never hardcoded in a
-stack file. Omit it for today's no-domain deploy; supply it once the domain is being
-attached, see "Attaching the domain later" above. `HostedZoneId` and `CertificateArn` are
-not declared on `TorabarabimSite` at all without it, so there is nothing to pass a
-placeholder for in no-domain mode.
+CDK context `domain` (`-c domain=torahbarabim.com`) is never hardcoded in a stack file,
+and **every command against the live stacks has to pass it**: see the warning under
+"What the human does" above for what a diff looks like without it. `HostedZoneId` and
+`CertificateArn` are not declared on `TorabarabimSite` at all in no-domain mode, which
+is why the bring-up steps have nothing to pass a placeholder for.
+
+**You do not have to re-supply a parameter that has not changed.** `cdk deploy` defaults
+to `--previous-parameters`, so it reuses whatever CloudFormation already holds for any
+parameter you omit. The table above is what to have ready the first time, not a list to
+retype on every deploy.
 
 ## Connecting a local database client (DBeaver) to production
 
