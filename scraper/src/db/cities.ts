@@ -1,9 +1,10 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { pgTable, integer, text, pgEnum } from 'drizzle-orm/pg-core';
 import postgres from 'postgres';
-import type { Area, City } from '@torabarabim/common';
+import type { Area } from '@torabarabim/common';
 
 import { loadConfig } from '../config';
+import type { CityRecord } from '../models';
 
 // Mirrors the columns of server/src/db/schema/cities.ts. The scraper only
 // ever reads this table, so it declares its own minimal view of it rather
@@ -27,7 +28,7 @@ const cities = pgTable('cities', {
   area: areaEnum('area').notNull(),
 });
 
-export const fetchCities = async (): Promise<City[]> => {
+export const fetchCities = async (): Promise<CityRecord[]> => {
   const { databaseUrl } = loadConfig(process.env);
   const sql = postgres(databaseUrl);
   try {
