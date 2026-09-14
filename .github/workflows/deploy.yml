@@ -114,6 +114,11 @@ jobs:
     environment: production-migrations
     # Builds an arm64 image, so it runs on an arm64 runner: see deploy-server
     # below for why, and for the symptom if this label ever stops resolving.
+    # Deliberately no `timeout-minutes`, unlike deploy-server: this job waits
+    # on the production-migrations environment for a human to approve it, and
+    # a timeout that counts that wait would cancel a legitimate migration
+    # because nobody was at a keyboard. A stuck build here is rarer and
+    # visible, since someone is already watching for the approval prompt.
     runs-on: ubuntu-24.04-arm
     permissions:
       id-token: write
@@ -309,6 +314,11 @@ jobs:
     # stops resolving, the job queues instead of failing, so a deploy that
     # never starts is the symptom to look for.
     runs-on: ubuntu-24.04-arm
+    # Without this a hung job runs until GitHub's six-hour default and holds
+    # every later deploy behind it in the queue, which is exactly what run 27
+    # did. A native build that has not finished in half an hour is stuck, not
+    # slow, and failing is the more useful outcome.
+    timeout-minutes: 30
     permissions:
       id-token: write
       contents: read
