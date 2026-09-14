@@ -21,7 +21,11 @@ export const initAnalytics = (): void => {
   initStarted = true;
 
   void import('mixpanel-browser').then(({ default: mixpanel }) => {
-    mixpanel.init(MIXPANEL_PROJECT_TOKEN, { track_pageview: false, persistence: 'localStorage' });
+    mixpanel.init(MIXPANEL_PROJECT_TOKEN, {
+      track_pageview: false,
+      persistence: 'localStorage',
+      api_host: 'https://api-eu.mixpanel.com',
+    });
     mixpanelInstance = mixpanel;
     queuedEvents.splice(0).forEach(({ name, props }) => mixpanelInstance?.track(name, props));
   });
