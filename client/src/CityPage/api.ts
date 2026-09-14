@@ -25,13 +25,13 @@ const fetchJson = async <T>(url: URL, signal?: AbortSignal): Promise<T> => {
   return (await response.json()) as T;
 };
 
-// GET /v1/cities/:name
-// 200 with CityDetailResponse: this is what turns the city's Hebrew name
-// into the numeric code GET /v1/lessons's `city` filter expects.
-// 404 when no city has this exact name.
+// GET /v1/cities/:slug
+// 200 with CityDetailResponse: this is what turns the city's slug into the
+// numeric code GET /v1/lessons's `city` filter expects.
+// 404 when no city has this slug.
 // 5xx for a server or upstream failure.
-export const fetchCityDetail = (cityName: string, signal?: AbortSignal): Promise<CityDetailResponse> =>
-  fetchJson(new URL(`/v1/cities/${encodeURIComponent(cityName)}`, window.location.origin), signal);
+export const fetchCityDetail = (citySlug: string, signal?: AbortSignal): Promise<CityDetailResponse> =>
+  fetchJson(new URL(`/v1/cities/${encodeURIComponent(citySlug)}`, window.location.origin), signal);
 
 // GET /v1/lessons
 // 200 with LessonSearchResponse, including an empty result set: a real city

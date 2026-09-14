@@ -1,19 +1,22 @@
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { BackLink } from '~/components/BackLink/BackLink';
+import { DayGroup } from '~/components/DayGroup/DayGroup';
+import { DayGroupSkeleton } from '~/components/DayGroupSkeleton/DayGroupSkeleton';
 import { QuietButton } from '~/components/QuietButton/QuietButton';
 import { StateCard } from '~/components/StateCard/StateCard';
+import { TitleSkeleton } from '~/components/TitleSkeleton/TitleSkeleton';
+import { BACK_TO_ALL_CITIES_LABEL } from '~/consts';
+import { dayGroupHeading, groupByDay } from '~/helpers';
 
+import { AreaLink } from './components/AreaLink/AreaLink';
 import { CityEmptyState } from './components/CityEmptyState/CityEmptyState';
-import { DayGroup } from './components/DayGroup/DayGroup';
-import { DayGroupSkeleton } from './components/DayGroupSkeleton/DayGroupSkeleton';
 import { RabbiRail } from './components/RabbiRail/RabbiRail';
 import { RabbiRailSkeleton } from './components/RabbiRailSkeleton/RabbiRailSkeleton';
-import { TitleSkeleton } from './components/TitleSkeleton/TitleSkeleton';
 import * as consts from './consts';
-import { cityErrorCopy, dayGroupHeading, groupByDay } from './helpers';
+import { cityErrorCopy } from './helpers';
 import type { CityPageProps } from './models';
 import * as styles from './styles';
 import { useAreaLessons } from './useAreaLessons';
@@ -22,13 +25,13 @@ import { useCityLessons } from './useCityLessons';
 
 // Once someone has chosen where, the only question left is when (design
 // spec, guidance intent): lessons group by day, with a rail of who teaches
-// here above them. Call 1 (city detail) resolves the name into the numeric
-// code call 2 needs, so call 2 cannot fire speculatively with the name; call
+// here above them. Call 1 (city detail) resolves the slug into the numeric
+// code call 2 needs, so call 2 cannot fire speculatively with the slug; call
 // 3 (the area) only fires once call 2 comes back empty (useCityLessons.ts,
 // useAreaLessons.ts).
 export const CityPage = styled(({ className }: CityPageProps) => {
-  const { cityName = '' } = useParams();
-  const cityQuery = useCityDetail(cityName);
+  const { cityName: citySlug = '' } = useParams();
+  const cityQuery = useCityDetail(citySlug);
   const city = cityQuery.data;
   const errorCopy = cityQuery.error ? cityErrorCopy(cityQuery.error) : null;
 
@@ -45,7 +48,7 @@ export const CityPage = styled(({ className }: CityPageProps) => {
 
   return (
     <main className={className}>
-      <BackLink to="/cities" label={consts.BACK_TO_ALL_CITIES_LABEL} />
+      <BackLink to="/cities" label={BACK_TO_ALL_CITIES_LABEL} />
 
       {cityQuery.isPending && (
         <>
@@ -85,12 +88,7 @@ export const CityPage = styled(({ className }: CityPageProps) => {
             {canShowSubheading && lessonsQuery.data && (
               <>
                 <p className="sub">{consts.citySubheading(lessonsQuery.data.total)}</p>
-                <Link className="areaLink" to={`/lessons?area=${city.area}`}>
-                  <svg className="chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <span dir="auto">{consts.areaLinkLabel(areaName)}</span>
-                </Link>
+                <AreaLink areaSlug={city.areaSlug} {...{ areaName }} />
               </>
             )}
           </div>
@@ -112,6 +110,7 @@ export const CityPage = styled(({ className }: CityPageProps) => {
           {!lessonsQuery.isPending && !lessonsQuery.isError && isCityResolvedEmpty && (
             <CityEmptyState
               cityName={city.name}
+              areaSlug={city.areaSlug}
               areaName={areaName}
               areaItems={areaQuery.data?.items}
               isAreaPending={areaQuery.isPending}

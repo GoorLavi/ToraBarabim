@@ -5,6 +5,7 @@ import type { RabbiCityRecord, RabbiDirectoryEntryRecord, RabbiListResult } from
 const toCity = (record: RabbiCityRecord): City => ({
   id: String(record.code),
   name: record.nameHe,
+  slug: record.slug,
   area: record.area,
 });
 

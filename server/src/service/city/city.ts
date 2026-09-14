@@ -1,15 +1,21 @@
+import type { Area } from '@torabarabim/common';
 import { asc, desc, eq, like, sql } from 'drizzle-orm';
 
 import { db } from '../../db/client';
 import { cities, lessons, rabbis } from '../../db/schema';
 import { AREAS } from '../../db/schema/enums';
-import { AREA_NAMES_HE } from '../shared/consts';
+import { AREA_NAMES_HE, toAreaSlug } from '../shared/consts';
 import { toRabbiSummary as toRabbi } from '../shared/rabbi-summary';
+import { toSlug } from '../shared/slug';
 import { CITY_SEARCH_LIMIT } from './consts';
 import { CityNotFoundError } from './errors';
 import type { CityAreaGroup, CityDetailResult, CityDirectoryResult, CitySearchQuery, ResolvedCity } from './models';
 
 const collator = new Intl.Collator('he');
+
+type CityRow = { code: number; nameHe: string; area: Area };
+
+const toResolvedCity = (row: CityRow): ResolvedCity => ({ ...row, slug: toSlug(row.nameHe) });
 
 // `%` and `_` are LIKE wildcards; escape them so a city name containing
 // either, or a user typing one, cannot change what the prefix match does.
@@ -21,7 +27,7 @@ export const search = async (query: CitySearchQuery): Promise<ResolvedCity[]> =>
 
   const pattern = `${escapeLikePattern(q)}%`;
 
-  return db
+  const rows = await db
     .select({ code: cities.code, nameHe: cities.nameHe, area: cities.area })
     .from(cities)
     .where(like(cities.nameHe, pattern))
@@ -30,6 +36,8 @@ export const search = async (query: CitySearchQuery): Promise<ResolvedCity[]> =>
     // alphabetically as the final tiebreak.
     .orderBy(desc(eq(cities.nameHe, q)), sql`${cities.population} DESC NULLS LAST`, asc(cities.nameHe))
     .limit(CITY_SEARCH_LIMIT);
+
+  return rows.map(toResolvedCity);
 };
 
 // Every city and every lesson's city code are each loaded once and joined
@@ -43,26 +51,29 @@ export const listDirectory = async (): Promise<CityDirectoryResult> => {
   const countByCode = new Map(countRows.map((row) => [row.cityCode, row.count] as const));
 
   const citiesWithLessons = cityRows
-    .map((row) => ({ ...row, lessonCount: countByCode.get(row.code) ?? 0 }))
+    .map((row) => ({ ...toResolvedCity(row), lessonCount: countByCode.get(row.code) ?? 0 }))
     .filter((row) => row.lessonCount > 0);
 
   const areas: CityAreaGroup[] = AREAS.map((area) => ({
     area,
     areaName: AREA_NAMES_HE[area],
+    slug: toAreaSlug(area),
     cities: citiesWithLessons.filter((row) => row.area === area).sort((a, b) => collator.compare(a.nameHe, b.nameHe)),
   })).filter((group) => group.cities.length > 0);
 
   return { areas };
 };
 
-export const resolveByName = async (name: string): Promise<CityDetailResult> => {
-  const [cityRow] = await db
-    .select({ code: cities.code, nameHe: cities.nameHe, area: cities.area })
-    .from(cities)
-    .where(eq(cities.nameHe, name))
-    .limit(1);
+// The cities table is about 1,300 rows, the same size `listDirectory` above
+// already loads unfiltered; matching the slug in memory here reuses that
+// same cost rather than introducing a new one, and keeps the slug's
+// definition (`toSlug(nameHe)`) in exactly one place instead of also
+// expressing it in SQL.
+export const resolveBySlug = async (slug: string): Promise<CityDetailResult> => {
+  const cityRows = await db.select({ code: cities.code, nameHe: cities.nameHe, area: cities.area }).from(cities);
+  const cityRow = cityRows.find((row) => toSlug(row.nameHe) === slug);
   if (!cityRow) {
-    throw new CityNotFoundError(name);
+    throw new CityNotFoundError(slug);
   }
 
   const rabbiRows = await db
@@ -82,8 +93,9 @@ export const resolveByName = async (name: string): Promise<CityDetailResult> => 
   const distinctRabbis = [...new Map(rabbiRows.map((row) => [row.id, toRabbi(row)] as const)).values()];
 
   return {
-    ...cityRow,
+    ...toResolvedCity(cityRow),
     areaName: AREA_NAMES_HE[cityRow.area],
+    areaSlug: toAreaSlug(cityRow.area),
     rabbis: distinctRabbis.sort((a, b) => collator.compare(a.name, b.name)),
   };
 };

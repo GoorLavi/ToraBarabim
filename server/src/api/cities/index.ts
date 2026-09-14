@@ -4,7 +4,7 @@ import { ZodError } from 'zod';
 import { toCityDetailResponse, toCityDirectoryResponse, toCityList } from '../../convertors/city';
 import { CityNotFoundError } from '../../service/city/errors';
 import * as cityService from '../../service/city/city';
-import { cityNameParamSchema, citySearchQuerySchema } from '../../service/city/models';
+import { citySearchQuerySchema, citySlugParamSchema } from '../../service/city/models';
 
 const GENERIC_ERROR_MESSAGE = 'אירעה שגיאה בשרת, נסו שוב מאוחר יותר';
 
@@ -36,8 +36,8 @@ export const registerCityRoutes = async (app: FastifyInstance): Promise<void> =>
     }
   });
 
-  // Static, so find-my-way matches it before the `/:name` param route below
-  // regardless of registration order; no city is ever named "directory".
+  // Static, so find-my-way matches it before the `/:slug` param route below
+  // regardless of registration order; no city ever slugifies to "directory".
   app.get('/v1/cities/directory', async (request, reply) => {
     try {
       const result = await cityService.listDirectory();
@@ -47,13 +47,13 @@ export const registerCityRoutes = async (app: FastifyInstance): Promise<void> =>
     }
   });
 
-  app.get('/v1/cities/:name', async (request, reply) => {
+  app.get('/v1/cities/:slug', async (request, reply) => {
     try {
-      const { name } = cityNameParamSchema.parse(request.params);
-      const result = await cityService.resolveByName(name);
+      const { slug } = citySlugParamSchema.parse(request.params);
+      const result = await cityService.resolveBySlug(slug);
       return reply.send(toCityDetailResponse(result));
     } catch (error) {
-      return handleError(reply, error, 'GET /v1/cities/:name');
+      return handleError(reply, error, 'GET /v1/cities/:slug');
     }
   });
 };

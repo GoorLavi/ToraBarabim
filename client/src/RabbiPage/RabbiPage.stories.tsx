@@ -37,7 +37,7 @@ const rabbiDetail = (overrides: Partial<RabbiDetailResponse>): RabbiDetailRespon
     bio: 'ראש ישיבת "אור התורה" ומגידי השיעור הוותיקים בעיר. מלמד גמרא והלכה מזה למעלה מעשרים שנה.',
   }),
   lessonCount: 3,
-  cities: [{ id: '4000', name: 'חיפה', area: 'haifa' }],
+  cities: [{ id: '4000', name: 'חיפה', slug: 'חיפה', area: 'haifa' }],
   ...overrides,
 });
 
@@ -51,7 +51,7 @@ const lesson = (overrides: Partial<LessonOccurrence>): LessonOccurrence => ({
   topic: 'parasha',
   audience: 'mixed',
   rabbi: rabbiFixture({ id: 'story-rabbi', name: 'הרב יעקב מזרחי' }),
-  place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'חיפה', area: 'haifa' },
+  place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'חיפה', citySlug: 'חיפה', area: 'haifa' },
   ...overrides,
 });
 
@@ -66,9 +66,9 @@ installMockFetch((url) => {
       rabbiDetail({
         ...rabbiFixture({ id: 'story-longname', name: 'הרב נתן צבי אשכנזי הכהן' }),
         cities: [
-          { id: '1', name: 'חיפה', area: 'haifa' },
-          { id: '2', name: 'ירושלים', area: 'jerusalem' },
-          { id: '3', name: 'תל אביב', area: 'telAviv' },
+          { id: '1', name: 'חיפה', slug: 'חיפה', area: 'haifa' },
+          { id: '2', name: 'ירושלים', slug: 'ירושלים', area: 'jerusalem' },
+          { id: '3', name: 'תל אביב', slug: 'תל-אביב', area: 'telAviv' },
         ],
       }),
     );
@@ -94,7 +94,13 @@ installMockFetch((url) => {
             startTime: '06:00',
             title: undefined,
             topic: 'gemara',
-            place: { name: 'בית מדרש אוהל יעקב, מרכז קהילתי נאות שקד', street: 'הרב קוק 12', city: 'חיפה', area: 'haifa' },
+            place: {
+              name: 'בית מדרש אוהל יעקב, מרכז קהילתי נאות שקד',
+              street: 'הרב קוק 12',
+              city: 'חיפה',
+              citySlug: 'חיפה',
+              area: 'haifa',
+            },
           }),
           lesson({ lessonId: 'l3', date: '2026-09-13', startTime: '19:00', audience: 'women' }),
         ],

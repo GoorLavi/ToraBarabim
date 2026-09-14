@@ -134,6 +134,9 @@ describe('public API', () => {
       assert.equal(typeof occurrence.rabbi.name, 'string');
       assert.equal(typeof occurrence.place.name, 'string');
       assert.equal(typeof occurrence.place.city, 'string');
+      // The city page a "lessons in this city" link on the lesson page can
+      // now point at directly, instead of falling back to a text search.
+      assert.equal(occurrence.place.citySlug, toSlug(occurrence.place.city));
       assert.equal(typeof occurrence.place.area, 'string');
     });
 
@@ -238,28 +241,41 @@ describe('public API', () => {
     });
   });
 
-  test('GET /v1/cities/directory groups only cities that have a lesson', async () => {
+  test('GET /v1/cities/directory groups only cities that have a lesson, and every area and city carries a slug', async () => {
     const res = await app.inject({ method: 'GET', url: '/v1/cities/directory' });
     assert.equal(res.statusCode, 200);
 
-    const body = res.json() as { areas: { area: string; areaName: string; cities: { lessonCount: number }[] }[] };
+    const body = res.json() as {
+      areas: { area: string; areaName: string; slug: string; cities: { slug: string; lessonCount: number }[] }[];
+    };
     assert.ok(body.areas.length > 0);
     for (const area of body.areas) {
+      assert.ok(area.slug.length > 0);
       assert.ok(area.cities.length > 0);
       for (const city of area.cities) {
+        assert.ok(city.slug.length > 0);
         assert.ok(city.lessonCount > 0);
       }
     }
   });
 
-  describe('GET /v1/cities/:name', () => {
-    test('resolves a seeded city with the rabbis teaching there', async () => {
-      const res = await app.inject({ method: 'GET', url: `/v1/cities/${encodeURIComponent(SEEDED_CITY_NAME)}` });
+  describe('GET /v1/cities/:slug', () => {
+    test('resolves a seeded city by its slug, with its slug, its area slug, and the rabbis teaching there', async () => {
+      const slug = toSlug(SEEDED_CITY_NAME);
+      const res = await app.inject({ method: 'GET', url: `/v1/cities/${slug}` });
       assert.equal(res.statusCode, 200);
 
-      const body = res.json() as { name: string; areaName: string; rabbis: { id: string; name: string; slug: string }[] };
+      const body = res.json() as {
+        name: string;
+        slug: string;
+        areaName: string;
+        areaSlug: string;
+        rabbis: { id: string; name: string; slug: string }[];
+      };
       assert.equal(body.name, SEEDED_CITY_NAME);
+      assert.equal(body.slug, slug);
       assert.equal(typeof body.areaName, 'string');
+      assert.ok(body.areaSlug.length > 0);
 
       const rabbi = body.rabbis.find((candidate) => candidate.id === SEEDED_CITY_RABBI_ID);
       assert.ok(rabbi);
@@ -269,9 +285,15 @@ describe('public API', () => {
       assert.equal(rabbi.slug, toSlug(SEEDED_CITY_RABBI_NAME));
     });
 
-    test('a genuinely missing city returns 404', async () => {
+    test('an unknown slug returns 404 with city_not_found', async () => {
       const res = await app.inject({ method: 'GET', url: '/v1/cities/עיר-שלא-קיימת-לעולם' });
       assert.equal(res.statusCode, 404);
+      assert.equal((res.json() as { error: string }).error, 'city_not_found');
+    });
+
+    test('toSlug is idempotent on a real Hebrew city name, which is what lets a stale name-based URL normalise to the canonical slug', () => {
+      const slug = toSlug(SEEDED_CITY_NAME);
+      assert.equal(toSlug(slug), slug);
     });
   });
 
