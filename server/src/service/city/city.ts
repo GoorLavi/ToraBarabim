@@ -1,25 +1,15 @@
-import type { Rabbi } from '@torabarabim/common';
 import { asc, desc, eq, like, sql } from 'drizzle-orm';
 
 import { db } from '../../db/client';
 import { cities, lessons, rabbis } from '../../db/schema';
 import { AREAS } from '../../db/schema/enums';
 import { AREA_NAMES_HE } from '../shared/consts';
+import { toRabbiSummary as toRabbi } from '../shared/rabbi-summary';
 import { CITY_SEARCH_LIMIT } from './consts';
 import { CityNotFoundError } from './errors';
 import type { CityAreaGroup, CityDetailResult, CityDirectoryResult, CitySearchQuery, ResolvedCity } from './models';
 
 const collator = new Intl.Collator('he');
-
-type RabbiNameRow = Pick<typeof rabbis.$inferSelect, 'id' | 'name' | 'title' | 'photoUrl' | 'bio'>;
-
-const toRabbi = (row: RabbiNameRow): Rabbi => ({
-  id: row.id,
-  name: row.name,
-  title: row.title ?? undefined,
-  photoUrl: row.photoUrl ?? undefined,
-  bio: row.bio ?? undefined,
-});
 
 // `%` and `_` are LIKE wildcards; escape them so a city name containing
 // either, or a user typing one, cannot change what the prefix match does.

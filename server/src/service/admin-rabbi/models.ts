@@ -56,6 +56,7 @@ export type DeleteRabbiQuery = z.infer<typeof deleteRabbiQuerySchema>;
 export interface RabbiRecord {
   id: string;
   name: string;
+  slug: string;
   title?: string;
   photoUrl?: string;
   bio?: string;

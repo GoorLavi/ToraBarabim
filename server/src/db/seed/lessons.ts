@@ -10,7 +10,9 @@ const rabbiInsertSchema = createInsertSchema(rabbis);
 const lessonInsertSchema = createInsertSchema(lessons);
 const exceptionInsertSchema = createInsertSchema(lessonExceptions);
 
-type RabbiSeed = Rabbi & { prominence: RabbiProminence };
+// `slug` is excluded: it is derived server-side from `name` at read time,
+// never stored, so seed input never carries one.
+type RabbiSeed = Omit<Rabbi, 'slug'> & { prominence: RabbiProminence };
 
 // A spread of tiers so the home rails sort into something other than
 // insertion order when tested locally.

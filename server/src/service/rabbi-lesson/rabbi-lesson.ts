@@ -1,4 +1,4 @@
-import type { Area, Lesson, LessonException, LessonPlace, LessonOccurrence as WireLessonOccurrence, Place, Rabbi, Weekday } from '@torabarabim/common';
+import type { Area, Lesson, LessonException, LessonPlace, LessonOccurrence as WireLessonOccurrence, Place, Weekday } from '@torabarabim/common';
 import { and, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
@@ -6,6 +6,7 @@ import { db } from '../../db/client';
 import { cities, lessonExceptions, lessons, rabbis } from '../../db/schema';
 import { addDays, todayInIsrael } from '../lesson/israel-time';
 import { applyException, expandLesson, type ResolvedOccurrence } from '../lesson/occurrence';
+import { toRabbiSummary as toRabbi } from '../shared/rabbi-summary';
 import { UPCOMING_OCCURRENCE_WINDOW_DAYS } from './consts';
 import { LessonNotFoundError, UnknownCityError } from './errors';
 import type { CreateRabbiLessonInput, RabbiLessonListQuery, RabbiLessonListResult, RabbiLessonRecord, UpdateRabbiLessonInput } from './models';
@@ -163,7 +164,6 @@ export const remove = async (rabbiId: string, id: string): Promise<void> => {
 
 type LessonRow = typeof lessons.$inferSelect;
 type ExceptionRow = typeof lessonExceptions.$inferSelect;
-type RabbiRow = typeof rabbis.$inferSelect;
 type CityRow = { code: number; nameHe: string; area: Area };
 
 const toLessonDomain = (row: LessonRow): Lesson => ({
@@ -203,14 +203,6 @@ const toPlace = (place: LessonPlace, cityByCode: Map<number, CityRow>): Place =>
   if (!city) throw new Error(`data inconsistency: a lesson references unknown city code ${place.cityCode}`);
   return { name: place.name, street: place.street, floor: place.floor, city: city.nameHe, area: city.area };
 };
-
-const toRabbi = (row: RabbiRow): Rabbi => ({
-  id: row.id,
-  name: row.name,
-  title: row.title ?? undefined,
-  photoUrl: row.photoUrl ?? undefined,
-  bio: row.bio ?? undefined,
-});
 
 const MINUTES_PER_DAY = 24 * 60;
 const addMinutes = (startTime: string, minutes: number): string => {

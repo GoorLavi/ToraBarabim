@@ -2,18 +2,13 @@ import { eq, inArray, sql } from 'drizzle-orm';
 
 import { db } from '../../db/client';
 import { cities, lessons, rabbis } from '../../db/schema';
+import { toRabbiSummary } from '../shared/rabbi-summary';
 import { RabbiNotFoundError } from './errors';
 import type { RabbiCityRecord, RabbiDirectoryEntryRecord, RabbiListQuery, RabbiListResult, RabbiSummaryRecord } from './models';
 
 type RabbiRow = typeof rabbis.$inferSelect;
 
-const toSummary = (row: RabbiRow): RabbiSummaryRecord => ({
-  id: row.id,
-  name: row.name,
-  title: row.title ?? undefined,
-  photoUrl: row.photoUrl ?? undefined,
-  bio: row.bio ?? undefined,
-});
+const toSummary = (row: RabbiRow): RabbiSummaryRecord => toRabbiSummary(row);
 
 // The stored name carries its own honorific ('הרב', 'הרבנית'), so sorting on
 // the raw name would file almost every rabbi under ה. This strips only the

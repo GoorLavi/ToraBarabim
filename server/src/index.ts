@@ -4,6 +4,7 @@ import Fastify from 'fastify';
 
 import { registerAdminRoutes } from './api/admin';
 import { registerAdminAuthRoutes } from './api/admin/auth';
+import { registerAreaRoutes } from './api/areas';
 import { registerCityRoutes } from './api/cities';
 import { registerHealthRoutes } from './api/health';
 import { registerHomeRoutes } from './api/home';
@@ -16,6 +17,7 @@ import { registerCookies } from './plugins/cookies';
 import { registerCors } from './plugins/cors';
 import { registerEmptyBodySupport } from './plugins/empty-body';
 import { registerErrorHandler } from './plugins/error-handler';
+import { registerSsr } from './plugins/ssr';
 
 const config = loadConfig(process.env);
 
@@ -48,11 +50,17 @@ const start = async (): Promise<void> => {
   await registerLessonRoutes(app);
   await registerHomeRoutes(app);
   await registerCityRoutes(app);
+  await registerAreaRoutes(app);
   await registerRabbiDirectoryRoutes(app);
   await registerAdminAuthRoutes(app);
   await registerAdminRoutes(app);
   await registerRabbiAuthRoutes(app);
   await registerRabbiRoutes(app);
+  // Last: its own route is a catch-all, so every `/v1/*` route above must
+  // already be registered. Fastify still matches those exactly regardless of
+  // registration order, but registering the wildcard last keeps this file
+  // reading as "the API, then the app that renders around it".
+  await registerSsr(app);
   registerErrorHandler(app);
 
   try {

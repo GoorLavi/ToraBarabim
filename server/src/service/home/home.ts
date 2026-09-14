@@ -1,4 +1,4 @@
-import type { Area, Lesson, LessonException, LessonPlace, Place, Rabbi, Weekday } from '@torabarabim/common';
+import type { Area, Lesson, LessonException, LessonPlace, Place, Weekday } from '@torabarabim/common';
 import { and, gte, inArray, lte } from 'drizzle-orm';
 
 import { AREAS } from '../../db/schema/enums';
@@ -7,6 +7,7 @@ import { cities, lessonExceptions, lessons, rabbis } from '../../db/schema';
 import { applyException, expandLesson, type ResolvedOccurrence } from '../lesson/occurrence';
 import { addDays, compareIsoDates, todayInIsrael } from '../lesson/israel-time';
 import { AREA_NAMES_HE } from '../shared/consts';
+import { toRabbiSummary as toRabbi } from '../shared/rabbi-summary';
 import { HOME_WINDOW_DAYS, MAX_ITEMS_PER_ROW, MIN_ITEMS_PER_ROW, PROMINENCE_RANK } from './consts';
 import type { HomeResult, HomeRowResult, ResolvedHomeOccurrence } from './models';
 
@@ -84,14 +85,6 @@ const toPlace = (place: LessonPlace, cityByCode: Map<number, CityRow>): Place =>
   }
   return { name: place.name, street: place.street, floor: place.floor, city: city.nameHe, area: city.area };
 };
-
-const toRabbi = (row: RabbiRow): Rabbi => ({
-  id: row.id,
-  name: row.name,
-  title: row.title ?? undefined,
-  photoUrl: row.photoUrl ?? undefined,
-  bio: row.bio ?? undefined,
-});
 
 const resolveRecord = (
   occurrence: ResolvedOccurrence,

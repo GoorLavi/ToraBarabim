@@ -3,24 +3,17 @@ import { useEffect, useState } from 'react';
 import { useTheme } from 'styled-components';
 
 import * as consts from './consts';
+import { useMediaQuery } from './useMediaQuery';
 
 // The pinned bar is a `lg`-and-below concern only: at `lg` and up the
 // header is sticky instead and never collapses.
 const useIsBelowLg = (): boolean => {
   const theme = useTheme();
   const query = `(max-width: calc(${theme.breakpoints.lg} - 1px))`;
-  const [isBelowLg, setIsBelowLg] = useState(() => window.matchMedia(query).matches);
 
-  useEffect(() => {
-    const mediaQueryList = window.matchMedia(query);
-    const handleChange = (event: MediaQueryListEvent): void => setIsBelowLg(event.matches);
-
-    setIsBelowLg(mediaQueryList.matches);
-    mediaQueryList.addEventListener('change', handleChange);
-    return () => mediaQueryList.removeEventListener('change', handleChange);
-  }, [query]);
-
-  return isBelowLg;
+  // Mobile-first: before we know the viewport, assume the narrow layout,
+  // which for a "below lg" query means true.
+  return useMediaQuery(query, true);
 };
 
 // Only meaningful when `ResizeObserver` is unavailable: the header's own
@@ -29,16 +22,9 @@ const useIsBelowLg = (): boolean => {
 const useFallbackHeaderHeight = (): number => {
   const theme = useTheme();
   const query = `(min-width: ${theme.breakpoints.md})`;
-  const [isAtLeastMd, setIsAtLeastMd] = useState(() => window.matchMedia(query).matches);
 
-  useEffect(() => {
-    const mediaQueryList = window.matchMedia(query);
-    const handleChange = (event: MediaQueryListEvent): void => setIsAtLeastMd(event.matches);
-
-    setIsAtLeastMd(mediaQueryList.matches);
-    mediaQueryList.addEventListener('change', handleChange);
-    return () => mediaQueryList.removeEventListener('change', handleChange);
-  }, [query]);
+  // Mobile-first: before we know the viewport, assume the narrow layout.
+  const isAtLeastMd = useMediaQuery(query, false);
 
   return isAtLeastMd ? consts.FALLBACK_HEADER_HEIGHT_TABLET_PX : consts.FALLBACK_HEADER_HEIGHT_PHONE_PX;
 };

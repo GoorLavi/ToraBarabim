@@ -11,10 +11,10 @@ tokens are in [design-system.md](design-system.md). Figma setup and traps are in
 **Stack:** React 19 + Vite + styled-components 6 + TanStack Query 5 on the front,
 Fastify 5 + Zod 4 + Pino on the back, TypeScript strict throughout, npm workspaces.
 
-The roster was adapted from the Why's agent system, cut down to the four roles this
-project actually needs.
+The roster was adapted from the Why's agent system, cut down to the roles this project
+actually needs.
 
-## Roster (3 specialists + 1 orchestrator)
+## Roster (4 specialists + 1 orchestrator)
 
 **Orchestrate (no code):**
 - `/tora`: the orchestrator command. Clarifies the idea, writes the plan and the
@@ -28,6 +28,10 @@ project actually needs.
 **Build (write code):**
 - `tora-server`: API routes, services, data access. Node + TypeScript.
 - `tora-client`: the Hebrew RTL front end. React + TypeScript.
+- `tora-ssr`: the rendering seam. The root document, the entry files, loaders and `meta`,
+  the Fastify mount, and the build that carries both bundles. It straddles both
+  workspaces, which is exactly why it is separate: page components stay with
+  `tora-client` and business logic stays with `tora-server`.
 
 ## What each agent reads
 
@@ -35,16 +39,20 @@ A cold-started agent that has to hunt for context burns effort you already spent
 reading is assigned, not left to judgment: **read your always list, plus the files your
 brief names, and nothing else.** Do not scan the repository.
 
-| Document | orchestrator | `tora-server` | `tora-client` | `tora-designer` |
-| --- | :---: | :---: | :---: | :---: |
-| `CLAUDE.md` (root rulebook) | always | always | always | always |
-| `docs/product.md` | always | when the brief touches product behaviour | when the brief touches product behaviour | always |
-| `docs/decisions/` | always | the records the brief names | the records the brief names | the records the brief names |
-| `server/CLAUDE.md` | when planning server work | always | never | never |
-| `client/CLAUDE.md` | when planning client work | never | always | when reviewing a screen |
-| `.claude/design-system.md` | when planning a visual change | never | always | always |
-| `.claude/figma-protocol.md` | never | never | never | before the first Figma write |
-| `.claude/README.md` (this file) | always | never | never | never |
+| Document | orchestrator | `tora-server` | `tora-client` | `tora-ssr` | `tora-designer` |
+| --- | :---: | :---: | :---: | :---: | :---: |
+| `CLAUDE.md` (root rulebook) | always | always | always | always | always |
+| `docs/product.md` | always | when the brief touches product behaviour | when the brief touches product behaviour | when the brief touches product behaviour | always |
+| `docs/decisions/` | always | the records the brief names | the records the brief names | the records the brief names | the records the brief names |
+| `server/CLAUDE.md` | when planning server work | always | never | always | never |
+| `client/CLAUDE.md` | when planning client work | never | always | always | when reviewing a screen |
+| `.claude/design-system.md` | when planning a visual change | never | always | never | always |
+| `.claude/figma-protocol.md` | never | never | never | never | before the first Figma write |
+| `.claude/README.md` (this file) | always | never | never | never | never |
+
+`tora-ssr` reads both workspace rulebooks because it is the one agent whose slice spans
+them. That breadth is also why its boundaries are drawn tightly in its own file: it owns
+how a page becomes HTML, never what the page says or what the data means.
 
 Rules that hold regardless of the table:
 

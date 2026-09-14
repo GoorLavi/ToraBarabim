@@ -20,6 +20,7 @@ export type UpdateRabbiProfileInput = z.infer<typeof updateRabbiProfileSchema>;
 export interface RabbiProfileRecord {
   id: string;
   name: string;
+  slug: string;
   title?: string;
   photoUrl?: string;
   bio?: string;

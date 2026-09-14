@@ -9,16 +9,16 @@ import { useSelectedCity } from '~/hooks/useSelectedCity';
 import { Footer } from './components/Footer/Footer';
 import type { LayoutProps } from './models';
 import * as styles from './styles';
-import { useScrollRestoration } from './useScrollRestoration';
 
 // The one place the header and footer are assembled for every public route:
 // every routed page below `<Outlet />` renders only its own content.
+// Scroll position is the router's own `<ScrollRestoration />` job now
+// (rendered once in root.tsx), superseding this folder's old
+// useScrollRestoration hook.
 export const Layout = styled(({ className }: LayoutProps) => {
   const { option, customDate, selectOption, selectCustomDate, clearDate } = useDateFilter();
   const { city, select: selectCity, clear: clearCity } = useSelectedCity();
   const { query, setQuery } = useSearchQuery();
-
-  useScrollRestoration();
 
   return (
     <div className={className}>

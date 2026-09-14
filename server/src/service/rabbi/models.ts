@@ -17,6 +17,11 @@ export type RabbiIdParam = z.infer<typeof rabbiIdParamSchema>;
 export interface RabbiSummaryRecord {
   id: string;
   name: string;
+  // Derived from `name` with `toSlug`, falling back to `id` when that comes
+  // out empty. Never empty. The id, not the slug, is what makes the URL
+  // unique, so two rabbis sharing a name sharing a slug is not a correctness
+  // problem.
+  slug: string;
   title?: string;
   photoUrl?: string;
   bio?: string;

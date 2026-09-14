@@ -13,7 +13,9 @@ export interface AdminUser {
 
 // `prominence` is an admin-only field: it drives home-row sort order and
 // must never appear on the public `Rabbi` type or any public response.
-export type CreateRabbiRequest = Omit<Rabbi, 'id'> & { prominence?: RabbiProminence };
+// `slug` is also excluded here: it is derived server-side from `name`, an
+// admin never sends one, so a create or update request never carries it.
+export type CreateRabbiRequest = Omit<Rabbi, 'id' | 'slug'> & { prominence?: RabbiProminence };
 // An update is a partial patch, so omitting a key must mean something
 // different from clearing it: omit `title` or `bio` to leave it as is,
 // send `null` to clear it, send a string to set it. `name` and
