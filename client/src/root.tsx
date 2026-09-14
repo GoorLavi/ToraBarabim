@@ -6,10 +6,11 @@ import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router';
 import styled, { ThemeProvider } from 'styled-components';
 
 import { Analytics } from '~/analytics/Analytics';
+import { SITE_WIDE_META } from '~/consts';
 import { GlobalStyle } from '~/styles/GlobalStyle';
 import { ARGAMAN_VE_ZAHAV_THEME } from '~/theme/themes';
 
-import { DEFAULT_DESCRIPTION, DEFAULT_TITLE, SITE_NAME, SITE_ORIGIN, SITE_WIDE_META } from '../consts';
+import { DEFAULT_DESCRIPTION, DEFAULT_TITLE, SITE_NAME, SITE_ORIGIN } from '../consts';
 import * as rootConsts from './root.consts';
 import * as rootStyles from './root.styles';
 

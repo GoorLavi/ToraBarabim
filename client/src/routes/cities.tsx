@@ -6,8 +6,9 @@ import type { HeadersFunction, MetaFunction } from 'react-router';
 import { CitiesPage } from '~/CitiesPage/CitiesPage';
 import { CITIES_QUERY_KEYS, LOAD_ERROR_BODY, LOAD_ERROR_HEADING, RETRY_LABEL } from '~/CitiesPage/consts';
 import { StateCard } from '~/components/StateCard/StateCard';
+import { SITE_WIDE_META } from '~/consts';
 
-import { SITE_ORIGIN, SITE_WIDE_META } from '../../consts';
+import { SITE_ORIGIN } from '../../consts';
 import * as consts from './consts';
 import { loadCityDirectory } from './cities.server';
 

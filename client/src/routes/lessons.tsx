@@ -1,6 +1,8 @@
 import type { MetaFunction } from 'react-router';
 
-import { SITE_ORIGIN, SITE_WIDE_META } from '../../consts';
+import { SITE_WIDE_META } from '~/consts';
+
+import { SITE_ORIGIN } from '../../consts';
 import * as consts from './consts';
 
 // Deliberately the bare path, with no query string. Every filtered view of

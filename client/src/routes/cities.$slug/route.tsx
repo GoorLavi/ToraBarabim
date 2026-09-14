@@ -7,9 +7,10 @@ import { isRouteErrorResponse, redirect, useRouteError } from 'react-router';
 import * as cityPageConsts from '~/CityPage/consts';
 import { CityPage } from '~/CityPage/CityPage';
 import { StateCard } from '~/components/StateCard/StateCard';
+import { SITE_WIDE_META } from '~/consts';
 import { cityPath } from '~/helpers';
 
-import { SITE_ORIGIN, SITE_WIDE_META } from '../../../consts';
+import { SITE_ORIGIN } from '../../../consts';
 import { PUBLIC_CACHE_HEADERS } from '../consts';
 import * as consts from './consts';
 import { loadCityDetail } from './city-detail.server';
