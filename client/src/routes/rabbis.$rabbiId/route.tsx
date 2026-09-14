@@ -10,7 +10,7 @@ import * as rabbiPageConsts from '~/RabbiPage/consts';
 import { RabbiPage } from '~/RabbiPage/RabbiPage';
 
 import { SITE_ORIGIN } from '../../../consts';
-import { PUBLIC_CACHE_HEADERS, UNCACHEABLE_ERROR_HEADERS } from '../consts';
+import { PUBLIC_CACHE_HEADERS, SITE_WIDE_META, UNCACHEABLE_ERROR_HEADERS } from '../consts';
 import * as consts from './consts';
 import { loadRabbiDetail } from './rabbi-detail.server';
 
@@ -56,6 +56,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     { property: 'og:title', content: title },
     { property: 'og:description', content: description },
     { property: 'og:url', content: url },
+    ...SITE_WIDE_META,
     { 'script:ld+json': consts.personJsonLd(data, url) },
   ];
 };

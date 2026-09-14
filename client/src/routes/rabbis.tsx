@@ -32,6 +32,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     { property: 'og:title', content: title },
     { property: 'og:description', content: description },
     { property: 'og:url', content: url },
+    ...consts.SITE_WIDE_META,
     { 'script:ld+json': consts.rabbisItemListJsonLd(data) },
   ];
 };
