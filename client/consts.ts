@@ -2,10 +2,11 @@ export const SITE_ORIGIN = 'https://torahbarabim.com';
 
 export const SITE_NAME = 'תורה ברבים';
 
-// Cloudflare Web Analytics site token. Public by design: it ships in the page
-// source of every site that uses the product, and it grants nothing beyond
-// reporting a page view for this site.
-export const CLOUDFLARE_ANALYTICS_TOKEN = '4def41ef690f4c8391068f73d4238e89';
+// Mixpanel project token. Public by design, like the Cloudflare token it
+// replaces: it ships in the page source of every site that uses the
+// product, and it identifies which Mixpanel project events land in, not a
+// person.
+export const MIXPANEL_PROJECT_TOKEN = '811128865ac744fd3ee48870ccb29cfd';
 
 // The sitewide default title and description, used by root.tsx for every
 // route that does not override them with its own `meta` export.

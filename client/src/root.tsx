@@ -5,10 +5,11 @@ import type { MetaFunction } from 'react-router';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router';
 import styled, { ThemeProvider } from 'styled-components';
 
+import { Analytics } from '~/analytics/Analytics';
 import { GlobalStyle } from '~/styles/GlobalStyle';
 import { ARGAMAN_VE_ZAHAV_THEME } from '~/theme/themes';
 
-import { CLOUDFLARE_ANALYTICS_TOKEN, DEFAULT_DESCRIPTION, DEFAULT_TITLE, SITE_NAME, SITE_ORIGIN, SITE_WIDE_META } from '../consts';
+import { DEFAULT_DESCRIPTION, DEFAULT_TITLE, SITE_NAME, SITE_ORIGIN, SITE_WIDE_META } from '../consts';
 import * as rootConsts from './root.consts';
 import * as rootStyles from './root.styles';
 
@@ -73,19 +74,6 @@ export function Layout({ children }: { children: ReactNode }) {
         <div id="root">{children}</div>
         <ScrollRestoration />
         <Scripts />
-        {/*
-          Cloudflare Web Analytics. Fails closed in dev: `import.meta.env.PROD`
-          is true only in a built bundle, never under the Vite dev server, so
-          a local session never reports a page view into the real dashboard.
-          The token is public by design (client/consts.ts).
-        */}
-        {import.meta.env.PROD && (
-          <script
-            type="module"
-            src="https://static.cloudflareinsights.com/beacon.min.js"
-            data-cf-beacon={`{"token": "${CLOUDFLARE_ANALYTICS_TOKEN}", "spa": true}`}
-          />
-        )}
       </body>
     </html>
   );
@@ -104,6 +92,7 @@ export default function Root() {
     <ThemeProvider theme={ARGAMAN_VE_ZAHAV_THEME}>
       <GlobalStyle />
       <QueryClientProvider client={queryClient}>
+        <Analytics />
         <Outlet />
       </QueryClientProvider>
     </ThemeProvider>

@@ -1,6 +1,6 @@
 # 0022: Visits are measured by Cloudflare Web Analytics, cookieless and without events
 
-- **Status:** accepted
+- **Status:** superseded by [0024](0024-visits-are-measured-by-mixpanel-full-tracking-no-consent-banner.md)
 - **Date:** 2026-09-09
 - **Decided by:** goorlavi
 

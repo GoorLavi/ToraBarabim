@@ -2,6 +2,8 @@ import classNames from 'classnames';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
 import { lessonPath } from '~/helpers';
 
 import * as consts from './consts';
@@ -23,6 +25,7 @@ export const LessonCard = styled(({ className, lesson }: LessonCardProps) => {
       to={lessonPath(lesson)}
       aria-label={cardAriaLabel(lesson)}
       className={classNames(className, { cancelled: lesson.status === 'cancelled' })}
+      onClick={() => trackEvent(MIXPANEL_EVENTS.lessonClick, { lessonId: lesson.lessonId })}
     >
       <div className="poster">
         {teachingRabbi.photoUrl ? (
