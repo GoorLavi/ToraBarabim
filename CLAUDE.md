@@ -205,21 +205,32 @@ Every error response carries an accurate status code, not just a JSON error body
   429 (also set `Retry-After`).
 - **5xx** for server or upstream errors.
 
-## Verification (and the gap we are accepting)
+## Verification
 
-**There are no automated tests yet.** That is a deliberate, temporary choice to move
-fast at the start, and it has a cost: nothing catches a regression.
+There is a test suite now, in `server/test/`, and CI runs it on every pull request. It
+covers the public API and the rendering seam, and it is deliberately a few files with
+broad suites rather than a test per function
+([0023](docs/decisions/0023-the-public-pages-are-server-rendered.md) reversed
+[0008](docs/decisions/0008-no-automated-tests-yet.md), which had accepted the gap).
 
-So be precise about what you claim:
+It does not cover everything, so be precise about what you claim. These are three
+different sentences and they are not interchangeable:
 
-- "It works" currently means: it type-checks, it starts, and someone exercised the path
-  by hand. Say exactly that, not more.
+- **"It type checks and builds."** The compiler was happy. Nothing was executed.
+- **"The suite passes."** Say it only if you ran it. It needs a database and a built
+  client, so a sandbox without either cannot make this claim.
+- **"It works."** Only for a path someone actually exercised, by a test or by hand.
+  Name which.
+
 - **A screenshot is never proof of correctness.** Rendering the UI is design judgment.
   Say "the design is right", never "it works".
-- If you find yourself wanting to assert something and there is nowhere to assert it,
-  say so in your report. That is the signal that this section needs to change.
-
-Revisit this once there is enough behavior worth protecting.
+- **A test is written against a defect or a guarantee, never against a coverage
+  target.** The suite exists because this project shipped bugs a test would have
+  caught; each one earned its assertion.
+- **Never weaken, skip, or delete an assertion to get a green run.** A failing test is
+  a finding to report, not an obstacle.
+- If you want to assert something and there is nowhere to assert it, say so in your
+  report.
 
 ## Secrets and Configuration
 

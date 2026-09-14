@@ -1,6 +1,6 @@
 # 0023: The public pages are server rendered
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-09-13
 - **Decided by:** project owner
 - **Refines:** [0010](0010-production-shape-traded-for-cost.md), which chose the

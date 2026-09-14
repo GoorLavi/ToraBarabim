@@ -1,6 +1,6 @@
 # 0008: No automated tests yet, deliberately and temporarily
 
-- **Status:** accepted
+- **Status:** reversed by [0023](0023-the-public-pages-are-server-rendered.md)
 - **Date:** 2026-08-14
 - **Decided by:** project owner
 

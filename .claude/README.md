@@ -103,9 +103,10 @@ not because they are bad ideas:
 
 ## Known gaps
 
-- No automated tests, deliberately. See
-  [decision 0008](../docs/decisions/0008-no-automated-tests-yet.md) for what "it works"
-  is allowed to mean until that changes, and what would reverse it.
+- Testing is not an agent's own lane: there is a suite in `server/test/` and CI runs it,
+  but no agent is briefed to grow it, so coverage follows whoever happens to be asked.
+  See **Verification** in the root rulebook for what each claim about it is allowed to
+  mean.
 - No agent reviews code. The orchestrator verifies by hand that it compiles, runs, and
   behaves; nothing gives a verdict on the code itself.
 - Production is decided but not built. See
