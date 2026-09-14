@@ -112,10 +112,13 @@ jobs:
     needs: [build, detect-migration]
     if: needs.detect-migration.outputs.has-new-migration == 'true'
     environment: production-migrations
-    runs-on: ubuntu-latest
+    # Builds an arm64 image, so it runs on an arm64 runner: see deploy-server
+    # below for why, and for the symptom if this label ever stops resolving.
+    runs-on: ubuntu-24.04-arm
     permissions:
       id-token: write
       contents: read
+      actions: write
     steps:
       - uses: actions/checkout@v4
 
@@ -127,7 +130,6 @@ jobs:
 
       - uses: aws-actions/amazon-ecr-login@v2
 
-      - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
 
       - name: Read TorabarabimServer stack outputs
@@ -180,6 +182,8 @@ jobs:
           platforms: linux/arm64
           push: true
           tags: ${{ format('{0}:migrate-{1}', steps.ecr-repo.outputs.uri, github.sha) }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Register a new migration task definition revision with the fresh image
         id: register
@@ -298,10 +302,20 @@ jobs:
   deploy-server:
     needs: [build, deploy-client]
     if: always() && needs.build.result == 'success' && needs.deploy-client.result == 'success'
-    runs-on: ubuntu-latest
+    # server/Dockerfile pins linux/arm64 to match Fargate. On an x86 runner
+    # every RUN in it executed under QEMU emulation, which is what made this
+    # the slowest job in the pipeline by a wide margin. A native arm64 runner
+    # removes the emulation rather than working around it. If this label ever
+    # stops resolving, the job queues instead of failing, so a deploy that
+    # never starts is the symptom to look for.
+    runs-on: ubuntu-24.04-arm
     permissions:
       id-token: write
       contents: read
+      # Required by the build cache below, which stores its layers through the
+      # Actions cache service. Without it the restore is silently empty and
+      # every deploy reinstalls every dependency from scratch.
+      actions: write
     steps:
       - uses: actions/checkout@v4
 
@@ -313,7 +327,6 @@ jobs:
 
       - uses: aws-actions/amazon-ecr-login@v2
 
-      - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
 
       - name: Read TorabarabimServer stack outputs
@@ -337,6 +350,13 @@ jobs:
             | jq -r '.containerDefinitions[] | select(.name=="Server") | .image')
           echo "uri=${IMAGE%%:*}" >> "$GITHUB_OUTPUT"
 
+      # `mode=max` caches the intermediate stages, not only the final one,
+      # which is what makes server/Dockerfile's `npm ci` layer reusable: it
+      # installs five workspaces and is the slowest step in the image. Both
+      # image-building jobs share one cache scope on purpose, since the
+      # migrate and runtime targets share those base stages. The cache is
+      # keyed by layer, so a lockfile change still rebuilds the install and
+      # everything after it, which is correct.
       - name: Build and push the runtime image
         uses: docker/build-push-action@v6
         with:
@@ -346,6 +366,8 @@ jobs:
           platforms: linux/arm64
           push: true
           tags: ${{ format('{0}:server-{1}', steps.ecr-repo.outputs.uri, github.sha) }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Register a new task definition revision with the fresh image
         id: register
