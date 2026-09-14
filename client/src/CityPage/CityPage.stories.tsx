@@ -26,8 +26,10 @@ const installMockFetch = (respond: (url: URL) => Response | Promise<Response> | 
 const cityDetail = (overrides: Partial<CityDetailResponse>): CityDetailResponse => ({
   id: '4000',
   name: 'חיפה',
+  slug: 'חיפה',
   area: 'haifa',
   areaName: 'חיפה והקריות',
+  areaSlug: 'חיפה-והקריות',
   rabbis: [
     rabbiFixture({ id: 'r1', name: 'הרב אברהם כהן', title: 'ראש ישיבה', photoUrl: 'https://example.invalid/r1.jpg' }),
     rabbiFixture({ id: 'r2', name: 'הרב משה לוי' }),
@@ -46,7 +48,7 @@ const lesson = (overrides: Partial<LessonOccurrence>): LessonOccurrence => ({
   topic: 'parasha',
   audience: 'mixed',
   rabbi: rabbiFixture({ id: 'r1', name: 'הרב אברהם כהן' }),
-  place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'חיפה', area: 'haifa' },
+  place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'חיפה', citySlug: 'חיפה', area: 'haifa' },
   ...overrides,
 });
 
@@ -57,9 +59,20 @@ installMockFetch((url) => {
   // decoding it back.
   const pathname = decodeURIComponent(url.pathname);
 
-  if (pathname === '/v1/cities/עיר-מלאה') return jsonResponse(200, cityDetail({ name: 'עיר-מלאה' }));
+  if (pathname === '/v1/cities/עיר-מלאה') return jsonResponse(200, cityDetail({ name: 'עיר-מלאה', slug: 'עיר-מלאה' }));
   if (pathname === '/v1/cities/עיר-ריקה') {
-    return jsonResponse(200, cityDetail({ id: '46', name: 'עיר-ריקה', area: 'north', areaName: 'הצפון', rabbis: [] }));
+    return jsonResponse(
+      200,
+      cityDetail({
+        id: '46',
+        name: 'עיר-ריקה',
+        slug: 'עיר-ריקה',
+        area: 'north',
+        areaName: 'הצפון',
+        areaSlug: 'הצפון',
+        rabbis: [],
+      }),
+    );
   }
   if (pathname === '/v1/cities/שם-עיר-לא-קיים') return jsonResponse(404, { error: 'city_not_found', message: 'לא נמצאה' });
   if (pathname === '/v1/cities/עיר-שגיאה') return jsonResponse(500, { error: 'internal_error', message: 'שגיאה' });
@@ -87,7 +100,7 @@ installMockFetch((url) => {
           lesson({
             lessonId: 'a1',
             rabbi: rabbiFixture({ id: 'r9', name: 'הרב שמעון אזולאי' }),
-            place: { name: 'בית מדרש', street: 'הרצל 1', city: 'טבריה', area: 'north' },
+            place: { name: 'בית מדרש', street: 'הרצל 1', city: 'טבריה', citySlug: 'טבריה', area: 'north' },
           }),
         ],
         page: 1,
@@ -103,9 +116,9 @@ installMockFetch((url) => {
 
 // See RabbiPage.stories.tsx for why this uses `Routes`'s `location` override
 // instead of a second, nested MemoryRouter.
-const withRoute = (cityName: string) => (Story: React.ComponentType) => (
-  <Routes location={{ pathname: `/cities/${encodeURIComponent(cityName)}`, search: '', hash: '', state: null, key: 'story' }}>
-    <Route path="/cities/:cityName" element={<Story />} />
+const withRoute = (citySlug: string) => (Story: React.ComponentType) => (
+  <Routes location={{ pathname: `/cities/${encodeURIComponent(citySlug)}`, search: '', hash: '', state: null, key: 'story' }}>
+    <Route path="/cities/:slug" element={<Story />} />
   </Routes>
 );
 

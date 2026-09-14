@@ -2,9 +2,10 @@ import styled from 'styled-components';
 
 import * as pageConsts from '~/CityPage/consts';
 import { StateCard } from '~/components/StateCard/StateCard';
+import { DayGroup } from '~/components/DayGroup/DayGroup';
+import { DayGroupSkeleton } from '~/components/DayGroupSkeleton/DayGroupSkeleton';
 
-import { DayGroup } from '../DayGroup/DayGroup';
-import { DayGroupSkeleton } from '../DayGroupSkeleton/DayGroupSkeleton';
+import { AreaLink } from '../AreaLink/AreaLink';
 import type { CityEmptyStateProps } from './models';
 import * as styles from './styles';
 
@@ -14,9 +15,12 @@ import * as styles from './styles';
 // weight"). While the area fetch is still pending its body optimistically
 // reads as "widened", correcting to the "also empty" copy once resolved;
 // an area-fetch failure degrades quietly, the same choice
-// RabbiEmptyLessons makes for its own fallback.
+// RabbiEmptyLessons makes for its own fallback. The area link stays
+// reachable regardless of how that fetch resolves: the person landed here
+// through the city, and the area page is the route onward
+// (design spec, "close the hole CityEmptyState left").
 export const CityEmptyState = styled(
-  ({ className, cityName, areaName, areaItems, isAreaPending, isAreaError }: CityEmptyStateProps) => {
+  ({ className, cityName, areaName, areaSlug, areaItems, isAreaPending, isAreaError }: CityEmptyStateProps) => {
     const isAreaAlsoEmpty = !isAreaPending && !isAreaError && areaItems?.length === 0;
     const body = isAreaAlsoEmpty ? pageConsts.areaAlsoEmptyBody(areaName) : pageConsts.widenedToAreaBody(cityName, areaName);
     const showAreaGroup = !isAreaError && (isAreaPending || (areaItems && areaItems.length > 0));
@@ -33,6 +37,8 @@ export const CityEmptyState = styled(
 
         {showAreaGroup &&
           (isAreaPending ? <DayGroupSkeleton /> : <DayGroup heading={pageConsts.areaGroupHeading(areaName)} items={areaItems ?? []} />)}
+
+        <AreaLink {...{ areaSlug, areaName }} />
       </div>
     );
   },

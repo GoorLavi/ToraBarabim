@@ -36,7 +36,12 @@ const SERVER_BUILD_PATH = path.join(__dirname, '../../../client/build/server/ind
 // bare ones to serve for it. `@fastify/static` is registered with
 // `wildcard: false` so it does not also claim a catch-all route of its own,
 // which would collide with the one below.
-const STATIC_ASSET_PATTERN = /^\/(?:assets\/.+|favicon\.svg|robots\.txt|sitemap\.xml|outage\.html)$/;
+// `sitemap.xml` is deliberately absent: it is a React Router resource route
+// now (client/src/routes/sitemap.ts), built from the database on request,
+// and matching it here would serve the stale build-time file this same
+// server directory no longer even contains instead of ever reaching that
+// route.
+const STATIC_ASSET_PATTERN = /^\/(?:assets\/.+|favicon\.svg|robots\.txt|outage\.html)$/;
 
 // No official Fastify adapter exists for React Router 7 (only Express), so
 // this hand-builds the Web Fetch `Request` the framework's own

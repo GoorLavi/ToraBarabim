@@ -1,6 +1,5 @@
 import { AREAS } from '../../db/schema/enums';
-import { AREA_NAMES_HE } from '../shared/consts';
-import { toSlug } from '../shared/slug';
+import { AREA_NAMES_HE, toAreaSlug } from '../shared/consts';
 import * as cityService from '../city/city';
 import { AreaNotFoundError } from './errors';
 import type { AreaDetailResult, AreaDirectoryResult, AreaSummary } from './models';
@@ -15,7 +14,7 @@ export const listDirectory = async (): Promise<AreaDirectoryResult> => {
   const areas: AreaSummary[] = cityDirectory.areas.map((group) => ({
     area: group.area,
     areaName: group.areaName,
-    slug: toSlug(group.areaName),
+    slug: group.slug,
     cityCount: group.cities.length,
     lessonCount: group.cities.reduce((total, city) => total + city.lessonCount, 0),
   }));
@@ -24,7 +23,7 @@ export const listDirectory = async (): Promise<AreaDirectoryResult> => {
 };
 
 export const resolveBySlug = async (slug: string): Promise<AreaDetailResult> => {
-  const area = AREAS.find((candidate) => toSlug(AREA_NAMES_HE[candidate]) === slug);
+  const area = AREAS.find((candidate) => toAreaSlug(candidate) === slug);
   if (!area) {
     throw new AreaNotFoundError(slug);
   }

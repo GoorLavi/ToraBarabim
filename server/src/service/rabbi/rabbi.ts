@@ -3,6 +3,7 @@ import { eq, inArray, sql } from 'drizzle-orm';
 import { db } from '../../db/client';
 import { cities, lessons, rabbis } from '../../db/schema';
 import { toRabbiSummary } from '../shared/rabbi-summary';
+import { toSlug } from '../shared/slug';
 import { RabbiNotFoundError } from './errors';
 import type { RabbiCityRecord, RabbiDirectoryEntryRecord, RabbiListQuery, RabbiListResult, RabbiSummaryRecord } from './models';
 
@@ -51,7 +52,7 @@ const loadLessonStats = async (rabbiIds: string[]): Promise<Map<string, LessonSt
   const citiesByRabbi = new Map<string, Map<number, RabbiCityRecord>>();
   for (const row of cityRows) {
     const cityMap = citiesByRabbi.get(row.rabbiId) ?? new Map<number, RabbiCityRecord>();
-    cityMap.set(row.code, { code: row.code, nameHe: row.nameHe, area: row.area });
+    cityMap.set(row.code, { code: row.code, nameHe: row.nameHe, slug: toSlug(row.nameHe), area: row.area });
     citiesByRabbi.set(row.rabbiId, cityMap);
   }
 

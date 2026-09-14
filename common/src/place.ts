@@ -8,5 +8,6 @@ export interface Place {
   street: string;
   floor?: string;
   city: string;
+  citySlug: string;
   area: Area;
 }

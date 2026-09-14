@@ -30,6 +30,7 @@ export interface RabbiSummaryRecord {
 export interface RabbiCityRecord {
   code: number;
   nameHe: string;
+  slug: string;
   area: Area;
 }
 

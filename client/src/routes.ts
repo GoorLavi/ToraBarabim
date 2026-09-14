@@ -13,10 +13,14 @@ export default [
     // that could drift out of step with this one is never needed.
     route('rabbis/:rabbiId/:slug?', 'routes/rabbis.$rabbiId/route.tsx'),
     route('cities', 'routes/cities.tsx'),
-    route('cities/:cityName', 'routes/cities.$cityName.tsx'),
+    route('cities/:slug', 'routes/cities.$slug/route.tsx'),
+    route('areas/:slug', 'routes/areas.$slug/route.tsx'),
     route('contact', 'routes/contact.tsx'),
     route('*', 'routes/not-found.tsx'),
   ]),
   route('admin/*', 'routes/admin.tsx'),
   route('rabbi/*', 'routes/rabbi-panel.tsx'),
+  // Outside `layout`: it renders no UI, only an XML `Response` (see
+  // routes/sitemap.ts).
+  route('sitemap.xml', 'routes/sitemap.ts'),
 ] satisfies RouteConfig;

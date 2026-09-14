@@ -3,13 +3,14 @@ import styled from 'styled-components';
 
 import { BackLink } from '~/components/BackLink/BackLink';
 import { NotFoundScreen } from '~/components/NotFoundScreen/NotFoundScreen';
+import { cityPath } from '~/helpers';
 
 import { LessonDetails } from './components/LessonDetails/LessonDetails';
 import { LessonDetailsSkeleton } from './components/LessonDetailsSkeleton/LessonDetailsSkeleton';
 import { LessonTicket } from './components/LessonTicket/LessonTicket';
 import { LessonTicketSkeleton } from './components/LessonTicket/components/LessonTicketSkeleton/LessonTicketSkeleton';
 import * as consts from './consts';
-import { lessonErrorCopy, otherLessonsInCityHref, teachingRabbiOf } from './helpers';
+import { lessonErrorCopy, teachingRabbiOf } from './helpers';
 import type { LessonPageProps } from './models';
 import * as styles from './styles';
 import { useLessonOccurrence } from './useLessonOccurrence';
@@ -57,7 +58,7 @@ export const LessonPage = styled(({ className }: LessonPageProps) => {
           <LessonTicket occurrence={occurrence} />
 
           {occurrence.status === 'cancelled' && (
-            <Link className="otherLessons" to={otherLessonsInCityHref(occurrence.place.city)} dir="auto">
+            <Link className="otherLessons" to={cityPath({ slug: occurrence.place.citySlug })} dir="auto">
               {consts.otherLessonsInCityLabel(occurrence.place.city)}
               <svg className="chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />

@@ -22,7 +22,7 @@ const todayItems: LessonOccurrence[] = [
     topic: 'parasha',
     audience: 'mixed',
     rabbi: rabbiFixture({ id: 'rabbi-1', name: 'הרב יעקב מזרחי', title: 'דיין' }),
-    place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'נתניה', area: 'sharon' },
+    place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'נתניה', citySlug: 'נתניה', area: 'sharon' },
   },
   {
     lessonId: 'lesson-2',
@@ -34,7 +34,7 @@ const todayItems: LessonOccurrence[] = [
     topic: 'gemara',
     audience: 'men',
     rabbi: rabbiFixture({ id: 'rabbi-2', name: 'הרב אברהם כהן', title: 'ראש ישיבה' }),
-    place: { name: 'בית הכנסת "אוהל יעקב"', street: 'רחוב הרב קוק 12', city: 'נתניה', area: 'sharon' },
+    place: { name: 'בית הכנסת "אוהל יעקב"', street: 'רחוב הרב קוק 12', city: 'נתניה', citySlug: 'נתניה', area: 'sharon' },
   },
 ];
 
@@ -49,7 +49,7 @@ const futureDayItems: LessonOccurrence[] = [
     topic: 'other',
     audience: 'women',
     rabbi: rabbiFixture({ id: 'rabbi-4', name: 'הרב שלמה אביטן' }),
-    place: { name: 'בית הכנסת "אור החיים"', street: 'רחוב טרומפלדור 5', city: 'נתניה', area: 'south' },
+    place: { name: 'בית הכנסת "אור החיים"', street: 'רחוב טרומפלדור 5', city: 'נתניה', citySlug: 'נתניה', area: 'south' },
   },
 ];
 

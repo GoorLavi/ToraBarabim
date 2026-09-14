@@ -1,9 +1,10 @@
-import type { Area, Lesson, LessonException, LessonPlace, Place, Rabbi, Weekday } from '@torabarabim/common';
+import type { Lesson, LessonException, Rabbi, Weekday } from '@torabarabim/common';
 import { and, eq, gte, inArray, lte } from 'drizzle-orm';
 
 import { db } from '../../db/client';
 import { cities, lessonExceptions, lessons, rabbis } from '../../db/schema';
 import { toRabbiSummary as toRabbi } from '../shared/rabbi-summary';
+import { toPlace, type PlaceCityRow } from '../shared/place';
 import { DEFAULT_RANGE_DAYS, MAX_RANGE_DAYS } from './consts';
 import { InvalidDateRangeError, LessonNotFoundError, LessonOccurrenceNotFoundError } from './errors';
 import { addDays, compareIsoDates, daysBetween, todayInIsrael } from './israel-time';
@@ -51,7 +52,6 @@ const resolveRange = (query: LessonSearchQuery, now: Date): ResolvedLessonSearch
 
 type LessonRow = typeof lessons.$inferSelect;
 type ExceptionRow = typeof lessonExceptions.$inferSelect;
-type CityRow = { code: number; nameHe: string; area: Area };
 
 const toLessonDomain = (row: LessonRow): Lesson => ({
   id: row.id,
@@ -92,17 +92,6 @@ const toExceptionDomain = (row: ExceptionRow): LessonException =>
         note: row.note ?? undefined,
       };
 
-// Resolves a lesson's (or an exception's override) `LessonPlace` into the
-// public `Place` shape by looking up its city, the one join a venue ever
-// needs since it carries everything else as its own text.
-const toPlace = (place: LessonPlace, cityByCode: Map<number, CityRow>): Place => {
-  const city = cityByCode.get(place.cityCode);
-  if (!city) {
-    throw new Error(`data inconsistency: a lesson references unknown city code ${place.cityCode}`);
-  }
-  return { name: place.name, street: place.street, floor: place.floor, city: city.nameHe, area: city.area };
-};
-
 const STATUS_ORDER = { scheduled: 0, cancelled: 1 } as const;
 
 // Cancelled occurrences stay in the result and sort after scheduled ones
@@ -120,7 +109,7 @@ const compareOccurrences = (a: ResolvedOccurrence, b: ResolvedOccurrence): numbe
 const resolveRecord = (
   occurrence: ResolvedOccurrence,
   rabbiById: Map<string, Rabbi>,
-  cityByCode: Map<number, CityRow>,
+  cityByCode: Map<number, PlaceCityRow>,
 ): ResolvedLessonOccurrence => {
   const rabbi = rabbiById.get(occurrence.lesson.rabbiId);
   if (!rabbi) {

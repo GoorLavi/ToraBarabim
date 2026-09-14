@@ -11,6 +11,7 @@ import type {
 export const toCity = (record: ResolvedCity): City => ({
   id: String(record.code),
   name: record.nameHe,
+  slug: record.slug,
   area: record.area,
 });
 
@@ -26,6 +27,7 @@ export const toCityWithLessonCount = (record: CityWithLessonCountResult): CityWi
 const toCityAreaGroup = (group: CityAreaGroupResult): CityAreaGroup => ({
   area: group.area,
   areaName: group.areaName,
+  slug: group.slug,
   cities: group.cities.map(toCityWithLessonCount),
 });
 
@@ -36,5 +38,6 @@ export const toCityDirectoryResponse = (result: CityDirectoryResult): CityDirect
 export const toCityDetailResponse = (result: CityDetailResult): CityDetailResponse => ({
   ...toCity(result),
   areaName: result.areaName,
+  areaSlug: result.areaSlug,
   rabbis: result.rabbis,
 });

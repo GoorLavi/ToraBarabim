@@ -1,4 +1,4 @@
-import type { City } from '@torabarabim/common';
+import type { CityRecord } from '../models';
 
 import type { SourceAdapter } from '../adapters/models';
 import { todayInIsrael } from '../date-utils';
@@ -27,7 +27,7 @@ const emptyResult = (adapter: SourceAdapter, status: 'failed' | 'empty', error?:
 // snapshot, and persist the new snapshot. Never throws: any failure at any
 // step becomes a 'failed' result, so one bad adapter cannot take down the
 // others in runAll below.
-export const runSource = async (adapter: SourceAdapter, fetcher: Fetcher, cities: City[], outputDir: string): Promise<SourceRunResult> => {
+export const runSource = async (adapter: SourceAdapter, fetcher: Fetcher, cities: CityRecord[], outputDir: string): Promise<SourceRunResult> => {
   let rawLessons;
   try {
     rawLessons = await adapter.collect(fetcher);
@@ -60,7 +60,7 @@ export const runSource = async (adapter: SourceAdapter, fetcher: Fetcher, cities
   }
 };
 
-export const runAll = async (adapters: SourceAdapter[], config: Config, cities: City[]): Promise<RunReport> => {
+export const runAll = async (adapters: SourceAdapter[], config: Config, cities: CityRecord[]): Promise<RunReport> => {
   const fetcher = createFetcher({
     userAgent: config.userAgent,
     requestDelayMs: config.requestDelayMs,

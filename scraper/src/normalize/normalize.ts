@@ -1,4 +1,6 @@
-import type { City, Recurrence } from '@torabarabim/common';
+import type { Recurrence } from '@torabarabim/common';
+
+import type { CityRecord } from '../models';
 
 import type { RawLesson } from '../adapters/models';
 import { parseAudience, parseTopic } from './audience-topic';
@@ -29,7 +31,7 @@ const resolveRecurrence = (
 // Converts one RawLesson into the shared domain vocabulary. Pure: every
 // input it needs (the reference date a yearless date resolves against, the
 // city list) is passed in, so it needs no network call to be exercised.
-export const normalizeLesson = (sourceId: string, raw: RawLesson, cities: City[], referenceIsoDate: string): CollectedLesson => {
+export const normalizeLesson = (sourceId: string, raw: RawLesson, cities: CityRecord[], referenceIsoDate: string): CollectedLesson => {
   const gaps: GapField[] = [];
 
   const title = raw.titleRaw?.trim() || undefined;

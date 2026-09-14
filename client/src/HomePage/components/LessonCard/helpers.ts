@@ -15,9 +15,6 @@ import { CANCELLED_LABEL, LESSON_AUDIENCE_LABELS, LESSON_TOPIC_LABELS, cardWeekd
 export const descriptionLabel = (lesson: LessonOccurrence): string | undefined =>
   lesson.title ?? (lesson.topic ? LESSON_TOPIC_LABELS[lesson.topic] : undefined);
 
-// The client route for a single occurrence (client/src/App/App.tsx).
-export const lessonCardHref = (lesson: LessonOccurrence): string => `/lesson/${lesson.lessonId}/${lesson.date}`;
-
 // The card's visible text runs together into one accessible name without
 // this: "יום א׳21:00הרב יעקב מזרחיגברים · מבוא..." (design review nit). Built
 // as real, comma-separated sentence fragments instead.

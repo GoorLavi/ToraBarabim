@@ -1,7 +1,7 @@
-// Fires when no city exists with the given exact Hebrew name. Maps to 404.
+// Fires when no city's slug matches the requested value. Maps to 404.
 export class CityNotFoundError extends Error {
-  constructor(name: string) {
-    super(`no city found with name '${name}'`);
+  constructor(slug: string) {
+    super(`no city found with slug '${slug}'`);
     this.name = 'CityNotFoundError';
   }
 }

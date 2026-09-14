@@ -8,27 +8,22 @@ import { SITE_ORIGIN } from './consts';
 const robotsTxt = `User-agent: *
 Allow: /
 Disallow: /admin
+Disallow: /rabbi
 
 Sitemap: ${SITE_ORIGIN}/sitemap.xml
 `;
 
-const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>${SITE_ORIGIN}/</loc>
-  </url>
-</urlset>
-`;
-
-// Placeholder sitemap: one entry because one public URL exists today. Grows
-// to one entry per city and per rabbi page once those routes ship.
+// `sitemap.xml` is a resource route now (client/src/routes/sitemap.ts),
+// built from the database on every request instead of emitted once here: a
+// rabbi or a city added after this build would otherwise stay invisible to
+// crawlers until the next deploy. `robots.txt` carries no per-record data,
+// so it stays a build-time file.
 // `%SITE_ORIGIN%` text substitution is gone with index.html: root.tsx and
 // each route's `meta` now interpolate SITE_ORIGIN directly in JS.
 const seoFiles = (): Plugin => ({
   name: 'seo-files',
   generateBundle() {
     this.emitFile({ type: 'asset', fileName: 'robots.txt', source: robotsTxt });
-    this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: sitemapXml });
   },
 });
 

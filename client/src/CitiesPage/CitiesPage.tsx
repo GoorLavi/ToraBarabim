@@ -1,11 +1,12 @@
 import styled from 'styled-components';
 
+import { CityAreaSectionSkeleton } from '~/components/CityAreaSectionSkeleton/CityAreaSectionSkeleton';
 import { StateCard } from '~/components/StateCard/StateCard';
+import { cityCountLabel } from '~/consts';
 
 import { CityAreaSection } from './components/CityAreaSection/CityAreaSection';
-import { CityAreaSectionSkeleton } from './components/CityAreaSectionSkeleton/CityAreaSectionSkeleton';
 import * as consts from './consts';
-import { cityCountLabel, totalCityCount } from './helpers';
+import { totalCityCount } from './helpers';
 import type { CitiesPageProps } from './models';
 import * as styles from './styles';
 import { useCityDirectory } from './useCityDirectory';

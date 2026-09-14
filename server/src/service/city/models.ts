@@ -7,15 +7,16 @@ export const citySearchQuerySchema = z.object({
 
 export type CitySearchQuery = z.infer<typeof citySearchQuerySchema>;
 
-export const cityNameParamSchema = z.object({
-  name: z.string().trim().min(1).max(200),
+export const citySlugParamSchema = z.object({
+  slug: z.string().trim().min(1).max(100),
 });
 
-export type CityNameParam = z.infer<typeof cityNameParamSchema>;
+export type CitySlugParam = z.infer<typeof citySlugParamSchema>;
 
 export interface ResolvedCity {
   code: number;
   nameHe: string;
+  slug: string;
   area: Area;
 }
 
@@ -26,6 +27,7 @@ export interface CityWithLessonCount extends ResolvedCity {
 export interface CityAreaGroup {
   area: Area;
   areaName: string;
+  slug: string;
   cities: CityWithLessonCount[];
 }
 
@@ -37,5 +39,6 @@ export interface CityDirectoryResult {
 
 export interface CityDetailResult extends ResolvedCity {
   areaName: string;
+  areaSlug: string;
   rabbis: Rabbi[];
 }

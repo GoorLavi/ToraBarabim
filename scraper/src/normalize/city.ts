@@ -1,4 +1,6 @@
-import type { Area, City } from '@torabarabim/common';
+import type { Area } from '@torabarabim/common';
+
+import type { CityRecord } from '../models';
 
 import { CITY_DOUBLED_LETTERS, CITY_QUOTE_CHARS, CITY_SUFFIX_SEPARATOR } from './consts';
 
@@ -18,8 +20,8 @@ const normalizeCityName = (name: string): string =>
 // one city is ambiguous and is left out of the index: picking either city
 // would risk sending someone to the wrong end of the country, which is
 // worse than the gap it would replace.
-const buildCityIndex = (cities: City[]): Map<string, City> => {
-  const groupedByKey = new Map<string, City[]>();
+const buildCityIndex = (cities: CityRecord[]): Map<string, CityRecord> => {
+  const groupedByKey = new Map<string, CityRecord[]>();
   for (const city of cities) {
     const key = normalizeCityName(city.name);
     const group = groupedByKey.get(key);
@@ -27,7 +29,7 @@ const buildCityIndex = (cities: City[]): Map<string, City> => {
     else groupedByKey.set(key, [city]);
   }
 
-  const index = new Map<string, City>();
+  const index = new Map<string, CityRecord>();
   for (const [key, group] of groupedByKey) {
     const [onlyCity] = group;
     if (group.length === 1 && onlyCity) index.set(key, onlyCity);
@@ -38,9 +40,9 @@ const buildCityIndex = (cities: City[]): Map<string, City> => {
 // Keyed on the cities array's own identity: every lesson in a run is
 // resolved against the same array, so the index is built once per run and
 // reused, never rebuilt per lesson.
-const indexByCitiesList = new WeakMap<City[], Map<string, City>>();
+const indexByCitiesList = new WeakMap<CityRecord[], Map<string, CityRecord>>();
 
-const getCityIndex = (cities: City[]): Map<string, City> => {
+const getCityIndex = (cities: CityRecord[]): Map<string, CityRecord> => {
   const cached = indexByCitiesList.get(cities);
   if (cached) return cached;
 
@@ -54,7 +56,7 @@ const getCityIndex = (cities: City[]): Map<string, City> => {
 // normalizeCityName). A name that still does not match, or matches more
 // than one official city, is a gap to report, never a guess at the nearest
 // city.
-export const resolveCity = (cityRaw: string, cities: City[]): { name: string; area: Area } | undefined => {
+export const resolveCity = (cityRaw: string, cities: CityRecord[]): { name: string; area: Area } | undefined => {
   const match = getCityIndex(cities).get(normalizeCityName(cityRaw));
   return match ? { name: match.name, area: match.area } : undefined;
 };

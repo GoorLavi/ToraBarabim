@@ -56,6 +56,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     { property: 'og:title', content: title },
     { property: 'og:description', content: description },
     { property: 'og:url', content: url },
+    { 'script:ld+json': consts.personJsonLd(data, url) },
   ];
 };
 

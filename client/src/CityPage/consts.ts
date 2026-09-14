@@ -1,9 +1,9 @@
 import type { Area } from '@torabarabim/common';
 
-export const BACK_TO_ALL_CITIES_LABEL = 'חזרה לכל הערים';
+import { lessonCountLabel } from '~/consts';
 
 export const CITY_PAGE_QUERY_KEYS = {
-  detail: (cityName: string) => ['city', cityName] as const,
+  detail: (citySlug: string) => ['city', citySlug] as const,
   lessons: (cityCode: string, pageSize: number) => ['city', cityCode, 'lessons', pageSize] as const,
   areaLessons: (area: Area | undefined) => ['city', 'area-lessons', area] as const,
 };
@@ -32,7 +32,6 @@ export const ALL_CITIES_LABEL = 'לכל הערים';
 export const CONTACT_US_LABEL = 'כתבו לנו';
 
 export const cityHeading = (cityName: string): string => `שיעורים ב${cityName}`;
-export const lessonCountLabel = (count: number): string => (count === 1 ? 'שיעור אחד' : `${count} שיעורים`);
 export const citySubheading = (count: number): string => `${lessonCountLabel(count)} בשבועיים הקרובים`;
 export const areaLinkLabel = (areaName: string): string => `לכל השיעורים באזור ${areaName}`;
 export const whoTeachesHeading = (cityName: string): string => `${WHO_TEACHES_HEADING_PREFIX}${cityName}`;
