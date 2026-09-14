@@ -109,6 +109,12 @@ export class SiteStack extends Stack {
     const apiOrigin = new origins.HttpOrigin(apiOriginDomain, {
       protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
     });
+    // Proxies Mixpanel analytics through this distribution's own domain
+    // (behind `/mp/*` below) so an ad blocker that blocks `api-eu.mixpanel.com`
+    // by hostname no longer catches the request.
+    const mixpanelOrigin = new origins.HttpOrigin('api-eu.mixpanel.com', {
+      protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
+    });
     // Everything except `Host`, which must stay CloudFront's own. API
     // Gateway matches the incoming `Host` against its execute-api domain
     // and answers anything else with a bare 403, so forwarding the
@@ -134,6 +140,22 @@ export class SiteStack extends Stack {
       code: cloudfront.FunctionCode.fromInline(`
         function handler(event) {
           return { statusCode: 404, statusDescription: 'Not Found' };
+        }
+      `),
+      runtime: cloudfront.FunctionRuntime.JS_2_0,
+    });
+
+    // The `/mp/*` behavior below exists only so the viewer never sees the
+    // `api-eu.mixpanel.com` hostname; the origin still expects its own path
+    // shape (`/track`, `/engage`, and so on), so the `/mp` prefix that makes
+    // the behavior routable has to come off again before the request leaves
+    // the edge.
+    const stripMixpanelPrefixFunction = new cloudfront.Function(this, 'StripMixpanelPrefixFunction', {
+      code: cloudfront.FunctionCode.fromInline(`
+        function handler(event) {
+          var request = event.request;
+          request.uri = request.uri.replace(/^\\/mp/, '');
+          return request;
         }
       `),
       runtime: cloudfront.FunctionRuntime.JS_2_0,
@@ -231,6 +253,18 @@ export class SiteStack extends Stack {
           cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
           functionAssociations: [
             { function: blockHealthCheckFunction, eventType: cloudfront.FunctionEventType.VIEWER_REQUEST },
+          ],
+        },
+        // Same-origin path for Mixpanel calls (client/src analytics client
+        // posts here instead of directly to api-eu.mixpanel.com). No cache:
+        // every call is a distinct tracking event, not a cacheable resource.
+        '/mp/*': {
+          origin: mixpanelOrigin,
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+          functionAssociations: [
+            { function: stripMixpanelPrefixFunction, eventType: cloudfront.FunctionEventType.VIEWER_REQUEST },
           ],
         },
         '/v1/*': {

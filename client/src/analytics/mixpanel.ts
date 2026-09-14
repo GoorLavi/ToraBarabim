@@ -1,6 +1,6 @@
 import type { Mixpanel } from 'mixpanel-browser';
 
-import { MIXPANEL_PROJECT_TOKEN } from '../../consts';
+import { MIXPANEL_PROJECT_TOKEN, SITE_ORIGIN } from '../../consts';
 
 // `mixpanel-browser` touches `window`/`document` at import time, and this
 // module is imported by components that render during SSR (SearchField,
@@ -24,7 +24,7 @@ export const initAnalytics = (): void => {
     mixpanel.init(MIXPANEL_PROJECT_TOKEN, {
       track_pageview: false,
       persistence: 'localStorage',
-      api_host: 'https://api-eu.mixpanel.com',
+      api_host: `${SITE_ORIGIN}/mp`,
     });
     mixpanelInstance = mixpanel;
     queuedEvents.splice(0).forEach(({ name, props }) => mixpanelInstance?.track(name, props));
