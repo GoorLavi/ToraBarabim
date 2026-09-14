@@ -5,12 +5,13 @@ import type { HeadersFunction, LoaderFunctionArgs, MetaFunction } from 'react-ro
 import { isRouteErrorResponse, useRouteError } from 'react-router';
 
 import { NotFoundScreen } from '~/components/NotFoundScreen/NotFoundScreen';
+import { SITE_WIDE_META } from '~/consts';
 import { lessonPath } from '~/helpers';
 import * as lessonPageConsts from '~/LessonPage/consts';
 import { teachingRabbiOf } from '~/LessonPage/helpers';
 import { LessonPage } from '~/LessonPage/LessonPage';
 
-import { SITE_ORIGIN, SITE_WIDE_META } from '../../consts';
+import { SITE_ORIGIN } from '../../consts';
 import * as consts from './consts';
 import { loadLessonOccurrence } from './lesson.server';
 

@@ -4,10 +4,11 @@ import type { RabbiDirectoryResponse } from '@torabarabim/common';
 import type { HeadersFunction, MetaFunction } from 'react-router';
 
 import { StateCard } from '~/components/StateCard/StateCard';
+import { SITE_WIDE_META } from '~/consts';
 import { LOAD_ERROR_BODY, LOAD_ERROR_HEADING, RABBIS_QUERY_KEYS, RETRY_LABEL } from '~/RabbisPage/consts';
 import { RabbisPage } from '~/RabbisPage/RabbisPage';
 
-import { SITE_ORIGIN, SITE_WIDE_META } from '../../consts';
+import { SITE_ORIGIN } from '../../consts';
 import * as consts from './consts';
 import { loadRabbiDirectory } from './rabbis.server';
 
