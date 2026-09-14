@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readdir } from 'node:fs/promises';
 import { after, before, describe, test } from 'node:test';
 
 import type { City, HomeResponse, LessonOccurrence, LessonSearchResponse, RabbiDirectoryEntry, RabbiDirectoryResponse } from '@torabarabim/common';
@@ -11,6 +12,7 @@ import { registerLessonRoutes } from '../src/api/lessons';
 import { registerRabbiDirectoryRoutes } from '../src/api/rabbis';
 import { db } from '../src/db/client';
 import { registerErrorHandler } from '../src/plugins/error-handler';
+import { CLIENT_BUILD_DIR, registerSsr } from '../src/plugins/ssr';
 import { nextDateOnWeekday, todayInIsrael } from '../src/service/lesson/israel-time';
 import { toSlug } from '../src/service/shared/slug';
 
@@ -37,10 +39,36 @@ const assertDatabaseReachable = async (): Promise<void> => {
   }
 };
 
+// A missing or empty client build must fail the whole suite loudly, with a
+// fix in hand, the same way `assertDatabaseReachable` does for Postgres:
+// `/health`'s render probe needs the real SSR plugin mounted (see
+// `buildApp`), and that plugin serves this build's output.
+const assertClientBuilt = async (): Promise<void> => {
+  try {
+    const entries = await readdir(CLIENT_BUILD_DIR);
+    if (entries.length === 0) throw new Error('client build directory is empty');
+  } catch (cause) {
+    throw new Error(
+      `Expected a built client at ${CLIENT_BUILD_DIR}. Run \`npm run build -w client\` first.`,
+      { cause },
+    );
+  }
+};
+
 // Mirrors the public routes `src/index.ts` registers, minus what a browser
 // needs (CORS, cookies, multipart, rate limiting) and everything behind
 // auth: none of that is reachable through `app.inject`, and it is not part
 // of the public surface this suite exists to protect.
+//
+// The SSR plugin is the one exception: it is mounted last, exactly as
+// `src/index.ts` does, because `/health`'s render probe (`app.inject`
+// against `HEALTH_RENDER_PROBE_PATH`) must hit the real catch-all route.
+// Without it, the probe path matches nothing, Fastify answers its own
+// default 404, and the health check would pass without ever proving
+// rendering works, which is the one failure it exists to catch. The cost is
+// real: this suite now needs a client build to run, and loads the client's
+// compiled server bundle once. Accepted because a health test that cannot
+// fail when rendering is broken is not a test.
 const buildApp = async (): Promise<FastifyInstance> => {
   const app = Fastify({ logger: false });
   await registerHealthRoutes(app);
@@ -48,6 +76,7 @@ const buildApp = async (): Promise<FastifyInstance> => {
   await registerHomeRoutes(app);
   await registerCityRoutes(app);
   await registerRabbiDirectoryRoutes(app);
+  await registerSsr(app);
   registerErrorHandler(app);
   return app;
 };
@@ -68,7 +97,7 @@ describe('public API', () => {
   let app: FastifyInstance;
 
   before(async () => {
-    await assertDatabaseReachable();
+    await Promise.all([assertDatabaseReachable(), assertClientBuilt()]);
     app = await buildApp();
   });
 

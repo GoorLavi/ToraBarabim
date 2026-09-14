@@ -80,6 +80,14 @@ jobs:
 
       - run: npm ci
 
+      # The public-api suite's `/health` test mounts the real SSR plugin
+      # (server/src/plugins/ssr.ts), which serves this build output, so this
+      # job's environment matches what a deployed container actually has.
+      # Without it, `/health` would either 503 on a missing client build or,
+      # worse, pass its render probe for the wrong reason: no client build
+      # means no SSR route is even reachable to prove out.
+      - run: npm run build --workspace client
+
       # `db:migrate`/`db:seed` read the repo-root `.env` via `--env-file`
       # (server/CLAUDE.md, "No entry point loads the environment itself"),
       # so this job's own env above is written out to that file, letting the
