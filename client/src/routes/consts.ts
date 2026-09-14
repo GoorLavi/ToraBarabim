@@ -1,3 +1,7 @@
+import type { CityDirectoryResponse } from '@torabarabim/common';
+
+import { SITE_NAME } from '../../consts';
+
 // Shared by every server-rendered route's loader and `headers` export.
 
 // An error response must never sit behind the CDN's success caching (the
@@ -22,3 +26,12 @@ export const PUBLIC_CACHE_HEADERS = { 'Cache-Control': 'public, max-age=60, stal
 export const HOME_ERROR_HEADING = 'לא הצלחנו לטעון את הדף';
 export const HOME_ERROR_BODY = 'משהו השתבש בטעינת השיעורים. אפשר לנסות לרענן את הדף.';
 export const HOME_ERROR_RELOAD_LABEL = 'רענון הדף';
+
+// cities.tsx's own document title and description, not in-page copy:
+// CitiesPage/consts.ts owns what a visitor reads on the page itself.
+export const citiesPageTitle = (): string => `כל הערים | שיעורי תורה לפי עיר ואזור | ${SITE_NAME}`;
+
+export const citiesPageDescription = (directory: CityDirectoryResponse): string => {
+  const cityCount = directory.areas.reduce((total, group) => total + group.cities.length, 0);
+  return `כל הערים והאזורים שיש בהם שיעורי תורה, ${cityCount} ערים בפריסה ארצית, ב${SITE_NAME}.`;
+};

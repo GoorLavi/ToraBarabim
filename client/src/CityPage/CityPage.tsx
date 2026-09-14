@@ -30,7 +30,7 @@ import { useCityLessons } from './useCityLessons';
 // 3 (the area) only fires once call 2 comes back empty (useCityLessons.ts,
 // useAreaLessons.ts).
 export const CityPage = styled(({ className }: CityPageProps) => {
-  const { cityName: citySlug = '' } = useParams();
+  const { slug: citySlug = '' } = useParams();
   const cityQuery = useCityDetail(citySlug);
   const city = cityQuery.data;
   const errorCopy = cityQuery.error ? cityErrorCopy(cityQuery.error) : null;
