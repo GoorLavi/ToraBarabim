@@ -24,8 +24,3 @@ export const lessonErrorCopy = (error: LessonPageApiError | null): LessonErrorCo
 // The substitute teaches this occurrence when one is assigned; otherwise
 // it is the lesson's own rabbi. Shared by `LessonTicket` and `LessonDetails`.
 export const teachingRabbiOf = (occurrence: LessonOccurrence): Rabbi => occurrence.substituteRabbi ?? occurrence.rabbi;
-
-// There is no city id on a resolved `Place` (common/src/place.ts), only its
-// name, so the best honest link back is a text search for it rather than a
-// structured city filter.
-export const otherLessonsInCityHref = (city: string): string => `/?q=${encodeURIComponent(city)}`;

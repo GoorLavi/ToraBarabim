@@ -134,8 +134,9 @@ describe('public API', () => {
       assert.equal(typeof occurrence.rabbi.name, 'string');
       assert.equal(typeof occurrence.place.name, 'string');
       assert.equal(typeof occurrence.place.city, 'string');
-      // The city page a "lessons in this city" link on the lesson page can
-      // now point at directly, instead of falling back to a text search.
+      // The lesson page's "other lessons in this city" link is built from
+      // this slug, so it reaches the city page directly instead of falling
+      // back to a text search the way it did before the field existed.
       assert.equal(occurrence.place.citySlug, toSlug(occurrence.place.city));
       assert.equal(typeof occurrence.place.area, 'string');
     });
