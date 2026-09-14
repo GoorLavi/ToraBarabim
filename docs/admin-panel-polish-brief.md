@@ -17,10 +17,12 @@ then moved into this chunk of work. The panel currently manages lessons and rabb
 **Nothing here is guesswork.** Every item was seen on a real screen or read off the
 source, and each names its cause. Do not re-litigate whether they are real.
 
-**Verification is by hand.** There are no automated tests, deliberately: see
-`docs/decisions/0008-no-automated-tests-yet.md`. "It works" means it type checks, it
-runs, and someone exercised the path in a browser. Nothing less counts, and a screenshot
-proves the design is right, never that the code is correct.
+**Verification of this work is by hand.** There is a test suite in `server/test/`, but
+it covers the public API and the rendering seam, not the admin panel, so nothing in it
+will catch a regression here. "It works" means it type checks, it runs, and someone
+exercised the path in a browser. Nothing less counts, and a screenshot proves the design
+is right, never that the code is correct. See **Verification** in `CLAUDE.md` for what
+each claim is allowed to mean.
 
 **A warning from this project's own history.** Three separate agents verified the write
 endpoints with `curl` and all reported success. Every one of them was wrong in the same

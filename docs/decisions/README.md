@@ -75,7 +75,7 @@ The real alternatives and why each lost. If there was no alternative, say so.
 | [0005](0005-s3-compatible-storage-one-code-path.md) | Images use one S3-compatible code path, MinIO locally | accepted |
 | [0006](0006-production-on-aws-with-cdk.md) | Production runs on AWS, defined in CDK | accepted |
 | [0007](0007-admin-panel-lives-in-the-same-app.md) | The admin panel is a section of the same app | accepted |
-| [0008](0008-no-automated-tests-yet.md) | No automated tests yet, deliberately and temporarily | accepted |
+| [0008](0008-no-automated-tests-yet.md) | No automated tests yet, deliberately and temporarily | reversed by [0023](0023-the-public-pages-are-server-rendered.md) |
 | [0009](0009-scraped-lessons-stay-out.md) | Scraped lessons do not reach the site yet | accepted |
 | [0010](0010-production-shape-traded-for-cost.md) | The production shape, and what was traded for cost | accepted |
 | [0011](0011-deploys-are-automatic-migrations-are-not.md) | Deploys run themselves, migrations wait for a human | accepted |
@@ -90,3 +90,4 @@ The real alternatives and why each lost. If there was no alternative, say so.
 | [0020](0020-one-super-admin-gates-admin-management.md) | One super admin gates admin management | accepted |
 | [0021](0021-agents-read-aws-as-their-own-identity.md) | Agents read AWS as their own identity, never as the owner | accepted |
 | [0022](0022-visits-are-measured-by-cloudflare-web-analytics.md) | Visits are measured by Cloudflare Web Analytics, cookieless and without events | accepted |
+| [0023](0023-the-public-pages-are-server-rendered.md) | The public pages are server rendered | accepted, supersedes [0010](0010-production-shape-traded-for-cost.md)'s cost figure and reverses [0008](0008-no-automated-tests-yet.md) |
