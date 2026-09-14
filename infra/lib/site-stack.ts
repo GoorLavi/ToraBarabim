@@ -174,6 +174,19 @@ export class SiteStack extends Stack {
       queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.all(),
     });
 
+    // Used by the `/sitemap.xml` behavior below, which explains the TTL choice.
+    const sitemapCachePolicy = new cloudfront.CachePolicy(this, 'SitemapCachePolicy', {
+      comment: 'sitemap.xml: crawled occasionally, changes only when a rabbi, city or area is added',
+      cookieBehavior: cloudfront.CacheCookieBehavior.none(),
+      headerBehavior: cloudfront.CacheHeaderBehavior.none(),
+      queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
+      enableAcceptEncodingGzip: true,
+      enableAcceptEncodingBrotli: true,
+      minTtl: Duration.seconds(0),
+      defaultTtl: Duration.days(1),
+      maxTtl: Duration.days(7),
+    });
+
     // `domainNames` and `certificate` are left undefined without a domain:
     // CloudFront then serves the distribution on its own generated
     // *.cloudfront.net name using its default certificate, and needs
@@ -249,6 +262,24 @@ export class SiteStack extends Stack {
           cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
           originRequestPolicy: sessionOriginRequestPolicy,
         },
+        // `sitemap.xml` is a resource route answered by the same Fargate
+        // service (client/src/routes/sitemap.ts), not a static file, so it
+        // needs an API origin behavior like the documents above rather than
+        // the S3 behavior it used to have. Its content only changes when a
+        // rabbi, a city or an area gains its first lesson, which a crawler
+        // fetches occasionally and does not need same-minute freshness for,
+        // so the edge TTL is a day rather than the document policy's
+        // minute, keeping this cheap to serve (0010's cost ceiling) without
+        // an extra request reaching the container for every crawl. The
+        // route's own Cache-Control (client/src/routes/consts.ts's
+        // `SITEMAP_CACHE_HEADERS`) matches this policy's default so local
+        // development and the CDN agree.
+        '/sitemap.xml': {
+          origin: apiOrigin,
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          cachePolicy: sitemapCachePolicy,
+          originRequestPolicy: documentOriginRequestPolicy,
+        },
         // Hashed, content-addressed build output and the handful of named
         // static files the client build emits. All of it lives in the
         // private client bucket and none of it needs the container: this
@@ -267,11 +298,6 @@ export class SiteStack extends Stack {
           cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
         },
         '/robots.txt': {
-          origin: clientOrigin,
-          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-        },
-        '/sitemap.xml': {
           origin: clientOrigin,
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,

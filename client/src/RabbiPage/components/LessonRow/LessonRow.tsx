@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { lessonPath } from '~/helpers';
+
 import { rowDateLabel } from './consts';
 import { rowTitle, rowVenueLine } from './helpers';
 import type { LessonRowProps } from './models';
@@ -12,7 +14,7 @@ export const LessonRow = styled(({ className, lesson }: LessonRowProps) => {
   const title = rowTitle(lesson);
 
   return (
-    <Link to={`/lesson/${lesson.lessonId}/${lesson.date}`} className={className}>
+    <Link to={lessonPath(lesson)} className={className}>
       <div className="when">
         <span className="time">{lesson.startTime}</span>
         <span className="date" dir="auto">

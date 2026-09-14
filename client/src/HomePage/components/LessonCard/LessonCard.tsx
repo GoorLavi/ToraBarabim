@@ -2,8 +2,10 @@ import classNames from 'classnames';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { lessonPath } from '~/helpers';
+
 import * as consts from './consts';
-import { cardAriaLabel, descriptionLabel, lessonCardHref } from './helpers';
+import { cardAriaLabel, descriptionLabel } from './helpers';
 import type { LessonCardProps } from './models';
 import * as styles from './styles';
 
@@ -18,7 +20,7 @@ export const LessonCard = styled(({ className, lesson }: LessonCardProps) => {
 
   return (
     <Link
-      to={lessonCardHref(lesson)}
+      to={lessonPath(lesson)}
       aria-label={cardAriaLabel(lesson)}
       className={classNames(className, { cancelled: lesson.status === 'cancelled' })}
     >

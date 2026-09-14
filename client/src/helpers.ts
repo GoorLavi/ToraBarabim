@@ -27,6 +27,11 @@ export const cityPath = (city: Pick<City, 'slug'>): string => `/cities/${encodeU
 // The one place an area's public path is built, mirroring cityPath.
 export const areaPath = (area: Pick<AreaSummary, 'slug'>): string => `/areas/${encodeURIComponent(area.slug)}`;
 
+// The one place a lesson occurrence's public path is built, from the lesson
+// id React Router matches on and the ISO date of the specific occurrence.
+export const lessonPath = (occurrence: Pick<LessonOccurrence, 'lessonId' | 'date'>): string =>
+  `/lesson/${encodeURIComponent(occurrence.lessonId)}/${encodeURIComponent(occurrence.date)}`;
+
 // Shared by the city page, the cities directory and the area page: once
 // someone has chosen where, the only question left is when (design spec,
 // guidance intent). Sorted defensively rather than trusted blind.

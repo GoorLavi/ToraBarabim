@@ -20,4 +20,7 @@ export default [
   ]),
   route('admin/*', 'routes/admin.tsx'),
   route('rabbi/*', 'routes/rabbi-panel.tsx'),
+  // Outside `layout`: it renders no UI, only an XML `Response` (see
+  // routes/sitemap.ts).
+  route('sitemap.xml', 'routes/sitemap.ts'),
 ] satisfies RouteConfig;
