@@ -500,14 +500,16 @@ request (0023), so this is a different, and more coupled, picture than a static 
   window, and every tab already open, keeps resolving its scripts normally. The new
   build's assets sit alongside the old ones in the bucket, unused until the server below
   starts naming them.
-- **While the server updates:** the ECS circuit breaker keeps the previous task running
-  alongside the new one until the new one passes its health check, so a visitor's request
-  is never dropped; it lands on whichever task is currently healthy. There is no
-  zero-downtime guarantee stronger than that (a request mid-flight to a task that is being
-  drained could still see a connection reset), but there is no window where the API is
-  fully down. A visitor can receive a document from either task during this window: the
-  previous one naming the previous build's assets, or the new one naming the new build's,
-  both already live in the bucket by this point.
+- **While the server updates:** with two tasks and `minHealthyPercent: 100`, the ECS
+  circuit breaker keeps both previous tasks running alongside the two replacements until
+  each new one passes its health check, so a visitor's request is never dropped; it lands
+  on whichever task is currently healthy. There is no zero-downtime guarantee stronger
+  than that (a request mid-flight to a task that is being drained could still see a
+  connection reset), but there is no window where the API is fully down, and with two
+  tasks steady-state there is also no window where a single crashed task takes the whole
+  service down. A visitor can receive a document from any of the tasks during this
+  window: the previous ones naming the previous build's assets, or the new ones naming
+  the new build's, both already live in the bucket by this point.
 - **For up to 60 seconds after the server update finishes:** `TorabarabimSite`'s
   `DocumentCachePolicy` may still serve an edge-cached copy of a document rendered by the
   previous server, naming the previous build's assets. This is bounded and expected, not
@@ -688,8 +690,8 @@ query typed through this connection as if it cannot be undone, because it cannot
 | --- | --- |
 | RDS `db.t4g.micro`, single-AZ, 20 GB gp2, encrypted | ~13 |
 | RDS automated backup storage (within the 20 GB allocated, first month) | ~0 to 2 |
-| Fargate task, 0.25 vCPU / 0.5 GB, ARM64, always on | ~7 |
-| Public IPv4 address on the Fargate task | ~3.60 |
+| Fargate tasks, 0.25 vCPU / 0.5 GB, ARM64, always on, 2 tasks | ~14 |
+| Public IPv4 addresses, one per task, 2 tasks | ~7.20 |
 | API Gateway HTTP API, at this project's expected traffic | <1 |
 | NAT Gateway | 0 (none deployed) |
 | Application Load Balancer | 0 (none deployed) |
@@ -702,26 +704,43 @@ query typed through this connection as if it cannot be undone, because it cannot
 | Route 53 domain registration, `torahbarabim.com` (annual, amortized) | ~1, domain mode only |
 | ACM certificate | 0 (ACM certificates for CloudFront are free) |
 | Data transfer out, low traffic | ~1 to 3 |
-| **Total** | **~30 to 35 with a domain, ~28.50 to 33.50 without one** |
+| **Total** | **~40 to 46 with a domain, ~39 to 44 without one** |
 
-Still inside decision 0006's 20 to 50 dollar budget, and close to step one's own 30 to 34
-dollar estimate: CloudFront, S3, Route 53, and ACM add only a couple of dollars at this
-traffic and image volume, per decision 0005's "on the order of a thousand images, so
-storage cost is effectively noise." The no-domain total drops the two Route 53 line items
-above (nothing to host or register without a domain) and otherwise does not change: every
-other line item, including CloudFront itself, is identical between the two modes.
+Still inside decision 0006's 20 to 50 dollar budget, though closer to its ceiling than
+step one's own 30 to 34 dollar estimate now that the service runs two tasks instead of
+one (see "Why two tasks, not one" below): CloudFront, S3, Route 53, and ACM add only a
+couple of dollars at this traffic and image volume, per decision 0005's "on the order of
+a thousand images, so storage cost is effectively noise." The no-domain total drops the
+two Route 53 line items above (nothing to host or register without a domain) and
+otherwise does not change: every other line item, including CloudFront itself, is
+identical between the two modes.
 
 AWS bills every public IPv4 address by the hour (about $0.005/hour, roughly $3.60 for a
-730-hour month) since February 2024, and this task has one by design: it is what lets a
-Fargate task in a public subnet reach the internet without a NAT Gateway. That $3.60 a
-month is still far cheaper than the NAT Gateway it replaces (a NAT Gateway alone runs
-about $32/month before any data processing charges, before it would even need its own
-public IP on top). During a redeploy, the circuit breaker settings
-(`minHealthyPercent: 100`, `maxHealthyPercent: 200`) briefly run a second task alongside
-the first so the service does not drop to zero, which briefly doubles both the Fargate
-task-hour and the public-IPv4-address line for the few minutes a deploy takes; this is
-not in the steady-state total above.
+730-hour month) since February 2024, and each task has one by design: it is what lets a
+Fargate task in a public subnet reach the internet without a NAT Gateway. Two tasks at
+$3.60 each is still far cheaper than the single NAT Gateway they jointly replace (a NAT
+Gateway alone runs about $32/month before any data processing charges, before it would
+even need its own public IP on top). During a redeploy, the circuit breaker settings
+(`minHealthyPercent: 100`, `maxHealthyPercent: 200`) keep both old tasks serving traffic
+until two replacements pass their health check, which briefly runs up to four tasks
+(and four public IPs) instead of the steady-state two, for the few minutes a deploy
+takes; this is not in the steady-state total above.
 
-This excludes any RDS storage growth past 20 GB, any Fargate scaling beyond one task, and
-any CloudFront or S3 cost growth well past the roughly 1,000-image, low-traffic volumes
-decision 0005 and this project's current stage assume; none of those happen automatically.
+This excludes any RDS storage growth past 20 GB, any Fargate scaling beyond two tasks,
+and any CloudFront or S3 cost growth well past the roughly 1,000-image, low-traffic
+volumes decision 0005 and this project's current stage assume; none of those happen
+automatically.
+
+### Why two tasks, not one
+
+`desiredCount` on the Fargate service (`infra/lib/server-stack.ts`) is 2, not 1. The
+owner tested the single-task shape directly by scaling the service to zero, which is
+exactly what a crash or a failed health check on the one task does on its own: the site
+went fully down, and that same test found the outage fallback's status-code mapping was
+also wrong (see the comment on `errorResponses` in `infra/lib/site-stack.ts`). Two tasks
+at this size cost about the same per month as one task at double the size, plus one more
+public IP, so this buys the same CPU headroom a bigger single task would and removes the
+single point of failure for roughly the price of that one public IP. It also makes a
+deploy genuinely redundant
+rather than merely sequenced: with `minHealthyPercent: 100`, ECS now keeps two old tasks
+serving traffic throughout a deploy instead of one.

@@ -286,22 +286,38 @@ export class SiteStack extends Stack {
         },
       },
       // A server outage must never produce a white page (owner requirement,
-      // 0023's second fallback). 502/503/504 are what API Gateway itself
-      // returns when it cannot reach the container at all (no running task,
-      // a stalled deploy, a timed-out connection through the VPC Link): the
-      // request never reached Fastify, so there is no risk of this
-      // colliding with an application-level response. It deliberately does
-      // NOT list 403 or 404: those are legitimate responses this
-      // distribution already relies on (a missing rabbi is a real 404 from
-      // the API, a missing S3 object is a real 403 from OAC), and CloudFront's
-      // custom error responses apply distribution-wide by status code with no
-      // way to scope them to one behavior, so folding either into this page
-      // would rewrite that real 404 or 403 for every visitor and crawler, not
-      // only during an actual outage. An application-level 500 from Fastify's
-      // own error handler is also left untouched, on purpose: it still
-      // carries the `/v1/*` JSON error contract the client's error handling
-      // depends on, and swallowing it here would be a second, undocumented
-      // error shape for the client to guess at.
+      // 0023's second fallback). The mapping was originally 502/503/504,
+      // reasoned from documented API Gateway behavior for an unreachable
+      // integration (no running task, a stalled deploy, a timed-out
+      // connection through the VPC Link). The owner tested that reasoning
+      // against the live site by scaling the ECS service to zero, and the
+      // browser showed a bare `{"message":"Internal Server Error"}`: API
+      // Gateway's own **500** for an integration failure, not any of the
+      // three that were mapped. None of them fired and the outage page never
+      // appeared. 500 is now in the list, established by that test, not by
+      // reading AWS's docs.
+      //
+      // It deliberately does NOT list 403 or 404: those are legitimate
+      // responses this distribution already relies on (a missing rabbi is a
+      // real 404 from the API, a missing S3 object is a real 403 from OAC),
+      // and CloudFront's custom error responses apply distribution-wide by
+      // status code with no way to scope them to one behavior, so folding
+      // either into this page would rewrite that real 404 or 403 for every
+      // visitor and crawler, not only during an actual outage.
+      //
+      // 500 cannot be excluded the same way, and that has a real cost: a
+      // genuine application-level 500 from Fastify's own error handler on
+      // `/v1/*` now also matches this mapping and is replaced by this same
+      // static outage page, for the same distribution-wide-by-status-code
+      // reason. A client fetch expecting a JSON error body gets this page's
+      // HTML instead, fails to parse it, and falls into its own error state
+      // regardless, so the visitor still sees an error either way, but the
+      // `/v1/*` JSON contract is broken in that one case. This is accepted
+      // knowingly, not missed: an origin group cannot fail over on a status
+      // code within one behavior either, and a Lambda@Edge origin-response
+      // function that could tell the two apart means a us-east-1 deployment
+      // and a second runtime, rejected under 0010's cost ceiling for the same
+      // reason it is rejected for the outage page mechanism itself, below.
       //
       // This fails open: told nothing else, a broken origin now answers with
       // a calm, readable, static "back soon" page instead of a raw gateway
@@ -329,7 +345,7 @@ export class SiteStack extends Stack {
       // happens), and the bucket has no `index.html` or per-path fallback
       // object in framework mode, so a failed-over request would 404 against
       // S3 for almost every real path instead of showing anything useful.
-      errorResponses: [502, 503, 504].map((httpStatus) => ({
+      errorResponses: [500, 502, 503, 504].map((httpStatus) => ({
         httpStatus,
         responseHttpStatus: 503,
         responsePagePath: '/outage.html',

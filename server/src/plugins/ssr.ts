@@ -19,12 +19,24 @@ import type { ServerBuild } from 'react-router';
 export const CLIENT_BUILD_DIR = path.join(__dirname, '../../../client/build/client');
 const SERVER_BUILD_PATH = path.join(__dirname, '../../../client/build/server/index.cjs');
 
-// A hashed filename (`/assets/foo-abc123.js`) or a known static file
-// (`favicon.svg`, `robots.txt`, `sitemap.xml`) all end in an extension; a
-// document route never does. `@fastify/static` is registered with
+// Covers the paths CloudFront serves from the S3 bucket instead of this
+// server in production (infra/lib/site-stack.ts's `additionalBehaviors`):
+// the hashed asset directory and the handful of named static files the
+// client build emits (client/vite.config.ts's `seoFiles` plugin, and
+// `client/public`). This fast path exists for local development and as
+// defence in depth (0010); production traffic for these paths never reaches
+// this server at all. A broader "anything with a file extension" pattern
+// used to sit here and also matched React Router's own `*.data` single-fetch
+// requests, 404ing them before they ever reached `createRequestHandler`.
+// Anything not on this list, `.data` included, falls through to the handler
+// below and gets a real 404 from the app instead of a bare one from the file
+// server, which is also why `assets/.+` requires a filename rather than
+// matching CloudFront's `assets/*` exactly: an empty `/assets/` has no real
+// file behind it either way, and the app's own 404 is the better of the two
+// bare ones to serve for it. `@fastify/static` is registered with
 // `wildcard: false` so it does not also claim a catch-all route of its own,
 // which would collide with the one below.
-const STATIC_ASSET_PATTERN = /\.[a-z0-9]+$/i;
+const STATIC_ASSET_PATTERN = /^\/(?:assets\/.+|favicon\.svg|robots\.txt|sitemap\.xml|outage\.html)$/;
 
 // No official Fastify adapter exists for React Router 7 (only Express), so
 // this hand-builds the Web Fetch `Request` the framework's own
