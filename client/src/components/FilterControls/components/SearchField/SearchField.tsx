@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import styled from 'styled-components';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
 import { directionForValue } from '~/helpers';
 
 import * as consts from './consts';
@@ -15,7 +17,13 @@ export const SearchField = styled(({ className, value, onChange }: SearchFieldPr
 
   useEffect(() => {
     if (draft.trim() === value) return;
-    const timer = window.setTimeout(() => onChange(draft), consts.DEBOUNCE_MS);
+    const timer = window.setTimeout(() => {
+      onChange(draft);
+      // Tracked value matches what `onChange` actually commits (useSearchQuery
+      // trims before writing to the URL), not the raw keystroke buffer.
+      const committed = draft.trim();
+      if (committed.length > 0) trackEvent(MIXPANEL_EVENTS.search, { query: committed });
+    }, consts.DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
   }, [draft, value, onChange]);
 

@@ -3,6 +3,8 @@ import type { FocusEvent } from 'react';
 import classNames from 'classnames';
 import styled from 'styled-components';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
 import { directionForValue } from '~/helpers';
 
 import * as consts from './consts';
@@ -85,6 +87,7 @@ export const CityPicker = styled(({ className, city, onSelectCity, onClearCity }
                     aria-selected={item.id === city?.id}
                     onClick={() => {
                       onSelectCity({ id: item.id, name: item.name });
+                      trackEvent(MIXPANEL_EVENTS.filterCity, { cityId: item.id, cityName: item.name });
                       setQuery('');
                       setIsOpen(false);
                     }}

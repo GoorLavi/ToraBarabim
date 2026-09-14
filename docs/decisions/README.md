@@ -89,5 +89,7 @@ The real alternatives and why each lost. If there was no alternative, say so.
 | [0019](0019-lower-the-admin-password-minimum-and-drop-the-bootstrap-script.md) | Lower the admin password minimum, and drop the bootstrap script | accepted |
 | [0020](0020-one-super-admin-gates-admin-management.md) | One super admin gates admin management | accepted |
 | [0021](0021-agents-read-aws-as-their-own-identity.md) | Agents read AWS as their own identity, never as the owner | accepted |
-| [0022](0022-visits-are-measured-by-cloudflare-web-analytics.md) | Visits are measured by Cloudflare Web Analytics, cookieless and without events | accepted |
+| [0022](0022-visits-are-measured-by-cloudflare-web-analytics.md) | Visits are measured by Cloudflare Web Analytics, cookieless and without events | superseded by [0024](0024-visits-are-measured-by-mixpanel-full-tracking-no-consent-banner.md) |
 | [0023](0023-the-public-pages-are-server-rendered.md) | The public pages are server rendered | accepted, supersedes [0010](0010-production-shape-traded-for-cost.md)'s cost figure and reverses [0008](0008-no-automated-tests-yet.md) |
+| [0024](0024-visits-are-measured-by-mixpanel-full-tracking-no-consent-banner.md) | Visits are measured by Mixpanel, with full tracking and no consent banner | accepted |
+| [0025](0025-mixpanel-ad-blocker-undercount-stays-no-proxy-yet.md) | Mixpanel's ad-blocker undercount stays, no same-origin proxy yet | accepted |

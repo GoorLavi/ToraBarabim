@@ -3,6 +3,8 @@ import { useRef, useState } from 'react';
 import type { FocusEvent, KeyboardEvent } from 'react';
 import styled from 'styled-components';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
 import { dayLabel, numericDayLabel, todayInIsrael } from '~/HomePage/helpers';
 
 import { HebrewDatePicker } from './components/HebrewDatePicker/HebrewDatePicker';
@@ -45,6 +47,7 @@ export const DateFilterChips = styled(
 
     const handleSelectDate = (isoDate: string): void => {
       onSelectCustomDate(isoDate);
+      trackEvent(MIXPANEL_EVENTS.filterDate, { date: isoDate });
       closePicker();
     };
 
@@ -90,7 +93,10 @@ export const DateFilterChips = styled(
               className={classNames('chip', { selected: isSelected })}
               aria-pressed={isSelected}
               aria-label={isSelected ? consts.clearFilterLabel(item.label) : item.label}
-              onClick={() => onSelectOption(item.value)}
+              onClick={() => {
+                onSelectOption(item.value);
+                if (!isSelected) trackEvent(MIXPANEL_EVENTS.filterDate, { date: item.value });
+              }}
             >
               <span>{item.label}</span>
               {isSelected && (
