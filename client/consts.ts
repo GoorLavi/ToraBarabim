@@ -12,3 +12,17 @@ export const CLOUDFLARE_ANALYTICS_TOKEN = '4def41ef690f4c8391068f73d4238e89';
 export const DEFAULT_TITLE = 'תורה ברבים | שיעורי תורה לפי רב, מקום ותאריך';
 export const DEFAULT_DESCRIPTION =
   'כל שיעורי התורה במקום אחד. חיפוש לפי רב, לפי עיר ולפי תאריך, ומה נמסר הערב קרוב אליכם.';
+
+// The entries that belong on every page regardless of which route rendered
+// it. React Router replaces a parent's meta array wholesale rather than
+// merging it by key, so a route exporting its own `meta` drops everything
+// root.tsx sets unless it spreads these back in, which every public route
+// does. Order within the array does not matter, only that the spread is
+// there. Defined here, beside the other sitewide values, because root.tsx
+// and every route module need the identical list and two copies would
+// drift apart silently.
+export const SITE_WIDE_META = [
+  { property: 'og:site_name', content: SITE_NAME },
+  { property: 'og:locale', content: 'he_IL' },
+  { name: 'twitter:card', content: 'summary' },
+];

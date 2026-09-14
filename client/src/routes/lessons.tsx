@@ -1,6 +1,6 @@
 import type { MetaFunction } from 'react-router';
 
-import { SITE_ORIGIN } from '../../consts';
+import { SITE_ORIGIN, SITE_WIDE_META } from '../../consts';
 import * as consts from './consts';
 
 // Deliberately the bare path, with no query string. Every filtered view of
@@ -18,7 +18,7 @@ export const meta: MetaFunction = () => [
   { property: 'og:title', content: consts.lessonsPageTitle() },
   { property: 'og:description', content: consts.LESSONS_PAGE_DESCRIPTION },
   { property: 'og:url', content: CANONICAL },
-  ...consts.SITE_WIDE_META,
+  ...SITE_WIDE_META,
 ];
 
 export { LessonsPage as default } from '~/LessonsPage/LessonsPage';

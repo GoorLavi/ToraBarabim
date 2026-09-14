@@ -9,8 +9,8 @@ import { AreaPage } from '~/AreaPage/AreaPage';
 import { StateCard } from '~/components/StateCard/StateCard';
 import { areaPath } from '~/helpers';
 
-import { SITE_ORIGIN } from '../../../consts';
-import { PUBLIC_CACHE_HEADERS, SITE_WIDE_META, UNCACHEABLE_ERROR_HEADERS } from '../consts';
+import { SITE_ORIGIN, SITE_WIDE_META } from '../../../consts';
+import { PUBLIC_CACHE_HEADERS, UNCACHEABLE_ERROR_HEADERS } from '../consts';
 import * as consts from './consts';
 import { loadAreaDetail } from './area-detail.server';
 

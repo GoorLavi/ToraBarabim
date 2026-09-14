@@ -8,7 +8,7 @@ import styled, { ThemeProvider } from 'styled-components';
 import { GlobalStyle } from '~/styles/GlobalStyle';
 import { ARGAMAN_VE_ZAHAV_THEME } from '~/theme/themes';
 
-import { CLOUDFLARE_ANALYTICS_TOKEN, DEFAULT_DESCRIPTION, DEFAULT_TITLE, SITE_NAME, SITE_ORIGIN } from '../consts';
+import { CLOUDFLARE_ANALYTICS_TOKEN, DEFAULT_DESCRIPTION, DEFAULT_TITLE, SITE_NAME, SITE_ORIGIN, SITE_WIDE_META } from '../consts';
 import * as rootConsts from './root.consts';
 import * as rootStyles from './root.styles';
 
@@ -25,12 +25,10 @@ export const meta: MetaFunction = () => [
   { name: 'description', content: DEFAULT_DESCRIPTION },
   { tagName: 'link', rel: 'canonical', href: `${SITE_ORIGIN}/` },
   { property: 'og:type', content: 'website' },
-  { property: 'og:site_name', content: SITE_NAME },
   { property: 'og:title', content: DEFAULT_TITLE },
   { property: 'og:description', content: DEFAULT_DESCRIPTION },
   { property: 'og:url', content: `${SITE_ORIGIN}/` },
-  { property: 'og:locale', content: 'he_IL' },
-  { name: 'twitter:card', content: 'summary' },
+  ...SITE_WIDE_META,
 ];
 
 const WEBSITE_JSON_LD = JSON.stringify({

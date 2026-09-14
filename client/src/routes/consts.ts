@@ -9,17 +9,6 @@ import { cityPath, rabbiPath } from '~/helpers';
 
 import { SITE_NAME, SITE_ORIGIN } from '../../consts';
 
-// React Router replaces a parent's meta array wholesale rather than merging
-// by key (see the loop in its `Meta` component): the deepest route exporting
-// `meta` wins entirely. So these sitewide entries, which live in root.tsx's
-// default array, vanish from any route that exports its own unless it spreads
-// them back in. Every public route's `meta` starts with this for that reason.
-export const SITE_WIDE_META = [
-  { property: 'og:site_name', content: SITE_NAME },
-  { property: 'og:locale', content: 'he_IL' },
-  { name: 'twitter:card', content: 'summary' },
-];
-
 // Shared by every server-rendered route's loader and `headers` export.
 
 // An error response must never sit behind the CDN's success caching (the
