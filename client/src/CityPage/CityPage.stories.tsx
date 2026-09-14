@@ -116,9 +116,9 @@ installMockFetch((url) => {
 
 // See RabbiPage.stories.tsx for why this uses `Routes`'s `location` override
 // instead of a second, nested MemoryRouter.
-const withRoute = (cityName: string) => (Story: React.ComponentType) => (
-  <Routes location={{ pathname: `/cities/${encodeURIComponent(cityName)}`, search: '', hash: '', state: null, key: 'story' }}>
-    <Route path="/cities/:cityName" element={<Story />} />
+const withRoute = (citySlug: string) => (Story: React.ComponentType) => (
+  <Routes location={{ pathname: `/cities/${encodeURIComponent(citySlug)}`, search: '', hash: '', state: null, key: 'story' }}>
+    <Route path="/cities/:slug" element={<Story />} />
   </Routes>
 );
 
