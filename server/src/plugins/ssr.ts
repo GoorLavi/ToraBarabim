@@ -10,7 +10,13 @@ import type { ServerBuild } from 'react-router';
 // plugin only ever imports the build output, never client source. Resolved
 // from `__dirname` (this file compiles to CommonJS), which is `dist/plugins`
 // once built, so three levels up is the repo root either way.
-const CLIENT_BUILD_DIR = path.join(__dirname, '../../../client/build/client');
+//
+// Exported so `api/health` can check the same directory the SSR mount
+// actually serves from, rather than a second `__dirname`-relative copy: two
+// independent path calculations that happen to agree today would silently
+// drift the moment the build layout moves, and a health check reading the
+// wrong directory reports confidently either way.
+export const CLIENT_BUILD_DIR = path.join(__dirname, '../../../client/build/client');
 const SERVER_BUILD_PATH = path.join(__dirname, '../../../client/build/server/index.cjs');
 
 // A hashed filename (`/assets/foo-abc123.js`) or a known static file

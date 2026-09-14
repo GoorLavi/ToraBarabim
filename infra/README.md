@@ -346,9 +346,15 @@ it ever needs to be reproduced manually:
 
 ```bash
 npm run build -w client
-aws s3 sync client/dist s3://<ClientBucketName output> --delete --profile torabarabim
+aws s3 sync client/build/client s3://<ClientBucketName output> --profile torabarabim
 aws cloudfront create-invalidation --distribution-id <DistributionId output> --paths "/*" --profile torabarabim
 ```
+
+**No `--delete`.** A hashed asset filename is never reused, so the previous build's
+files staying in the bucket costs only storage. Deleting them would break a tab a
+visitor already has open (its document names those exact files) and would delete
+`outage.html`, the static fallback this same bucket serves. This matches what the
+automated pipeline does, see its own comment in `.github/workflows/deploy.yml`.
 
 **No API address is supplied to this build, and none may be.** The client calls
 `/v1/...` against whatever origin served it, which the distribution's `/v1/*` behavior
@@ -359,9 +365,13 @@ address alike, with no value to keep in sync. An earlier version of this step ba
 to, because a `SameSite=Lax` cookie set by a cross-site response is discarded by the
 browser.
 
-The invalidation matters: CloudFront's default cache policy on the client behavior would
-otherwise keep serving the previous build's `index.html` for a while after a new one is
-uploaded.
+The invalidation matters for the handful of named, non-hashed files this bucket also
+serves (`robots.txt`, `sitemap.xml`, `favicon.svg`, `outage.html`): their CloudFront
+behavior caches on ordinary HTTP rules, so without it a stale one can keep answering for
+a while. Hashed assets under `/assets/*` never need it, a filename is never reused. The
+document itself (the home page, a lesson, a rabbi) is not part of this sync at all: it
+is rendered by the server on every request and cached at the edge for at most 60 seconds
+(`TorabarabimSite`'s `DocumentCachePolicy`), never sourced from this bucket.
 
 The site is now live at the `SiteUrl` output.
 
@@ -374,21 +384,26 @@ human needs to know to set it up once, approve a migration, and recover from a f
 
 ### What deploys automatically, and what stays manual
 
-**Automatic, on every push to `main`:**
+**Automatic, on every push to `main`, in this order:**
 - Type check and build every workspace. A broken build stops here and nothing below it
   runs.
+- If, and only if, the commit added a new file under `server/drizzle/*.sql`: build the
+  `migrate` Docker image, register a new revision of the **already deployed** migration
+  task definition, and run it exactly the way step 3 above does, after a human approves
+  it (see "Approving a migration" below). Runs before everything below, so the new code
+  is never running against a database it does not expect yet.
+- Build the client, sync it to the client bucket (no `--delete`, matching step 7 above),
+  and invalidate the CloudFront cache. The build reads no stack output and needs
+  no AWS credentials: the site calls the API on its own origin, so there is no address to
+  look up. **This runs before the server image swap below, and the order is now load
+  bearing:** the document the new server renders references this exact build's hashed
+  asset filenames (0023), so they must already be sitting in the bucket before a server
+  that names them goes live. Nothing is deleted from the bucket by this step, so the
+  still-running previous server keeps resolving its own, older filenames throughout.
 - Build the server's `runtime` Docker image from that commit, push it to the same ECR
   repository `cdk deploy` already uses, register a new revision of the **already
   deployed** ECS task definition pointing at it, and update the running service, waiting
   for it to stabilize.
-- If, and only if, the commit added a new file under `server/drizzle/*.sql`: build the
-  `migrate` Docker image the same way, register a new revision of the **already
-  deployed** migration task definition, and run it exactly the way step 3 above does,
-  after a human approves it (see "Approving a migration" below). Runs before the server
-  update, so the new code is never running against a database it does not expect yet.
-- Build the client, sync it to the client bucket, and invalidate the CloudFront cache.
-  The build reads no stack output and needs no AWS credentials: the site calls the API
-  on its own origin, so there is no address to look up.
 
 **Stays manual, on purpose, per the brief this pipeline implements:** every `cdk deploy`
 of `TorabarabimNetwork`, `TorabarabimDatabase`, `TorabarabimServer`, `TorabarabimSite`, or
@@ -459,40 +474,51 @@ Every job downstream of a failure simply does not run; nothing rolls back automa
   previous schema. Read the `migrate` log stream in the `ServerLogGroup` CloudWatch log
   group (same place step 3 above points at) for `drizzle-kit`'s output, fix the migration,
   and push again.
-- **Server update failed or the service never stabilized:** the ECS circuit breaker
-  (`minHealthyPercent: 100`, `maxHealthyPercent: 200`, set on the service in
-  `TorabarabimServer`) rolls the service back to the previous task definition revision on
-  its own; a failed deploy here should self-heal within a few minutes without losing
-  traffic. Confirm in the ECS console or `aws ecs describe-services`.
-- **Client sync or invalidation failed after the server already updated:** the API is on
-  the new code, the client bucket may be mid-sync or the CloudFront cache not yet
-  invalidated. Re-run the `deploy-client` job from the failed workflow run (Actions >
-  the run > Re-run failed jobs); it rebuilds nothing new, it re-syncs the same artifact.
+- **Client sync or invalidation failed:** `deploy-server` depends on `deploy-client`
+  succeeding (this ordering is load bearing, see "What deploys automatically" above), so
+  the server is never touched. Production keeps serving the previous server release,
+  which still points at the previous build's asset filenames, still present in the
+  bucket since nothing is ever deleted from it. Re-run the `deploy-client` job from the
+  failed workflow run (Actions > the run > Re-run failed jobs); it rebuilds nothing new,
+  it re-syncs the same artifact.
+- **Server update failed or the service never stabilized:** by this point the client half
+  already succeeded. The ECS circuit breaker (`minHealthyPercent: 100`,
+  `maxHealthyPercent: 200`, set on the service in `TorabarabimServer`) rolls the service
+  back to the previous task definition revision on its own; a failed deploy here should
+  self-heal within a few minutes without losing traffic. Confirm in the ECS console or
+  `aws ecs describe-services`.
 
 ### What a visitor sees mid-deploy
 
+The document itself, not only the client bundle, is now rendered by the server on every
+request (0023), so this is a different, and more coupled, picture than a static site's.
+
+- **While the client syncs and the CloudFront invalidation runs (before the server
+  updates at all):** the previous server is still the only one running, and it still
+  renders documents naming the previous build's hashed asset filenames. Those filenames
+  are untouched by this sync (no `--delete`), so every page a visitor loads in this
+  window, and every tab already open, keeps resolving its scripts normally. The new
+  build's assets sit alongside the old ones in the bucket, unused until the server below
+  starts naming them.
 - **While the server updates:** the ECS circuit breaker keeps the previous task running
   alongside the new one until the new one passes its health check, so a visitor's request
   is never dropped; it lands on whichever task is currently healthy. There is no
   zero-downtime guarantee stronger than that (a request mid-flight to a task that is being
   drained could still see a connection reset), but there is no window where the API is
-  fully down.
-- **Between the server update finishing and the client deploy finishing:** none, in
-  practice, for a change that only touches the server. The client bundle does not embed
-  server response shapes at build time beyond what it already expects; a client built
-  against yesterday's API and a server already running today's code coexist safely as
-  long as the API response shape did not change in a way the deployed client cannot
-  handle. **This is the one real gap:** the pipeline has no mechanism to detect or block
-  an API response shape change that is not backward compatible with whatever client build
-  is still live in CloudFront for however long the deploy takes. Keep server API changes
-  additive, the same "add before you remove" discipline the root rulebook already asks of
-  a migration.
-- **While the client syncs and the CloudFront invalidation runs:** a visitor loading the
-  site can, for a few seconds to a couple of minutes, receive either the previous or the
-  new `index.html` depending on which edge cache location answers and whether the
-  invalidation has reached it yet. Both versions of the client work against the API that
-  is live at that moment (see above), so this is a brief inconsistency in which static
-  bundle a visitor gets, not a broken page.
+  fully down. A visitor can receive a document from either task during this window: the
+  previous one naming the previous build's assets, or the new one naming the new build's,
+  both already live in the bucket by this point.
+- **For up to 60 seconds after the server update finishes:** `TorabarabimSite`'s
+  `DocumentCachePolicy` may still serve an edge-cached copy of a document rendered by the
+  previous server, naming the previous build's assets. This is bounded and expected, not
+  a bug: those assets are never deleted, so the cached document still resolves correctly
+  until its cache entry expires.
+- **The one real, ongoing gap:** the pipeline has no mechanism to detect or block a server
+  API response shape change that is not backward compatible with whatever client bundle a
+  visitor's browser is currently running (fetched from a document rendered at any point
+  before the deploy, and JavaScript already loaded in an open tab does not refetch it
+  mid-session). Keep server API changes additive, the same "add before you remove"
+  discipline the root rulebook already asks of a migration.
 
 ## Attaching the domain later, once the support case resolves
 
@@ -565,10 +591,6 @@ The `SiteUrl` output on `TorabarabimSite` now reads `https://torahbarabim.com`; 
 parameter must track it. Until this redeploy runs, the CloudFront address from step 5
 still works (its DNS did not change), but a browser visiting the new domain will have its
 admin-panel requests blocked by CORS.
-
-The invalidation matters: CloudFront's default cache policy on the client behavior would
-otherwise keep serving the previous build's `index.html` for a while after a new one is
-uploaded.
 
 ## Parameters the human must supply
 

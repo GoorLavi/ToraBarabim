@@ -4,7 +4,11 @@
 .env.*
 !.env.example
 
-client/dist
+# The Dockerfile builds the client itself (`npm run build -w client` in the
+# `build` stage) rather than expecting a pre-built one from the host, so a
+# stale `client/build` left over from a local build must stay out of the
+# context: copying it in would let it silently override the fresh one the
+# image generates.
 client/build
 client/.vite
 scraper/dist

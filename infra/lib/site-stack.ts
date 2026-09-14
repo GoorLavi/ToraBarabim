@@ -1,4 +1,4 @@
-import { CfnOutput, CfnParameter, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
+import { CfnOutput, CfnParameter, Duration, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
@@ -96,26 +96,83 @@ export class SiteStack extends Stack {
     // this once step two exists.
     photoBucket.grantReadWrite(serverTaskRole);
 
-    // SPA routing without relying on CloudFront's distribution-wide custom
-    // error pages: those trigger on a 403/404 from *any* origin, which
-    // would rewrite a legitimate 404 from the API (e.g. a lesson that does
-    // not exist) into a 200 serving index.html. Rewriting the request
-    // before it reaches S3, only on the default (client) behavior, avoids
-    // the collision entirely.
-    const spaRoutingFunction = new cloudfront.Function(this, 'SpaRoutingFunction', {
+    // Framework mode emits no `index.html` at all: the document for every
+    // path, including `/`, is rendered by the server on request. There is
+    // therefore nothing left for a viewer-request CloudFront Function to
+    // rewrite, and no `defaultRootObject` to set. The S3 origin below now
+    // carries only hashed, named static files; every document goes to the
+    // API origin instead (see `defaultBehavior`).
+    const apiOriginDomain = `${serverHttpApi.apiId}.execute-api.${this.region}.amazonaws.com`;
+    // Shared by every behavior that reaches the API: the document behaviors
+    // below and `/v1/*` all talk to the same Fargate service through the
+    // same HTTP API.
+    const apiOrigin = new origins.HttpOrigin(apiOriginDomain, {
+      protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
+    });
+    // Everything except `Host`, which must stay CloudFront's own. API
+    // Gateway matches the incoming `Host` against its execute-api domain
+    // and answers anything else with a bare 403, so forwarding the
+    // viewer's `Host` (what ALL_VIEWER does) breaks every request through
+    // any of these behaviors while the API answers fine when called
+    // directly. Shared by every behavior that must see the caller's
+    // cookies and headers: `/v1/*` and the two session-backed document
+    // paths, `/admin/*` and `/rabbi/*`.
+    const sessionOriginRequestPolicy = cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER;
+    const clientOrigin = origins.S3BucketOrigin.withOriginAccessControl(clientBucket);
+
+    // `/health` is the container's own liveness probe (server/src/api/health),
+    // answered by ECS over `localhost` inside the task and never through this
+    // distribution today. It has no reason to be reachable publicly, and
+    // leaving it reachable would put its response at the mercy of
+    // `errorResponses` below: a real 503 from that endpoint would otherwise
+    // become the outage page for anyone polling it from outside. A function
+    // response is returned to the viewer before origin selection happens, so
+    // it is answered without ever creating an origin response for
+    // `errorResponses` to act on. See the comment on `errorResponses` for the
+    // full reasoning.
+    const blockHealthCheckFunction = new cloudfront.Function(this, 'BlockHealthCheckFunction', {
       code: cloudfront.FunctionCode.fromInline(`
         function handler(event) {
-          var request = event.request;
-          if (!request.uri.includes('.')) {
-            request.uri = '/index.html';
-          }
-          return request;
+          return { statusCode: 404, statusDescription: 'Not Found' };
         }
       `),
       runtime: cloudfront.FunctionRuntime.JS_2_0,
     });
 
-    const apiOriginDomain = `${serverHttpApi.apiId}.execute-api.${this.region}.amazonaws.com`;
+    // A document response is public and cacheable, but it must never be
+    // keyed or personalized on a cookie: the admin and rabbi-panel session
+    // cookie would otherwise turn the first visitor's response into what
+    // every later visitor on that edge location receives. Cookies are
+    // dropped entirely, in both the cache key and what reaches the origin,
+    // so a public loader that ever tried to read one would simply not see
+    // it rather than silently poisoning the shared cache. The query string
+    // *is* part of the cache key and is forwarded: the home page's filters
+    // (city, date, search term) live there, and each combination is a
+    // distinct page.
+    const documentCachePolicy = new cloudfront.CachePolicy(this, 'DocumentCachePolicy', {
+      comment: 'Public SSR documents: cacheable, keyed on the query string, never on a cookie',
+      cookieBehavior: cloudfront.CacheCookieBehavior.none(),
+      headerBehavior: cloudfront.CacheHeaderBehavior.none(),
+      queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
+      enableAcceptEncodingGzip: true,
+      enableAcceptEncodingBrotli: true,
+      // 60 seconds by default absorbs a burst of crawler and visitor
+      // traffic on the one small container this sits in front of (0010),
+      // while still surfacing a newly entered lesson within a minute. A
+      // route's own `Cache-Control`, once one is set, wins within this
+      // min/max band; `minTtl: 0` lets an explicit no-store on a
+      // session-sensitive response (if one is ever rendered on this path
+      // by mistake) still take effect instead of being floored upward.
+      minTtl: Duration.seconds(0),
+      defaultTtl: Duration.seconds(60),
+      maxTtl: Duration.days(1),
+    });
+    const documentOriginRequestPolicy = new cloudfront.OriginRequestPolicy(this, 'DocumentOriginRequestPolicy', {
+      comment: 'Public SSR documents: forwards the query string only, no cookies and no viewer headers',
+      cookieBehavior: cloudfront.OriginRequestCookieBehavior.none(),
+      headerBehavior: cloudfront.OriginRequestHeaderBehavior.none(),
+      queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.all(),
+    });
 
     // `domainNames` and `certificate` are left undefined without a domain:
     // CloudFront then serves the distribution on its own generated
@@ -126,9 +183,10 @@ export class SiteStack extends Stack {
     // a replacement: the distribution id, its cache, and its DNS-visible
     // behavior for existing visitors carry over.
     //
-    // Same distribution serves the static client and the API on the same
-    // origin: the admin panel authenticates with a cookie, and a separate
-    // API host turns that into a cross-site cookie problem for no benefit.
+    // Same distribution serves the document, the static client, and the API
+    // on the same origin: the admin panel authenticates with a cookie, and
+    // a separate API host turns that into a cross-site cookie problem for
+    // no benefit.
     const distribution = new cloudfront.Distribution(this, 'SiteDistribution', {
       domainNames: domain ? [domain, `www.${domain}`] : undefined,
       certificate,
@@ -137,35 +195,146 @@ export class SiteStack extends Stack {
       // ignores this property, which CDK otherwise warns about on every
       // no-domain synth.
       minimumProtocolVersion: domain ? cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021 : undefined,
-      defaultRootObject: 'index.html',
+      // Every path not claimed by a more specific behavior below is a
+      // document: the home page, a lesson, a rabbi, a city, `not-found`,
+      // and the API's own 404 for a record that does not exist. All of it
+      // is rendered by the server, so the default behavior is the API
+      // origin, not the S3 bucket.
       defaultBehavior: {
-        origin: origins.S3BucketOrigin.withOriginAccessControl(clientBucket),
+        origin: apiOrigin,
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-        functionAssociations: [
-          { function: spaRoutingFunction, eventType: cloudfront.FunctionEventType.VIEWER_REQUEST },
-        ],
+        allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+        cachePolicy: documentCachePolicy,
+        originRequestPolicy: documentOriginRequestPolicy,
       },
       additionalBehaviors: {
+        // The origin here is never actually reached: the function above
+        // always returns its own response at viewer-request time, before
+        // CloudFront picks an origin. It is still declared because the
+        // behavior type requires one.
+        '/health': {
+          origin: apiOrigin,
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+          functionAssociations: [
+            { function: blockHealthCheckFunction, eventType: cloudfront.FunctionEventType.VIEWER_REQUEST },
+          ],
+        },
         '/v1/*': {
-          origin: new origins.HttpOrigin(apiOriginDomain, {
-            protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
-          }),
+          origin: apiOrigin,
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
           // Caching off: an admin session cookie makes every response
           // specific to the caller, and a cached response here would be
           // served back to the next visitor regardless of who they are.
           cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-          // Everything except `Host`, which must stay CloudFront's own. API
-          // Gateway matches the incoming `Host` against its execute-api
-          // domain and answers anything else with a bare 403, so forwarding
-          // the viewer's `Host` (what ALL_VIEWER does) breaks every request
-          // through this behavior while the API answers fine when called
-          // directly.
-          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+          originRequestPolicy: sessionOriginRequestPolicy,
+        },
+        // The admin and rabbi panel documents are server rendered too
+        // (0023), but their loaders read the session cookie to decide
+        // whether to redirect to the sign-in screen, so every response is
+        // specific to the caller. Same shape as `/v1/*`: no caching, and
+        // the cookie has to reach the origin for that check to work at all.
+        '/admin/*': {
+          origin: apiOrigin,
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+          originRequestPolicy: sessionOriginRequestPolicy,
+        },
+        '/rabbi/*': {
+          origin: apiOrigin,
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+          originRequestPolicy: sessionOriginRequestPolicy,
+        },
+        // Hashed, content-addressed build output and the handful of named
+        // static files the client build emits. All of it lives in the
+        // private client bucket and none of it needs the container: this
+        // is exactly the cost trade-off 0010 exists to protect (a document
+        // request costs Fargate CPU it is not free to hand out; a static
+        // file costs S3 and CloudFront, which this project already pays
+        // for at this traffic).
+        '/assets/*': {
+          origin: clientOrigin,
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+        },
+        '/favicon.svg': {
+          origin: clientOrigin,
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+        },
+        '/robots.txt': {
+          origin: clientOrigin,
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+        },
+        '/sitemap.xml': {
+          origin: clientOrigin,
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+        },
+        // The outage fallback page (see `errorResponses` below). Also
+        // reachable directly, which is the only way to eyeball it without
+        // waiting for a real outage.
+        '/outage.html': {
+          origin: clientOrigin,
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
         },
       },
+      // A server outage must never produce a white page (owner requirement,
+      // 0023's second fallback). 502/503/504 are what API Gateway itself
+      // returns when it cannot reach the container at all (no running task,
+      // a stalled deploy, a timed-out connection through the VPC Link): the
+      // request never reached Fastify, so there is no risk of this
+      // colliding with an application-level response. It deliberately does
+      // NOT list 403 or 404: those are legitimate responses this
+      // distribution already relies on (a missing rabbi is a real 404 from
+      // the API, a missing S3 object is a real 403 from OAC), and CloudFront's
+      // custom error responses apply distribution-wide by status code with no
+      // way to scope them to one behavior, so folding either into this page
+      // would rewrite that real 404 or 403 for every visitor and crawler, not
+      // only during an actual outage. An application-level 500 from Fastify's
+      // own error handler is also left untouched, on purpose: it still
+      // carries the `/v1/*` JSON error contract the client's error handling
+      // depends on, and swallowing it here would be a second, undocumented
+      // error shape for the client to guess at.
+      //
+      // This fails open: told nothing else, a broken origin now answers with
+      // a calm, readable, static "back soon" page instead of a raw gateway
+      // error or a blank tab. The cost of that same distribution-wide reach is
+      // symmetric, and it is no longer hypothetical: `GET /health`
+      // (server/src/api/health) deliberately answers 503 while the SSR bundle
+      // it renders through is broken, specifically so the ECS deployment
+      // circuit breaker can detect and roll back a bad image. Reached through
+      // this distribution, that 503 would be presented as this same outage
+      // page instead of the JSON status a caller might expect, which is why
+      // `/health` is not routed to the origin at all (see the
+      // `blockHealthCheckFunction` behavior above): it answers a plain 404 at
+      // the edge for any external caller, before this mapping, or the origin,
+      // ever sees the request. The container's own probe is unaffected either
+      // way, because it calls `http://localhost:<port>/health` directly
+      // inside the task (ServerStack) and never goes through CloudFront; the
+      // circuit breaker keeps working exactly as before. Anyone who needs to
+      // watch this service's health from outside the container should use
+      // ServerStack's `ServerErrorAlarm` and `NoHealthyTaskAlarm` (CloudWatch
+      // plus SNS email), not a public request to `/health`, which no longer
+      // answers at all. An origin-group failover to the S3 bucket was the
+      // other candidate for the outage page itself and was rejected: a
+      // CloudFront Function cannot rewrite the request only for the failover
+      // case (it runs at viewer-request time, before origin selection
+      // happens), and the bucket has no `index.html` or per-path fallback
+      // object in framework mode, so a failed-over request would 404 against
+      // S3 for almost every real path instead of showing anything useful.
+      errorResponses: [502, 503, 504].map((httpStatus) => ({
+        httpStatus,
+        responseHttpStatus: 503,
+        responsePagePath: '/outage.html',
+        ttl: Duration.seconds(30),
+      })),
     });
 
     // No Route 53 records at all without a domain: nothing to alias to,

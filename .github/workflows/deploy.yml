@@ -62,11 +62,16 @@ jobs:
       # The `migrate` job below can sit at its approval gate indefinitely,
       # so this artifact has to outlive however long a human takes. At seven
       # days it expired under an approval that came fifteen days later, and
-      # `deploy-client` failed with nothing left to download.
+      # `deploy-client` failed with nothing left to download. Only the
+      # client half (`client/build/client`: hashed assets plus a handful of
+      # named files, favicon.svg, robots.txt, sitemap.xml, outage.html) is
+      # uploaded. The server half (`client/build/server`) is not used from
+      # here, since the runtime image builds its own copy from source inside
+      # `server/Dockerfile`.
       - uses: actions/upload-artifact@v4
         with:
           name: client-dist
-          path: client/dist
+          path: client/build/client
           retention-days: 90
 
   detect-migration:
@@ -210,15 +215,89 @@ jobs:
             exit 1
           fi
 
-  # Updates only the running service with a new image; never runs
-  # `cdk deploy` and never changes the stack's own shape.
-  deploy-server:
+  # The document the server emits references hashed asset filenames
+  # (`/assets/foo-abc123.js`), so those assets must already be in the bucket
+  # before a server that points at them goes live. This runs before
+  # `deploy-server` for that reason: reversing it, as this workflow used to,
+  # guarantees a window where every page loads with a script that 404s.
+  #
+  # Running first instead moves the window rather than closing it: for the
+  # time between this job finishing and `deploy-server` finishing, the
+  # bucket holds this commit's assets while the still-running old server
+  # emits documents naming the previous commit's filenames. That is the safe
+  # direction, because the old build's assets are never deleted (see the
+  # sync step below), so the old server's references keep resolving; the
+  # only cost is the new assets sitting unused in the bucket for a few
+  # minutes; a stale asset reference, which the old order risked, has no
+  # equivalent recovery.
+  deploy-client:
     needs: [build, detect-migration, migrate]
     if: |
       always() &&
       needs.build.result == 'success' &&
       needs.detect-migration.result == 'success' &&
       (needs.migrate.result == 'success' || needs.migrate.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: client-dist
+          path: client-dist
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Read TorabarabimSite stack outputs
+        id: site-outputs
+        run: |
+          OUTPUTS=$(aws cloudformation describe-stacks --stack-name "$SITE_STACK" --query 'Stacks[0].Outputs' --output json)
+          for key in ClientBucketName DistributionId; do
+            value=$(echo "$OUTPUTS" | jq -r --arg k "$key" '.[] | select(.OutputKey==$k) | .OutputValue')
+            echo "$key=$value" >> "$GITHUB_OUTPUT"
+          done
+
+      # No `--delete`: a hashed filename is never reused, so the previous
+      # build's assets staying in the bucket costs only storage, and removing
+      # them would break a tab a visitor already has open (it holds a
+      # document naming those exact files) and the static fallback this
+      # bucket also serves. Fails open toward keeping old objects around;
+      # the alternative (deleting) fails closed by breaking live pages the
+      # moment a new build lands. Orphaned objects are not currently
+      # cleaned up by anything; see the report for that gap.
+      - name: Sync the client build to the client bucket
+        run: |
+          aws s3 sync client-dist "s3://${{ steps.site-outputs.outputs.ClientBucketName }}"
+
+      # Framework mode emits no `index.html`; documents come from the server
+      # origin now, not this bucket. What this bucket holds is hashed assets,
+      # which are content addressed and never need invalidating (a new build
+      # gets new filenames), plus a handful of stable-path named files
+      # (favicon.svg, robots.txt, sitemap.xml, outage.html) that do. `/*` also
+      # reaches the server-rendered documents, which now carry their own
+      # 60 second edge cache: clearing it here means a visitor gets this
+      # deploy's pages right away instead of within that window, so the wide
+      # invalidation is doing real work on both origins, not leftover from
+      # when this bucket served the document too.
+      - name: Invalidate the CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ steps.site-outputs.outputs.DistributionId }}" \
+            --paths "/*"
+
+  # Updates only the running service with a new image; never runs
+  # `cdk deploy` and never changes the stack's own shape. Depends on
+  # `deploy-client` (not the other way around, see the comment there) so the
+  # server the deployment circuit breaker promotes never emits a filename
+  # the bucket does not have yet.
+  deploy-server:
+    needs: [build, deploy-client]
+    if: always() && needs.build.result == 'success' && needs.deploy-client.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -290,44 +369,3 @@ jobs:
           aws ecs wait services-stable \
             --cluster "${{ steps.server-outputs.outputs.ClusterName }}" \
             --services "${{ steps.server-outputs.outputs.ServiceName }}"
-
-  deploy-client:
-    needs: [build, deploy-server]
-    if: always() && needs.build.result == 'success' && needs.deploy-server.result == 'success'
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: client-dist
-          path: client-dist
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Read TorabarabimSite stack outputs
-        id: site-outputs
-        run: |
-          OUTPUTS=$(aws cloudformation describe-stacks --stack-name "$SITE_STACK" --query 'Stacks[0].Outputs' --output json)
-          for key in ClientBucketName DistributionId; do
-            value=$(echo "$OUTPUTS" | jq -r --arg k "$key" '.[] | select(.OutputKey==$k) | .OutputValue')
-            echo "$key=$value" >> "$GITHUB_OUTPUT"
-          done
-
-      - name: Sync the client build to the client bucket
-        run: |
-          aws s3 sync client-dist "s3://${{ steps.site-outputs.outputs.ClientBucketName }}" --delete
-
-      # Without this, CloudFront's cache policy on the client behavior keeps
-      # serving the previous build's index.html for a while after the new
-      # one lands in the bucket.
-      - name: Invalidate the CloudFront cache
-        run: |
-          aws cloudfront create-invalidation \
-            --distribution-id "${{ steps.site-outputs.outputs.DistributionId }}" \
-            --paths "/*"
