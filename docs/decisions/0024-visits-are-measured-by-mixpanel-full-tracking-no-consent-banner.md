@@ -32,9 +32,12 @@ identifies a person rather than a browser, this gap is the first thing to revisi
 
 **Four events are tracked**, from `client/src/analytics/`:
 - a page view, on every route change
-- `search`, when a query commits
-- `filter_city` and `filter_date`, when either filter is set
-- `lesson_click`, when a listing is opened
+- `Search`, when a query commits
+- `Filter City` and `Filter Date`, when either filter is set
+- `Lesson Click`, when a listing is opened
+
+Event names are Title Case (`client/src/analytics/consts.ts`), Mixpanel's own naming
+convention, not the snake_case used above in earlier drafts of this record.
 
 **The Mixpanel project token is committed**, in `client/consts.ts`, the same way the
 Cloudflare site token was. It identifies which project events land in, not a person, and

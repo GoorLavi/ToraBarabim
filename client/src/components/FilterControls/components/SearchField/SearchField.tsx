@@ -19,7 +19,10 @@ export const SearchField = styled(({ className, value, onChange }: SearchFieldPr
     if (draft.trim() === value) return;
     const timer = window.setTimeout(() => {
       onChange(draft);
-      if (draft.trim().length > 0) trackEvent(MIXPANEL_EVENTS.search, { query: draft });
+      // Tracked value matches what `onChange` actually commits (useSearchQuery
+      // trims before writing to the URL), not the raw keystroke buffer.
+      const committed = draft.trim();
+      if (committed.length > 0) trackEvent(MIXPANEL_EVENTS.search, { query: committed });
     }, consts.DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
   }, [draft, value, onChange]);
