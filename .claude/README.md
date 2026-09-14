@@ -76,9 +76,9 @@ Rules that hold regardless of the table:
    code is written.
 4. Build: `tora-server` lands the API shape, then `tora-client` builds against it.
 5. Verify: it compiles and runs; the designer renders and reviews any visual change.
-6. **Ship gate (human):** the human ratifies. Only the orchestrator, and only on an
-   explicit per-time go-ahead, may then stage, commit, and push. All other agents
-   never stage or commit.
+6. **Ship gate (human):** the human ratifies the merge, which is the deploy. The
+   orchestrator stages, commits, and pushes to the branch without asking each time;
+   all other agents never stage or commit. The commit is not the gate, the merge is.
 
 Run it with `/tora <your idea>`.
 

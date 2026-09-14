@@ -254,10 +254,12 @@ Agents read AWS as their own identity, `claude-readonly`, never as the owner
 
 ## Git
 
-- **Never stage or commit on your own.** Do not run `git add`, `git commit`, or
-  `git push` unless the human explicitly asks, each time.
-- Only the orchestrator (`/tora`) may commit, and only on an explicit per-time
-  go-ahead. Specialist agents never stage or commit.
+- **Only the orchestrator (`/tora`) may stage, commit, or push, and it does not need
+  to ask each time.** Specialist agents never stage, commit, or push, no matter what
+  their brief says.
+- **A commit is not an approval of the work.** It moves the work onto a branch where
+  the human can read it; the gates that matter are the pull request and the merge
+  below, not the commit.
 - Run `git status` and review what is included before staging.
 - **Every change reaches `main` through a pull request.** Never commit to `main`
   directly and never merge without being asked. Merging is a deploy
