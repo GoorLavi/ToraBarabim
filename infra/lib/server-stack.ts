@@ -182,11 +182,34 @@ export class ServerStack extends Stack {
     const service = new ecs.FargateService(this, 'Service', {
       cluster,
       taskDefinition,
-      desiredCount: 1,
+      // Two tasks, not one: the owner tested the single-task shape by
+      // scaling the service to zero, which is exactly what happens whenever
+      // the one task dies on its own (a crash, a bad health check, an AZ
+      // hiccup), and it took the whole site down. Two tasks at this size
+      // cost roughly the same per month as one task at double the size
+      // (0.25 vCPU x2 vs 0.5 vCPU x1), plus a second public IP (~3.60/month,
+      // see the cost table in the README), so this buys the same CPU
+      // headroom the larger single task would and removes the single point
+      // of failure, for about the price of the public IP alone. It also
+      // makes a deploy genuinely redundant rather than merely sequenced:
+      // with `minHealthyPercent: 100` below, ECS now keeps two old tasks
+      // serving traffic until two replacements pass their health check,
+      // instead of the previous shape where the only "old" capacity during a
+      // deploy was the single task being replaced. State that would break
+      // under two tasks (an in-memory session, a sticky assumption) was
+      // checked: admin sessions are rows in Postgres
+      // (server/src/service/admin-auth/session.ts), read and written by
+      // whichever task handles the request, so either task answers a session
+      // check identically. Cloud Map's SRV record already supports more than
+      // one registered instance, and API Gateway's service-discovery
+      // integration resolves and balances across all of them; nothing here
+      // was written assuming exactly one.
+      desiredCount: 2,
       // No NAT gateway in this VPC: the task needs a public IP for outbound
       // internet to pull its image and reach Secrets Manager. Inbound is
       // still locked to the VPC Link security group only, so the public IP
-      // is for egress, not for the internet reaching the app directly.
+      // is for egress, not for the internet reaching the app directly. Two
+      // tasks now means two public IPs, priced accordingly in the README.
       vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
       assignPublicIp: true,
       securityGroups: [serverSecurityGroup],

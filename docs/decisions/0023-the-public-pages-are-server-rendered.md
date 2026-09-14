@@ -45,9 +45,11 @@ HTTP request back to this application. There is no new container and no new AWS
 resource.
 
 **A render failure never produces a blank page.** `onShellError` returns a usable shell
-so the browser can recover, and CloudFront fails over to the static client bucket when
-the origin is unreachable. Both are required, not optional: the document now depends on
-the server in a way it never did before.
+so the browser can recover, and CloudFront maps the origin's 500, 502, 503 and 504
+responses to a static outage page in the client bucket, a mapping established by taking
+the service down and observing what it actually returned, not by reading documentation.
+Both are required, not optional: the document now depends on the server in a way it
+never did before.
 
 This was decided after a spike that server rendered one page and answered four
 questions against this repository rather than against documentation. All four came back
@@ -57,20 +59,25 @@ sound, and the spike's findings are the substance of the consequences below.
 
 **Availability is coupled where it was not.** Previously a dead server left the site
 standing and showing error states, because S3 served the document. Now the document
-itself comes from Fargate, and the service runs a single task. The two fallbacks above
-are what stands between that and a white page, and they are the first thing to check if
-this is ever reviewed.
+itself comes from Fargate. Scaling the service to zero to test the fallback showed what
+that costs: the whole site went down, not just its data. The service therefore runs two
+tasks rather than one, so a single task failing is no longer a site outage, and the
+fallbacks above are the second line rather than the only one.
 
 **TypeScript moved from 7 to 6.** `@react-router/dev` declares support for `^5 || ^6`.
 The alternative was installing with `--legacy-peer-deps` and carrying a forced install
 into the repository, which is the kind of thing that is invisible until it breaks.
 
-**No new AWS line item, with a bounded risk.** The container was already paid for around
-the clock. The task is the smallest Fargate size, `0.25 vCPU`, and rendering React is
-CPU bound, so it may need `0.5 vCPU`, roughly seven dollars a month more against a base
-of thirty to thirty four. Caching the HTML at CloudFront absorbs crawler traffic, which
-is the bulk of it. **This is an estimate, not a measurement**, and cannot become one
-until the change serves real traffic.
+**No new AWS line item, but the bill does move.** Server rendering itself adds no
+resource: the container was already paid for around the clock. The second task does,
+and it is the cost of the availability above, roughly seven dollars a month plus a
+second public IP. Two tasks at `0.25 vCPU` cost about what one at `0.5 vCPU` would, so
+the same money buys headroom and survival rather than headroom alone. Caching the HTML
+at CloudFront absorbs crawler traffic, which is the bulk of it. **This supersedes
+[0010](0010-production-shape-traded-for-cost.md)'s "roughly 30 to 34 dollars a month at
+rest"**, which was written for a single task; 0010 is accepted and therefore not edited.
+**These are estimates, not measurements**, and cannot become measurements until the
+change serves real traffic.
 
 **The deploy order reverses, and it is now load bearing.** The document references
 hashed asset filenames, so assets must reach their bucket before the server that points
