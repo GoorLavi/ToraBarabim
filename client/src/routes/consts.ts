@@ -2,7 +2,9 @@ import type { CityDirectoryResponse, LessonOccurrence, Rabbi, RabbiDirectoryResp
 
 import type { JsonLdObject } from './models';
 
+import { TITLE as CONTACT_TITLE } from '~/ContactPage/consts';
 import { kickerLabel } from '~/LessonPage/components/LessonTicket/helpers';
+import { TITLE_UNFILTERED as LESSONS_TITLE } from '~/LessonsPage/consts';
 import { cityPath, rabbiPath } from '~/helpers';
 
 import { SITE_NAME, SITE_ORIGIN } from '../../consts';
@@ -155,3 +157,17 @@ export const lessonEventJsonLd = (occurrence: LessonOccurrence, teachingRabbi: R
     ...(teachingRabbi.photoUrl ? { image: teachingRabbi.photoUrl } : {}),
   },
 });
+
+// contact.tsx's and lessons.tsx's own document titles and descriptions.
+// Every public route needs its own, because root.tsx's defaults describe the
+// home page, including a canonical pointing at `/`: React Router replaces a
+// parent's meta entry rather than merging into it, so a route with no `meta`
+// export of its own tells a crawler it is a copy of the home page. That is
+// the exact instruction decision 0023 exists to undo.
+export const contactPageTitle = (): string => `${CONTACT_TITLE} | ${SITE_NAME}`;
+export const CONTACT_PAGE_DESCRIPTION =
+  'איך ליצור איתנו קשר בכל דבר שקשור ללוח השיעורים: שיעור חסר, פרט לא מדויק, או בקשה להוסיף מגיד שיעור.';
+
+export const lessonsPageTitle = (): string => `${LESSONS_TITLE} | ${SITE_NAME}`;
+export const LESSONS_PAGE_DESCRIPTION =
+  'כל שיעורי התורה בלוח, לפי יום ולפי מקום. אפשר לסנן לפי עיר, לפי תאריך ולפי מה שמחפשים.';

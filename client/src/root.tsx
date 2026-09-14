@@ -8,25 +8,27 @@ import styled, { ThemeProvider } from 'styled-components';
 import { GlobalStyle } from '~/styles/GlobalStyle';
 import { ARGAMAN_VE_ZAHAV_THEME } from '~/theme/themes';
 
-import { CLOUDFLARE_ANALYTICS_TOKEN, DEFAULT_DESCRIPTION, DEFAULT_TITLE, SITE_NAME, SITE_ORIGIN } from '../consts';
+import { CLOUDFLARE_ANALYTICS_TOKEN, DEFAULT_DESCRIPTION, DEFAULT_TITLE, SITE_NAME, SITE_ORIGIN, SITE_WIDE_META } from '../consts';
 import * as rootConsts from './root.consts';
 import * as rootStyles from './root.styles';
 
-// The sitewide default. A route with its own `meta` export (currently only
-// the rabbi page) replaces the entries whose `title`/`name`/`property` key
-// matches; React Router does not merge a child's meta into a parent's, so
-// every other route falls through to exactly this array.
+// The home page's meta, and the fallback for a route that exports none.
+// React Router replaces this array wholesale rather than merging by key: the
+// deepest route exporting `meta` wins entirely, so a route with its own gets
+// nothing from here, and a route without one inherits all of it verbatim.
+// That second case is why every public route must export `meta`: inheriting
+// this array means inheriting a canonical that points at `/`, which tells a
+// crawler the page is a copy of the home page. `routes/consts.ts` holds the
+// sitewide entries each route spreads back in.
 export const meta: MetaFunction = () => [
   { title: DEFAULT_TITLE },
   { name: 'description', content: DEFAULT_DESCRIPTION },
   { tagName: 'link', rel: 'canonical', href: `${SITE_ORIGIN}/` },
   { property: 'og:type', content: 'website' },
-  { property: 'og:site_name', content: SITE_NAME },
   { property: 'og:title', content: DEFAULT_TITLE },
   { property: 'og:description', content: DEFAULT_DESCRIPTION },
   { property: 'og:url', content: `${SITE_ORIGIN}/` },
-  { property: 'og:locale', content: 'he_IL' },
-  { name: 'twitter:card', content: 'summary' },
+  ...SITE_WIDE_META,
 ];
 
 const WEBSITE_JSON_LD = JSON.stringify({

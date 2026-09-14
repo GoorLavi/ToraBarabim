@@ -7,7 +7,7 @@ import { CitiesPage } from '~/CitiesPage/CitiesPage';
 import { CITIES_QUERY_KEYS, LOAD_ERROR_BODY, LOAD_ERROR_HEADING, RETRY_LABEL } from '~/CitiesPage/consts';
 import { StateCard } from '~/components/StateCard/StateCard';
 
-import { SITE_ORIGIN } from '../../consts';
+import { SITE_ORIGIN, SITE_WIDE_META } from '../../consts';
 import * as consts from './consts';
 import { loadCityDirectory } from './cities.server';
 
@@ -31,6 +31,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     { property: 'og:title', content: title },
     { property: 'og:description', content: description },
     { property: 'og:url', content: url },
+    ...SITE_WIDE_META,
     { 'script:ld+json': consts.citiesItemListJsonLd(data) },
   ];
 };

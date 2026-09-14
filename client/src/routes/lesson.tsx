@@ -10,7 +10,7 @@ import * as lessonPageConsts from '~/LessonPage/consts';
 import { teachingRabbiOf } from '~/LessonPage/helpers';
 import { LessonPage } from '~/LessonPage/LessonPage';
 
-import { SITE_ORIGIN } from '../../consts';
+import { SITE_ORIGIN, SITE_WIDE_META } from '../../consts';
 import * as consts from './consts';
 import { loadLessonOccurrence } from './lesson.server';
 
@@ -39,6 +39,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     { property: 'og:title', content: title },
     { property: 'og:description', content: description },
     { property: 'og:url', content: url },
+    ...SITE_WIDE_META,
     { 'script:ld+json': consts.lessonEventJsonLd(data, teachingRabbi) },
   ];
 };

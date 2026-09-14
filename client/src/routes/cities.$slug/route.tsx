@@ -9,7 +9,7 @@ import { CityPage } from '~/CityPage/CityPage';
 import { StateCard } from '~/components/StateCard/StateCard';
 import { cityPath } from '~/helpers';
 
-import { SITE_ORIGIN } from '../../../consts';
+import { SITE_ORIGIN, SITE_WIDE_META } from '../../../consts';
 import { PUBLIC_CACHE_HEADERS } from '../consts';
 import * as consts from './consts';
 import { loadCityDetail } from './city-detail.server';
@@ -47,6 +47,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     { property: 'og:title', content: title },
     { property: 'og:description', content: description },
     { property: 'og:url', content: url },
+    ...SITE_WIDE_META,
   ];
 };
 
