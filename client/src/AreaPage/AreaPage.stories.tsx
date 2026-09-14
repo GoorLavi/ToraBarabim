@@ -118,7 +118,12 @@ installMockFetch((url) => {
     if (url.searchParams.get('area') === 'sharon') {
       return jsonResponse(200, { items: [], page: 1, pageSize: 24, total: 0 });
     }
-    return jsonResponse(200, { items: [], page: 1, pageSize: 24, total: 0 });
+    // Falls through for every other lessons query rather than answering it.
+    // Each stories file wraps `window.fetch` and keeps the previous wrapper,
+    // so returning a response here stops the chain: a catch-all would swallow
+    // CityPage's and RabbiPage's own lessons mocks depending on which module
+    // Storybook happened to load first.
+    return null;
   }
 
   if (pathname === '/v1/areas') return jsonResponse(200, areaDirectory({}));
