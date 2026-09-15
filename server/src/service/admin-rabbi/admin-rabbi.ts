@@ -55,7 +55,14 @@ export const getById = async (id: string): Promise<RabbiRecord> => {
 export const create = async (input: CreateRabbiInput): Promise<RabbiRecord> => {
   const [row] = await db
     .insert(rabbis)
-    .values({ id: nanoid(), name: input.name, title: input.title, bio: input.bio, prominence: input.prominence })
+    .values({
+      id: nanoid(),
+      name: input.name,
+      honorific: input.honorific ?? 'rav',
+      title: input.title,
+      bio: input.bio,
+      prominence: input.prominence,
+    })
     .returning();
   if (!row) throw new Error('insert into rabbis returned no row');
   return toRecord(row);

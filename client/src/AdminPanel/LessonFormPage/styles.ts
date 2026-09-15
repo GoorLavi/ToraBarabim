@@ -152,6 +152,7 @@ export const LessonFormPage = css(
           font-size: ${theme.typography.secondary.phone.fontSize};
           line-height: ${theme.typography.secondary.phone.lineHeight};
         }
+
       }
 
       > .errorSummary {

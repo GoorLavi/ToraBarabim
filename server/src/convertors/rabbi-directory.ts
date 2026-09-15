@@ -12,6 +12,7 @@ const toCity = (record: RabbiCityRecord): City => ({
 const toDirectoryEntry = (record: RabbiDirectoryEntryRecord): RabbiDirectoryEntry => ({
   id: record.id,
   name: record.name,
+  honorific: record.honorific,
   slug: record.slug,
   title: record.title,
   photoUrl: record.photoUrl,

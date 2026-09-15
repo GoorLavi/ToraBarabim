@@ -7,6 +7,7 @@ import { cities, lessonExceptions, lessons, rabbis } from '../../db/schema';
 import { addDays, todayInIsrael } from '../lesson/israel-time';
 import { applyException, expandLesson, type ResolvedOccurrence } from '../lesson/occurrence';
 import { toPlace } from '../shared/place';
+import { assertAudienceAllowedForRabbi } from '../shared/rabbanit-guard';
 import { toRabbiSummary as toRabbi } from '../shared/rabbi-summary';
 import { UPCOMING_OCCURRENCE_WINDOW_DAYS } from './consts';
 import { LessonNotFoundError, UnknownCityError } from './errors';
@@ -88,7 +89,7 @@ export const getOwnById = async (rabbiId: string, id: string): Promise<RabbiLess
 };
 
 export const create = async (rabbiId: string, input: CreateRabbiLessonInput): Promise<RabbiLessonRecord> => {
-  await verifyCity(input.place.cityCode);
+  await Promise.all([verifyCity(input.place.cityCode), assertAudienceAllowedForRabbi(rabbiId, input.audience)]);
 
   const [row] = await db
     .insert(lessons)
@@ -115,7 +116,7 @@ export const create = async (rabbiId: string, input: CreateRabbiLessonInput): Pr
 };
 
 export const update = async (rabbiId: string, id: string, input: UpdateRabbiLessonInput): Promise<RabbiLessonRecord> => {
-  await verifyCity(input.place.cityCode);
+  await Promise.all([verifyCity(input.place.cityCode), assertAudienceAllowedForRabbi(rabbiId, input.audience)]);
 
   const [row] = await db
     .update(lessons)

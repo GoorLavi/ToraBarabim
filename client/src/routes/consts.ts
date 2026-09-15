@@ -5,7 +5,9 @@ import type { JsonLdObject } from './models';
 import { TITLE as CONTACT_TITLE } from '~/ContactPage/consts';
 import { kickerLabel } from '~/LessonPage/components/LessonTicket/helpers';
 import { TITLE_UNFILTERED as LESSONS_TITLE } from '~/LessonsPage/consts';
-import { cityPath, rabbiPath } from '~/helpers';
+import { cityPath, rabbiDisplayName, rabbiPath } from '~/helpers';
+
+import { RABBI_HONORIFIC_LABELS } from '~/consts';
 
 import { SITE_NAME, SITE_ORIGIN } from '../../consts';
 
@@ -83,7 +85,7 @@ export const rabbisItemListJsonLd = (directory: RabbiDirectoryResponse): JsonLdO
     '@type': 'ListItem',
     position: index + 1,
     url: `${SITE_ORIGIN}${rabbiPath(rabbi)}`,
-    name: rabbi.name,
+    name: rabbiDisplayName(rabbi),
   })),
 });
 
@@ -95,14 +97,15 @@ export const rabbisItemListJsonLd = (directory: RabbiDirectoryResponse): JsonLdO
 const lessonSubjectLabel = (occurrence: LessonOccurrence): string => kickerLabel(occurrence) ?? 'שיעור תורה';
 
 export const lessonPageTitle = (occurrence: LessonOccurrence, teachingRabbi: Rabbi): string =>
-  `${lessonSubjectLabel(occurrence)} עם ${teachingRabbi.name} | ${SITE_NAME}`;
+  `${lessonSubjectLabel(occurrence)} עם ${rabbiDisplayName(teachingRabbi)} | ${SITE_NAME}`;
 
 export const lessonPageDescription = (occurrence: LessonOccurrence, teachingRabbi: Rabbi): string => {
   const subject = lessonSubjectLabel(occurrence);
+  const teacherName = rabbiDisplayName(teachingRabbi);
   if (occurrence.status === 'cancelled') {
-    return `השיעור "${subject}" עם ${teachingRabbi.name} בוטל בתאריך זה. אפשר לחפש שיעורים אחרים ב${occurrence.place.city} ב${SITE_NAME}.`;
+    return `השיעור "${subject}" עם ${teacherName} בוטל בתאריך זה. אפשר לחפש שיעורים אחרים ב${occurrence.place.city} ב${SITE_NAME}.`;
   }
-  return `${subject} עם ${teachingRabbi.name} ב${occurrence.place.city}, ${occurrence.place.name}. פרטים מלאים ב${SITE_NAME}.`;
+  return `${subject} עם ${teacherName} ב${occurrence.place.city}, ${occurrence.place.name}. פרטים מלאים ב${SITE_NAME}.`;
 };
 
 const JERUSALEM_OFFSET_FORMATTER = new Intl.DateTimeFormat('en-US', {
@@ -134,7 +137,7 @@ const israelDateTime = (isoDate: string, clockTime: string): string => `${isoDat
 export const lessonEventJsonLd = (occurrence: LessonOccurrence, teachingRabbi: Rabbi): JsonLdObject => ({
   '@context': 'https://schema.org',
   '@type': 'Event',
-  name: `${lessonSubjectLabel(occurrence)} עם ${teachingRabbi.name}`,
+  name: `${lessonSubjectLabel(occurrence)} עם ${rabbiDisplayName(teachingRabbi)}`,
   startDate: israelDateTime(occurrence.date, occurrence.startTime),
   endDate: israelDateTime(occurrence.date, occurrence.endTime),
   eventStatus:
@@ -152,6 +155,7 @@ export const lessonEventJsonLd = (occurrence: LessonOccurrence, teachingRabbi: R
   performer: {
     '@type': 'Person',
     name: teachingRabbi.name,
+    honorificPrefix: RABBI_HONORIFIC_LABELS[teachingRabbi.honorific],
     url: `${SITE_ORIGIN}${rabbiPath(teachingRabbi)}`,
     ...(teachingRabbi.bio ? { description: teachingRabbi.bio } : {}),
     ...(teachingRabbi.photoUrl ? { image: teachingRabbi.photoUrl } : {}),

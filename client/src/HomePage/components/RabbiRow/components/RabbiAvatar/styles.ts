@@ -38,6 +38,10 @@ export const RabbiAvatar = css(
     font-weight: ${theme.typography.fontWeight.semiBold};
     overflow-wrap: break-word;
     transition: color 150ms ease;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   /* Hover only on a mouse: a touch device must never get a stuck hover

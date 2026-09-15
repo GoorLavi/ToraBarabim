@@ -1,5 +1,7 @@
 import type { LessonOccurrence } from '@torabarabim/common';
 
+import { rabbiDisplayName } from '~/helpers';
+
 import { CANCELLED_LABEL, LESSON_AUDIENCE_LABELS, LESSON_TOPIC_LABELS, cardWeekday } from './consts';
 
 // The audience is required on the wire today (`LessonOccurrence.audience`
@@ -23,7 +25,7 @@ export const cardAriaLabel = (lesson: LessonOccurrence): string => {
   const description = descriptionLabel(lesson);
 
   const parts = [
-    teachingRabbi.name,
+    rabbiDisplayName(teachingRabbi),
     `${cardWeekday(lesson.date)} בשעה ${lesson.startTime}`,
     LESSON_AUDIENCE_LABELS[lesson.audience],
   ];

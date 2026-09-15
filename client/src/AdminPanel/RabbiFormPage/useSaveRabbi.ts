@@ -50,6 +50,7 @@ export const useSaveRabbi = (): SaveRabbiResult => {
           })
         : await createAdminRabbi({
             name: form.name.trim(),
+            honorific: form.honorific,
             title: form.title.trim() || undefined,
             bio: form.bio.trim() || undefined,
             prominence: form.prominence,

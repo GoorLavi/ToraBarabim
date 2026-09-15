@@ -6,4 +6,6 @@ export const TAB_LESSONS_LABEL = 'השיעורים שלי';
 export const TAB_PROFILE_LABEL = 'הפרטים שלי';
 export const LOGOUT_LABEL = 'יציאה';
 
-export const LOGOUT_ERROR_MESSAGE = 'היציאה נכשלה, נסה שוב';
+// Gender-neutral, not keyed by honorific: the shell renders it even if the
+// profile fetch itself never resolved, so there is no honorific to key on.
+export const LOGOUT_ERROR_MESSAGE = 'היציאה נכשלה, יש לנסות שוב';

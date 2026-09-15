@@ -6,7 +6,7 @@ import { isRouteErrorResponse, redirect, useRouteError } from 'react-router';
 
 import { StateCard } from '~/components/StateCard/StateCard';
 import { SITE_WIDE_META } from '~/consts';
-import { rabbiPath } from '~/helpers';
+import { rabbiDisplayName, rabbiPath } from '~/helpers';
 import * as rabbiPageConsts from '~/RabbiPage/consts';
 import { RabbiPage } from '~/RabbiPage/RabbiPage';
 
@@ -46,7 +46,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
   if (!data) return [];
 
   const url = `${SITE_ORIGIN}${rabbiPath(data)}`;
-  const title = consts.pageTitle(data.name);
+  const title = consts.pageTitle(rabbiDisplayName(data));
   const description = consts.pageDescription(data);
 
   return [
