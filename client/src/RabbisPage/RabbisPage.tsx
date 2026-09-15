@@ -25,7 +25,7 @@ export const RabbisPage = styled(({ className }: RabbisPageProps) => {
   const subline = hasNoResults
     ? consts.NO_RESULTS_SUBLINE
     : isSearchActive
-      ? rabbiMatchCountLabel(filteredRabbis.length)
+      ? rabbiMatchCountLabel(filteredRabbis)
       : `${rabbiCountLabel(rabbis.length)} · ${consts.ORDER_LABEL}`;
 
   return (

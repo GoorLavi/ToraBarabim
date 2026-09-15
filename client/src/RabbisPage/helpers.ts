@@ -2,7 +2,17 @@ import type { RabbiDirectoryEntry, RabbiHonorific } from '@torabarabim/common';
 
 export const rabbiCountLabel = (count: number): string => (count === 1 ? 'רב אחד' : `${count} רבנים`);
 
-export const rabbiMatchCountLabel = (count: number): string => (count === 1 ? 'נמצא רב אחד' : `נמצאו ${count} רבנים`);
+export const rabbiMatchCountLabel = (matches: RabbiDirectoryEntry[]): string => {
+  const count = matches.length;
+  if (count === 1) {
+    const [onlyMatch] = matches;
+    return onlyMatch?.honorific === 'rabbanit' ? 'נמצאה רבנית אחת' : 'נמצא רב אחד';
+  }
+
+  const allRabbaniyot = matches.every((rabbi) => rabbi.honorific === 'rabbanit');
+  // Masculine plural is Hebrew's generic for a mixed or all-ravs group, not a default picked here.
+  return allRabbaniyot ? `נמצאו ${count} רבניות` : `נמצאו ${count} רבנים`;
+};
 
 // Longest-first is unnecessary here: the lookahead requires the matched word
 // to end at a space or the string's end, so "רב" never matches inside
