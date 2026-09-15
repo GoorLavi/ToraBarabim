@@ -43,10 +43,12 @@ export const HomeRails = styled(({ className, query }: HomeRailsProps) => {
     );
   }
 
+  const { rows, womensAreaLessonCount } = query.data;
+
   return (
     <div className={className}>
-      {query.data.rows.map((row) => (
-        <LessonRail key={row.id} title={row.title} items={row.items} />
+      {rows.map((row) => (
+        <LessonRail key={row.id} {...{ title: row.title, items: row.items, womensAreaLessonCount }} />
       ))}
     </div>
   );

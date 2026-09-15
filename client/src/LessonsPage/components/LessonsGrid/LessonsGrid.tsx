@@ -9,7 +9,7 @@ export const LessonsGrid = styled(({ className, items }: LessonsGridProps) => (
   <ul className={className}>
     {items.map((item) => (
       <li className="cell" key={`${item.lessonId}-${item.date}`}>
-        <LessonCard lesson={item} />
+        <LessonCard {...{ lesson: item, surface: 'general' }} />
       </li>
     ))}
   </ul>

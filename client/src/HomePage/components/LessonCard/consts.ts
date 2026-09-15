@@ -1,17 +1,12 @@
-import type { LessonAudience, LessonTopic } from '@torabarabim/common';
+import type { LessonTopic } from '@torabarabim/common';
 
 export const CANCELLED_LABEL = 'מבוטל השבוע';
 export const SUBSTITUTE_LABEL = 'הפעם במקום';
 
-// The forbidden couple-oriented terms never appear in this product
-// (design-system.md, "Audience wording"): the three values below are exact
-// and final, and the mixed-audience wording is spelled out rather than a
-// single loaded word.
-export const LESSON_AUDIENCE_LABELS: Record<LessonAudience, string> = {
-  men: 'גברים',
-  women: 'נשים',
-  mixed: 'גם גברים וגם נשים',
-};
+// Non-breaking spaces on both sides of the dot, so the meta line's
+// description never wraps with the dot left dangling alone at a line's end
+// (design review, card meta at 375).
+export const META_SEPARATOR = ' · ';
 
 export const LESSON_TOPIC_LABELS: Record<LessonTopic, string> = {
   gemara: 'גמרא',

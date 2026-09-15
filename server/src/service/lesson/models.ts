@@ -1,8 +1,8 @@
 import type { LessonAudience, LessonTopic, Place, Rabbi } from '@torabarabim/common';
 import { z } from 'zod';
 
-import { AREAS, LESSON_AUDIENCES, LESSON_TOPICS } from '../../db/schema/enums';
-import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '../shared/consts';
+import { AREAS, LESSON_TOPICS } from '../../db/schema/enums';
+import { AUDIENCE_FILTERS, AUDIENCE_SCOPES, DEFAULT_PAGE, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '../shared/consts';
 import { MAX_SEARCH_QUERY_LENGTH } from './consts';
 
 // `from`/`to` stay optional here: the service resolves their defaults
@@ -11,6 +11,10 @@ import { MAX_SEARCH_QUERY_LENGTH } from './consts';
 // gets back from `GET /v1/cities`, not the Hebrew name.
 // `q` has no `.min(1)`: an empty string must pass validation and be treated
 // as "no filter", the same as an absent parameter, per the search contract.
+// `audience` narrows to `men` | `mixed` only: `women` is never a valid
+// public filter (a rabbanit's lessons reach a general search through the
+// name exception, not through requesting `women` directly), so requesting
+// it is a 400, not an empty result.
 export const lessonSearchQuerySchema = z.object({
   from: z.iso.date().optional(),
   to: z.iso.date().optional(),
@@ -18,7 +22,8 @@ export const lessonSearchQuerySchema = z.object({
   area: z.enum(AREAS).optional(),
   rabbiId: z.string().trim().min(1).optional(),
   topic: z.enum(LESSON_TOPICS).optional(),
-  audience: z.enum(LESSON_AUDIENCES).optional(),
+  audience: z.enum(AUDIENCE_FILTERS).optional(),
+  scope: z.enum(AUDIENCE_SCOPES).default('general'),
   q: z.string().trim().max(MAX_SEARCH_QUERY_LENGTH).optional(),
   page: z.coerce.number().int().min(1).default(DEFAULT_PAGE),
   pageSize: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),

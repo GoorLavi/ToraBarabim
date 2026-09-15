@@ -1,4 +1,4 @@
-import type { LessonSearchResponse, RabbiDetailResponse } from '@torabarabim/common';
+import type { AudienceScope, LessonSearchResponse, RabbiDetailResponse } from '@torabarabim/common';
 
 // Carries the HTTP status so a caller can map it to Hebrew copy without
 // parsing `message`, mirroring LessonPage/api.ts's LessonPageApiError.
@@ -39,11 +39,12 @@ export const fetchRabbiDetail = (rabbiId: string, signal?: AbortSignal): Promise
 // 400 for an invalid query.
 // 5xx for a server or upstream failure.
 export const fetchLessons = (
-  params: { rabbiId?: string; pageSize?: number },
+  params: { rabbiId?: string; pageSize?: number; scope?: AudienceScope },
   signal?: AbortSignal,
 ): Promise<LessonSearchResponse> => {
   const url = new URL('/v1/lessons', window.location.origin);
   if (params.rabbiId) url.searchParams.set('rabbiId', params.rabbiId);
   if (params.pageSize) url.searchParams.set('pageSize', String(params.pageSize));
+  if (params.scope) url.searchParams.set('scope', params.scope);
   return fetchJson(url, signal);
 };

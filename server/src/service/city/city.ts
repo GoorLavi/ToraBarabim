@@ -4,6 +4,7 @@ import { asc, desc, eq, like, sql } from 'drizzle-orm';
 import { db } from '../../db/client';
 import { cities, lessons, rabbis } from '../../db/schema';
 import { AREAS } from '../../db/schema/enums';
+import { isLessonInScope } from '../shared/audience-scope';
 import { AREA_NAMES_HE, toAreaSlug } from '../shared/consts';
 import { toRabbiSummary as toRabbi } from '../shared/rabbi-summary';
 import { toSlug } from '../shared/slug';
@@ -40,15 +41,27 @@ export const search = async (query: CitySearchQuery): Promise<ResolvedCity[]> =>
   return rows.map(toResolvedCity);
 };
 
-// Every city and every lesson's city code are each loaded once and joined
-// in memory, so counting lessons per city never runs a query per row.
+// Every city, every rabbi's honorific, and every lesson's city code and
+// audience are each loaded once and joined in memory, so counting
+// general-scope lessons per city never runs a query per row or per city.
 export const listDirectory = async (): Promise<CityDirectoryResult> => {
-  const [cityRows, countRows] = await Promise.all([
+  const [cityRows, rabbiRows, lessonRows] = await Promise.all([
     db.select({ code: cities.code, nameHe: cities.nameHe, area: cities.area }).from(cities),
-    db.select({ cityCode: lessons.cityCode, count: sql<number>`count(*)::int` }).from(lessons).groupBy(lessons.cityCode),
+    db.select({ id: rabbis.id, honorific: rabbis.honorific }).from(rabbis),
+    db.select({ cityCode: lessons.cityCode, rabbiId: lessons.rabbiId, audience: lessons.audience }).from(lessons),
   ]);
 
-  const countByCode = new Map(countRows.map((row) => [row.cityCode, row.count] as const));
+  const honorificByRabbiId = new Map(rabbiRows.map((row) => [row.id, row.honorific] as const));
+
+  const countByCode = new Map<number, number>();
+  for (const row of lessonRows) {
+    const teacherHonorific = honorificByRabbiId.get(row.rabbiId);
+    if (!teacherHonorific) {
+      throw new Error(`data inconsistency: a lesson references unknown rabbi ${row.rabbiId}`);
+    }
+    if (!isLessonInScope('general', { audience: row.audience, teacherHonorific })) continue;
+    countByCode.set(row.cityCode, (countByCode.get(row.cityCode) ?? 0) + 1);
+  }
 
   const citiesWithLessons = cityRows
     .map((row) => ({ ...toResolvedCity(row), lessonCount: countByCode.get(row.code) ?? 0 }))
@@ -76,7 +89,7 @@ export const resolveBySlug = async (slug: string): Promise<CityDetailResult> => 
     throw new CityNotFoundError(slug);
   }
 
-  const rabbiRows = await db
+  const cityLessonRows = await db
     .select({
       id: rabbis.id,
       name: rabbis.name,
@@ -84,14 +97,19 @@ export const resolveBySlug = async (slug: string): Promise<CityDetailResult> => 
       title: rabbis.title,
       photoUrl: rabbis.photoUrl,
       bio: rabbis.bio,
+      audience: lessons.audience,
     })
     .from(lessons)
     .innerJoin(rabbis, eq(lessons.rabbiId, rabbis.id))
     .where(eq(lessons.cityCode, cityRow.code));
 
+  const generalScopeRows = cityLessonRows.filter((row) =>
+    isLessonInScope('general', { audience: row.audience, teacherHonorific: row.honorific }),
+  );
+
   // A rabbi with several lessons in the same city joins in once per lesson;
   // de-duplicate by id so the city page lists each rabbi once.
-  const distinctRabbis = [...new Map(rabbiRows.map((row) => [row.id, toRabbi(row)] as const)).values()];
+  const distinctRabbis = [...new Map(generalScopeRows.map((row) => [row.id, toRabbi(row)] as const)).values()];
 
   return {
     ...toResolvedCity(cityRow),

@@ -1,7 +1,10 @@
-// Rail mode (no date filter, no city, no search query) renders whatever
-// `GET /v1/home` returns, unfiltered and unsorted by the client. Any filter
-// switches to the existing single filtered list. There is no in-between
-// state (resolveHomeMode in helpers.ts is the one place that decides).
+import type { AudienceFilter } from '@torabarabim/common';
+
+// Rail mode (no date filter, no city, no search query, no audience filter)
+// renders whatever `GET /v1/home` returns, unfiltered and unsorted by the
+// client. Any filter switches to the existing single filtered list. There is
+// no in-between state (resolveHomeMode in helpers.ts is the one place that
+// decides).
 export type HomeMode = 'rail' | 'filtered';
 
 export interface LessonFilters {
@@ -10,6 +13,7 @@ export interface LessonFilters {
   city?: string;
   pageSize?: number;
   q?: string;
+  audience?: AudienceFilter;
 }
 
 export interface HomePageProps {

@@ -1,6 +1,6 @@
-import type { HomeResponse, HomeRow, LessonOccurrence } from '@torabarabim/common';
+import type { HomeResponse, HomeRow, HomeRowItem, LessonOccurrence } from '@torabarabim/common';
 
-import type { HomeResult, HomeRowResult, ResolvedHomeOccurrence } from '../service/home/models';
+import type { HomeResult, HomeRowItemResult, HomeRowResult, ResolvedHomeOccurrence } from '../service/home/models';
 
 const toLessonOccurrence = (record: ResolvedHomeOccurrence): LessonOccurrence => ({
   lessonId: record.lessonId,
@@ -17,12 +17,16 @@ const toLessonOccurrence = (record: ResolvedHomeOccurrence): LessonOccurrence =>
   note: record.note,
 });
 
+const toHomeRowItem = (item: HomeRowItemResult): HomeRowItem =>
+  item.kind === 'lesson' ? { kind: 'lesson', lesson: toLessonOccurrence(item.occurrence) } : { kind: 'womensArea' };
+
 const toHomeRow = (row: HomeRowResult): HomeRow => ({
   id: row.id,
   title: row.title,
-  items: row.items.map(toLessonOccurrence),
+  items: row.items.map(toHomeRowItem),
 });
 
 export const toHomeResponse = (result: HomeResult): HomeResponse => ({
   rows: result.rows.map(toHomeRow),
+  womensAreaLessonCount: result.womensAreaLessonCount,
 });

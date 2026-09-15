@@ -1,8 +1,19 @@
-import type { LessonOccurrence } from '@torabarabim/common';
+import type { LessonAudience, LessonOccurrence } from '@torabarabim/common';
 
+import { AUDIENCE_LABELS } from '~/consts';
 import { rabbiDisplayName } from '~/helpers';
 
-import { CANCELLED_LABEL, LESSON_AUDIENCE_LABELS, LESSON_TOPIC_LABELS, cardWeekday } from './consts';
+import { CANCELLED_LABEL, LESSON_TOPIC_LABELS, cardWeekday } from './consts';
+import type { AudienceTreatment, LessonCardSurface } from './models';
+
+// Where the audience line at the head of the meta line lands, per surface
+// (models.ts, `LessonCardSurface`). At most one treatment per card, since a
+// lesson carries exactly one audience.
+export const audienceTreatment = (audience: LessonAudience, surface: LessonCardSurface): AudienceTreatment => {
+  if (audience === 'mixed') return 'marked';
+  if (surface === 'general' && audience === 'women') return 'chip';
+  return 'plain';
+};
 
 // The audience is required on the wire today (`LessonOccurrence.audience`
 // is not optional), so there is no "unfilled" case to guard here yet.
@@ -27,7 +38,7 @@ export const cardAriaLabel = (lesson: LessonOccurrence): string => {
   const parts = [
     rabbiDisplayName(teachingRabbi),
     `${cardWeekday(lesson.date)} בשעה ${lesson.startTime}`,
-    LESSON_AUDIENCE_LABELS[lesson.audience],
+    AUDIENCE_LABELS[lesson.audience],
   ];
   if (description) parts.push(description);
   parts.push(lesson.place.city);

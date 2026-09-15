@@ -1,14 +1,13 @@
 import type { LessonsFilters } from './models';
 
-// The date, city and search filters read `~/hooks/consts.ts` instead: they
-// are shared with the home page's own filters (useDateFilter,
-// useSelectedCity, useSearchQuery), so a link built by one page keeps
-// working if handed to the other. These four remain page-local: nothing on
-// the home page reads them.
+// The date, city, search and audience filters read `~/hooks/consts.ts`
+// instead: they are shared with the home page's own filters
+// (useDateFilter, useSelectedCity, useSearchQuery, useAudienceFilter), so a
+// link built by one page keeps working if handed to the other. These two
+// remain page-local: nothing on the home page reads them.
 export const RABBI_ID_PARAM = 'rabbiId';
 export const AREA_PARAM = 'area';
 export const TOPIC_PARAM = 'topic';
-export const AUDIENCE_PARAM = 'audience';
 
 // The complete list's horizon: a hand-mirrored constant, since the client
 // has no shared import path to the server's own limit

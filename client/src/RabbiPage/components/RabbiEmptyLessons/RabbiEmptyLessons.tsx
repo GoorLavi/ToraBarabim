@@ -47,7 +47,7 @@ export const RabbiEmptyLessons = styled(
                   ))
                 : nationwideItems?.map((item) => (
                     <div className="cell" key={`${item.lessonId}-${item.date}`}>
-                      <LessonCard lesson={item} />
+                      <LessonCard {...{ lesson: item, surface: 'general' }} />
                     </div>
                   ))}
             </div>

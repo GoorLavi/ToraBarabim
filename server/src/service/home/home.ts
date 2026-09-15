@@ -6,11 +6,13 @@ import { db } from '../../db/client';
 import { cities, lessonExceptions, lessons, rabbis } from '../../db/schema';
 import { applyException, expandLesson, type ResolvedOccurrence } from '../lesson/occurrence';
 import { addDays, compareIsoDates, todayInIsrael } from '../lesson/israel-time';
+import { isLessonInScope, isRabbiInDirectoryScope } from '../shared/audience-scope';
 import { AREA_NAMES_HE } from '../shared/consts';
+import { toCitySummary } from '../shared/city-summary';
 import { toPlace, type PlaceCityRow } from '../shared/place';
 import { toRabbiSummary as toRabbi } from '../shared/rabbi-summary';
-import { HOME_WINDOW_DAYS, MAX_ITEMS_PER_ROW, MIN_ITEMS_PER_ROW, PROMINENCE_RANK } from './consts';
-import type { HomeResult, HomeRowResult, ResolvedHomeOccurrence } from './models';
+import { HOME_WINDOW_DAYS, MAX_ITEMS_PER_ROW, MIN_ITEMS_PER_ROW, PROMINENCE_RANK, WOMENS_AREA_TILE_INDEX } from './consts';
+import type { HomeResult, HomeRowItemResult, HomeRowResult, LoadedWindow, ResolvedHomeOccurrence, WomenAreaResult, WomensSet } from './models';
 
 const MINUTES_PER_DAY = 24 * 60;
 
@@ -87,7 +89,8 @@ const resolveRecord = (
 
   const substituteRabbiRow = occurrence.substituteRabbiId ? rabbiRowById.get(occurrence.substituteRabbiId) : undefined;
   // The substitute is who is actually teaching, so their tier, not the
-  // lesson's own rabbi's, decides where this occurrence sorts.
+  // lesson's own rabbi's, decides where this occurrence sorts. This is a
+  // sort-only concern; scope (below) always reads the lesson's own rabbi.
   const activeProminence = substituteRabbiRow?.prominence ?? rabbiRow.prominence;
 
   return {
@@ -100,6 +103,11 @@ const resolveRecord = (
     audience: occurrence.lesson.audience,
     recurrenceKind: occurrence.lesson.recurrence.kind,
     rabbi: toRabbi(rabbiRow),
+    // The lesson's own city, not `occurrence.place`'s (an exception may
+    // move a single date to a different venue): the women's-area city list
+    // must stay tappable through `/v1/lessons?city=`, which filters on the
+    // lesson's own `cityCode`, not a one-off exception's.
+    cityCode: occurrence.lesson.place.cityCode,
     place: toPlace(occurrence.place, cityByCode),
     substituteRabbi: substituteRabbiRow ? toRabbi(substituteRabbiRow) : undefined,
     note: occurrence.note,
@@ -126,13 +134,15 @@ const orderRow = (occurrences: ResolvedHomeOccurrence[]): ResolvedHomeOccurrence
     return a.shuffleKey - b.shuffleKey;
   });
 
+const toRowItem = (occurrence: ResolvedHomeOccurrence): HomeRowItemResult => ({ kind: 'lesson', occurrence });
+
 const buildRow = (
   id: HomeRowResult['id'],
   title: string,
   matches: ResolvedHomeOccurrence[],
 ): HomeRowResult | undefined => {
   const items = orderRow(pickNearestPerLesson(matches)).slice(0, MAX_ITEMS_PER_ROW);
-  return items.length >= MIN_ITEMS_PER_ROW ? { id, title, items } : undefined;
+  return items.length >= MIN_ITEMS_PER_ROW ? { id, title, items: items.map(toRowItem) } : undefined;
 };
 
 // The four rows filter on different, overlapping axes (area, day, audience,
@@ -149,7 +159,9 @@ const buildRowExcluding = (
 ): HomeRowResult | undefined => {
   const eligible = matches.filter((occurrence) => !usedLessonIds.has(occurrence.lessonId));
   const row = buildRow(id, title, eligible);
-  row?.items.forEach((item) => usedLessonIds.add(item.lessonId));
+  row?.items.forEach((item) => {
+    if (item.kind === 'lesson') usedLessonIds.add(item.occurrence.lessonId);
+  });
   return row;
 };
 
@@ -173,9 +185,43 @@ const chooseArea = (occurrences: ResolvedHomeOccurrence[]): Area | undefined => 
   return chosen;
 };
 
+const collator = new Intl.Collator('he');
+
+// `lessonCount` matches the rest of the site's "{n} שיעורים בשבועיים
+// הקרובים" copy: occurrences in the 14-day window, not distinct lessons. A
+// lesson recurring three times in the window counts three times here, and
+// `resolved` (from `loadWindow`) already excludes cancelled occurrences.
+const buildWomensSet = (resolved: ResolvedHomeOccurrence[], cityByCode: Map<number, PlaceCityRow>): WomensSet => {
+  const inScope = resolved.filter((occurrence) =>
+    isLessonInScope('women', { audience: occurrence.audience, teacherHonorific: occurrence.rabbi.honorific }),
+  );
+
+  const teacherById = new Map(inScope.map((occurrence) => [occurrence.rabbi.id, occurrence.rabbi] as const));
+
+  const countByCityCode = new Map<number, number>();
+  for (const occurrence of inScope) {
+    countByCityCode.set(occurrence.cityCode, (countByCityCode.get(occurrence.cityCode) ?? 0) + 1);
+  }
+  const citiesWithLessonCount = [...countByCityCode.entries()].map(([code, lessonCount]) => {
+    const cityRow = cityByCode.get(code);
+    if (!cityRow) {
+      throw new Error(`data inconsistency: a lesson references unknown city code ${code}`);
+    }
+    return { ...toCitySummary(cityRow), lessonCount };
+  });
+
+  return {
+    lessonCount: inScope.length,
+    teachers: [...teacherById.values()].sort((a, b) => collator.compare(a.name, b.name)),
+    // Alphabetical, matching the city directory and area page's own
+    // ordering of `CityWithLessonCount` (`service/city/city.ts`).
+    cities: citiesWithLessonCount.sort((a, b) => collator.compare(a.name, b.name)),
+  };
+};
+
 // `now` is read once here, at the edge, and threaded through; nothing else
 // in this module reads the clock directly.
-export const getHome = async (now: Date): Promise<HomeResult> => {
+const loadWindow = async (now: Date): Promise<LoadedWindow> => {
   const from = todayInIsrael(now);
   // `expandLesson` treats `to` as inclusive, so the last day of the window
   // is `HOME_WINDOW_DAYS - 1` days after today for a window that counts today.
@@ -211,8 +257,21 @@ export const getHome = async (now: Date): Promise<HomeResult> => {
     .filter((occurrence) => occurrence.status === 'scheduled')
     .map((occurrence) => resolveRecord(occurrence, rabbiRowById, cityByCode));
 
+  return { from, resolved, cityByCode, rabbiRows };
+};
+
+export const getHome = async (now: Date): Promise<HomeResult> => {
+  const { from: today, resolved: allResolved, cityByCode } = await loadWindow(now);
+
+  const { lessonCount: womensAreaLessonCount } = buildWomensSet(allResolved, cityByCode);
+
+  // 0026: a rabbanit's lesson leaves the general surfaces, so the rows
+  // below are built from the general-scope set, not every occurrence.
+  const resolved = allResolved.filter((occurrence) =>
+    isLessonInScope('general', { audience: occurrence.audience, teacherHonorific: occurrence.rabbi.honorific }),
+  );
+
   const area = chooseArea(resolved);
-  const today = from;
   const usedLessonIds = new Set<string>();
 
   const rows = [
@@ -239,5 +298,27 @@ export const getHome = async (now: Date): Promise<HomeResult> => {
     ),
   ].filter((row): row is HomeRowResult => row !== undefined);
 
-  return { rows };
+  const [firstRow] = rows;
+  if (firstRow && womensAreaLessonCount > 0) {
+    const items = [...firstRow.items];
+    items.splice(WOMENS_AREA_TILE_INDEX, 0, { kind: 'womensArea' });
+    rows[0] = { ...firstRow, items };
+  }
+
+  return { rows, womensAreaLessonCount };
+};
+
+export const getWomenArea = async (now: Date): Promise<WomenAreaResult> => {
+  const { resolved, cityByCode, rabbiRows } = await loadWindow(now);
+  const { lessonCount, teachers, cities: womenCities } = buildWomensSet(resolved, cityByCode);
+
+  if (lessonCount === 0) {
+    const rabbaniyot = rabbiRows
+      .filter((row) => isRabbiInDirectoryScope('women', row.honorific))
+      .map((row) => toRabbi(row))
+      .sort((a, b) => collator.compare(a.name, b.name));
+    return { kind: 'empty', rabbaniyot };
+  }
+
+  return { kind: 'populated', lessonCount, teachers, cities: womenCities };
 };

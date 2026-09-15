@@ -11,3 +11,4 @@ export * from './lesson';
 export * from './lesson-exception';
 export * from './lesson-occurrence';
 export * from './rabbi-portal';
+export * from './women-area';

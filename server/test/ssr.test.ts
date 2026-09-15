@@ -24,6 +24,17 @@ const extractCanonical = (html: string): string => {
   return match[1] ?? '';
 };
 
+const extractMetaProperty = (html: string, property: string): string => {
+  const match = new RegExp(`<meta property="${property}" content="([^"]*)"`).exec(html);
+  assert.ok(match, `expected the document to include a <meta property="${property}"> tag`);
+  return match[1] ?? '';
+};
+
+// See public-api.test.ts's own comment: the seeded rabbanit, used here only
+// to confirm the sitemap lists her page, not to assert anything about her
+// lessons.
+const SEEDED_RABBANIT_ID = 'rabbi-9';
+
 describe('SSR rendering seam', () => {
   let app: FastifyInstance;
 
@@ -179,6 +190,41 @@ describe('SSR rendering seam', () => {
       const rabbiPanel = await app.inject({ method: 'GET', url: '/rabbi' });
       assert.match(admin.body, /<meta name="robots" content="noindex, nofollow"/);
       assert.match(rabbiPanel.body, /<meta name="robots" content="noindex, nofollow"/);
+    });
+
+    // Test 9 (plan, section 8): both women's-area routes render, each with
+    // its own title and canonical, and /women's og:title matches plan
+    // decision 8 exactly, not an approximation of it.
+    test('/women and /women/rabbaniyot carry their own titles and canonicals, and /women carries decision 8\'s og:title exactly', async () => {
+      const women = await app.inject({ method: 'GET', url: '/women' });
+      const rabbaniyot = await app.inject({ method: 'GET', url: '/women/rabbaniyot' });
+      assert.equal(women.statusCode, 200);
+      assert.equal(rabbaniyot.statusCode, 200);
+
+      const womenTitle = extractTitle(women.body);
+      const rabbaniyotTitle = extractTitle(rabbaniyot.body);
+      assert.notEqual(womenTitle, rabbaniyotTitle);
+
+      const womenCanonical = extractCanonical(women.body);
+      const rabbaniyotCanonical = extractCanonical(rabbaniyot.body);
+      assert.notEqual(womenCanonical, rabbaniyotCanonical);
+      assert.equal(womenCanonical, `${SITE_ORIGIN}/women`);
+      assert.equal(rabbaniyotCanonical, `${SITE_ORIGIN}/women/rabbaniyot`);
+
+      assert.equal(extractMetaProperty(women.body, 'og:title'), 'שיעורי תורה לנשים | תורה ברבים');
+    });
+  });
+
+  describe('the sitemap', () => {
+    // Test 10 (plan, section 8): both new pages and the seeded rabbanit's
+    // own page are reachable through the sitemap, proving the two scoped
+    // `rabbiService.list` calls in sitemap.server.ts both feed it.
+    test('the sitemap contains /women, /women/rabbaniyot and the seeded rabbanit\'s page', async () => {
+      const res = await app.inject({ method: 'GET', url: '/sitemap.xml' });
+      assert.equal(res.statusCode, 200);
+      assert.match(res.body, /<loc>[^<]*\/women<\/loc>/);
+      assert.match(res.body, /<loc>[^<]*\/women\/rabbaniyot<\/loc>/);
+      assert.match(res.body, new RegExp(`<loc>[^<]*/rabbis/${SEEDED_RABBANIT_ID}/[^<]*</loc>`));
     });
   });
 });

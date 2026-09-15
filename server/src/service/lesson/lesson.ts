@@ -3,6 +3,7 @@ import { and, eq, gte, inArray, lte } from 'drizzle-orm';
 
 import { db } from '../../db/client';
 import { cities, lessonExceptions, lessons, rabbis } from '../../db/schema';
+import { isLessonInScope, matchesAudienceFilter } from '../shared/audience-scope';
 import { toRabbiSummary as toRabbi } from '../shared/rabbi-summary';
 import { toPlace, type PlaceCityRow } from '../shared/place';
 import { DEFAULT_RANGE_DAYS, MAX_RANGE_DAYS } from './consts';
@@ -166,10 +167,11 @@ export const search = async (rawQuery: LessonSearchQuery, now: Date): Promise<Le
   const matchingRabbiIds = q ? rabbiRows.filter((row) => includesQuery(row.name, q)).map((row) => row.id) : undefined;
   const matchingCityCodes = q ? cityRows.filter((row) => includesQuery(row.nameHe, q)).map((row) => row.code) : undefined;
 
+  // `audience` is applied in memory below, via `matchesAudienceFilter`,
+  // because it must OR with `mixed` rather than match exactly.
   const conditions = [
     query.rabbiId ? eq(lessons.rabbiId, query.rabbiId) : undefined,
     query.topic ? eq(lessons.topic, query.topic) : undefined,
-    query.audience ? eq(lessons.audience, query.audience) : undefined,
     query.city !== undefined ? eq(lessons.cityCode, query.city) : undefined,
     eligibleCityCodes ? inArray(lessons.cityCode, eligibleCityCodes) : undefined,
   ].filter((condition) => condition !== undefined);
@@ -188,7 +190,23 @@ export const search = async (rawQuery: LessonSearchQuery, now: Date): Promise<Le
       )
     : lessonRows;
 
-  const lessonDomainById = new Map(matchingRows.map((row) => [row.id, toLessonDomain(row)] as const));
+  // Scope and the audience filter both apply here, before expansion, so
+  // `total` below is computed over exactly the rows the caller may see.
+  const scopedRows = matchingRows.filter((row) => {
+    const teacherHonorific = rabbiById.get(row.rabbiId)?.honorific;
+    if (!teacherHonorific) {
+      throw new Error(`data inconsistency: lesson ${row.id} references unknown rabbi ${row.rabbiId}`);
+    }
+
+    const teacherNameMatched = matchingRabbiIds?.includes(row.rabbiId) ?? false;
+    if (!isLessonInScope(query.scope, { audience: row.audience, teacherHonorific }, { teacherNameMatched })) {
+      return false;
+    }
+
+    return query.audience ? matchesAudienceFilter(query.audience, row.audience) : true;
+  });
+
+  const lessonDomainById = new Map(scopedRows.map((row) => [row.id, toLessonDomain(row)] as const));
   const lessonIds = [...lessonDomainById.keys()];
 
   const exceptionRows = lessonIds.length

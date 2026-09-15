@@ -39,12 +39,13 @@ export const fetchCityDetail = (citySlug: string, signal?: AbortSignal): Promise
 // 400 for an invalid query.
 // 5xx for a server or upstream failure.
 export const fetchLessons = (
-  params: { city?: string; area?: Area; pageSize?: number },
+  params: { city?: string; area?: Area; page?: number; pageSize?: number },
   signal?: AbortSignal,
 ): Promise<LessonSearchResponse> => {
   const url = new URL('/v1/lessons', window.location.origin);
   if (params.city) url.searchParams.set('city', params.city);
   if (params.area) url.searchParams.set('area', params.area);
+  if (params.page) url.searchParams.set('page', String(params.page));
   if (params.pageSize) url.searchParams.set('pageSize', String(params.pageSize));
   return fetchJson(url, signal);
 };

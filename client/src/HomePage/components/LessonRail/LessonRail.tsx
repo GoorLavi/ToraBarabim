@@ -3,13 +3,14 @@ import styled from 'styled-components';
 
 import { LessonCard } from '~/HomePage/components/LessonCard/LessonCard';
 
+import { WomensAreaTile } from './components/WomensAreaTile/WomensAreaTile';
 import * as consts from './consts';
 import { scrollRailBy } from './helpers';
 import type { LessonRailProps } from './models';
 import * as styles from './styles';
 import { useScrollEdges } from './useScrollEdges';
 
-export const LessonRail = styled(({ className, title, items }: LessonRailProps) => {
+export const LessonRail = styled(({ className, title, items, womensAreaLessonCount }: LessonRailProps) => {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const { atStart, atEnd } = useScrollEdges(scrollerRef);
 
@@ -32,11 +33,17 @@ export const LessonRail = styled(({ className, title, items }: LessonRailProps) 
 
         <div className="scrollerGroup" ref={scrollerRef}>
           <ul className="scroller">
-            {items.map((item) => (
-              <li key={`${item.lessonId}-${item.date}`}>
-                <LessonCard lesson={item} />
-              </li>
-            ))}
+            {items.map((item) =>
+              item.kind === 'lesson' ? (
+                <li key={`${item.lesson.lessonId}-${item.lesson.date}`}>
+                  <LessonCard {...{ lesson: item.lesson, surface: 'general' }} />
+                </li>
+              ) : (
+                <li key="womens-area">
+                  <WomensAreaTile {...{ lessonCount: womensAreaLessonCount }} />
+                </li>
+              ),
+            )}
           </ul>
         </div>
 

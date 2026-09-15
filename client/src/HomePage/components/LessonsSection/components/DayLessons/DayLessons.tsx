@@ -32,7 +32,7 @@ export const DayLessons = styled(({ className, headingLabel, items, showSeeAllLi
       <ul className="grid">
         {visibleItems.map((item) => (
           <li className="cell" key={`${item.lessonId}-${item.date}`}>
-            <LessonCard lesson={item} />
+            <LessonCard lesson={item} surface="general" />
           </li>
         ))}
       </ul>
