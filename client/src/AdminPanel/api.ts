@@ -42,7 +42,8 @@ export class AdminApiError extends Error {
 const parseErrorBody = async (response: Response): Promise<{ code?: string }> => {
   try {
     const body: unknown = await response.json();
-    const code = body && typeof body === 'object' && 'error' in body && typeof body.error === 'string' ? body.error : undefined;
+    if (!body || typeof body !== 'object') return {};
+    const code = 'error' in body && typeof body.error === 'string' ? body.error : undefined;
     return { code };
   } catch {
     return {};

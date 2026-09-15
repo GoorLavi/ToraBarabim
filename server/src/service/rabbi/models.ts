@@ -1,4 +1,4 @@
-import type { Area } from '@torabarabim/common';
+import type { Area, RabbiHonorific } from '@torabarabim/common';
 import { z } from 'zod';
 
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '../shared/consts';
@@ -17,6 +17,7 @@ export type RabbiIdParam = z.infer<typeof rabbiIdParamSchema>;
 export interface RabbiSummaryRecord {
   id: string;
   name: string;
+  honorific: RabbiHonorific;
   // Derived from `name` with `toSlug`, falling back to `id` when that comes
   // out empty. Never empty. The id, not the slug, is what makes the URL
   // unique, so two rabbis sharing a name sharing a slug is not a correctness

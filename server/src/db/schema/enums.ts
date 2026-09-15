@@ -1,4 +1,4 @@
-import type { Area, LessonAudience, LessonTopic, RabbiProminence } from '@torabarabim/common';
+import type { Area, LessonAudience, LessonTopic, RabbiHonorific, RabbiProminence } from '@torabarabim/common';
 import { pgEnum } from 'drizzle-orm/pg-core';
 
 // Source of truth for the wire union types, mirrored here because a
@@ -37,6 +37,8 @@ export const EXCEPTION_KINDS = ['cancelled', 'modified'] as const;
 
 export const RABBI_PROMINENCES = ['local', 'known', 'sought'] as const satisfies readonly RabbiProminence[];
 
+export const RABBI_HONORIFICS = ['rav', 'rabbanit'] as const satisfies readonly RabbiHonorific[];
+
 // Not mirrored from `common`: an account's role is a server-side auth
 // concept, never a field the client reads or sends.
 export const ADMIN_ROLES = ['admin', 'rabbi'] as const;
@@ -55,10 +57,19 @@ const rabbiProminenceExhaustivenessCheck: Record<RabbiProminence, true> = {
 };
 void rabbiProminenceExhaustivenessCheck;
 
+// Same mechanism as `rabbiProminenceExhaustivenessCheck` above: catches a
+// member added to `RabbiHonorific` in `common` that never made it here.
+const rabbiHonorificExhaustivenessCheck: Record<RabbiHonorific, true> = {
+  rav: true,
+  rabbanit: true,
+};
+void rabbiHonorificExhaustivenessCheck;
+
 export const areaEnum = pgEnum('area', AREAS);
 export const lessonTopicEnum = pgEnum('lesson_topic', LESSON_TOPICS);
 export const lessonAudienceEnum = pgEnum('lesson_audience', LESSON_AUDIENCES);
 export const recurrenceKindEnum = pgEnum('recurrence_kind', RECURRENCE_KINDS);
 export const exceptionKindEnum = pgEnum('exception_kind', EXCEPTION_KINDS);
 export const rabbiProminenceEnum = pgEnum('rabbi_prominence', RABBI_PROMINENCES);
+export const rabbiHonorificEnum = pgEnum('rabbi_honorific', RABBI_HONORIFICS);
 export const adminRoleEnum = pgEnum('admin_role', ADMIN_ROLES);

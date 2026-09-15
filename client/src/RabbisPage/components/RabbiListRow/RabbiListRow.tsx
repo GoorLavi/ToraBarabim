@@ -2,15 +2,12 @@ import classNames from 'classnames';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { rabbiPath } from '~/helpers';
+import { rabbiDisplayName, rabbiPath } from '~/helpers';
 
 import { rabbiMetaLine } from './helpers';
 import type { RabbiListRowProps } from './models';
 import * as styles from './styles';
 
-// The stored name already carries its own honorific (a הרבנית appears in the
-// data), so it renders exactly as given: never prepended, never re-sorted
-// (design spec, "all-rabbis, the index").
 export const RabbiListRow = styled(({ className, rabbi }: RabbiListRowProps) => (
   <Link to={rabbiPath(rabbi)} className={className}>
     <div className={classNames('avatar', { placeholder: !rabbi.photoUrl })}>
@@ -19,7 +16,7 @@ export const RabbiListRow = styled(({ className, rabbi }: RabbiListRowProps) => 
 
     <div className="text">
       <span className="name" dir="auto">
-        {rabbi.name}
+        {rabbiDisplayName(rabbi)}
       </span>
       <span className="meta" dir="auto">
         {rabbiMetaLine(rabbi)}

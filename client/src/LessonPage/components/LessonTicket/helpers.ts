@@ -1,4 +1,4 @@
-import type { LessonOccurrence } from '@torabarabim/common';
+import type { LessonOccurrence, RabbiHonorific } from '@torabarabim/common';
 
 import { LESSON_TOPIC_LABELS } from '~/HomePage/components/LessonCard/consts';
 import { SUBSTITUTE_ROLE_LABEL, TEACHING_RABBI_ROLE_LABEL } from '~/LessonPage/consts';
@@ -53,5 +53,7 @@ export const kickerLabel = (occurrence: LessonOccurrence): string | undefined =>
 
 // The label above the rabbi's name: what the lecturer is called normally,
 // versus what to call the fact that this occurrence has a substitute. Its
-// own slot, never sharing one with `kickerLabel`.
-export const roleLabel = (isSubstitute: boolean): string => (isSubstitute ? SUBSTITUTE_ROLE_LABEL : TEACHING_RABBI_ROLE_LABEL);
+// own slot, never sharing one with `kickerLabel`. Keyed by the teaching
+// rabbi's own honorific, the substitute's when there is one.
+export const roleLabel = (isSubstitute: boolean, teachingRabbiHonorific: RabbiHonorific): string =>
+  (isSubstitute ? SUBSTITUTE_ROLE_LABEL : TEACHING_RABBI_ROLE_LABEL)[teachingRabbiHonorific];

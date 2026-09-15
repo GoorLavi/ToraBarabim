@@ -30,6 +30,12 @@ export const STREET_HELPER = 'הכתובת המלאה מוצגת בעמוד הש
 export const FLOOR_LABEL = 'קומה / הערת הגעה';
 
 export const AUDIENCE_SECTION_HEADING = 'למי השיעור מיועד';
+// A רבנית may only teach women-only lessons: the picker is replaced by a
+// read-only value and this helper line, and the audience is always 'women'
+// (see the server-side rule this mirrors, common/src/rabbi.ts). Only ever
+// rendered for a rabbanit's own profile, so it speaks to her directly and
+// needs no honorific-keyed form.
+export const RABBANIT_FIXED_AUDIENCE_NOTE = 'את מלמדת נשים בלבד.';
 // Never `מעורב`: see .claude/design-system.md, Audience wording.
 export const AUDIENCE_LABELS: Record<LessonAudience, string> = {
   men: 'גברים',
@@ -52,7 +58,7 @@ export const REQUIRED_START_TIME_ERROR = 'יש למלא שעת התחלה';
 export const REQUIRED_DURATION_ERROR = 'יש למלא משך שיעור תקין (בדקות)';
 export const REQUIRED_WEEKDAY_ERROR = 'יש לבחור לפחות יום אחד בשבוע';
 export const REQUIRED_DATE_ERROR = 'יש לבחור תאריך';
-export const UNKNOWN_CITY_ERROR = 'העיר שנבחרה אינה קיימת יותר. בחר עיר אחרת';
+export const UNKNOWN_CITY_ERROR = 'העיר שנבחרה אינה קיימת יותר. יש לבחור עיר אחרת';
 
 export const LOADING_MESSAGE = 'טוען...';
 export const LOAD_ERROR_MESSAGE = 'לא הצלחנו לטעון את השיעור';

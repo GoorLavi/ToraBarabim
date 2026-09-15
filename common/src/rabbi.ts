@@ -1,6 +1,14 @@
+// A rabbanit may only teach women-only lessons, enforced server-side
+// wherever a rabbi is assigned to a lesson or named as a substitute.
+export type RabbiHonorific = 'rav' | 'rabbanit';
+
 export interface Rabbi {
   id: string;
+  // The bare name, never carrying an honorific ("אייל עמרמי", not "הרב אייל
+  // עמרמי"): the client composes the display form from `name` and
+  // `honorific`.
   name: string;
+  honorific: RabbiHonorific;
   // Derived server-side from `name` with the server's `toSlug`, falling
   // back to `id` when that comes out empty, for the SEO URL
   // `/rabbis/<id>/<slug>`. Never empty. The client never computes one: the

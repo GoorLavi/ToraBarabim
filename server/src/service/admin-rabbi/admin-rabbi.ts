@@ -6,6 +6,7 @@ import { loadConfig } from '../../config';
 import { db } from '../../db/client';
 import { lessonExceptions, lessons, rabbis } from '../../db/schema';
 import storage from '../../storage/storage';
+import { stripLeadingHonorific } from '../shared/name';
 import { toRabbiSummary } from '../shared/rabbi-summary';
 import { PhotoTooLargeError, RabbiDeleteConfirmationRequiredError, RabbiNotFoundError, UnsupportedPhotoTypeError } from './errors';
 import type {
@@ -55,7 +56,14 @@ export const getById = async (id: string): Promise<RabbiRecord> => {
 export const create = async (input: CreateRabbiInput): Promise<RabbiRecord> => {
   const [row] = await db
     .insert(rabbis)
-    .values({ id: nanoid(), name: input.name, title: input.title, bio: input.bio, prominence: input.prominence })
+    .values({
+      id: nanoid(),
+      name: stripLeadingHonorific(input.name),
+      honorific: input.honorific ?? 'rav',
+      title: input.title,
+      bio: input.bio,
+      prominence: input.prominence,
+    })
     .returning();
   if (!row) throw new Error('insert into rabbis returned no row');
   return toRecord(row);
@@ -64,7 +72,7 @@ export const create = async (input: CreateRabbiInput): Promise<RabbiRecord> => {
 export const update = async (id: string, input: UpdateRabbiInput): Promise<RabbiRecord> => {
   const [row] = await db
     .update(rabbis)
-    .set({ ...input, updatedAt: new Date() })
+    .set({ ...input, name: input.name !== undefined ? stripLeadingHonorific(input.name) : undefined, updatedAt: new Date() })
     .where(eq(rabbis.id, id))
     .returning();
   if (!row) throw new RabbiNotFoundError(id);

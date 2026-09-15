@@ -5,8 +5,9 @@ import styled from 'styled-components';
 
 import { AudiencePicker } from '~/components/AudiencePicker/AudiencePicker';
 import { CitySelect } from '~/components/CitySelect/CitySelect';
+import { ReadOnlyField } from '~/components/ReadOnlyField/ReadOnlyField';
 import { RecurrenceFields } from '~/components/RecurrenceFields/RecurrenceFields';
-import { directionForValue } from '~/helpers';
+import { directionForValue, rabbiDisplayName } from '~/helpers';
 import { RabbiApiError } from '~/RabbiPanel/api';
 import { RABBI_ROUTES } from '~/RabbiPanel/consts';
 import { rabbiErrorMessage } from '~/RabbiPanel/helpers';
@@ -50,6 +51,12 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
     }
   }, [existing, isLoadedFromExisting]);
 
+  const isRabbaniteProfile = profile.data?.honorific === 'rabbanit';
+  // A rabbanit may only teach women-only lessons: derived here rather than
+  // synced into `form.audience` via an effect, which would render a frame
+  // with the wrong value.
+  const effectiveForm: LessonFormState = isRabbaniteProfile ? { ...form, audience: 'women' } : form;
+
   if (id && existing.status === 'pending') {
     return (
       <div className={className}>
@@ -81,7 +88,7 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
   const failingSections = consts.SECTION_DEFS.filter((section) => section.fields.some((field) => fieldErrors[field]));
 
   const submit = (): void => {
-    const errors = validateLessonForm(form);
+    const errors = validateLessonForm(effectiveForm);
     setFieldErrors(errors);
     if (Object.keys(errors).length > 0) {
       const firstFailingSection = consts.SECTION_DEFS.find((section) => section.fields.some((field) => errors[field]));
@@ -92,12 +99,12 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
     }
 
     saveLesson.mutate(
-      { form, existingLessonId: id },
+      { form: effectiveForm, existingLessonId: id },
       { onSuccess: () => navigate(RABBI_ROUTES.lessons) },
     );
   };
 
-  const rabbiName = profile.data?.name;
+  const rabbiName = profile.data && rabbiDisplayName(profile.data);
   const lessonTitleForDelete = form.title || rabbiName || consts.NEW_HEADING;
 
   return (
@@ -211,11 +218,15 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
 
           <section className="section" ref={audienceSectionRef}>
             <h2 className="sectionHeading">{consts.AUDIENCE_SECTION_HEADING}</h2>
-            <AudiencePicker
-              audience={form.audience}
-              onSelectAudience={(audience) => setForm((prev) => ({ ...prev, audience }))}
-              errorMessage={fieldErrors.audience}
-            />
+            {isRabbaniteProfile ? (
+              <ReadOnlyField value={consts.AUDIENCE_LABELS.women} helper={consts.RABBANIT_FIXED_AUDIENCE_NOTE} />
+            ) : (
+              <AudiencePicker
+                audience={form.audience}
+                onSelectAudience={(audience) => setForm((prev) => ({ ...prev, audience }))}
+                errorMessage={fieldErrors.audience}
+              />
+            )}
           </section>
 
           {failingSections.length > 0 && (
@@ -254,7 +265,7 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
             rabbiName={rabbiName}
             rabbiPhotoUrl={profile.data?.photoUrl}
             title={form.title}
-            audience={form.audience}
+            audience={effectiveForm.audience}
             cityName={form.city?.name}
             weekdayLabel={previewWeekdayLabel(form)}
             startTime={form.startTime}

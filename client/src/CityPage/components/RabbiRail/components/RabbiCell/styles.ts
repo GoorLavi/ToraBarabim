@@ -41,6 +41,10 @@ export const RabbiCell = css(
     color: ${theme.colors.text};
     overflow-wrap: break-word;
     transition: color 150ms ease;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   /* Rest, hover, keyboard focus and pressed each measured off the state

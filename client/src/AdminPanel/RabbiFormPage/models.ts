@@ -1,4 +1,4 @@
-import type { RabbiProminence } from '@torabarabim/common';
+import type { RabbiHonorific, RabbiProminence } from '@torabarabim/common';
 
 export interface RabbiFormPageProps {
   className?: string;
@@ -6,6 +6,7 @@ export interface RabbiFormPageProps {
 
 export interface RabbiFormState {
   name: string;
+  honorific: RabbiHonorific;
   title: string;
   bio: string;
   // The rabbi's title/bio as loaded from the server, so a save can tell

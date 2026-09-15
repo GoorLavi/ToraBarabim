@@ -5,20 +5,24 @@ import type { City, HomeResponse, LessonOccurrence, LessonSearchResponse, RabbiD
 import type { FastifyInstance } from 'fastify';
 
 import { nextDateOnWeekday, todayInIsrael } from '../src/service/lesson/israel-time';
+import { stripLeadingHonorific } from '../src/service/shared/name';
 import { toSlug } from '../src/service/shared/slug';
 import { assertClientBuilt, assertDatabaseReachable, buildApp, rawClient } from './app-harness';
 
 // The seeded rabbi and lesson ids/names this suite asserts against; see
 // `server/src/db/seed/lessons.ts`. Kept close to the assertions that use
 // them rather than re-derived, since the seed data is fixed test fixture,
-// not something under test.
+// not something under test. Names are bare (never carrying "הרב"/"הרבנית"):
+// the client composes the display form from `name` and `honorific`.
 const SEEDED_RABBI_ID = 'rabbi-1';
-const SEEDED_RABBI_NAME = 'הרב אברהם כהן';
+const SEEDED_RABBI_NAME = 'אברהם כהן';
 const SUNDAY_TO_THURSDAY_LESSON_ID = 'lesson-1';
 const SEEDED_CITY_NAME = 'ירושלים';
 const SEEDED_CITY_PREFIX = 'ירוש';
 const SEEDED_CITY_RABBI_ID = 'rabbi-3';
-const SEEDED_CITY_RABBI_NAME = 'הרב יעקב מזרחי';
+const SEEDED_CITY_RABBI_NAME = 'יעקב מזרחי';
+const SEEDED_RABBANIT_ID = 'rabbi-9';
+const SEEDED_RABBANIT_NAME = 'שרה גולדברג';
 
 describe('public API', () => {
   let app: FastifyInstance;
@@ -116,6 +120,8 @@ describe('public API', () => {
       // carries `slug` too, not only the standalone rabbi endpoints.
       assert.equal(body.rabbi.name, SEEDED_RABBI_NAME);
       assert.equal(body.rabbi.slug, toSlug(SEEDED_RABBI_NAME));
+      // The name is bare, and the client composes "הרב"/"הרבנית" from this.
+      assert.equal(body.rabbi.honorific, 'rav');
     });
 
     test('a genuinely missing lesson returns 404', async () => {
@@ -198,7 +204,7 @@ describe('public API', () => {
         slug: string;
         areaName: string;
         areaSlug: string;
-        rabbis: { id: string; name: string; slug: string }[];
+        rabbis: { id: string; name: string; slug: string; honorific: string }[];
       };
       assert.equal(body.name, SEEDED_CITY_NAME);
       assert.equal(body.slug, slug);
@@ -211,6 +217,7 @@ describe('public API', () => {
       // carries `slug` too, not only the standalone rabbi endpoints.
       assert.equal(rabbi.name, SEEDED_CITY_RABBI_NAME);
       assert.equal(rabbi.slug, toSlug(SEEDED_CITY_RABBI_NAME));
+      assert.equal(rabbi.honorific, 'rav');
     });
 
     test('an unknown slug returns 404 with city_not_found', async () => {
@@ -242,6 +249,12 @@ describe('public API', () => {
       assert.equal(typeof rabbi.slug, 'string');
       assert.ok(rabbi.slug.length > 0);
       assert.equal(rabbi.slug, toSlug(SEEDED_RABBI_NAME));
+      assert.equal(rabbi.honorific, 'rav');
+
+      const rabbanit = body.items.find((entry) => entry.id === SEEDED_RABBANIT_ID) as RabbiDirectoryEntry | undefined;
+      assert.ok(rabbanit);
+      assert.equal(rabbanit.name, SEEDED_RABBANIT_NAME);
+      assert.equal(rabbanit.honorific, 'rabbanit');
     });
 
     test('rejects a non-numeric page size', async () => {
@@ -262,11 +275,37 @@ describe('public API', () => {
       assert.equal(typeof body.slug, 'string');
       assert.ok(body.slug.length > 0);
       assert.equal(body.slug, toSlug(SEEDED_RABBI_NAME));
+      assert.equal(body.honorific, 'rav');
     });
 
     test('a genuinely missing rabbi returns 404', async () => {
       const res = await app.inject({ method: 'GET', url: '/v1/rabbis/does-not-exist' });
       assert.equal(res.statusCode, 404);
+    });
+  });
+
+  // A pure function, exercised directly rather than through a write route:
+  // both admin-rabbi and rabbi-profile call it before saving a name, so a
+  // pasted "הרב הרב ..." can never happen. See `service/shared/name.ts`.
+  describe('stripLeadingHonorific', () => {
+    test('strips a leading rav honorific', () => {
+      assert.equal(stripLeadingHonorific('הרב אברהם כהן'), 'אברהם כהן');
+    });
+
+    test('strips a leading rabbanit honorific', () => {
+      assert.equal(stripLeadingHonorific('הרבנית שרה גולדברג'), 'שרה גולדברג');
+    });
+
+    test('is whitespace-tolerant between the honorific and the name', () => {
+      assert.equal(stripLeadingHonorific('הרב   אברהם כהן'), 'אברהם כהן');
+    });
+
+    test('leaves an already-bare name untouched', () => {
+      assert.equal(stripLeadingHonorific('אברהם כהן'), 'אברהם כהן');
+    });
+
+    test('only strips one leading honorific, never both, so double-prefixing cannot happen', () => {
+      assert.equal(stripLeadingHonorific('הרב הרב אברהם כהן'), 'הרב אברהם כהן');
     });
   });
 });

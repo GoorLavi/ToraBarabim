@@ -1,7 +1,12 @@
+import type { RabbiHonorific } from '@torabarabim/common';
 import { z } from 'zod';
 
 // `prominence` is never in this schema: it is an admin-only sort input and
 // a rabbi must never be able to set it, not even to its current value.
+// `honorific` is never in this schema either, for the same reason: only an
+// admin decides whether a rabbi is a 'rav' or a 'rabbanit', since setting
+// it to 'rabbanit' is gated on that rabbi's lessons (see
+// `admin-rabbi.update`), a check a self-service write must not bypass.
 //
 // `title` and `bio` are nullable columns, so this needs three states, not
 // two: omit the key to leave it as is (it is then absent from the parsed
@@ -20,6 +25,7 @@ export type UpdateRabbiProfileInput = z.infer<typeof updateRabbiProfileSchema>;
 export interface RabbiProfileRecord {
   id: string;
   name: string;
+  honorific: RabbiHonorific;
   slug: string;
   title?: string;
   photoUrl?: string;

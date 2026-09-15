@@ -37,6 +37,10 @@ export const FLOOR_LABEL = 'קומה / הערת הגעה';
 
 export const AUDIENCE_SECTION_HEADING = 'קהל היעד';
 export const AUDIENCE_HELPER = 'יש לבחור אחת מהאפשרויות.';
+// A רבנית may only teach women-only lessons: the picker is replaced by a
+// read-only value and this helper line, and the audience is set to 'women'
+// automatically (see the server-side rule this mirrors, common/src/rabbi.ts).
+export const RABBANIT_FIXED_AUDIENCE_NOTE = 'רבנית מלמדת לנשים בלבד.';
 
 export const CANCEL_LABEL = 'ביטול';
 export const SAVE_AND_ADD_ANOTHER_LABEL = 'שמירה והוספת שיעור נוסף';

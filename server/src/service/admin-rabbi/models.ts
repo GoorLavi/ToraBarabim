@@ -1,7 +1,7 @@
-import type { RabbiProminence } from '@torabarabim/common';
+import type { RabbiHonorific, RabbiProminence } from '@torabarabim/common';
 import { z } from 'zod';
 
-import { RABBI_PROMINENCES } from '../../db/schema/enums';
+import { RABBI_HONORIFICS, RABBI_PROMINENCES } from '../../db/schema/enums';
 import { DEFAULT_ADMIN_PAGE, DEFAULT_ADMIN_PAGE_SIZE, MAX_ADMIN_PAGE_SIZE } from '../admin-shared/consts';
 
 export const rabbiIdParamSchema = z.object({
@@ -19,6 +19,7 @@ export type RabbiListQuery = z.infer<typeof rabbiListQuerySchema>;
 // dedicated photo upload endpoint, never by handing the server an arbitrary URL.
 export const createRabbiSchema = z.object({
   name: z.string().trim().min(1),
+  honorific: z.enum(RABBI_HONORIFICS).optional(),
   title: z.string().trim().min(1).optional(),
   bio: z.string().trim().min(1).optional(),
   prominence: z.enum(RABBI_PROMINENCES).optional(),
@@ -56,6 +57,7 @@ export type DeleteRabbiQuery = z.infer<typeof deleteRabbiQuerySchema>;
 export interface RabbiRecord {
   id: string;
   name: string;
+  honorific: RabbiHonorific;
   slug: string;
   title?: string;
   photoUrl?: string;

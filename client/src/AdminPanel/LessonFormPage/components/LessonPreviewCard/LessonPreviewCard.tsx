@@ -1,5 +1,7 @@
 import styled from 'styled-components';
 
+import { rabbiDisplayName } from '~/helpers';
+
 import * as consts from './consts';
 import type { LessonPreviewCardProps } from './models';
 import * as styles from './styles';
@@ -25,7 +27,7 @@ export const LessonPreviewCard = styled(({ className, rabbi, title, audience, ci
 
       <div className="body">
         <h3 className="title" dir="auto">
-          {rabbi?.name ?? consts.NO_RABBI_PLACEHOLDER}
+          {rabbi ? rabbiDisplayName(rabbi) : consts.NO_RABBI_PLACEHOLDER}
         </h3>
 
         {rabbi && (

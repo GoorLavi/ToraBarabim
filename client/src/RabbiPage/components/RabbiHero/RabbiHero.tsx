@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import styled from 'styled-components';
 
+import { rabbiDisplayName } from '~/helpers';
 import { rabbiMetaLabel } from '~/RabbiPage/helpers';
 
 import type { RabbiHeroProps } from './models';
@@ -18,7 +19,7 @@ export const RabbiHero = styled(({ className, rabbi }: RabbiHeroProps) => (
 
     <div className="names">
       <h1 className="name" dir="auto">
-        {rabbi.name}
+        {rabbiDisplayName(rabbi)}
       </h1>
       {rabbi.title && (
         <p className="title" dir="auto">

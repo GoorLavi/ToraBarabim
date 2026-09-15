@@ -1,10 +1,13 @@
 import { pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
-import { rabbiProminenceEnum } from './enums';
+import { rabbiHonorificEnum, rabbiProminenceEnum } from './enums';
 
 export const rabbis = pgTable('rabbis', {
   id: text('id').primaryKey(),
+  // Bare, never carrying an honorific: the client composes "הרב <name>" or
+  // "הרבנית <name>" from this and `honorific`.
   name: text('name').notNull(),
+  honorific: rabbiHonorificEnum('honorific').notNull().default('rav'),
   title: text('title'),
   photoUrl: text('photo_url'),
   bio: text('bio'),

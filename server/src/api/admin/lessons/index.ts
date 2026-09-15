@@ -6,6 +6,7 @@ import { requireAdminAuth } from '../../../plugins/admin-guard';
 import * as adminLessonService from '../../../service/admin-lesson/admin-lesson';
 import { LessonNotFoundError, ReferencedRabbiNotFoundError, UnknownCityError } from '../../../service/admin-lesson/errors';
 import { createLessonSchema, lessonIdParamSchema, lessonListQuerySchema, updateLessonSchema } from '../../../service/admin-lesson/models';
+import { RabbanitAudienceMustBeWomenError } from '../../../service/shared/errors';
 
 const GENERIC_ERROR_MESSAGE = 'אירעה שגיאה בשרת, נסו שוב מאוחר יותר';
 const LESSON_NOT_FOUND_MESSAGE = 'השיעור המבוקש לא נמצא';
@@ -25,6 +26,10 @@ const handleError = (reply: FastifyReply, error: unknown, routeLabel: string): F
 
   if (error instanceof UnknownCityError) {
     return reply.status(400).send({ error: 'unknown_city', message: `העיר שנבחרה אינה קיימת: '${error.cityCode}'` });
+  }
+
+  if (error instanceof RabbanitAudienceMustBeWomenError) {
+    return reply.status(400).send({ error: 'rabbanit_audience_must_be_women', message: 'לרבנית אפשר לשמור רק שיעור לנשים' });
   }
 
   reply.request.log.error({ err: error }, `unhandled error in ${routeLabel}`);
