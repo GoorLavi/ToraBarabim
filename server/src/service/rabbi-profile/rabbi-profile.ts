@@ -6,7 +6,6 @@ import { loadConfig } from '../../config';
 import { db } from '../../db/client';
 import { rabbis } from '../../db/schema';
 import storage from '../../storage/storage';
-import { stripLeadingHonorific } from '../shared/name';
 import { toRabbiSummary } from '../shared/rabbi-summary';
 import { PhotoTooLargeError, RabbiNotFoundError, UnsupportedPhotoTypeError } from './errors';
 import type { RabbiProfileRecord, UpdateRabbiProfileInput } from './models';
@@ -27,7 +26,7 @@ export const getOwn = async (rabbiId: string): Promise<RabbiProfileRecord> => {
 export const updateOwn = async (rabbiId: string, input: UpdateRabbiProfileInput): Promise<RabbiProfileRecord> => {
   const [row] = await db
     .update(rabbis)
-    .set({ ...input, name: input.name !== undefined ? stripLeadingHonorific(input.name) : undefined, updatedAt: new Date() })
+    .set({ ...input, updatedAt: new Date() })
     .where(eq(rabbis.id, rabbiId))
     .returning();
   if (!row) throw new RabbiNotFoundError(rabbiId);

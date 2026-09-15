@@ -5,7 +5,7 @@ import type { City, HomeResponse, LessonOccurrence, LessonSearchResponse, RabbiD
 import type { FastifyInstance } from 'fastify';
 
 import { nextDateOnWeekday, todayInIsrael } from '../src/service/lesson/israel-time';
-import { stripLeadingHonorific } from '../src/service/shared/name';
+import { rabbiNameSchema, stripLeadingHonorific } from '../src/service/shared/name';
 import { toSlug } from '../src/service/shared/slug';
 import { assertClientBuilt, assertDatabaseReachable, buildApp, rawClient } from './app-harness';
 
@@ -285,8 +285,10 @@ describe('public API', () => {
   });
 
   // A pure function, exercised directly rather than through a write route:
-  // both admin-rabbi and rabbi-profile call it before saving a name, so a
-  // pasted "הרב הרב ..." can never happen. See `service/shared/name.ts`.
+  // both admin-rabbi and rabbi-profile pipe it through the shared
+  // `rabbiNameSchema` before saving a name, so a pasted "הרב הרב ..." is
+  // normalized to a bare stored name rather than ever being stored as is.
+  // See `service/shared/name.ts`.
   describe('stripLeadingHonorific', () => {
     test('strips a leading rav honorific', () => {
       assert.equal(stripLeadingHonorific('הרב אברהם כהן'), 'אברהם כהן');
@@ -304,8 +306,29 @@ describe('public API', () => {
       assert.equal(stripLeadingHonorific('אברהם כהן'), 'אברהם כהן');
     });
 
-    test('only strips one leading honorific, never both, so double-prefixing cannot happen', () => {
-      assert.equal(stripLeadingHonorific('הרב הרב אברהם כהן'), 'הרב אברהם כהן');
+    test('strips every repeated leading honorific, not just the first', () => {
+      assert.equal(stripLeadingHonorific('הרב הרב אברהם כהן'), 'אברהם כהן');
+    });
+
+    test('strips a bare honorific down to an empty string', () => {
+      assert.equal(stripLeadingHonorific('הרב'), '');
+      assert.equal(stripLeadingHonorific('הרבנית'), '');
+    });
+  });
+
+  describe('rabbiNameSchema', () => {
+    test('rejects a name that is only an honorific', () => {
+      assert.equal(rabbiNameSchema.safeParse('הרב').success, false);
+    });
+
+    test('rejects a name that is only repeated honorifics', () => {
+      assert.equal(rabbiNameSchema.safeParse('הרב הרבנית').success, false);
+    });
+
+    test('accepts a prefixed name and normalizes it to the bare name', () => {
+      const result = rabbiNameSchema.safeParse('הרב משה');
+      assert.equal(result.success, true);
+      assert.equal(result.success && result.data, 'משה');
     });
   });
 });

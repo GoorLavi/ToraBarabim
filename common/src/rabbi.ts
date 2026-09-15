@@ -1,5 +1,3 @@
-// A rabbanit may only teach women-only lessons, enforced server-side
-// wherever a rabbi is assigned to a lesson or named as a substitute.
 export type RabbiHonorific = 'rav' | 'rabbanit';
 
 export interface Rabbi {

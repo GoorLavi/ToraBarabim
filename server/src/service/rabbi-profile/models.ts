@@ -1,6 +1,8 @@
 import type { RabbiHonorific } from '@torabarabim/common';
 import { z } from 'zod';
 
+import { rabbiNameSchema } from '../shared/name';
+
 // `prominence` is never in this schema: it is an admin-only sort input and
 // a rabbi must never be able to set it, not even to its current value.
 // `honorific` is never in this schema either, for the same reason: only an
@@ -16,7 +18,7 @@ import { z } from 'zod';
 // rejected by `min(1)`, so there is exactly one way to clear a field and
 // it is never confused with leaving it alone.
 export const updateRabbiProfileSchema = z.object({
-  name: z.string().trim().min(1).optional(),
+  name: rabbiNameSchema.optional(),
   title: z.string().trim().min(1).nullable().optional(),
   bio: z.string().trim().min(1).nullable().optional(),
 });
