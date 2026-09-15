@@ -11,7 +11,7 @@ export const ReadOnlyField = styled(({ className, label, value, helper }: ReadOn
     <p className="value" dir="auto">
       {value}
     </p>
-    <span className="helper">{helper}</span>
+    {helper && <span className="helper">{helper}</span>}
   </div>
 ))`
   ${styles.ReadOnlyField}

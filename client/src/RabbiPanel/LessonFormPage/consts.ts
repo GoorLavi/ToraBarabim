@@ -30,12 +30,6 @@ export const STREET_HELPER = 'הכתובת המלאה מוצגת בעמוד הש
 export const FLOOR_LABEL = 'קומה / הערת הגעה';
 
 export const AUDIENCE_SECTION_HEADING = 'למי השיעור מיועד';
-// A רבנית may only teach women-only lessons: the picker is replaced by a
-// read-only value and this helper line, and the audience is always 'women'
-// (see the server-side rule this mirrors, common/src/rabbi.ts). Only ever
-// rendered for a rabbanit's own profile, so it speaks to her directly and
-// needs no honorific-keyed form.
-export const RABBANIT_FIXED_AUDIENCE_NOTE = 'את מלמדת נשים בלבד.';
 // Never `מעורב`: see .claude/design-system.md, Audience wording.
 export const AUDIENCE_LABELS: Record<LessonAudience, string> = {
   men: 'גברים',

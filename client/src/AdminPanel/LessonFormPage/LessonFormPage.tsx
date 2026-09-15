@@ -250,7 +250,7 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
           <section className="section" ref={audienceSectionRef}>
             <h2 className="sectionHeading">{consts.AUDIENCE_SECTION_HEADING}</h2>
             {isRabbaniteSelected ? (
-              <ReadOnlyField value={LESSON_AUDIENCE_LABELS.women} helper={consts.RABBANIT_FIXED_AUDIENCE_NOTE} />
+              <ReadOnlyField value={LESSON_AUDIENCE_LABELS.women} />
             ) : (
               <>
                 <AudiencePicker
