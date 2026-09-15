@@ -24,9 +24,10 @@ runs. That made it cheap to turn two written rules into mechanical blocks.
 **Two hooks, both fail closed.** `guard-migrate.sh` blocks `db:migrate`,
 `drizzle-kit migrate`, and `drizzle-kit push`; `guard-production-db.sh` blocks
 `db:tunnel`, the tunnel script, and `ssm start-session`. A `permissions.deny` list in
-`.claude/settings.json` carries the same commands as a second layer. Both match the
-command's text, like the AWS profile hook: a command that merely quotes one of these
-words is blocked too.
+`.claude/settings.json` carries the direct spellings of the same commands as a second
+layer; it matches command prefixes, so it is narrower than the hooks by design, and the
+hooks are the guard. Both hooks match the command's text, like the AWS profile hook: a
+command that merely quotes one of these words is blocked too.
 
 The agent's side of a schema change is the `create-migration` skill: edit the schema,
 generate the SQL, hand the apply step to the human with the folder to run it from.

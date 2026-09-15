@@ -25,7 +25,8 @@ if [ "$behind" -gt 0 ]; then
   if git -C "$root" merge --ff-only origin/main >/dev/null 2>&1; then
     log "was $behind commits behind origin/main, fast-forwarded"
   else
-    log "is $behind commits behind origin/main and cannot fast-forward; merge origin/main by hand before continuing"
+    log "is $behind commits behind origin/main and cannot fast-forward; merge origin/main by hand, then run this again"
+    exit 1
   fi
 else
   log "up to date with origin/main"

@@ -6,9 +6,14 @@
   "permissions": {
     "deny": [
       "Bash(npm run db:migrate*)",
-      "Bash(npm run db:tunnel*)",
       "Bash(npx drizzle-kit migrate*)",
-      "Bash(npx drizzle-kit push*)"
+      "Bash(npx drizzle-kit push*)",
+      "Bash(drizzle-kit migrate*)",
+      "Bash(drizzle-kit push*)",
+      "Bash(npm run db:tunnel*)",
+      "Bash(bash infra/scripts/db-tunnel.sh*)",
+      "Bash(infra/scripts/db-tunnel.sh*)",
+      "Bash(aws ssm start-session*)"
     ]
   },
   "hooks": {
