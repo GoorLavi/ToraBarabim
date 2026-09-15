@@ -1,10 +1,10 @@
 import styled from 'styled-components';
 
+import { ResponsiveSheet } from '~/components/ResponsiveSheet/ResponsiveSheet';
 import { rabbiErrorMessage } from '~/RabbiPanel/helpers';
 import { fullDateLabel } from '~/RabbiPanel/UpcomingPage/helpers';
 import * as parentConsts from '~/RabbiPanel/UpcomingPage/consts';
 import { useCancelOccurrence } from '~/RabbiPanel/UpcomingPage/useCancelOccurrence';
-import { ResponsiveSheet } from '~/RabbiPanel/components/ResponsiveSheet/ResponsiveSheet';
 
 import type { CancelOccurrenceSheetProps } from './models';
 import * as styles from './styles';

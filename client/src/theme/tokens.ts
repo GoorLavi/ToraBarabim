@@ -1,4 +1,4 @@
-import type { ThemeBreakpoints, ThemeLayout, ThemeRadii, ThemeShadows, ThemeSpacing, ThemeTypography } from './models';
+import type { ThemeBreakpoints, ThemeLayout, ThemeRadii, ThemeShadows, ThemeSpacing, ThemeTypography, ThemeZIndex } from './models';
 
 // Type, spacing, radii, shadows and breakpoints are shared by every theme:
 // only color varies (design-system.md, "Themes and the token contract").
@@ -119,4 +119,13 @@ export const BREAKPOINTS: ThemeBreakpoints = {
 // this rather than retyping 1280.
 export const LAYOUT: ThemeLayout = {
   contentMaxWidth: '1280px',
+};
+
+// The stacking scale every header layer and its overlays share (design-
+// system.md, "Z-index"). A sheet's scrim always outranks a popover, which
+// always outranks the sticky header itself.
+export const Z_INDEX: ThemeZIndex = {
+  popover: 20,
+  header: 30,
+  sheetScrim: 100,
 };
