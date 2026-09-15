@@ -131,10 +131,17 @@ Load them alongside `figma:figma-use`, not instead of it.
 
 ## Server name, and why the tools line is exact-match
 
-The Figma MCP server is `mcp__707ae073-602d-4776-8af6-8ce9f64a7b10__*`. There is no
-server named `Figma`. A glob on the wrong name silently grants zero tools, and the
-agent then believes it has access it does not have. If Figma tools ever go missing
-from the designer, check this id first.
+The Figma MCP server is `mcp__Figma__*`. A glob on the wrong name silently grants
+zero tools, and the agent then believes it has access it does not have. If Figma
+tools ever go missing from the designer, check this name first.
+
+**The name is not stable, so verify it rather than trusting this line.** The server
+was previously exposed as `mcp__707ae073-602d-4776-8af6-8ce9f64a7b10__*`, and this
+file and the designer's frontmatter both went on naming that id after it stopped
+existing. The designer then reported itself blocked and misdiagnosed the cause,
+because a stale exact-match name and a revoked grant look identical from inside the
+agent. Read the live tool list first: what the session actually exposes wins over
+what is written here.
 
 The designer therefore lists the Figma tools by full name, with no wildcard, plus
 `Skill` and `ToolSearch` for loading the skills. The cost of exact-match is that a
