@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { reactRouter } from '@react-router/dev/vite';
 import { defineConfig, type Plugin } from 'vite';
 
-import { SITE_ORIGIN } from './consts';
+import { SITE_ORIGIN } from './consts.ts';
 
 const robotsTxt = `User-agent: *
 Allow: /
@@ -27,6 +27,13 @@ const seoFiles = (): Plugin => ({
   },
 });
 
+// Route loaders import server services, so `loadConfig` (server/src/config.ts)
+// runs inside this dev server's SSR and needs the repo-root `.env` in
+// `process.env`. Vite cannot supply it: `@react-router/dev` sets
+// `envFile: false`, and Vite's own `.env` loading only ever reaches
+// `import.meta.env` for `VITE_`-prefixed keys in client code. So this
+// workspace's `dev` script wraps vite in `node --env-file=../.env`, the same
+// way every `server` script does.
 export default defineConfig({
   plugins: [reactRouter(), seoFiles()],
   resolve: {
@@ -42,6 +49,25 @@ export default defineConfig({
     // (`styled.default.div is not a function`). Bundling it here routes both
     // through Vite's own, consistent interop instead.
     noExternal: ['styled-components'],
+  },
+  environments: {
+    ssr: {
+      // styled-components' ESM build (its `module` entry, which Vite picks
+      // for SSR) carries one bare `require("stream")`, inside the
+      // `interleaveWithNodeStream` path entry.server.tsx renders every page
+      // through. The built server is CommonJS (react-router.config.ts), so
+      // `require` exists there and production never meets this; the dev
+      // server evaluates that file as ESM, where the call throws and the
+      // request hangs with no response at all. Pre-bundling resolves the
+      // package's CJS `main` instead and rewrites that call into a real
+      // import. React stays excluded so the pre-bundle imports the same
+      // instance react-dom/server renders with, rather than bundling a
+      // second copy and nulling the hook dispatcher.
+      optimizeDeps: {
+        include: ['styled-components'],
+        exclude: ['react', 'react-dom'],
+      },
+    },
   },
   server: {
     port: 5173,

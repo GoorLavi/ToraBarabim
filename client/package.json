@@ -5,7 +5,7 @@
   "description": "Hebrew, right-to-left web client for the ToraBarabim lesson search",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node --env-file=../.env ../node_modules/.bin/vite",
     "build": "tsc --noEmit -p tsconfig.json && vite build",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "storybook": "storybook dev -p 6006",

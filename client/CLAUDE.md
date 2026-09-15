@@ -1,8 +1,21 @@
 # client house rules (extends root CLAUDE.md)
 
-One React SPA, Hebrew and right-to-left throughout. React 19, Vite, TypeScript strict,
-styled-components 6, TanStack Query 5, React Router 7. Import within the workspace via
-the `~/*` alias (maps to `src`).
+One React app, Hebrew and right-to-left throughout, server rendered by React Router 7
+in framework mode ([0023](../docs/decisions/0023-the-public-pages-are-server-rendered.md)).
+React 19, Vite, TypeScript strict, styled-components 6, TanStack Query 5. Import within
+the workspace via the `~/*` alias (maps to `src`).
+
+## Local Dev
+
+`npm run dev` from the repo root starts both workspaces: the API on 3000 and this Vite
+dev server on 5173. Develop against **5173**, which has hot reload; 3000 serves the last
+`vite build` output, so a client change is invisible there until you rebuild.
+
+Both processes need the repo-root `.env`, because a route loader here imports server
+services and runs them during SSR. `vite.config.ts` says why this workspace's `dev`
+script has to load that file itself. A missing or incomplete `.env` shows up as
+`Invalid server configuration: {...}` on every page, naming the keys it wants, and the
+dev database has to be up (`npm run db:up`) for a loader to return anything.
 
 The tree shape and the styling shape below are carried over from the Why's client
 deliberately. They are not preferences: mixing two shapes inside one codebase is what

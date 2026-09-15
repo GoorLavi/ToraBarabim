@@ -7,6 +7,10 @@
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
     "isolatedModules": true,
+    // Vite's coming `configLoader: 'native'` resolves vite.config.ts without
+    // a bundler, so its imports need real file extensions. Safe to allow
+    // because this project only type checks: `noEmit` is on below.
+    "allowImportingTsExtensions": true,
     "types": ["vite/client", "node"],
     "paths": {
       "~/*": ["./src/*"]

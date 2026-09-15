@@ -8,6 +8,8 @@ npm-debug.log*
 .env
 .env.local
 .vite/
+# React Router framework-mode typegen output
+client/.react-router/
 coverage/
 
 # Scraper: downloaded pages/images and run output, never committed
