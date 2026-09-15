@@ -21,19 +21,16 @@ export const RETRY_LABEL = 'נסו שוב';
 export const ALL_LESSONS_LABEL = 'לכל השיעורים';
 export const BACK_TO_ALL_LESSONS_LABEL = 'חזרה לכל השיעורים';
 
-// The label above the rabbi's name in the ticket's lower panel (LessonTicket):
-// the ordinary role label, and what it becomes when a substitute is teaching.
-// Keyed by the teaching rabbi's own honorific (the substitute's, when there
-// is one), never the lesson's original rabbi, so a `Record` here means a new
-// honorific fails the build until both forms are written.
+// The label above the rabbi's name in the ticket's lower panel (LessonTicket).
+// A `Record` so a new honorific fails the build until its form is written.
 export const TEACHING_RABBI_ROLE_LABEL: Record<RabbiHonorific, string> = {
   rav: 'מגיד השיעור',
-  rabbanit: 'מגידת השיעור',
+  rabbanit: 'תעביר את השיעור',
 };
-export const SUBSTITUTE_ROLE_LABEL: Record<RabbiHonorific, string> = {
-  rav: 'הפעם מגיד השיעור',
-  rabbanit: 'הפעם מגידת השיעור',
-};
+
+// Not keyed by honorific: no screen names a substitute, and the women-only
+// rule is not enforced on substitutes (decision 0026).
+export const SUBSTITUTE_ROLE_LABEL = 'הפעם מגיד השיעור';
 
 // Takes an already-composed display name (`rabbiDisplayName`), so this
 // never prepends the honorific a second time.

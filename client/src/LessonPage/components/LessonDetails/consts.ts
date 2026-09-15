@@ -4,6 +4,6 @@ import type { RabbiHonorific } from '@torabarabim/common';
 // is one), so a new honorific fails the build until it is added here too.
 export const ABOUT_RABBI_HEADING: Record<RabbiHonorific, string> = {
   rav: 'על מגיד השיעור',
-  rabbanit: 'על מגידת השיעור',
+  rabbanit: 'על הרבנית',
 };
 export const LESSON_NOTE_HEADING = 'הערה לשיעור';
