@@ -3,6 +3,7 @@ import { css } from 'styled-components';
 import {
   CARD_MAX_INLINE_SIZE_NO_POSTER_DESKTOP,
   CARD_MIN_BLOCK_SIZE_DESKTOP,
+  GOOGLE_MAPS_BUTTON_HOVER_COLOR,
   NOTCH_DIAMETER,
   PANEL_BLOCK_PADDING_PHONE,
   PERFORATION_DASH,
@@ -14,6 +15,7 @@ import {
   STUB_WHEN_ROW_GAP_DESKTOP,
   TEXT_COLUMN_INLINE_PADDING_DESKTOP,
   TICKET_FINE_GAP,
+  WAZE_BUTTON_HOVER_COLOR,
 } from './consts';
 
 // The ticket's full look: split in two, one perforation line, two circular
@@ -387,6 +389,92 @@ export const TicketShell = css(
         font-weight: ${theme.typography.tagAndCaption.fontWeight};
         font-size: ${theme.typography.tagAndCaption.phone.fontSize};
         line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
+      }
+
+      /* A real gap between two distinct actions, not the ticket's usual
+         optical-adjustment spacing (design direction for the nav row). */
+      > .place > .navRow {
+        inline-size: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: ${theme.spacing.sm};
+        margin-block-start: ${theme.spacing.lg};
+      }
+
+      > .place > .navRow > .heading {
+        inline-size: 100%;
+        margin-block-end: ${theme.spacing.sm};
+        color: ${theme.colors.textOnPrimaryMuted};
+        font-weight: ${theme.typography.tagAndCaption.fontWeight};
+        font-size: ${theme.typography.tagAndCaption.phone.fontSize};
+        line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
+      }
+
+      > .place > .navRow > .navButton {
+        /* 160, not 140: the Google Maps label's own min-content width is
+           ~152-160px, and a lower basis let it wrap inside the button
+           instead of the row wrapping to stacked full-width buttons. */
+        flex: 1 1 160px;
+        min-block-size: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: ${theme.spacing.xs};
+        padding-inline: ${theme.spacing.md};
+        border: 1px solid ${theme.colors.borderOnPrimary};
+        border-radius: ${theme.radii.md};
+        background: ${theme.colors.surfaceOnPrimary};
+        color: ${theme.colors.textOnPrimary};
+        font-weight: ${theme.typography.fontWeight.semiBold};
+        font-size: ${theme.typography.body.phone.fontSize};
+        line-height: ${theme.typography.body.phone.lineHeight};
+        text-decoration: none;
+        white-space: nowrap;
+
+        /* Both icons share the same rendered block-size so their optical
+           weight matches; each keeps its own source aspect ratio rather than
+           being forced into a shared square box, since Google Maps' mark is
+           a tall pin, not a square glyph. */
+        > .icon {
+          flex: 0 0 auto;
+          block-size: 20px;
+          inline-size: auto;
+
+          &.waze {
+            aspect-ratio: 1 / 1;
+          }
+
+          &.googleMaps {
+            aspect-ratio: 256 / 367;
+          }
+        }
+
+        /* A \`primary\`-colored ring is invisible against this card's own
+           \`primary\` background, so the ring is the ticket's on-primary text
+           color instead, not the site's usual \`colors.primary\` (unlike
+           AddressCard's \`.mailButton\`, which sits on a plain surface). */
+        &:focus-visible {
+          outline: 2px solid ${theme.colors.textOnPrimary};
+          outline-offset: 2px;
+        }
+
+        /* Per-brand hover/pressed tint, hardcoded rather than a theme token:
+           each color belongs to that one brand's own mark, not a reusable
+           on-primary hover role (0026-full-color-brand-marks-on-navigation-links.md).
+           Waze's tint is darkened from the brand cyan, not the brand value itself:
+           white text on the brand cyan measured 2.91:1, below the 4.5:1 floor for
+           17px text, so it is darkened to a value that measures 5.04:1. */
+        &.waze:hover,
+        &.waze:active {
+          background: ${WAZE_BUTTON_HOVER_COLOR};
+          border-color: ${WAZE_BUTTON_HOVER_COLOR};
+        }
+
+        &.googleMaps:hover,
+        &.googleMaps:active {
+          background: ${GOOGLE_MAPS_BUTTON_HOVER_COLOR};
+          border-color: ${GOOGLE_MAPS_BUTTON_HOVER_COLOR};
+        }
       }
 
       /* The rule that replaces the old gap between the audience tag and the

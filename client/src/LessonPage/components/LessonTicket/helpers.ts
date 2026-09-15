@@ -1,4 +1,4 @@
-import type { LessonOccurrence } from '@torabarabim/common';
+import type { LessonOccurrence, Place } from '@torabarabim/common';
 
 import { LESSON_TOPIC_LABELS } from '~/HomePage/components/LessonCard/consts';
 import { SUBSTITUTE_ROLE_LABEL, TEACHING_RABBI_ROLE_LABEL } from '~/LessonPage/consts';
@@ -55,3 +55,18 @@ export const kickerLabel = (occurrence: LessonOccurrence): string | undefined =>
 // versus what to call the fact that this occurrence has a substitute. Its
 // own slot, never sharing one with `kickerLabel`.
 export const roleLabel = (isSubstitute: boolean): string => (isSubstitute ? SUBSTITUTE_ROLE_LABEL : TEACHING_RABBI_ROLE_LABEL);
+
+// Street and city only, never `floor`: a floor is an arrival note ("קומה
+// 2"), not part of a geocodable address, and passing it to Waze/Google Maps
+// would make the query fail to resolve.
+const navigationQuery = (place: Pick<Place, 'street' | 'city'>): string => `${place.street}, ${place.city}`;
+
+// `undefined` when the street is blank, so the caller hides the whole nav
+// row rather than link out to a bare city (fail closed: a navigation link
+// that only narrows down to a city is worse than none, per the design
+// direction in this component's brief).
+export const wazeHref = (place: Pick<Place, 'street' | 'city'>): string | undefined =>
+  place.street.trim() ? `https://waze.com/ul?q=${encodeURIComponent(navigationQuery(place))}&navigate=yes` : undefined;
+
+export const googleMapsHref = (place: Pick<Place, 'street' | 'city'>): string | undefined =>
+  place.street.trim() ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(navigationQuery(place))}` : undefined;

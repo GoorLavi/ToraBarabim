@@ -5,19 +5,26 @@ import { LESSON_AUDIENCE_LABELS } from '~/HomePage/components/LessonCard/consts'
 import * as pageConsts from '~/LessonPage/consts';
 import { teachingRabbiOf } from '~/LessonPage/helpers';
 
+import * as consts from './consts';
 import {
   addressLine,
   computeDurationMinutes,
   dayNumberLabel,
   durationLabel,
   endTimeLabel,
+  googleMapsHref,
   kickerLabel,
   monthLabel,
   roleLabel,
+  wazeHref,
   weekdayLabel,
 } from './helpers';
 import type { LessonTicketProps } from './models';
 import * as styles from './styles';
+
+// Both brand marks are a flat list of `<path>`s, each with its own literal fill, so one
+// renderer covers both icons.
+const renderIconPath = ({ d, fill }: { d: string; fill: string }, index: number) => <path key={index} d={d} fill={fill} />;
 
 // The loading state is this same shell with nothing inside it
 // (`LessonTicketSkeleton`), so every shape rule lives in `TicketShell` and
@@ -29,6 +36,9 @@ export const LessonTicket = styled(({ className, occurrence }: LessonTicketProps
   const isNoPoster = !teachingRabbi.photoUrl;
   const kicker = kickerLabel(occurrence);
   const duration = computeDurationMinutes(occurrence.startTime, occurrence.endTime);
+  const wazeUrl = wazeHref(occurrence.place);
+  const googleMapsUrl = googleMapsHref(occurrence.place);
+  const showNavRow = !isCancelled && Boolean(wazeUrl) && Boolean(googleMapsUrl);
 
   return (
     <div className={classNames(className, { cancelled: isCancelled, noPoster: isNoPoster })}>
@@ -98,6 +108,40 @@ export const LessonTicket = styled(({ className, occurrence }: LessonTicketProps
             <span className="audienceTag" dir="auto">
               {LESSON_AUDIENCE_LABELS[occurrence.audience]}
             </span>
+
+            {showNavRow && wazeUrl && googleMapsUrl && (
+              <div className="navRow">
+                <p className="heading" dir="auto">
+                  {consts.NAV_ROW_HEADING_LABEL}
+                </p>
+
+                <a
+                  className="navButton waze"
+                  href={wazeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={consts.WAZE_ARIA_LABEL}
+                >
+                  <svg className="icon waze" viewBox={consts.WAZE_ICON_VIEW_BOX} aria-hidden="true">
+                    {consts.WAZE_ICON_PATHS.map(renderIconPath)}
+                  </svg>
+                  <span dir="ltr">{consts.WAZE_LABEL}</span>
+                </a>
+
+                <a
+                  className="navButton googleMaps"
+                  href={googleMapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={consts.GOOGLE_MAPS_ARIA_LABEL}
+                >
+                  <svg className="icon googleMaps" viewBox={consts.GOOGLE_MAPS_ICON_VIEW_BOX} aria-hidden="true">
+                    {consts.GOOGLE_MAPS_ICON_PATHS.map(renderIconPath)}
+                  </svg>
+                  <span dir="ltr">{consts.GOOGLE_MAPS_LABEL}</span>
+                </a>
+              </div>
+            )}
           </div>
 
           <span className="hairline" aria-hidden="true" />
