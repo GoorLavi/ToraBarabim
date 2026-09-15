@@ -11,13 +11,6 @@ type RabbiRow = typeof rabbis.$inferSelect;
 
 const toSummary = (row: RabbiRow): RabbiSummaryRecord => toRabbiSummary(row);
 
-// The stored name carries its own honorific ('הרב', 'הרבנית'), so sorting on
-// the raw name would file almost every rabbi under ה. This strips only the
-// leading honorific for the sort key; the name a client receives is never
-// touched.
-const HONORIFIC_PREFIX = /^(הרבנית|הרב)\s+/;
-const sortKey = (name: string): string => name.replace(HONORIFIC_PREFIX, '').trim();
-
 const collator = new Intl.Collator('he');
 
 interface LessonStats {
@@ -73,7 +66,7 @@ const toDirectoryEntry = (row: RabbiRow, stats: LessonStats): RabbiDirectoryEntr
 
 export const list = async (query: RabbiListQuery): Promise<RabbiListResult> => {
   const rows = await db.select().from(rabbis);
-  const sorted = [...rows].sort((a, b) => collator.compare(sortKey(a.name), sortKey(b.name)));
+  const sorted = [...rows].sort((a, b) => collator.compare(a.name, b.name));
 
   const total = sorted.length;
   const start = (query.page - 1) * query.pageSize;

@@ -1,8 +1,9 @@
-import type { RabbiProminence } from '@torabarabim/common';
+import type { RabbiHonorific, RabbiProminence } from '@torabarabim/common';
 import { z } from 'zod';
 
-import { RABBI_PROMINENCES } from '../../db/schema/enums';
+import { RABBI_HONORIFICS, RABBI_PROMINENCES } from '../../db/schema/enums';
 import { DEFAULT_ADMIN_PAGE, DEFAULT_ADMIN_PAGE_SIZE, MAX_ADMIN_PAGE_SIZE } from '../admin-shared/consts';
+import { rabbiNameSchema } from '../shared/name';
 
 export const rabbiIdParamSchema = z.object({
   id: z.string().trim().min(1),
@@ -18,7 +19,8 @@ export type RabbiListQuery = z.infer<typeof rabbiListQuerySchema>;
 // Name, title, and bio only: `photoUrl` is set exclusively via the
 // dedicated photo upload endpoint, never by handing the server an arbitrary URL.
 export const createRabbiSchema = z.object({
-  name: z.string().trim().min(1),
+  name: rabbiNameSchema,
+  honorific: z.enum(RABBI_HONORIFICS).optional(),
   title: z.string().trim().min(1).optional(),
   bio: z.string().trim().min(1).optional(),
   prominence: z.enum(RABBI_PROMINENCES).optional(),
@@ -34,7 +36,7 @@ export type CreateRabbiInput = z.infer<typeof createRabbiSchema>;
 // exactly as it is on create, so there is exactly one way to say "clear
 // this field" and it is never confused with "leave it alone".
 export const updateRabbiSchema = z.object({
-  name: z.string().trim().min(1).optional(),
+  name: rabbiNameSchema.optional(),
   title: z.string().trim().min(1).nullable().optional(),
   bio: z.string().trim().min(1).nullable().optional(),
   prominence: z.enum(RABBI_PROMINENCES).optional(),
@@ -56,6 +58,7 @@ export type DeleteRabbiQuery = z.infer<typeof deleteRabbiQuerySchema>;
 export interface RabbiRecord {
   id: string;
   name: string;
+  honorific: RabbiHonorific;
   slug: string;
   title?: string;
   photoUrl?: string;

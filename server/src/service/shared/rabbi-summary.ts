@@ -1,4 +1,4 @@
-import type { Rabbi } from '@torabarabim/common';
+import type { Rabbi, RabbiHonorific } from '@torabarabim/common';
 
 import { toSlug } from './slug';
 
@@ -8,6 +8,7 @@ import { toSlug } from './slug';
 export interface RabbiSummaryRow {
   id: string;
   name: string;
+  honorific: RabbiHonorific;
   title: string | null;
   photoUrl: string | null;
   bio: string | null;
@@ -21,6 +22,7 @@ export interface RabbiSummaryRow {
 export const toRabbiSummary = (row: RabbiSummaryRow): Rabbi => ({
   id: row.id,
   name: row.name,
+  honorific: row.honorific,
   // `title` is a role ('ראש ישיבה', 'דיין'), not part of the rabbi's
   // identity, so it stays out of the slug; the id, not the slug, is what
   // resolves the rabbi, so a name that collapses to '' after `toSlug`

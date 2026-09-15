@@ -93,6 +93,7 @@ export const RabbisPage = styled(({ className }: RabbisPageProps) => {
             <>
               {consts.NO_RESULTS_HEADING_PREFIX}
               <span dir="auto">{trimmedSearch}</span>
+              {consts.NO_RESULTS_HEADING_SUFFIX}
             </>
           }
           body={consts.NO_RESULTS_BODY}

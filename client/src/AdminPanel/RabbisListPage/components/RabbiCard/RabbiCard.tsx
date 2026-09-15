@@ -4,6 +4,7 @@ import styled from 'styled-components';
 
 import { ADMIN_ROUTES } from '~/AdminPanel/consts';
 import * as parentConsts from '~/AdminPanel/RabbisListPage/consts';
+import { rabbiDisplayName } from '~/helpers';
 
 import type { RabbiCardProps } from './models';
 import * as styles from './styles';
@@ -25,7 +26,7 @@ export const RabbiCard = styled(({ className, row }: RabbiCardProps) => {
 
       <div className="body">
         <h3 className="name" dir="auto">
-          {row.rabbi.name}
+          {rabbiDisplayName(row.rabbi)}
         </h3>
         <p className="count">{row.lessonCount === 0 ? parentConsts.NO_LESSONS_YET_LABEL : parentConsts.lessonCountLabel(row.lessonCount)}</p>
 

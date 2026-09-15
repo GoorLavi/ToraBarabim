@@ -4,16 +4,21 @@ import styled from 'styled-components';
 
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
+import { rabbiDisplayName } from '~/helpers';
 import { RABBI_ROUTES } from '~/RabbiPanel/consts';
-import { useRabbiSession } from '~/RabbiPanel/useRabbiSession';
+import { useRabbiProfile } from '~/RabbiPanel/useRabbiProfile';
 
 import * as consts from './consts';
 import type { RabbiShellProps } from './models';
 import * as styles from './styles';
 import { useRabbiLogout } from './useRabbiLogout';
 
+// The greeting reads the rabbi's own profile, not the session record: the
+// session's `name` is copied at login and can drift from the profile the
+// rabbi has since edited, and it never carries the honorific this greeting
+// must show.
 export const RabbiShell = styled(({ className }: RabbiShellProps) => {
-  const session = useRabbiSession();
+  const profile = useRabbiProfile();
   const logout = useRabbiLogout();
 
   return (
@@ -52,9 +57,9 @@ export const RabbiShell = styled(({ className }: RabbiShellProps) => {
           </nav>
 
           <div className="account">
-            {session.data && (
+            {profile.data && (
               <span className="name" dir="auto">
-                {session.data.name}
+                {rabbiDisplayName(profile.data)}
               </span>
             )}
             <button type="button" className="logout" onClick={() => logout.mutate()} disabled={logout.isPending}>

@@ -44,7 +44,7 @@ const lesson = (overrides: Partial<LessonOccurrence>): LessonOccurrence => ({
   title: 'הלכות שבת',
   topic: 'halacha',
   audience: 'men',
-  rabbi: rabbiFixture({ id: 'r1', name: 'הרב אליהו בן דוד' }),
+  rabbi: rabbiFixture({ id: 'r1', name: 'אליהו בן דוד' }),
   place: { name: 'בית הכנסת הגדול', street: 'שדרות הנשיא 12', city: 'חיפה', citySlug: 'חיפה', area: 'haifa' },
   ...overrides,
 });
@@ -96,7 +96,7 @@ installMockFetch((url) => {
             lessonId: 'l2',
             date: '2026-09-14',
             startTime: '06:30',
-            rabbi: rabbiFixture({ id: 'r2', name: 'הרב שמואל וקנין' }),
+            rabbi: rabbiFixture({ id: 'r2', name: 'שמואל וקנין' }),
             title: 'שיעור דף יומי',
             topic: 'gemara',
           }),

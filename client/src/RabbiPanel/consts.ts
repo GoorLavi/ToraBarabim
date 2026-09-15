@@ -5,12 +5,15 @@
 // the value from here.
 export const RABBI_LESSON_PAGE_SIZE = 100;
 
-export const GENERIC_ERROR_MESSAGE = 'אירעה שגיאה, נסה שוב מאוחר יותר';
-export const NETWORK_ERROR_MESSAGE = 'לא ניתן להתחבר לשרת. בדוק את החיבור ונסה שוב';
+// Gender-neutral by necessity, not just style: these can surface before the
+// rabbi's own profile (and so their honorific) has loaded, for instance when
+// the profile fetch itself is what failed.
+export const GENERIC_ERROR_MESSAGE = 'אירעה שגיאה, יש לנסות שוב מאוחר יותר';
+export const NETWORK_ERROR_MESSAGE = 'לא ניתן להתחבר לשרת. יש לבדוק את החיבור ולנסות שוב';
 export const UNAUTHENTICATED_MESSAGE = 'תוקף ההתחברות פג. יש להתחבר מחדש';
 export const INVALID_REQUEST_MESSAGE = 'הבקשה אינה תקינה';
 export const NOT_FOUND_MESSAGE = 'הרשומה המבוקשת לא נמצאה';
-export const RATE_LIMITED_MESSAGE = 'יותר מדי ניסיונות כניסה. נסה שוב בעוד כמה דקות';
+export const RATE_LIMITED_MESSAGE = 'יותר מדי ניסיונות כניסה. יש לנסות שוב בעוד כמה דקות';
 
 export const RABBI_QUERY_KEYS = {
   session: () => ['rabbi', 'session'] as const,

@@ -6,7 +6,7 @@ import styled from 'styled-components';
 
 import { ADMIN_ROUTES } from '~/AdminPanel/consts';
 import * as parentConsts from '~/AdminPanel/LessonFormPage/consts';
-import { directionForValue } from '~/helpers';
+import { directionForValue, rabbiDisplayName } from '~/helpers';
 
 import type { RabbiPickerProps } from './models';
 import * as styles from './styles';
@@ -27,7 +27,7 @@ export const RabbiPicker = styled(({ className, rabbi, onSelectRabbi, errorMessa
     <div className={classNames(className, { open: isOpen, invalid: Boolean(errorMessage) })} onBlur={close}>
       <button type="button" className="control" aria-haspopup="listbox" aria-expanded={isOpen} onClick={() => setIsOpen((open) => !open)}>
         <span className="label" dir="auto">
-          {rabbi?.name ?? parentConsts.RABBI_SEARCH_PLACEHOLDER}
+          {rabbi ? rabbiDisplayName(rabbi) : parentConsts.RABBI_SEARCH_PLACEHOLDER}
         </span>
       </button>
 
@@ -65,7 +65,7 @@ export const RabbiPicker = styled(({ className, rabbi, onSelectRabbi, errorMessa
                       setIsOpen(false);
                     }}
                   >
-                    <span dir="auto">{item.name}</span>
+                    <span dir="auto">{rabbiDisplayName(item)}</span>
                   </button>
                 </li>
               ))}

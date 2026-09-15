@@ -100,6 +100,31 @@ export const RabbiFormPage = css(
           line-height: ${theme.typography.secondary.phone.lineHeight};
         }
 
+        > .honorificPicker {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: ${theme.spacing.sm};
+
+          > .pill {
+            min-block-size: 48px;
+            padding-inline: ${theme.spacing.lg};
+            border: 1px solid ${theme.colors.border};
+            border-radius: ${theme.radii.pill};
+            background: ${theme.colors.surface};
+            color: ${theme.colors.text};
+            font-size: ${theme.typography.body.phone.fontSize};
+            line-height: ${theme.typography.body.phone.lineHeight};
+
+            &.selected {
+              border-color: ${theme.colors.primary};
+              background: ${theme.colors.primary};
+              color: ${theme.colors.textOnPrimary};
+              font-weight: ${theme.typography.fontWeight.semiBold};
+            }
+          }
+        }
+
         > input,
         > select,
         > textarea {

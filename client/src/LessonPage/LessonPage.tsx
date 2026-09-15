@@ -66,7 +66,11 @@ export const LessonPage = styled(({ className }: LessonPageProps) => {
             </Link>
           )}
 
-          <LessonDetails bio={teachingRabbiOf(occurrence).bio} note={occurrence.note} />
+          <LessonDetails
+            bio={teachingRabbiOf(occurrence).bio}
+            note={occurrence.note}
+            teachingRabbiHonorific={teachingRabbiOf(occurrence).honorific}
+          />
 
           <BackLink to="/" label={consts.BACK_TO_ALL_LESSONS_LABEL} />
         </>

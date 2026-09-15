@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { PhotoPicker } from '~/components/PhotoPicker/PhotoPicker';
+import { ReadOnlyField } from '~/components/ReadOnlyField/ReadOnlyField';
+import { RABBI_HONORIFIC_LABELS } from '~/consts';
 import { directionForValue } from '~/helpers';
 import { RABBI_ROUTES } from '~/RabbiPanel/consts';
 import { rabbiErrorMessage } from '~/RabbiPanel/helpers';
@@ -76,7 +78,7 @@ export const ProfilePage = styled(({ className }: ProfilePageProps) => {
   return (
     <div className={className}>
       <h1 className="heading">{consts.HEADING}</h1>
-      <p className="subtext">{consts.SUBTEXT}</p>
+      <p className="subtext">{consts.SUBTEXT[profile.data.honorific]}</p>
 
       <form
         className="form"
@@ -104,6 +106,12 @@ export const ProfilePage = styled(({ className }: ProfilePageProps) => {
             {rabbiErrorMessage(saveProfile.error)}
           </p>
         )}
+
+        <ReadOnlyField
+          label={consts.HONORIFIC_LABEL}
+          value={RABBI_HONORIFIC_LABELS[profile.data.honorific]}
+          helper={consts.HONORIFIC_READONLY_NOTE}
+        />
 
         <label className="field">
           <span className="label">{consts.NAME_LABEL}</span>
@@ -136,7 +144,7 @@ export const ProfilePage = styled(({ className }: ProfilePageProps) => {
             value={form.bio}
             onChange={(event) => setForm((prev) => prev && { ...prev, bio: event.target.value })}
           />
-          <span className="helper">{consts.BIO_HELPER}</span>
+          <span className="helper">{consts.BIO_HELPER[profile.data.honorific]}</span>
         </label>
 
         <p className="liveNote">{consts.LIVE_NOTE}</p>
