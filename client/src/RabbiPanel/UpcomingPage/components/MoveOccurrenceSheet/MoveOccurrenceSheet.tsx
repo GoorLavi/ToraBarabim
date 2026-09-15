@@ -2,8 +2,8 @@ import { useState } from 'react';
 import styled from 'styled-components';
 
 import { CitySelect } from '~/components/CitySelect/CitySelect';
+import { ResponsiveSheet } from '~/components/ResponsiveSheet/ResponsiveSheet';
 import { directionForValue } from '~/helpers';
-import { ResponsiveSheet } from '~/RabbiPanel/components/ResponsiveSheet/ResponsiveSheet';
 import { rabbiErrorMessage } from '~/RabbiPanel/helpers';
 import * as parentConsts from '~/RabbiPanel/UpcomingPage/consts';
 

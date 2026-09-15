@@ -1,14 +1,21 @@
+export const CITY_PICKER_QUERY_KEYS = {
+  search: (q: string) => ['cityPicker', 'search', q] as const,
+  suggestions: () => ['cityPicker', 'suggestions'] as const,
+};
+
 // Shown on the pill when no city is chosen: a real "all areas" state
 // (design-system.md, "No default city"), distinct from any chosen city's
 // name.
 export const ALL_AREAS_LABEL = 'כל הארץ';
-export const SEARCH_PLACEHOLDER = 'חיפוש עיר';
-export const SEARCH_LABEL = 'חיפוש עיר';
-export const OPEN_PICKER_LABEL = 'בחירת עיר';
-export const LOADING_MESSAGE = 'מחפש ערים...';
-export const NO_RESULTS_MESSAGE = 'לא נמצאו ערים תואמות';
-export const SEARCH_HINT = 'הקלידו שם עיר';
+
+// Doubles as the panel's dialog `aria-label` (CityPicker.tsx) and its own
+// visible heading row (CityPickerPanel.tsx).
+export const PANEL_HEADING = 'בחירת עיר';
+export const CLOSE_PANEL_LABEL = 'סגירה';
 
 // The selected pill's own accessible name names the action a second tap
-// takes, the same pattern as the date chips: no hint text, no tooltip.
+// takes: no hint text, no tooltip.
 export const clearCityLabel = (name: string): string => `${name}, הסרת הסינון`;
+
+export const RECENT_CITIES_STORAGE_KEY = 'torabarabim:recentCities';
+export const MAX_RECENT_CITIES = 3;

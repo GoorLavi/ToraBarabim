@@ -24,6 +24,10 @@ export interface CityWithLessonCount extends ResolvedCity {
   lessonCount: number;
 }
 
+export interface CitySearchResult extends CityWithLessonCount {
+  areaName: string;
+}
+
 export interface CityAreaGroup {
   area: Area;
   areaName: string;
@@ -35,6 +39,16 @@ export interface CityAreaGroup {
 // areas that have at least one such city.
 export interface CityDirectoryResult {
   areas: CityAreaGroup[];
+}
+
+export interface CityAreaSuggestionGroup extends CityAreaGroup {
+  areaLessonCount: number;
+}
+
+// Same filtering as `CityDirectoryResult`, ordered by lesson supply instead
+// of alphabetically, with no cap on cities per area.
+export interface CitySuggestionsResult {
+  areas: CityAreaSuggestionGroup[];
 }
 
 export interface CityDetailResult extends ResolvedCity {

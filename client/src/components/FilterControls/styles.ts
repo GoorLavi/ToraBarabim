@@ -2,8 +2,6 @@ import { css } from 'styled-components';
 
 import type { Theme } from '~/theme/models';
 
-import { HEADER_Z_INDEX } from './consts';
-
 // The band's paint and vertical rhythm, shared by the header itself and by
 // `PinnedHeaderBar`'s expand panel below `lg`: that panel is meant to read
 // as the exact same header shown again over the page, so it needs the same
@@ -28,7 +26,7 @@ export const FilterControls = css(
   @media (min-width: ${theme.breakpoints.lg}) {
     position: sticky;
     inset-block-start: 0;
-    z-index: ${HEADER_Z_INDEX};
+    z-index: ${theme.zIndex.header};
 
     /* Only once scrolled, so the band does not float a shadow over nothing
        at rest. */

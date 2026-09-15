@@ -182,7 +182,7 @@ Type, spacing, radii, shadows and breakpoints live alongside color in the same t
 object. All are tokens, none are raw values in a component.
 
 ### Color: the token set
-Sixteen color tokens. The theme defines all sixteen.
+Seventeen color tokens. The theme defines all seventeen.
 
 | Token | Role |
 |---|---|
@@ -202,6 +202,7 @@ Sixteen color tokens. The theme defines all sixteen.
 | `color.borderOnPrimary` | Hairlines and perforations on a `primary` fill. White at 30% |
 | `color.surfaceOnPrimary` | A quiet raised block on a `primary` fill, such as a tag on the lesson ticket. White at 12% |
 | `color.danger` | Error text. Text only, never a fill |
+| `color.scrim` | The backdrop behind a fixed sheet's panel (a bottom sheet, a drawer): `color.text` at 45% |
 
 **Contrast rule for `accent`.** The accent does not reach 4.5:1 against `surface`, so it
 is reserved for graphic elements and large numerals and is never used for body-size text:
@@ -237,6 +238,7 @@ binding or a parochet.
 | `color.borderOnPrimary` | `rgba(255, 255, 255, 0.3)` |
 | `color.surfaceOnPrimary` | `rgba(255, 255, 255, 0.12)` |
 | `color.danger` | `#A32A22` |
+| `color.scrim` | `rgba(32, 27, 29, 0.45)` |
 
 ### Type
 **Assistant**, confirmed present in Figma with the three weights the design uses. It was
@@ -331,10 +333,24 @@ Two. The shadow color is a near-black at low alpha, because a tinted shadow read
 smudge.
 
 - `shadow.card`: `0 1px 2px rgba(28,26,23,0.04), 0 1px 3px rgba(28,26,23,0.06)`
-- `shadow.raised`: `0 4px 16px rgba(28,26,23,0.10)`, for the sticky search bar only
+- `shadow.raised`: `0 4px 16px rgba(28,26,23,0.10)`, for the sticky search bar and for
+  anything that floats over the page and needs to read as lifted off it: a header
+  popover (the date picker, the city picker) and a `ResponsiveSheet` panel.
 
 Separation is carried mainly by `color.border` and by `surface` against `bg`, not by
 shadow.
+
+### Z-index
+Three layers, low to high: `zIndex.popover` (20) for a popover anchored inside the
+header (the date picker's calendar, the city picker, both from `sm` up), `zIndex.header`
+(30) for the sticky header band at `lg` and up and for the pinned bar (and its expand
+panel) below `lg`, and `zIndex.sheetScrim` (100) for the scrim and panel behind any
+`ResponsiveSheet`. A sheet always sits above every popover, which always sits above the
+header.
+
+A handful of raw z-index values remain outside this scale, in `AdminPanel`,
+`RabbiPanel/LoginPage`, and `components/CitySelect`: migrating those to the token is a
+separate change.
 
 ### Breakpoints and content width
 Min-width, narrow to wide: `sm 480`, `md 768`, `lg 1024`, `xl 1280`.
