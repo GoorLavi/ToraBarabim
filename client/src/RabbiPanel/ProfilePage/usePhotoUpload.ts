@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
 import { uploadProfilePhoto } from '~/RabbiPanel/api';
 import { RABBI_QUERY_KEYS } from '~/RabbiPanel/consts';
 
@@ -38,6 +40,7 @@ export const usePhotoUpload = (): PhotoUploadState => {
     onSuccess: (profile) => {
       queryClient.setQueryData(RABBI_QUERY_KEYS.profile(), profile);
       setSelectedFile(undefined);
+      trackEvent(MIXPANEL_EVENTS.profilePhotoUploaded);
     },
   });
 

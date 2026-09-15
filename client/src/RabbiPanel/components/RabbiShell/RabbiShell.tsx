@@ -2,6 +2,8 @@ import classNames from 'classnames';
 import { NavLink, Outlet } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
 import { rabbiDisplayName } from '~/helpers';
 import { RABBI_ROUTES } from '~/RabbiPanel/consts';
 import { useRabbiProfile } from '~/RabbiPanel/useRabbiProfile';
@@ -31,13 +33,25 @@ export const RabbiShell = styled(({ className }: RabbiShellProps) => {
           </div>
 
           <nav className="nav" aria-label={consts.NAV_LABEL}>
-            <NavLink to={RABBI_ROUTES.upcoming} className={({ isActive }) => classNames('tab', { active: isActive })}>
+            <NavLink
+              to={RABBI_ROUTES.upcoming}
+              className={({ isActive }) => classNames('tab', { active: isActive })}
+              onClick={() => trackEvent(MIXPANEL_EVENTS.panelTabClick, { tab: 'upcoming' })}
+            >
               {consts.TAB_UPCOMING_LABEL}
             </NavLink>
-            <NavLink to={RABBI_ROUTES.lessons} className={({ isActive }) => classNames('tab', { active: isActive })}>
+            <NavLink
+              to={RABBI_ROUTES.lessons}
+              className={({ isActive }) => classNames('tab', { active: isActive })}
+              onClick={() => trackEvent(MIXPANEL_EVENTS.panelTabClick, { tab: 'lessons' })}
+            >
               {consts.TAB_LESSONS_LABEL}
             </NavLink>
-            <NavLink to={RABBI_ROUTES.profile} className={({ isActive }) => classNames('tab', { active: isActive })}>
+            <NavLink
+              to={RABBI_ROUTES.profile}
+              className={({ isActive }) => classNames('tab', { active: isActive })}
+              onClick={() => trackEvent(MIXPANEL_EVENTS.panelTabClick, { tab: 'profile' })}
+            >
               {consts.TAB_PROFILE_LABEL}
             </NavLink>
           </nav>
