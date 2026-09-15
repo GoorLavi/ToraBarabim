@@ -9,7 +9,6 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecrAssets from 'aws-cdk-lib/aws-ecr-assets';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as iam from 'aws-cdk-lib/aws-iam';
-import * as kms from 'aws-cdk-lib/aws-kms';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as lambdaNode from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as logs from 'aws-cdk-lib/aws-logs';
@@ -319,15 +318,19 @@ export class ServerStack extends Stack {
       }),
     );
     // The parameter is a SecureString encrypted with the account's default
-    // `aws/ssm` key, not a customer-managed one, so there is no key ARN of
-    // our own to scope this to. AWS documents kms:Decrypt as one of the few
-    // actions an IAM policy may target by key alias ARN, which keeps this to
-    // exactly the one key rather than "*".
-    const ssmDefaultKey = kms.Alias.fromAliasName(this, 'SsmDefaultKey', 'alias/aws/ssm');
+    // `aws/ssm` key. AWS documents that an IAM policy statement cannot
+    // identify a KMS key by key id, alias name, or alias ARN, only by key
+    // ARN, and that ARN cannot be resolved here without an account lookup.
+    // Scoping by kms:ViaService instead allows decryption only for calls
+    // made through SSM in this account and region, which is as narrow as
+    // this grant can get without naming the key itself.
     alertNotifierFunction.addToRolePolicy(
       new iam.PolicyStatement({
         actions: ['kms:Decrypt'],
-        resources: [ssmDefaultKey.keyArn],
+        resources: [`arn:${this.partition}:kms:${this.region}:${this.account}:key/*`],
+        conditions: {
+          StringEquals: { 'kms:ViaService': `ssm.${this.region}.amazonaws.com` },
+        },
       }),
     );
     alertTopic.addSubscription(new snsSubscriptions.LambdaSubscription(alertNotifierFunction));
@@ -347,12 +350,18 @@ export class ServerStack extends Stack {
     // so missing data for five straight minutes is a reliable proxy for "no
     // healthy task" without turning on Container Insights, which bills per
     // metric on top of standard CloudWatch pricing.
+    //
+    // The comparison is GREATER_THAN a threshold the metric, a percentage,
+    // can never actually exceed: that is deliberate, not a placeholder. It
+    // means a real datapoint can never breach, so only the treatMissingData
+    // override below can, which is what turns "no data" into the only
+    // breaching condition and lets the alarm return to OK once data resumes.
     const noHealthyTaskAlarm = new cloudwatch.Alarm(this, 'NoHealthyTaskAlarm', {
       metric: service.metricCpuUtilization({ period: Duration.minutes(1) }),
       threshold: 100,
       evaluationPeriods: 5,
       datapointsToAlarm: 5,
-      comparisonOperator: cloudwatch.ComparisonOperator.LESS_THAN_OR_EQUAL_TO_THRESHOLD,
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
       treatMissingData: cloudwatch.TreatMissingData.BREACHING,
       alarmDescription: 'The service has had no running task publishing metrics for 5 minutes',
     });
