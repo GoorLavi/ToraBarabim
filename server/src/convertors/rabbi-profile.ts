@@ -7,6 +7,7 @@ import type { RabbiProfileRecord } from '../service/rabbi-profile/models';
 export const toRabbiProfileResponse = (record: RabbiProfileRecord): RabbiProfileResponse => ({
   id: record.id,
   name: record.name,
+  honorific: record.honorific,
   slug: record.slug,
   title: record.title,
   photoUrl: record.photoUrl,

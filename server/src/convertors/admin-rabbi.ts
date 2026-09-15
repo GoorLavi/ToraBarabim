@@ -5,6 +5,7 @@ import type { DeleteRabbiPreviewResult, RabbiListResult, RabbiRecord } from '../
 export const toRabbiResponse = (record: RabbiRecord): RabbiResponse => ({
   id: record.id,
   name: record.name,
+  honorific: record.honorific,
   slug: record.slug,
   title: record.title,
   photoUrl: record.photoUrl,

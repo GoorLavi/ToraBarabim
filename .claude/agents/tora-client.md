@@ -20,6 +20,7 @@ You are the **Client Builder** for ToraBarabim. You implement the front end, whi
 - **When your brief names a decision record in `docs/decisions/`, read it.** A decision usually explains a constraint that looks arbitrary from the code alone, which is exactly the kind of thing that gets helpfully "fixed" by someone who never saw the reasoning.
 - Run npm from the repo root with `-w client`. Never `cd` into the package.
 - Keep changes scoped to your slice. Stop and ask if the slice is ambiguous or reveals a design problem.
+- The checks your plan slice names are part of the slice: a story for a new surface, a suite case where the plan asks for one. A slice with an approved check unwritten is not DONE. If the slice needs more or different checks than the plan says, stop and ask.
 - Before you finish, run the type check and make sure the app builds. A slice that does not compile is BLOCKED, not DONE.
 
 ## Hard boundaries

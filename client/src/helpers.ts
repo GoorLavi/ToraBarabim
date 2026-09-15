@@ -1,6 +1,14 @@
 import type { AreaSummary, City, LessonOccurrence, Rabbi } from '@torabarabim/common';
 
+import { RABBI_HONORIFIC_LABELS } from './consts';
 import type { DayGroup } from './models';
+
+// The one place a rabbi's display name is composed, from the bare stored
+// name and the honorific: "הרב אייל עמרמי" or "הרבנית שרה גולדברג". Every
+// render site uses this rather than building the string by hand, so the
+// honorific can never be dropped or duplicated.
+export const rabbiDisplayName = (rabbi: Pick<Rabbi, 'name' | 'honorific'>): string =>
+  `${RABBI_HONORIFIC_LABELS[rabbi.honorific]} ${rabbi.name}`;
 
 // `dir="auto"` resolves direction from the value's first strong directional
 // character. A value without one, whether empty or only whitespace, falls

@@ -8,8 +8,10 @@ import { ADMIN_ROUTES } from '~/AdminPanel/consts';
 import { adminErrorMessage } from '~/AdminPanel/helpers';
 import { AudiencePicker } from '~/components/AudiencePicker/AudiencePicker';
 import { CitySelect } from '~/components/CitySelect/CitySelect';
+import { ReadOnlyField } from '~/components/ReadOnlyField/ReadOnlyField';
 import { RecurrenceFields } from '~/components/RecurrenceFields/RecurrenceFields';
 import { directionForValue } from '~/helpers';
+import { LESSON_AUDIENCE_LABELS } from '~/HomePage/components/LessonCard/consts';
 
 import { LessonPreviewCard } from './components/LessonPreviewCard/LessonPreviewCard';
 import { RabbiPicker } from './components/RabbiPicker/RabbiPicker';
@@ -60,6 +62,13 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
     }
   }, [id, preselectedRabbi, hasAppliedPreselect]);
 
+  const isRabbaniteSelected = form.rabbi?.honorific === 'rabbanit';
+  // A rabbanit may only teach women-only lessons: derived here rather than
+  // synced into `form.audience` via an effect, so switching the picked
+  // rabbi back to a rav reveals whatever audience was chosen before, or
+  // empty, instead of a stale value left by the effect.
+  const effectiveForm: LessonFormState = isRabbaniteSelected ? { ...form, audience: 'women' } : form;
+
   if (id && existing.status === 'pending') {
     return (
       <div className={className}>
@@ -96,7 +105,7 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
   const failingSections = consts.SECTION_DEFS.filter((section) => section.fields.some((field) => fieldErrors[field]));
 
   const submit = (afterSave: 'list' | 'again'): void => {
-    const errors = validateLessonForm(form);
+    const errors = validateLessonForm(effectiveForm);
     setFieldErrors(errors);
     if (Object.keys(errors).length > 0) {
       const firstFailingSection = consts.SECTION_DEFS.find((section) => section.fields.some((field) => errors[field]));
@@ -107,7 +116,7 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
     }
 
     saveLesson.mutate(
-      { form, existingLessonId: id },
+      { form: effectiveForm, existingLessonId: id },
       {
         onSuccess: () => {
           if (afterSave === 'list') {
@@ -240,12 +249,18 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
 
           <section className="section" ref={audienceSectionRef}>
             <h2 className="sectionHeading">{consts.AUDIENCE_SECTION_HEADING}</h2>
-            <AudiencePicker
-              audience={form.audience}
-              onSelectAudience={(audience) => setForm((prev) => ({ ...prev, audience }))}
-              errorMessage={fieldErrors.audience}
-            />
-            <p className="helper">{consts.AUDIENCE_HELPER}</p>
+            {isRabbaniteSelected ? (
+              <ReadOnlyField value={LESSON_AUDIENCE_LABELS.women} />
+            ) : (
+              <>
+                <AudiencePicker
+                  audience={form.audience}
+                  onSelectAudience={(audience) => setForm((prev) => ({ ...prev, audience }))}
+                  errorMessage={fieldErrors.audience}
+                />
+                <p className="helper">{consts.AUDIENCE_HELPER}</p>
+              </>
+            )}
           </section>
 
           {failingSections.length > 0 && (
@@ -276,7 +291,7 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
           <LessonPreviewCard
             rabbi={form.rabbi}
             title={form.title}
-            audience={form.audience}
+            audience={effectiveForm.audience}
             cityName={form.city?.name}
             weekdayLabel={previewWeekdayLabel(form)}
             startTime={form.startTime}

@@ -149,6 +149,7 @@ export const resolveBySlug = async (slug: string): Promise<CityDetailResult> => 
     .select({
       id: rabbis.id,
       name: rabbis.name,
+      honorific: rabbis.honorific,
       title: rabbis.title,
       photoUrl: rabbis.photoUrl,
       bio: rabbis.bio,

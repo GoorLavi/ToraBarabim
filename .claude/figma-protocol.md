@@ -131,21 +131,21 @@ Load them alongside `figma:figma-use`, not instead of it.
 
 ## Server name, and why the tools line is exact-match
 
-The Figma MCP server is `mcp__Figma__*`. A glob on the wrong name silently grants
-zero tools, and the agent then believes it has access it does not have. If Figma
-tools ever go missing from the designer, check this name first.
+The Figma MCP server is exposed under **two different names depending on where the
+agent runs**: `mcp__Figma__*` and `mcp__707ae073-602d-4776-8af6-8ce9f64a7b10__*`. The
+designer's frontmatter lists the same nine tools under both spellings on purpose, so
+its capabilities do not depend on which environment picked it up. Keep the two lists
+identical; a tool added to one and not the other reintroduces exactly the drift this
+is here to prevent.
 
-**The name is not stable, so verify it rather than trusting this line.** The server
-was previously exposed as `mcp__707ae073-602d-4776-8af6-8ce9f64a7b10__*`, and this
-file and the designer's frontmatter both went on naming that id after it stopped
-existing. The designer then reported itself blocked and misdiagnosed the cause,
-because a stale exact-match name and a revoked grant look identical from inside the
-agent. Read the live tool list first: what the session actually exposes wins over
-what is written here.
+A name the running session does not expose grants zero tools silently, and from
+inside the agent that is indistinguishable from a revoked grant: the designer has
+already reported itself blocked and misdiagnosed the cause that way. So when Figma
+tools go missing, **read the live tool list before trusting this file or the
+frontmatter.** What the session actually exposes wins over what is written here.
 
-The designer therefore lists the Figma tools by full name, with no wildcard, plus
-`Skill` and `ToolSearch` for loading the skills. The cost of exact-match is that a
-tool newly added to the server stays ungranted until someone adds it to that line, so
+The tools are listed by full name with no wildcard. The cost of exact-match is that a
+tool newly added to the server stays ungranted until someone adds it to both lines, so
 if a Figma capability you expect is missing, check the agent frontmatter before
 assuming the server lacks it.
 

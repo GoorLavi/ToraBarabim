@@ -1,7 +1,10 @@
+import { rabbiDisplayName } from '~/helpers';
+
 import * as consts from './consts';
 import type { RabbiFormErrors, RabbiFormState } from './models';
 
-export const pageHeading = (form: RabbiFormState): string => form.name || consts.NEW_RABBI_HEADING;
+export const pageHeading = (form: RabbiFormState): string =>
+  form.name ? rabbiDisplayName({ name: form.name, honorific: form.honorific }) : consts.NEW_RABBI_HEADING;
 
 // Both name and a photo are required to save, a UI-level rule stricter
 // than `CreateRabbiRequest`'s wire type (`photoUrl` is optional there,

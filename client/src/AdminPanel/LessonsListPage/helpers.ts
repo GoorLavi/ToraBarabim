@@ -1,5 +1,7 @@
 import type { Lesson, LessonListResponse, RabbiListResponse, Weekday } from '@torabarabim/common';
 
+import { rabbiDisplayName } from '~/helpers';
+
 import * as consts from './consts';
 import type { AdminLessonRow, RecurrenceFilter } from './models';
 
@@ -124,6 +126,7 @@ export const filterRows = (rows: AdminLessonRow[], recurrence: RecurrenceFilter,
   rows.filter((row) => rowMatchesRecurrence(row, recurrence) && rowMatchesSearch(row, search));
 
 // Matches the public `LessonCard`'s rule: the lesson's own title leads, and
-// the rabbi's name is what fills in when there is none.
-export const lessonPrimaryLabel = (row: AdminLessonRow): string => row.lesson.title ?? row.rabbi?.name ?? consts.UNTITLED_RABBI_FALLBACK;
+// the rabbi's composed display name is what fills in when there is none.
+export const lessonPrimaryLabel = (row: AdminLessonRow): string =>
+  row.lesson.title ?? (row.rabbi ? rabbiDisplayName(row.rabbi) : consts.UNTITLED_RABBI_FALLBACK);
 export const lessonHasOwnTitle = (row: AdminLessonRow): boolean => Boolean(row.lesson.title);

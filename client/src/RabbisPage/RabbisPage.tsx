@@ -7,7 +7,7 @@ import { RabbiListRow } from './components/RabbiListRow/RabbiListRow';
 import { RabbiListRowSkeleton } from './components/RabbiListRowSkeleton/RabbiListRowSkeleton';
 import { RabbiSearchField } from './components/RabbiSearchField/RabbiSearchField';
 import * as consts from './consts';
-import { filterRabbisByName, rabbiCountLabel } from './helpers';
+import { filterRabbisByName, rabbiCountLabel, rabbiMatchCountLabel } from './helpers';
 import type { RabbisPageProps } from './models';
 import * as styles from './styles';
 import { useRabbiDirectory } from './useRabbiDirectory';
@@ -21,6 +21,12 @@ export const RabbisPage = styled(({ className }: RabbisPageProps) => {
   const trimmedSearch = search.trim();
   const filteredRabbis = filterRabbisByName(rabbis, trimmedSearch);
   const hasNoResults = query.isSuccess && !isBoardEmpty && trimmedSearch !== '' && filteredRabbis.length === 0;
+  const isSearchActive = trimmedSearch !== '' && !hasNoResults;
+  const subline = hasNoResults
+    ? consts.NO_RESULTS_SUBLINE
+    : isSearchActive
+      ? rabbiMatchCountLabel(filteredRabbis)
+      : `${rabbiCountLabel(rabbis.length)} · ${consts.ORDER_LABEL}`;
 
   return (
     <main className={className}>
@@ -34,9 +40,7 @@ export const RabbisPage = styled(({ className }: RabbisPageProps) => {
           <>
             <h1 className="heading">{consts.PAGE_TITLE}</h1>
             {!query.isError && !isBoardEmpty && (
-              <p className="sub">
-                {hasNoResults ? consts.NO_RESULTS_SUBLINE : `${rabbiCountLabel(rabbis.length)} · ${consts.ORDER_LABEL}`}
-              </p>
+              <p className="sub">{subline}</p>
             )}
           </>
         )}
@@ -89,6 +93,7 @@ export const RabbisPage = styled(({ className }: RabbisPageProps) => {
             <>
               {consts.NO_RESULTS_HEADING_PREFIX}
               <span dir="auto">{trimmedSearch}</span>
+              {consts.NO_RESULTS_HEADING_SUFFIX}
             </>
           }
           body={consts.NO_RESULTS_BODY}

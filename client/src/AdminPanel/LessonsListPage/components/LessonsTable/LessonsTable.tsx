@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { ADMIN_ROUTES } from '~/AdminPanel/consts';
 import * as parentConsts from '~/AdminPanel/LessonsListPage/consts';
 import { lessonHasOwnTitle, lessonPrimaryLabel, recurrenceWhenLabel } from '~/AdminPanel/LessonsListPage/helpers';
+import { rabbiDisplayName } from '~/helpers';
 
 import type { LessonsTableProps } from './models';
 import * as styles from './styles';
@@ -40,7 +41,7 @@ export const LessonsTable = styled(({ className, rows }: LessonsTableProps) => (
           </span>
           {lessonHasOwnTitle(row) && row.rabbi && (
             <span className="secondary" dir="auto">
-              {row.rabbi.name}
+              {rabbiDisplayName(row.rabbi)}
             </span>
           )}
         </span>

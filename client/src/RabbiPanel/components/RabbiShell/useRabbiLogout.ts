@@ -2,6 +2,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { UseMutationResult } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
 import { logout, RabbiApiError } from '~/RabbiPanel/api';
 import { RABBI_QUERY_KEYS, RABBI_ROUTES } from '~/RabbiPanel/consts';
 
@@ -12,6 +14,7 @@ export const useRabbiLogout = (): UseMutationResult<void, RabbiApiError, void> =
   const endSession = (): void => {
     queryClient.removeQueries({ queryKey: RABBI_QUERY_KEYS.session() });
     navigate(RABBI_ROUTES.login, { replace: true });
+    trackEvent(MIXPANEL_EVENTS.rabbiLogout);
   };
 
   return useMutation({

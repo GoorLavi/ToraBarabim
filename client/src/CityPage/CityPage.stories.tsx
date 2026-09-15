@@ -31,9 +31,9 @@ const cityDetail = (overrides: Partial<CityDetailResponse>): CityDetailResponse 
   areaName: 'חיפה והקריות',
   areaSlug: 'חיפה-והקריות',
   rabbis: [
-    rabbiFixture({ id: 'r1', name: 'הרב אברהם כהן', title: 'ראש ישיבה', photoUrl: 'https://example.invalid/r1.jpg' }),
-    rabbiFixture({ id: 'r2', name: 'הרב משה לוי' }),
-    rabbiFixture({ id: 'r3', name: 'הרב נתן צבי אשכנזי הכהן', photoUrl: 'https://example.invalid/r3.jpg' }),
+    rabbiFixture({ id: 'r1', name: 'אברהם כהן', title: 'ראש ישיבה', photoUrl: 'https://example.invalid/r1.jpg' }),
+    rabbiFixture({ id: 'r2', name: 'משה לוי' }),
+    rabbiFixture({ id: 'r3', name: 'נתן צבי אשכנזי הכהן', photoUrl: 'https://example.invalid/r3.jpg' }),
   ],
   ...overrides,
 });
@@ -47,7 +47,7 @@ const lesson = (overrides: Partial<LessonOccurrence>): LessonOccurrence => ({
   title: 'עיונים בפרשת השבוע',
   topic: 'parasha',
   audience: 'mixed',
-  rabbi: rabbiFixture({ id: 'r1', name: 'הרב אברהם כהן' }),
+  rabbi: rabbiFixture({ id: 'r1', name: 'אברהם כהן' }),
   place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'חיפה', citySlug: 'חיפה', area: 'haifa' },
   ...overrides,
 });
@@ -83,7 +83,7 @@ installMockFetch((url) => {
       return jsonResponse(200, {
         items: [
           lesson({ lessonId: 'l1', date: '2026-09-10', startTime: '20:30' }),
-          lesson({ lessonId: 'l2', date: '2026-09-10', startTime: '06:00', rabbi: rabbiFixture({ id: 'r2', name: 'הרב משה לוי' }) }),
+          lesson({ lessonId: 'l2', date: '2026-09-10', startTime: '06:00', rabbi: rabbiFixture({ id: 'r2', name: 'משה לוי' }) }),
           lesson({ lessonId: 'l3', date: '2026-09-13', startTime: '19:00', audience: 'women', title: undefined, topic: undefined }),
         ],
         page: 1,
@@ -99,7 +99,7 @@ installMockFetch((url) => {
         items: [
           lesson({
             lessonId: 'a1',
-            rabbi: rabbiFixture({ id: 'r9', name: 'הרב שמעון אזולאי' }),
+            rabbi: rabbiFixture({ id: 'r9', name: 'שמעון אזולאי' }),
             place: { name: 'בית מדרש', street: 'הרצל 1', city: 'טבריה', citySlug: 'טבריה', area: 'north' },
           }),
         ],

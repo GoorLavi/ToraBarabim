@@ -4,7 +4,7 @@ import styled from 'styled-components';
 
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
-import { lessonPath } from '~/helpers';
+import { lessonPath, rabbiDisplayName } from '~/helpers';
 
 import * as consts from './consts';
 import { cardAriaLabel, descriptionLabel } from './helpers';
@@ -41,7 +41,7 @@ export const LessonCard = styled(({ className, lesson }: LessonCardProps) => {
 
       <div className="body">
         <h3 className="title" dir="auto">
-          {teachingRabbi.name}
+          {rabbiDisplayName(teachingRabbi)}
         </h3>
 
         <p className="meta" dir="auto">
@@ -66,7 +66,7 @@ export const LessonCard = styled(({ className, lesson }: LessonCardProps) => {
 
         {lesson.substituteRabbi && (
           <p className="substituteNote" dir="auto">
-            {consts.SUBSTITUTE_LABEL} {lesson.rabbi.name}
+            {consts.SUBSTITUTE_LABEL} {rabbiDisplayName(lesson.rabbi)}
           </p>
         )}
       </div>

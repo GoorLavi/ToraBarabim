@@ -7,7 +7,7 @@ import * as styles from './styles';
 // No bio, no notes panel, no title (design spec, "Required fields only"):
 // both sections are individually optional, and the component renders
 // nothing at all when neither is present, rather than an empty panel.
-export const LessonDetails = styled(({ className, bio, note }: LessonDetailsProps) => {
+export const LessonDetails = styled(({ className, bio, note, teachingRabbiHonorific }: LessonDetailsProps) => {
   if (!bio && !note) return null;
 
   return (
@@ -15,7 +15,7 @@ export const LessonDetails = styled(({ className, bio, note }: LessonDetailsProp
       {bio && (
         <section className="section">
           <h2 className="heading" dir="auto">
-            {consts.ABOUT_RABBI_HEADING}
+            {consts.ABOUT_RABBI_HEADING[teachingRabbiHonorific]}
           </h2>
           <p className="text" dir="auto">
             {bio}

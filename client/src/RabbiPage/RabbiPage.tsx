@@ -3,6 +3,7 @@ import styled from 'styled-components';
 
 import { BackLink } from '~/components/BackLink/BackLink';
 import { StateCard } from '~/components/StateCard/StateCard';
+import { rabbiDisplayName } from '~/helpers';
 
 import { LessonsSection } from './components/LessonsSection/LessonsSection';
 import { RabbiBodySkeleton } from './components/RabbiBodySkeleton/RabbiBodySkeleton';
@@ -77,7 +78,7 @@ export const RabbiPage = styled(({ className }: RabbiPageProps) => {
 
           {hasNoLessons ? (
             <RabbiEmptyLessons
-              rabbiName={rabbi.name}
+              rabbiName={rabbiDisplayName(rabbi)}
               nationwideItems={nationwideQuery.data?.items}
               isNationwidePending={nationwideQuery.isPending}
               isNationwideError={nationwideQuery.isError}

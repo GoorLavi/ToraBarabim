@@ -151,6 +151,51 @@ still restricted to the VPC Link's security group only; nothing on the internet 
 reach the task directly. The database has no public IP and sits in isolated subnets with
 no route to the internet at all.
 
+## Alerting: email and Telegram
+
+The 5xx and no-healthy-task alarms in `TorabarabimServer` publish to one SNS topic
+(`AlertTopic`) with two independent subscribers, so a broken Lambda never silences the
+alert: the confirmed email address (`AlertEmail`), and a small Lambda
+(`infra/lib/alert-notifier`) that posts the same notification to a Telegram chat, in
+Hebrew. Both alarms also fire on recovery (`addOkAction`), not only on breach, so a
+resolved alarm is announced too.
+
+**The Lambda is deliberately outside the VPC.** This account has no NAT Gateway (see
+"Why no ALB, why no NAT gateway" above); a VPC-attached Lambda would have no route to
+`api.telegram.org` and every send would fail by timing out, silently, rather than by an
+error anyone would notice. It reaches Telegram and SSM over the public internet instead,
+the same way the CDK CLI itself does from a developer machine.
+
+**The bot token and chat id are never in CloudFormation, in the CDK, or in git.** They
+live in one SSM Parameter Store SecureString, created once by hand:
+
+```bash
+aws ssm put-parameter \
+  --profile torabarabim \
+  --name /torabarabim/telegram-bot-token \
+  --type SecureString \
+  --value '{"botToken":"<bot-token-from-BotFather>","chatId":"<numeric-chat-id>"}'
+```
+
+`TelegramBotTokenParamName` on `TorabarabimServer` (default
+`/torabarabim/telegram-bot-token`) carries only the parameter's *name* into the stack;
+the Lambda reads the value itself at invocation time with `ssm:GetParameter` and
+`WithDecryption: true`, scoped to that one parameter's ARN, plus `kms:Decrypt` on the
+account's default `aws/ssm` key. Change the parameter name only if you also pass a
+matching `--parameters TorabarabimServer:TelegramBotTokenParamName=...` on every future
+deploy.
+
+**Verifying it works, without waiting for a real outage:** publish a plain string
+directly to the topic; the formatter recognizes anything that is not CloudWatch's own
+alarm JSON and forwards it as-is under a Hebrew header.
+
+```bash
+aws sns publish \
+  --profile torabarabim \
+  --topic-arn <AlertTopic ARN, from the TorabarabimServer stack resources> \
+  --message "בדיקת התראה ידנית"
+```
+
 ## Step one does not serve images until step two exists
 
 The S3 bucket for rabbi photos is created in `TorabarabimSite` (step two).
@@ -624,6 +669,7 @@ admin-panel requests blocked by CORS.
 | --- | --- | --- | --- |
 | `CorsOrigins` | `TorabarabimServer` | no | Comma-separated list. Must be exactly the `SiteUrl` output on `TorabarabimSite`: the CloudFront address today, `https://torahbarabim.com` once the domain is attached |
 | `AlertEmail` | `TorabarabimServer` | no | Receives an SNS confirmation email; must be confirmed before alerts arrive |
+| `TelegramBotTokenParamName` | `TorabarabimServer` | no, but the SSM parameter it names is | Defaults to `/torabarabim/telegram-bot-token`; the parameter itself must exist as a SecureString before the Lambda's first invocation, see "Alerting: email and Telegram" above |
 | `StorageBucketName` | `TorabarabimServer` | no | Placeholder until step 5, then the `PhotoBucketName` output |
 | `StoragePublicBaseUrl` | `TorabarabimServer` | no | Placeholder until step 5, then the `PhotoBucketPublicBaseUrl` output |
 | `HostedZoneId` | `TorabarabimCertificate`, `TorabarabimSite` | no | Domain mode only. The zone id Route 53 created when `torahbarabim.com` was registered |
@@ -726,7 +772,8 @@ query typed through this connection as if it cannot be undone, because it cannot
 | Application Load Balancer | 0 (none deployed) |
 | Secrets Manager, 2 secrets (session secret, database URL) | ~0.80 |
 | CloudWatch Logs, one month retention, low volume | ~1 to 2 |
-| CloudWatch Alarms (2) + SNS (email) | <1 |
+| CloudWatch Alarms (2) + SNS (email + Lambda) | <1 |
+| Alert notifier Lambda + SSM SecureString parameter | 0 (Lambda's free tier is 1,000,000 requests/month and never expires; standard-tier SSM SecureString parameters are free) |
 | S3, client bucket + photo bucket, ~1,000 images, low volume | ~1 |
 | CloudFront, one distribution, low traffic | ~1 |
 | Route 53 hosted zone (1, imported, not billed twice for the same domain) | ~0.50, domain mode only |

@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import type { RabbiProminence } from '@torabarabim/common';
+import classNames from 'classnames';
 import styled from 'styled-components';
 
 import { ADMIN_ROUTES } from '~/AdminPanel/consts';
 import { adminErrorMessage } from '~/AdminPanel/helpers';
 import { PhotoPicker } from '~/components/PhotoPicker/PhotoPicker';
-import { directionForValue } from '~/helpers';
+import { ReadOnlyField } from '~/components/ReadOnlyField/ReadOnlyField';
+import { directionForValue, rabbiDisplayName } from '~/helpers';
 
 import { DeleteRabbiButton } from './components/DeleteRabbiButton/DeleteRabbiButton';
 import { RabbiAccountSection } from './components/RabbiAccountSection/RabbiAccountSection';
@@ -21,6 +23,7 @@ import { useSaveRabbi } from './useSaveRabbi';
 
 const emptyForm: RabbiFormState = {
   name: '',
+  honorific: 'rav',
   title: '',
   bio: '',
   existingTitle: undefined,
@@ -45,6 +48,7 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
     if (existingRabbi.data && !isLoadedFromExisting) {
       setForm({
         name: existingRabbi.data.name,
+        honorific: existingRabbi.data.honorific,
         title: existingRabbi.data.title ?? '',
         bio: existingRabbi.data.bio ?? '',
         existingTitle: existingRabbi.data.title,
@@ -125,6 +129,33 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
             {pageHeading(form)}
           </h1>
           <p className="subtext">{consts.TWO_FIELDS_NOTE}</p>
+
+          {id ? (
+            <ReadOnlyField
+              label={consts.HONORIFIC_LABEL}
+              value={consts.HONORIFIC_LABELS[form.honorific]}
+              helper={consts.HONORIFIC_READONLY_NOTE}
+            />
+          ) : (
+            <div className="field">
+              <span className="label">{consts.HONORIFIC_LABEL}</span>
+              <div className="honorificPicker" role="radiogroup" aria-label={consts.HONORIFIC_LABEL}>
+                {consts.HONORIFIC_OPTIONS.map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className={classNames('pill', { selected: form.honorific === value })}
+                    role="radio"
+                    aria-checked={form.honorific === value}
+                    onClick={() => setForm((prev) => ({ ...prev, honorific: value }))}
+                  >
+                    {consts.HONORIFIC_LABELS[value]}
+                  </button>
+                ))}
+              </div>
+              <span className="helper">{consts.HONORIFIC_HELPER}</span>
+            </div>
+          )}
 
           <label className="field">
             <span className="label">{consts.NAME_LABEL}</span>
@@ -208,7 +239,7 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
         </form>
 
         <aside className="preview">
-          <RabbiPreviewCard photoUrl={previewPhotoUrl} name={form.name} />
+          <RabbiPreviewCard photoUrl={previewPhotoUrl} name={form.name.trim() ? rabbiDisplayName({ name: form.name, honorific: form.honorific }) : ''} />
         </aside>
       </div>
     </div>
