@@ -93,4 +93,5 @@ The real alternatives and why each lost. If there was no alternative, say so.
 | [0023](0023-the-public-pages-are-server-rendered.md) | The public pages are server rendered | accepted, supersedes [0010](0010-production-shape-traded-for-cost.md)'s cost figure and reverses [0008](0008-no-automated-tests-yet.md) |
 | [0024](0024-visits-are-measured-by-mixpanel-full-tracking-no-consent-banner.md) | Visits are measured by Mixpanel, with full tracking and no consent banner | accepted |
 | [0025](0025-mixpanel-ad-blocker-undercount-stays-no-proxy-yet.md) | Mixpanel's ad-blocker undercount stays, no same-origin proxy yet | accepted |
-| [0026](0026-full-color-brand-marks-on-navigation-links.md) | Waze and Google Maps navigation links use full-color brand marks | accepted |
+| [0026](0026-rabbaniyot-teach-women-only-and-the-honorific-is-a-field.md) | Rabbaniyot teach women only, and the honorific is a field | accepted |
+| [0027](0027-full-color-brand-marks-on-navigation-links.md) | Waze and Google Maps navigation links use full-color brand marks | accepted |

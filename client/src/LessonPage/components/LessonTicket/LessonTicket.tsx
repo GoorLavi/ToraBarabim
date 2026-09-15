@@ -2,6 +2,7 @@ import classNames from 'classnames';
 import styled from 'styled-components';
 
 import { LESSON_AUDIENCE_LABELS } from '~/HomePage/components/LessonCard/consts';
+import { rabbiDisplayName } from '~/helpers';
 import * as pageConsts from '~/LessonPage/consts';
 import { teachingRabbiOf } from '~/LessonPage/helpers';
 
@@ -149,17 +150,17 @@ export const LessonTicket = styled(({ className, occurrence }: LessonTicketProps
           <div className="teacherRow">
             <div className="teacher">
               <span className="role" dir="auto">
-                {roleLabel(isSubstitute)}
+                {roleLabel(isSubstitute, teachingRabbi.honorific)}
               </span>
 
               {isSubstitute && (
                 <span className="substituteTag" dir="auto">
-                  {pageConsts.originalRabbiTagLabel(occurrence.rabbi.name)}
+                  {pageConsts.originalRabbiTagLabel(rabbiDisplayName(occurrence.rabbi))}
                 </span>
               )}
 
               <h1 className="name" dir="auto">
-                {teachingRabbi.name}
+                {rabbiDisplayName(teachingRabbi)}
               </h1>
 
               {teachingRabbi.title && (

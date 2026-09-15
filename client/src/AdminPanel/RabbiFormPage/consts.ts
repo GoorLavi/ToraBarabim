@@ -1,4 +1,4 @@
-import type { RabbiProminence } from '@torabarabim/common';
+import type { RabbiHonorific, RabbiProminence } from '@torabarabim/common';
 
 export const BACK_TO_LIST_LABEL = '→ חזרה לרשימת הרבנים';
 export const NEW_RABBI_HEADING = 'רב חדש';
@@ -8,8 +8,20 @@ export const NEW_RABBI_HEADING = 'רב חדש';
 // place (see the report for this slice).
 export const TWO_FIELDS_NOTE = 'שם ותמונה הם שדות חובה. אי אפשר לשמור רב בלי תמונה, כי באתר אין כרטיס בלי תמונה. תואר ותקציר אינם חובה.';
 
+export const HONORIFIC_LABEL = 'הרב או הרבנית';
+export const HONORIFIC_HELPER = 'רבנית יכולה ללמד רק שיעורים לנשים. אי אפשר לשנות את התואר אחרי היצירה.';
+export const HONORIFIC_READONLY_NOTE = 'נקבע ביצירת הרב ולא ניתן לשנותו. תואר שגוי דורש מחיקת הרב ויצירתו מחדש.';
+export const HONORIFIC_LABELS: Record<RabbiHonorific, string> = {
+  rav: 'הרב',
+  rabbanit: 'הרבנית',
+};
+// `@torabarabim/common` is types only, so this list is hand-mirrored from
+// the `RabbiHonorific` union (rabbi.ts), the same pattern as
+// `PROMINENCE_OPTIONS` below.
+export const HONORIFIC_OPTIONS: readonly RabbiHonorific[] = Object.keys(HONORIFIC_LABELS) as RabbiHonorific[];
+
 export const NAME_LABEL = 'שם הרב';
-export const NAME_HELPER = 'כפי שיופיע באתר.';
+export const NAME_HELPER = 'השם בלבד, בלי "הרב" או "הרבנית". הפנייה נוספת אוטומטית.';
 
 export const TITLE_LABEL = 'תואר';
 export const TITLE_PLACEHOLDER = 'למשל: רב בית הכנסת אהל יוסף';

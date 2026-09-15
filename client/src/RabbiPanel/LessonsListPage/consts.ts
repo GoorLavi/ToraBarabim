@@ -13,7 +13,7 @@ export const ONE_TIME_TAG_LABEL = 'חד־פעמי';
 export const LOADING_MESSAGE = 'טוען...';
 
 export const EMPTY_HEADLINE = 'עוד לא הוספת שיעור';
-export const EMPTY_HINT = 'כל שיעור שתוסיף יעלה לאתר מיד ויופיע כאן.';
+export const EMPTY_HINT = 'כל שיעור שיתווסף יעלה לאתר מיד ויופיע כאן.';
 export const EMPTY_CTA = 'הוספת השיעור הראשון';
 
 export const ERROR_MESSAGE = 'לא הצלחנו לטעון את השיעורים שלך';

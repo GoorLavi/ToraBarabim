@@ -1,6 +1,7 @@
 import type { CreateLessonRequest, Lesson, Rabbi } from '@torabarabim/common';
 
 import type { SelectedCity } from '~/components/CitySelect/models';
+import { rabbiDisplayName } from '~/helpers';
 
 import * as consts from './consts';
 import type { LessonFormErrors, LessonFormState } from './models';
@@ -35,7 +36,8 @@ export const lessonToFormState = (lesson: Lesson, rabbi: Rabbi | undefined, city
   audience: lesson.audience,
 });
 
-export const pageHeading = (form: LessonFormState): string => form.title || form.rabbi?.name || consts.NEW_LESSON_HEADING;
+export const pageHeading = (form: LessonFormState): string =>
+  form.title || (form.rabbi && rabbiDisplayName(form.rabbi)) || consts.NEW_LESSON_HEADING;
 
 export const validateLessonForm = (form: LessonFormState): LessonFormErrors => {
   const errors: LessonFormErrors = {};

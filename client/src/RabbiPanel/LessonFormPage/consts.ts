@@ -52,7 +52,7 @@ export const REQUIRED_START_TIME_ERROR = 'יש למלא שעת התחלה';
 export const REQUIRED_DURATION_ERROR = 'יש למלא משך שיעור תקין (בדקות)';
 export const REQUIRED_WEEKDAY_ERROR = 'יש לבחור לפחות יום אחד בשבוע';
 export const REQUIRED_DATE_ERROR = 'יש לבחור תאריך';
-export const UNKNOWN_CITY_ERROR = 'העיר שנבחרה אינה קיימת יותר. בחר עיר אחרת';
+export const UNKNOWN_CITY_ERROR = 'העיר שנבחרה אינה קיימת יותר. יש לבחור עיר אחרת';
 
 export const LOADING_MESSAGE = 'טוען...';
 export const LOAD_ERROR_MESSAGE = 'לא הצלחנו לטעון את השיעור';

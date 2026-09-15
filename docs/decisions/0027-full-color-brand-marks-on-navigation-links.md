@@ -1,4 +1,4 @@
-# 0026: Waze and Google Maps navigation links use full-color brand marks
+# 0027: Waze and Google Maps navigation links use full-color brand marks
 
 - **Status:** accepted
 - **Date:** 2026-09-15

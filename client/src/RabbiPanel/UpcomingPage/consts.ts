@@ -20,7 +20,7 @@ export const LOADING_MESSAGE = 'טוען...';
 
 export const EMPTY_FIRST_HEADLINE = 'עוד לא הוספת שיעור';
 export const EMPTY_FIRST_HINT =
-  'אחרי שתוסיף שיעור, כל המועדים שלו יופיעו כאן לפי תאריך, ותוכל לבטל או להזיז מועד אחד בלחיצה.';
+  'אחרי הוספת שיעור, כל המועדים שלו יופיעו כאן לפי תאריך, ואפשר יהיה לבטל או להזיז מועד אחד בלחיצה.';
 export const EMPTY_FIRST_CTA = 'הוספת השיעור הראשון';
 
 export const EMPTY_WINDOW_HEADLINE = 'אין מועדים בשבועיים הקרובים';

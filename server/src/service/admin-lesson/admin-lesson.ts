@@ -1,9 +1,10 @@
-import type { Weekday } from '@torabarabim/common';
+import type { LessonAudience, Weekday } from '@torabarabim/common';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
 import { db } from '../../db/client';
-import { cities, lessonExceptions, lessons, rabbis } from '../../db/schema';
+import { cities, lessonExceptions, lessons } from '../../db/schema';
+import { assertAudienceAllowedForHonorific, getRabbiHonorific } from '../shared/rabbanit-guard';
 import { LessonNotFoundError, ReferencedRabbiNotFoundError, UnknownCityError } from './errors';
 import type { CreateLessonInput, LessonListQuery, LessonListResult, LessonRecord, UpdateLessonInput } from './models';
 
@@ -57,13 +58,16 @@ const toRecord = (row: JoinedLessonRow): LessonRecord => ({
   notes: row.notes ?? undefined,
 });
 
-const verifyReferences = async (rabbiId: string, cityCode: number): Promise<void> => {
-  const [rabbiRows, cityRows] = await Promise.all([
-    db.select({ id: rabbis.id }).from(rabbis).where(eq(rabbis.id, rabbiId)).limit(1),
+// Verifies the rabbi and city references exist, and that a rabbanit is
+// never assigned a lesson whose audience is not 'women'.
+const verifyReferences = async (rabbiId: string, cityCode: number, audience: LessonAudience): Promise<void> => {
+  const [honorific, cityRows] = await Promise.all([
+    getRabbiHonorific(rabbiId),
     db.select({ code: cities.code }).from(cities).where(eq(cities.code, cityCode)).limit(1),
   ]);
-  if (!rabbiRows[0]) throw new ReferencedRabbiNotFoundError(rabbiId);
+  if (honorific === undefined) throw new ReferencedRabbiNotFoundError(rabbiId);
   if (!cityRows[0]) throw new UnknownCityError(cityCode);
+  assertAudienceAllowedForHonorific(honorific, rabbiId, audience);
 };
 
 export const list = async (query: LessonListQuery): Promise<LessonListResult> => {
@@ -89,7 +93,7 @@ export const getById = async (id: string): Promise<LessonRecord> => {
 };
 
 export const create = async (input: CreateLessonInput): Promise<LessonRecord> => {
-  await verifyReferences(input.rabbiId, input.place.cityCode);
+  await verifyReferences(input.rabbiId, input.place.cityCode, input.audience);
 
   const [row] = await db
     .insert(lessons)
@@ -116,7 +120,7 @@ export const create = async (input: CreateLessonInput): Promise<LessonRecord> =>
 };
 
 export const update = async (id: string, input: UpdateLessonInput): Promise<LessonRecord> => {
-  await verifyReferences(input.rabbiId, input.place.cityCode);
+  await verifyReferences(input.rabbiId, input.place.cityCode, input.audience);
 
   const [row] = await db
     .update(lessons)

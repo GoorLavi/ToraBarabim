@@ -29,7 +29,7 @@ const installMockFetch = (respond: (url: URL) => Response | Promise<Response> | 
 const rabbiDetail = (overrides: Partial<RabbiDetailResponse>): RabbiDetailResponse => ({
   ...rabbiFixture({
     id: 'story-rabbi',
-    name: 'הרב יעקב מזרחי',
+    name: 'יעקב מזרחי',
     title: 'ראש ישיבה',
     photoUrl:
       'data:image/svg+xml;utf8,' +
@@ -50,7 +50,7 @@ const lesson = (overrides: Partial<LessonOccurrence>): LessonOccurrence => ({
   title: 'עיונים בפרשת השבוע',
   topic: 'parasha',
   audience: 'mixed',
-  rabbi: rabbiFixture({ id: 'story-rabbi', name: 'הרב יעקב מזרחי' }),
+  rabbi: rabbiFixture({ id: 'story-rabbi', name: 'יעקב מזרחי' }),
   place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'חיפה', citySlug: 'חיפה', area: 'haifa' },
   ...overrides,
 });
@@ -64,7 +64,7 @@ installMockFetch((url) => {
     return jsonResponse(
       200,
       rabbiDetail({
-        ...rabbiFixture({ id: 'story-longname', name: 'הרב נתן צבי אשכנזי הכהן' }),
+        ...rabbiFixture({ id: 'story-longname', name: 'נתן צבי אשכנזי הכהן' }),
         cities: [
           { id: '1', name: 'חיפה', slug: 'חיפה', area: 'haifa' },
           { id: '2', name: 'ירושלים', slug: 'ירושלים', area: 'jerusalem' },
@@ -76,7 +76,11 @@ installMockFetch((url) => {
   if (url.pathname === '/v1/rabbis/story-empty') {
     return jsonResponse(
       200,
-      rabbiDetail({ ...rabbiFixture({ id: 'story-empty', name: 'הרבנית שרה גולדברג' }), lessonCount: 0, cities: [] }),
+      rabbiDetail({
+        ...rabbiFixture({ id: 'story-empty', name: 'שרה גולדברג', honorific: 'rabbanit' }),
+        lessonCount: 0,
+        cities: [],
+      }),
     );
   }
   if (url.pathname === '/v1/rabbis/story-notfound') return jsonResponse(404, { error: 'rabbi_not_found', message: 'לא נמצא' });
@@ -113,8 +117,8 @@ installMockFetch((url) => {
       // The nationwide fallback for the empty-rabbi state.
       return jsonResponse(200, {
         items: [
-          lesson({ lessonId: 'n1', rabbi: rabbiFixture({ id: 'other-1', name: 'הרב אברהם כהן' }) }),
-          lesson({ lessonId: 'n2', rabbi: rabbiFixture({ id: 'other-2', name: 'הרב משה לוי' }) }),
+          lesson({ lessonId: 'n1', rabbi: rabbiFixture({ id: 'other-1', name: 'אברהם כהן' }) }),
+          lesson({ lessonId: 'n2', rabbi: rabbiFixture({ id: 'other-2', name: 'משה לוי' }) }),
         ],
         page: 1,
         pageSize: 4,

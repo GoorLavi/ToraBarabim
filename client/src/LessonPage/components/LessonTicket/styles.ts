@@ -460,7 +460,7 @@ export const TicketShell = css(
 
         /* Per-brand hover/pressed tint, hardcoded rather than a theme token:
            each color belongs to that one brand's own mark, not a reusable
-           on-primary hover role (0026-full-color-brand-marks-on-navigation-links.md).
+           on-primary hover role (0027-full-color-brand-marks-on-navigation-links.md).
            Waze's tint is darkened from the brand cyan, not the brand value itself:
            white text on the brand cyan measured 2.91:1, below the 4.5:1 floor for
            17px text, so it is darkened to a value that measures 5.04:1. */

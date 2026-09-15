@@ -60,6 +60,11 @@ This is the defining constraint of the project. It is not a localization feature
   no translation-key files. The site will never have a second language.
 - **Copy is written natively in Hebrew**, never translated from English. If a string
   reads like a translation, it is wrong.
+- **A rabbi's name is never shown bare.** Every surface shows it with its honorific,
+  "הרב" or "הרבנית", through `rabbiDisplayName`, never a hand-built string. The honorific
+  is set once, at creation, and a rabbanit's lessons are for women only, enforced on the
+  server wherever a lesson is saved
+  ([0026](docs/decisions/0026-rabbaniyot-teach-women-only-and-the-honorific-is-a-field.md)).
 - **The page renders `direction: rtl`.** Use CSS logical properties in all layout, so
   the direction lives in one place instead of being re-decided per rule.
   ```css

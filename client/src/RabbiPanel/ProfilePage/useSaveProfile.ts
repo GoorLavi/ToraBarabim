@@ -2,6 +2,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { UseMutationResult } from '@tanstack/react-query';
 import type { RabbiProfileResponse } from '@torabarabim/common';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
 import { RabbiApiError, updateProfile } from '~/RabbiPanel/api';
 import { RABBI_QUERY_KEYS } from '~/RabbiPanel/consts';
 
@@ -21,6 +23,7 @@ export const useSaveProfile = (): UseMutationResult<RabbiProfileResponse, RabbiA
     onSuccess: (profile) => {
       queryClient.setQueryData(RABBI_QUERY_KEYS.profile(), profile);
       void queryClient.invalidateQueries({ queryKey: RABBI_QUERY_KEYS.session() });
+      trackEvent(MIXPANEL_EVENTS.profileSaved, { rabbiId: profile.id });
     },
   });
 };

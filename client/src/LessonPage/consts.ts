@@ -1,3 +1,5 @@
+import type { RabbiHonorific } from '@torabarabim/common';
+
 export const LESSON_PAGE_QUERY_KEYS = {
   occurrence: (lessonId: string, date: string) => ['lesson-occurrence', lessonId, date] as const,
 };
@@ -19,14 +21,20 @@ export const RETRY_LABEL = 'נסו שוב';
 export const ALL_LESSONS_LABEL = 'לכל השיעורים';
 export const BACK_TO_ALL_LESSONS_LABEL = 'חזרה לכל השיעורים';
 
-// The label above the rabbi's name in the ticket's lower panel (LessonTicket):
-// the ordinary role label, and what it becomes when a substitute is teaching.
-export const TEACHING_RABBI_ROLE_LABEL = 'מגיד השיעור';
+// The label above the rabbi's name in the ticket's lower panel (LessonTicket).
+// A `Record` so a new honorific fails the build until its form is written.
+export const TEACHING_RABBI_ROLE_LABEL: Record<RabbiHonorific, string> = {
+  rav: 'מגיד השיעור',
+  rabbanit: 'תעביר את השיעור',
+};
+
+// Not keyed by honorific: no screen names a substitute, and the women-only
+// rule is not enforced on substitutes (decision 0026).
 export const SUBSTITUTE_ROLE_LABEL = 'הפעם מגיד השיעור';
 
-// `name` already carries its own title (e.g. "הרב יעקב מזרחי"), so this never
-// prepends "הרב" again.
-export const originalRabbiTagLabel = (name: string): string => `במקום ${name}`;
+// Takes an already-composed display name (`rabbiDisplayName`), so this
+// never prepends the honorific a second time.
+export const originalRabbiTagLabel = (displayName: string): string => `במקום ${displayName}`;
 
 export const otherLessonsInCityLabel = (city: string): string => `לשיעורים אחרים ב${city}`;
 export const NO_REASON_GIVEN_LABEL = 'לא נמסרה סיבה';

@@ -1,7 +1,7 @@
 import type { RabbiProminence } from './home';
 import type { LessonException } from './lesson-exception';
 import type { Lesson, ResolvedLessonPlace } from './lesson';
-import type { Rabbi } from './rabbi';
+import type { Rabbi, RabbiHonorific } from './rabbi';
 
 // Never carries passwordHash: that stays server-side.
 export interface AdminUser {
@@ -15,12 +15,19 @@ export interface AdminUser {
 // must never appear on the public `Rabbi` type or any public response.
 // `slug` is also excluded here: it is derived server-side from `name`, an
 // admin never sends one, so a create or update request never carries it.
-export type CreateRabbiRequest = Omit<Rabbi, 'id' | 'slug'> & { prominence?: RabbiProminence };
+// `honorific` is optional here, unlike on the read-side `Rabbi`: the
+// server defaults a create to 'rav' when omitted.
+export type CreateRabbiRequest = Omit<Rabbi, 'id' | 'slug' | 'honorific'> & {
+  prominence?: RabbiProminence;
+  honorific?: RabbiHonorific;
+};
 // An update is a partial patch, so omitting a key must mean something
 // different from clearing it: omit `title` or `bio` to leave it as is,
 // send `null` to clear it, send a string to set it. `name` and
 // `prominence` are never nullable, so they only ever take "omit or set".
-export type UpdateRabbiRequest = Partial<Omit<CreateRabbiRequest, 'title' | 'bio'>> & {
+// `honorific` is never here at all: it is set once at creation and never
+// changes, per the honorific decision.
+export type UpdateRabbiRequest = Partial<Omit<CreateRabbiRequest, 'title' | 'bio' | 'honorific'>> & {
   title?: string | null;
   bio?: string | null;
 };

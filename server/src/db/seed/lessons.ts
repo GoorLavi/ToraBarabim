@@ -17,17 +17,17 @@ type RabbiSeed = Omit<Rabbi, 'slug'> & { prominence: RabbiProminence };
 // A spread of tiers so the home rails sort into something other than
 // insertion order when tested locally.
 const RABBIS: RabbiSeed[] = [
-  { id: 'rabbi-1', name: 'הרב אברהם כהן', title: 'ראש ישיבה', bio: 'ראש ישיבת "אור התורה" ומגידי השיעור הוותיקים בעיר.', prominence: 'sought' },
-  { id: 'rabbi-2', name: 'הרב משה לוי', title: 'רב שכונה', prominence: 'local' },
-  { id: 'rabbi-3', name: 'הרב יעקב מזרחי', title: 'דיין', bio: 'דיין בבית הדין הרבני ומרצה בנושאי הלכה בת ימינו.', prominence: 'known' },
-  { id: 'rabbi-4', name: 'הרב שלמה אביטן', prominence: 'local' },
-  { id: 'rabbi-5', name: 'הרב דוד עמאר', title: 'רב קהילה', prominence: 'known' },
-  { id: 'rabbi-6', name: 'הרב יצחק פרץ', title: 'ראש כולל', bio: 'ראש כולל אברכים ומחבר ספרים בענייני מוסר.', prominence: 'sought' },
-  { id: 'rabbi-7', name: 'הרב אליהו וקנין', prominence: 'local' },
-  { id: 'rabbi-8', name: 'הרב רפאל בן שושן', title: 'מגיד שיעור', prominence: 'known' },
-  { id: 'rabbi-9', name: 'הרבנית שרה גולדברג', title: 'מרצה', bio: 'מרצה לפרשת שבוע ומחשבת ישראל לנשים.', prominence: 'sought' },
-  { id: 'rabbi-10', name: 'הרב נתן צבי אשכנזי', title: 'רב בית כנסת', prominence: 'local' },
-  { id: 'rabbi-11', name: 'הרב שמעון אזולאי', prominence: 'known' },
+  { id: 'rabbi-1', name: 'אברהם כהן', honorific: 'rav', title: 'ראש ישיבה', bio: 'ראש ישיבת "אור התורה" ומגידי השיעור הוותיקים בעיר.', prominence: 'sought' },
+  { id: 'rabbi-2', name: 'משה לוי', honorific: 'rav', title: 'רב שכונה', prominence: 'local' },
+  { id: 'rabbi-3', name: 'יעקב מזרחי', honorific: 'rav', title: 'דיין', bio: 'דיין בבית הדין הרבני ומרצה בנושאי הלכה בת ימינו.', prominence: 'known' },
+  { id: 'rabbi-4', name: 'שלמה אביטן', honorific: 'rav', prominence: 'local' },
+  { id: 'rabbi-5', name: 'דוד עמאר', honorific: 'rav', title: 'רב קהילה', prominence: 'known' },
+  { id: 'rabbi-6', name: 'יצחק פרץ', honorific: 'rav', title: 'ראש כולל', bio: 'ראש כולל אברכים ומחבר ספרים בענייני מוסר.', prominence: 'sought' },
+  { id: 'rabbi-7', name: 'אליהו וקנין', honorific: 'rav', prominence: 'local' },
+  { id: 'rabbi-8', name: 'רפאל בן שושן', honorific: 'rav', title: 'מגיד שיעור', prominence: 'known' },
+  { id: 'rabbi-9', name: 'שרה גולדברג', honorific: 'rabbanit', title: 'מרצה', bio: 'מרצה לפרשת שבוע ומחשבת ישראל לנשים.', prominence: 'sought' },
+  { id: 'rabbi-10', name: 'נתן צבי אשכנזי', honorific: 'rav', title: 'רב בית כנסת', prominence: 'local' },
+  { id: 'rabbi-11', name: 'שמעון אזולאי', honorific: 'rav', prominence: 'known' },
 ];
 
 // A venue is free text on a lesson, not a registered entity; this table is
@@ -224,6 +224,7 @@ export const seedLessons = async (
       target: rabbis.id,
       set: {
         name: sql`excluded.name`,
+        honorific: sql`excluded.honorific`,
         title: sql`excluded.title`,
         photoUrl: sql`excluded.photo_url`,
         bio: sql`excluded.bio`,

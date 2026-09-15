@@ -11,8 +11,13 @@ export const rabbiSlugFromName = (name: string): string => name.replace(/[^\p{L}
 // A rabbi fixture shared by the Storybook stories that embed a rabbi
 // (RabbiPage, CityPage, LessonCard, LessonsSection, LessonTicket). `slug`
 // derives from `name` unless a story needs to override it, so the same
-// name always produces the same slug everywhere this is used.
-export const rabbiFixture = (rabbi: Omit<Rabbi, 'slug'> & Partial<Pick<Rabbi, 'slug'>>): Rabbi => ({
+// name always produces the same slug everywhere this is used. `honorific`
+// defaults to 'rav' so most callers, which are not testing the rabbanit
+// case, do not have to state it.
+export const rabbiFixture = (
+  rabbi: Omit<Rabbi, 'slug' | 'honorific'> & Partial<Pick<Rabbi, 'slug' | 'honorific'>>,
+): Rabbi => ({
   ...rabbi,
   slug: rabbi.slug ?? rabbiSlugFromName(rabbi.name),
+  honorific: rabbi.honorific ?? 'rav',
 });

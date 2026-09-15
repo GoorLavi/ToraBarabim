@@ -1,11 +1,15 @@
 export const WORDMARK = 'תורה ברבים';
 export const BADGE_LABEL = 'אזור אישי';
-export const HEADING = 'ברוך הבא';
-export const SUBTEXT = 'כאן תעדכן את השיעורים שלך ואת הפרטים שמופיעים עליך באתר.';
+// Nobody is known yet at this screen, so every string here is
+// gender-neutral by construction (plural-impersonal or "יש ל"), never
+// masculine by default. See RabbiPanel/consts.ts's `Record<RabbiHonorific>`
+// pattern for the pages that speak to a signed-in rabbi.
+export const HEADING = 'ברוכים הבאים';
+export const SUBTEXT = 'כאן אפשר לעדכן את השיעורים ואת הפרטים שמופיעים באתר.';
 export const IDENTIFIER_LABEL = 'אימייל או שם משתמש';
 export const PASSWORD_LABEL = 'סיסמה';
 export const SUBMIT_LABEL = 'כניסה';
-export const SUBMIT_PENDING_LABEL = 'מתחבר...';
+export const SUBMIT_PENDING_LABEL = 'מתחברים...';
 export const INVALID_CREDENTIALS_ERROR = 'אימייל, שם משתמש או סיסמה שגויים';
 export const RATE_LIMITED_ERROR = 'יותר מדי ניסיונות כניסה. נסה שוב בעוד כמה דקות';
 export const FORGOT_PASSWORD_NOTE =

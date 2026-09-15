@@ -1,3 +1,5 @@
+import type { RabbiHonorific } from '@torabarabim/common';
+
 import { SITE_NAME, SITE_ORIGIN } from '../consts';
 import linkPreviewImage from './link-preview.png?no-inline';
 
@@ -5,6 +7,14 @@ import linkPreviewImage from './link-preview.png?no-inline';
 // client/src/CitiesPage, client/src/AreaPage): three callers each of the
 // back link and the two count labels.
 export const BACK_TO_ALL_CITIES_LABEL = 'חזרה לכל הערים';
+
+// The one Hebrew label per honorific, read by `rabbiDisplayName` (helpers.ts)
+// and by every screen that lets an admin or a rabbanit's own profile show
+// which one applies.
+export const RABBI_HONORIFIC_LABELS: Record<RabbiHonorific, string> = {
+  rav: 'הרב',
+  rabbanit: 'הרבנית',
+};
 
 export const lessonCountLabel = (count: number): string => (count === 1 ? 'שיעור אחד' : `${count} שיעורים`);
 export const cityCountLabel = (count: number): string => (count === 1 ? 'עיר אחת' : `${count} ערים`);

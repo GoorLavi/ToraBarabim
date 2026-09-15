@@ -101,7 +101,7 @@ export const GOOGLE_MAPS_ICON_PATHS: ReadonlyArray<{ d: string; fill: string }> 
 
 // Per-brand hover/pressed tints, hardcoded rather than theme tokens: each
 // belongs to one brand's own mark, not a reusable design-system role
-// (0026-full-color-brand-marks-on-navigation-links.md). Waze's tint is darkened from
+// (0027-full-color-brand-marks-on-navigation-links.md). Waze's tint is darkened from
 // the brand cyan (not the brand value itself): white text on `#03A6C0` measured
 // 2.91:1, below the 4.5:1 floor for 17px text, so it is darkened to `#027A8C`, which
 // measures 5.04:1 by the WCAG relative-luminance formula.
