@@ -1,4 +1,4 @@
-import type { LessonOccurrence, RabbiHonorific } from '@torabarabim/common';
+import type { LessonOccurrence, Place, RabbiHonorific } from '@torabarabim/common';
 
 import { LESSON_TOPIC_LABELS } from '~/HomePage/components/LessonCard/consts';
 import { SUBSTITUTE_ROLE_LABEL, TEACHING_RABBI_ROLE_LABEL } from '~/LessonPage/consts';
@@ -56,3 +56,25 @@ export const kickerLabel = (occurrence: LessonOccurrence): string | undefined =>
 // own slot, never sharing one with `kickerLabel`.
 export const roleLabel = (isSubstitute: boolean, teachingRabbiHonorific: RabbiHonorific): string =>
   isSubstitute ? SUBSTITUTE_ROLE_LABEL : TEACHING_RABBI_ROLE_LABEL[teachingRabbiHonorific];
+
+// Street and city only, never `floor`: a floor is an arrival note ("קומה
+// 2"), not part of a geocodable address, and passing it to Waze/Google Maps
+// would make the query fail to resolve. Both fields are trimmed here, the
+// one place the query string is actually built, so stray whitespace never
+// reaches the URL.
+const navigationQuery = (place: Pick<Place, 'street' | 'city'>): string => `${place.street.trim()}, ${place.city.trim()}`;
+
+// `undefined` unless both street and city are present, so the caller hides
+// the whole nav row rather than link out to a bare street or a bare city
+// (fail closed: a navigation link that only narrows down part of the
+// address is worse than none, per the design direction in this component's
+// brief).
+export const wazeHref = (place: Pick<Place, 'street' | 'city'>): string | undefined =>
+  place.street.trim() && place.city.trim()
+    ? `https://waze.com/ul?q=${encodeURIComponent(navigationQuery(place))}&navigate=yes`
+    : undefined;
+
+export const googleMapsHref = (place: Pick<Place, 'street' | 'city'>): string | undefined =>
+  place.street.trim() && place.city.trim()
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(navigationQuery(place))}`
+    : undefined;
