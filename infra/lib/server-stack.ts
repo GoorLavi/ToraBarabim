@@ -19,7 +19,7 @@ import * as sns from 'aws-cdk-lib/aws-sns';
 import * as snsSubscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
 import { Construct } from 'constructs';
 
-import { CONTAINER_PORT, DOCKER_BUILD_CONTEXT_EXCLUDES } from './consts';
+import { CONTAINER_PORT, DOCKER_BUILD_CONTEXT_EXCLUDES, NO_HEALTHY_TASK_THRESHOLD } from './consts';
 
 const REPO_ROOT = path.join(__dirname, '..', '..');
 const TASK_CPU = 256;
@@ -351,14 +351,15 @@ export class ServerStack extends Stack {
     // healthy task" without turning on Container Insights, which bills per
     // metric on top of standard CloudWatch pricing.
     //
-    // The comparison is GREATER_THAN a threshold the metric, a percentage,
-    // can never actually exceed: that is deliberate, not a placeholder. It
-    // means a real datapoint can never breach, so only the treatMissingData
-    // override below can, which is what turns "no data" into the only
-    // breaching condition and lets the alarm return to OK once data resumes.
+    // This alarm is a presence check, not a utilization check: the threshold
+    // is set far above anything CPUUtilization could ever report, so a real
+    // datapoint can never breach it, and treatMissingData is therefore the
+    // only path to ALARM. A threshold of 100 once sat exactly on the metric's
+    // own ceiling and read as a utilization check that happened to be
+    // inverted; an unreachable threshold cannot be misread that way.
     const noHealthyTaskAlarm = new cloudwatch.Alarm(this, 'NoHealthyTaskAlarm', {
       metric: service.metricCpuUtilization({ period: Duration.minutes(1) }),
-      threshold: 100,
+      threshold: NO_HEALTHY_TASK_THRESHOLD,
       evaluationPeriods: 5,
       datapointsToAlarm: 5,
       comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,

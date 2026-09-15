@@ -1,9 +1,9 @@
-import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 
 import { App } from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
 
+import { NO_HEALTHY_TASK_THRESHOLD } from '../lib/consts';
 import { DatabaseStack } from '../lib/database-stack';
 import { NetworkStack } from '../lib/network-stack';
 import { ServerStack } from '../lib/server-stack';
@@ -35,6 +35,7 @@ describe('NoHealthyTaskAlarm', () => {
       AlarmDescription: 'The service has had no running task publishing metrics for 5 minutes',
       ComparisonOperator: 'GreaterThanThreshold',
       TreatMissingData: 'breaching',
+      Threshold: NO_HEALTHY_TASK_THRESHOLD,
     });
   });
 });
