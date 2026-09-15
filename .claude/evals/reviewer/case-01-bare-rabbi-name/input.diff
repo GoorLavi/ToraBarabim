@@ -1,0 +1,51 @@
+diff --git a/client/src/HomePage/components/TonightCard/TonightCard.tsx b/client/src/HomePage/components/TonightCard/TonightCard.tsx
+new file mode 100644
+--- /dev/null
++++ b/client/src/HomePage/components/TonightCard/TonightCard.tsx
+@@ -0,0 +1,34 @@
++import styled from 'styled-components';
++import { Link } from 'react-router';
++import { formatLessonTime } from './helpers';
++import type { TonightCardProps } from './models';
++import * as styles from './styles';
++
++export const TonightCard = styled(({ className, lesson }: TonightCardProps) => {
++  return (
++    <div className={className}>
++      <Link className='card' to={`/lessons/${lesson.slug}`}>
++        <div className='rabbi'>
++          {lesson.rabbi.portraitUrl ? (
++            <img className='portrait' src={lesson.rabbi.portraitUrl} alt='' />
++          ) : (
++            <div className='portraitFallback' />
++          )}
++          <span className='name' dir='auto'>
++            {lesson.rabbi.name}
++          </span>
++        </div>
++        <div className='details'>
++          <span className='title' dir='auto'>
++            {lesson.title}
++          </span>
++          <span className='time'>{formatLessonTime(lesson.startsAt)}</span>
++          <span className='place' dir='auto'>
++            {lesson.venue.city}
++          </span>
++        </div>
++      </Link>
++    </div>
++  );
++})`
++  ${styles.TonightCard}
++`;
+diff --git a/client/src/HomePage/components/TonightCard/models.ts b/client/src/HomePage/components/TonightCard/models.ts
+new file mode 100644
+--- /dev/null
++++ b/client/src/HomePage/components/TonightCard/models.ts
+@@ -0,0 +1,6 @@
++import type { Lesson } from '~/api/models';
++
++export interface TonightCardProps {
++  className?: string;
++  lesson: Lesson;
++}

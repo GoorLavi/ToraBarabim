@@ -9,6 +9,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "tsx --test test/*.test.ts",
     "synth": "cdk synth",
     "diff": "cdk diff",
     "deploy": "cdk deploy",
@@ -19,8 +20,10 @@
     "constructs": "^10.8.1"
   },
   "devDependencies": {
+    "@aws-sdk/client-ssm": "^3.1110.0",
     "@types/node": "^26.2.0",
     "aws-cdk": "^2.1136.0",
+    "esbuild": "^0.25.0",
     "tsx": "^4.23.12",
     "typescript": "^6.0.3"
   }

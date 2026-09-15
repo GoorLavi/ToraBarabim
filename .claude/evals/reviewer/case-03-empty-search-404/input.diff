@@ -1,0 +1,21 @@
+diff --git a/server/src/api/lessons/index.ts b/server/src/api/lessons/index.ts
+--- a/server/src/api/lessons/index.ts
++++ b/server/src/api/lessons/index.ts
+@@ -18,10 +18,15 @@ export const lessonRoutes: FastifyPluginAsyncZod = async (app) => {
+   app.get('/search', { schema: { querystring: searchQuerySchema } }, async (request, reply) => {
+     try {
+       const result = await lessonService.search(request.query);
++      if (result.lessons.length === 0) {
++        return reply.code(404).send({ error: 'לא נמצאו שיעורים' });
++      }
++
+       return reply.send({
+         lessons: result.lessons.map(toLessonSummary),
+         page: request.query.page,
+         pageSize: request.query.pageSize,
+         total: result.total,
+       });
+     } catch (error) {
+       return handleError(reply, error);
+     }
+   });
