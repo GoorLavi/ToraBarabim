@@ -25,6 +25,10 @@ const isTelegramCredentials = (value: unknown): value is TelegramCredentials => 
   return typeof candidate.botToken === 'string' && typeof candidate.chatId === 'string';
 };
 
+// A caught value is not guaranteed to be an Error (a thrown string or
+// object is valid JavaScript), so narrow with a check rather than casting.
+const describeError = (error: unknown): string => (error instanceof Error ? error.message : String(error));
+
 const ssmClient = new SSMClient({});
 
 // Cached across warm invocations so a busy alert period does not re-read the
@@ -45,7 +49,7 @@ const readTelegramCredentials = async (): Promise<TelegramCredentials> => {
     const response = await ssmClient.send(new GetParameterCommand({ Name: parameterName, WithDecryption: true }));
     parameterValue = response.Parameter?.Value;
   } catch (error) {
-    throw new Error(`Failed to read SSM parameter ${parameterName}: ${(error as Error).message}`, { cause: error });
+    throw new Error(`Failed to read SSM parameter ${parameterName}: ${describeError(error)}`, { cause: error });
   }
   if (!parameterValue) {
     throw new Error(`SSM parameter ${parameterName} exists but carries no value`);

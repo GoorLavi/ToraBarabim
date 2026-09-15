@@ -36,6 +36,12 @@ jobs:
 
       - run: npm run build --workspace client
 
+      # The root `npm run typecheck` above does not cover `infra` (or
+      # `common`), so a type error in the CDK app would otherwise reach
+      # `main` green. Runs before the test step below so a type error is
+      # the first failure a reader sees, not the stripped-of-types test run.
+      - run: npm run typecheck -w infra
+
       # The alert-notifier's formatter test needs neither a database nor a
       # built client, so it runs here rather than in the `test` job below.
       - run: npm test -w infra

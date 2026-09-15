@@ -65,6 +65,14 @@ export class ServerStack extends Stack {
       default: '/torabarabim/telegram-bot-token',
       description:
         'SSM Parameter Store SecureString name holding {"botToken","chatId"} for the Telegram alert notifier',
+      // Interpolated straight into the Lambda's ssm:GetParameter resource
+      // ARN below: an unconstrained value could widen that grant to every
+      // parameter in the account (e.g. "/*") or, lacking the leading "/",
+      // produce a malformed ARN that silently grants access to nothing.
+      allowedPattern: '^/[a-zA-Z0-9_.-]+(/[a-zA-Z0-9_.-]+)*$',
+      constraintDescription:
+        'Must be an absolute SSM parameter name starting with "/", using only letters, numbers, dots, ' +
+        'underscores, and hyphens in each segment, with no wildcards',
     });
     // Step two owns the S3 bucket. These have no default on purpose: until
     // step two exists, the human must supply a placeholder, and the API
