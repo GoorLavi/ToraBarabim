@@ -2,6 +2,8 @@ import type { RabbiDirectoryEntry } from '@torabarabim/common';
 
 export const rabbiCountLabel = (count: number): string => (count === 1 ? 'רב אחד' : `${count} רבנים`);
 
+export const rabbiMatchCountLabel = (count: number): string => (count === 1 ? 'נמצא רב אחד' : `נמצאו ${count} רבנים`);
+
 // Local, case-insensitive substring match against the whole stored name,
 // honorific included: the name is never re-split into a title and a given
 // name (design spec, "no string in the code ever prepends הרב to a name").
