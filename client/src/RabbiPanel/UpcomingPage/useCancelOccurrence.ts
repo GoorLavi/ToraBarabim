@@ -19,7 +19,7 @@ export const useCancelOccurrence = (): UseMutationResult<RabbiLessonExceptionRes
 
   return useMutation({
     mutationFn: ({ lessonId, date }: CancelOccurrenceInput) => upsertOccurrenceException(lessonId, date, { kind: 'cancelled', date }),
-    onSuccess: (data, { lessonId, date }) => {
+    onSuccess: (_data, { lessonId, date }) => {
       void queryClient.invalidateQueries({ queryKey: RABBI_QUERY_KEYS.occurrences() });
       trackEvent(MIXPANEL_EVENTS.occurrenceCancelled, { lessonId, date });
     },

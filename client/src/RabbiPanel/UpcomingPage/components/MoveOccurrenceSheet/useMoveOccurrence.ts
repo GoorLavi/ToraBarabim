@@ -21,7 +21,7 @@ export const useMoveOccurrence = (): UseMutationResult<RabbiLessonExceptionRespo
   return useMutation({
     mutationFn: ({ lessonId, date, startTime, place }: MoveOccurrenceInput) =>
       upsertOccurrenceException(lessonId, date, { kind: 'modified', date, startTime, place }),
-    onSuccess: (data, { lessonId, date }) => {
+    onSuccess: (_data, { lessonId, date }) => {
       void queryClient.invalidateQueries({ queryKey: RABBI_QUERY_KEYS.occurrences() });
       trackEvent(MIXPANEL_EVENTS.occurrenceMoved, { lessonId, date });
     },
