@@ -8,6 +8,10 @@ import * as cwActions from 'aws-cdk-lib/aws-cloudwatch-actions';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecrAssets from 'aws-cdk-lib/aws-ecr-assets';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as kms from 'aws-cdk-lib/aws-kms';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as lambdaNode from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as rds from 'aws-cdk-lib/aws-rds';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
@@ -50,6 +54,17 @@ export class ServerStack extends Stack {
     const alertEmail = new CfnParameter(this, 'AlertEmail', {
       type: 'String',
       description: 'Email address that receives the 5xx and no-healthy-task alerts',
+    });
+    // A CfnParameter for the parameter's NAME, not its value: the value
+    // (the Telegram bot token and chat id) is created out of band by the
+    // human as an SSM SecureString, per infra/README.md, and never appears
+    // here. The default keeps every existing deploy command working without
+    // a new required argument.
+    const telegramBotTokenParamName = new CfnParameter(this, 'TelegramBotTokenParamName', {
+      type: 'String',
+      default: '/torabarabim/telegram-bot-token',
+      description:
+        'SSM Parameter Store SecureString name holding {"botToken","chatId"} for the Telegram alert notifier',
     });
     // Step two owns the S3 bucket. These have no default on purpose: until
     // step two exists, the human must supply a placeholder, and the API
@@ -268,6 +283,47 @@ export class ServerStack extends Stack {
     });
     alertTopic.addSubscription(new snsSubscriptions.EmailSubscription(alertEmail.valueAsString));
 
+    const alertNotifierLogGroup = new logs.LogGroup(this, 'AlertNotifierLogGroup', {
+      retention: LOG_RETENTION,
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
+    const alertNotifierFunction = new lambdaNode.NodejsFunction(this, 'AlertNotifierFunction', {
+      entry: path.join(__dirname, 'alert-notifier', 'handler.ts'),
+      runtime: lambda.Runtime.NODEJS_22_X,
+      architecture: lambda.Architecture.ARM_64,
+      timeout: Duration.seconds(10),
+      logGroup: alertNotifierLogGroup,
+      environment: {
+        TELEGRAM_BOT_TOKEN_PARAM_NAME: telegramBotTokenParamName.valueAsString,
+      },
+      // Deliberately not given `vpc`: this account has no NAT Gateway (see
+      // "Why no ALB, why no NAT gateway" in the README), so a VPC-attached
+      // function here would have no route to api.telegram.org and every
+      // send would fail silently by timing out, not by an error anyone
+      // would notice quickly.
+    });
+    alertNotifierFunction.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ['ssm:GetParameter'],
+        resources: [
+          `arn:${this.partition}:ssm:${this.region}:${this.account}:parameter${telegramBotTokenParamName.valueAsString}`,
+        ],
+      }),
+    );
+    // The parameter is a SecureString encrypted with the account's default
+    // `aws/ssm` key, not a customer-managed one, so there is no key ARN of
+    // our own to scope this to. AWS documents kms:Decrypt as one of the few
+    // actions an IAM policy may target by key alias ARN, which keeps this to
+    // exactly the one key rather than "*".
+    const ssmDefaultKey = kms.Alias.fromAliasName(this, 'SsmDefaultKey', 'alias/aws/ssm');
+    alertNotifierFunction.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ['kms:Decrypt'],
+        resources: [ssmDefaultKey.keyArn],
+      }),
+    );
+    alertTopic.addSubscription(new snsSubscriptions.LambdaSubscription(alertNotifierFunction));
+
     const serverErrorAlarm = new cloudwatch.Alarm(this, 'ServerErrorAlarm', {
       metric: httpApi.metricServerError({ period: Duration.minutes(5) }),
       threshold: 1,
@@ -277,6 +333,7 @@ export class ServerStack extends Stack {
       alarmDescription: 'The API returned a 5xx response',
     });
     serverErrorAlarm.addAlarmAction(new cwActions.SnsAction(alertTopic));
+    serverErrorAlarm.addOkAction(new cwActions.SnsAction(alertTopic));
 
     // CPUUtilization is only published while at least one task is running,
     // so missing data for five straight minutes is a reliable proxy for "no
@@ -292,6 +349,7 @@ export class ServerStack extends Stack {
       alarmDescription: 'The service has had no running task publishing metrics for 5 minutes',
     });
     noHealthyTaskAlarm.addAlarmAction(new cwActions.SnsAction(alertTopic));
+    noHealthyTaskAlarm.addOkAction(new cwActions.SnsAction(alertTopic));
 
     // A separate task definition the human runs by hand: never on container
     // start, never as part of a deploy. House rules forbid an agent running

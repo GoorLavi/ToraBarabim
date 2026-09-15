@@ -36,6 +36,10 @@ jobs:
 
       - run: npm run build --workspace client
 
+      # The alert-notifier's formatter test needs neither a database nor a
+      # built client, so it runs here rather than in the `test` job below.
+      - run: npm test -w infra
+
   # A sibling job rather than a step of typecheck-and-build: it needs its
   # own Postgres, and keeping it separate means a slow seed never delays the
   # type-check/build feedback, and the two run in parallel.
