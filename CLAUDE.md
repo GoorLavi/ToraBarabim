@@ -37,6 +37,23 @@ because the next person reads it as the intended pattern and copies it.
 - This binds every agent. Being blocked is a normal outcome to report, never a reason
   to improvise.
 
+## Stay in Your Lane
+
+Every agent owns one domain and decides only inside it. The roster in
+[.claude/README.md](.claude/README.md) says who owns what.
+
+- **Comment across, decide within.** You may comment on another agent's domain where it
+  bears on yours (product can say a layout buries the outcome; the designer can say a
+  label reads like a promise), but you never decide it or tell its owner how to do it.
+- **Ask the owner instead of guessing.** A question outside your domain goes to its
+  owner: consult them if they are your peer under
+  [.claude/consulting-protocol.md](.claude/consulting-protocol.md), otherwise name them
+  in your report so the orchestrator routes it.
+- **Hand over the context the next owner needs** to decide well, so they do not have to
+  rebuild it.
+- **A disagreement across domains goes to the human**, stated as a disagreement. Nobody
+  settles it by overruling the owner.
+
 ## Recording Decisions
 
 A choice that is hard to reverse, costs something real, or will make someone ask "why is
@@ -236,6 +253,10 @@ different sentences and they are not interchangeable:
   a finding to report, not an obstacle.
 - If you want to assert something and there is nowhere to assert it, say so in your
   report.
+- **A test plan is part of every approved plan**, and the tests it names are part of
+  the builder's slice. A slice whose approved test is unwritten is not DONE. A builder
+  that finds the plan needs more or different tests stops and asks rather than
+  expanding the scope on its own.
 
 ## Secrets and Configuration
 
@@ -277,6 +298,9 @@ Agents read AWS as their own identity, `claude-readonly`, never as the owner
   the human can read it; the gates that matter are the pull request and the merge
   below, not the commit.
 - Run `git status` and review what is included before staging.
+- **`/ship-pr` is the named, per-use exception** that takes a working tree from
+  uncommitted to an open pull request in one pass. Invoking it is the explicit request;
+  it never runs on the orchestrator's own initiative.
 - **Every change reaches `main` through a pull request.** Never commit to `main`
   directly and never merge without being asked. Merging is a deploy
   ([0011](docs/decisions/0011-deploys-are-automatic-migrations-are-not.md)), so the
@@ -285,7 +309,8 @@ Agents read AWS as their own identity, `claude-readonly`, never as the owner
 ## Data and Migrations
 
 - **Never run a migration on your own.** Change the schema, regenerate types, and hand
-  the migration to the human to apply.
+  the migration to the human to apply. The exact sequence is the `create-migration`
+  skill, and a hook blocks the apply step; being blocked is the expected outcome.
 - Migrations are backward-compatible: add before you remove.
 - **A removal ships in its own deploy, after the code that stopped needing the old
   shape is already live.** The migration finishes before the new server does, so for
@@ -306,6 +331,28 @@ npm install zod -w server
 
 Workspaces: `server` (Node + TypeScript API) and `client` (React + TypeScript front
 end).
+
+## Worktrees
+
+A worktree (a checked-out branch in its own folder, separate from the primary checkout)
+starts stale and incomplete, and both failures look like something else.
+
+- **Hydrate it before anything else:** `bash scripts/setup-worktree.sh` from inside the
+  worktree. It fast-forwards to `origin/main`, copies the gitignored root `.env` from
+  the primary checkout, and installs dependencies. A worktree created three commits
+  behind once had no `.github/` and read as "this project has no CI"; a missing `.env`
+  reads as a broken CDK setup.
+- **Compare against `origin/main`, never the local `main` branch.** The local branch is
+  whatever was last checked out there and has been found over a hundred commits stale.
+- **A command you hand the human says which folder to run it in.** From the wrong
+  checkout it acts on different code and succeeds silently. Migrations are the worst
+  case: new migration files exist only in the worktree, so `db:migrate` from the primary
+  checkout applies nothing and reports success. Migrations run from the worktree root;
+  `cdk` runs from the primary checkout, which has the `.env` the CDK app reads.
+- **After a migration, confirm the effect in the database itself**, never from the
+  command's output.
+- A merged worktree with no uncommitted changes is removed, not kept "just in case".
+  Never remove one that is unmerged or dirty without asking.
 
 ## Styling (styled-components)
 
