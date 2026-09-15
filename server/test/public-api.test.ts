@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
 
 import type {
-  City,
+  CitySearchResult,
+  CitySuggestionsResponse,
   HomeResponse,
   HomeRowItem,
   LessonOccurrence,
@@ -331,19 +332,36 @@ describe('public API', () => {
     test('an absent query is a normal 200 with an empty list, never a 404', async () => {
       const res = await app.inject({ method: 'GET', url: '/v1/cities' });
       assert.equal(res.statusCode, 200);
-      assert.deepEqual((res.json() as { items: City[] }).items, []);
+      assert.deepEqual((res.json() as { items: CitySearchResult[] }).items, []);
     });
 
-    test('matches a known seeded city by prefix', async () => {
+    test('matches a known seeded city by prefix, and carries its area name and lesson count', async () => {
       const res = await app.inject({ method: 'GET', url: `/v1/cities?q=${encodeURIComponent(SEEDED_CITY_PREFIX)}` });
       assert.equal(res.statusCode, 200);
-      const { items } = res.json() as { items: City[] };
-      assert.ok(items.some((city) => city.name === SEEDED_CITY_NAME));
+      const { items } = res.json() as { items: CitySearchResult[] };
+      const city = items.find((candidate) => candidate.name === SEEDED_CITY_NAME);
+      assert.ok(city);
+      assert.equal(typeof city.areaName, 'string');
+      assert.ok(city.areaName.length > 0);
+      assert.equal(typeof city.lessonCount, 'number');
+      assert.ok(city.lessonCount > 0, 'the seeded city has seeded lessons');
     });
 
     test('rejects a query over the length limit', async () => {
       const res = await app.inject({ method: 'GET', url: `/v1/cities?q=${'א'.repeat(101)}` });
       assert.equal(res.statusCode, 400);
+    });
+
+    // A general surface (the header search), so it counts general-scope
+    // lessons only: the rabbanit's city has real lessons but none of them
+    // general, so its count here must be 0, not the raw lesson count.
+    test("a general surface counts general-scope lessons only: the rabbanit's city, whose only lessons are hers, shows lessonCount 0", async () => {
+      const res = await app.inject({ method: 'GET', url: `/v1/cities?q=${encodeURIComponent(SEEDED_RABBANIT_CITY_NAME)}` });
+      assert.equal(res.statusCode, 200);
+      const { items } = res.json() as { items: CitySearchResult[] };
+      const city = items.find((candidate) => candidate.name === SEEDED_RABBANIT_CITY_NAME);
+      assert.ok(city, 'the city itself must still match the prefix, even with no general-scope lesson');
+      assert.equal(city.lessonCount, 0);
     });
   });
 
@@ -361,6 +379,47 @@ describe('public API', () => {
       for (const city of area.cities) {
         assert.ok(city.slug.length > 0);
         assert.ok(city.lessonCount > 0);
+        // A general surface, so a city whose only lessons are the
+        // rabbanit's (real lessons, zero general-scope ones) must not
+        // appear here at all, not merely with a count of 0.
+        assert.notEqual(city.slug, toSlug(SEEDED_RABBANIT_CITY_NAME));
+      }
+    }
+  });
+
+  test('GET /v1/cities/suggestions orders areas and cities by lesson supply, and each area total matches its own cities', async () => {
+    const res = await app.inject({ method: 'GET', url: '/v1/cities/suggestions' });
+    assert.equal(res.statusCode, 200);
+
+    const body = res.json() as CitySuggestionsResponse;
+    assert.ok(body.areas.length > 0);
+
+    let previousAreaLessonCount: number | undefined;
+    for (const area of body.areas) {
+      if (previousAreaLessonCount !== undefined) {
+        assert.ok(previousAreaLessonCount >= area.areaLessonCount, 'areas must appear in non-increasing areaLessonCount order');
+      }
+      previousAreaLessonCount = area.areaLessonCount;
+
+      assert.ok(area.cities.length > 0);
+      assert.ok(!area.cities.some((city) => city.slug === toSlug(SEEDED_RABBANIT_CITY_NAME)));
+
+      const summedLessonCount = area.cities.reduce((total, city) => total + city.lessonCount, 0);
+      assert.equal(
+        area.areaLessonCount,
+        summedLessonCount,
+        `${area.areaName}'s areaLessonCount must equal the sum of its own cities' lessonCount`,
+      );
+
+      let previousCityLessonCount: number | undefined;
+      for (const city of area.cities) {
+        if (previousCityLessonCount !== undefined) {
+          assert.ok(
+            previousCityLessonCount >= city.lessonCount,
+            `cities within ${area.areaName} must appear in non-increasing lessonCount order`,
+          );
+        }
+        previousCityLessonCount = city.lessonCount;
       }
     }
   });

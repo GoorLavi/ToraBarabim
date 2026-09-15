@@ -2,7 +2,6 @@ import { css } from 'styled-components';
 
 import { contentBandCap, contentGutterInline } from '~/styles/contentBand';
 
-import { HEADER_Z_INDEX } from '../../consts';
 import { headerBandAppearance } from '../../styles';
 
 // Fixed, not sticky, and hidden by default: below `lg` the full header
@@ -14,7 +13,7 @@ export const PinnedHeaderBar = css(
   position: fixed;
   inset-block-start: 0;
   inset-inline: 0;
-  z-index: ${HEADER_Z_INDEX};
+  z-index: ${theme.zIndex.header};
   transform: translateY(-100%);
   transition: transform 160ms ease-out;
 

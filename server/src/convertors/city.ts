@@ -1,18 +1,36 @@
-import type { City, CityAreaGroup, CityDetailResponse, CityDirectoryResponse, CityWithLessonCount } from '@torabarabim/common';
+import type {
+  City,
+  CityAreaGroup,
+  CityAreaSuggestionGroup,
+  CityDetailResponse,
+  CityDirectoryResponse,
+  CitySearchResult,
+  CitySuggestionsResponse,
+  CityWithLessonCount,
+} from '@torabarabim/common';
 
 import { toCitySummary } from '../service/shared/city-summary';
 import type {
   CityAreaGroup as CityAreaGroupResult,
+  CityAreaSuggestionGroup as CityAreaSuggestionGroupResult,
   CityDetailResult,
   CityDirectoryResult,
+  CitySearchResult as CitySearchResultRecord,
+  CitySuggestionsResult,
   CityWithLessonCount as CityWithLessonCountResult,
   ResolvedCity,
 } from '../service/city/models';
 
 export const toCity = (record: ResolvedCity): City => toCitySummary(record);
 
-export const toCityList = (records: ResolvedCity[]): { items: City[] } => ({
-  items: records.map(toCity),
+export const toCitySearchResult = (record: CitySearchResultRecord): CitySearchResult => ({
+  ...toCity(record),
+  areaName: record.areaName,
+  lessonCount: record.lessonCount,
+});
+
+export const toCityList = (records: CitySearchResultRecord[]): { items: CitySearchResult[] } => ({
+  items: records.map(toCitySearchResult),
 });
 
 export const toCityWithLessonCount = (record: CityWithLessonCountResult): CityWithLessonCount => ({
@@ -29,6 +47,15 @@ const toCityAreaGroup = (group: CityAreaGroupResult): CityAreaGroup => ({
 
 export const toCityDirectoryResponse = (result: CityDirectoryResult): CityDirectoryResponse => ({
   areas: result.areas.map(toCityAreaGroup),
+});
+
+const toCityAreaSuggestionGroup = (group: CityAreaSuggestionGroupResult): CityAreaSuggestionGroup => ({
+  ...toCityAreaGroup(group),
+  areaLessonCount: group.areaLessonCount,
+});
+
+export const toCitySuggestionsResponse = (result: CitySuggestionsResult): CitySuggestionsResponse => ({
+  areas: result.areas.map(toCityAreaSuggestionGroup),
 });
 
 export const toCityDetailResponse = (result: CityDetailResult): CityDetailResponse => ({

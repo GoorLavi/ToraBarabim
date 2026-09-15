@@ -10,7 +10,17 @@ import { toRabbiSummary as toRabbi } from '../shared/rabbi-summary';
 import { toSlug } from '../shared/slug';
 import { CITY_SEARCH_LIMIT } from './consts';
 import { CityNotFoundError } from './errors';
-import type { CityAreaGroup, CityDetailResult, CityDirectoryResult, CitySearchQuery, ResolvedCity } from './models';
+import type {
+  CityAreaGroup,
+  CityAreaSuggestionGroup,
+  CityDetailResult,
+  CityDirectoryResult,
+  CitySearchQuery,
+  CitySearchResult,
+  CitySuggestionsResult,
+  CityWithLessonCount,
+  ResolvedCity,
+} from './models';
 
 const collator = new Intl.Collator('he');
 
@@ -22,31 +32,14 @@ const toResolvedCity = (row: CityRow): ResolvedCity => ({ ...row, slug: toSlug(r
 // either, or a user typing one, cannot change what the prefix match does.
 const escapeLikePattern = (value: string): string => value.replace(/[\\%_]/g, (char) => `\\${char}`);
 
-export const search = async (query: CitySearchQuery): Promise<ResolvedCity[]> => {
-  const q = query.q?.trim();
-  if (!q) return [];
-
-  const pattern = `${escapeLikePattern(q)}%`;
-
-  const rows = await db
-    .select({ code: cities.code, nameHe: cities.nameHe, area: cities.area })
-    .from(cities)
-    .where(like(cities.nameHe, pattern))
-    // Exact matches first, then largest population first (a city with no
-    // population row sorts last within its tier, never first), then
-    // alphabetically as the final tiebreak.
-    .orderBy(desc(eq(cities.nameHe, q)), sql`${cities.population} DESC NULLS LAST`, asc(cities.nameHe))
-    .limit(CITY_SEARCH_LIMIT);
-
-  return rows.map(toResolvedCity);
-};
-
-// Every city, every rabbi's honorific, and every lesson's city code and
-// audience are each loaded once and joined in memory, so counting
-// general-scope lessons per city never runs a query per row or per city.
-export const listDirectory = async (): Promise<CityDirectoryResult> => {
-  const [cityRows, rabbiRows, lessonRows] = await Promise.all([
-    db.select({ code: cities.code, nameHe: cities.nameHe, area: cities.area }).from(cities),
+// Every rabbi's honorific and every lesson's city code and audience are
+// each loaded once and joined in memory, so counting general-scope lessons
+// per city never runs a query per row or per city. Shared by `search`
+// (every city, including a zero-count one that still matched the prefix)
+// and `loadCitiesWithLessonCounts` (only cities with at least one), so the
+// scope rule is computed once per request path, not copied between them.
+const loadGeneralScopeLessonCountByCity = async (): Promise<Map<number, number>> => {
+  const [rabbiRows, lessonRows] = await Promise.all([
     db.select({ id: rabbis.id, honorific: rabbis.honorific }).from(rabbis),
     db.select({ cityCode: lessons.cityCode, rabbiId: lessons.rabbiId, audience: lessons.audience }).from(lessons),
   ]);
@@ -62,10 +55,58 @@ export const listDirectory = async (): Promise<CityDirectoryResult> => {
     if (!isLessonInScope('general', { audience: row.audience, teacherHonorific })) continue;
     countByCode.set(row.cityCode, (countByCode.get(row.cityCode) ?? 0) + 1);
   }
+  return countByCode;
+};
 
-  const citiesWithLessons = cityRows
-    .map((row) => ({ ...toResolvedCity(row), lessonCount: countByCode.get(row.code) ?? 0 }))
+// A general surface (the header's city search), so it counts general-scope
+// lessons only, same as `loadCitiesWithLessonCounts` below: a city whose
+// only lessons are a rabbanit's must not look like it has lessons here.
+export const search = async (query: CitySearchQuery): Promise<CitySearchResult[]> => {
+  const q = query.q?.trim();
+  if (!q) return [];
+
+  const pattern = `${escapeLikePattern(q)}%`;
+
+  const [rows, countByCode] = await Promise.all([
+    db
+      .select({ code: cities.code, nameHe: cities.nameHe, area: cities.area })
+      .from(cities)
+      .where(like(cities.nameHe, pattern))
+      // Exact matches first, then largest population first (a city with no
+      // population row sorts last within its tier, never first), then
+      // alphabetically as the final tiebreak.
+      .orderBy(desc(eq(cities.nameHe, q)), sql`${cities.population} DESC NULLS LAST`, asc(cities.nameHe))
+      .limit(CITY_SEARCH_LIMIT),
+    loadGeneralScopeLessonCountByCity(),
+  ]);
+
+  return rows.map((row) => ({
+    ...toResolvedCity(row),
+    lessonCount: countByCode.get(row.code) ?? 0,
+    areaName: AREA_NAMES_HE[row.area],
+  }));
+};
+
+type CityWithLessonSupply = CityWithLessonCount & { population: number | null };
+
+// `listDirectory` and `listSuggestions` are its two callers: they group and
+// order the result differently, so this only loads and filters.
+const loadCitiesWithLessonCounts = async (): Promise<CityWithLessonSupply[]> => {
+  const [cityRows, countByCode] = await Promise.all([
+    db.select({ code: cities.code, nameHe: cities.nameHe, area: cities.area, population: cities.population }).from(cities),
+    loadGeneralScopeLessonCountByCity(),
+  ]);
+
+  return cityRows
+    .map((row) => ({ ...toResolvedCity(row), population: row.population, lessonCount: countByCode.get(row.code) ?? 0 }))
     .filter((row) => row.lessonCount > 0);
+};
+
+// The public city directory (`/cities`) is scanned by name, so its order is
+// alphabetical. The suggestions picker below orders the same underlying
+// data by lesson supply instead; two callers, two orders, on purpose.
+export const listDirectory = async (): Promise<CityDirectoryResult> => {
+  const citiesWithLessons = await loadCitiesWithLessonCounts();
 
   const areas: CityAreaGroup[] = AREAS.map((area) => ({
     area,
@@ -73,6 +114,41 @@ export const listDirectory = async (): Promise<CityDirectoryResult> => {
     slug: toAreaSlug(area),
     cities: citiesWithLessons.filter((row) => row.area === area).sort((a, b) => collator.compare(a.nameHe, b.nameHe)),
   })).filter((group) => group.cities.length > 0);
+
+  return { areas };
+};
+
+// Ranks by lesson count first, since that is the popularity this endpoint
+// exists to surface; population only breaks a tie in lesson count, and a
+// city with no census row sorts last within its tier rather than first.
+const byLessonSupply = (a: CityWithLessonSupply, b: CityWithLessonSupply): number => {
+  if (a.lessonCount !== b.lessonCount) return b.lessonCount - a.lessonCount;
+  if (a.population !== b.population) {
+    if (a.population === null) return 1;
+    if (b.population === null) return -1;
+    return b.population - a.population;
+  }
+  return collator.compare(a.nameHe, b.nameHe);
+};
+
+export const listSuggestions = async (): Promise<CitySuggestionsResult> => {
+  const citiesWithLessons = await loadCitiesWithLessonCounts();
+
+  const areas: CityAreaSuggestionGroup[] = AREAS.map((area) => {
+    const areaCities = citiesWithLessons.filter((row) => row.area === area).sort(byLessonSupply);
+    return {
+      area,
+      areaName: AREA_NAMES_HE[area],
+      slug: toAreaSlug(area),
+      cities: areaCities,
+      areaLessonCount: areaCities.reduce((total, row) => total + row.lessonCount, 0),
+    };
+  })
+    .filter((group) => group.cities.length > 0)
+    .sort((a, b) => {
+      if (a.areaLessonCount !== b.areaLessonCount) return b.areaLessonCount - a.areaLessonCount;
+      return collator.compare(a.areaName, b.areaName);
+    });
 
   return { areas };
 };
