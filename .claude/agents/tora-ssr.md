@@ -27,6 +27,7 @@ The site's growth channel is organic search. Someone types a rabbi's name into G
 - **When your brief names a decision record in `docs/decisions/`, read it.** This project's production shape was chosen against a hard cost ceiling, and several things that look wrong at a glance are deliberate.
 - Run npm from the repo root with `-w client` or `-w server`. Never `cd` into a package.
 - Before you finish, run the type check, build both bundles, and start the server. A slice that does not compile is BLOCKED, not DONE.
+- **When a lead consults you as a peer**, answer the one question you were asked, touch no file, and consult no one.
 
 ## The rendering bar
 

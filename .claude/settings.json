@@ -1,6 +1,20 @@
 {
   "env": {
-    "AWS_PROFILE": "claude-ro"
+    "AWS_PROFILE": "claude-ro",
+    "CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH": "2"
+  },
+  "permissions": {
+    "deny": [
+      "Bash(npm run db:migrate*)",
+      "Bash(npx drizzle-kit migrate*)",
+      "Bash(npx drizzle-kit push*)",
+      "Bash(drizzle-kit migrate*)",
+      "Bash(drizzle-kit push*)",
+      "Bash(npm run db:tunnel*)",
+      "Bash(bash infra/scripts/db-tunnel.sh*)",
+      "Bash(infra/scripts/db-tunnel.sh*)",
+      "Bash(aws ssm start-session*)"
+    ]
   },
   "hooks": {
     "PreToolUse": [
@@ -11,6 +25,18 @@
             "type": "command",
             "command": "jq -r '.tool_input.command' | grep -qE '(--profile[ =]+torabarabim|AWS_PROFILE=torabarabim)' && echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Blocked: torabarabim is the owner administrator profile. Agents read AWS through claude-ro, which is already the default. If a write really is needed, hand the command to the owner to run.\"}}' || true",
             "statusMessage": "Checking the AWS profile"
+          },
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-migrate.sh\"",
+            "timeout": 10,
+            "statusMessage": "Checking for a migration command"
+          },
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-production-db.sh\"",
+            "timeout": 10,
+            "statusMessage": "Checking for a production database tunnel"
           }
         ]
       }

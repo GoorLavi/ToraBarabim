@@ -95,3 +95,5 @@ The real alternatives and why each lost. If there was no alternative, say so.
 | [0025](0025-mixpanel-ad-blocker-undercount-stays-no-proxy-yet.md) | Mixpanel's ad-blocker undercount stays, no same-origin proxy yet | accepted |
 | [0026](0026-rabbaniyot-teach-women-only-and-the-honorific-is-a-field.md) | Rabbaniyot teach women only, and the honorific is a field | accepted |
 | [0027](0027-full-color-brand-marks-on-navigation-links.md) | Waze and Google Maps navigation links use full-color brand marks | accepted |
+| [0028](0028-agents-never-reach-the-production-database.md) | Agents never reach the production database, enforced by hooks | accepted |
+| [0029](0029-the-reviewer-is-edited-only-through-its-golden-set.md) | The reviewer is edited only through its golden set | accepted |

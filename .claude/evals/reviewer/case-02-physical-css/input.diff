@@ -1,0 +1,23 @@
+diff --git a/client/src/LessonPage/components/LessonDetails/styles.ts b/client/src/LessonPage/components/LessonDetails/styles.ts
+--- a/client/src/LessonPage/components/LessonDetails/styles.ts
++++ b/client/src/LessonPage/components/LessonDetails/styles.ts
+@@ -12,6 +12,20 @@ const lessonDetails = css`
+     gap: ${({ theme }) => theme.spacing.sm};
+   }
+
++  > .venueRow {
++    display: flex;
++    align-items: center;
++    padding-left: ${({ theme }) => theme.spacing.md};
++    border-left: 2px solid ${({ theme }) => theme.colors.border};
++    text-align: left;
++
++    > .venueName {
++      margin-right: ${({ theme }) => theme.spacing.xs};
++      font-size: ${({ theme }) => theme.typography.body};
++    }
++  }
++
+   > .audience {
+     color: ${({ theme }) => theme.colors.textMuted};
+   }
