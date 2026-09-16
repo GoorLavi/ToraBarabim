@@ -1,4 +1,4 @@
-import type { HomeResponse, LessonOccurrence } from '@torabarabim/common';
+import type { AudienceFilter, HomeResponse, LessonOccurrence } from '@torabarabim/common';
 
 import type { DateFilterOption, SelectedCity } from '~/hooks/models';
 
@@ -100,35 +100,25 @@ export const numericDayLabel = (isoDate: string): string =>
 
 // The one place the two page modes are decided: rail (nothing chosen, so
 // render whatever the server sends) versus filtered (the existing single
-// list). No in-between state.
-export const resolveHomeMode = (option: DateFilterOption, city: SelectedCity | undefined, searchQuery: string): HomeMode =>
-  option === 'all' && !city && !searchQuery ? 'rail' : 'filtered';
+// list). The header audience dropdown (הכל / גברים / גם גברים וגם נשים) is a
+// fourth trigger alongside date, city and search (0012's two-mode rule).
+// No in-between state.
+export const resolveHomeMode = (
+  option: DateFilterOption,
+  city: SelectedCity | undefined,
+  searchQuery: string,
+  audienceFilter: AudienceFilter | undefined,
+): HomeMode => (option === 'all' && !city && !searchQuery && !audienceFilter ? 'rail' : 'filtered');
 
-// Rail mode has no server-side rabbi or city list; RabbiRow and CityGrid
-// are fed the union of every row's items instead of a single fetched list.
+// Rail mode has no server-side rabbi or city list; RabbiRow and CityGrid are
+// fed the union of every row's lesson items instead of a single fetched
+// list.
 export const flattenHomeRows = (data: HomeResponse | undefined): LessonOccurrence[] | undefined =>
   data ? data.rows.flatMap((row) => row.items) : undefined;
 
-// One element, two strings (brief: "not a rail-mode ornament") in rail mode.
-// In filtered mode the section heading already names the day and, when one
-// is chosen, the city (LessonsSection, dayHeadingLabel), so the context
-// line there only earns its place when it carries something the heading
-// does not: the search term. Otherwise it would just repeat the heading in
-// a smaller size (design review, item 6).
-//
-// `total` is the count from `GET /v1/lessons`, which spans the whole
-// widened window (LESSON_WINDOW_DAYS), not a single day. That is exactly
-// the scope a free-text search asks about, unlike a date or city filter
-// which is already scoped to one day by the heading below, so it belongs
-// here and nowhere else. Left undefined while the query has not resolved
-// yet, and left out entirely at zero: the empty state under it already
-// names the search term, and repeating "0" above it would only be noise.
-export const contextLine = (mode: HomeMode, searchQuery: string, total?: number): string | undefined => {
-  if (mode === 'rail') return RAIL_CONTEXT_LINE;
-  if (!searchQuery) return undefined;
-  if (total === undefined) return `שיעורים לפי החיפוש ״${searchQuery}״`;
-  if (total === 0) return undefined;
-  if (total === 1) return `שיעור אחד לפי החיפוש ״${searchQuery}״ בשבועיים הקרובים`;
-
-  return `${total} שיעורים לפי החיפוש ״${searchQuery}״ בשבועיים הקרובים`;
-};
+// One element, one string, and only in rail mode. Filtered mode never shows
+// one: the section heading already names the day and city, and
+// `DayLessons`'s own count line already names the total, so a search
+// (`?q=`) adding a third line here only repeated both (design review: "name
+// search repeats the same count and query three times").
+export const contextLine = (mode: HomeMode): string | undefined => (mode === 'rail' ? RAIL_CONTEXT_LINE : undefined);

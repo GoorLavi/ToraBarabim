@@ -6,12 +6,12 @@ import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
 import type { SelectedCity } from '~/hooks/models';
 
-import { CityPickerDrawer } from './components/CityPickerDrawer/CityPickerDrawer';
+import { FilterDrawer } from '../FilterDrawer/FilterDrawer';
+import { useIsWideViewport } from '../useIsWideViewport';
 import { CityPickerPanel } from './components/CityPickerPanel/CityPickerPanel';
 import * as consts from './consts';
 import type { CityPickerProps } from './models';
 import * as styles from './styles';
-import { useIsWideViewport } from './useIsWideViewport';
 import { useRecentCities } from './useRecentCities';
 
 // A city, once chosen, turns the pill into a toggle like the date chips:
@@ -98,9 +98,9 @@ export const CityPicker = styled(({ className, city, onSelectCity, onClearCity }
       </button>
 
       {isOpen && !isWide && (
-        <CityPickerDrawer {...{ ariaLabel: consts.PANEL_HEADING, onDismiss: dismiss }}>
+        <FilterDrawer {...{ ariaLabel: consts.PANEL_HEADING, onDismiss: dismiss }}>
           <CityPickerPanel {...{ isDrawer: true, isWide, recentCities, onSelect: handleSelectCity, onClose: close }} />
-        </CityPickerDrawer>
+        </FilterDrawer>
       )}
 
       {isOpen && isWide && (

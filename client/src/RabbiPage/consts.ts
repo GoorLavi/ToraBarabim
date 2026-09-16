@@ -1,8 +1,10 @@
+import type { AudienceScope } from '@torabarabim/common';
+
 export const BACK_TO_ALL_RABBIS_LABEL = 'חזרה לכל הרבנים';
 
 export const RABBI_PAGE_QUERY_KEYS = {
   detail: (rabbiId: string) => ['rabbi', rabbiId] as const,
-  lessons: (rabbiId: string) => ['rabbi', rabbiId, 'lessons'] as const,
+  lessons: (rabbiId: string, scope: AudienceScope | undefined) => ['rabbi', rabbiId, 'lessons', scope] as const,
   // Not parameterised by rabbiId: this is the "lessons across the whole
   // country" fallback, fetched once no matter which rabbi's page asked for
   // it (design spec, "the empty state widens to the whole country").

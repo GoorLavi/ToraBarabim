@@ -11,7 +11,7 @@ import { CitySelect } from '~/components/CitySelect/CitySelect';
 import { ReadOnlyField } from '~/components/ReadOnlyField/ReadOnlyField';
 import { RecurrenceFields } from '~/components/RecurrenceFields/RecurrenceFields';
 import { directionForValue } from '~/helpers';
-import { LESSON_AUDIENCE_LABELS } from '~/HomePage/components/LessonCard/consts';
+import { AUDIENCE_LABELS } from '~/consts';
 
 import { LessonPreviewCard } from './components/LessonPreviewCard/LessonPreviewCard';
 import { RabbiPicker } from './components/RabbiPicker/RabbiPicker';
@@ -250,7 +250,7 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
           <section className="section" ref={audienceSectionRef}>
             <h2 className="sectionHeading">{consts.AUDIENCE_SECTION_HEADING}</h2>
             {isRabbaniteSelected ? (
-              <ReadOnlyField value={LESSON_AUDIENCE_LABELS.women} />
+              <ReadOnlyField value={AUDIENCE_LABELS.women} />
             ) : (
               <>
                 <AudiencePicker

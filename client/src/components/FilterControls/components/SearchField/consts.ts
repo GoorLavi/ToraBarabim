@@ -1,4 +1,4 @@
-export const PLACEHOLDER = 'שם של רב, בית כנסת או עיר';
+export const PLACEHOLDER = 'רב, בית כנסת או עיר';
 export const LABEL = 'חיפוש שיעור';
 export const CLEAR_LABEL = 'נקו את החיפוש';
 

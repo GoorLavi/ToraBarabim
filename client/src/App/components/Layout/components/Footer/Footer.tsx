@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 
 import { TextLink } from '~/HomePage/components/TextLink/TextLink';
+import { WOMEN_PAGE_PATH } from '~/hooks/consts';
 
 import * as consts from './consts';
 import type { FooterProps } from './models';
@@ -17,6 +18,7 @@ export const Footer = styled(({ className }: FooterProps) => (
         <TextLink to="/cities">{consts.CITIES_LABEL}</TextLink>
         <TextLink to="/rabbis">{consts.RABBIS_LABEL}</TextLink>
         <TextLink to="/lessons">{consts.LESSONS_LABEL}</TextLink>
+        <TextLink to={WOMEN_PAGE_PATH}>{consts.WOMEN_LABEL}</TextLink>
       </nav>
     </div>
   </footer>

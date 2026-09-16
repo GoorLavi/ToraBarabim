@@ -106,7 +106,7 @@ export const AreaPage = styled(({ className }: AreaPageProps) => {
                 <ul className="grid">
                   {area.cities.map((city) => (
                     <li key={city.id} className="cell">
-                      <CityChip city={city} />
+                      <CityChip city={city} lessonCount={city.lessonCount} />
                     </li>
                   ))}
                 </ul>
@@ -137,7 +137,7 @@ export const AreaPage = styled(({ className }: AreaPageProps) => {
               {!lessonsQuery.isPending && !lessonsQuery.isError && !isWindowEmpty && (
                 <>
                   {dayGroups.map((group) => (
-                    <DayGroup key={group.date} heading={dayGroupHeading(group.date)} items={group.items} />
+                    <DayGroup key={group.date} heading={dayGroupHeading(group.date)} items={group.items} surface="general" />
                   ))}
 
                   {hasMore && (

@@ -72,11 +72,16 @@ export interface ThemeTypography {
   secondary: ThemeTypeRole;
   tagAndCaption: ThemeTypeRole;
   // The floor for a lesson-poster card in the two-column phone grid, where
-  // the card is roughly 173px wide (design-system.md, Type): "the card title
+  // the card is roughly 171px wide (design-system.md, Type): "the card title
   // steps down to 15 / 21 with its supporting lines at 14 / 20. That is the
   // floor, not a licence to shrink further."
   cardTitleCompact: ThemeTypeRole;
   secondaryCompact: ThemeTypeRole;
+  // The women's-area tile's own lesson count, inside its plum area. Numerically
+  // equal to `ticketTime`'s desktop step, but a distinct role: design-system.md
+  // reserves `ticketTime` for the lesson ticket's start time alone. Constant
+  // at every tile width, unlike the responsive roles above.
+  tileCount: ThemeTypeRole;
 }
 
 export interface ThemeSpacing {

@@ -8,6 +8,7 @@ export const CityChip = css(
   ({ theme }) => `
   display: flex;
   flex-direction: column;
+  inline-size: 100%;
   padding-block: ${theme.spacing.md};
   padding-inline: ${PADDING_INLINE};
   border: 1px solid ${theme.colors.border};
@@ -15,6 +16,9 @@ export const CityChip = css(
   background: ${theme.colors.surface};
   text-decoration: none;
   overflow-wrap: break-word;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
 
   &:hover {
     border-color: ${theme.colors.primary};
@@ -27,6 +31,11 @@ export const CityChip = css(
   &:focus-visible {
     outline: 2px solid ${theme.colors.primary};
     outline-offset: 2px;
+  }
+
+  &.selected {
+    border-color: ${theme.colors.primary};
+    background: ${theme.colors.primarySoft};
   }
 
   > .name {

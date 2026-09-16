@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import styled from 'styled-components';
 
-import { LESSON_AUDIENCE_LABELS } from '~/HomePage/components/LessonCard/consts';
+import { AUDIENCE_LABELS } from '~/consts';
 import { rabbiDisplayName } from '~/helpers';
 import * as pageConsts from '~/LessonPage/consts';
 import { teachingRabbiOf } from '~/LessonPage/helpers';
@@ -107,7 +107,7 @@ export const LessonTicket = styled(({ className, occurrence }: LessonTicketProps
             </p>
 
             <span className="audienceTag" dir="auto">
-              {LESSON_AUDIENCE_LABELS[occurrence.audience]}
+              {AUDIENCE_LABELS[occurrence.audience]}
             </span>
 
             {showNavRow && wazeUrl && googleMapsUrl && (

@@ -2,6 +2,7 @@ import { eq, inArray, sql } from 'drizzle-orm';
 
 import { db } from '../../db/client';
 import { cities, lessons, rabbis } from '../../db/schema';
+import { isRabbiInDirectoryScope } from '../shared/audience-scope';
 import { toRabbiSummary } from '../shared/rabbi-summary';
 import { toSlug } from '../shared/slug';
 import { RabbiNotFoundError } from './errors';
@@ -66,7 +67,8 @@ const toDirectoryEntry = (row: RabbiRow, stats: LessonStats): RabbiDirectoryEntr
 
 export const list = async (query: RabbiListQuery): Promise<RabbiListResult> => {
   const rows = await db.select().from(rabbis);
-  const sorted = [...rows].sort((a, b) => collator.compare(a.name, b.name));
+  const scoped = rows.filter((row) => isRabbiInDirectoryScope(query.scope, row.honorific));
+  const sorted = [...scoped].sort((a, b) => collator.compare(a.name, b.name));
 
   const total = sorted.length;
   const start = (query.page - 1) * query.pageSize;
