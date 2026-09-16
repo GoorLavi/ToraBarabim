@@ -10,9 +10,10 @@ import * as styles from './styles';
 
 // The tile carries its own proportions rather than stretching to a
 // neighbouring lesson card's actual height: the plum area matches a lesson
-// card's poster area exactly, and the white area is a fixed approximation
-// of a lesson card's text block, so the two land at the same total height
-// without depending on either card's own content (styles.ts).
+// card's poster area exactly, and the white area's own height is derived
+// from the same tokens a lesson card's text block renders with, so the two
+// land at the same total height without depending on either card's own
+// content (styles.ts).
 export const WomensAreaTile = styled(({ className, lessonCount }: WomensAreaTileProps) => (
   <Link to={WOMEN_PAGE_PATH} className={className} aria-label={consts.tileAriaLabel(lessonCount)}>
     <div className="plum">

@@ -2,7 +2,7 @@ import { css } from 'styled-components';
 
 import { POSTER_ASPECT_RATIO } from '~/HomePage/consts';
 
-import { EMBLEM_SIZE_FLOOR, EMBLEM_SIZE_MD, EMBLEM_SIZE_PHONE, EMBLEM_SIZE_WIDE, WHITE_AREA_HEIGHT } from './consts';
+import { EMBLEM_SIZE_FLOOR, EMBLEM_SIZE_MD, EMBLEM_SIZE_PHONE, EMBLEM_SIZE_WIDE } from './consts';
 
 export const WomensAreaTile = css(
   ({ theme }) => `
@@ -102,7 +102,19 @@ export const WomensAreaTile = css(
 
   > .white {
     flex-shrink: 0;
-    block-size: ${WHITE_AREA_HEIGHT};
+    /* Derived, not mirrored, from the same tokens a lesson card's own
+       \`.body\` renders with (LessonCard/styles.ts): two block paddings, the
+       title's line-height, two gaps, and two more lines at the meta line's
+       height (its own meta line, then its city line). CARD_WIDE_THRESHOLD
+       (LessonCard/consts.ts) is 190px, below every width a rail card ships
+       at (200/220/240), so a real card's title, meta and city always
+       render at these sizes here, never the compact fallback; \`cardTitle\`
+       and \`secondary\` are themselves identical at phone and desktop, so
+       this is one constant height, not a responsive step. */
+    block-size: calc(
+      2 * ${theme.spacing.md} + ${theme.typography.cardTitle.phone.lineHeight} + 2 * ${theme.spacing.xs} + 2 *
+        ${theme.typography.secondary.phone.lineHeight}
+    );
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -116,13 +128,8 @@ export const WomensAreaTile = css(
     > .heading {
       color: ${theme.colors.text};
       font-weight: ${theme.typography.cardTitle.fontWeight};
-      font-size: ${theme.typography.cardTitleCompact.phone.fontSize};
-      line-height: ${theme.typography.cardTitleCompact.phone.lineHeight};
-
-      @media (min-width: ${theme.breakpoints.lg}) {
-        font-size: ${theme.typography.cardTitle.phone.fontSize};
-        line-height: ${theme.typography.cardTitle.phone.lineHeight};
-      }
+      font-size: ${theme.typography.cardTitle.phone.fontSize};
+      line-height: ${theme.typography.cardTitle.phone.lineHeight};
     }
 
     > .seeAll {
@@ -131,8 +138,8 @@ export const WomensAreaTile = css(
       gap: ${theme.spacing.xs};
       color: ${theme.colors.primary};
       font-weight: ${theme.typography.fontWeight.semiBold};
-      font-size: ${theme.typography.secondaryCompact.phone.fontSize};
-      line-height: ${theme.typography.secondaryCompact.phone.lineHeight};
+      font-size: ${theme.typography.secondary.phone.fontSize};
+      line-height: ${theme.typography.secondary.phone.lineHeight};
 
       /* Off scale, matched to TextLink's own chevron viewBox (7x12). */
       > .chevron {

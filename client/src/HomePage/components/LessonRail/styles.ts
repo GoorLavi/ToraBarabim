@@ -79,13 +79,18 @@ export const LessonRail = css(
 
     > .scrollerGroup {
       overflow-x: auto;
+      /* Explicit, not left to default: setting only \`overflow-x\` computes
+         \`overflow-y\` to \`auto\` too (CSS Overflow), which on a block-size:
+         auto container reserves room for the horizontal scrollbar by
+         growing the box itself, not by borrowing from the content area,
+         which was the extra space above WomensAreaBand (design review).
+         \`hidden\` opts out of that growth; the card's keyboard focus ring
+         (outline 2px, offset 2px) still needs room, which \`padding-block\`
+         below reserves instead. */
+      overflow-y: hidden;
       overscroll-behavior-inline: contain;
       scroll-snap-type: inline proximity;
       padding-inline: ${theme.spacing.lg};
-      /* The card is a real link now, and its keyboard focus ring (outline
-         2px, offset 2px) sits outside the card's own box. Without this the
-         ring is clipped: setting overflow-x here computes overflow-block to
-         auto too, so anything beyond the card's block box gets cut. */
       padding-block: ${theme.spacing.xs};
       scroll-padding-inline-start: ${theme.spacing.lg};
       scrollbar-width: none;
