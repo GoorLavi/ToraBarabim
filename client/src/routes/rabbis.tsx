@@ -3,6 +3,8 @@ import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query
 import type { RabbiDirectoryResponse } from '@torabarabim/common';
 import type { HeadersFunction, MetaFunction } from 'react-router';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
 import { StateCard } from '~/components/StateCard/StateCard';
 import { SITE_WIDE_META } from '~/consts';
 import { LOAD_ERROR_BODY, LOAD_ERROR_HEADING, RABBIS_QUERY_KEYS, RETRY_LABEL } from '~/RabbisPage/consts';
@@ -78,7 +80,14 @@ export function ErrorBoundary() {
         headingLevel="h1"
         heading={LOAD_ERROR_HEADING}
         body={LOAD_ERROR_BODY}
-        action={{ actionLabel: RETRY_LABEL, actionStyle: 'primary', onAction: () => window.location.reload() }}
+        action={{
+          actionLabel: RETRY_LABEL,
+          actionStyle: 'primary',
+          onAction: () => {
+            trackEvent(MIXPANEL_EVENTS.retryClick, { surface: 'rabbisRoute' });
+            window.location.reload();
+          },
+        }}
       />
     </main>
   );

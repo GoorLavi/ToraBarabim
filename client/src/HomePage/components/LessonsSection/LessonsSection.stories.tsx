@@ -55,7 +55,7 @@ const futureDayItems: LessonOccurrence[] = [
 
 const city = { id: '100', name: 'נתניה' };
 
-const pendingQuery: LessonSearchQueryState = { isPending: true, isError: false, data: undefined, error: null, refetch: () => {} };
+const pendingQuery: LessonSearchQueryState = { isPending: true, isError: false, data: undefined, error: null, refetch: () => {}, dataUpdatedAt: 0 };
 
 const errorQuery: LessonSearchQueryState = {
   isPending: false,
@@ -63,6 +63,7 @@ const errorQuery: LessonSearchQueryState = {
   data: undefined,
   error: new HomeApiError(500, 'GET /v1/lessons returned 500'),
   refetch: () => {},
+  dataUpdatedAt: 0,
 };
 
 const populatedQuery: LessonSearchQueryState = {
@@ -71,6 +72,7 @@ const populatedQuery: LessonSearchQueryState = {
   data: { items: todayItems, page: 1, pageSize: 50, total: todayItems.length },
   error: null,
   refetch: () => {},
+  dataUpdatedAt: 0,
 };
 
 // The ratified empty state: today has nothing, so the screen names that and
@@ -82,6 +84,7 @@ const emptyWithFallbackQuery: LessonSearchQueryState = {
   data: { items: futureDayItems, page: 1, pageSize: 50, total: futureDayItems.length },
   error: null,
   refetch: () => {},
+  dataUpdatedAt: 0,
 };
 
 // Nothing anywhere in the whole widened window: the terminal case, still
@@ -92,6 +95,7 @@ const terminalEmptyQuery: LessonSearchQueryState = {
   data: { items: [], page: 1, pageSize: 50, total: 0 },
   error: null,
   refetch: () => {},
+  dataUpdatedAt: 0,
 };
 
 const meta: Meta<typeof LessonsSection> = {

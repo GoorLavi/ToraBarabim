@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
+import { useActiveFilters } from '~/analytics/useActiveFilters';
 import { directionForValue } from '~/helpers';
 
 import * as consts from './consts';
@@ -14,6 +15,13 @@ import * as styles from './styles';
 // debounce settles, so typing never feels like it is waiting on a request.
 export const SearchField = styled(({ className, value, onChange }: SearchFieldProps) => {
   const [draft, setDraft] = useState(value);
+  const activeFilters = useActiveFilters();
+  // Read from a ref rather than listed as an effect dependency: `Layout`
+  // builds a fresh `filters` object on every render, and including it here
+  // would restart the debounce timer on an unrelated city or date change
+  // while someone is mid-keystroke.
+  const activeFiltersRef = useRef(activeFilters);
+  activeFiltersRef.current = activeFilters;
 
   useEffect(() => {
     if (draft.trim() === value) return;
@@ -22,7 +30,17 @@ export const SearchField = styled(({ className, value, onChange }: SearchFieldPr
       // Tracked value matches what `onChange` actually commits (useSearchQuery
       // trims before writing to the URL), not the raw keystroke buffer.
       const committed = draft.trim();
-      if (committed.length > 0) trackEvent(MIXPANEL_EVENTS.search, { query: committed });
+      if (committed.length > 0) {
+        const filters = activeFiltersRef.current;
+        trackEvent(MIXPANEL_EVENTS.search, {
+          query: committed,
+          queryLength: committed.length,
+          ...(filters.cityId ? { cityId: filters.cityId } : {}),
+          ...(filters.cityName ? { cityName: filters.cityName } : {}),
+          dateOption: filters.dateOption,
+          ...(filters.date ? { date: filters.date } : {}),
+        });
+      }
     }, consts.DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
   }, [draft, value, onChange]);

@@ -5,11 +5,11 @@ import { LessonCard } from '~/HomePage/components/LessonCard/LessonCard';
 import type { LessonsGridProps } from './models';
 import * as styles from './styles';
 
-export const LessonsGrid = styled(({ className, items }: LessonsGridProps) => (
+export const LessonsGrid = styled(({ className, items, surface }: LessonsGridProps) => (
   <ul className={className}>
-    {items.map((item) => (
+    {items.map((item, index) => (
       <li className="cell" key={`${item.lessonId}-${item.date}`}>
-        <LessonCard lesson={item} />
+        <LessonCard {...{ lesson: item, clickContext: { surface, position: index } }} />
       </li>
     ))}
   </ul>

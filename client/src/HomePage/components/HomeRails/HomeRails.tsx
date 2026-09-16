@@ -1,6 +1,9 @@
 import classNames from 'classnames';
 import styled from 'styled-components';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
+
 import { LessonRail } from '../LessonRail/LessonRail';
 import { RailSkeleton } from './components/RailSkeleton/RailSkeleton';
 import * as consts from './consts';
@@ -13,7 +16,14 @@ export const HomeRails = styled(({ className, query }: HomeRailsProps) => {
       <div className={classNames(className, 'error')} role="alert">
         <p className="headline">{consts.ERROR_HEADLINE}</p>
         <p className="hint">{consts.ERROR_HINT}</p>
-        <button type="button" className="retry" onClick={() => query.refetch()}>
+        <button
+          type="button"
+          className="retry"
+          onClick={() => {
+            trackEvent(MIXPANEL_EVENTS.retryClick, { surface: 'homeRails' });
+            query.refetch();
+          }}
+        >
           {consts.RETRY_LABEL}
         </button>
       </div>

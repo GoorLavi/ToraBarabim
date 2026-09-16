@@ -48,7 +48,7 @@ export const DateFilterChips = styled(
 
     const handleSelectDate = (isoDate: string): void => {
       onSelectCustomDate(isoDate);
-      trackEvent(MIXPANEL_EVENTS.filterDate, { date: isoDate });
+      trackEvent(MIXPANEL_EVENTS.filterDate, { option: 'custom', date: isoDate, source: 'calendar' });
       closePicker();
     };
 
@@ -106,7 +106,7 @@ export const DateFilterChips = styled(
               aria-label={isSelected ? consts.clearFilterLabel(item.label) : item.label}
               onClick={() => {
                 onSelectOption(item.value);
-                if (!isSelected) trackEvent(MIXPANEL_EVENTS.filterDate, { date: item.value });
+                if (!isSelected) trackEvent(MIXPANEL_EVENTS.filterDate, { option: item.value, source: 'chip' });
               }}
             >
               <span>{item.label}</span>

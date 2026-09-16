@@ -7,11 +7,13 @@ import * as consts from './consts';
 import { scrollRailBy } from './helpers';
 import type { LessonRailProps } from './models';
 import * as styles from './styles';
+import { useRailScrollTracking } from './useRailScrollTracking';
 import { useScrollEdges } from './useScrollEdges';
 
 export const LessonRail = styled(({ className, title, items }: LessonRailProps) => {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const { atStart, atEnd } = useScrollEdges(scrollerRef);
+  useRailScrollTracking(scrollerRef, title);
 
   const scroll = (direction: 'prev' | 'next'): void => {
     if (scrollerRef.current) scrollRailBy(scrollerRef.current, direction);
@@ -32,9 +34,9 @@ export const LessonRail = styled(({ className, title, items }: LessonRailProps) 
 
         <div className="scrollerGroup" ref={scrollerRef}>
           <ul className="scroller">
-            {items.map((item) => (
+            {items.map((item, index) => (
               <li key={`${item.lessonId}-${item.date}`}>
-                <LessonCard lesson={item} />
+                <LessonCard {...{ lesson: item, clickContext: { surface: 'homeRail' as const, railTitle: title, position: index } }} />
               </li>
             ))}
           </ul>

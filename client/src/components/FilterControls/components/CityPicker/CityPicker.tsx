@@ -51,7 +51,7 @@ export const CityPicker = styled(({ className, city, onSelectCity, onClearCity }
   const handleSelectCity = (selected: SelectedCity): void => {
     onSelectCity(selected);
     addRecentCity(selected);
-    trackEvent(MIXPANEL_EVENTS.filterCity, { cityId: selected.id, cityName: selected.name });
+    trackEvent(MIXPANEL_EVENTS.filterCity, { cityId: selected.id, cityName: selected.name, source: 'headerPicker' });
     close();
   };
 

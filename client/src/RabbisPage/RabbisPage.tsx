@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import styled from 'styled-components';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
 import { StateCard } from '~/components/StateCard/StateCard';
 
 import { RabbiListRow } from './components/RabbiListRow/RabbiListRow';
@@ -71,7 +73,14 @@ export const RabbisPage = styled(({ className }: RabbisPageProps) => {
           headingLevel="h2"
           heading={consts.LOAD_ERROR_HEADING}
           body={consts.LOAD_ERROR_BODY}
-          action={{ actionLabel: consts.RETRY_LABEL, actionStyle: 'primary', onAction: () => query.refetch() }}
+          action={{
+            actionLabel: consts.RETRY_LABEL,
+            actionStyle: 'primary',
+            onAction: () => {
+              trackEvent(MIXPANEL_EVENTS.retryClick, { surface: 'rabbisPage' });
+              query.refetch();
+            },
+          }}
         />
       )}
 
@@ -103,9 +112,9 @@ export const RabbisPage = styled(({ className }: RabbisPageProps) => {
 
       {query.isSuccess && !isBoardEmpty && !hasNoResults && (
         <ul className="list">
-          {filteredRabbis.map((rabbi) => (
+          {filteredRabbis.map((rabbi, index) => (
             <li key={rabbi.id} className="cell">
-              <RabbiListRow rabbi={rabbi} />
+              <RabbiListRow {...{ rabbi, position: index }} />
             </li>
           ))}
         </ul>

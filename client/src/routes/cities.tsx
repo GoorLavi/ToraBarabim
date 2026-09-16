@@ -3,6 +3,8 @@ import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query
 import type { CityDirectoryResponse } from '@torabarabim/common';
 import type { HeadersFunction, MetaFunction } from 'react-router';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
 import { CitiesPage } from '~/CitiesPage/CitiesPage';
 import { CITIES_QUERY_KEYS, LOAD_ERROR_BODY, LOAD_ERROR_HEADING, RETRY_LABEL } from '~/CitiesPage/consts';
 import { StateCard } from '~/components/StateCard/StateCard';
@@ -68,7 +70,14 @@ export function ErrorBoundary() {
         headingLevel="h1"
         heading={LOAD_ERROR_HEADING}
         body={LOAD_ERROR_BODY}
-        action={{ actionLabel: RETRY_LABEL, actionStyle: 'primary', onAction: () => window.location.reload() }}
+        action={{
+          actionLabel: RETRY_LABEL,
+          actionStyle: 'primary',
+          onAction: () => {
+            trackEvent(MIXPANEL_EVENTS.retryClick, { surface: 'citiesRoute' });
+            window.location.reload();
+          },
+        }}
       />
     </main>
   );

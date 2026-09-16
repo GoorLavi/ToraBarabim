@@ -45,9 +45,9 @@ export const RabbiEmptyLessons = styled(
                       <LessonCardSkeleton />
                     </div>
                   ))
-                : nationwideItems?.map((item) => (
+                : nationwideItems?.map((item, index) => (
                     <div className="cell" key={`${item.lessonId}-${item.date}`}>
-                      <LessonCard lesson={item} />
+                      <LessonCard {...{ lesson: item, clickContext: { surface: 'rabbiPage' as const, position: index } }} />
                     </div>
                   ))}
             </div>

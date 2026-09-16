@@ -9,7 +9,7 @@ import { ContactCta } from './components/ContactCta/ContactCta';
 import { HomeRails } from './components/HomeRails/HomeRails';
 import { LessonsSection } from './components/LessonsSection/LessonsSection';
 import { RabbiRow } from './components/RabbiRow/RabbiRow';
-import { LESSON_WINDOW_DAYS, LESSON_WINDOW_PAGE_SIZE } from './consts';
+import { HOME_QUERY_KEYS, LESSON_WINDOW_DAYS, LESSON_WINDOW_PAGE_SIZE } from './consts';
 import { addDays, contextLine, flattenHomeRows, resolveHomeMode, resolveTargetDate } from './helpers';
 import type { HomePageProps, LessonFilters } from './models';
 import * as styles from './styles';
@@ -67,6 +67,7 @@ export const HomePage = styled(({ className }: HomePageProps) => {
           ) : (
             <LessonsSection
               query={lessonsQuery}
+              resultSetKey={HOME_QUERY_KEYS.lessons(filters)}
               hasDateFilter={hasDateFilter}
               targetDate={targetDate}
               city={city}

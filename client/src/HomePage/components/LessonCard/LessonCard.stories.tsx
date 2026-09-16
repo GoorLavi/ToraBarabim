@@ -28,6 +28,7 @@ const baseLesson: LessonOccurrence = {
 const meta: Meta<typeof LessonCard> = {
   title: 'HomePage/LessonCard',
   component: LessonCard,
+  args: { clickContext: { surface: 'lessonsGrid', position: 0 } },
   decorators: [
     (Story) => (
       <div style={{ maxWidth: '260px' }}>

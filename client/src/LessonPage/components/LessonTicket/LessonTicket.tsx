@@ -1,7 +1,11 @@
 import classNames from 'classnames';
 import styled from 'styled-components';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { navigationClickProps } from '~/analytics/helpers';
+import { trackEvent } from '~/analytics/mixpanel';
 import { LESSON_AUDIENCE_LABELS } from '~/HomePage/components/LessonCard/consts';
+import { todayInIsrael } from '~/HomePage/helpers';
 import { rabbiDisplayName } from '~/helpers';
 import * as pageConsts from '~/LessonPage/consts';
 import { teachingRabbiOf } from '~/LessonPage/helpers';
@@ -40,6 +44,11 @@ export const LessonTicket = styled(({ className, occurrence }: LessonTicketProps
   const wazeUrl = wazeHref(occurrence.place);
   const googleMapsUrl = googleMapsHref(occurrence.place);
   const showNavRow = !isCancelled && Boolean(wazeUrl) && Boolean(googleMapsUrl);
+  const rabbiName = rabbiDisplayName(teachingRabbi);
+
+  const handleNavigationClick = (provider: 'waze' | 'googleMaps'): void => {
+    trackEvent(MIXPANEL_EVENTS.navigationClick, navigationClickProps(provider, occurrence, teachingRabbi, rabbiName, todayInIsrael()));
+  };
 
   return (
     <div className={classNames(className, { cancelled: isCancelled, noPoster: isNoPoster })}>
@@ -122,6 +131,7 @@ export const LessonTicket = styled(({ className, occurrence }: LessonTicketProps
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={consts.WAZE_ARIA_LABEL}
+                  onClick={() => handleNavigationClick('waze')}
                 >
                   <svg className="icon waze" viewBox={consts.WAZE_ICON_VIEW_BOX} aria-hidden="true">
                     {consts.WAZE_ICON_PATHS.map(renderIconPath)}
@@ -135,6 +145,7 @@ export const LessonTicket = styled(({ className, occurrence }: LessonTicketProps
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={consts.GOOGLE_MAPS_ARIA_LABEL}
+                  onClick={() => handleNavigationClick('googleMaps')}
                 >
                   <svg className="icon googleMaps" viewBox={consts.GOOGLE_MAPS_ICON_VIEW_BOX} aria-hidden="true">
                     {consts.GOOGLE_MAPS_ICON_PATHS.map(renderIconPath)}
@@ -160,7 +171,7 @@ export const LessonTicket = styled(({ className, occurrence }: LessonTicketProps
               )}
 
               <h1 className="name" dir="auto">
-                {rabbiDisplayName(teachingRabbi)}
+                {rabbiName}
               </h1>
 
               {teachingRabbi.title && (

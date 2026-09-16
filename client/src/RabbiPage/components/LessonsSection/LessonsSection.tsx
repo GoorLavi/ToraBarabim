@@ -1,5 +1,7 @@
 import styled from 'styled-components';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
 import { LESSONS_HEADING, LESSONS_SUBHEADING, RETRY_LABEL } from '~/RabbiPage/consts';
 
 import { LessonRow } from '../LessonRow/LessonRow';
@@ -29,7 +31,14 @@ export const LessonsSection = styled(
       {!isPending && isError && (
         <div className="error" role="alert">
           <p className="message">{consts.ERROR_MESSAGE}</p>
-          <button type="button" className="retry" onClick={onRetry}>
+          <button
+            type="button"
+            className="retry"
+            onClick={() => {
+              trackEvent(MIXPANEL_EVENTS.retryClick, { surface: 'rabbiPageLessons' });
+              onRetry();
+            }}
+          >
             {RETRY_LABEL}
           </button>
         </div>
