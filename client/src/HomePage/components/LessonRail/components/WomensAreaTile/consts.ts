@@ -4,15 +4,17 @@ export const TILE_HEADING = 'שיעורים לנשים';
 export const TILE_LINE = 'לפי יום, לפי עיר ולפי רב או רבנית';
 export const TILE_LINK_LABEL = 'לכל השיעורים לנשים';
 
-// 44 percent of the tile's own width, at each of the three widths a rail
-// card steps through (LessonRail/consts.ts, CARD_WIDTH_PHONE/MD/LG).
-export const EMBLEM_SIZE_PHONE = 88;
-export const EMBLEM_SIZE_MD = 96;
-export const EMBLEM_SIZE_WIDE = 104;
+// The tile's own width now tracks the rail's card width continuously
+// (LessonRail/helpers.ts, railCardWidth), rather than stepping at three
+// fixed breakpoints, so the emblem is sized as a live percentage of it
+// instead of a matching set of fixed steps (styles.ts).
+export const EMBLEM_WIDTH_PERCENT = '44%';
 // The floor the emblem shrinks to, first, if the plum area ever runs short
 // (styles.ts's container queries): below this it stops reading as
-// candlesticks.
-export const EMBLEM_SIZE_FLOOR = 72;
+// candlesticks. 56 at the design's own measurement, landed on just above
+// the 44 percent value a 320-wide phone's card produces (60), so the floor
+// itself barely ever actually engages.
+export const EMBLEM_SIZE_FLOOR = 56;
 
 // The plum area shows the bare numeral large, and the word beneath it
 // switches singular/plural on its own; `lessonCountLabel` (which spells the

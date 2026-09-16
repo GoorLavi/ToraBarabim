@@ -17,7 +17,10 @@ import * as styles from './styles';
 export const WomensAreaTile = styled(({ className, lessonCount }: WomensAreaTileProps) => (
   <Link to={WOMEN_PAGE_PATH} className={className} aria-label={consts.tileAriaLabel(lessonCount)}>
     <div className="plum">
-      <CandlesEmblem {...{ variant: 'onPlum', size: consts.EMBLEM_SIZE_PHONE }} className="emblem" />
+      {/* The `size` attribute is only ever a fallback before CSS applies:
+          `.emblem` in styles.ts sizes it for real, as a live percentage of
+          the tile's own width. */}
+      <CandlesEmblem {...{ variant: 'onPlum', size: consts.EMBLEM_SIZE_FLOOR }} className="emblem" />
       <p className="count" dir="ltr">
         {lessonCount}
       </p>

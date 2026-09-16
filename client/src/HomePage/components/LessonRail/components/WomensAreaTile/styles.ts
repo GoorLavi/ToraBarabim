@@ -1,13 +1,20 @@
 import { css } from 'styled-components';
 
+import { CARD_WIDE_THRESHOLD } from '~/HomePage/components/LessonCard/consts';
 import { POSTER_ASPECT_RATIO } from '~/HomePage/consts';
 
-import { EMBLEM_SIZE_FLOOR, EMBLEM_SIZE_MD, EMBLEM_SIZE_PHONE, EMBLEM_SIZE_WIDE } from './consts';
+import { EMBLEM_SIZE_FLOOR, EMBLEM_WIDTH_PERCENT } from './consts';
 
 export const WomensAreaTile = css(
   ({ theme }) => `
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
+  /* Fills its own \`<li>\` exactly like a card does: the rail's row stretches
+     every item to the tallest one (a wrapped meta line, most often), and
+     without this the tile would stop at its own natural height instead,
+     landing short of its row-mates by however much the row grew. */
+  block-size: 100%;
   overflow: hidden;
   border: 1px solid ${theme.colors.border};
   border-radius: ${theme.radii.lg};
@@ -30,8 +37,11 @@ export const WomensAreaTile = css(
   > .plum {
     container-type: inline-size;
     container-name: plum;
-    /* Equal to a lesson card's own poster area: same ratio, so the same
-       width steps to the same height (POSTER_ASPECT_RATIO, HomePage/consts.ts). */
+    /* Equal to a lesson card's own poster area, always, never more: fixed
+       by the same 3:4 ratio (POSTER_ASPECT_RATIO, HomePage/consts.ts), the
+       same pattern the card's own poster now follows. Never distorted:
+       the row's stretch lands in \`.white\` below, not here. */
+    flex-shrink: 0;
     aspect-ratio: ${POSTER_ASPECT_RATIO};
     display: flex;
     flex-direction: column;
@@ -42,35 +52,25 @@ export const WomensAreaTile = css(
     background: ${theme.colors.primary};
     text-align: center;
 
-    /* The plum area's own three fallbacks, each only reachable below the
-       narrowest width this tile actually ships at (200px), and strictly
-       ordered: the emblem shrinks toward its floor first (183px), then the
-       gap between every item in the column tightens (159px), then the
-       bottom line is dropped (150px, on the line below). The count itself
-       is never part of either. */
+    /* The plum area's own remaining fallbacks, strictly ordered: the gap
+       between every item in the column tightens first (159px), then the
+       bottom line is dropped (150px, on the line below). The emblem no
+       longer needs a fallback of its own: floored at a live percentage
+       (below), it already lands at the floor right around the narrowest
+       width the rail now ships at. The count itself is never part of
+       either. */
     @container plum (max-width: 159px) {
       gap: ${theme.spacing.sm};
     }
 
     > .emblem {
       flex-shrink: 0;
-      inline-size: ${EMBLEM_SIZE_PHONE}px;
-      block-size: ${EMBLEM_SIZE_PHONE}px;
-
-      @media (min-width: ${theme.breakpoints.md}) {
-        inline-size: ${EMBLEM_SIZE_MD}px;
-        block-size: ${EMBLEM_SIZE_MD}px;
-      }
-
-      @media (min-width: ${theme.breakpoints.lg}) {
-        inline-size: ${EMBLEM_SIZE_WIDE}px;
-        block-size: ${EMBLEM_SIZE_WIDE}px;
-      }
-
-      @container plum (max-width: 183px) {
-        inline-size: ${EMBLEM_SIZE_FLOOR}px;
-        block-size: ${EMBLEM_SIZE_FLOOR}px;
-      }
+      /* 44 percent of the tile's own width (design spec), floored so it
+         never stops reading as candlesticks; the tile's width itself now
+         tracks the rail's card width continuously, not in fixed steps
+         (consts.ts). */
+      inline-size: max(${EMBLEM_SIZE_FLOOR}px, ${EMBLEM_WIDTH_PERCENT});
+      block-size: max(${EMBLEM_SIZE_FLOOR}px, ${EMBLEM_WIDTH_PERCENT});
     }
 
     > .count {
@@ -101,20 +101,32 @@ export const WomensAreaTile = css(
   }
 
   > .white {
-    flex-shrink: 0;
-    /* Derived, not mirrored, from the same tokens a lesson card's own
-       \`.body\` renders with (LessonCard/styles.ts): two block paddings, the
-       title's line-height, two gaps, and two more lines at the meta line's
-       height (its own meta line, then its city line). CARD_WIDE_THRESHOLD
-       (LessonCard/consts.ts) is 190px, below every width a rail card ships
-       at (200/220/240), so a real card's title, meta and city always
-       render at these sizes here, never the compact fallback; \`cardTitle\`
-       and \`secondary\` are themselves identical at phone and desktop, so
-       this is one constant height, not a responsive step. */
-    block-size: calc(
-      2 * ${theme.spacing.md} + ${theme.typography.cardTitle.phone.lineHeight} + 2 * ${theme.spacing.xs} + 2 *
-        ${theme.typography.secondary.phone.lineHeight}
+    /* Absorbs the row's own stretch (the plum area above never does, see
+       \`.plum\`): the same pattern the card's own body now follows. Never
+       below a floor, though: the same tokens a real card's own \`.body\`
+       renders with at this width (LessonCard/styles.ts), crossing the
+       card's own CARD_WIDE_THRESHOLD (LessonCard/consts.ts, 190px), not
+       CANCELLED_LABEL_BOTTOM_THRESHOLD's 200, a different decision. Below
+       it: two block paddings, the compact title's line-height, two gaps,
+       two more lines at the compact meta line's height. At or above it,
+       the same shape with the wide roles instead. This tile's own content
+       is always the same two lines regardless of width; the difference
+       becomes empty space at the bottom, so the tile matches the card
+       beside it exactly when the row does not stretch, and grows with it
+       when the row does, same as the card. */
+    flex: 1 1 auto;
+    min-block-size: calc(
+      2 * ${theme.spacing.md} + ${theme.typography.cardTitleCompact.phone.lineHeight} + 2 * ${theme.spacing.xs} + 2 *
+        ${theme.typography.secondaryCompact.phone.lineHeight}
     );
+
+    @container (min-inline-size: ${CARD_WIDE_THRESHOLD}) {
+      min-block-size: calc(
+        2 * ${theme.spacing.md} + ${theme.typography.cardTitle.phone.lineHeight} + 2 * ${theme.spacing.xs} + 2 *
+          ${theme.typography.secondary.phone.lineHeight}
+      );
+    }
+
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -128,8 +140,13 @@ export const WomensAreaTile = css(
     > .heading {
       color: ${theme.colors.text};
       font-weight: ${theme.typography.cardTitle.fontWeight};
-      font-size: ${theme.typography.cardTitle.phone.fontSize};
-      line-height: ${theme.typography.cardTitle.phone.lineHeight};
+      font-size: ${theme.typography.cardTitleCompact.phone.fontSize};
+      line-height: ${theme.typography.cardTitleCompact.phone.lineHeight};
+
+      @container (min-inline-size: ${CARD_WIDE_THRESHOLD}) {
+        font-size: ${theme.typography.cardTitle.phone.fontSize};
+        line-height: ${theme.typography.cardTitle.phone.lineHeight};
+      }
     }
 
     > .seeAll {
@@ -138,8 +155,13 @@ export const WomensAreaTile = css(
       gap: ${theme.spacing.xs};
       color: ${theme.colors.primary};
       font-weight: ${theme.typography.fontWeight.semiBold};
-      font-size: ${theme.typography.secondary.phone.fontSize};
-      line-height: ${theme.typography.secondary.phone.lineHeight};
+      font-size: ${theme.typography.secondaryCompact.phone.fontSize};
+      line-height: ${theme.typography.secondaryCompact.phone.lineHeight};
+
+      @container (min-inline-size: ${CARD_WIDE_THRESHOLD}) {
+        font-size: ${theme.typography.secondary.phone.fontSize};
+        line-height: ${theme.typography.secondary.phone.lineHeight};
+      }
 
       /* Off scale, matched to TextLink's own chevron viewBox (7x12). */
       > .chevron {

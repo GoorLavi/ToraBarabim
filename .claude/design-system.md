@@ -415,16 +415,45 @@ around.
 The unfiltered home page is rows of cards that scroll sideways, each row a different cut
 of the same lessons.
 
-- **Card width is fixed, not a fraction:** 200 on a phone, 220 from 768, 240 from 1024.
-  A fraction makes the peek depend on the screen, and the peek is the whole point.
-- **Gap** `md` (12) on a phone, `lg` (16) from 768. Heading to cards `lg` (16).
-- **The peek is the signal.** At a phone width one card sits whole and the next is
-  visibly cut, so the row reads as continuing rather than ending.
+- **The card is one size across the whole site, and that size comes from the grid.** A
+  rail card and a grid card are the same card at the same screen width: the grid's column
+  width, because columns must fill the content band exactly. 163.5 at 375, 229 at 768,
+  315 at 1024, 296 at 1280, 308 from 1328 up. The card gets *smaller* at 1280, where the
+  grid steps from three columns to four; that is the grid's rule and the rail follows it.
+- **Gap `lg` (16) everywhere**, in a rail and in a grid alike. Heading to cards `lg` (16).
+- **The rail runs full-bleed to the screen edge, with the page gutter as its inner
+  padding.** The first card still lines up under the heading, and the row visibly carries
+  on past the content band instead of ending with it.
+- **The fade at the inline end is the signal that there is more, together with the
+  arrows.** Drawn over the cards, from `color.bg` at the row's edge to transparent, shown
+  only while there is more to scroll and gone once the row is at its end. It is the one
+  signal that works on a touch screen, where there are no arrows, so it is wider there:
+  **56px below `md` (768), 32px from `md` up**, where the arrows share the work. Below
+  `md` it takes a middle stop, `color.bg` at 60% opacity halfway, so the edge stays solid
+  while the card behind it is still legible. A 32px linear fade was tried first and read
+  as a shadow on the edge rather than as a card waiting: the row looked finished.
+- **The fade's position is logical (`inset-inline-end`), its gradient axis is physical.**
+  CSS cannot express a gradient direction logically, so that one line names a side, with a
+  comment saying why. The direction still lives in one place: the element's position.
+- **The women's-area tile is a rail item, so it follows the card exactly.** Same width at
+  every breakpoint; its plum area is the card's image area (3:4); its white area equals
+  the card's text block at that width and is never written as a number, so it takes the
+  card's own type step at the same 190 threshold. The emblem is 44% of the card width with
+  a 56 floor: at a 320 screen that is a 136 card and a 60 emblem.
+- **This replaces the earlier rule**, which fixed the rail card at 200 / 220 / 240 and
+  named the peek as the signal. The owner decided that the lesson card is one size
+  everywhere, rails included, for consistency and reuse. The cost is arithmetic: columns
+  fill the band exactly, so what shows of the next card is only the gutter minus the gap,
+  8px at 1280 and nothing at 375. The fade is what carries the meaning the peek used to.
 - **Rails stay rails at every width.** They never become a grid on a desktop: the order
   is a ranking, and a wrapping grid destroys it and turns the first row into a page.
 - Above 1024, previous and next buttons at the row's inline edges, 48 by 48, `surface`
   fill with `border` and `shadow.card`, centred on the poster rather than the whole card.
-  At the ends they go **disabled, never hidden**, so the row does not shift.
+  The poster is 3:4 of the card, so its centre moves with the card and **is calculated
+  from the same width formula, never stored as a number**: below 1280 the grid is three
+  columns, so the card is wider and the poster taller, and a fixed value sits 56px off
+  centre at 1200. The 197 in the Figma frame is what that calculation gives at 1280, not a
+  constant. At the ends they go **disabled, never hidden**, so the row does not shift.
 - **Snap by proximity, never mandatorily.** Mandatory snapping fights a fast flick and
   feels grabby, which is the opposite of what this site is for.
 - A flick must not navigate the browser backwards.

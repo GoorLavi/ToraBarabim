@@ -1,6 +1,7 @@
 import { css } from 'styled-components';
 
-import { CARD_WIDTH_LG, CARD_WIDTH_MD, CARD_WIDTH_PHONE } from '~/HomePage/components/LessonRail/consts';
+import { RAIL_COLUMNS_MD, RAIL_COLUMNS_PHONE, RAIL_COLUMNS_XL } from '~/HomePage/components/LessonRail/consts';
+import { railCardWidth, railEdgeOffset } from '~/HomePage/components/LessonRail/helpers';
 
 // Static, not a pulse: a breathing block reads as a fault to an audience
 // that spans a wide age range and often reads outdoors, and the shape below
@@ -21,29 +22,28 @@ export const RailSkeleton = css(
 
   > .cards {
     display: flex;
-    gap: ${theme.spacing.md};
+    gap: ${theme.spacing.lg};
     overflow: hidden;
     /* Mirrors LessonRail's .scrollerWrap/.scroller exactly, so a skeleton
        card lands on the same pixel its real card will occupy, and the row
        never overflows the viewport while loading (design review, item 1). */
-    margin-inline: calc(-1 * ${theme.spacing.lg});
-    padding-inline: ${theme.spacing.lg};
+    margin-inline: calc(-1 * ${railEdgeOffset(theme, false)});
+    padding-inline: ${railEdgeOffset(theme, false)};
 
     @media (min-width: ${theme.breakpoints.md}) {
-      gap: ${theme.spacing.lg};
-      margin-inline: calc(-1 * ${theme.spacing.xl});
-      padding-inline: ${theme.spacing.xl};
+      margin-inline: calc(-1 * ${railEdgeOffset(theme, true)});
+      padding-inline: ${railEdgeOffset(theme, true)};
     }
 
     > .card {
-      flex: 0 0 ${CARD_WIDTH_PHONE};
+      flex: 0 0 ${railCardWidth(theme, RAIL_COLUMNS_PHONE, railEdgeOffset(theme, false))};
 
       @media (min-width: ${theme.breakpoints.md}) {
-        flex-basis: ${CARD_WIDTH_MD};
+        flex-basis: ${railCardWidth(theme, RAIL_COLUMNS_MD, railEdgeOffset(theme, true))};
       }
 
-      @media (min-width: ${theme.breakpoints.lg}) {
-        flex-basis: ${CARD_WIDTH_LG};
+      @media (min-width: ${theme.breakpoints.xl}) {
+        flex-basis: ${railCardWidth(theme, RAIL_COLUMNS_XL, railEdgeOffset(theme, true))};
       }
     }
   }
