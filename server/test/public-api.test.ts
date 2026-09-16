@@ -381,6 +381,17 @@ describe('public API', () => {
       assert.equal(res.statusCode, 400);
     });
 
+    // An exact name match outranks every other tier (population, then name)
+    // and never depends on the lesson count, so this holds whichever way the
+    // count is gathered.
+    test('an exact name match is ordered first', async () => {
+      const res = await app.inject({ method: 'GET', url: `/v1/cities?q=${encodeURIComponent(SEEDED_CITY_NAME)}` });
+      assert.equal(res.statusCode, 200);
+      const { items } = res.json() as { items: CitySearchResult[] };
+      assert.ok(items.length > 0);
+      assert.equal(items[0]?.name, SEEDED_CITY_NAME);
+    });
+
     // A general surface (the header search), so it counts general-scope
     // lessons only: the rabbanit's city has real lessons but none of them
     // general, so its count here must be 0, not the raw lesson count.

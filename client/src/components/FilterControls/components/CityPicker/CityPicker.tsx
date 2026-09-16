@@ -30,6 +30,13 @@ export const CityPicker = styled(({ className, city, onSelectCity, onClearCity }
     pillRef.current?.focus();
   };
 
+  // Outside click and scrim tap already tell us where the user is going
+  // next; pulling focus back to the pill here would fight the click that
+  // dismissed the panel.
+  const dismiss = (): void => {
+    setIsOpen(false);
+  };
+
   // The desktop popover is never portalled (position: absolute needs only a
   // positioned ancestor, not the viewport, so it never hits the fixed-
   // position containing-block bug ResponsiveSheet works around), so a plain
@@ -41,7 +48,7 @@ export const CityPicker = styled(({ className, city, onSelectCity, onClearCity }
 
     const handlePointerDown = (event: PointerEvent): void => {
       if (rootRef.current?.contains(event.target as Node)) return;
-      close();
+      dismiss();
     };
 
     document.addEventListener('pointerdown', handlePointerDown);
@@ -91,7 +98,7 @@ export const CityPicker = styled(({ className, city, onSelectCity, onClearCity }
       </button>
 
       {isOpen && !isWide && (
-        <FilterDrawer {...{ ariaLabel: consts.PANEL_HEADING, onDismiss: close }}>
+        <FilterDrawer {...{ ariaLabel: consts.PANEL_HEADING, onDismiss: dismiss }}>
           <CityPickerPanel {...{ isDrawer: true, isWide, recentCities, onSelect: handleSelectCity, onClose: close }} />
         </FilterDrawer>
       )}
