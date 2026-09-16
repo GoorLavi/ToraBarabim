@@ -7,9 +7,9 @@ import * as styles from './styles';
 
 export const LessonsGrid = styled(({ className, items }: LessonsGridProps) => (
   <ul className={className}>
-    {items.map((item) => (
-      <li className="cell" key={`${item.lessonId}-${item.date}`}>
-        <LessonCard lesson={item} />
+    {items.map((lesson) => (
+      <li className="cell" key={`${lesson.lessonId}-${lesson.date}`}>
+        <LessonCard {...{ lesson }} />
       </li>
     ))}
   </ul>

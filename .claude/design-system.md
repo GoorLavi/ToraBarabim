@@ -294,12 +294,12 @@ list heading has usually already stated. It is the least load-bearing text on th
 **Do not cite this exemption anywhere else.** Any other request to go below 14 is a
 signal that something needs less text, not smaller text.
 
-In a two-column poster grid on a phone the card is roughly 173px wide, and the card
+In a two-column poster grid on a phone the card is roughly 171px wide, and the card
 title steps down to 15 / 21 with its supporting lines at 14 / 20. That is the floor, not
 a licence to shrink further.
 
 **The step is measured against the card's own width, never the screen's.** A card 200px
-wide on a 375px phone gets the full size; the same component in a 173px grid cell keeps
+wide on a 375px phone gets the full size; the same component in a 171px grid cell keeps
 the floor. Reading the viewport instead was a real defect: it shrank the type on a card
 that had plenty of room, because a narrow screen was mistaken for a narrow card.
 
@@ -374,8 +374,19 @@ poster, at 243 by 324, which is a thumbnail. An earlier version of this paragrap
 four columns broke long names at 262px; that was an estimate, it was measured and found
 wrong, and it is gone.
 
-**This describes every lesson grid:** the filtered home page, `/lessons`, and the city
-page. The rows use a fixed card width and never reflow into a grid; see below.
+**This describes every lesson grid:** the filtered home page, `/lessons`, the city and
+area pages, and the nationwide fallback on a rabbi page with no lessons of its own. It is
+one component, and there is nothing for a second copy to disagree with. The rows use a
+fixed card width and never reflow into a grid; see below.
+
+**The gap is `lg` (16) at every width, and a row's cards share a bottom edge.** One
+value, no breakpoint step: the 296px and 308px cells above are computed against a 16 gap,
+and a phone cell is 171px in the 358 band a 390 screen leaves. The cell stretches its card
+to the row's height, so a card whose audience line wraps to a second line does not leave
+its neighbour ending higher. These cards carry a border and a shadow, and a row of them
+landing at different heights reads as broken alignment rather than as air. Four copies of
+this grid disagreed on both of these values, in both directions, because this paragraph
+did not exist to disagree with.
 
 **A column count is set by the longest real string, never by the container.** The
 all-rabbis index stays at two columns even in the wider band: its longest meta line

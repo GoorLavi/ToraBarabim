@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { LessonsGrid } from '~/components/LessonsGrid/LessonsGrid';
 import { QuietButton } from '~/components/QuietButton/QuietButton';
 import { StateCard } from '~/components/StateCard/StateCard';
 import { dayLabel } from '~/HomePage/helpers';
@@ -9,7 +10,6 @@ import { useDateFilter } from '~/hooks/useDateFilter';
 import { useSearchQuery } from '~/hooks/useSearchQuery';
 import { useSelectedCity } from '~/hooks/useSelectedCity';
 
-import { LessonsGrid } from './components/LessonsGrid/LessonsGrid';
 import { LessonsSkeleton } from './components/LessonsSkeleton/LessonsSkeleton';
 import * as consts from './consts';
 import {
@@ -122,7 +122,7 @@ const renderContent = ({
             </p>
           )}
         </div>
-        <LessonsGrid items={items} />
+        <LessonsGrid {...{ items }} />
         {listQuery.hasNextPage && (
           <QuietButton
             className="loadMore"
@@ -141,7 +141,7 @@ const renderContent = ({
     return (
       <>
         {titleHeading(title)}
-        <LessonsGrid items={primaryItems} />
+        <LessonsGrid {...{ items: primaryItems }} />
       </>
     );
   }
@@ -156,7 +156,7 @@ const renderContent = ({
         <h2 className="dayHeading" dir="auto">
           {dayLabel(fallbackDate)}
         </h2>
-        <LessonsGrid items={fallbackItems} />
+        <LessonsGrid {...{ items: fallbackItems }} />
       </>
     );
   }

@@ -1,12 +1,11 @@
 import styled from 'styled-components';
 
-import { LessonCard } from '~/HomePage/components/LessonCard/LessonCard';
-import { LessonCardSkeleton } from '~/HomePage/components/LessonCardSkeleton/LessonCardSkeleton';
+import { LessonsGrid } from '~/components/LessonsGrid/LessonsGrid';
+import { LessonsGridSkeleton } from '~/components/LessonsGridSkeleton/LessonsGridSkeleton';
+import { StateCard } from '~/components/StateCard/StateCard';
 import * as pageConsts from '~/RabbiPage/consts';
 import { noLessonsHeading } from '~/RabbiPage/consts';
-import { StateCard } from '~/components/StateCard/StateCard';
 
-import * as consts from './consts';
 import type { RabbiEmptyLessonsProps } from './models';
 import * as styles from './styles';
 
@@ -38,19 +37,11 @@ export const RabbiEmptyLessons = styled(
               <p className="sub">{pageConsts.NATIONWIDE_LESSONS_SUBHEADING}</p>
             </div>
 
-            <div className="grid">
-              {isNationwidePending
-                ? consts.SKELETON_CARD_KEYS.map((key) => (
-                    <div className="cell" key={key}>
-                      <LessonCardSkeleton />
-                    </div>
-                  ))
-                : nationwideItems?.map((item) => (
-                    <div className="cell" key={`${item.lessonId}-${item.date}`}>
-                      <LessonCard lesson={item} />
-                    </div>
-                  ))}
-            </div>
+            {isNationwidePending ? (
+              <LessonsGridSkeleton {...{ cellCount: pageConsts.NATIONWIDE_LESSONS_PAGE_SIZE }} />
+            ) : (
+              <LessonsGrid {...{ items: nationwideItems ?? [] }} />
+            )}
           </div>
         )}
       </div>
