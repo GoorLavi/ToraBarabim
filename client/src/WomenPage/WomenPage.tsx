@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import type { ReactNode } from 'react';
 import styled from 'styled-components';
 
 import { CityChip } from '~/components/CityChip/CityChip';
@@ -44,6 +45,10 @@ export const WomenPage = styled(({ className }: WomenPageProps) => {
 
   const items = lessonsQuery.data?.pages.flatMap((page) => page.items) ?? [];
   const total = lessonsQuery.data?.pages[0]?.total ?? 0;
+  // A failed "load more" (isFetchNextPageError) leaves the already-loaded
+  // pages in place, so it is never this, the full-page error: that only
+  // fires when there is no data to show at all.
+  const hasInitialError = lessonsQuery.isError && !lessonsQuery.data;
   // Never derived from a placeholder page (the previous filter's data,
   // kept up during the new filter's own first fetch): a filter change must
   // never flash the previous filter's empty card, or start the widen
@@ -96,22 +101,30 @@ export const WomenPage = styled(({ className }: WomenPageProps) => {
 
   const heading = city ? consts.pageTitleForCity(city.name) : consts.PAGE_TITLE;
 
-  const filteredEmptyHeading =
-    query && hasDateFilter ? (
-      <>
-        {consts.FILTERED_EMPTY_SEARCH_PREFIX}
-        <bdi>{query}</bdi>
-        {consts.filteredEmptyBothSuffix(dateLabel(range.from))}
-      </>
-    ) : query ? (
-      <>
-        {consts.FILTERED_EMPTY_SEARCH_PREFIX}
-        <bdi>{query}</bdi>
-        {consts.FILTERED_EMPTY_QUOTE_CLOSE}
-      </>
-    ) : (
-      consts.filteredEmptyDateHeadline(dateLabel(range.from))
-    );
+  // Guard clauses over a nested ternary: search-and-date, search alone, or
+  // date alone are three different sentence shapes, not one interpolation.
+  const buildFilteredEmptyHeading = (): ReactNode => {
+    const label = dateLabel(range.from);
+    if (query && hasDateFilter) {
+      return (
+        <>
+          {consts.FILTERED_EMPTY_SEARCH_PREFIX}
+          <bdi>{query}</bdi>
+          {consts.filteredEmptyBothSuffix(label)}
+        </>
+      );
+    }
+    if (query) {
+      return (
+        <>
+          {consts.FILTERED_EMPTY_SEARCH_PREFIX}
+          <bdi>{query}</bdi>
+          {consts.FILTERED_EMPTY_QUOTE_CLOSE}
+        </>
+      );
+    }
+    return consts.filteredEmptyDateHeadline(label);
+  };
 
   return (
     <main className={className}>
@@ -123,7 +136,7 @@ export const WomenPage = styled(({ className }: WomenPageProps) => {
         </>
       )}
 
-      {!lessonsQuery.isPending && (lessonsQuery.isError || summaryQuery.isError) && (
+      {!lessonsQuery.isPending && (hasInitialError || summaryQuery.isError) && (
         <StateCard
           variant="surface"
           headingLevel="h1"
@@ -140,7 +153,7 @@ export const WomenPage = styled(({ className }: WomenPageProps) => {
         />
       )}
 
-      {!lessonsQuery.isPending && !lessonsQuery.isError && !summaryQuery.isError && summaryQuery.data && (
+      {!lessonsQuery.isPending && !hasInitialError && !summaryQuery.isError && summaryQuery.data && (
         <>
           <div className="title">
             <h1 className="heading" dir="auto">
@@ -201,7 +214,11 @@ export const WomenPage = styled(({ className }: WomenPageProps) => {
             <QuietButton
               className="loadMore"
               {...{
-                label: lessonsQuery.isFetchingNextPage ? consts.LOADING_MORE_LABEL : consts.MORE_LABEL,
+                label: lessonsQuery.isFetchNextPageError
+                  ? consts.LOAD_MORE_ERROR_LABEL
+                  : lessonsQuery.isFetchingNextPage
+                    ? consts.LOADING_MORE_LABEL
+                    : consts.MORE_LABEL,
                 onClick: () => lessonsQuery.fetchNextPage(),
                 disabled: lessonsQuery.isFetchingNextPage,
               }}
@@ -236,7 +253,7 @@ export const WomenPage = styled(({ className }: WomenPageProps) => {
             <StateCard
               variant="surface"
               headingLevel="h2"
-              heading={filteredEmptyHeading}
+              heading={buildFilteredEmptyHeading()}
               body={consts.FILTERED_EMPTY_BODY}
               action={{ actionLabel: consts.CLEAR_FILTERS_LABEL, actionStyle: 'quiet', onAction: clearDateAndSearchFilters }}
             />

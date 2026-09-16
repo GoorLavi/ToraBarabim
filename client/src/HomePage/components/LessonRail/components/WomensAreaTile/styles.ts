@@ -41,10 +41,8 @@ export const WomensAreaTile = css(
       inline-size: ${EMBLEM_SIZE_PHONE}px;
       block-size: ${EMBLEM_SIZE_PHONE}px;
 
-      /* A container query never fired here (the tile is a bordered flex
-         box, not a query container the browser was tracking the way
-         LessonCard's own inline-size container was): switched to the same
-         viewport breakpoint LessonRail/styles.ts steps the card width at. */
+      /* Steps at the same viewport breakpoint LessonRail/styles.ts steps
+         the card width at, not a container query. */
       @media (min-width: ${theme.breakpoints.lg}) {
         inline-size: ${EMBLEM_SIZE_WIDE}px;
         block-size: ${EMBLEM_SIZE_WIDE}px;

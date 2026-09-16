@@ -1,7 +1,9 @@
 import { css } from 'styled-components';
 
 // Shaped like CityPicker: same pill, so the two read as a matched pair in
-// the header.
+// the header. `.popover` positions `AudiencePanel`, the `sm`-and-up form;
+// below `sm` the same panel renders inside `FilterDrawer` instead, which
+// owns its own positioning.
 export const AudienceFilter = css(
   ({ theme }) => `
   position: relative;
@@ -51,95 +53,18 @@ export const AudienceFilter = css(
 
   > .popover {
     position: absolute;
-    z-index: 20;
+    z-index: ${theme.zIndex.popover};
     inset-block-start: calc(100% + ${theme.spacing.xs});
     inset-inline-end: 0;
     inline-size: max-content;
     min-inline-size: 240px;
-    display: flex;
-    flex-direction: column;
-    gap: ${theme.spacing.xs};
-    padding: ${theme.spacing.sm};
+    max-inline-size: calc(100vw - 2 * ${theme.spacing.lg});
+    max-block-size: min(480px, calc(100dvh - 2 * ${theme.spacing.xl}));
     border: 1px solid ${theme.colors.border};
     border-radius: ${theme.radii.md};
     background: ${theme.colors.surface};
     box-shadow: ${theme.shadows.raised};
-
-    > .popoverHeader {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding-inline: ${theme.spacing.sm};
-      padding-block-start: ${theme.spacing.xs};
-
-      > .popoverTitle {
-        color: ${theme.colors.text};
-        font-weight: ${theme.typography.fontWeight.semiBold};
-        font-size: ${theme.typography.secondary.phone.fontSize};
-        line-height: ${theme.typography.secondary.phone.lineHeight};
-      }
-
-      > .closeButton {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        inline-size: 32px;
-        block-size: 32px;
-        border-radius: ${theme.radii.pill};
-        color: ${theme.colors.textSecondary};
-
-        > .closeIcon {
-          inline-size: 16px;
-          block-size: 16px;
-        }
-      }
-    }
-
-    > .options {
-      display: flex;
-      flex-direction: column;
-      gap: ${theme.spacing.xs};
-
-      > .option {
-        > button {
-          inline-size: 100%;
-          min-block-size: 48px;
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          justify-content: center;
-          padding-block: ${theme.spacing.xs};
-          padding-inline: ${theme.spacing.md};
-          border-radius: ${theme.radii.sm};
-          text-align: start;
-          color: ${theme.colors.text};
-
-          > .label {
-            font-size: ${theme.typography.body.phone.fontSize};
-            line-height: ${theme.typography.body.phone.lineHeight};
-          }
-
-          > .subLabel {
-            color: ${theme.colors.textSecondary};
-            font-size: ${theme.typography.tagAndCaption.phone.fontSize};
-            line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
-          }
-
-          &[aria-selected='true'] {
-            background: ${theme.colors.primarySoft};
-            color: ${theme.colors.primary};
-
-            > .label {
-              font-weight: ${theme.typography.fontWeight.semiBold};
-            }
-          }
-
-          &:hover {
-            background: ${theme.colors.primarySoft};
-          }
-        }
-      }
-    }
+    overflow: hidden;
   }
 `,
 );

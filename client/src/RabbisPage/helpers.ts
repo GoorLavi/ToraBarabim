@@ -2,10 +2,10 @@ import type { RabbiDirectoryEntry, RabbiHonorific } from '@torabarabim/common';
 
 import type { RabbiDirectory } from './models';
 
-// /rabbis is ravs only, /women/rabbaniyot is rabbaniyot only (owner
-// decision A3), so the whole directory shares one grammatical gender: no
-// per-entry check is needed the way `rabbiMatchCountLabel` below needs one
-// for a mixed set of search results.
+// /rabbis is ravs only, /women/rabbaniyot is rabbaniyot only, so the whole
+// directory shares one grammatical gender: no per-entry check is needed
+// the way `rabbiMatchCountLabel` below needs one for a mixed set of search
+// results.
 export const rabbiCountLabel = (count: number, directory: RabbiDirectory): string => {
   if (directory === 'rabbaniyot') return count === 1 ? 'רבנית אחת' : `${count} רבניות`;
   return count === 1 ? 'רב אחד' : `${count} רבנים`;

@@ -6,12 +6,9 @@ import { ALL_AUDIENCES_LABEL, MIXED_BUTTON_LABEL, OPTION_LABELS } from './consts
 import type { AudienceOption } from './models';
 
 // Carries city and date across to /women, drops the search term and the
-// audience param itself (owner default, plan amendments: "leaving /women
-// via the dropdown carries city and date back and drops the search text").
-// The current page's own city/date params win when present; a city page
-// has no city query param of its own, so its route's loader data supplies
-// the city instead (section 7: "on /cities/:slug it carries that page's
-// city via useRouteLoaderData").
+// audience param itself. The current page's own city/date params win when
+// present; a city page has no city query param of its own, so its route's
+// loader data supplies the city instead.
 export const womenPagePath = (currentSearch: string, cityRouteData: CityDetailResponse | undefined): string => {
   const params = new URLSearchParams(currentSearch);
   const next = new URLSearchParams();

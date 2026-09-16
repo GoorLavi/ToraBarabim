@@ -37,6 +37,10 @@ export const CityPage = styled(({ className }: CityPageProps) => {
   const lessonsQuery = useCityLessons(city?.id, Boolean(city));
   const items = lessonsQuery.data?.pages.flatMap((page) => page.items) ?? [];
   const total = lessonsQuery.data?.pages[0]?.total ?? 0;
+  // A failed "load more" (isFetchNextPageError) leaves the already-loaded
+  // pages in place, so it is never this, the full-page error: that only
+  // fires when there is no data to show at all.
+  const hasInitialError = lessonsQuery.isError && !lessonsQuery.data;
   const isCityResolvedEmpty = lessonsQuery.isSuccess && items.length === 0;
   const areaQuery = useAreaLessons(city?.area, Boolean(isCityResolvedEmpty));
 
@@ -92,11 +96,11 @@ export const CityPage = styled(({ className }: CityPageProps) => {
             )}
           </div>
 
-          {canShowRail && <RabbiRail heading={consts.whoTeachesHeading(city.name)} rabbis={city.rabbis} />}
+          {canShowRail && <RabbiRail {...{ heading: consts.whoTeachesHeading(city.name), rabbis: city.rabbis }} />}
 
           {lessonsQuery.isPending && <DayGroupSkeleton />}
 
-          {!lessonsQuery.isPending && lessonsQuery.isError && (
+          {!lessonsQuery.isPending && hasInitialError && (
             <StateCard
               variant="surface"
               headingLevel="h2"
@@ -106,7 +110,7 @@ export const CityPage = styled(({ className }: CityPageProps) => {
             />
           )}
 
-          {!lessonsQuery.isPending && !lessonsQuery.isError && isCityResolvedEmpty && (
+          {!lessonsQuery.isPending && !hasInitialError && isCityResolvedEmpty && (
             <CityEmptyState
               cityName={city.name}
               areaSlug={city.areaSlug}
@@ -117,18 +121,20 @@ export const CityPage = styled(({ className }: CityPageProps) => {
             />
           )}
 
-          {!lessonsQuery.isPending && !lessonsQuery.isError && !isCityResolvedEmpty && (
+          {!lessonsQuery.isPending && !hasInitialError && !isCityResolvedEmpty && (
             <>
               {dayGroups.map((group) => (
-                <DayGroup key={group.date} heading={dayGroupHeading(group.date)} items={group.items} surface="general" />
+                <DayGroup key={group.date} {...{ heading: dayGroupHeading(group.date), items: group.items, surface: 'general' }} />
               ))}
 
               {lessonsQuery.hasNextPage && (
                 <QuietButton
                   className="loadMore"
-                  label={consts.loadMoreLabel(city.name)}
-                  onClick={() => lessonsQuery.fetchNextPage()}
-                  disabled={lessonsQuery.isFetchingNextPage}
+                  {...{
+                    label: lessonsQuery.isFetchNextPageError ? consts.LOAD_MORE_ERROR_LABEL : consts.loadMoreLabel(city.name),
+                    onClick: () => lessonsQuery.fetchNextPage(),
+                    disabled: lessonsQuery.isFetchingNextPage,
+                  }}
                 />
               )}
             </>

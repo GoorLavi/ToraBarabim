@@ -1,6 +1,5 @@
 import classNames from 'classnames';
-import { useState } from 'react';
-import type { FocusEvent } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { CityDetailResponse } from '@torabarabim/common';
 import { useLocation, useNavigate, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
@@ -8,32 +7,55 @@ import styled from 'styled-components';
 import { CITY_DETAIL_ROUTE_ID } from '~/hooks/consts';
 import { isWomenPagePath } from '~/hooks/helpers';
 
+import { FilterDrawer } from '../FilterDrawer/FilterDrawer';
+import { useIsWideViewport } from '../useIsWideViewport';
+import { AudiencePanel } from './components/AudiencePanel/AudiencePanel';
 import * as consts from './consts';
-import { buttonLabel, isOptionSelected, womenPagePath } from './helpers';
+import { buttonLabel, womenPagePath } from './helpers';
 import type { AudienceFilterProps, AudienceOption } from './models';
 import * as styles from './styles';
 
 // Every value but נשים behaves like every other header control: it filters
 // the home page in place, or launches a filtered home page from elsewhere
 // (useAudienceFilter, useHeaderFilterParams). נשים is the one option that
-// always navigates, to /women, carrying city and date across. `useMatch`,
-// not a bare pathname comparison, so `/women/` (a trailing slash) still
-// reads as the women's page.
+// always navigates, to /women, carrying city and date across. Below `sm`
+// the menu opens as the same bottom drawer the city picker uses
+// (useIsWideViewport, FilterDrawer); from `sm` up it stays an anchored
+// popover, closed the same way CityPicker's own popover is (a real
+// outside-pointer listener, not `onBlur`, which Safari never fires from a
+// click). `isWomenPagePath`, not a bare pathname comparison, so `/women/`
+// (a trailing slash) still reads as the women's page.
 export const AudienceFilter = styled(({ className, filter, onSelectFilter, onClearFilter }: AudienceFilterProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const isWide = useIsWideViewport();
+  const pillRef = useRef<HTMLButtonElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const cityRouteData = useRouteLoaderData(CITY_DETAIL_ROUTE_ID) as CityDetailResponse | undefined;
-  // Also matches /women/rabbaniyot: the header shows נשים selected there
-  // too, the same as on /women itself.
   const isWomenPage = isWomenPagePath(location.pathname);
 
-  const close = (event: FocusEvent<HTMLDivElement>): void => {
-    if (!event.currentTarget.contains(event.relatedTarget)) setIsOpen(false);
+  const close = (): void => {
+    setIsOpen(false);
+    pillRef.current?.focus();
   };
 
+  // Mirrors CityPicker.tsx: the desktop popover is never portalled, so a
+  // plain outside-pointer listener on the real DOM tree is enough.
+  useEffect(() => {
+    if (!isOpen || !isWide) return;
+
+    const handlePointerDown = (event: PointerEvent): void => {
+      if (rootRef.current?.contains(event.target as Node)) return;
+      close();
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [isOpen, isWide]);
+
   const selectOption = (option: AudienceOption): void => {
-    setIsOpen(false);
+    close();
     if (option === 'women') {
       navigate(womenPagePath(location.search, cityRouteData));
       return;
@@ -46,13 +68,14 @@ export const AudienceFilter = styled(({ className, filter, onSelectFilter, onCle
   };
 
   return (
-    <div className={classNames(className, { open: isOpen })} onBlur={close}>
+    <div className={classNames(className, { open: isOpen })} ref={rootRef}>
       <button
         type="button"
+        ref={pillRef}
         className={classNames('pill', { selected: Boolean(filter) || isWomenPage })}
-        aria-haspopup="listbox"
+        aria-haspopup="dialog"
         aria-expanded={isOpen}
-        onClick={() => setIsOpen((open) => !open)}
+        onClick={() => setIsOpen(true)}
       >
         <svg className="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <circle cx="12" cy="8" r="3.2" stroke="currentColor" strokeWidth="1.6" />
@@ -66,27 +89,15 @@ export const AudienceFilter = styled(({ className, filter, onSelectFilter, onCle
         </svg>
       </button>
 
-      {isOpen && (
-        <div className="popover">
-          <div className="popoverHeader">
-            <span className="popoverTitle">{consts.POPOVER_TITLE}</span>
-            <button type="button" className="closeButton" aria-label={consts.CLOSE_LABEL} onClick={() => setIsOpen(false)}>
-              <svg className="closeIcon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-              </svg>
-            </button>
-          </div>
+      {isOpen && !isWide && (
+        <FilterDrawer {...{ ariaLabel: consts.POPOVER_TITLE, onDismiss: close }}>
+          <AudiencePanel {...{ isDrawer: true, isWide, filter, isWomenPage, onSelectOption: selectOption, onClose: close }} />
+        </FilterDrawer>
+      )}
 
-          <ul className="options" role="listbox">
-            {consts.AUDIENCE_OPTIONS.map((option) => (
-              <li key={option} className="option" role="presentation">
-                <button type="button" role="option" aria-selected={isOptionSelected(option, filter, isWomenPage)} onClick={() => selectOption(option)}>
-                  <span className="label">{consts.OPTION_LABELS[option]}</span>
-                  {option === 'women' && <span className="subLabel">{consts.WOMEN_SUBLABEL}</span>}
-                </button>
-              </li>
-            ))}
-          </ul>
+      {isOpen && isWide && (
+        <div className="popover" role="dialog" aria-label={consts.POPOVER_TITLE}>
+          <AudiencePanel {...{ isDrawer: false, isWide, filter, isWomenPage, onSelectOption: selectOption, onClose: close }} />
         </div>
       )}
     </div>

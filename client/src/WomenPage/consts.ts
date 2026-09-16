@@ -9,9 +9,11 @@ export const WOMEN_PAGE_QUERY_KEYS = {
   cityLookup: (cityId: string) => ['women', 'city-lookup', cityId] as const,
 };
 
-// A 404 never applies to this page (there is no per-city or per-slug
-// variant of /women), so only transient failures retry, mirroring
-// CityPage/consts.ts, CITY_PAGE_RETRY_LIMIT.
+// /women itself has no per-city or per-slug variant, so most calls retry
+// only transient failures, mirroring CityPage/consts.ts,
+// CITY_PAGE_RETRY_LIMIT. `useCityAreaLookup.ts`'s own two calls resolve a
+// real city and a real slug, so that one call wraps this in its own
+// 404-aware predicate instead of using it bare.
 export const WOMEN_PAGE_RETRY_LIMIT = 1;
 
 // The fixed page size "load more" pages through (useLessonListPages.ts),
@@ -48,6 +50,7 @@ export const CONTACT_US_LABEL = 'כתבו לנו';
 
 export const MORE_LABEL = 'עוד שיעורים לנשים';
 export const LOADING_MORE_LABEL = 'טוען...';
+export const LOAD_MORE_ERROR_LABEL = 'לא הצלחנו לטעון עוד שיעורים, נסו שוב';
 
 // The empty-with-city state: reachable only with a city chosen and no date
 // or search filter (a date or a search, city or not, goes through the
@@ -74,8 +77,8 @@ export const widenedGroupHeading = (areaName: string): string => `שיעורים
 export const NOTHING_YET_HEADING = 'עדיין אין שיעורים לנשים בלוח';
 export const NOTHING_YET_BODY = 'הלוח עוד בבנייה. אם אתן מכירות שיעור לנשים, כתבו לנו. אנחנו בודקים כל שיעור לפני שהוא עולה ללוח.';
 
-// The filtered-empty state (Figma node 75:709, plan amendments): reachable
-// whenever a date or a search is active and nothing matches, city or not.
+// The filtered-empty state: reachable whenever a date or a search is
+// active and nothing matches, city or not.
 // The search and search-plus-date headlines carry the query itself, bidi-
 // isolated, so they are composed as JSX in WomenPage.tsx rather than as a
 // plain string here; this is the date-only shape.

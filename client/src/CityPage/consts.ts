@@ -36,6 +36,7 @@ export const citySubheading = (count: number): string => `${lessonCountLabel(cou
 export const areaLinkLabel = (areaName: string): string => `לכל השיעורים באזור ${areaName}`;
 export const whoTeachesHeading = (cityName: string): string => `${WHO_TEACHES_HEADING_PREFIX}${cityName}`;
 export const loadMoreLabel = (cityName: string): string => `עוד שיעורים ב${cityName}`;
+export const LOAD_MORE_ERROR_LABEL = 'לא הצלחנו לטעון עוד שיעורים, נסו שוב';
 
 export const noLessonsHeading = (cityName: string): string => `אין כרגע שיעורים ב${cityName}`;
 export const widenedToAreaBody = (cityName: string, areaName: string): string =>

@@ -5,9 +5,8 @@ import { fetchRabbiDirectoryPage, RabbisPageApiError } from './api';
 import { RABBI_DIRECTORY_PAGE_SIZE, RABBIS_QUERY_KEYS } from './consts';
 import type { RabbiDirectory } from './models';
 
-// `rabbis` lists ravs only, `rabbaniyot` lists rabbaniyot only (owner
-// decision A3): the one place a `RabbiDirectory` resolves to the wire's
-// `AudienceScope`.
+// `rabbis` lists ravs only, `rabbaniyot` lists rabbaniyot only: the one
+// place a `RabbiDirectory` resolves to the wire's `AudienceScope`.
 const scopeForDirectory = (directory: RabbiDirectory): AudienceScope => (directory === 'rabbaniyot' ? 'women' : 'general');
 
 // The index draws no pagination control (design spec): the search field
