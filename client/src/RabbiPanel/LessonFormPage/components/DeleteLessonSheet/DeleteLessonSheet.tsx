@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-import { ResponsiveSheet } from '~/RabbiPanel/components/ResponsiveSheet/ResponsiveSheet';
+import { ResponsiveSheet } from '~/components/ResponsiveSheet/ResponsiveSheet';
 import { rabbiErrorMessage } from '~/RabbiPanel/helpers';
 
 import * as consts from './consts';

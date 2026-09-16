@@ -1,7 +1,7 @@
 import type { FastifyInstance, FastifyReply } from 'fastify';
 import { ZodError } from 'zod';
 
-import { toCityDetailResponse, toCityDirectoryResponse, toCityList } from '../../convertors/city';
+import { toCityDetailResponse, toCityDirectoryResponse, toCitySearchResponse, toCitySuggestionsResponse } from '../../convertors/city';
 import { CityNotFoundError } from '../../service/city/errors';
 import * as cityService from '../../service/city/city';
 import { citySearchQuerySchema, citySlugParamSchema } from '../../service/city/models';
@@ -30,7 +30,7 @@ export const registerCityRoutes = async (app: FastifyInstance): Promise<void> =>
     try {
       const query = citySearchQuerySchema.parse(request.query);
       const result = await cityService.search(query);
-      return reply.send(toCityList(result));
+      return reply.send(toCitySearchResponse(result));
     } catch (error) {
       return handleError(reply, error, 'GET /v1/cities');
     }
@@ -44,6 +44,17 @@ export const registerCityRoutes = async (app: FastifyInstance): Promise<void> =>
       return reply.send(toCityDirectoryResponse(result));
     } catch (error) {
       return handleError(reply, error, 'GET /v1/cities/directory');
+    }
+  });
+
+  // Static, for the same reason as `/v1/cities/directory` above; no city
+  // ever slugifies to "suggestions" either.
+  app.get('/v1/cities/suggestions', async (request, reply) => {
+    try {
+      const result = await cityService.listSuggestions();
+      return reply.send(toCitySuggestionsResponse(result));
+    } catch (error) {
+      return handleError(reply, error, 'GET /v1/cities/suggestions');
     }
   });
 

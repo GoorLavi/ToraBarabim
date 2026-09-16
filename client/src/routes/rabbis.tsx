@@ -3,9 +3,11 @@ import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query
 import type { RabbiDirectoryResponse } from '@torabarabim/common';
 import type { HeadersFunction, MetaFunction } from 'react-router';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
 import { StateCard } from '~/components/StateCard/StateCard';
 import { SITE_WIDE_META } from '~/consts';
-import { LOAD_ERROR_BODY, LOAD_ERROR_HEADING, RABBIS_QUERY_KEYS, RETRY_LABEL } from '~/RabbisPage/consts';
+import { DIRECTORY_COPY, LOAD_ERROR_BODY, RABBIS_QUERY_KEYS, RETRY_LABEL } from '~/RabbisPage/consts';
 import { RabbisPage } from '~/RabbisPage/RabbisPage';
 
 import { SITE_ORIGIN } from '../../consts';
@@ -16,7 +18,7 @@ import { loadRabbiDirectory } from './rabbis.server';
 // local component state, never the query string (RabbisPage/RabbisPage.tsx),
 // but this loader never reads the request either way, so a crawler landing
 // on /rabbis always sees the same unfiltered first page of the directory.
-export const loader = async (): Promise<RabbiDirectoryResponse> => loadRabbiDirectory();
+export const loader = async (): Promise<RabbiDirectoryResponse> => loadRabbiDirectory('general');
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   if (!data) return [];
@@ -54,13 +56,13 @@ export default function RabbisRoute({ loaderData }: { loaderData: RabbiDirectory
   // the client hook fills in the remaining pages itself on the next fetch.
   const [queryClient] = useState(() => {
     const client = new QueryClient();
-    client.setQueryData(RABBIS_QUERY_KEYS.all(), loaderData.items);
+    client.setQueryData(RABBIS_QUERY_KEYS.directory('rabbis'), loaderData.items);
     return client;
   });
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <RabbisPage />
+      <RabbisPage directory="rabbis" />
     </HydrationBoundary>
   );
 }
@@ -76,9 +78,16 @@ export function ErrorBoundary() {
       <StateCard
         variant="surface"
         headingLevel="h1"
-        heading={LOAD_ERROR_HEADING}
+        heading={DIRECTORY_COPY.rabbis.loadErrorHeading}
         body={LOAD_ERROR_BODY}
-        action={{ actionLabel: RETRY_LABEL, actionStyle: 'primary', onAction: () => window.location.reload() }}
+        action={{
+          actionLabel: RETRY_LABEL,
+          actionStyle: 'primary',
+          onAction: () => {
+            trackEvent(MIXPANEL_EVENTS.retryClick, { surface: 'rabbisRoute' });
+            window.location.reload();
+          },
+        }}
       />
     </main>
   );

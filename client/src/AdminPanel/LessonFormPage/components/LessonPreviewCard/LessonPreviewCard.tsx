@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 
+import { AUDIENCE_LABELS } from '~/consts';
 import { rabbiDisplayName } from '~/helpers';
 
 import * as consts from './consts';
@@ -19,9 +20,11 @@ export const LessonPreviewCard = styled(({ className, rabbi, title, audience, ci
     <article className="card">
       <div className="poster">
         {rabbi?.photoUrl ? <img className="image" src={rabbi.photoUrl} alt="" /> : <div className="image placeholder" aria-hidden="true" />}
-        <div className="medallion" dir="ltr">
+        <div className="medallion">
           <span className="weekday">{weekdayLabel ?? consts.NO_DAY_PLACEHOLDER}</span>
-          <span className="time">{startTime || consts.NO_TIME_PLACEHOLDER}</span>
+          <span className="time" dir="ltr">
+            {startTime || consts.NO_TIME_PLACEHOLDER}
+          </span>
         </div>
       </div>
 
@@ -32,7 +35,7 @@ export const LessonPreviewCard = styled(({ className, rabbi, title, audience, ci
 
         {rabbi && (
           <p className="meta" dir="auto">
-            {audience && <span className="audience">{consts.AUDIENCE_LABELS[audience]}</span>}
+            {audience && <span className="audience">{AUDIENCE_LABELS[audience]}</span>}
             {title && <span className="description"> · {title}</span>}
           </p>
         )}

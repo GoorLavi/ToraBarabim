@@ -1,17 +1,12 @@
-import type { LessonAudience, LessonTopic } from '@torabarabim/common';
+import type { LessonTopic } from '@torabarabim/common';
 
 export const CANCELLED_LABEL = 'מבוטל השבוע';
 export const SUBSTITUTE_LABEL = 'הפעם במקום';
 
-// The forbidden couple-oriented terms never appear in this product
-// (design-system.md, "Audience wording"): the three values below are exact
-// and final, and the mixed-audience wording is spelled out rather than a
-// single loaded word.
-export const LESSON_AUDIENCE_LABELS: Record<LessonAudience, string> = {
-  men: 'גברים',
-  women: 'נשים',
-  mixed: 'גם גברים וגם נשים',
-};
+// Non-breaking spaces on both sides of the dot, so the meta line's
+// description never wraps with the dot left dangling alone at a line's end
+// (design review, card meta at 375).
+export const META_SEPARATOR = ' · ';
 
 export const LESSON_TOPIC_LABELS: Record<LessonTopic, string> = {
   gemara: 'גמרא',
@@ -25,7 +20,7 @@ export const LESSON_TOPIC_LABELS: Record<LessonTopic, string> = {
 };
 
 // The floor from design-system.md, Type ("the card title steps down to
-// 15 / 21... in a two-column poster grid on a phone, roughly 173px wide")
+// 15 / 21... in a two-column poster grid on a phone, roughly 171px wide")
 // is a property of the card's own rendered width, not of the viewport: a
 // rail card can be 200px wide on the same 375px phone. Stepped with
 // `@container` in styles.ts instead of a viewport media query.

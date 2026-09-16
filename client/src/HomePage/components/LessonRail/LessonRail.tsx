@@ -3,15 +3,19 @@ import styled from 'styled-components';
 
 import { LessonCard } from '~/HomePage/components/LessonCard/LessonCard';
 
+import { WomensAreaTile } from './components/WomensAreaTile/WomensAreaTile';
 import * as consts from './consts';
-import { scrollRailBy } from './helpers';
+import { railSlots, scrollRailBy } from './helpers';
 import type { LessonRailProps } from './models';
 import * as styles from './styles';
+import { useRailScrollTracking } from './useRailScrollTracking';
 import { useScrollEdges } from './useScrollEdges';
 
-export const LessonRail = styled(({ className, title, items }: LessonRailProps) => {
+export const LessonRail = styled(({ className, title, items, womensAreaTileIndex, womensAreaLessonCount }: LessonRailProps) => {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const { atStart, atEnd } = useScrollEdges(scrollerRef);
+  useRailScrollTracking(scrollerRef, title);
+  const slots = railSlots(items, womensAreaTileIndex);
 
   const scroll = (direction: 'prev' | 'next'): void => {
     if (scrollerRef.current) scrollRailBy(scrollerRef.current, direction);
@@ -32,11 +36,23 @@ export const LessonRail = styled(({ className, title, items }: LessonRailProps) 
 
         <div className="scrollerGroup" ref={scrollerRef}>
           <ul className="scroller">
-            {items.map((item) => (
-              <li key={`${item.lessonId}-${item.date}`}>
-                <LessonCard lesson={item} />
-              </li>
-            ))}
+            {slots.map((slot, index) =>
+              slot.kind === 'lesson' ? (
+                <li key={`${slot.lesson.lessonId}-${slot.lesson.date}`}>
+                  <LessonCard
+                    {...{
+                      lesson: slot.lesson,
+                      surface: 'general',
+                      clickContext: { surface: 'homeRail' as const, railTitle: title, position: index },
+                    }}
+                  />
+                </li>
+              ) : (
+                <li key="womens-area" className="tile">
+                  <WomensAreaTile {...{ lessonCount: womensAreaLessonCount }} />
+                </li>
+              ),
+            )}
           </ul>
         </div>
 

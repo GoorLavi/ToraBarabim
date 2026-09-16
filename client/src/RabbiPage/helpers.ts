@@ -1,7 +1,15 @@
-import type { LessonOccurrence, RabbiDetailResponse } from '@torabarabim/common';
+import type { AudienceScope, LessonOccurrence, RabbiDetailResponse } from '@torabarabim/common';
 
 import type { RabbiPageApiError } from './api';
 import * as consts from './consts';
+
+// A rabbanit's own lessons only come back from the public search under
+// `scope=women` (0026); a rav's under `scope=general`. Unknown until the
+// rabbi's own detail call resolves.
+export const scopeForRabbi = (rabbi: RabbiDetailResponse | undefined): AudienceScope | undefined => {
+  if (!rabbi) return undefined;
+  return rabbi.honorific === 'rabbanit' ? 'women' : 'general';
+};
 
 // A 404 is a fact about the rabbi, so its screen offers a way out. Every
 // other failure is transient, so its screen offers a retry (mirrors

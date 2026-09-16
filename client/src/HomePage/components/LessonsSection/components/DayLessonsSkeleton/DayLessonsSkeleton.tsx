@@ -1,8 +1,8 @@
 import styled from 'styled-components';
 
-import { LessonCardSkeleton } from '~/HomePage/components/LessonCardSkeleton/LessonCardSkeleton';
+import { LessonsGridSkeleton } from '~/components/LessonsGridSkeleton/LessonsGridSkeleton';
 
-import * as consts from './consts';
+import { INITIAL_VISIBLE_COUNT } from '../DayLessons/consts';
 import type { DayLessonsSkeletonProps } from './models';
 import * as styles from './styles';
 
@@ -13,11 +13,7 @@ import * as styles from './styles';
 export const DayLessonsSkeleton = styled(({ className, headingLabel }: DayLessonsSkeletonProps) => (
   <section className={className} aria-hidden="true">
     <h2 className="title" dir="auto">{headingLabel}</h2>
-    <div className="grid">
-      {consts.CARD_KEYS.map((key) => (
-        <LessonCardSkeleton key={key} />
-      ))}
-    </div>
+    <LessonsGridSkeleton {...{ cellCount: INITIAL_VISIBLE_COUNT }} />
   </section>
 ))`
   ${styles.DayLessonsSkeleton}

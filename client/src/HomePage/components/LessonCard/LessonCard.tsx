@@ -3,11 +3,15 @@ import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { lessonClickProps } from '~/analytics/helpers';
 import { trackEvent } from '~/analytics/mixpanel';
+import { useActiveFilters } from '~/analytics/useActiveFilters';
+import { todayInIsrael } from '~/HomePage/helpers';
+import { AUDIENCE_LABELS } from '~/consts';
 import { lessonPath, rabbiDisplayName } from '~/helpers';
 
 import * as consts from './consts';
-import { cardAriaLabel, descriptionLabel } from './helpers';
+import { audienceTreatment, cardAriaLabel, descriptionLabel } from './helpers';
 import type { LessonCardProps } from './models';
 import * as styles from './styles';
 
@@ -16,16 +20,26 @@ import * as styles from './styles';
 // missing photoUrl is real data today (Rabbi.photoUrl is optional on the
 // wire), so it falls back to a single, plain, undecorated fill rather than
 // initials or a silhouette, kept in this one spot for a later single edit.
-export const LessonCard = styled(({ className, lesson }: LessonCardProps) => {
+export const LessonCard = styled(({ className, lesson, surface, clickContext }: LessonCardProps) => {
   const teachingRabbi = lesson.substituteRabbi ?? lesson.rabbi;
   const description = descriptionLabel(lesson);
+  const treatment = audienceTreatment(lesson.audience, surface);
+  const activeFilters = useActiveFilters();
+
+  const handleClick = (): void => {
+    const rabbiName = rabbiDisplayName(teachingRabbi);
+    trackEvent(
+      MIXPANEL_EVENTS.lessonClick,
+      lessonClickProps(lesson, teachingRabbi, rabbiName, clickContext, activeFilters, todayInIsrael()),
+    );
+  };
 
   return (
     <Link
       to={lessonPath(lesson)}
       aria-label={cardAriaLabel(lesson)}
       className={classNames(className, { cancelled: lesson.status === 'cancelled' })}
-      onClick={() => trackEvent(MIXPANEL_EVENTS.lessonClick, { lessonId: lesson.lessonId })}
+      onClick={handleClick}
     >
       <div className="poster">
         {teachingRabbi.photoUrl ? (
@@ -33,9 +47,11 @@ export const LessonCard = styled(({ className, lesson }: LessonCardProps) => {
         ) : (
           <div className="image placeholder" aria-hidden="true" />
         )}
-        <div className="medallion" dir="ltr">
+        <div className="medallion">
           <span className="weekday">{consts.cardWeekday(lesson.date)}</span>
-          <span className="time">{lesson.startTime}</span>
+          <span className="time" dir="ltr">
+            {lesson.startTime}
+          </span>
         </div>
       </div>
 
@@ -45,8 +61,8 @@ export const LessonCard = styled(({ className, lesson }: LessonCardProps) => {
         </h3>
 
         <p className="meta" dir="auto">
-          <span className="audience">{consts.LESSON_AUDIENCE_LABELS[lesson.audience]}</span>
-          {description && <span className="description"> · {description}</span>}
+          <span className={classNames('audience', treatment)}>{AUDIENCE_LABELS[lesson.audience]}</span>
+          {description && <span className="description">{consts.META_SEPARATOR}{description}</span>}
         </p>
 
         <p className="city" dir="auto">

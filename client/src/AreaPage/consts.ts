@@ -5,6 +5,10 @@ import { cityCountLabel, lessonCountLabel } from '~/consts';
 export const AREA_PAGE_QUERY_KEYS = {
   detail: (areaSlug: string) => ['area', areaSlug] as const,
   lessons: (area: Area | undefined, pageSize: number) => ['area', area, 'lessons', pageSize] as const,
+  // Identifies the lessons result set without `pageSize`, the dimension
+  // "load more" grows: two requests at different page sizes for the same
+  // area are still the same result set for analytics purposes.
+  lessonsResultSet: (area: Area | undefined) => ['area', area, 'lessons'] as const,
   otherAreas: () => ['area', 'other-areas'] as const,
 };
 

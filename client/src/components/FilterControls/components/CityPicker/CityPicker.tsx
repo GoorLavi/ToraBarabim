@@ -1,39 +1,78 @@
-import { useState } from 'react';
-import type { FocusEvent } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import classNames from 'classnames';
 import styled from 'styled-components';
 
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
-import { directionForValue } from '~/helpers';
+import type { SelectedCity } from '~/hooks/models';
 
+import { FilterDrawer } from '../FilterDrawer/FilterDrawer';
+import { useIsWideViewport } from '../useIsWideViewport';
+import { CityPickerPanel } from './components/CityPickerPanel/CityPickerPanel';
 import * as consts from './consts';
 import type { CityPickerProps } from './models';
 import * as styles from './styles';
-import { useCitySearchResults } from './useCitySearchResults';
+import { useRecentCities } from './useRecentCities';
 
 // A city, once chosen, turns the pill into a toggle like the date chips:
 // tapping it clears the selection and returns to "כל הארץ" rather than
-// reopening the popover (explicit, from the human).
+// reopening the panel. So the panel only ever opens in the no-city-chosen
+// state, and needs no selected styling of its own.
 export const CityPicker = styled(({ className, city, onSelectCity, onClearCity }: CityPickerProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [query, setQuery] = useState('');
-  const results = useCitySearchResults(query);
+  const isWide = useIsWideViewport();
+  const pillRef = useRef<HTMLButtonElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const { recentCities, addRecentCity } = useRecentCities();
 
-  const close = (event: FocusEvent<HTMLDivElement>): void => {
-    if (!event.currentTarget.contains(event.relatedTarget)) setIsOpen(false);
+  const close = (): void => {
+    setIsOpen(false);
+    pillRef.current?.focus();
+  };
+
+  // Outside click and scrim tap already tell us where the user is going
+  // next; pulling focus back to the pill here would fight the click that
+  // dismissed the panel.
+  const dismiss = (): void => {
+    setIsOpen(false);
+  };
+
+  // The desktop popover is never portalled (position: absolute needs only a
+  // positioned ancestor, not the viewport, so it never hits the fixed-
+  // position containing-block bug ResponsiveSheet works around), so a plain
+  // outside-pointer listener on the real DOM tree is enough; it also avoids
+  // a fixed, full-viewport catcher that would inherit that same bug were
+  // this ever rendered inside the transformed pinned header bar.
+  useEffect(() => {
+    if (!isOpen || !isWide) return;
+
+    const handlePointerDown = (event: PointerEvent): void => {
+      if (rootRef.current?.contains(event.target as Node)) return;
+      dismiss();
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [isOpen, isWide]);
+
+  const handleSelectCity = (selected: SelectedCity): void => {
+    onSelectCity(selected);
+    addRecentCity(selected);
+    trackEvent(MIXPANEL_EVENTS.filterCity, { cityId: selected.id, cityName: selected.name, source: 'headerPicker' });
+    close();
   };
 
   return (
-    <div className={classNames(className, { open: isOpen })} onBlur={close}>
+    <div className={classNames(className, { open: isOpen })} ref={rootRef}>
       <button
         type="button"
+        ref={pillRef}
         className={classNames('pill', { selected: Boolean(city) })}
-        aria-haspopup={city ? undefined : 'listbox'}
+        aria-haspopup={city ? undefined : 'dialog'}
         aria-expanded={city ? undefined : isOpen}
         aria-pressed={city ? true : undefined}
         aria-label={city ? consts.clearCityLabel(city.name) : undefined}
-        onClick={() => (city ? onClearCity() : setIsOpen((open) => !open))}
+        onClick={() => (city ? onClearCity() : setIsOpen(true))}
       >
         <svg className="pin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path
@@ -58,46 +97,15 @@ export const CityPicker = styled(({ className, city, onSelectCity, onClearCity }
         )}
       </button>
 
-      {isOpen && (
-        <div className="popover">
-          <input
-            type="text"
-            className="search"
-            autoFocus
-            aria-label={consts.SEARCH_LABEL}
-            placeholder={consts.SEARCH_PLACEHOLDER}
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            dir={directionForValue(query)}
-          />
+      {isOpen && !isWide && (
+        <FilterDrawer {...{ ariaLabel: consts.PANEL_HEADING, onDismiss: dismiss }}>
+          <CityPickerPanel {...{ isDrawer: true, isWide, recentCities, onSelect: handleSelectCity, onClose: close }} />
+        </FilterDrawer>
+      )}
 
-          {query.trim().length === 0 && <p className="hint">{consts.SEARCH_HINT}</p>}
-          {query.trim().length > 0 && results.isPending && <p className="hint">{consts.LOADING_MESSAGE}</p>}
-          {query.trim().length > 0 && !results.isPending && !results.isError && results.items.length === 0 && (
-            <p className="hint">{consts.NO_RESULTS_MESSAGE}</p>
-          )}
-
-          {results.items.length > 0 && (
-            <ul className="results" role="listbox">
-              {results.items.map((item) => (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    role="option"
-                    aria-selected={item.id === city?.id}
-                    onClick={() => {
-                      onSelectCity({ id: item.id, name: item.name });
-                      trackEvent(MIXPANEL_EVENTS.filterCity, { cityId: item.id, cityName: item.name });
-                      setQuery('');
-                      setIsOpen(false);
-                    }}
-                  >
-                    <span dir="auto">{item.name}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+      {isOpen && isWide && (
+        <div className="popover" role="dialog" aria-label={consts.PANEL_HEADING}>
+          <CityPickerPanel {...{ isDrawer: false, isWide, recentCities, onSelect: handleSelectCity, onClose: close }} />
         </div>
       )}
     </div>

@@ -18,6 +18,11 @@ export const CityPicker = css(
     line-height: ${theme.typography.body.phone.lineHeight};
     white-space: nowrap;
 
+    &:focus-visible {
+      outline: 2px solid ${theme.colors.primary};
+      outline-offset: 2px;
+    }
+
     > .pin {
       flex-shrink: 0;
       inline-size: 18px;
@@ -25,7 +30,8 @@ export const CityPicker = css(
     }
 
     > .label {
-      max-inline-size: 140px;
+      max-inline-size: min(140px, 42vw);
+      min-inline-size: 0;
       overflow: hidden;
       text-overflow: ellipsis;
     }
@@ -34,6 +40,14 @@ export const CityPicker = css(
       flex-shrink: 0;
       inline-size: 16px;
       block-size: 16px;
+      transform: rotate(180deg);
+
+      /* Below sm the panel rises from the bottom as a drawer, so the
+         chevron points up to match; from sm up it opens as a popover
+         below the pill, so it points down. */
+      @media (min-width: ${theme.breakpoints.sm}) {
+        transform: rotate(0deg);
+      }
     }
 
     /* The path only fills half of its 24-unit viewBox, so a 28px box
@@ -53,63 +67,19 @@ export const CityPicker = css(
 
   > .popover {
     position: absolute;
-    z-index: 20;
+    z-index: ${theme.zIndex.popover};
     inset-block-start: calc(100% + ${theme.spacing.xs});
-    inset-inline-start: 0;
+    inset-inline-end: 0;
     inline-size: min(320px, 90vw);
+    max-inline-size: calc(100vw - 2 * ${theme.spacing.lg});
+    max-block-size: min(560px, calc(100dvh - 2 * ${theme.spacing.xl}));
     display: flex;
     flex-direction: column;
-    gap: ${theme.spacing.sm};
-    padding: ${theme.spacing.md};
     border: 1px solid ${theme.colors.border};
     border-radius: ${theme.radii.md};
     background: ${theme.colors.surface};
     box-shadow: ${theme.shadows.raised};
-
-    > .search {
-      min-block-size: 48px;
-      padding-inline: ${theme.spacing.md};
-      border: 1px solid ${theme.colors.border};
-      border-radius: ${theme.radii.md};
-      color: ${theme.colors.text};
-      font-size: ${theme.typography.body.phone.fontSize};
-      line-height: ${theme.typography.body.phone.lineHeight};
-    }
-
-    > .hint {
-      color: ${theme.colors.textSecondary};
-      font-size: ${theme.typography.secondary.phone.fontSize};
-      line-height: ${theme.typography.secondary.phone.lineHeight};
-    }
-
-    > .results {
-      display: flex;
-      flex-direction: column;
-      gap: ${theme.spacing.xs};
-      max-block-size: 280px;
-      overflow-y: auto;
-
-      > li > button {
-        inline-size: 100%;
-        min-block-size: 48px;
-        padding-inline: ${theme.spacing.md};
-        border-radius: ${theme.radii.sm};
-        text-align: start;
-        color: ${theme.colors.text};
-        font-size: ${theme.typography.body.phone.fontSize};
-        line-height: ${theme.typography.body.phone.lineHeight};
-
-        &[aria-selected='true'] {
-          background: ${theme.colors.primarySoft};
-          color: ${theme.colors.primary};
-          font-weight: ${theme.typography.fontWeight.semiBold};
-        }
-
-        &:hover {
-          background: ${theme.colors.primarySoft};
-        }
-      }
-    }
+    overflow: hidden;
   }
 `,
 );

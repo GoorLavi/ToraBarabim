@@ -13,6 +13,7 @@ import { registerLessonRoutes } from '../src/api/lessons';
 import { registerRabbiRoutes } from '../src/api/rabbi';
 import { registerRabbiAuthRoutes } from '../src/api/rabbi/auth';
 import { registerRabbiDirectoryRoutes } from '../src/api/rabbis';
+import { registerWomenAreaRoutes } from '../src/api/women';
 import { loadConfig } from '../src/config';
 import { db } from '../src/db/client';
 import { registerCookies } from '../src/plugins/cookies';
@@ -82,6 +83,7 @@ export const buildApp = async (): Promise<FastifyInstance> => {
   await registerHomeRoutes(app);
   await registerCityRoutes(app);
   await registerRabbiDirectoryRoutes(app);
+  await registerWomenAreaRoutes(app);
   await registerSsr(app);
   registerErrorHandler(app);
   return app;

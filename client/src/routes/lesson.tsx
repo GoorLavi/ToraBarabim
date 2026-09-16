@@ -4,6 +4,8 @@ import type { LessonOccurrence } from '@torabarabim/common';
 import type { HeadersFunction, LoaderFunctionArgs, MetaFunction } from 'react-router';
 import { isRouteErrorResponse, useRouteError } from 'react-router';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
 import { NotFoundScreen } from '~/components/NotFoundScreen/NotFoundScreen';
 import { SITE_WIDE_META } from '~/consts';
 import { lessonPath } from '~/helpers';
@@ -92,7 +94,10 @@ export function ErrorBoundary() {
           heading={lessonPageConsts.SERVER_ERROR_HEADING}
           explanation={lessonPageConsts.SERVER_ERROR_EXPLANATION}
           actionLabel={lessonPageConsts.RETRY_LABEL}
-          onAction={() => window.location.reload()}
+          onAction={() => {
+            trackEvent(MIXPANEL_EVENTS.retryClick, { surface: 'lessonRoute' });
+            window.location.reload();
+          }}
         />
       )}
     </main>

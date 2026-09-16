@@ -1,4 +1,4 @@
-import type { LessonAudience, Weekday } from '@torabarabim/common';
+import type { Weekday } from '@torabarabim/common';
 
 export const HEADING = 'השיעורים שלי';
 export const countLabel = (n: number): string => `${n} שיעורים מופיעים באתר על שמך.`;
@@ -18,15 +18,6 @@ export const EMPTY_CTA = 'הוספת השיעור הראשון';
 
 export const ERROR_MESSAGE = 'לא הצלחנו לטעון את השיעורים שלך';
 export const RETRY_LABEL = 'ניסיון נוסף';
-
-// Duplicated from `AudiencePicker/consts.ts` rather than imported: this
-// screen only needs a plain lookup, not the picker itself. Never `מעורב`
-// (design-system.md, Audience wording).
-export const AUDIENCE_LABELS: Record<LessonAudience, string> = {
-  men: 'גברים',
-  women: 'נשים',
-  mixed: 'גם גברים וגם נשים',
-};
 
 // `Record`, not an array, so indexing by `Weekday` needs no bounds check:
 // every `Weekday` (0-6) has an entry by construction.

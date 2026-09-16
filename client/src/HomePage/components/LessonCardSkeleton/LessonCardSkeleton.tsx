@@ -8,7 +8,8 @@ import * as styles from './styles';
 // rectangles, so a still block still reads as "a lesson card is coming"
 // outdoors (design review: "static only works when the skeleton is shaped
 // like the thing that is coming"). Shared by RailSkeleton and
-// DayLessonsSkeleton, the two places that lay several of these out.
+// components/LessonsGridSkeleton, the two places that lay several of these
+// out.
 export const LessonCardSkeleton = styled(({ className }: LessonCardSkeletonProps) => (
   <div className={className} aria-hidden="true">
     <div className="poster">

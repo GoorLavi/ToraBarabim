@@ -25,6 +25,11 @@ export interface ThemeColors {
   // White at 12% opacity: a tag or pill fill on a `primary` field.
   surfaceOnPrimary: string;
   danger: string;
+  // `text` at 45% opacity: the backdrop behind a `ResponsiveSheet`'s panel
+  // and every sheet built on it (the date picker's mobile sheet, the city
+  // picker's drawer). Alpha over the page rather than a flat color, so it
+  // darkens whatever happens to be behind it.
+  scrim: string;
 }
 
 export interface ThemeTypeSize {
@@ -67,11 +72,16 @@ export interface ThemeTypography {
   secondary: ThemeTypeRole;
   tagAndCaption: ThemeTypeRole;
   // The floor for a lesson-poster card in the two-column phone grid, where
-  // the card is roughly 173px wide (design-system.md, Type): "the card title
+  // the card is roughly 171px wide (design-system.md, Type): "the card title
   // steps down to 15 / 21 with its supporting lines at 14 / 20. That is the
   // floor, not a licence to shrink further."
   cardTitleCompact: ThemeTypeRole;
   secondaryCompact: ThemeTypeRole;
+  // The women's-area tile's own lesson count, inside its plum area. Numerically
+  // equal to `ticketTime`'s desktop step, but a distinct role: design-system.md
+  // reserves `ticketTime` for the lesson ticket's start time alone. Constant
+  // at every tile width, unlike the responsive roles above.
+  tileCount: ThemeTypeRole;
 }
 
 export interface ThemeSpacing {
@@ -110,6 +120,18 @@ export interface ThemeLayout {
   contentMaxWidth: string;
 }
 
+export interface ThemeZIndex {
+  // Popovers anchored inside the header: the date picker's calendar and the
+  // city picker, both from `sm` up.
+  popover: number;
+  // The sticky header band at `lg` and up, and the pinned bar (and its
+  // expand panel) below `lg`.
+  header: number;
+  // The scrim and panel behind any `ResponsiveSheet`: above every popover
+  // and the header itself, so a sheet always sits on top.
+  sheetScrim: number;
+}
+
 export interface Theme {
   colors: ThemeColors;
   typography: ThemeTypography;
@@ -118,4 +140,5 @@ export interface Theme {
   shadows: ThemeShadows;
   breakpoints: ThemeBreakpoints;
   layout: ThemeLayout;
+  zIndex: ThemeZIndex;
 }

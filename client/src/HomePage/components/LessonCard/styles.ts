@@ -52,6 +52,10 @@ export const LessonCard = css(
     > .medallion {
       position: absolute;
       inset-block-start: ${theme.spacing.sm};
+      /* The page's own inline-end (the left, in RTL): only the time text
+         carries its own \`dir="ltr"\` for the digits, not this element, so
+         this resolves against the real page direction rather than a local
+         override that would put it on the opposite physical side. */
       inset-inline-end: ${theme.spacing.sm};
       display: flex;
       flex-direction: column;
@@ -112,10 +116,29 @@ export const LessonCard = css(
       }
 
       > .audience {
-        /* Not \`primary\`: that is the same color as every real link on the
-           page, and this tag is not tappable (design review nit). */
-        color: ${theme.colors.text};
-        font-weight: ${theme.typography.fontWeight.semiBold};
+        display: inline-block;
+        color: ${theme.colors.textSecondary};
+        font-weight: ${theme.typography.fontWeight.regular};
+
+        &.marked {
+          color: ${theme.colors.text};
+          font-weight: ${theme.typography.fontWeight.semiBold};
+        }
+
+        /* Never truncates: a long audience string wraps onto a second line
+           rather than losing text. */
+        &.chip {
+          /* Off the 4px spacing scale, measured against the chip's own
+             14/20 text so the pill reads as a tag rather than a button. */
+          padding-block: 2px;
+          padding-inline: ${theme.spacing.xs};
+          border: 1px solid ${theme.colors.primary};
+          border-radius: ${theme.radii.sm};
+          background: ${theme.colors.primarySoft};
+          color: ${theme.colors.primary};
+          font-weight: ${theme.typography.fontWeight.semiBold};
+          white-space: normal;
+        }
       }
 
       > .description {

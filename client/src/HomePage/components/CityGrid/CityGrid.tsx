@@ -2,6 +2,8 @@ import { useMutation } from '@tanstack/react-query';
 import classNames from 'classnames';
 import styled from 'styled-components';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
 import { fetchCities } from '~/HomePage/api';
 import { TextLink } from '~/HomePage/components/TextLink/TextLink';
 
@@ -25,7 +27,9 @@ export const CityGrid = styled(({ className, items, isLoading, isError, onSelect
     resolveCity.mutate(name, {
       onSuccess: (result) => {
         const match = result.items.find((city) => city.name === name) ?? result.items[0];
-        if (match) onSelectCity({ id: match.id, name: match.name });
+        if (!match) return;
+        onSelectCity({ id: match.id, name: match.name });
+        trackEvent(MIXPANEL_EVENTS.filterCity, { cityId: match.id, cityName: match.name, source: 'homeCityGrid' });
       },
     });
   };
@@ -38,7 +42,12 @@ export const CityGrid = styled(({ className, items, isLoading, isError, onSelect
     <section className={className}>
       <div className="heading">
         <h2>{consts.HEADING}</h2>
-        <TextLink className="seeAll" to="/cities" withChevron>
+        <TextLink
+          className="seeAll"
+          to="/cities"
+          withChevron
+          onClick={() => trackEvent(MIXPANEL_EVENTS.seeAllClick, { target: 'cities', surface: 'home' })}
+        >
           {consts.SEE_ALL_LABEL}
         </TextLink>
       </div>

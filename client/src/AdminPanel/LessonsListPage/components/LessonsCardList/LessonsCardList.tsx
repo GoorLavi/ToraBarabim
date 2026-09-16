@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { ADMIN_ROUTES } from '~/AdminPanel/consts';
 import * as parentConsts from '~/AdminPanel/LessonsListPage/consts';
 import { lessonHasOwnTitle, lessonPrimaryLabel, recurrenceWhenLabel } from '~/AdminPanel/LessonsListPage/helpers';
+import { AUDIENCE_LABELS } from '~/consts';
 import { rabbiDisplayName } from '~/helpers';
 
 import type { LessonsCardListProps } from './models';
@@ -33,7 +34,7 @@ export const LessonsCardList = styled(({ className, rows }: LessonsCardListProps
 
         <div className="tags">
           <span className="tag">{row.lesson.recurrence.kind === 'weekly' ? parentConsts.RECURRING_TAG_LABEL : parentConsts.ONE_TIME_TAG_LABEL}</span>
-          <span className="tag audience">{parentConsts.LESSON_AUDIENCE_LABELS[row.lesson.audience]}</span>
+          <span className="tag audience">{AUDIENCE_LABELS[row.lesson.audience]}</span>
           <span className="tag city" dir="auto">
             {row.lesson.place.cityName}
           </span>

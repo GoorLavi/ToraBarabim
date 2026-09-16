@@ -1,3 +1,4 @@
+import type { AudienceFilter } from '@torabarabim/common';
 import classNames from 'classnames';
 import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
@@ -54,7 +55,13 @@ export const PinnedHeaderBar = styled(({ className, isVisible, ...fieldsProps }:
     setIsExpanded(false);
   };
 
-  const summary = filterSummaryLabel(fieldsProps.option, fieldsProps.customDate, fieldsProps.city, fieldsProps.searchQuery);
+  const summary = filterSummaryLabel(
+    fieldsProps.option,
+    fieldsProps.customDate,
+    fieldsProps.city,
+    fieldsProps.searchQuery,
+    fieldsProps.audienceFilter,
+  );
 
   // Choosing a date or a city closes the panel like any other disclosure;
   // typing a search term does not, or every keystroke would close it. From
@@ -82,6 +89,14 @@ export const PinnedHeaderBar = styled(({ className, isVisible, ...fieldsProps }:
     },
     onClearCity: () => {
       fieldsProps.onClearCity();
+      setIsExpanded(false);
+    },
+    onSelectAudienceFilter: (filter: AudienceFilter) => {
+      fieldsProps.onSelectAudienceFilter(filter);
+      setIsExpanded(false);
+    },
+    onClearAudienceFilter: () => {
+      fieldsProps.onClearAudienceFilter();
       setIsExpanded(false);
     },
   };

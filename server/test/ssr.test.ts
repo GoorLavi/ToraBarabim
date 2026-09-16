@@ -24,6 +24,25 @@ const extractCanonical = (html: string): string => {
   return match[1] ?? '';
 };
 
+const escapeForRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// Matches the tag first and reads `content` out of it, rather than assuming
+// `content` follows `property`: nothing in the rendering guarantees attribute
+// order, so the stricter pattern would pass or fail on formatting.
+const extractMetaProperty = (html: string, property: string): string => {
+  const tag = new RegExp(`<meta[^>]*property="${escapeForRegExp(property)}"[^>]*>`).exec(html);
+  assert.ok(tag, `expected the document to include a <meta property="${property}"> tag`);
+
+  const content = /content="([^"]*)"/.exec(tag[0]);
+  assert.ok(content, `expected the <meta property="${property}"> tag to carry a content attribute`);
+  return content[1] ?? '';
+};
+
+// See public-api.test.ts's own comment: the seeded rabbanit, used here only
+// to confirm the sitemap lists her page, not to assert anything about her
+// lessons.
+const SEEDED_RABBANIT_ID = 'rabbi-9';
+
 describe('SSR rendering seam', () => {
   let app: FastifyInstance;
 
@@ -81,6 +100,22 @@ describe('SSR rendering seam', () => {
       assert.equal(res.statusCode, 200);
       assert.match(res.body, /Disallow: \/admin/);
       assert.match(res.body, /Disallow: \/rabbi/);
+    });
+  });
+
+  describe('the document shape', () => {
+    // Regression test for quirks mode: styled-components' streaming
+    // interleave prepends collected CSS to the front of React's first raw
+    // chunk, which is the doctype glued to `<html ...>` by react-dom-server
+    // itself. Without a fix, the doctype either lands after the `<style>`
+    // block (quirks mode) or, from an earlier broken attempt at a fix, twice.
+    test('a rendered page starts with exactly one doctype', async () => {
+      const res = await app.inject({ method: 'GET', url: '/' });
+      assert.equal(res.statusCode, 200);
+      assert.match(res.body, /^<!doctype html>/i);
+
+      const doctypeCount = (res.body.match(/<!doctype html>/gi) ?? []).length;
+      assert.equal(doctypeCount, 1, `expected exactly one doctype, got ${doctypeCount}`);
     });
   });
 
@@ -179,6 +214,41 @@ describe('SSR rendering seam', () => {
       const rabbiPanel = await app.inject({ method: 'GET', url: '/rabbi' });
       assert.match(admin.body, /<meta name="robots" content="noindex, nofollow"/);
       assert.match(rabbiPanel.body, /<meta name="robots" content="noindex, nofollow"/);
+    });
+
+    // Test 9 (plan, section 8): both women's-area routes render, each with
+    // its own title and canonical, and /women's og:title matches plan
+    // decision 8 exactly, not an approximation of it.
+    test('/women and /women/rabbaniyot carry their own titles and canonicals, and /women carries decision 8\'s og:title exactly', async () => {
+      const women = await app.inject({ method: 'GET', url: '/women' });
+      const rabbaniyot = await app.inject({ method: 'GET', url: '/women/rabbaniyot' });
+      assert.equal(women.statusCode, 200);
+      assert.equal(rabbaniyot.statusCode, 200);
+
+      const womenTitle = extractTitle(women.body);
+      const rabbaniyotTitle = extractTitle(rabbaniyot.body);
+      assert.notEqual(womenTitle, rabbaniyotTitle);
+
+      const womenCanonical = extractCanonical(women.body);
+      const rabbaniyotCanonical = extractCanonical(rabbaniyot.body);
+      assert.notEqual(womenCanonical, rabbaniyotCanonical);
+      assert.equal(womenCanonical, `${SITE_ORIGIN}/women`);
+      assert.equal(rabbaniyotCanonical, `${SITE_ORIGIN}/women/rabbaniyot`);
+
+      assert.equal(extractMetaProperty(women.body, 'og:title'), 'שיעורי תורה לנשים | תורה ברבים');
+    });
+  });
+
+  describe('the sitemap', () => {
+    // Test 10 (plan, section 8): both new pages and the seeded rabbanit's
+    // own page are reachable through the sitemap, proving the two scoped
+    // `rabbiService.list` calls in sitemap.server.ts both feed it.
+    test('the sitemap contains /women, /women/rabbaniyot and the seeded rabbanit\'s page', async () => {
+      const res = await app.inject({ method: 'GET', url: '/sitemap.xml' });
+      assert.equal(res.statusCode, 200);
+      assert.match(res.body, /<loc>[^<]*\/women<\/loc>/);
+      assert.match(res.body, /<loc>[^<]*\/women\/rabbaniyot<\/loc>/);
+      assert.match(res.body, new RegExp(`<loc>[^<]*/rabbis/${SEEDED_RABBANIT_ID}/[^<]*</loc>`));
     });
   });
 });

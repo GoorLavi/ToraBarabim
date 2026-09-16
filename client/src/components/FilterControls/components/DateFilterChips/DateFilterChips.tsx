@@ -7,6 +7,7 @@ import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
 import { dayLabel, numericDayLabel, todayInIsrael } from '~/HomePage/helpers';
 
+import { DateFilterSheet } from './components/DateFilterSheet/DateFilterSheet';
 import { HebrewDatePicker } from './components/HebrewDatePicker/HebrewDatePicker';
 import * as consts from './consts';
 import type { DateFilterChipsProps } from './models';
@@ -47,7 +48,7 @@ export const DateFilterChips = styled(
 
     const handleSelectDate = (isoDate: string): void => {
       onSelectCustomDate(isoDate);
-      trackEvent(MIXPANEL_EVENTS.filterDate, { date: isoDate });
+      trackEvent(MIXPANEL_EVENTS.filterDate, { option: 'custom', date: isoDate, source: 'calendar' });
       closePicker();
     };
 
@@ -56,8 +57,18 @@ export const DateFilterChips = styled(
       closePicker();
     };
 
+    // Checked against the trigger and the panel directly, never against the
+    // wrapper: `ResponsiveSheet` portals the mobile panel into
+    // `document.body`, so the wrapper's own `contains()` no longer reflects
+    // where the panel actually lives in the DOM, even though React still
+    // delivers the blur event here (portals keep the React tree, only the
+    // DOM node moves).
     const handleBlur = (event: FocusEvent<HTMLDivElement>): void => {
-      if (!event.currentTarget.contains(event.relatedTarget)) dismissPicker();
+      const nextFocusTarget = event.relatedTarget;
+      const staysInsideWidget =
+        Boolean(nextFocusTarget) &&
+        (triggerRef.current?.contains(nextFocusTarget) || panelRef.current?.contains(nextFocusTarget));
+      if (!staysInsideWidget) dismissPicker();
     };
 
     const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
@@ -95,7 +106,7 @@ export const DateFilterChips = styled(
               aria-label={isSelected ? consts.clearFilterLabel(item.label) : item.label}
               onClick={() => {
                 onSelectOption(item.value);
-                if (!isSelected) trackEvent(MIXPANEL_EVENTS.filterDate, { date: item.value });
+                if (!isSelected) trackEvent(MIXPANEL_EVENTS.filterDate, { option: item.value, source: 'chip' });
               }}
             >
               <span>{item.label}</span>
@@ -131,35 +142,20 @@ export const DateFilterChips = styled(
           </button>
 
           {isPickerOpen && !isDesktop && (
-            <div className="sheetScrim" onClick={dismissPicker}>
-              <div
-                className="sheetPanel"
-                role="dialog"
-                aria-modal="true"
-                aria-label={consts.DIALOG_LABEL}
-                ref={panelRef}
-                onClick={(event) => event.stopPropagation()}
-              >
-                <div className="sheetHeader">
-                  <h2 className="sheetTitle">{consts.DIALOG_LABEL}</h2>
-                  <button type="button" className="closeButton" aria-label={consts.CLOSE_SHEET_LABEL} onClick={closePicker}>
-                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                    </svg>
-                  </button>
-                </div>
-                <HebrewDatePicker
-                  {...{
-                    surface: 'sheet',
-                    selectedDate: chosenDate,
-                    initialMonth: chosenDate ?? todayIso,
-                    todayIso,
-                    onSelectDate: handleSelectDate,
-                    onClear: handleClearDate,
-                  }}
-                />
-              </div>
-            </div>
+            <DateFilterSheet
+              {...{ heading: consts.DIALOG_LABEL, closeLabel: consts.CLOSE_SHEET_LABEL, onClose: closePicker, onDismiss: dismissPicker, contentRef: panelRef }}
+            >
+              <HebrewDatePicker
+                {...{
+                  surface: 'sheet',
+                  selectedDate: chosenDate,
+                  initialMonth: chosenDate ?? todayIso,
+                  todayIso,
+                  onSelectDate: handleSelectDate,
+                  onClear: handleClearDate,
+                }}
+              />
+            </DateFilterSheet>
           )}
 
           {isPickerOpen && isDesktop && (

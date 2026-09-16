@@ -166,6 +166,13 @@ do not know who they are.
 The word `בהפרדה` is also not used. The three values above already carry that meaning
 for this audience, and appending it is redundant.
 
+**One exception, and it is bounded to a single control: the closed header audience button
+shows `גברים ונשים` when `גם גברים וגם נשים` is selected.** The full value does not fit the
+button at 375, and the short form keeps both words the reader scans for. Approved by the
+owner. It applies to the closed button only: the list inside the menu, every lesson card,
+the admin screens and the stored value all keep `גם גברים וגם נשים`. Do not cite this
+exception anywhere else, and never shorten the other two values.
+
 **Audience is required.** The admin schema is an enum with no empty case, so a lesson
 without an audience cannot exist and no surface needs to render one. An earlier version
 of this section described a hide-when-empty behaviour; the implementation settled the
@@ -182,7 +189,7 @@ Type, spacing, radii, shadows and breakpoints live alongside color in the same t
 object. All are tokens, none are raw values in a component.
 
 ### Color: the token set
-Sixteen color tokens. The theme defines all sixteen.
+Seventeen color tokens. The theme defines all seventeen.
 
 | Token | Role |
 |---|---|
@@ -202,6 +209,7 @@ Sixteen color tokens. The theme defines all sixteen.
 | `color.borderOnPrimary` | Hairlines and perforations on a `primary` fill. White at 30% |
 | `color.surfaceOnPrimary` | A quiet raised block on a `primary` fill, such as a tag on the lesson ticket. White at 12% |
 | `color.danger` | Error text. Text only, never a fill |
+| `color.scrim` | The backdrop behind a fixed sheet's panel (a bottom sheet, a drawer): `color.text` at 45% |
 
 **Contrast rule for `accent`.** The accent does not reach 4.5:1 against `surface`, so it
 is reserved for graphic elements and large numerals and is never used for body-size text:
@@ -237,6 +245,7 @@ binding or a parochet.
 | `color.borderOnPrimary` | `rgba(255, 255, 255, 0.3)` |
 | `color.surfaceOnPrimary` | `rgba(255, 255, 255, 0.12)` |
 | `color.danger` | `#A32A22` |
+| `color.scrim` | `rgba(32, 27, 29, 0.45)` |
 
 ### Type
 **Assistant**, confirmed present in Figma with the three weights the design uses. It was
@@ -256,6 +265,7 @@ Verify style names with `listAvailableFontsAsync` rather than guessing.
 | Section heading | 20 / 28 | 24 / 32 | 700 |
 | Card title | 18 / 26 | 18 / 26 | 600 |
 | Time in a card | 20 / 24 | 20 / 24 | 600 |
+| Tile count | 36 / 40 | 36 / 40 | 700 |
 | Ticket time | 44 / 48 | 36 / 40 | 700 |
 | Ticket date | 56 / 56 | 64 / 64 | 700 |
 | Ticket venue | 18 / 26 | 20 / 28 | 600 |
@@ -265,6 +275,13 @@ Verify style names with `listAvailableFontsAsync` rather than guessing.
 
 Body is 17 and not 16 deliberately: the audience spans a wide age range and reads this
 outdoors.
+
+**Tile count is the number on the women's-area tile**, the one rail item that is not a
+lesson. It is the only thing on that tile that says how much is behind the door, so it is
+set larger than any other number on a card and never shrinks: when the tile runs out of
+room the emblem shrinks first, then the gaps, then the bottom line goes. It always sits in
+`color.accentOnDark` on the plum field, with its `שיעורים` label at `Tag and caption` in
+`color.textOnPrimaryMuted`. Mirrored from `tileCount` in the theme.
 
 **Ticket time is the one role that gets smaller on a wider screen.** On a phone the start
 time carries the lesson ticket on its own, so it is set at 44 / 48. On desktop the ticket
@@ -292,12 +309,12 @@ list heading has usually already stated. It is the least load-bearing text on th
 **Do not cite this exemption anywhere else.** Any other request to go below 14 is a
 signal that something needs less text, not smaller text.
 
-In a two-column poster grid on a phone the card is roughly 173px wide, and the card
+In a two-column poster grid on a phone the card is roughly 171px wide, and the card
 title steps down to 15 / 21 with its supporting lines at 14 / 20. That is the floor, not
 a licence to shrink further.
 
 **The step is measured against the card's own width, never the screen's.** A card 200px
-wide on a 375px phone gets the full size; the same component in a 173px grid cell keeps
+wide on a 375px phone gets the full size; the same component in a 171px grid cell keeps
 the floor. Reading the viewport instead was a real defect: it shrank the type on a card
 that had plenty of room, because a narrow screen was mistaken for a narrow card.
 
@@ -331,10 +348,24 @@ Two. The shadow color is a near-black at low alpha, because a tinted shadow read
 smudge.
 
 - `shadow.card`: `0 1px 2px rgba(28,26,23,0.04), 0 1px 3px rgba(28,26,23,0.06)`
-- `shadow.raised`: `0 4px 16px rgba(28,26,23,0.10)`, for the sticky search bar only
+- `shadow.raised`: `0 4px 16px rgba(28,26,23,0.10)`, for the sticky search bar and for
+  anything that floats over the page and needs to read as lifted off it: a header
+  popover (the date picker, the city picker) and a `ResponsiveSheet` panel.
 
 Separation is carried mainly by `color.border` and by `surface` against `bg`, not by
 shadow.
+
+### Z-index
+Three layers, low to high: `zIndex.popover` (20) for a popover anchored inside the
+header (the date picker's calendar, the city picker, both from `sm` up), `zIndex.header`
+(30) for the sticky header band at `lg` and up and for the pinned bar (and its expand
+panel) below `lg`, and `zIndex.sheetScrim` (100) for the scrim and panel behind any
+`ResponsiveSheet`. A sheet always sits above every popover, which always sits above the
+header.
+
+A handful of raw z-index values remain outside this scale, in `AdminPanel`,
+`RabbiPanel/LoginPage`, and `components/CitySelect`: migrating those to the token is a
+separate change.
 
 ### Breakpoints and content width
 Min-width, narrow to wide: `sm 480`, `md 768`, `lg 1024`, `xl 1280`.
@@ -358,8 +389,19 @@ poster, at 243 by 324, which is a thumbnail. An earlier version of this paragrap
 four columns broke long names at 262px; that was an estimate, it was measured and found
 wrong, and it is gone.
 
-**This describes every lesson grid:** the filtered home page, `/lessons`, and the city
-page. The rows use a fixed card width and never reflow into a grid; see below.
+**This describes every lesson grid:** the filtered home page, `/lessons`, the city and
+area pages, and the nationwide fallback on a rabbi page with no lessons of its own. It is
+one component, and there is nothing for a second copy to disagree with. The rows use a
+fixed card width and never reflow into a grid; see below.
+
+**The gap is `lg` (16) at every width, and a row's cards share a bottom edge.** One
+value, no breakpoint step: the 296px and 308px cells above are computed against a 16 gap,
+and a phone cell is 171px in the 358 band a 390 screen leaves. The cell stretches its card
+to the row's height, so a card whose audience line wraps to a second line does not leave
+its neighbour ending higher. These cards carry a border and a shadow, and a row of them
+landing at different heights reads as broken alignment rather than as air. Four copies of
+this grid disagreed on both of these values, in both directions, because this paragraph
+did not exist to disagree with.
 
 **A column count is set by the longest real string, never by the container.** The
 all-rabbis index stays at two columns even in the wider band: its longest meta line
