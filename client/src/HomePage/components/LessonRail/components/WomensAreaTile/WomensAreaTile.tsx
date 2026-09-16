@@ -8,9 +8,11 @@ import * as consts from './consts';
 import type { WomensAreaTileProps } from './models';
 import * as styles from './styles';
 
-// The one non-lesson item in the first home rail: same list item, same card
-// shell, so it sits in the rail at the height its neighbours set rather
-// than a fixed height of its own.
+// The tile carries its own proportions rather than stretching to a
+// neighbouring lesson card's actual height: the plum area matches a lesson
+// card's poster area exactly, and the white area is a fixed approximation
+// of a lesson card's text block, so the two land at the same total height
+// without depending on either card's own content (styles.ts).
 export const WomensAreaTile = styled(({ className, lessonCount }: WomensAreaTileProps) => (
   <Link to={WOMEN_PAGE_PATH} className={className} aria-label={consts.tileAriaLabel(lessonCount)}>
     <div className="plum">

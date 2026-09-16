@@ -6,16 +6,15 @@ export type RabbiProminence = 'local' | 'known' | 'sought';
 
 export type HomeRowId = 'area' | 'today' | 'bothAudiences' | 'weekly';
 
-// A row is mostly lesson occurrences, but the first row carries one
-// non-lesson item, the women's-area tile: server-placed, per 0012's rule
-// that the client renders whichever kind it receives, in order, and decides
-// nothing about the rows.
-export type HomeRowItem = { kind: 'lesson'; lesson: LessonOccurrence } | { kind: 'womensArea' };
-
 export interface HomeRow {
   id: HomeRowId;
   title: string;
-  items: HomeRowItem[];
+  items: LessonOccurrence[];
+  // The 0-based index within `items` where the women's-area tile renders;
+  // present only on the one row that carries it (0012: the client renders
+  // `items` exactly as given and never reorders them, so it splices the
+  // tile in at this index rather than choosing where it goes).
+  womensAreaTileIndex?: number;
 }
 
 export interface HomeResponse {

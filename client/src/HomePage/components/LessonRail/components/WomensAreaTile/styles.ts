@@ -1,14 +1,13 @@
 import { css } from 'styled-components';
 
-import { EMBLEM_SIZE_PHONE, EMBLEM_SIZE_WIDE } from './consts';
+import { POSTER_ASPECT_RATIO } from '~/HomePage/consts';
+
+import { EMBLEM_SIZE_FLOOR, EMBLEM_SIZE_MD, EMBLEM_SIZE_PHONE, EMBLEM_SIZE_WIDE, WHITE_AREA_HEIGHT } from './consts';
 
 export const WomensAreaTile = css(
   ({ theme }) => `
   display: flex;
   flex-direction: column;
-  /* Stretches to the list item's own height, set by the tallest lesson
-     card in the row, rather than a fixed height of its own. */
-  block-size: 100%;
   overflow: hidden;
   border: 1px solid ${theme.colors.border};
   border-radius: ${theme.radii.lg};
@@ -29,38 +28,64 @@ export const WomensAreaTile = css(
   }
 
   > .plum {
+    container-type: inline-size;
+    container-name: plum;
+    /* Equal to a lesson card's own poster area: same ratio, so the same
+       width steps to the same height (POSTER_ASPECT_RATIO, HomePage/consts.ts). */
+    aspect-ratio: ${POSTER_ASPECT_RATIO};
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: ${theme.spacing.xs};
-    padding: ${theme.spacing.lg};
+    justify-content: center;
+    gap: ${theme.spacing.md};
+    padding-inline: ${theme.spacing.md};
     background: ${theme.colors.primary};
     text-align: center;
 
+    /* The plum area's own three fallbacks, each only reachable below the
+       narrowest width this tile actually ships at (200px), and strictly
+       ordered: the emblem shrinks toward its floor first (183px), then the
+       gap between every item in the column tightens (159px), then the
+       bottom line is dropped (150px, on the line below). The count itself
+       is never part of either. */
+    @container plum (max-width: 159px) {
+      gap: ${theme.spacing.sm};
+    }
+
     > .emblem {
+      flex-shrink: 0;
       inline-size: ${EMBLEM_SIZE_PHONE}px;
       block-size: ${EMBLEM_SIZE_PHONE}px;
 
-      /* Steps at the same viewport breakpoint LessonRail/styles.ts steps
-         the card width at, not a container query. */
+      @media (min-width: ${theme.breakpoints.md}) {
+        inline-size: ${EMBLEM_SIZE_MD}px;
+        block-size: ${EMBLEM_SIZE_MD}px;
+      }
+
       @media (min-width: ${theme.breakpoints.lg}) {
         inline-size: ${EMBLEM_SIZE_WIDE}px;
         block-size: ${EMBLEM_SIZE_WIDE}px;
       }
+
+      @container plum (max-width: 183px) {
+        inline-size: ${EMBLEM_SIZE_FLOOR}px;
+        block-size: ${EMBLEM_SIZE_FLOOR}px;
+      }
     }
 
     > .count {
+      flex-shrink: 0;
       color: ${theme.colors.accentOnDark};
-      font-weight: ${theme.typography.fontWeight.bold};
-      font-size: ${theme.typography.ticketDate.phone.fontSize};
-      line-height: ${theme.typography.ticketDate.phone.lineHeight};
+      font-weight: ${theme.typography.tileCount.fontWeight};
+      font-size: ${theme.typography.tileCount.phone.fontSize};
+      line-height: ${theme.typography.tileCount.phone.lineHeight};
     }
 
     > .countWord {
-      color: ${theme.colors.textOnPrimary};
-      font-weight: ${theme.typography.fontWeight.semiBold};
-      font-size: ${theme.typography.cardTitle.phone.fontSize};
-      line-height: ${theme.typography.cardTitle.phone.lineHeight};
+      flex-shrink: 0;
+      color: ${theme.colors.textOnPrimaryMuted};
+      font-size: ${theme.typography.secondaryCompact.phone.fontSize};
+      line-height: ${theme.typography.secondaryCompact.phone.lineHeight};
     }
 
     > .line {
@@ -68,17 +93,22 @@ export const WomensAreaTile = css(
       font-size: ${theme.typography.secondary.phone.fontSize};
       line-height: ${theme.typography.secondary.phone.lineHeight};
       text-wrap: balance;
+
+      @container plum (max-width: 150px) {
+        display: none;
+      }
     }
   }
 
   > .white {
-    flex: 1;
+    flex-shrink: 0;
+    block-size: ${WHITE_AREA_HEIGHT};
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    /* Content sits at the top, any leftover height (the tile stretches to
-       match the lesson card beside it) collects below instead of pushing
-       the link down toward the middle. */
+    /* Content sits at the top: the heading lands on a lesson card's own
+       title line and the link on its meta line, with the city line's worth
+       of room left below, unused, so the two card types still line up. */
     justify-content: flex-start;
     gap: ${theme.spacing.xs};
     padding: ${theme.spacing.md};

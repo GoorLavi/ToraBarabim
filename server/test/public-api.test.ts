@@ -5,7 +5,6 @@ import type {
   CitySearchResult,
   CitySuggestionsResponse,
   HomeResponse,
-  HomeRowItem,
   LessonOccurrence,
   LessonSearchResponse,
   RabbiDirectoryEntry,
@@ -262,12 +261,15 @@ describe('public API', () => {
     });
   });
 
-  // Test 7 (updates the existing shape test to the row-item union): every
-  // row is still correctly shaped, no lesson item is taught by a rabbanit,
-  // exactly one women's-area tile exists and it sits at index 1 of the
-  // first row, every row keeps at least 3 lesson items after the scope
+  // Test 7 (updates the existing shape test to the new tile placement):
+  // every row is still correctly shaped, no lesson item is taught by a
+  // rabbanit, every row keeps at least 3 lesson items after the scope
   // filter, and the tile's count matches `GET /v1/women`'s own count.
-  test("GET /v1/home returns every row correctly shaped, excludes rabbanit-taught lessons, and places exactly one women's-area tile", async () => {
+  // Placement: exactly one row carries `womensAreaTileIndex` (value 3) when
+  // the women's set is non-empty, none when it is empty; the row is the
+  // second row when it has at least four lessons, otherwise the next row
+  // that does (see `WOMENS_AREA_TILE_*` in `service/home/consts.ts`).
+  test("GET /v1/home returns every row correctly shaped, excludes rabbanit-taught lessons, and places at most one women's-area tile", async () => {
     const [homeRes, womenRes] = await Promise.all([
       app.inject({ method: 'GET', url: '/v1/home' }),
       app.inject({ method: 'GET', url: '/v1/women' }),
@@ -278,30 +280,41 @@ describe('public API', () => {
     const body = homeRes.json() as HomeResponse;
     assert.ok(Array.isArray(body.rows));
 
-    let tileCount = 0;
+    const rowsWithTile: number[] = [];
     body.rows.forEach((row, rowIndex) => {
       assert.equal(typeof row.id, 'string');
       assert.equal(typeof row.title, 'string');
       assert.ok(Array.isArray(row.items));
-
-      const lessonItems = row.items.filter(
-        (item): item is Extract<HomeRowItem, { kind: 'lesson' }> => item.kind === 'lesson',
+      assert.ok(row.items.length >= 3, `expected row ${row.id} to keep at least 3 lesson items after the scope filter`);
+      assert.ok(
+        row.items.every((item) => typeof item.lessonId === 'string'),
+        `expected every item in row ${row.id} to be a lesson, nothing else`,
       );
-      assert.ok(lessonItems.length >= 3, `expected row ${row.id} to keep at least 3 lesson items after the scope filter`);
-      assert.ok(!lessonItems.some((item) => item.lesson.rabbi.honorific === 'rabbanit'));
+      assert.ok(!row.items.some((item) => item.rabbi.honorific === 'rabbanit'));
 
-      row.items.forEach((item, itemIndex) => {
-        if (item.kind !== 'womensArea') return;
-        tileCount += 1;
-        assert.equal(rowIndex, 0, 'the tile must appear in the first row only');
-        assert.equal(itemIndex, 1, 'the tile must sit at index 1 of the first row');
-      });
+      if (row.womensAreaTileIndex !== undefined) {
+        rowsWithTile.push(rowIndex);
+        assert.equal(row.womensAreaTileIndex, 3);
+        assert.ok(row.items.length >= 4, `expected row ${row.id} to have at least 4 lessons to carry the tile`);
+      }
     });
 
     const womenBody = womenRes.json() as WomenAreaResponse;
     const womenLessonCount = womenBody.kind === 'populated' ? womenBody.lessonCount : 0;
     assert.equal(body.womensAreaLessonCount, womenLessonCount);
-    assert.equal(tileCount, body.womensAreaLessonCount > 0 ? 1 : 0);
+
+    if (body.womensAreaLessonCount === 0) {
+      assert.equal(rowsWithTile.length, 0, "expected no row to carry the tile when the women's set is empty");
+    } else {
+      // The candidate row is the second row (index 1); if it has fewer
+      // than four lessons, the tile moves to the next row that does.
+      const expectedRowIndex = body.rows.findIndex((row, index) => index >= 1 && row.items.length >= 4);
+      if (expectedRowIndex === -1) {
+        assert.equal(rowsWithTile.length, 0, 'no row has enough lessons to carry the tile');
+      } else {
+        assert.deepEqual(rowsWithTile, [expectedRowIndex]);
+      }
+    }
   });
 
   // Test 8: a populated summary lists both a rabbanit and a rav among the

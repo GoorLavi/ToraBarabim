@@ -5,14 +5,15 @@ import { LessonCard } from '~/HomePage/components/LessonCard/LessonCard';
 
 import { WomensAreaTile } from './components/WomensAreaTile/WomensAreaTile';
 import * as consts from './consts';
-import { scrollRailBy } from './helpers';
+import { railSlots, scrollRailBy } from './helpers';
 import type { LessonRailProps } from './models';
 import * as styles from './styles';
 import { useScrollEdges } from './useScrollEdges';
 
-export const LessonRail = styled(({ className, title, items, womensAreaLessonCount }: LessonRailProps) => {
+export const LessonRail = styled(({ className, title, items, womensAreaTileIndex, womensAreaLessonCount }: LessonRailProps) => {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const { atStart, atEnd } = useScrollEdges(scrollerRef);
+  const slots = railSlots(items, womensAreaTileIndex);
 
   const scroll = (direction: 'prev' | 'next'): void => {
     if (scrollerRef.current) scrollRailBy(scrollerRef.current, direction);
@@ -33,13 +34,13 @@ export const LessonRail = styled(({ className, title, items, womensAreaLessonCou
 
         <div className="scrollerGroup" ref={scrollerRef}>
           <ul className="scroller">
-            {items.map((item) =>
-              item.kind === 'lesson' ? (
-                <li key={`${item.lesson.lessonId}-${item.lesson.date}`}>
-                  <LessonCard {...{ lesson: item.lesson, surface: 'general' }} />
+            {slots.map((slot) =>
+              slot.kind === 'lesson' ? (
+                <li key={`${slot.lesson.lessonId}-${slot.lesson.date}`}>
+                  <LessonCard {...{ lesson: slot.lesson, surface: 'general' }} />
                 </li>
               ) : (
-                <li key="womens-area">
+                <li key="womens-area" className="tile">
                   <WomensAreaTile {...{ lessonCount: womensAreaLessonCount }} />
                 </li>
               ),

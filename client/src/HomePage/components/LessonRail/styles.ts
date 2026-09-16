@@ -132,6 +132,13 @@ export const LessonRail = css(
           @media (min-width: ${theme.breakpoints.lg}) {
             flex-basis: ${CARD_WIDTH_LG};
           }
+
+          /* The tile now carries its own fixed proportions (plum area,
+             text block) rather than stretching to match a lesson card's
+             actual, content-dependent height. */
+          &.tile {
+            align-self: flex-start;
+          }
         }
       }
     }

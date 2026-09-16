@@ -25,14 +25,13 @@ export interface ResolvedHomeOccurrence {
   shuffleKey: number;
 }
 
-// A row's item is either a lesson occurrence or the women's-area tile,
-// server-placed at index 1 of the first row; see `getHome`.
-export type HomeRowItemResult = { kind: 'lesson'; occurrence: ResolvedHomeOccurrence } | { kind: 'womensArea' };
-
 export interface HomeRowResult {
   id: HomeRowId;
   title: string;
-  items: HomeRowItemResult[];
+  items: ResolvedHomeOccurrence[];
+  // The 0-based index in `items` where the women's-area tile renders; see
+  // `getHome`'s placement cadence. Present on at most one row.
+  womensAreaTileIndex?: number;
 }
 
 export interface HomeResult {

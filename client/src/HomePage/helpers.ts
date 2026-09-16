@@ -110,14 +110,11 @@ export const resolveHomeMode = (
   audienceFilter: AudienceFilter | undefined,
 ): HomeMode => (option === 'all' && !city && !searchQuery && !audienceFilter ? 'rail' : 'filtered');
 
-// Rail mode has no server-side rabbi or city list; RabbiRow and CityGrid
-// are fed the union of every row's lesson items instead of a single fetched
-// list. The one non-lesson item (the women's-area tile) carries no rabbi or
-// city of its own, so it is filtered out here rather than at each reader.
+// Rail mode has no server-side rabbi or city list; RabbiRow and CityGrid are
+// fed the union of every row's lesson items instead of a single fetched
+// list.
 export const flattenHomeRows = (data: HomeResponse | undefined): LessonOccurrence[] | undefined =>
-  data
-    ? data.rows.flatMap((row) => row.items.flatMap((item) => (item.kind === 'lesson' ? [item.lesson] : [])))
-    : undefined;
+  data ? data.rows.flatMap((row) => row.items) : undefined;
 
 // One element, one string, and only in rail mode. Filtered mode never shows
 // one: the section heading already names the day and city, and

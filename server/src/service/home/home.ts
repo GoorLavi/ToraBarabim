@@ -11,8 +11,17 @@ import { AREA_NAMES_HE } from '../shared/consts';
 import { toCitySummary } from '../shared/city-summary';
 import { toPlace, type PlaceCityRow } from '../shared/place';
 import { toRabbiSummary as toRabbi } from '../shared/rabbi-summary';
-import { HOME_WINDOW_DAYS, MAX_ITEMS_PER_ROW, MIN_ITEMS_PER_ROW, PROMINENCE_RANK, WOMENS_AREA_TILE_INDEX } from './consts';
-import type { HomeResult, HomeRowItemResult, HomeRowResult, LoadedWindow, ResolvedHomeOccurrence, WomenAreaResult, WomensSet } from './models';
+import {
+  HOME_WINDOW_DAYS,
+  MAX_ITEMS_PER_ROW,
+  MIN_ITEMS_PER_ROW,
+  PROMINENCE_RANK,
+  WOMENS_AREA_TILE_FIRST_CANDIDATE_ROW,
+  WOMENS_AREA_TILE_INDEX,
+  WOMENS_AREA_TILE_MIN_LESSONS,
+  WOMENS_AREA_TILE_ROW_CADENCE,
+} from './consts';
+import type { HomeResult, HomeRowResult, LoadedWindow, ResolvedHomeOccurrence, WomenAreaResult, WomensSet } from './models';
 
 const MINUTES_PER_DAY = 24 * 60;
 
@@ -134,15 +143,13 @@ const orderRow = (occurrences: ResolvedHomeOccurrence[]): ResolvedHomeOccurrence
     return a.shuffleKey - b.shuffleKey;
   });
 
-const toRowItem = (occurrence: ResolvedHomeOccurrence): HomeRowItemResult => ({ kind: 'lesson', occurrence });
-
 const buildRow = (
   id: HomeRowResult['id'],
   title: string,
   matches: ResolvedHomeOccurrence[],
 ): HomeRowResult | undefined => {
   const items = orderRow(pickNearestPerLesson(matches)).slice(0, MAX_ITEMS_PER_ROW);
-  return items.length >= MIN_ITEMS_PER_ROW ? { id, title, items: items.map(toRowItem) } : undefined;
+  return items.length >= MIN_ITEMS_PER_ROW ? { id, title, items } : undefined;
 };
 
 // The four rows filter on different, overlapping axes (area, day, audience,
@@ -159,9 +166,7 @@ const buildRowExcluding = (
 ): HomeRowResult | undefined => {
   const eligible = matches.filter((occurrence) => !usedLessonIds.has(occurrence.lessonId));
   const row = buildRow(id, title, eligible);
-  row?.items.forEach((item) => {
-    if (item.kind === 'lesson') usedLessonIds.add(item.occurrence.lessonId);
-  });
+  row?.items.forEach((item) => usedLessonIds.add(item.lessonId));
   return row;
 };
 
@@ -298,11 +303,24 @@ export const getHome = async (now: Date): Promise<HomeResult> => {
     ),
   ].filter((row): row is HomeRowResult => row !== undefined);
 
-  const [firstRow] = rows;
-  if (firstRow && womensAreaLessonCount > 0) {
-    const items = [...firstRow.items];
-    items.splice(WOMENS_AREA_TILE_INDEX, 0, { kind: 'womensArea' });
-    rows[0] = { ...firstRow, items };
+  // Places at most one tile: starting from the candidate row, scan forward
+  // for the first row with enough lessons for the tile's slot. If none
+  // qualifies, no tile is placed. A second candidate (cadence rows on from
+  // wherever the tile actually landed) never applies today, since the home
+  // page never has more rows than the first candidate's own cadence, but
+  // the loop is written to keep working if that changes.
+  if (womensAreaLessonCount > 0) {
+    let candidateRow = WOMENS_AREA_TILE_FIRST_CANDIDATE_ROW;
+    while (candidateRow < rows.length) {
+      const placedAt = rows.findIndex(
+        (row, index) => index >= candidateRow && row.items.length >= WOMENS_AREA_TILE_MIN_LESSONS,
+      );
+      const row = placedAt === -1 ? undefined : rows[placedAt];
+      if (!row) break;
+
+      rows[placedAt] = { ...row, womensAreaTileIndex: WOMENS_AREA_TILE_INDEX };
+      candidateRow = placedAt + WOMENS_AREA_TILE_ROW_CADENCE;
+    }
   }
 
   return { rows, womensAreaLessonCount };

@@ -10,7 +10,6 @@ import { ContactCta } from './components/ContactCta/ContactCta';
 import { HomeRails } from './components/HomeRails/HomeRails';
 import { LessonsSection } from './components/LessonsSection/LessonsSection';
 import { RabbiRow } from './components/RabbiRow/RabbiRow';
-import { WomensAreaBand } from './components/WomensAreaBand/WomensAreaBand';
 import { LESSON_WINDOW_DAYS, LESSON_WINDOW_PAGE_SIZE } from './consts';
 import { addDays, contextLine, flattenHomeRows, resolveHomeMode, resolveTargetDate } from './helpers';
 import type { HomePageProps, LessonFilters } from './models';
@@ -37,20 +36,13 @@ export const HomePage = styled(({ className }: HomePageProps) => {
     audience: audienceFilter,
   };
 
+  const homeRowsQuery = useHomeRows(mode === 'rail');
   const lessonsQuery = useLessonSearch(filters, mode === 'filtered');
-  // Always enabled, in both modes: the band's count reads `GET /v1/home`'s
-  // own `womensAreaLessonCount` rather than a second fetch to `GET
-  // /v1/women` for the same number (plan fix round, decision: "the band and
-  // tile read womensAreaLessonCount from the home response"). SSR already
-  // seeds this query's cache on first paint regardless of which mode the
-  // URL lands in, so this costs a real request only when nothing was seeded.
-  const homeRowsQuery = useHomeRows(true);
 
   const browseItems = mode === 'rail' ? flattenHomeRows(homeRowsQuery.data) : lessonsQuery.data?.items;
   const isBrowseLoading = mode === 'rail' ? homeRowsQuery.isPending : lessonsQuery.isPending;
   const isBrowseError = mode === 'rail' ? homeRowsQuery.isError : lessonsQuery.isError;
   const browseContextLine = contextLine(mode);
-  const womensAreaLessonCount = homeRowsQuery.data?.womensAreaLessonCount ?? 0;
 
   // The way back out of the dateless empty state (design-system.md, "Every
   // data screen has three states"): clears every filter and returns to the
@@ -89,8 +81,6 @@ export const HomePage = styled(({ className }: HomePageProps) => {
         </div>
 
         <RabbiRow items={browseItems} isLoading={isBrowseLoading} isError={isBrowseError} />
-
-        {womensAreaLessonCount > 0 && <WomensAreaBand {...{ lessonCount: womensAreaLessonCount }} />}
 
         <CityGrid items={browseItems} isLoading={isBrowseLoading} isError={isBrowseError} onSelectCity={selectCity} />
 
