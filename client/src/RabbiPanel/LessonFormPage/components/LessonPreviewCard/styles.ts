@@ -43,6 +43,10 @@ export const LessonPreviewCard = css(
       > .medallion {
         position: absolute;
         inset-block-start: ${theme.spacing.sm};
+        /* The page's own inline-end (the left, in RTL): only the time text
+           carries its own \`dir="ltr"\` for the digits, not this element, so
+           this resolves against the real page direction rather than a
+           local override that would put it on the opposite physical side. */
         inset-inline-end: ${theme.spacing.sm};
         display: flex;
         flex-direction: column;

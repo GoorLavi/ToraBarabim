@@ -18,9 +18,11 @@ export const LessonPreviewCard = styled(
       <article className="card">
         <div className="poster">
           {rabbiPhotoUrl ? <img className="image" src={rabbiPhotoUrl} alt="" /> : <div className="image placeholder" aria-hidden="true" />}
-          <div className="medallion" dir="ltr">
+          <div className="medallion">
             <span className="weekday">{weekdayLabel ?? consts.NO_DAY_PLACEHOLDER}</span>
-            <span className="time">{startTime || consts.NO_TIME_PLACEHOLDER}</span>
+            <span className="time" dir="ltr">
+              {startTime || consts.NO_TIME_PLACEHOLDER}
+            </span>
           </div>
         </div>
 

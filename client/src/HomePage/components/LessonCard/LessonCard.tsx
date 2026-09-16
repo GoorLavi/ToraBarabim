@@ -47,9 +47,11 @@ export const LessonCard = styled(({ className, lesson, surface, clickContext }: 
         ) : (
           <div className="image placeholder" aria-hidden="true" />
         )}
-        <div className="medallion" dir="ltr">
+        <div className="medallion">
           <span className="weekday">{consts.cardWeekday(lesson.date)}</span>
-          <span className="time">{lesson.startTime}</span>
+          <span className="time" dir="ltr">
+            {lesson.startTime}
+          </span>
         </div>
       </div>
 
