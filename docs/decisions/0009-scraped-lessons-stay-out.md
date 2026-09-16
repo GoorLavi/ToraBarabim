@@ -1,6 +1,6 @@
 # 0009: Scraped lessons do not reach the site yet
 
-- **Status:** accepted
+- **Status:** superseded by [0030](0030-weekly-agent-imports-scraped-lessons.md)
 - **Date:** 2026-08-14
 - **Decided by:** project owner
 

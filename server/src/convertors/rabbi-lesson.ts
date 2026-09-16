@@ -13,6 +13,7 @@ export const toRabbiLessonResponse = (record: RabbiLessonRecord): RabbiLessonRes
   startTime: record.startTime,
   durationMinutes: record.durationMinutes,
   notes: record.notes,
+  provenance: record.provenance,
 });
 
 export const toRabbiLessonListResponse = (result: RabbiLessonListResult): RabbiLessonListResponse => ({

@@ -62,6 +62,8 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
     }
   }, [id, preselectedRabbi, hasAppliedPreselect]);
 
+  const provenanceNotice = existing.status === 'success' ? consts.PROVENANCE_NOTICES[existing.data.lesson.provenance] : undefined;
+
   const isRabbaniteSelected = form.rabbi?.honorific === 'rabbanit';
   // A rabbanit may only teach women-only lessons: derived here rather than
   // synced into `form.audience` via an effect, so switching the picked
@@ -149,6 +151,8 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
             {pageHeading(form)}
           </h1>
           <p className="subtext">{consts.REQUIRED_FIELDS_NOTE}</p>
+
+          {provenanceNotice && <p className="provenanceNotice">{provenanceNotice}</p>}
 
           {generalSaveError && (
             <p className="generalError" role="alert">

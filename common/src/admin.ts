@@ -1,3 +1,4 @@
+import type { LessonProvenance } from './agent-import';
 import type { RabbiProminence } from './home';
 import type { LessonException } from './lesson-exception';
 import type { Lesson, ResolvedLessonPlace } from './lesson';
@@ -41,7 +42,9 @@ export type UpdateLessonRequest = CreateLessonRequest;
 // A write sends `place.cityCode` only; a read gets `place.cityName` back
 // too, resolved server-side, so the admin client never has to hold or
 // look up city reference data of its own just to show a lesson's city.
-export type LessonResponse = Omit<Lesson, 'place'> & { place: ResolvedLessonPlace };
+// `provenance` is read-only: it is never sent on a create or update, only
+// read back, so the admin form can show a notice for an imported lesson.
+export type LessonResponse = Omit<Lesson, 'place'> & { place: ResolvedLessonPlace; provenance: LessonProvenance };
 
 // Plain `Omit` does not distribute over a union: it computes `keyof` of
 // the whole union, which is the *intersection* of the branches' keys, and

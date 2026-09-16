@@ -6,14 +6,12 @@ import type { RabbiFormErrors, RabbiFormState } from './models';
 export const pageHeading = (form: RabbiFormState): string =>
   form.name ? rabbiDisplayName({ name: form.name, honorific: form.honorific }) : consts.NEW_RABBI_HEADING;
 
-// Both name and a photo are required to save, a UI-level rule stricter
-// than `CreateRabbiRequest`'s wire type (`photoUrl` is optional there,
-// since it is set through the separate photo-upload endpoint, not the
-// create body): see the report for this slice.
+// Name is the only field required to save. A rabbi may be created before
+// their photo exists; the public fallback (design-system.md, "Rabbi image
+// fallback") covers the card until one is added.
 export const validateRabbiForm = (form: RabbiFormState): RabbiFormErrors => {
   const errors: RabbiFormErrors = {};
   if (!form.name.trim()) errors.name = consts.REQUIRED_NAME_ERROR;
-  if (!form.photoFile && !form.existingPhotoUrl) errors.photo = consts.REQUIRED_PHOTO_ERROR;
   return errors;
 };
 

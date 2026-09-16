@@ -4,6 +4,7 @@ import Fastify from 'fastify';
 
 import { registerAdminRoutes } from './api/admin';
 import { registerAdminAuthRoutes } from './api/admin/auth';
+import { registerAgentRoutes } from './api/agent';
 import { registerAreaRoutes } from './api/areas';
 import { registerCityRoutes } from './api/cities';
 import { registerHealthRoutes } from './api/health';
@@ -56,6 +57,10 @@ const start = async (): Promise<void> => {
   await registerAdminRoutes(app);
   await registerRabbiAuthRoutes(app);
   await registerRabbiRoutes(app);
+  // Fail closed: with no `IMPORT_AGENT_KEY` configured, the whole agent
+  // import surface is unregistered, not merely unauthenticated, so a
+  // request to it 404s exactly as if the routes did not exist.
+  if (config.importAgentKey) await registerAgentRoutes(app, config.importAgentKey);
   // Last: its own route is a catch-all, so every `/v1/*` route above must
   // already be registered. Fastify still matches those exactly regardless of
   // registration order, but registering the wildcard last keeps this file

@@ -11,6 +11,6 @@ export const PHOTO_UPLOADING_MESSAGE = 'מעלה את התמונה...';
 export const PHOTO_UPLOAD_FAILED = 'העלאת התמונה לא הצליחה. התמונה הקודמת נשארה באתר.';
 export const PHOTO_RETRY_LABEL = 'ניסיון נוסף';
 export const PHOTO_CHOOSE_OTHER = 'בחירת תמונה אחרת';
-export const PHOTO_MISSING_NOTE = 'עדיין אין תמונה. באתר לא מוצג כרטיס בלי תמונה.';
+export const PHOTO_MISSING_NOTE = 'עוד אין תמונה. בינתיים יוצג באתר רקע רך במקומה.';
 export const UNSUPPORTED_TYPE_ERROR = 'ניתן להעלות קובץ מסוג JPG או PNG בלבד';
 export const TOO_LARGE_ERROR = 'התמונה חורגת מהגודל המרבי של 5MB';

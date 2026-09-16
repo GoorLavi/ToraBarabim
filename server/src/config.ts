@@ -24,6 +24,10 @@ const envSchema = z.object({
   STORAGE_SECRET_ACCESS_KEY: z.string().min(1).optional(),
   STORAGE_PUBLIC_BASE_URL: z.url(),
   MAX_UPLOAD_BYTES: z.coerce.number().int().positive().default(5_000_000),
+  // Absent by default: the agent import routes are only registered when
+  // this is set (fail closed, feature off). A present-but-short key fails
+  // boot rather than accepting a weak credential silently.
+  IMPORT_AGENT_KEY: z.string().min(32).optional(),
 }).refine(
   (data) => !data.STORAGE_ENDPOINT || (data.STORAGE_ACCESS_KEY_ID && data.STORAGE_SECRET_ACCESS_KEY),
   {
@@ -47,6 +51,7 @@ export interface Config {
   storageSecretAccessKey: string | undefined;
   storagePublicBaseUrl: string;
   maxUploadBytes: number;
+  importAgentKey: string | undefined;
 }
 
 export const loadConfig = (env: NodeJS.ProcessEnv): Config => {
@@ -72,5 +77,6 @@ export const loadConfig = (env: NodeJS.ProcessEnv): Config => {
     storageSecretAccessKey: parsed.data.STORAGE_SECRET_ACCESS_KEY,
     storagePublicBaseUrl: parsed.data.STORAGE_PUBLIC_BASE_URL,
     maxUploadBytes: parsed.data.MAX_UPLOAD_BYTES,
+    importAgentKey: parsed.data.IMPORT_AGENT_KEY,
   };
 };

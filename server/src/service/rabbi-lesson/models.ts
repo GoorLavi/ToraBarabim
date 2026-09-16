@@ -1,4 +1,4 @@
-import type { LessonAudience, LessonTopic } from '@torabarabim/common';
+import type { LessonAudience, LessonProvenance, LessonTopic } from '@torabarabim/common';
 import { z } from 'zod';
 
 import { lessonPlaceSchema, recurrenceSchema, timeOfDaySchema, type LessonPlaceRecord } from '../admin-lesson/models';
@@ -46,6 +46,11 @@ export interface RabbiLessonRecord {
   startTime: string;
   durationMinutes: number;
   notes?: string;
+  // `RabbiLessonResponse` is `LessonResponse` (see `common/src/rabbi-portal.ts`),
+  // which carries `provenance`, so a rabbi's own lesson view surfaces it
+  // too: harmless to show him that a lesson of his came from the weekly
+  // import, and keeps the two response shapes genuinely interchangeable.
+  provenance: LessonProvenance;
 }
 
 export interface RabbiLessonListResult {

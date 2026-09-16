@@ -84,6 +84,15 @@ export const LessonFormPage = css(
         line-height: ${theme.typography.secondary.phone.lineHeight};
       }
 
+      > .provenanceNotice {
+        padding: ${theme.spacing.sm};
+        border-radius: ${theme.radii.sm};
+        background: ${theme.colors.primarySoft};
+        color: ${theme.colors.text};
+        font-size: ${theme.typography.secondary.phone.fontSize};
+        line-height: ${theme.typography.secondary.phone.lineHeight};
+      }
+
       > .generalError {
         padding: ${theme.spacing.sm};
         border-radius: ${theme.radii.sm};

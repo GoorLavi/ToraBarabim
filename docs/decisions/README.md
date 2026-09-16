@@ -76,7 +76,7 @@ The real alternatives and why each lost. If there was no alternative, say so.
 | [0006](0006-production-on-aws-with-cdk.md) | Production runs on AWS, defined in CDK | accepted |
 | [0007](0007-admin-panel-lives-in-the-same-app.md) | The admin panel is a section of the same app | accepted |
 | [0008](0008-no-automated-tests-yet.md) | No automated tests yet, deliberately and temporarily | reversed by [0023](0023-the-public-pages-are-server-rendered.md) |
-| [0009](0009-scraped-lessons-stay-out.md) | Scraped lessons do not reach the site yet | accepted |
+| [0009](0009-scraped-lessons-stay-out.md) | Scraped lessons do not reach the site yet | superseded by [0030](0030-weekly-agent-imports-scraped-lessons.md) |
 | [0010](0010-production-shape-traded-for-cost.md) | The production shape, and what was traded for cost | accepted |
 | [0011](0011-deploys-are-automatic-migrations-are-not.md) | Deploys run themselves, migrations wait for a human | accepted |
 | [0012](0012-the-home-page-is-composed-by-the-server.md) | The home page is composed by the server | accepted |
@@ -97,3 +97,6 @@ The real alternatives and why each lost. If there was no alternative, say so.
 | [0027](0027-full-color-brand-marks-on-navigation-links.md) | Waze and Google Maps navigation links use full-color brand marks | accepted |
 | [0028](0028-agents-never-reach-the-production-database.md) | Agents never reach the production database, enforced by hooks | accepted |
 | [0029](0029-the-reviewer-is-edited-only-through-its-golden-set.md) | The reviewer is edited only through its golden set | accepted |
+| [0030](0030-weekly-agent-imports-scraped-lessons.md) | A weekly agent collects and imports scraped lessons, and fixed code decides every write | accepted, supersedes [0009](0009-scraped-lessons-stay-out.md) |
+| [0031](0031-import-agent-writes-with-its-own-key.md) | The import agent writes to production with its own key, without a per-run approval | accepted |
+| [0032](0032-import-matches-rabbis-by-name-and-site.md) | The import matches rabbis by name and site, and learns only what the owner confirmed | accepted |
