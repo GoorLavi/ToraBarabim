@@ -75,7 +75,7 @@ export const AudienceFilter = styled(({ className, filter, onSelectFilter, onCle
         className={classNames('pill', { selected: Boolean(filter) || isWomenPage })}
         aria-haspopup="dialog"
         aria-expanded={isOpen}
-        onClick={() => setIsOpen(true)}
+        onClick={() => (isOpen ? close() : setIsOpen(true))}
       >
         <svg className="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <circle cx="12" cy="8" r="3.2" stroke="currentColor" strokeWidth="1.6" />

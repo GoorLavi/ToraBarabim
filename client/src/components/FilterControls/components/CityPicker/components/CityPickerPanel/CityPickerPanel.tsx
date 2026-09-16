@@ -50,28 +50,29 @@ export const CityPickerPanel = styled(({ className, isDrawer, isWide, recentCiti
         closeLabel: parentConsts.CLOSE_PANEL_LABEL,
         onClose,
         initialFocusRef: searchInputRef,
+        fixedContent: (
+          <div className="searchRow">
+            <input
+              type="text"
+              ref={searchInputRef}
+              className="search"
+              aria-label={consts.SEARCH_LABEL}
+              placeholder={consts.SEARCH_PLACEHOLDER}
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              dir={directionForValue(query)}
+            />
+            {query.length > 0 && (
+              <button type="button" className="clear" aria-label={consts.CLEAR_SEARCH_LABEL} onClick={() => setQuery('')}>
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
+              </button>
+            )}
+          </div>
+        ),
       }}
     >
-      <div className="searchRow">
-        <input
-          type="text"
-          ref={searchInputRef}
-          className="search"
-          aria-label={consts.SEARCH_LABEL}
-          placeholder={consts.SEARCH_PLACEHOLDER}
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          dir={directionForValue(query)}
-        />
-        {query.length > 0 && (
-          <button type="button" className="clear" aria-label={consts.CLEAR_SEARCH_LABEL} onClick={() => setQuery('')}>
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-            </svg>
-          </button>
-        )}
-      </div>
-
       <div className="scrollRegion" ref={scrollRegionRef}>
         {isQueryEmpty ? (
           <GroupedCityList

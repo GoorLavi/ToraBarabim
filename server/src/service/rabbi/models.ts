@@ -3,9 +3,9 @@ import { z } from 'zod';
 
 import { AUDIENCE_SCOPES, DEFAULT_PAGE, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '../shared/consts';
 
-// `general` lists ravs only, `women` lists rabbaniyot only (owner decision
-// A3). Zod's default makes the parsed type required, so every call site
-// names its scope rather than one accidentally reading everyone.
+// `general` lists ravs only, `women` lists rabbaniyot only. Zod's default
+// makes the parsed type required, so every call site names its scope
+// rather than one accidentally reading everyone.
 export const rabbiListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(DEFAULT_PAGE),
   pageSize: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),

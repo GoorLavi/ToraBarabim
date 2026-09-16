@@ -41,7 +41,7 @@ export const AudiencePanel = css(
           line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
         }
 
-        &[aria-selected='true'] {
+        &[aria-pressed='true'] {
           background: ${theme.colors.primarySoft};
           color: ${theme.colors.primary};
 

@@ -16,14 +16,13 @@ export const AudiencePanel = styled(({ className, isDrawer, isWide, filter, isWo
     className={className}
     {...{ isDrawer, isWide, heading: consts.POPOVER_TITLE, closeLabel: consts.CLOSE_LABEL, onClose }}
   >
-    <ul className="options" role="listbox">
+    <ul className="options">
       {consts.AUDIENCE_OPTIONS.map((option) => (
-        <li key={option} className="option" role="presentation">
+        <li key={option} className="option">
           <button
             type="button"
             className="optionButton"
-            role="option"
-            aria-selected={isOptionSelected(option, filter, isWomenPage)}
+            aria-pressed={isOptionSelected(option, filter, isWomenPage)}
             onClick={() => onSelectOption(option)}
           >
             <span className="label">{consts.OPTION_LABELS[option]}</span>

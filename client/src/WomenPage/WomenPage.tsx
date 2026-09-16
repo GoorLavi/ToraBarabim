@@ -128,7 +128,7 @@ export const WomenPage = styled(({ className }: WomenPageProps) => {
 
   return (
     <main className={className}>
-      {lessonsQuery.isPending && (
+      {(lessonsQuery.isPending || summaryQuery.isPending) && (
         <>
           <TitleSkeleton />
           <RabbiRailSkeleton />
@@ -136,7 +136,7 @@ export const WomenPage = styled(({ className }: WomenPageProps) => {
         </>
       )}
 
-      {!lessonsQuery.isPending && (hasInitialError || summaryQuery.isError) && (
+      {!lessonsQuery.isPending && !summaryQuery.isPending && (hasInitialError || summaryQuery.isError) && (
         <StateCard
           variant="surface"
           headingLevel="h1"

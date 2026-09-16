@@ -13,9 +13,13 @@ import * as styles from './styles';
 // it. Returning focus to whichever control opened it is the caller's own
 // job (it owns that ref), done through `onClose`.
 export const PanelFrame = styled(
-  ({ className, isDrawer, isWide, heading, closeLabel, onClose, initialFocusRef, children }: PanelFrameProps) => {
+  ({ className, isDrawer, isWide, heading, closeLabel, onClose, initialFocusRef, fixedContent, children }: PanelFrameProps) => {
     const panelRef = useRef<HTMLDivElement>(null);
 
+    // Below `sm` the panel is a bottom-anchored drawer, and iOS's software
+    // keyboard would push it under itself if focus landed on a text field,
+    // so focus goes to the panel instead; from `sm` up there is no software
+    // keyboard to fight, so a provided `initialFocusRef` wins.
     useEffect(() => {
       if (isWide && initialFocusRef?.current) initialFocusRef.current.focus();
       else panelRef.current?.focus();
@@ -55,6 +59,8 @@ export const PanelFrame = styled(
             </svg>
           </button>
         </div>
+
+        {fixedContent}
 
         <div className="hairline" />
 

@@ -6,10 +6,8 @@ import type { AudienceScopeContext, AudienceScopedLesson } from './models';
 export const matchesAudienceFilter = (filter: AudienceFilter, audience: LessonAudience): boolean =>
   filter === 'men' ? audience === 'men' || audience === 'mixed' : audience === 'mixed';
 
-// Owner decision 2: `general` excludes a rabbanit-taught lesson, except
-// when her name matched the search text and no audience filter narrowed
-// the request, in which case her lessons still show, with her photo (owner
-// decision 5). `women` includes every teacher, audience women or mixed
+// `general` excludes a rabbanit-taught lesson, unless her name matched the
+// search text. `women` includes every teacher, audience women or mixed
 // only.
 export const isLessonInScope = (
   scope: AudienceScope,
@@ -26,6 +24,6 @@ export const isLessonInScope = (
 };
 
 // The public rabbi directory's scope: `general` lists ravs only, `women`
-// lists rabbaniyot only (owner decision A3).
+// lists rabbaniyot only.
 export const isRabbiInDirectoryScope = (scope: AudienceScope, honorific: RabbiHonorific): boolean =>
   scope === 'women' ? honorific === 'rabbanit' : honorific === 'rav';
