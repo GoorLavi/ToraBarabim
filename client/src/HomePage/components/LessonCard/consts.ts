@@ -26,6 +26,14 @@ export const LESSON_TOPIC_LABELS: Record<LessonTopic, string> = {
 // `@container` in styles.ts instead of a viewport media query.
 export const CARD_WIDE_THRESHOLD = '190px';
 
+// Below this, the cancellation label and the medallion cannot both sit at
+// the poster's top edge without colliding (design review): the label drops
+// to the bottom corner instead, still stepped by the card's own rendered
+// width via `@container`, not the viewport. A different value from
+// `CARD_WIDE_THRESHOLD` on purpose: that one is about the type scale's own
+// floor, this one is about two fixed-size corner marks fitting side by side.
+export const CANCELLED_LABEL_BOTTOM_THRESHOLD = '200px';
+
 const weekdayFormatter = new Intl.DateTimeFormat('he-IL', { weekday: 'short', timeZone: 'Asia/Jerusalem' });
 
 export const cardWeekday = (isoDate: string): string => weekdayFormatter.format(new Date(`${isoDate}T00:00:00Z`));

@@ -2,7 +2,7 @@ import { css } from 'styled-components';
 
 import { POSTER_ASPECT_RATIO } from '~/HomePage/consts';
 
-import { CARD_WIDE_THRESHOLD } from './consts';
+import { CANCELLED_LABEL_BOTTOM_THRESHOLD, CARD_WIDE_THRESHOLD } from './consts';
 
 export const LessonCard = css(
   ({ theme }) => `
@@ -54,7 +54,11 @@ export const LessonCard = css(
 
     > .cancelledLabel {
       position: absolute;
-      inset-block-start: ${theme.spacing.sm};
+      /* Below CANCELLED_LABEL_BOTTOM_THRESHOLD the medallion already owns
+         the top edge's other corner and there isn't room for both at the
+         top, so this starts at the bottom; from that width up it moves to
+         the top instead, same 8px insets either way. */
+      inset-block-end: ${theme.spacing.sm};
       /* The page's own inline-start (the right, in RTL), the corner the
          medallion moved out of: no local \`dir\` override here either, so
          this also resolves against the real page direction. */
@@ -67,6 +71,11 @@ export const LessonCard = css(
       font-weight: ${theme.typography.tagAndCaption.fontWeight};
       font-size: ${theme.typography.tagAndCaption.phone.fontSize};
       line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
+
+      @container (min-inline-size: ${CANCELLED_LABEL_BOTTOM_THRESHOLD}) {
+        inset-block-start: ${theme.spacing.sm};
+        inset-block-end: auto;
+      }
     }
 
     > .medallion {
