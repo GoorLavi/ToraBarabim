@@ -8,7 +8,7 @@ import { SITE_ORIGIN } from './consts.ts';
 const robotsTxt = `User-agent: *
 Allow: /
 Disallow: /admin
-Disallow: /rabbi
+Disallow: /rabbi/
 
 Sitemap: ${SITE_ORIGIN}/sitemap.xml
 `;
