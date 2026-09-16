@@ -12,11 +12,16 @@ export interface LessonSearchQueryState {
   data: LessonSearchResponse | undefined;
   error: HomeApiError | null;
   refetch: () => void;
+  dataUpdatedAt: number;
 }
 
 export interface LessonsSectionProps {
   className?: string;
   query: LessonSearchQueryState;
+  // The same key `useLessonSearch` fetches with (`HOME_QUERY_KEYS.lessons`),
+  // built once in `HomePage.tsx` so this component and the query it renders
+  // can never diverge on what counts as "a new result set".
+  resultSetKey: unknown;
   // Whether a date chip (or the calendar) is actually selected. When it
   // is not, there is no date axis to widen along, and the section renders
   // a flat, dateless list instead of day sections (design-system.md, "Every

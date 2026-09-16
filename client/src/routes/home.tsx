@@ -3,6 +3,8 @@ import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query
 import type { HomeResponse } from '@torabarabim/common';
 import type { HeadersFunction } from 'react-router';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
 import { StateCard } from '~/components/StateCard/StateCard';
 import { HOME_QUERY_KEYS } from '~/HomePage/consts';
 import { HomePage } from '~/HomePage/HomePage';
@@ -54,7 +56,10 @@ export function ErrorBoundary() {
         action={{
           actionLabel: consts.HOME_ERROR_RELOAD_LABEL,
           actionStyle: 'primary',
-          onAction: () => window.location.reload(),
+          onAction: () => {
+            trackEvent(MIXPANEL_EVENTS.retryClick, { surface: 'homeRoute' });
+            window.location.reload();
+          },
         }}
       />
     </main>

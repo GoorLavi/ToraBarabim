@@ -1,5 +1,7 @@
 import styled from 'styled-components';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
 import { CityAreaSectionSkeleton } from '~/components/CityAreaSectionSkeleton/CityAreaSectionSkeleton';
 import { StateCard } from '~/components/StateCard/StateCard';
 import { cityCountLabel } from '~/consts';
@@ -44,7 +46,14 @@ export const CitiesPage = styled(({ className }: CitiesPageProps) => {
           headingLevel="h2"
           heading={consts.LOAD_ERROR_HEADING}
           body={consts.LOAD_ERROR_BODY}
-          action={{ actionLabel: consts.RETRY_LABEL, actionStyle: 'primary', onAction: () => query.refetch() }}
+          action={{
+            actionLabel: consts.RETRY_LABEL,
+            actionStyle: 'primary',
+            onAction: () => {
+              trackEvent(MIXPANEL_EVENTS.retryClick, { surface: 'citiesPage' });
+              query.refetch();
+            },
+          }}
         />
       )}
 

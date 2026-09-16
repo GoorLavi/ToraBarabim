@@ -1,6 +1,8 @@
+import { useMemo } from 'react';
 import { Outlet } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { ActiveFiltersProvider } from '~/analytics/ActiveFiltersProvider';
 import { FilterControls } from '~/components/FilterControls/FilterControls';
 import { useAudienceFilter } from '~/hooks/useAudienceFilter';
 import { useDateFilter } from '~/hooks/useDateFilter';
@@ -22,32 +24,42 @@ export const Layout = styled(({ className }: LayoutProps) => {
   const { query, setQuery } = useSearchQuery();
   const { filter: audienceFilter, selectFilter: selectAudienceFilter, clearFilter: clearAudienceFilter } = useAudienceFilter();
 
+  // Memoised so every `LessonCard` reading it through `ActiveFiltersContext`
+  // does not re-render on every `Layout` render: a fresh object here would
+  // change the context value even when none of the filters actually did.
+  const filters = useMemo(
+    () => ({ cityId: city?.id, cityName: city?.name, dateOption: option, date: customDate, query }),
+    [city?.id, city?.name, option, customDate, query],
+  );
+
   return (
-    <div className={className}>
-      <FilterControls
-        {...{
-          option,
-          customDate,
-          onSelectOption: selectOption,
-          onSelectCustomDate: selectCustomDate,
-          onClearDate: clearDate,
-          city,
-          onSelectCity: selectCity,
-          onClearCity: clearCity,
-          searchQuery: query,
-          onSearchQueryChange: setQuery,
-          audienceFilter,
-          onSelectAudienceFilter: selectAudienceFilter,
-          onClearAudienceFilter: clearAudienceFilter,
-        }}
-      />
+    <ActiveFiltersProvider filters={filters}>
+      <div className={className}>
+        <FilterControls
+          {...{
+            option,
+            customDate,
+            onSelectOption: selectOption,
+            onSelectCustomDate: selectCustomDate,
+            onClearDate: clearDate,
+            city,
+            onSelectCity: selectCity,
+            onClearCity: clearCity,
+            searchQuery: query,
+            onSearchQueryChange: setQuery,
+            audienceFilter,
+            onSelectAudienceFilter: selectAudienceFilter,
+            onClearAudienceFilter: clearAudienceFilter,
+          }}
+        />
 
-      <div className="body">
-        <Outlet />
+        <div className="body">
+          <Outlet />
+        </div>
+
+        <Footer className="footer" />
       </div>
-
-      <Footer className="footer" />
-    </div>
+    </ActiveFiltersProvider>
   );
 })`
   ${styles.Layout}

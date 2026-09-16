@@ -3,7 +3,10 @@ import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { lessonClickProps } from '~/analytics/helpers';
 import { trackEvent } from '~/analytics/mixpanel';
+import { useActiveFilters } from '~/analytics/useActiveFilters';
+import { todayInIsrael } from '~/HomePage/helpers';
 import { AUDIENCE_LABELS } from '~/consts';
 import { lessonPath, rabbiDisplayName } from '~/helpers';
 
@@ -17,17 +20,26 @@ import * as styles from './styles';
 // missing photoUrl is real data today (Rabbi.photoUrl is optional on the
 // wire), so it falls back to a single, plain, undecorated fill rather than
 // initials or a silhouette, kept in this one spot for a later single edit.
-export const LessonCard = styled(({ className, lesson, surface }: LessonCardProps) => {
+export const LessonCard = styled(({ className, lesson, surface, clickContext }: LessonCardProps) => {
   const teachingRabbi = lesson.substituteRabbi ?? lesson.rabbi;
   const description = descriptionLabel(lesson);
   const treatment = audienceTreatment(lesson.audience, surface);
+  const activeFilters = useActiveFilters();
+
+  const handleClick = (): void => {
+    const rabbiName = rabbiDisplayName(teachingRabbi);
+    trackEvent(
+      MIXPANEL_EVENTS.lessonClick,
+      lessonClickProps(lesson, teachingRabbi, rabbiName, clickContext, activeFilters, todayInIsrael()),
+    );
+  };
 
   return (
     <Link
       to={lessonPath(lesson)}
       aria-label={cardAriaLabel(lesson)}
       className={classNames(className, { cancelled: lesson.status === 'cancelled' })}
-      onClick={() => trackEvent(MIXPANEL_EVENTS.lessonClick, { lessonId: lesson.lessonId })}
+      onClick={handleClick}
     >
       <div className="poster">
         {teachingRabbi.photoUrl ? (

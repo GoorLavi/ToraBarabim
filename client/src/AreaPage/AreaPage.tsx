@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
+import { useResultsShownTracking } from '~/analytics/useResultsShownTracking';
 import { BackLink } from '~/components/BackLink/BackLink';
 import { CityAreaSectionSkeleton } from '~/components/CityAreaSectionSkeleton/CityAreaSectionSkeleton';
 import { CityChip } from '~/components/CityChip/CityChip';
@@ -46,6 +49,21 @@ export const AreaPage = styled(({ className }: AreaPageProps) => {
   const hasMore = Boolean(lessonsQuery.data && lessonsQuery.data.items.length < lessonsQuery.data.total);
   const canShowSubheading = Boolean(hasCities && lessonsQuery.data && lessonsQuery.data.items.length > 0);
 
+  useResultsShownTracking(
+    {
+      resultSetKey: consts.AREA_PAGE_QUERY_KEYS.lessonsResultSet(hasCities ? area?.area : undefined),
+      dataUpdatedAt: lessonsQuery.dataUpdatedAt,
+      isPending: lessonsQuery.isPending,
+      isError: lessonsQuery.isError,
+    },
+    {
+      surface: 'areaPage',
+      resultCount: lessonsQuery.data?.items.length ?? 0,
+      hasResults: (lessonsQuery.data?.items.length ?? 0) > 0,
+      ...(areaName ? { areaName } : {}),
+    },
+  );
+
   return (
     <main className={className}>
       <BackLink to="/cities" label={BACK_TO_ALL_CITIES_LABEL} />
@@ -74,7 +92,14 @@ export const AreaPage = styled(({ className }: AreaPageProps) => {
           headingLevel="h1"
           heading={errorCopy.heading}
           body={errorCopy.body}
-          action={{ actionLabel: consts.RETRY_LABEL, actionStyle: 'primary', onAction: () => areaQuery.refetch() }}
+          action={{
+            actionLabel: consts.RETRY_LABEL,
+            actionStyle: 'primary',
+            onAction: () => {
+              trackEvent(MIXPANEL_EVENTS.retryClick, { surface: 'areaPageDetail' });
+              areaQuery.refetch();
+            },
+          }}
         />
       )}
 
@@ -120,7 +145,14 @@ export const AreaPage = styled(({ className }: AreaPageProps) => {
                   headingLevel="h2"
                   heading={consts.ERROR_HEADING}
                   body={consts.ERROR_BODY}
-                  action={{ actionLabel: consts.RETRY_LABEL, actionStyle: 'primary', onAction: () => lessonsQuery.refetch() }}
+                  action={{
+                    actionLabel: consts.RETRY_LABEL,
+                    actionStyle: 'primary',
+                    onAction: () => {
+                      trackEvent(MIXPANEL_EVENTS.retryClick, { surface: 'areaPageLessons' });
+                      lessonsQuery.refetch();
+                    },
+                  }}
                 />
               )}
 
@@ -137,7 +169,15 @@ export const AreaPage = styled(({ className }: AreaPageProps) => {
               {!lessonsQuery.isPending && !lessonsQuery.isError && !isWindowEmpty && (
                 <>
                   {dayGroups.map((group) => (
-                    <DayGroup key={group.date} heading={dayGroupHeading(group.date)} items={group.items} surface="general" />
+                    <DayGroup
+                      key={group.date}
+                      {...{
+                        heading: dayGroupHeading(group.date),
+                        items: group.items,
+                        surface: 'general' as const,
+                        clickSurface: 'areaPage' as const,
+                      }}
+                    />
                   ))}
 
                   {hasMore && (

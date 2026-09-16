@@ -1,6 +1,9 @@
 import classNames from 'classnames';
 import type { ReactNode } from 'react';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
+
 import * as parentConsts from '../../consts';
 import { CityPickerStateBlock } from '../CityPickerStateBlock/CityPickerStateBlock';
 import { CitySearchResultsList } from './components/CitySearchResultsList/CitySearchResultsList';
@@ -31,7 +34,14 @@ export const CitySearchResults = ({ className, search, onSelect, onBackToList }:
           title: consts.SEARCH_ERROR_HEADING,
           body: consts.SEARCH_ERROR_BODY,
           actions: [
-            { label: parentConsts.RETRY_LABEL, style: 'primary', onClick: search.retry },
+            {
+              label: parentConsts.RETRY_LABEL,
+              style: 'primary',
+              onClick: () => {
+                trackEvent(MIXPANEL_EVENTS.retryClick, { surface: 'cityPickerSearch' });
+                search.retry();
+              },
+            },
             { label: consts.BACK_TO_LIST_LABEL, style: 'quiet', onClick: onBackToList },
           ],
         }}

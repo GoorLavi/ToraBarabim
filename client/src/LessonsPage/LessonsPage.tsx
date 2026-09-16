@@ -2,6 +2,9 @@ import type { ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
+import { useResultsShownTracking } from '~/analytics/useResultsShownTracking';
 import { LessonsGrid } from '~/components/LessonsGrid/LessonsGrid';
 import { QuietButton } from '~/components/QuietButton/QuietButton';
 import { StateCard } from '~/components/StateCard/StateCard';
@@ -57,6 +60,7 @@ interface RenderContentParams {
   query: string;
   hasAnyFilter: boolean;
   onClearFilters: () => void;
+  gridSurface: 'searchResults' | 'lessonsGrid';
 }
 
 // The one place every state this page can be in resolves to what renders
@@ -70,6 +74,7 @@ const renderContent = ({
   query,
   hasAnyFilter,
   onClearFilters,
+  gridSurface,
 }: RenderContentParams): ReactNode => {
   if (listQuery.isPending) return <LessonsSkeleton />;
 
@@ -82,7 +87,14 @@ const renderContent = ({
           headingLevel="h2"
           heading={consts.ERROR_HEADLINE}
           body={getErrorHint(listQuery.error)}
-          action={{ actionLabel: consts.RETRY_LABEL, actionStyle: 'primary', onAction: () => listQuery.refetch() }}
+          action={{
+            actionLabel: consts.RETRY_LABEL,
+            actionStyle: 'primary',
+            onAction: () => {
+              trackEvent(MIXPANEL_EVENTS.retryClick, { surface: 'lessonsPage' });
+              listQuery.refetch();
+            },
+          }}
         />
       </>
     );
@@ -127,7 +139,7 @@ const renderContent = ({
             </p>
           )}
         </div>
-        <LessonsGrid {...{ items, surface: 'general' }} />
+        <LessonsGrid {...{ items, surface: 'general', clickSurface: gridSurface }} />
         {listQuery.hasNextPage && (
           <QuietButton
             className="loadMore"
@@ -146,7 +158,7 @@ const renderContent = ({
     return (
       <>
         {titleHeading(title)}
-        <LessonsGrid {...{ items: primaryItems, surface: 'general' }} />
+        <LessonsGrid {...{ items: primaryItems, surface: 'general', clickSurface: gridSurface }} />
       </>
     );
   }
@@ -161,7 +173,7 @@ const renderContent = ({
         <h2 className="dayHeading" dir="auto">
           {dayLabel(fallbackDate)}
         </h2>
-        <LessonsGrid {...{ items: fallbackItems, surface: 'general' }} />
+        <LessonsGrid {...{ items: fallbackItems, surface: 'general', clickSurface: gridSurface }} />
       </>
     );
   }
@@ -200,12 +212,35 @@ export const LessonsPage = styled(({ className }: LessonsPageProps) => {
   const listQuery = useLessonsList(filters, range.hasDateFilter);
   const hasAnyFilter = Boolean(city || query || hasPassThroughFilter(passThrough));
   const title = buildLessonsTitle(city, option, customDate, query);
+  const gridSurface: 'searchResults' | 'lessonsGrid' = hasAnyFilter ? 'searchResults' : 'lessonsGrid';
+
+  const flatItems = listQuery.data?.pages.flatMap((page) => page.items) ?? [];
+  useResultsShownTracking(
+    { resultSetKey: consts.LESSONS_QUERY_KEYS.list(filters), dataUpdatedAt: listQuery.dataUpdatedAt, isPending: listQuery.isPending, isError: listQuery.isError },
+    {
+      surface: 'lessonsPage',
+      resultCount: flatItems.length,
+      hasResults: flatItems.length > 0,
+      ...(query ? { query } : {}),
+      ...(city?.id ? { cityId: city.id } : {}),
+      ...(city?.name ? { cityName: city.name } : {}),
+      dateOption: option,
+      ...(customDate ? { date: customDate } : {}),
+    },
+  );
 
   // The way back out of an empty result (design-system.md, "Every data
   // screen has three states"): clears every filter, including whichever
   // pass-through ones arrived from an outside link, and returns to the
   // unfiltered complete list.
-  const clearFilters = (): void => setSearchParams({});
+  const clearFilters = (): void => {
+    trackEvent(MIXPANEL_EVENTS.clearFiltersClick, {
+      ...(city?.id ? { cityId: city.id } : {}),
+      dateOption: option,
+      ...(query ? { query } : {}),
+    });
+    setSearchParams({});
+  };
 
   return (
     <main className={className}>
@@ -218,6 +253,7 @@ export const LessonsPage = styled(({ className }: LessonsPageProps) => {
         query,
         hasAnyFilter,
         onClearFilters: clearFilters,
+        gridSurface,
       })}
     </main>
   );
