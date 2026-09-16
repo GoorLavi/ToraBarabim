@@ -35,6 +35,11 @@ export const LessonCard = styled(({ className, lesson, surface }: LessonCardProp
         ) : (
           <div className="image placeholder" aria-hidden="true" />
         )}
+        {lesson.status === 'cancelled' && (
+          <span className="cancelledLabel" role="status">
+            {consts.CANCELLED_LABEL}
+          </span>
+        )}
         <div className="medallion">
           <span className="weekday">{consts.cardWeekday(lesson.date)}</span>
           <span className="time" dir="ltr">
@@ -56,17 +61,6 @@ export const LessonCard = styled(({ className, lesson, surface }: LessonCardProp
         <p className="city" dir="auto">
           {lesson.place.city}
         </p>
-
-        {lesson.status === 'cancelled' && (
-          <p className="cancelledBadge" role="status">
-            <span>{consts.CANCELLED_LABEL}</span>
-            {lesson.cancellationReason && (
-              <span className="reason" dir="auto">
-                {lesson.cancellationReason}
-              </span>
-            )}
-          </p>
-        )}
 
         {lesson.substituteRabbi && (
           <p className="substituteNote" dir="auto">

@@ -29,7 +29,10 @@ export const LessonCard = css(
     }
   }
 
-  &.cancelled {
+  /* Only the portrait dims: the cancelled label and the rest of the card's
+     text stay at full strength, since a faded cancellation notice reads as
+     the opposite of what it is for. */
+  &.cancelled > .poster > .image {
     opacity: 0.7;
   }
 
@@ -47,6 +50,23 @@ export const LessonCard = css(
       &.placeholder {
         background: ${theme.colors.primarySoft};
       }
+    }
+
+    > .cancelledLabel {
+      position: absolute;
+      inset-block-start: ${theme.spacing.sm};
+      /* The page's own inline-start (the right, in RTL), the corner the
+         medallion moved out of: no local \`dir\` override here either, so
+         this also resolves against the real page direction. */
+      inset-inline-start: ${theme.spacing.sm};
+      padding-block: ${theme.spacing.xs};
+      padding-inline: ${theme.spacing.sm};
+      border-radius: ${theme.radii.sm};
+      background: ${theme.colors.primary};
+      color: ${theme.colors.textOnPrimary};
+      font-weight: ${theme.typography.tagAndCaption.fontWeight};
+      font-size: ${theme.typography.tagAndCaption.phone.fontSize};
+      line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
     }
 
     > .medallion {
@@ -155,26 +175,6 @@ export const LessonCard = css(
       @container (min-inline-size: ${CARD_WIDE_THRESHOLD}) {
         font-size: ${theme.typography.secondary.phone.fontSize};
         line-height: ${theme.typography.secondary.phone.lineHeight};
-      }
-    }
-
-    > .cancelledBadge {
-      display: flex;
-      flex-direction: column;
-      gap: ${theme.spacing.xs};
-      padding-block: ${theme.spacing.xs};
-      padding-inline: ${theme.spacing.sm};
-      border-radius: ${theme.radii.sm};
-      background: ${theme.colors.primarySoft};
-      color: ${theme.colors.text};
-      font-weight: ${theme.typography.tagAndCaption.fontWeight};
-      font-size: ${theme.typography.tagAndCaption.phone.fontSize};
-      line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
-      width: fit-content;
-
-      > .reason {
-        font-weight: ${theme.typography.fontWeight.regular};
-        color: ${theme.colors.textSecondary};
       }
     }
 
