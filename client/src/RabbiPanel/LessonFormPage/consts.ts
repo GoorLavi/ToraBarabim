@@ -1,5 +1,3 @@
-import type { LessonAudience } from '@torabarabim/common';
-
 import type { LessonFormField } from './models';
 
 export const BACK_TO_LIST_LABEL = '→ חזרה לשיעורים שלי';
@@ -30,12 +28,6 @@ export const STREET_HELPER = 'הכתובת המלאה מוצגת בעמוד הש
 export const FLOOR_LABEL = 'קומה / הערת הגעה';
 
 export const AUDIENCE_SECTION_HEADING = 'למי השיעור מיועד';
-// Never `מעורב`: see .claude/design-system.md, Audience wording.
-export const AUDIENCE_LABELS: Record<LessonAudience, string> = {
-  men: 'גברים',
-  women: 'נשים',
-  mixed: 'גם גברים וגם נשים',
-};
 
 export const LIVE_NOTE = 'מה שתשמור כאן יופיע באתר מיד.';
 export const SAVE_LABEL = 'שמירת השיעור';

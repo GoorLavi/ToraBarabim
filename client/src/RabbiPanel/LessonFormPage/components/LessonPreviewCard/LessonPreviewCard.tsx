@@ -1,5 +1,7 @@
 import styled from 'styled-components';
 
+import { AUDIENCE_LABELS } from '~/consts';
+
 import * as consts from './consts';
 import type { LessonPreviewCardProps } from './models';
 import * as styles from './styles';
@@ -28,7 +30,7 @@ export const LessonPreviewCard = styled(
           </h3>
 
           <p className="meta" dir="auto">
-            {audience && <span className="audience">{consts.AUDIENCE_LABELS[audience]}</span>}
+            {audience && <span className="audience">{AUDIENCE_LABELS[audience]}</span>}
             {title && <span className="description"> · {title}</span>}
           </p>
 

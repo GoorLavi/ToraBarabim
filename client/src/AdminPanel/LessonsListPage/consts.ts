@@ -1,4 +1,4 @@
-import type { LessonAudience, Weekday } from '@torabarabim/common';
+import type { Weekday } from '@torabarabim/common';
 
 export const CITY_ID_PARAM = 'cityId';
 export const CITY_NAME_PARAM = 'cityName';
@@ -25,12 +25,6 @@ export const RECURRING_TAG_LABEL = 'קבוע';
 export const ONE_TIME_TAG_LABEL = 'חד־פעמי';
 export const EDIT_LABEL = 'עריכה';
 export const UNTITLED_RABBI_FALLBACK = 'רב לא ידוע';
-
-export const LESSON_AUDIENCE_LABELS: Record<LessonAudience, string> = {
-  men: 'גברים',
-  women: 'נשים',
-  mixed: 'גם גברים וגם נשים',
-};
 
 // `Record`, not an array, so indexing by `Weekday` needs no bounds check:
 // every `Weekday` (0-6) has an entry by construction.
