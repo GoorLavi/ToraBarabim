@@ -1,6 +1,8 @@
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
 import { BackLink } from '~/components/BackLink/BackLink';
 import { StateCard } from '~/components/StateCard/StateCard';
 import { rabbiDisplayName } from '~/helpers';
@@ -61,7 +63,14 @@ export const RabbiPage = styled(({ className }: RabbiPageProps) => {
           headingLevel="h1"
           heading={errorCopy.heading}
           body={errorCopy.body}
-          action={{ actionLabel: consts.RETRY_LABEL, actionStyle: 'primary', onAction: () => rabbiQuery.refetch() }}
+          action={{
+            actionLabel: consts.RETRY_LABEL,
+            actionStyle: 'primary',
+            onAction: () => {
+              trackEvent(MIXPANEL_EVENTS.retryClick, { surface: 'rabbiPageDetail' });
+              rabbiQuery.refetch();
+            },
+          }}
         />
       )}
 

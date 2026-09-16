@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import styled from 'styled-components';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
 import { LessonsGrid } from '~/components/LessonsGrid/LessonsGrid';
 import { TextLink } from '~/HomePage/components/TextLink/TextLink';
 
@@ -21,7 +23,12 @@ export const DayLessons = styled(({ className, headingLabel, items, showSeeAllLi
       <div className="heading">
         <h2 className="title" dir="auto">{headingLabel}</h2>
         {showSeeAllLink && (
-          <TextLink className="seeAll" to="/lessons" withChevron>
+          <TextLink
+            className="seeAll"
+            to="/lessons"
+            withChevron
+            onClick={() => trackEvent(MIXPANEL_EVENTS.seeAllClick, { target: 'lessons', surface: 'home' })}
+          >
             {SEE_ALL_LABEL}
           </TextLink>
         )}
@@ -29,7 +36,7 @@ export const DayLessons = styled(({ className, headingLabel, items, showSeeAllLi
 
       {countLabel && <p className="count">{countLabel}</p>}
 
-      <LessonsGrid {...{ items: visibleItems, surface: 'general' }} />
+      <LessonsGrid {...{ items: visibleItems, surface: 'general', clickSurface: 'homeDayList' }} />
 
       {hasMore && (
         <button type="button" className="more" onClick={() => setVisibleCount((count) => count + INITIAL_VISIBLE_COUNT)}>

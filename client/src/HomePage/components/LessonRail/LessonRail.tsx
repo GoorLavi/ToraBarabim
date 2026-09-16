@@ -8,11 +8,13 @@ import * as consts from './consts';
 import { railSlots, scrollRailBy } from './helpers';
 import type { LessonRailProps } from './models';
 import * as styles from './styles';
+import { useRailScrollTracking } from './useRailScrollTracking';
 import { useScrollEdges } from './useScrollEdges';
 
 export const LessonRail = styled(({ className, title, items, womensAreaTileIndex, womensAreaLessonCount }: LessonRailProps) => {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const { atStart, atEnd } = useScrollEdges(scrollerRef);
+  useRailScrollTracking(scrollerRef, title);
   const slots = railSlots(items, womensAreaTileIndex);
 
   const scroll = (direction: 'prev' | 'next'): void => {
@@ -34,10 +36,16 @@ export const LessonRail = styled(({ className, title, items, womensAreaTileIndex
 
         <div className="scrollerGroup" ref={scrollerRef}>
           <ul className="scroller">
-            {slots.map((slot) =>
+            {slots.map((slot, index) =>
               slot.kind === 'lesson' ? (
                 <li key={`${slot.lesson.lessonId}-${slot.lesson.date}`}>
-                  <LessonCard {...{ lesson: slot.lesson, surface: 'general' }} />
+                  <LessonCard
+                    {...{
+                      lesson: slot.lesson,
+                      surface: 'general',
+                      clickContext: { surface: 'homeRail' as const, railTitle: title, position: index },
+                    }}
+                  />
                 </li>
               ) : (
                 <li key="womens-area" className="tile">

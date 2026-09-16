@@ -1,6 +1,9 @@
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
+import { useResultsShownTracking } from '~/analytics/useResultsShownTracking';
 import { BackLink } from '~/components/BackLink/BackLink';
 import { DayGroup } from '~/components/DayGroup/DayGroup';
 import { DayGroupSkeleton } from '~/components/DayGroupSkeleton/DayGroupSkeleton';
@@ -49,6 +52,22 @@ export const CityPage = styled(({ className }: CityPageProps) => {
   const canShowRail = Boolean(city && !isCityResolvedEmpty && city.rabbis.length > 0);
   const canShowSubheading = Boolean(!isCityResolvedEmpty && lessonsQuery.isSuccess);
 
+  useResultsShownTracking(
+    {
+      resultSetKey: consts.CITY_PAGE_QUERY_KEYS.lessons(city?.id ?? ''),
+      dataUpdatedAt: lessonsQuery.dataUpdatedAt,
+      isPending: lessonsQuery.isPending,
+      isError: lessonsQuery.isError,
+    },
+    {
+      surface: 'cityPage',
+      resultCount: items.length,
+      hasResults: items.length > 0,
+      ...(city?.id ? { cityId: city.id } : {}),
+      ...(city?.name ? { cityName: city.name } : {}),
+    },
+  );
+
   return (
     <main className={className}>
       <BackLink to="/cities" label={BACK_TO_ALL_CITIES_LABEL} />
@@ -77,7 +96,14 @@ export const CityPage = styled(({ className }: CityPageProps) => {
           headingLevel="h1"
           heading={errorCopy.heading}
           body={errorCopy.body}
-          action={{ actionLabel: consts.RETRY_LABEL, actionStyle: 'primary', onAction: () => cityQuery.refetch() }}
+          action={{
+            actionLabel: consts.RETRY_LABEL,
+            actionStyle: 'primary',
+            onAction: () => {
+              trackEvent(MIXPANEL_EVENTS.retryClick, { surface: 'cityPageDetail' });
+              cityQuery.refetch();
+            },
+          }}
         />
       )}
 
@@ -106,7 +132,14 @@ export const CityPage = styled(({ className }: CityPageProps) => {
               headingLevel="h2"
               heading={consts.ERROR_HEADING}
               body={consts.ERROR_BODY}
-              action={{ actionLabel: consts.RETRY_LABEL, actionStyle: 'primary', onAction: () => lessonsQuery.refetch() }}
+              action={{
+                actionLabel: consts.RETRY_LABEL,
+                actionStyle: 'primary',
+                onAction: () => {
+                  trackEvent(MIXPANEL_EVENTS.retryClick, { surface: 'cityPageLessons' });
+                  lessonsQuery.refetch();
+                },
+              }}
             />
           )}
 
@@ -124,7 +157,15 @@ export const CityPage = styled(({ className }: CityPageProps) => {
           {!lessonsQuery.isPending && !hasInitialError && !isCityResolvedEmpty && (
             <>
               {dayGroups.map((group) => (
-                <DayGroup key={group.date} {...{ heading: dayGroupHeading(group.date), items: group.items, surface: 'general' }} />
+                <DayGroup
+                  key={group.date}
+                  {...{
+                    heading: dayGroupHeading(group.date),
+                    items: group.items,
+                    surface: 'general' as const,
+                    clickSurface: 'cityPage' as const,
+                  }}
+                />
               ))}
 
               {lessonsQuery.hasNextPage && (

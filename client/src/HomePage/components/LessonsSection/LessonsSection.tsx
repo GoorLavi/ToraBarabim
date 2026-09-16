@@ -1,6 +1,10 @@
 import classNames from 'classnames';
 import styled from 'styled-components';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
+import { useActiveFilters } from '~/analytics/useActiveFilters';
+import { useResultsShownTracking } from '~/analytics/useResultsShownTracking';
 import { dayLabel } from '~/HomePage/helpers';
 
 import { DayLessons } from './components/DayLessons/DayLessons';
@@ -11,16 +15,48 @@ import type { LessonsSectionProps } from './models';
 import * as styles from './styles';
 
 export const LessonsSection = styled(
-  ({ className, query, hasDateFilter, targetDate, city, searchQuery, onClearFilters }: LessonsSectionProps) => {
+  ({ className, query, resultSetKey, hasDateFilter, targetDate, city, searchQuery, onClearFilters }: LessonsSectionProps) => {
     const primaryLabel = dayLabel(targetDate);
     const cityName = city?.name;
+    const activeFilters = useActiveFilters();
+    const settledItems = query.data?.items ?? [];
+
+    useResultsShownTracking(
+      { resultSetKey, dataUpdatedAt: query.dataUpdatedAt, isPending: query.isPending, isError: query.isError },
+      {
+        surface: 'homeFiltered',
+        resultCount: settledItems.length,
+        hasResults: settledItems.length > 0,
+        ...(activeFilters.query ? { query: activeFilters.query } : {}),
+        ...(activeFilters.cityId ? { cityId: activeFilters.cityId } : {}),
+        ...(activeFilters.cityName ? { cityName: activeFilters.cityName } : {}),
+        dateOption: activeFilters.dateOption,
+        ...(activeFilters.date ? { date: activeFilters.date } : {}),
+      },
+    );
+
+    const clearFilters = (): void => {
+      trackEvent(MIXPANEL_EVENTS.clearFiltersClick, {
+        ...(activeFilters.cityId ? { cityId: activeFilters.cityId } : {}),
+        dateOption: activeFilters.dateOption,
+        ...(activeFilters.query ? { query: activeFilters.query } : {}),
+      });
+      onClearFilters();
+    };
 
     if (query.isError) {
       return (
         <div className={classNames(className, 'state', 'error')} role="alert">
           <p className="headline">{consts.ERROR_HEADLINE}</p>
           <p className="hint">{getErrorHint(query.error)}</p>
-          <button type="button" className="retry" onClick={() => query.refetch()}>
+          <button
+            type="button"
+            className="retry"
+            onClick={() => {
+              trackEvent(MIXPANEL_EVENTS.retryClick, { surface: 'homeFiltered' });
+              query.refetch();
+            }}
+          >
             {consts.RETRY_LABEL}
           </button>
         </div>
@@ -69,7 +105,7 @@ export const LessonsSection = styled(
         <div className={className}>
           <div className="empty">
             <p className="headline">{consts.noFilteredLessonsHeadline(cityName, searchQuery)}</p>
-            <button type="button" className="clearFilters" onClick={onClearFilters}>
+            <button type="button" className="clearFilters" onClick={clearFilters}>
               {consts.CLEAR_FILTERS_LABEL}
             </button>
           </div>

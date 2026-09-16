@@ -1,5 +1,8 @@
 import styled from 'styled-components';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
+
 import * as parentConsts from '../../consts';
 import { CityPickerStateBlock } from '../CityPickerStateBlock/CityPickerStateBlock';
 import { RecentCities } from '../RecentCities/RecentCities';
@@ -29,7 +32,16 @@ export const GroupedCityList = styled(
             danger: true,
             title: consts.GROUPED_ERROR_HEADING,
             body: consts.GROUPED_ERROR_BODY,
-            actions: [{ label: parentConsts.RETRY_LABEL, style: 'primary', onClick: suggestions.retry }],
+            actions: [
+              {
+                label: parentConsts.RETRY_LABEL,
+                style: 'primary',
+                onClick: () => {
+                  trackEvent(MIXPANEL_EVENTS.retryClick, { surface: 'cityPickerSuggestions' });
+                  suggestions.retry();
+                },
+              },
+            ],
           }}
         />
       );

@@ -207,7 +207,15 @@ export const WomenPage = styled(({ className }: WomenPageProps) => {
 
           {!isEmpty &&
             dayGroups.map((group) => (
-              <DayGroup key={group.date} {...{ heading: dayGroupHeading(group.date), items: group.items, surface: 'womensArea' }} />
+              <DayGroup
+                key={group.date}
+                {...{
+                  heading: dayGroupHeading(group.date),
+                  items: group.items,
+                  surface: 'womensArea',
+                  clickSurface: 'womensArea',
+                }}
+              />
             ))}
 
           {!isEmpty && lessonsQuery.hasNextPage && (
@@ -243,6 +251,7 @@ export const WomenPage = styled(({ className }: WomenPageProps) => {
                     heading: consts.widenedGroupHeading(resolvedArea.areaName),
                     items: areaFallbackQuery.data.items,
                     surface: 'womensArea',
+                    clickSurface: 'womensArea',
                   }}
                 />
               )}

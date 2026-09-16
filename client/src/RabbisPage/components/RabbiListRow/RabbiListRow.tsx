@@ -2,14 +2,22 @@ import classNames from 'classnames';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
 import { rabbiDisplayName, rabbiPath } from '~/helpers';
 
 import { rabbiMetaLine } from './helpers';
 import type { RabbiListRowProps } from './models';
 import * as styles from './styles';
 
-export const RabbiListRow = styled(({ className, rabbi }: RabbiListRowProps) => (
-  <Link to={rabbiPath(rabbi)} className={className}>
+export const RabbiListRow = styled(({ className, rabbi, position }: RabbiListRowProps) => (
+  <Link
+    to={rabbiPath(rabbi)}
+    className={className}
+    onClick={() =>
+      trackEvent(MIXPANEL_EVENTS.rabbiClick, { rabbiId: rabbi.id, rabbiName: rabbiDisplayName(rabbi), surface: 'rabbisPage', position })
+    }
+  >
     <div className={classNames('avatar', { placeholder: !rabbi.photoUrl })}>
       {rabbi.photoUrl && <img className="photo" src={rabbi.photoUrl} alt="" />}
     </div>

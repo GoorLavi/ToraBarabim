@@ -28,9 +28,9 @@ export const RabbiRail = styled(({ className, heading, rabbis, allLink }: RabbiR
         )}
       </div>
       <ul className="rail">
-        {rabbis.map((rabbi) => (
+        {rabbis.map((rabbi, index) => (
           <li key={rabbi.id}>
-            <RabbiCell rabbi={rabbi} />
+            <RabbiCell {...{ rabbi, position: index }} />
           </li>
         ))}
       </ul>

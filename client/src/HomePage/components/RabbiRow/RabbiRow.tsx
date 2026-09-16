@@ -1,6 +1,8 @@
 import classNames from 'classnames';
 import styled from 'styled-components';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
 import { TextLink } from '~/HomePage/components/TextLink/TextLink';
 
 import { RabbiAvatar } from './components/RabbiAvatar/RabbiAvatar';
@@ -21,7 +23,12 @@ export const RabbiRow = styled(({ className, items, isLoading, isError }: RabbiR
     <section className={className}>
       <div className="heading">
         <h2>{consts.HEADING}</h2>
-        <TextLink className="seeAll" to="/rabbis" withChevron>
+        <TextLink
+          className="seeAll"
+          to="/rabbis"
+          withChevron
+          onClick={() => trackEvent(MIXPANEL_EVENTS.seeAllClick, { target: 'rabbis', surface: 'home' })}
+        >
           {consts.SEE_ALL_LABEL}
         </TextLink>
       </div>
@@ -40,9 +47,9 @@ export const RabbiRow = styled(({ className, items, isLoading, isError }: RabbiR
 
       {!isError && !isLoading && (
         <ul className="row">
-          {rabbis.map((rabbi) => (
+          {rabbis.map((rabbi, index) => (
             <li key={rabbi.id}>
-              <RabbiAvatar rabbi={rabbi} />
+              <RabbiAvatar {...{ rabbi, position: index }} />
             </li>
           ))}
         </ul>

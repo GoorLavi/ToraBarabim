@@ -1,6 +1,8 @@
 import { Link, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
 import { BackLink } from '~/components/BackLink/BackLink';
 import { NotFoundScreen } from '~/components/NotFoundScreen/NotFoundScreen';
 import { cityPath } from '~/helpers';
@@ -46,7 +48,10 @@ export const LessonPage = styled(({ className }: LessonPageProps) => {
               heading={errorCopy.heading}
               explanation={errorCopy.explanation}
               actionLabel={consts.RETRY_LABEL}
-              onAction={() => query.refetch()}
+              onAction={() => {
+                trackEvent(MIXPANEL_EVENTS.retryClick, { surface: 'lessonPage' });
+                query.refetch();
+              }}
             />
           )}
           <BackLink to="/" label={consts.BACK_TO_ALL_LESSONS_LABEL} />
