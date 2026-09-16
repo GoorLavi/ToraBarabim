@@ -4,6 +4,7 @@ import styled from 'styled-components';
 
 import { ActiveFiltersProvider } from '~/analytics/ActiveFiltersProvider';
 import { FilterControls } from '~/components/FilterControls/FilterControls';
+import { useAudienceFilter } from '~/hooks/useAudienceFilter';
 import { useDateFilter } from '~/hooks/useDateFilter';
 import { useSearchQuery } from '~/hooks/useSearchQuery';
 import { useSelectedCity } from '~/hooks/useSelectedCity';
@@ -21,6 +22,7 @@ export const Layout = styled(({ className }: LayoutProps) => {
   const { option, customDate, selectOption, selectCustomDate, clearDate } = useDateFilter();
   const { city, select: selectCity, clear: clearCity } = useSelectedCity();
   const { query, setQuery } = useSearchQuery();
+  const { filter: audienceFilter, selectFilter: selectAudienceFilter, clearFilter: clearAudienceFilter } = useAudienceFilter();
 
   // Memoised so every `LessonCard` reading it through `ActiveFiltersContext`
   // does not re-render on every `Layout` render: a fresh object here would
@@ -45,6 +47,9 @@ export const Layout = styled(({ className }: LayoutProps) => {
             onClearCity: clearCity,
             searchQuery: query,
             onSearchQueryChange: setQuery,
+            audienceFilter,
+            onSelectAudienceFilter: selectAudienceFilter,
+            onClearAudienceFilter: clearAudienceFilter,
           }}
         />
 

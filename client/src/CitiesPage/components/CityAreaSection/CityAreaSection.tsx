@@ -24,7 +24,7 @@ export const CityAreaSection = styled(({ className, areaGroup }: CityAreaSection
     <ul className="grid">
       {areaGroup.cities.map((city) => (
         <li key={city.id} className="cell">
-          <CityChip city={city} />
+          <CityChip city={city} lessonCount={city.lessonCount} />
         </li>
       ))}
     </ul>

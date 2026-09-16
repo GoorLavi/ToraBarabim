@@ -23,6 +23,7 @@ export const fetchLessons = async (filters: LessonFilters): Promise<LessonSearch
   if (filters.city) url.searchParams.set('city', filters.city);
   if (filters.pageSize) url.searchParams.set('pageSize', String(filters.pageSize));
   if (filters.q) url.searchParams.set('q', filters.q);
+  if (filters.audience) url.searchParams.set('audience', filters.audience);
 
   let response: Response;
   try {

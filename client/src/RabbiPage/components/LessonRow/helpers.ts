@@ -1,6 +1,7 @@
 import type { LessonOccurrence } from '@torabarabim/common';
 
-import { LESSON_AUDIENCE_LABELS, LESSON_TOPIC_LABELS } from '~/HomePage/components/LessonCard/consts';
+import { AUDIENCE_LABELS } from '~/consts';
+import { LESSON_TOPIC_LABELS } from '~/HomePage/components/LessonCard/consts';
 
 // The rabbi is already known on their own page, so the row's title is the
 // lesson's own title or topic, never the rabbi's name (unlike LessonCard,
@@ -15,4 +16,4 @@ export const rowTitle = (lesson: LessonOccurrence): string | undefined =>
 // both required on `Place`, so only the leading audience segment can ever
 // be the sole content.
 export const rowVenueLine = (lesson: LessonOccurrence): string =>
-  `${LESSON_AUDIENCE_LABELS[lesson.audience]} · ${lesson.place.name}, ${lesson.place.city}`;
+  `${AUDIENCE_LABELS[lesson.audience]} · ${lesson.place.name}, ${lesson.place.city}`;

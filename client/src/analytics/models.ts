@@ -40,8 +40,8 @@ export interface ActiveFiltersProviderProps {
 // pages), within the visible slice on the home day list, and across every
 // loaded page on `/lessons`. A dashboard reading "position 0" on its own
 // cannot tell which list that was, hence `surface` always travels with it.
-// `railTitle` exists only where `surface` is `'homeRail'`, so the two other
-// components that build this (`DayGroup`, `LessonsGrid`) can never end up
+// `railTitle` exists only where `surface` is `'homeRail'`, so the two
+// components that build this (`LessonsGrid`, `LessonRail`) can never end up
 // passing a title without a rail, or a rail without one.
 export type LessonClickContext =
   | { surface: 'homeRail'; railTitle: string; position: number }
@@ -61,7 +61,11 @@ interface LessonClickFields {
   topic?: LessonOccurrence['topic'];
   daysAhead: number;
   filterCityId?: string;
+  filterCityName?: string;
   filterDateOption: DateFilterOption;
+  // The chosen day, present only when `filterDateOption` is `'custom'`,
+  // which on its own says a day was picked but not which one.
+  filterDate?: string;
   filterQuery?: string;
 }
 

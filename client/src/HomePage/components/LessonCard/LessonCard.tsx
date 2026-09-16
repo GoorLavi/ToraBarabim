@@ -7,10 +7,11 @@ import { lessonClickProps } from '~/analytics/helpers';
 import { trackEvent } from '~/analytics/mixpanel';
 import { useActiveFilters } from '~/analytics/useActiveFilters';
 import { todayInIsrael } from '~/HomePage/helpers';
+import { AUDIENCE_LABELS } from '~/consts';
 import { lessonPath, rabbiDisplayName } from '~/helpers';
 
 import * as consts from './consts';
-import { cardAriaLabel, descriptionLabel } from './helpers';
+import { audienceTreatment, cardAriaLabel, descriptionLabel } from './helpers';
 import type { LessonCardProps } from './models';
 import * as styles from './styles';
 
@@ -19,9 +20,10 @@ import * as styles from './styles';
 // missing photoUrl is real data today (Rabbi.photoUrl is optional on the
 // wire), so it falls back to a single, plain, undecorated fill rather than
 // initials or a silhouette, kept in this one spot for a later single edit.
-export const LessonCard = styled(({ className, lesson, clickContext }: LessonCardProps) => {
+export const LessonCard = styled(({ className, lesson, surface, clickContext }: LessonCardProps) => {
   const teachingRabbi = lesson.substituteRabbi ?? lesson.rabbi;
   const description = descriptionLabel(lesson);
+  const treatment = audienceTreatment(lesson.audience, surface);
   const activeFilters = useActiveFilters();
 
   const handleClick = (): void => {
@@ -57,8 +59,8 @@ export const LessonCard = styled(({ className, lesson, clickContext }: LessonCar
         </h3>
 
         <p className="meta" dir="auto">
-          <span className="audience">{consts.LESSON_AUDIENCE_LABELS[lesson.audience]}</span>
-          {description && <span className="description"> · {description}</span>}
+          <span className={classNames('audience', treatment)}>{AUDIENCE_LABELS[lesson.audience]}</span>
+          {description && <span className="description">{consts.META_SEPARATOR}{description}</span>}
         </p>
 
         <p className="city" dir="auto">

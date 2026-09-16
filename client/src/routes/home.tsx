@@ -16,9 +16,9 @@ import { loadHome } from './home.server';
 // rows are what a crawler landing on `/` should see, so this always loads
 // them regardless of the request's own query string. A URL that already
 // carries a date, city, or search filter still renders that filtered list
-// through the existing client-side query (HomePage/useLessonSearch),
-// unchanged by this loader; the rows seeded below simply go unused in that
-// mode, the same way they would if a visitor applied a filter after landing.
+// through the existing client-side query (HomePage/useLessonSearch). The
+// seeded response is still read in that mode: it carries the women's-area
+// count the band shows in both modes.
 export const loader = async (): Promise<HomeResponse> => loadHome();
 
 export const headers: HeadersFunction = ({ errorHeaders }) => errorHeaders ?? consts.PUBLIC_CACHE_HEADERS;

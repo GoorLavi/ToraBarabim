@@ -16,7 +16,7 @@ const escapeXmlText = (value: string): string => value.replace(/&/g, '&amp;').re
 
 const urlEntry = (path: string): string => `  <url>\n    <loc>${escapeXmlText(`${SITE_ORIGIN}${path}`)}</loc>\n  </url>`;
 
-const STATIC_PATHS = ['/', '/cities', '/rabbis', '/contact'];
+const STATIC_PATHS = ['/', '/cities', '/rabbis', '/contact', '/women', '/women/rabbaniyot'];
 
 // Individual lesson occurrences are deliberately not listed. A recurring
 // lesson expands to one URL per date in the search window, so listing them
@@ -32,13 +32,14 @@ const STATIC_PATHS = ['/', '/cities', '/rabbis', '/contact'];
 const ALL_RABBIS_PAGE_SIZE = 100_000;
 
 const buildSitemapXml = async (): Promise<string> => {
-  const [rabbiResult, cityDirectory, areaDirectory] = await Promise.all([
-    rabbiService.list({ page: 1, pageSize: ALL_RABBIS_PAGE_SIZE }),
+  const [generalRabbis, womenRabbis, cityDirectory, areaDirectory] = await Promise.all([
+    rabbiService.list({ scope: 'general', page: 1, pageSize: ALL_RABBIS_PAGE_SIZE }),
+    rabbiService.list({ scope: 'women', page: 1, pageSize: ALL_RABBIS_PAGE_SIZE }),
     cityService.listDirectory(),
     areaService.listDirectory(),
   ]);
 
-  const rabbiUrls = rabbiResult.items.map(rabbiPath);
+  const rabbiUrls = [...generalRabbis.items, ...womenRabbis.items].map(rabbiPath);
   const cityUrls = cityDirectory.areas.flatMap((group) => group.cities.map(cityPath));
   const areaUrls = areaDirectory.areas.map(areaPath);
 

@@ -9,6 +9,7 @@ import type {
   CityWithLessonCount,
 } from '@torabarabim/common';
 
+import { toCitySummary } from '../service/shared/city-summary';
 import type {
   CityAreaGroup as CityAreaGroupResult,
   CityAreaSuggestionGroup as CityAreaSuggestionGroupResult,
@@ -20,12 +21,7 @@ import type {
   ResolvedCity,
 } from '../service/city/models';
 
-export const toCity = (record: ResolvedCity): City => ({
-  id: String(record.code),
-  name: record.nameHe,
-  slug: record.slug,
-  area: record.area,
-});
+export const toCity = (record: ResolvedCity): City => toCitySummary(record);
 
 export const toCitySearchResult = (record: CitySearchResultRecord): CitySearchResult => ({
   ...toCity(record),

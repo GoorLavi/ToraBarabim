@@ -1,27 +1,23 @@
 import type { Area } from '@torabarabim/common';
 
-import { lessonCountLabel } from '~/consts';
+import { LESSON_LIST_PAGE_SIZE, lessonCountLabel } from '~/consts';
 
 export const CITY_PAGE_QUERY_KEYS = {
   detail: (citySlug: string) => ['city', citySlug] as const,
-  lessons: (cityCode: string, pageSize: number) => ['city', cityCode, 'lessons', pageSize] as const,
-  // Identifies the lessons result set without `pageSize`, the dimension
-  // "load more" grows: two requests at different page sizes for the same
-  // city are still the same result set for analytics purposes.
-  lessonsResultSet: (cityCode: string) => ['city', cityCode, 'lessons'] as const,
+  lessons: (cityCode: string) => ['city', cityCode, 'lessons'] as const,
   areaLessons: (area: Area | undefined) => ['city', 'area-lessons', area] as const,
 };
 
 // A 404 never becomes a 200 by retrying (mirrors RabbiPage/consts.ts).
 export const CITY_PAGE_RETRY_LIMIT = 1;
 
-// No exact number in the design spec for either fetch; both are one call
-// asking for "enough for a first screenful" rather than true server-side
-// pagination merge, matching the pattern HomePage/consts.ts already uses
-// (LESSON_WINDOW_PAGE_SIZE): "load more" asks for a bigger page, not a next
-// page to merge in.
-export const CITY_LESSONS_PAGE_SIZE = 24;
-export const AREA_LESSONS_PAGE_SIZE = 24;
+// The fixed page size both the main list and the area fallback ask for.
+// "Load more" pages through `page` at this fixed size (useCityLessons.ts,
+// useLessonListPages.ts), never a growing `pageSize`. Shared with
+// WomenPage's own two page sizes through `LESSON_LIST_PAGE_SIZE`, rather
+// than four files each retyping the same number.
+export const CITY_LESSONS_PAGE_SIZE = LESSON_LIST_PAGE_SIZE;
+export const AREA_LESSONS_PAGE_SIZE = LESSON_LIST_PAGE_SIZE;
 
 export const WHO_TEACHES_HEADING_PREFIX = 'מי מלמד ב';
 
@@ -40,6 +36,7 @@ export const citySubheading = (count: number): string => `${lessonCountLabel(cou
 export const areaLinkLabel = (areaName: string): string => `לכל השיעורים באזור ${areaName}`;
 export const whoTeachesHeading = (cityName: string): string => `${WHO_TEACHES_HEADING_PREFIX}${cityName}`;
 export const loadMoreLabel = (cityName: string): string => `עוד שיעורים ב${cityName}`;
+export const LOAD_MORE_ERROR_LABEL = 'לא הצלחנו לטעון עוד שיעורים, נסו שוב';
 
 export const noLessonsHeading = (cityName: string): string => `אין כרגע שיעורים ב${cityName}`;
 export const widenedToAreaBody = (cityName: string, areaName: string): string =>

@@ -1,3 +1,5 @@
+import type { AudienceFilter } from '@torabarabim/common';
+
 import type { DateFilterOption, SelectedCity } from '~/hooks/models';
 
 export interface FilterControlsProps {
@@ -12,4 +14,7 @@ export interface FilterControlsProps {
   onClearCity: () => void;
   searchQuery: string;
   onSearchQueryChange: (value: string) => void;
+  audienceFilter: AudienceFilter | undefined;
+  onSelectAudienceFilter: (filter: AudienceFilter) => void;
+  onClearAudienceFilter: () => void;
 }

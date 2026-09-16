@@ -1,10 +1,12 @@
 import classNames from 'classnames';
+import type { ReactNode } from 'react';
 import styled from 'styled-components';
 
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
 
 import { LessonRail } from '../LessonRail/LessonRail';
+import { WomensAreaBand } from '../WomensAreaBand/WomensAreaBand';
 import { RailSkeleton } from './components/RailSkeleton/RailSkeleton';
 import * as consts from './consts';
 import type { HomeRailsProps } from './models';
@@ -53,13 +55,24 @@ export const HomeRails = styled(({ className, query }: HomeRailsProps) => {
     );
   }
 
-  return (
-    <div className={className}>
-      {query.data.rows.map((row) => (
-        <LessonRail key={row.id} title={row.title} items={row.items} />
-      ))}
-    </div>
-  );
+  const { rows, womensAreaLessonCount } = query.data;
+
+  const rails: ReactNode[] = rows.map((row) => (
+    <LessonRail
+      key={row.id}
+      {...{ title: row.title, items: row.items, womensAreaTileIndex: row.womensAreaTileIndex, womensAreaLessonCount }}
+    />
+  ));
+
+  if (womensAreaLessonCount > 0) {
+    rails.splice(
+      Math.min(consts.WOMENS_AREA_BAND_SLOT, rails.length),
+      0,
+      <WomensAreaBand key="womens-area-band" {...{ lessonCount: womensAreaLessonCount }} />,
+    );
+  }
+
+  return <div className={className}>{rails}</div>;
 })`
   ${styles.HomeRails}
 `;

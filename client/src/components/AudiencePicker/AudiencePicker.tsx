@@ -1,7 +1,8 @@
 import classNames from 'classnames';
 import styled from 'styled-components';
 
-import * as consts from './consts';
+import { AUDIENCE_LABELS } from '~/consts';
+
 import type { AudiencePickerProps } from './models';
 import * as styles from './styles';
 
@@ -19,7 +20,7 @@ export const AudiencePicker = styled(({ className, audience, onSelectAudience, e
           aria-checked={audience === value}
           onClick={() => onSelectAudience(value)}
         >
-          {consts.AUDIENCE_LABELS[value]}
+          {AUDIENCE_LABELS[value]}
         </button>
       ))}
     </div>

@@ -3,7 +3,7 @@ import styled from 'styled-components';
 
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
-import { LessonCard } from '~/HomePage/components/LessonCard/LessonCard';
+import { LessonsGrid } from '~/components/LessonsGrid/LessonsGrid';
 import { TextLink } from '~/HomePage/components/TextLink/TextLink';
 
 import { SEE_ALL_LABEL } from '../../consts';
@@ -36,13 +36,7 @@ export const DayLessons = styled(({ className, headingLabel, items, showSeeAllLi
 
       {countLabel && <p className="count">{countLabel}</p>}
 
-      <ul className="grid">
-        {visibleItems.map((item, index) => (
-          <li className="cell" key={`${item.lessonId}-${item.date}`}>
-            <LessonCard {...{ lesson: item, clickContext: { surface: 'homeDayList' as const, position: index } }} />
-          </li>
-        ))}
-      </ul>
+      <LessonsGrid {...{ items: visibleItems, surface: 'general', clickSurface: 'homeDayList' }} />
 
       {hasMore && (
         <button type="button" className="more" onClick={() => setVisibleCount((count) => count + INITIAL_VISIBLE_COUNT)}>

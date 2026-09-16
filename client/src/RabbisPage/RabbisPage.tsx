@@ -14,9 +14,10 @@ import type { RabbisPageProps } from './models';
 import * as styles from './styles';
 import { useRabbiDirectory } from './useRabbiDirectory';
 
-export const RabbisPage = styled(({ className }: RabbisPageProps) => {
-  const query = useRabbiDirectory();
+export const RabbisPage = styled(({ className, directory }: RabbisPageProps) => {
+  const query = useRabbiDirectory(directory);
   const [search, setSearch] = useState('');
+  const copy = consts.DIRECTORY_COPY[directory];
 
   const rabbis = query.data ?? [];
   const isBoardEmpty = query.isSuccess && rabbis.length === 0;
@@ -28,7 +29,7 @@ export const RabbisPage = styled(({ className }: RabbisPageProps) => {
     ? consts.NO_RESULTS_SUBLINE
     : isSearchActive
       ? rabbiMatchCountLabel(filteredRabbis)
-      : `${rabbiCountLabel(rabbis.length)} · ${consts.ORDER_LABEL}`;
+      : `${rabbiCountLabel(rabbis.length, directory)} · ${consts.ORDER_LABEL}`;
 
   return (
     <main className={className}>
@@ -40,7 +41,7 @@ export const RabbisPage = styled(({ className }: RabbisPageProps) => {
           </>
         ) : (
           <>
-            <h1 className="heading">{consts.PAGE_TITLE}</h1>
+            <h1 className="heading">{copy.pageTitle}</h1>
             {!query.isError && !isBoardEmpty && (
               <p className="sub">{subline}</p>
             )}
@@ -51,9 +52,12 @@ export const RabbisPage = styled(({ className }: RabbisPageProps) => {
       {!query.isPending && !query.isError && !isBoardEmpty && (
         <div className="searchField">
           <label className="searchLabel" htmlFor={consts.SEARCH_FIELD_ID}>
-            {consts.SEARCH_FIELD_LABEL}
+            {copy.searchFieldLabel}
           </label>
-          <RabbiSearchField id={consts.SEARCH_FIELD_ID} className="search" value={search} onChange={setSearch} />
+          <RabbiSearchField
+            {...{ id: consts.SEARCH_FIELD_ID, value: search, onChange: setSearch, ariaLabel: copy.searchInputAriaLabel }}
+            className="search"
+          />
         </div>
       )}
 
@@ -71,7 +75,7 @@ export const RabbisPage = styled(({ className }: RabbisPageProps) => {
         <StateCard
           variant="surface"
           headingLevel="h2"
-          heading={consts.LOAD_ERROR_HEADING}
+          heading={copy.loadErrorHeading}
           body={consts.LOAD_ERROR_BODY}
           action={{
             actionLabel: consts.RETRY_LABEL,
@@ -88,8 +92,8 @@ export const RabbisPage = styled(({ className }: RabbisPageProps) => {
         <StateCard
           variant="empty"
           headingLevel="h2"
-          heading={consts.BOARD_EMPTY_HEADING}
-          body={consts.BOARD_EMPTY_BODY}
+          heading={copy.boardEmptyHeading}
+          body={copy.boardEmptyBody}
           action={{ actionLabel: consts.CONTACT_US_LABEL, actionStyle: 'primary', actionTo: '/contact' }}
         />
       )}
@@ -100,9 +104,9 @@ export const RabbisPage = styled(({ className }: RabbisPageProps) => {
           headingLevel="h2"
           heading={
             <>
-              {consts.NO_RESULTS_HEADING_PREFIX}
+              {copy.noResultsHeadingPrefix}
               <span dir="auto">{trimmedSearch}</span>
-              {consts.NO_RESULTS_HEADING_SUFFIX}
+              {copy.noResultsHeadingSuffix}
             </>
           }
           body={consts.NO_RESULTS_BODY}

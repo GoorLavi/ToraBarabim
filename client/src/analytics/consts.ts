@@ -27,7 +27,15 @@ export const MIXPANEL_EVENTS = {
 
 // A `LessonCard` can sit in any of these lists; `homeRail` is the only one
 // that also carries a `railTitle` (analytics/models.ts, LessonClickContext).
-export type LessonSurface = 'homeRail' | 'homeDayList' | 'searchResults' | 'lessonsGrid' | 'rabbiPage' | 'cityPage' | 'areaPage';
+export type LessonSurface =
+  | 'homeRail'
+  | 'homeDayList'
+  | 'searchResults'
+  | 'lessonsGrid'
+  | 'rabbiPage'
+  | 'cityPage'
+  | 'areaPage'
+  | 'womensArea';
 
 // The four screens that fire `Results Shown` (RabbisPage, CitiesPage and
 // RabbiPage's lessons section do not, by design). Distinct from

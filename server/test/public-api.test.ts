@@ -9,10 +9,11 @@ import type {
   LessonSearchResponse,
   RabbiDirectoryEntry,
   RabbiDirectoryResponse,
+  WomenAreaResponse,
 } from '@torabarabim/common';
 import type { FastifyInstance } from 'fastify';
 
-import { nextDateOnWeekday, todayInIsrael } from '../src/service/lesson/israel-time';
+import { addDays, nextDateOnWeekday, todayInIsrael } from '../src/service/lesson/israel-time';
 import { rabbiNameSchema, stripLeadingHonorific } from '../src/service/shared/name';
 import { toSlug } from '../src/service/shared/slug';
 import { assertClientBuilt, assertDatabaseReachable, buildApp, rawClient } from './app-harness';
@@ -31,6 +32,21 @@ const SEEDED_CITY_RABBI_ID = 'rabbi-3';
 const SEEDED_CITY_RABBI_NAME = 'יעקב מזרחי';
 const SEEDED_RABBANIT_ID = 'rabbi-9';
 const SEEDED_RABBANIT_NAME = 'שרה גולדברג';
+const SEEDED_RABBANIT_SURNAME = 'גולדברג';
+const SEEDED_RABBANIT_CITY_NAME = 'רעננה';
+const SEEDED_RABBANIT_VENUE_TEXT = 'בית יעל';
+// The rav's women-only lesson seeded for the women's area; see
+// `server/src/db/seed/lessons.ts`.
+const SEEDED_WOMEN_LESSON_ID = 'lesson-27';
+
+// A 14-day window, wide enough that a weekly lesson's next occurrence is
+// always inside it no matter what day the suite happens to run on, and
+// explicit rather than relying on the search's own 7-day default.
+const searchWindowQuery = (): string => {
+  const from = todayInIsrael(new Date());
+  const to = addDays(from, 13);
+  return `from=${from}&to=${to}&pageSize=50`;
+};
 
 describe('public API', () => {
   let app: FastifyInstance;
@@ -110,6 +126,101 @@ describe('public API', () => {
       const res = await app.inject({ method: 'GET', url: '/v1/lessons?area=atlantis' });
       assert.equal(res.statusCode, 400);
     });
+
+    // Test 1: default search (general scope) excludes a rabbanit's lessons
+    // and keeps a rav's women-only lesson (0026 restricts who may teach a
+    // women-only lesson, not whether one may exist on a general surface).
+    test('the default scope excludes a rabbanit-taught lesson and keeps a rav-taught women-only lesson', async () => {
+      const res = await app.inject({ method: 'GET', url: `/v1/lessons?${searchWindowQuery()}` });
+      assert.equal(res.statusCode, 200);
+      const body = res.json() as LessonSearchResponse;
+      assert.ok(!body.items.some((item) => item.rabbi.id === SEEDED_RABBANIT_ID));
+      assert.ok(body.items.some((item) => item.lessonId === SEEDED_WOMEN_LESSON_ID));
+    });
+
+    // Test 2: `audience=women` is never a valid public filter; `audience=men`
+    // narrows to men-or-mixed and still carries none of the rabbanit's.
+    test('rejects audience=women, and audience=men returns only men-or-mixed lessons', async () => {
+      const rejected = await app.inject({ method: 'GET', url: '/v1/lessons?audience=women' });
+      assert.equal(rejected.statusCode, 400);
+
+      const res = await app.inject({ method: 'GET', url: `/v1/lessons?audience=men&${searchWindowQuery()}` });
+      assert.equal(res.statusCode, 200);
+      const body = res.json() as LessonSearchResponse;
+      assert.ok(body.items.length > 0);
+      assert.ok(body.items.every((item) => item.audience === 'men' || item.audience === 'mixed'));
+      assert.ok(!body.items.some((item) => item.rabbi.id === SEEDED_RABBANIT_ID));
+    });
+
+    // Test 3: the name-search exception (owner decision 5) shows her
+    // lessons, with her photo, only when her own name matched `q` and no
+    // audience filter narrowed the request. Her venue's name is not her
+    // name, and an audience filter wins over the exception.
+    describe('the name-search exception', () => {
+      test("her surname returns her lessons", async () => {
+        const res = await app.inject({
+          method: 'GET',
+          url: `/v1/lessons?q=${encodeURIComponent(SEEDED_RABBANIT_SURNAME)}&${searchWindowQuery()}`,
+        });
+        assert.equal(res.statusCode, 200);
+        const body = res.json() as LessonSearchResponse;
+        assert.ok(body.items.some((item) => item.rabbi.id === SEEDED_RABBANIT_ID));
+      });
+
+      test('the same query plus audience=men returns none of hers: the filter wins', async () => {
+        const res = await app.inject({
+          method: 'GET',
+          url: `/v1/lessons?q=${encodeURIComponent(SEEDED_RABBANIT_SURNAME)}&audience=men&${searchWindowQuery()}`,
+        });
+        assert.equal(res.statusCode, 200);
+        const body = res.json() as LessonSearchResponse;
+        assert.ok(!body.items.some((item) => item.rabbi.id === SEEDED_RABBANIT_ID));
+      });
+
+      test("her venue's name, not her own name, returns none of hers", async () => {
+        const res = await app.inject({
+          method: 'GET',
+          url: `/v1/lessons?q=${encodeURIComponent(SEEDED_RABBANIT_VENUE_TEXT)}&${searchWindowQuery()}`,
+        });
+        assert.equal(res.statusCode, 200);
+        const body = res.json() as LessonSearchResponse;
+        assert.ok(!body.items.some((item) => item.rabbi.id === SEEDED_RABBANIT_ID));
+      });
+    });
+
+    // Test 4: `scope=women` includes every teacher, audience women or mixed
+    // only, and combines with every other filter as AND.
+    describe('scope=women', () => {
+      test('every item is audience women or mixed, and includes both hers and a mixed lesson taught by a rav', async () => {
+        const res = await app.inject({ method: 'GET', url: `/v1/lessons?scope=women&${searchWindowQuery()}` });
+        assert.equal(res.statusCode, 200);
+        const body = res.json() as LessonSearchResponse;
+        assert.ok(body.items.length > 0);
+        assert.ok(body.items.every((item) => item.audience === 'women' || item.audience === 'mixed'));
+        assert.ok(body.items.some((item) => item.rabbi.id === SEEDED_RABBANIT_ID));
+        // A wrong "women's set" definition (e.g. audience women only, no
+        // mixed) would still pass the two assertions above; this one only
+        // passes if a rav's women-only lesson is included too.
+        assert.ok(body.items.some((item) => item.lessonId === SEEDED_WOMEN_LESSON_ID));
+        assert.ok(body.items.some((item) => item.audience === 'mixed' && item.rabbi.honorific === 'rav'));
+      });
+
+      test('rabbiId scoped to the rabbanit returns her lessons only with scope=women', async () => {
+        const withScope = await app.inject({
+          method: 'GET',
+          url: `/v1/lessons?rabbiId=${SEEDED_RABBANIT_ID}&scope=women&${searchWindowQuery()}`,
+        });
+        assert.equal(withScope.statusCode, 200);
+        assert.ok((withScope.json() as LessonSearchResponse).items.length > 0);
+
+        const withoutScope = await app.inject({
+          method: 'GET',
+          url: `/v1/lessons?rabbiId=${SEEDED_RABBANIT_ID}&${searchWindowQuery()}`,
+        });
+        assert.equal(withoutScope.statusCode, 200);
+        assert.deepEqual((withoutScope.json() as LessonSearchResponse).items, []);
+      });
+    });
   });
 
   describe('GET /v1/lessons/:lessonId/occurrences/:date', () => {
@@ -150,17 +261,84 @@ describe('public API', () => {
     });
   });
 
-  test('GET /v1/home returns every row correctly shaped', async () => {
-    const res = await app.inject({ method: 'GET', url: '/v1/home' });
-    assert.equal(res.statusCode, 200);
+  // Test 7 (updates the existing shape test to the new tile placement):
+  // every row is still correctly shaped, no lesson item is taught by a
+  // rabbanit, every row keeps at least 3 lesson items after the scope
+  // filter, and the tile's count matches `GET /v1/women`'s own count.
+  // Placement: exactly one row carries `womensAreaTileIndex` (value 3) when
+  // the women's set is non-empty, none when it is empty; the row is the
+  // second row when it has at least four lessons, otherwise the next row
+  // that does (see `WOMENS_AREA_TILE_*` in `service/home/consts.ts`).
+  test("GET /v1/home returns every row correctly shaped, excludes rabbanit-taught lessons, and places at most one women's-area tile", async () => {
+    const [homeRes, womenRes] = await Promise.all([
+      app.inject({ method: 'GET', url: '/v1/home' }),
+      app.inject({ method: 'GET', url: '/v1/women' }),
+    ]);
+    assert.equal(homeRes.statusCode, 200);
+    assert.equal(womenRes.statusCode, 200);
 
-    const body = res.json() as HomeResponse;
+    const body = homeRes.json() as HomeResponse;
     assert.ok(Array.isArray(body.rows));
-    for (const row of body.rows) {
+
+    const rowsWithTile: number[] = [];
+    body.rows.forEach((row, rowIndex) => {
       assert.equal(typeof row.id, 'string');
       assert.equal(typeof row.title, 'string');
       assert.ok(Array.isArray(row.items));
+      assert.ok(row.items.length >= 3, `expected row ${row.id} to keep at least 3 lesson items after the scope filter`);
+      assert.ok(
+        row.items.every((item) => typeof item.lessonId === 'string'),
+        `expected every item in row ${row.id} to be a lesson, nothing else`,
+      );
+      assert.ok(!row.items.some((item) => item.rabbi.honorific === 'rabbanit'));
+
+      if (row.womensAreaTileIndex !== undefined) {
+        rowsWithTile.push(rowIndex);
+        assert.equal(row.womensAreaTileIndex, 3);
+        assert.ok(row.items.length >= 4, `expected row ${row.id} to have at least 4 lessons to carry the tile`);
+      }
+    });
+
+    const womenBody = womenRes.json() as WomenAreaResponse;
+    const womenLessonCount = womenBody.kind === 'populated' ? womenBody.lessonCount : 0;
+    assert.equal(body.womensAreaLessonCount, womenLessonCount);
+
+    if (body.womensAreaLessonCount === 0) {
+      assert.equal(rowsWithTile.length, 0, "expected no row to carry the tile when the women's set is empty");
+    } else {
+      // The candidate row is the second row (index 1); if it has fewer
+      // than four lessons, the tile moves to the next row that does.
+      const expectedRowIndex = body.rows.findIndex((row, index) => index >= 1 && row.items.length >= 4);
+      if (expectedRowIndex === -1) {
+        assert.equal(rowsWithTile.length, 0, 'no row has enough lessons to carry the tile');
+      } else {
+        assert.deepEqual(rowsWithTile, [expectedRowIndex]);
+      }
     }
+  });
+
+  // Test 8: a populated summary lists both a rabbanit and a rav among the
+  // teachers (the women's set is defined by audience, not by teacher), and
+  // at least one city.
+  describe('GET /v1/women', () => {
+    test('returns a populated summary with a rabbanit and a rav among the teachers, and at least one city', async () => {
+      const res = await app.inject({ method: 'GET', url: '/v1/women' });
+      assert.equal(res.statusCode, 200);
+
+      const body = res.json() as WomenAreaResponse;
+      assert.equal(body.kind, 'populated');
+      if (body.kind !== 'populated') return;
+
+      assert.ok(body.lessonCount > 0);
+      assert.ok(body.teachers.some((teacher) => teacher.id === SEEDED_RABBANIT_ID));
+      assert.ok(body.teachers.some((teacher) => teacher.honorific === 'rav'));
+      assert.ok(body.cities.length > 0);
+      assert.ok(body.cities.every((city) => city.lessonCount > 0));
+      // Each city's count is the same women's-set definition, split by
+      // city: they must sum to the summary's own count.
+      const citiesLessonCount = body.cities.reduce((total, city) => total + city.lessonCount, 0);
+      assert.equal(citiesLessonCount, body.lessonCount);
+    });
   });
 
   describe('GET /v1/cities', () => {
@@ -171,20 +349,48 @@ describe('public API', () => {
     });
 
     test('matches a known seeded city by prefix, and carries its area name and lesson count', async () => {
-      const res = await app.inject({ method: 'GET', url: `/v1/cities?q=${encodeURIComponent(SEEDED_CITY_PREFIX)}` });
-      assert.equal(res.statusCode, 200);
-      const { items } = res.json() as { items: CitySearchResult[] };
+      const [searchRes, directoryRes] = await Promise.all([
+        app.inject({ method: 'GET', url: `/v1/cities?q=${encodeURIComponent(SEEDED_CITY_PREFIX)}` }),
+        app.inject({ method: 'GET', url: '/v1/cities/directory' }),
+      ]);
+      assert.equal(searchRes.statusCode, 200);
+      assert.equal(directoryRes.statusCode, 200);
+
+      const { items } = searchRes.json() as { items: CitySearchResult[] };
       const city = items.find((candidate) => candidate.name === SEEDED_CITY_NAME);
       assert.ok(city);
       assert.equal(typeof city.areaName, 'string');
       assert.ok(city.areaName.length > 0);
       assert.equal(typeof city.lessonCount, 'number');
       assert.ok(city.lessonCount > 0, 'the seeded city has seeded lessons');
+
+      // `search` and `listDirectory` share one SQL aggregation
+      // (`citiesWithLessonCountQuery`); a real, non-zero count here means a
+      // mismatch between the two call sites would show up as a genuine
+      // number disagreement, not two zeros agreeing by accident.
+      const directoryBody = directoryRes.json() as {
+        areas: { cities: { slug: string; lessonCount: number }[] }[];
+      };
+      const directoryCity = directoryBody.areas.flatMap((area) => area.cities).find((candidate) => candidate.slug === toSlug(SEEDED_CITY_NAME));
+      assert.ok(directoryCity);
+      assert.equal(city.lessonCount, directoryCity.lessonCount);
     });
 
     test('rejects a query over the length limit', async () => {
       const res = await app.inject({ method: 'GET', url: `/v1/cities?q=${'א'.repeat(101)}` });
       assert.equal(res.statusCode, 400);
+    });
+
+    // A general surface (the header search), so it counts general-scope
+    // lessons only: the rabbanit's city has real lessons but none of them
+    // general, so its count here must be 0, not the raw lesson count.
+    test("a general surface counts general-scope lessons only: the rabbanit's city, whose only lessons are hers, shows lessonCount 0", async () => {
+      const res = await app.inject({ method: 'GET', url: `/v1/cities?q=${encodeURIComponent(SEEDED_RABBANIT_CITY_NAME)}` });
+      assert.equal(res.statusCode, 200);
+      const { items } = res.json() as { items: CitySearchResult[] };
+      const city = items.find((candidate) => candidate.name === SEEDED_RABBANIT_CITY_NAME);
+      assert.ok(city, 'the city itself must still match the prefix, even with no general-scope lesson');
+      assert.equal(city.lessonCount, 0);
     });
   });
 
@@ -202,6 +408,10 @@ describe('public API', () => {
       for (const city of area.cities) {
         assert.ok(city.slug.length > 0);
         assert.ok(city.lessonCount > 0);
+        // A general surface, so a city whose only lessons are the
+        // rabbanit's (real lessons, zero general-scope ones) must not
+        // appear here at all, not merely with a count of 0.
+        assert.notEqual(city.slug, toSlug(SEEDED_RABBANIT_CITY_NAME));
       }
     }
   });
@@ -221,6 +431,7 @@ describe('public API', () => {
       previousAreaLessonCount = area.areaLessonCount;
 
       assert.ok(area.cities.length > 0);
+      assert.ok(!area.cities.some((city) => city.slug === toSlug(SEEDED_RABBANIT_CITY_NAME)));
 
       const summedLessonCount = area.cities.reduce((total, city) => total + city.lessonCount, 0);
       assert.equal(
@@ -269,6 +480,17 @@ describe('public API', () => {
       assert.equal(rabbi.honorific, 'rav');
     });
 
+    // Test 5: the rail excludes a rabbanit even in her own city (0026: her
+    // lessons are for women only, and the rail has no search text for the
+    // name exception to apply to).
+    test("the city rail for the rabbanit's own city leaves her out", async () => {
+      const slug = toSlug(SEEDED_RABBANIT_CITY_NAME);
+      const res = await app.inject({ method: 'GET', url: `/v1/cities/${slug}` });
+      assert.equal(res.statusCode, 200);
+      const body = res.json() as { rabbis: { id: string }[] };
+      assert.ok(!body.rabbis.some((rabbi) => rabbi.id === SEEDED_RABBANIT_ID));
+    });
+
     test('an unknown slug returns 404 with city_not_found', async () => {
       const res = await app.inject({ method: 'GET', url: '/v1/cities/עיר-שלא-קיימת-לעולם' });
       assert.equal(res.statusCode, 404);
@@ -289,7 +511,7 @@ describe('public API', () => {
       const body = res.json() as RabbiDirectoryResponse;
       assert.equal(body.page, 1);
       assert.equal(body.pageSize, 20);
-      assert.ok(body.total >= 11, 'expected at least the 11 seeded rabbis');
+      assert.ok(body.total >= 10, 'expected at least the 10 seeded ravs (the default scope excludes the rabbanit)');
 
       const rabbi = body.items.find((entry) => entry.id === SEEDED_RABBI_ID) as RabbiDirectoryEntry | undefined;
       assert.ok(rabbi);
@@ -299,16 +521,29 @@ describe('public API', () => {
       assert.ok(rabbi.slug.length > 0);
       assert.equal(rabbi.slug, toSlug(SEEDED_RABBI_NAME));
       assert.equal(rabbi.honorific, 'rav');
-
-      const rabbanit = body.items.find((entry) => entry.id === SEEDED_RABBANIT_ID) as RabbiDirectoryEntry | undefined;
-      assert.ok(rabbanit);
-      assert.equal(rabbanit.name, SEEDED_RABBANIT_NAME);
-      assert.equal(rabbanit.honorific, 'rabbanit');
     });
 
     test('rejects a non-numeric page size', async () => {
       const res = await app.inject({ method: 'GET', url: '/v1/rabbis?pageSize=abc' });
       assert.equal(res.statusCode, 400);
+    });
+
+    // Test 6: the default (general) scope lists ravs only; scope=women
+    // lists rabbaniyot only, including the seeded one.
+    test('the default scope has no rabbanit, and scope=women returns only rabbaniyot including the seeded one', async () => {
+      const general = await app.inject({ method: 'GET', url: '/v1/rabbis?pageSize=50' });
+      assert.equal(general.statusCode, 200);
+      const generalBody = general.json() as RabbiDirectoryResponse;
+      assert.ok(!generalBody.items.some((item) => item.honorific === 'rabbanit'));
+
+      const women = await app.inject({ method: 'GET', url: '/v1/rabbis?scope=women&pageSize=50' });
+      assert.equal(women.statusCode, 200);
+      const womenBody = women.json() as RabbiDirectoryResponse;
+      assert.ok(womenBody.items.length > 0);
+      assert.ok(womenBody.items.every((item) => item.honorific === 'rabbanit'));
+      const rabbanit = womenBody.items.find((item) => item.id === SEEDED_RABBANIT_ID);
+      assert.ok(rabbanit);
+      assert.equal(rabbanit.name, SEEDED_RABBANIT_NAME);
     });
   });
 

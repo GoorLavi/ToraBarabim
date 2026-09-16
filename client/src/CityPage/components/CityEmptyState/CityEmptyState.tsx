@@ -36,7 +36,18 @@ export const CityEmptyState = styled(
         />
 
         {showAreaGroup &&
-          (isAreaPending ? <DayGroupSkeleton /> : <DayGroup {...{ heading: pageConsts.areaGroupHeading(areaName), items: areaItems ?? [], surface: 'cityPage' as const }} />)}
+          (isAreaPending ? (
+            <DayGroupSkeleton />
+          ) : (
+            <DayGroup
+              {...{
+                heading: pageConsts.areaGroupHeading(areaName),
+                items: areaItems ?? [],
+                surface: 'general' as const,
+                clickSurface: 'cityPage' as const,
+              }}
+            />
+          ))}
 
         <AreaLink {...{ areaSlug, areaName }} />
       </div>

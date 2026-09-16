@@ -1,11 +1,15 @@
 import type { Area, RabbiHonorific } from '@torabarabim/common';
 import { z } from 'zod';
 
-import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '../shared/consts';
+import { AUDIENCE_SCOPES, DEFAULT_PAGE, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '../shared/consts';
 
+// `general` lists ravs only, `women` lists rabbaniyot only. Zod's default
+// makes the parsed type required, so every call site names its scope
+// rather than one accidentally reading everyone.
 export const rabbiListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(DEFAULT_PAGE),
   pageSize: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),
+  scope: z.enum(AUDIENCE_SCOPES).default('general'),
 });
 export type RabbiListQuery = z.infer<typeof rabbiListQuerySchema>;
 

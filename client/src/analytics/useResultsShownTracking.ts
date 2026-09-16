@@ -5,11 +5,12 @@ import { trackEvent } from './mixpanel';
 import type { AnalyticsEventProps } from './models';
 
 interface ResultsShownQueryState {
-  // Identifies the result set, never the query, so a page that paginates by
-  // growing its `pageSize` (CityPage, AreaPage: one bigger request, not a
-  // second page merged in) does not re-fire on "load more". Callers derive
-  // this from their query key with the paginating dimension left out; it
-  // must never be the query key itself where the two differ.
+  // Identifies the result set, never the query, so a page that paginates
+  // (AreaPage growing its `pageSize`; CityPage's infinite query, whose
+  // `dataUpdatedAt` also advances on `fetchNextPage`) does not re-fire on
+  // "load more". Callers derive this from their query key with the
+  // paginating dimension left out; it must never be the query key itself
+  // where the two differ.
   resultSetKey: unknown;
   dataUpdatedAt: number;
   isPending: boolean;

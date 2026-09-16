@@ -37,8 +37,19 @@ export const FilterFieldsGrid = css(
     min-inline-size: 0;
   }
 
-  > .search {
+  > .searchRow {
     grid-area: search;
+    display: flex;
+    align-items: center;
+    /* Same gap as the date chips row (design review, frame 9:94). */
+    gap: ${theme.spacing.md};
+    min-inline-size: 0;
+
+    > .search {
+      flex: 1;
+      min-inline-size: 0;
+      block-size: 48px;
+    }
   }
 
   > .city {

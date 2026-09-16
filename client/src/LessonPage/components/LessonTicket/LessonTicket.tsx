@@ -4,8 +4,8 @@ import styled from 'styled-components';
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { navigationClickProps } from '~/analytics/helpers';
 import { trackEvent } from '~/analytics/mixpanel';
-import { LESSON_AUDIENCE_LABELS } from '~/HomePage/components/LessonCard/consts';
 import { todayInIsrael } from '~/HomePage/helpers';
+import { AUDIENCE_LABELS } from '~/consts';
 import { rabbiDisplayName } from '~/helpers';
 import * as pageConsts from '~/LessonPage/consts';
 import { teachingRabbiOf } from '~/LessonPage/helpers';
@@ -116,7 +116,7 @@ export const LessonTicket = styled(({ className, occurrence }: LessonTicketProps
             </p>
 
             <span className="audienceTag" dir="auto">
-              {LESSON_AUDIENCE_LABELS[occurrence.audience]}
+              {AUDIENCE_LABELS[occurrence.audience]}
             </span>
 
             {showNavRow && wazeUrl && googleMapsUrl && (

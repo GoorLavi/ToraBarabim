@@ -11,3 +11,9 @@ export const RETRY_LABEL = 'נסו שוב';
 // The only empty case is zero rows, which with no filters active means the
 // site itself has nothing yet.
 export const EMPTY_HEADLINE = 'אין כרגע שיעורים באתר';
+
+// After the second rail, before the third: one rail in three, never after
+// every rail (design review). With fewer than three rails this clamps to
+// the end of the list, still inside the rails block and still before
+// `לפי רב`.
+export const WOMENS_AREA_BAND_SLOT = 2;

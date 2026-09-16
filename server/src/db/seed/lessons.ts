@@ -52,7 +52,8 @@ type VenueKey =
   | 'place-8'
   | 'place-9'
   | 'place-10'
-  | 'place-11';
+  | 'place-11'
+  | 'place-12';
 
 const VENUES: Record<VenueKey, VenueSeed> = {
   'place-1': { name: 'בית הכנסת "אוהל יעקב"', street: 'רחוב הרב קוק 12', cityName: 'צפת' },
@@ -66,6 +67,10 @@ const VENUES: Record<VenueKey, VenueSeed> = {
   'place-9': { name: 'מדרשה לנשים "בית יעל"', street: 'רחוב סוקולוב 14', floor: 'קומה 2', cityName: 'רעננה' },
   'place-10': { name: 'בית הכנסת "זכרון משה"', street: 'רחוב יפו 88', cityName: 'ירושלים' },
   'place-11': { name: 'אולם אירועים "גני התורה"', street: 'רחוב ההסתדרות 2', cityName: 'אשדוד' },
+  // A rav's own venue, used for lesson-27, the women's-area seed lesson:
+  // its name must not resemble any seeded rabbi's name, so `q=<venue name>`
+  // never matches a rabbi through the search's rabbi-name path.
+  'place-12': { name: 'בית מדרש "שערי אורה"', street: 'רחוב הפרחים 6', cityName: 'חיפה' },
 };
 
 interface LessonSeed {
@@ -105,6 +110,11 @@ const LESSONS: LessonSeed[] = [
   { id: 'lesson-21', title: 'שיעור פתוח', rabbiId: 'rabbi-4', venueKey: 'place-8', topic: 'other', audience: 'mixed', recurrence: { kind: 'weekly', weekdays: [3] }, startTime: '19:00', durationMinutes: 45 },
   { id: 'lesson-22', title: 'שולחן ערוך יומי', rabbiId: 'rabbi-3', venueKey: 'place-10', topic: 'halacha', audience: 'men', recurrence: { kind: 'weekly', weekdays: [0, 1, 2, 3, 4] }, startTime: '13:00', durationMinutes: 20 },
   { id: 'lesson-23', title: 'ערב עיון בפרשת השבוע', rabbiId: 'rabbi-11', venueKey: 'place-6', topic: 'parasha', audience: 'men', recurrence: { kind: 'weekly', weekdays: [4] }, startTime: '22:00', durationMinutes: 60 },
+  // A rav teaching a women-only lesson (0026 permits this; only a
+  // rabbanit-taught lesson is restricted to women). Exercises the women's
+  // area and the audience scope: it stays on the general surfaces with a
+  // נשים chip, and it counts in the women's set alongside rabbi-9's.
+  { id: 'lesson-27', title: 'שיעור לנשים בפרשת השבוע', rabbiId: 'rabbi-5', venueKey: 'place-12', topic: 'parasha', audience: 'women', recurrence: { kind: 'weekly', weekdays: [2] }, startTime: '20:00', durationMinutes: 45 },
 ];
 
 const buildOnceLessons = (todayIso: string): LessonSeed[] => [

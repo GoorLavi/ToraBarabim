@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -9,6 +8,8 @@ import { BackLink } from '~/components/BackLink/BackLink';
 import { DayGroup } from '~/components/DayGroup/DayGroup';
 import { DayGroupSkeleton } from '~/components/DayGroupSkeleton/DayGroupSkeleton';
 import { QuietButton } from '~/components/QuietButton/QuietButton';
+import { RabbiRail } from '~/components/RabbiRail/RabbiRail';
+import { RabbiRailSkeleton } from '~/components/RabbiRailSkeleton/RabbiRailSkeleton';
 import { StateCard } from '~/components/StateCard/StateCard';
 import { TitleSkeleton } from '~/components/TitleSkeleton/TitleSkeleton';
 import { BACK_TO_ALL_CITIES_LABEL } from '~/consts';
@@ -16,8 +17,6 @@ import { dayGroupHeading, groupByDay } from '~/helpers';
 
 import { AreaLink } from './components/AreaLink/AreaLink';
 import { CityEmptyState } from './components/CityEmptyState/CityEmptyState';
-import { RabbiRail } from './components/RabbiRail/RabbiRail';
-import { RabbiRailSkeleton } from './components/RabbiRailSkeleton/RabbiRailSkeleton';
 import * as consts from './consts';
 import { cityErrorCopy } from './helpers';
 import type { CityPageProps } from './models';
@@ -38,28 +37,32 @@ export const CityPage = styled(({ className }: CityPageProps) => {
   const city = cityQuery.data;
   const errorCopy = cityQuery.error ? cityErrorCopy(cityQuery.error) : null;
 
-  const [pageSize, setPageSize] = useState(consts.CITY_LESSONS_PAGE_SIZE);
-  const lessonsQuery = useCityLessons(city?.id, pageSize);
-  const isCityResolvedEmpty = lessonsQuery.data?.items.length === 0;
+  const lessonsQuery = useCityLessons(city?.id, Boolean(city));
+  const items = lessonsQuery.data?.pages.flatMap((page) => page.items) ?? [];
+  const total = lessonsQuery.data?.pages[0]?.total ?? 0;
+  // A failed "load more" (isFetchNextPageError) leaves the already-loaded
+  // pages in place, so it is never this, the full-page error: that only
+  // fires when there is no data to show at all.
+  const hasInitialError = lessonsQuery.isError && !lessonsQuery.data;
+  const isCityResolvedEmpty = lessonsQuery.isSuccess && items.length === 0;
   const areaQuery = useAreaLessons(city?.area, Boolean(isCityResolvedEmpty));
 
   const areaName = city?.areaName ?? '';
-  const dayGroups = lessonsQuery.data ? groupByDay(lessonsQuery.data.items) : [];
-  const hasMore = Boolean(lessonsQuery.data && lessonsQuery.data.items.length < lessonsQuery.data.total);
+  const dayGroups = groupByDay(items);
   const canShowRail = Boolean(city && !isCityResolvedEmpty && city.rabbis.length > 0);
-  const canShowSubheading = Boolean(!isCityResolvedEmpty && lessonsQuery.data);
+  const canShowSubheading = Boolean(!isCityResolvedEmpty && lessonsQuery.isSuccess);
 
   useResultsShownTracking(
     {
-      resultSetKey: consts.CITY_PAGE_QUERY_KEYS.lessonsResultSet(city?.id ?? ''),
+      resultSetKey: consts.CITY_PAGE_QUERY_KEYS.lessons(city?.id ?? ''),
       dataUpdatedAt: lessonsQuery.dataUpdatedAt,
       isPending: lessonsQuery.isPending,
       isError: lessonsQuery.isError,
     },
     {
       surface: 'cityPage',
-      resultCount: lessonsQuery.data?.items.length ?? 0,
-      hasResults: (lessonsQuery.data?.items.length ?? 0) > 0,
+      resultCount: items.length,
+      hasResults: items.length > 0,
       ...(city?.id ? { cityId: city.id } : {}),
       ...(city?.name ? { cityName: city.name } : {}),
     },
@@ -111,19 +114,19 @@ export const CityPage = styled(({ className }: CityPageProps) => {
               {consts.cityHeading(city.name)}
             </h1>
 
-            {canShowSubheading && lessonsQuery.data && (
+            {canShowSubheading && (
               <>
-                <p className="sub">{consts.citySubheading(lessonsQuery.data.total)}</p>
+                <p className="sub">{consts.citySubheading(total)}</p>
                 <AreaLink areaSlug={city.areaSlug} {...{ areaName }} />
               </>
             )}
           </div>
 
-          {canShowRail && <RabbiRail cityName={city.name} rabbis={city.rabbis} />}
+          {canShowRail && <RabbiRail {...{ heading: consts.whoTeachesHeading(city.name), rabbis: city.rabbis }} />}
 
           {lessonsQuery.isPending && <DayGroupSkeleton />}
 
-          {!lessonsQuery.isPending && lessonsQuery.isError && (
+          {!lessonsQuery.isPending && hasInitialError && (
             <StateCard
               variant="surface"
               headingLevel="h2"
@@ -140,7 +143,7 @@ export const CityPage = styled(({ className }: CityPageProps) => {
             />
           )}
 
-          {!lessonsQuery.isPending && !lessonsQuery.isError && isCityResolvedEmpty && (
+          {!lessonsQuery.isPending && !hasInitialError && isCityResolvedEmpty && (
             <CityEmptyState
               cityName={city.name}
               areaSlug={city.areaSlug}
@@ -151,17 +154,28 @@ export const CityPage = styled(({ className }: CityPageProps) => {
             />
           )}
 
-          {!lessonsQuery.isPending && !lessonsQuery.isError && !isCityResolvedEmpty && (
+          {!lessonsQuery.isPending && !hasInitialError && !isCityResolvedEmpty && (
             <>
               {dayGroups.map((group) => (
-                <DayGroup key={group.date} {...{ heading: dayGroupHeading(group.date), items: group.items, surface: 'cityPage' as const }} />
+                <DayGroup
+                  key={group.date}
+                  {...{
+                    heading: dayGroupHeading(group.date),
+                    items: group.items,
+                    surface: 'general' as const,
+                    clickSurface: 'cityPage' as const,
+                  }}
+                />
               ))}
 
-              {hasMore && (
+              {lessonsQuery.hasNextPage && (
                 <QuietButton
                   className="loadMore"
-                  label={consts.loadMoreLabel(city.name)}
-                  onClick={() => setPageSize((current) => current + consts.CITY_LESSONS_PAGE_SIZE)}
+                  {...{
+                    label: lessonsQuery.isFetchNextPageError ? consts.LOAD_MORE_ERROR_LABEL : consts.loadMoreLabel(city.name),
+                    onClick: () => lessonsQuery.fetchNextPage(),
+                    disabled: lessonsQuery.isFetchingNextPage,
+                  }}
                 />
               )}
             </>

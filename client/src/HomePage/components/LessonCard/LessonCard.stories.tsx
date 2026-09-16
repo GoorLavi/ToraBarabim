@@ -28,7 +28,7 @@ const baseLesson: LessonOccurrence = {
 const meta: Meta<typeof LessonCard> = {
   title: 'HomePage/LessonCard',
   component: LessonCard,
-  args: { clickContext: { surface: 'lessonsGrid', position: 0 } },
+  args: { surface: 'general', clickContext: { surface: 'lessonsGrid', position: 0 } },
   decorators: [
     (Story) => (
       <div style={{ maxWidth: '260px' }}>
@@ -113,5 +113,31 @@ export const VeryLongCityName: Story = {
         area: 'south',
       },
     },
+  },
+};
+
+// On a general surface נשים renders as a chip (primarySoft fill, primary
+// text and hairline), the one audience value worth calling out; it must
+// wrap, never truncate.
+export const GeneralSurfaceWomenChip: Story = {
+  args: {
+    lesson: { ...baseLesson, audience: 'women', title: undefined, topic: 'mussar' },
+    surface: 'general',
+  },
+};
+
+// On /women every card is already for women, so נשים reads as plain text
+// there and only a mixed lesson is marked.
+export const WomensAreaSurfaceMixedMarked: Story = {
+  args: {
+    lesson: { ...baseLesson, audience: 'mixed' },
+    surface: 'womensArea',
+  },
+};
+
+export const WomensAreaSurfaceWomenPlain: Story = {
+  args: {
+    lesson: { ...baseLesson, audience: 'women' },
+    surface: 'womensArea',
   },
 };

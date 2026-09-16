@@ -13,6 +13,14 @@ export type LessonTopic =
 
 export type LessonAudience = 'men' | 'women' | 'mixed';
 
+// Who a public lesson query is scoped to. The rule each value applies is
+// `server/src/service/shared/audience-scope.ts`'s, the one place it lives.
+export type AudienceScope = 'general' | 'women';
+
+// Narrower than `LessonAudience` on purpose: a general surface never
+// requests `women` directly.
+export type AudienceFilter = 'men' | 'mixed';
+
 export type Recurrence =
   | { kind: 'weekly'; weekdays: Weekday[] }
   | { kind: 'once'; date: string }; // ISO date, e.g. '2026-08-20'

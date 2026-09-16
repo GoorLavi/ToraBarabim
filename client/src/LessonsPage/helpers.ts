@@ -54,11 +54,13 @@ export const selectDaySections = (
 };
 
 // היום / מחר / בשבת stand on their own; any other date takes a ב prefix
-// (05-lessons.md: "היום / מחר / בשבת / ב<date>").
+// with a maqaf (05-lessons.md: "היום / מחר / בשבת / ב־<date>"). Without the
+// maqaf "ב16 בספטמבר" reads as the digit "16" glued onto the letter ב
+// rather than the prefix "on the 16th".
 export const dateWord = (targetDate: string): string => {
   const label = compactDayLabel(targetDate);
   if (label === 'היום' || label === 'מחר' || label === 'בשבת') return label;
-  return `ב${label}`;
+  return `ב־${label}`;
 };
 
 // The one place the page's h1 is built: שיעורים, plus ב<city> when a city

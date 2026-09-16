@@ -12,6 +12,7 @@ import { registerLessonRoutes } from './api/lessons';
 import { registerRabbiRoutes } from './api/rabbi';
 import { registerRabbiAuthRoutes } from './api/rabbi/auth';
 import { registerRabbiDirectoryRoutes } from './api/rabbis';
+import { registerWomenAreaRoutes } from './api/women';
 import { loadConfig } from './config';
 import { registerCookies } from './plugins/cookies';
 import { registerCors } from './plugins/cors';
@@ -52,6 +53,7 @@ const start = async (): Promise<void> => {
   await registerCityRoutes(app);
   await registerAreaRoutes(app);
   await registerRabbiDirectoryRoutes(app);
+  await registerWomenAreaRoutes(app);
   await registerAdminAuthRoutes(app);
   await registerAdminRoutes(app);
   await registerRabbiAuthRoutes(app);

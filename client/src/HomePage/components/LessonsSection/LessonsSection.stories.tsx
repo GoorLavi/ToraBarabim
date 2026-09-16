@@ -101,7 +101,14 @@ const terminalEmptyQuery: LessonSearchQueryState = {
 const meta: Meta<typeof LessonsSection> = {
   title: 'HomePage/LessonsSection',
   component: LessonsSection,
-  args: { hasDateFilter: true, targetDate: TODAY, city, searchQuery: '', onClearFilters: () => {} },
+  args: {
+    hasDateFilter: true,
+    targetDate: TODAY,
+    city,
+    searchQuery: '',
+    onClearFilters: () => {},
+    resultSetKey: ['story', 'lessons'],
+  },
 };
 
 export default meta;

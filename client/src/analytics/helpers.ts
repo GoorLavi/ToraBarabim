@@ -70,7 +70,9 @@ export const lessonClickProps = (
   ...(lesson.topic ? { topic: lesson.topic } : {}),
   daysAhead: daysAhead(lesson.date, todayIso),
   ...(filters.cityId ? { filterCityId: filters.cityId } : {}),
+  ...(filters.cityName ? { filterCityName: filters.cityName } : {}),
   filterDateOption: filters.dateOption,
+  ...(filters.date ? { filterDate: filters.date } : {}),
   ...(filters.query ? { filterQuery: filters.query } : {}),
 });
 

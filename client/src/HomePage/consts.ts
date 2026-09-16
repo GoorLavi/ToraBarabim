@@ -25,18 +25,19 @@ export const RAIL_CONTEXT_LINE = 'שיעורים בכל הארץ בשבועיי�
 
 // Mirrors the real `LessonCard` body block's rough height (title, meta and
 // city lines plus padding), so a loading skeleton's card does not jump in
-// block-size once real data replaces it. Shared by LessonCardSkeleton, the
-// one skeleton card both HomeRails/components/RailSkeleton and
-// LessonsSection/components/DayLessonsSkeleton render, which is why it
-// lives here rather than under either one.
+// block-size once real data replaces it. Shared by LessonCardSkeleton, which
+// HomeRails/components/RailSkeleton and components/LessonsGridSkeleton both
+// render. One of those now sits outside HomePage, so this no longer lives
+// at its callers' common ancestor; lifting LessonCard and its skeleton out
+// of HomePage is a deferred change.
 export const SKELETON_BODY_HEIGHT = '104px';
 
 // The poster's width-to-height ratio, as a plain number so CSS `aspect-ratio`
 // can read it directly. The one place this ratio is written: LessonCard,
-// LessonCardSkeleton and LessonRail's arrow-centring calc all read it from
-// here, so a future change to the ratio cannot leave one of them stale
-// (design review, item: "the poster aspect ratio is written in three
-// places"). Stays 3:4, not the 2:3 the design doc states elsewhere; the
-// human chose the shipped code over the doc, and the doc is being corrected
-// separately.
+// LessonCardSkeleton, LessonRail's arrow-centring calc and WomensAreaTile's
+// own plum area all read it from here, so a future change to the ratio
+// cannot leave one of them stale (design review, item: "the poster aspect
+// ratio is written in three places"). Stays 3:4, not the 2:3 the design doc
+// states elsewhere; the human chose the shipped code over the doc, and the
+// doc is being corrected separately.
 export const POSTER_ASPECT_RATIO = 3 / 4;

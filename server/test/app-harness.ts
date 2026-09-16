@@ -7,6 +7,7 @@ import { registerHealthRoutes } from '../src/api/health';
 import { registerHomeRoutes } from '../src/api/home';
 import { registerLessonRoutes } from '../src/api/lessons';
 import { registerRabbiDirectoryRoutes } from '../src/api/rabbis';
+import { registerWomenAreaRoutes } from '../src/api/women';
 import { db } from '../src/db/client';
 import { registerErrorHandler } from '../src/plugins/error-handler';
 import { CLIENT_BUILD_DIR, registerSsr } from '../src/plugins/ssr';
@@ -71,6 +72,7 @@ export const buildApp = async (): Promise<FastifyInstance> => {
   await registerHomeRoutes(app);
   await registerCityRoutes(app);
   await registerRabbiDirectoryRoutes(app);
+  await registerWomenAreaRoutes(app);
   await registerSsr(app);
   registerErrorHandler(app);
   return app;

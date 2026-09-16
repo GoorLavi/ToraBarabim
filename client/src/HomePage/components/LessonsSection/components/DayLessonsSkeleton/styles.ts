@@ -20,19 +20,5 @@ export const DayLessonsSkeleton = css(
       line-height: ${theme.typography.sectionHeading.desktop.lineHeight};
     }
   }
-
-  > .grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: ${theme.spacing.lg};
-
-    @media (min-width: ${theme.breakpoints.md}) {
-      grid-template-columns: repeat(3, 1fr);
-    }
-
-    @media (min-width: ${theme.breakpoints.xl}) {
-      grid-template-columns: repeat(4, 1fr);
-    }
-  }
 `,
 );
