@@ -186,6 +186,18 @@ describe('public API', () => {
       const res = await app.inject({ method: 'GET', url: `/v1/cities?q=${'א'.repeat(101)}` });
       assert.equal(res.statusCode, 400);
     });
+
+    // An exact name match outranks every other tier (population, then name)
+    // regardless of lesson count, so this pins the ordering the search's
+    // two-step query (cities first, lesson counts joined in memory after)
+    // must preserve.
+    test('an exact name match is ordered first', async () => {
+      const res = await app.inject({ method: 'GET', url: `/v1/cities?q=${encodeURIComponent(SEEDED_CITY_NAME)}` });
+      assert.equal(res.statusCode, 200);
+      const { items } = res.json() as { items: CitySearchResult[] };
+      assert.ok(items.length > 0);
+      assert.equal(items[0]?.name, SEEDED_CITY_NAME);
+    });
   });
 
   test('GET /v1/cities/directory groups only cities that have a lesson, and every area and city carries a slug', async () => {

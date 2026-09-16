@@ -1,5 +1,5 @@
 import type { Area } from '@torabarabim/common';
-import { asc, desc, eq, like, sql } from 'drizzle-orm';
+import { asc, desc, eq, inArray, like, sql } from 'drizzle-orm';
 
 import { db } from '../../db/client';
 import { cities, lessons, rabbis } from '../../db/schema';
@@ -37,28 +37,35 @@ export const search = async (query: CitySearchQuery): Promise<CitySearchResult[]
 
   const pattern = `${escapeLikePattern(q)}%`;
 
-  const rows = await db
-    .select({
-      code: cities.code,
-      nameHe: cities.nameHe,
-      area: cities.area,
-      lessonCount: sql<number>`count(${lessons.id})::int`,
-    })
+  const matchedCities = await db
+    .select({ code: cities.code, nameHe: cities.nameHe, area: cities.area })
     .from(cities)
-    .leftJoin(lessons, eq(lessons.cityCode, cities.code))
     .where(like(cities.nameHe, pattern))
-    // Grouping by the primary key alone is enough for Postgres to let every
-    // other selected or ordered column of `cities` through ungrouped.
-    .groupBy(cities.code)
     // Exact matches first, then largest population first (a city with no
     // population row sorts last within its tier, never first), then
     // alphabetically as the final tiebreak.
     .orderBy(desc(eq(cities.nameHe, q)), sql`${cities.population} DESC NULLS LAST`, asc(cities.nameHe))
     .limit(CITY_SEARCH_LIMIT);
 
-  return rows.map((row) => ({
+  if (matchedCities.length === 0) return [];
+
+  // The ordering above never depends on lessonCount, so counting lessons for
+  // only these already-limited codes and joining in memory returns exactly
+  // the same rows in the same order as the single leftJoin-and-group query
+  // did, without making Postgres aggregate a join across every prefix match
+  // before it can order and limit.
+  const matchedCodes = matchedCities.map((row) => row.code);
+  const countRows = await db
+    .select({ cityCode: lessons.cityCode, count: sql<number>`count(*)::int` })
+    .from(lessons)
+    .where(inArray(lessons.cityCode, matchedCodes))
+    .groupBy(lessons.cityCode);
+
+  const lessonCountByCode = new Map(countRows.map((row) => [row.cityCode, row.count] as const));
+
+  return matchedCities.map((row) => ({
     ...toResolvedCity(row),
-    lessonCount: row.lessonCount,
+    lessonCount: lessonCountByCode.get(row.code) ?? 0,
     areaName: AREA_NAMES_HE[row.area],
   }));
 };

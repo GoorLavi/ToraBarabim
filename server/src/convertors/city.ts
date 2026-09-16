@@ -33,7 +33,7 @@ export const toCitySearchResult = (record: CitySearchResultRecord): CitySearchRe
   lessonCount: record.lessonCount,
 });
 
-export const toCityList = (records: CitySearchResultRecord[]): { items: CitySearchResult[] } => ({
+export const toCitySearchResponse = (records: CitySearchResultRecord[]): { items: CitySearchResult[] } => ({
   items: records.map(toCitySearchResult),
 });
 
