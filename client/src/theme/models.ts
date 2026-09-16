@@ -72,7 +72,7 @@ export interface ThemeTypography {
   secondary: ThemeTypeRole;
   tagAndCaption: ThemeTypeRole;
   // The floor for a lesson-poster card in the two-column phone grid, where
-  // the card is roughly 173px wide (design-system.md, Type): "the card title
+  // the card is roughly 171px wide (design-system.md, Type): "the card title
   // steps down to 15 / 21 with its supporting lines at 14 / 20. That is the
   // floor, not a licence to shrink further."
   cardTitleCompact: ThemeTypeRole;

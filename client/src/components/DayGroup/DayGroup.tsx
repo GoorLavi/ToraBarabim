@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-import { LessonCard } from '~/HomePage/components/LessonCard/LessonCard';
+import { LessonsGrid } from '~/components/LessonsGrid/LessonsGrid';
 
 import type { DayGroupProps } from './models';
 import * as styles from './styles';
@@ -13,13 +13,7 @@ export const DayGroup = styled(({ className, heading, items, surface }: DayGroup
     <h2 className="heading" dir="auto">
       {heading}
     </h2>
-    <ul className="grid">
-      {items.map((item) => (
-        <li className="cell" key={`${item.lessonId}-${item.date}`}>
-          <LessonCard {...{ lesson: item, surface }} />
-        </li>
-      ))}
-    </ul>
+    <LessonsGrid {...{ items, surface }} />
   </section>
 ))`
   ${styles.DayGroup}

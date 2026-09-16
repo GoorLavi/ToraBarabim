@@ -13,6 +13,7 @@ evals/
     case-01-bare-rabbi-name/    input.diff + expected.md
     case-02-physical-css/       input.diff + expected.md
     case-03-empty-search-404/   input.diff + expected.md
+    case-04-duplicated-grid/    input.diff + expected.md
 ```
 
 Each case is a synthetic diff (`input.diff`) plus the findings the agent **must** flag

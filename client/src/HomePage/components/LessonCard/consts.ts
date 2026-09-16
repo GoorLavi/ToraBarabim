@@ -20,7 +20,7 @@ export const LESSON_TOPIC_LABELS: Record<LessonTopic, string> = {
 };
 
 // The floor from design-system.md, Type ("the card title steps down to
-// 15 / 21... in a two-column poster grid on a phone, roughly 173px wide")
+// 15 / 21... in a two-column poster grid on a phone, roughly 171px wide")
 // is a property of the card's own rendered width, not of the viewport: a
 // rail card can be 200px wide on the same 375px phone. Stepped with
 // `@container` in styles.ts instead of a viewport media query.

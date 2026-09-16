@@ -25,10 +25,11 @@ export const RAIL_CONTEXT_LINE = 'שיעורים בכל הארץ בשבועיי�
 
 // Mirrors the real `LessonCard` body block's rough height (title, meta and
 // city lines plus padding), so a loading skeleton's card does not jump in
-// block-size once real data replaces it. Shared by LessonCardSkeleton, the
-// one skeleton card both HomeRails/components/RailSkeleton and
-// LessonsSection/components/DayLessonsSkeleton render, which is why it
-// lives here rather than under either one.
+// block-size once real data replaces it. Shared by LessonCardSkeleton, which
+// HomeRails/components/RailSkeleton and components/LessonsGridSkeleton both
+// render. One of those now sits outside HomePage, so this no longer lives
+// at its callers' common ancestor; lifting LessonCard and its skeleton out
+// of HomePage is a deferred change.
 export const SKELETON_BODY_HEIGHT = '104px';
 
 // The poster's width-to-height ratio, as a plain number so CSS `aspect-ratio`
