@@ -4,11 +4,12 @@ export const TILE_HEADING = 'שיעורים לנשים';
 export const TILE_LINE = 'לפי יום, לפי עיר ולפי רב או רבנית';
 export const TILE_LINK_LABEL = 'לכל השיעורים לנשים';
 
-// The tile's own width now tracks the rail's card width continuously
-// (LessonRail/helpers.ts, railCardWidth), rather than stepping at three
-// fixed breakpoints, so the emblem is sized as a live percentage of it
-// instead of a matching set of fixed steps (styles.ts).
-export const EMBLEM_WIDTH_PERCENT = '44%';
+// 44 percent of the CARD's own width (design spec), read via the rail's own
+// width formula (LessonRail/helpers.ts, railCardWidth) rather than a CSS
+// percentage: a percentage on `.emblem` would resolve against `.plum`'s own
+// content box, which is narrower than the card by `.plum`'s own inline
+// padding, landing short of 44 percent every time (styles.ts).
+export const EMBLEM_WIDTH_FACTOR = 0.44;
 // The floor the emblem shrinks to, first, if the plum area ever runs short
 // (styles.ts's container queries): below this it stops reading as
 // candlesticks. 56 at the design's own measurement, landed on just above

@@ -1,9 +1,21 @@
 import { css } from 'styled-components';
 
 import { CARD_WIDE_THRESHOLD } from '~/HomePage/components/LessonCard/consts';
+import { RAIL_COLUMNS_MD, RAIL_COLUMNS_PHONE, RAIL_COLUMNS_XL } from '~/HomePage/components/LessonRail/consts';
+import { railCardWidth, railEdgeOffset } from '~/HomePage/components/LessonRail/helpers';
 import { POSTER_ASPECT_RATIO } from '~/HomePage/consts';
+import type { Theme } from '~/theme/models';
 
-import { EMBLEM_SIZE_FLOOR, EMBLEM_WIDTH_PERCENT } from './consts';
+import { EMBLEM_SIZE_FLOOR, EMBLEM_WIDTH_FACTOR } from './consts';
+
+// The same three breakpoints and the same formula the rail's own `<li>`
+// already uses to size a card (LessonRail/styles.ts, LessonRail/helpers.ts):
+// this is the one place the tile's rendered width is computed, so reusing
+// it here for the emblem, rather than a CSS percentage that would resolve
+// against `.plum`'s own narrower content box, keeps a single source of
+// truth instead of a second number that could drift from it.
+const emblemInlineSize = (theme: Theme, columns: number, isWide: boolean): string =>
+  `max(${EMBLEM_SIZE_FLOOR}px, calc(${EMBLEM_WIDTH_FACTOR} * ${railCardWidth(theme, columns, railEdgeOffset(theme, isWide))}))`;
 
 export const WomensAreaTile = css(
   ({ theme }) => `
@@ -65,12 +77,25 @@ export const WomensAreaTile = css(
 
     > .emblem {
       flex-shrink: 0;
-      /* 44 percent of the tile's own width (design spec), floored so it
-         never stops reading as candlesticks; the tile's width itself now
-         tracks the rail's card width continuously, not in fixed steps
-         (consts.ts). */
-      inline-size: max(${EMBLEM_SIZE_FLOOR}px, ${EMBLEM_WIDTH_PERCENT});
-      block-size: max(${EMBLEM_SIZE_FLOOR}px, ${EMBLEM_WIDTH_PERCENT});
+      /* 44 percent of the CARD's own width (consts.ts, EMBLEM_WIDTH_FACTOR),
+         stepped at the same three breakpoints the card width itself steps
+         at (LessonRail/helpers.ts, railCardWidth). */
+      inline-size: ${emblemInlineSize(theme, RAIL_COLUMNS_PHONE, false)};
+      /* The height follows the width rather than repeating the same
+         calculation: a second, independent height formula could drift
+         from the width one, and the ratio already gives a square for free.
+         The auto height is what lets the ratio apply at all, since the
+         component's own height attribute would otherwise pin it. */
+      block-size: auto;
+      aspect-ratio: 1;
+
+      @media (min-width: ${theme.breakpoints.md}) {
+        inline-size: ${emblemInlineSize(theme, RAIL_COLUMNS_MD, true)};
+      }
+
+      @media (min-width: ${theme.breakpoints.xl}) {
+        inline-size: ${emblemInlineSize(theme, RAIL_COLUMNS_XL, true)};
+      }
     }
 
     > .count {
