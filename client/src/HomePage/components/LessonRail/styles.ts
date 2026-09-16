@@ -2,7 +2,8 @@ import { css } from 'styled-components';
 
 import { POSTER_ASPECT_RATIO } from '~/HomePage/consts';
 
-import { CARD_WIDTH_LG, CARD_WIDTH_MD, CARD_WIDTH_PHONE } from './consts';
+import { EDGE_FADE_WIDTH_PHONE, RAIL_COLUMNS_MD, RAIL_COLUMNS_PHONE, RAIL_COLUMNS_XL } from './consts';
+import { railCardWidth, railEdgeOffset } from './helpers';
 
 export const LessonRail = css(
   ({ theme }) => `
@@ -25,14 +26,13 @@ export const LessonRail = css(
 
   > .scrollerWrap {
     position: relative;
-    /* Cancels .content's own padding-inline exactly, so the scroller reaches
-       the same edge .content itself reaches: the viewport edge below the
-       site's content cap (theme.layout.contentMaxWidth), the content
-       column's edge above it. */
-    margin-inline: calc(-1 * ${theme.spacing.lg});
+    /* Cancels the content band's own edge offset exactly, so the scroller
+       reaches the same edge the band itself reaches at every width, not
+       just up to its cap (helpers.ts, railEdgeOffset). */
+    margin-inline: calc(-1 * ${railEdgeOffset(theme, false)});
 
     @media (min-width: ${theme.breakpoints.md}) {
-      margin-inline: calc(-1 * ${theme.spacing.xl});
+      margin-inline: calc(-1 * ${railEdgeOffset(theme, true)});
     }
 
     > .arrow {
@@ -44,12 +44,17 @@ export const LessonRail = css(
         justify-content: center;
         position: absolute;
         z-index: 1;
-        /* Centred on the poster (\`POSTER_ASPECT_RATIO\` at \`${CARD_WIDTH_LG}\`
-           wide, the card width at this breakpoint), not on the whole card:
-           50% of \`.scrollerWrap\` centred on the card's text body too and
-           landed the arrows in the poster's lower third (design review,
-           item 11). */
-        inset-block-start: calc(${CARD_WIDTH_LG} / ${POSTER_ASPECT_RATIO} / 2 - 24px);
+        /* Centred on the poster, not the whole card: half the poster's own
+           height (the card's own width divided by POSTER_ASPECT_RATIO,
+           the same formula LessonCard's own poster uses) minus half the
+           button's own 48px, so the button's centre lands on the poster's
+           centre rather than its own top edge. Live, not the single 1280
+           figure Figma draws: below \`xl\` there are still only 3 columns
+           (RAIL_COLUMNS_MD), so the card, and the poster, are wider there
+           than at \`xl\` and up (RAIL_COLUMNS_XL), where a 4th column lands. */
+        inset-block-start: calc(
+          ${railCardWidth(theme, RAIL_COLUMNS_MD, railEdgeOffset(theme, true))} / ${POSTER_ASPECT_RATIO} / 2 - 24px
+        );
         inline-size: 48px;
         block-size: 48px;
         border: 1px solid ${theme.colors.border};
@@ -57,6 +62,12 @@ export const LessonRail = css(
         background: ${theme.colors.surface};
         color: ${theme.colors.primary};
         box-shadow: ${theme.shadows.card};
+
+        @media (min-width: ${theme.breakpoints.xl}) {
+          inset-block-start: calc(
+            ${railCardWidth(theme, RAIL_COLUMNS_XL, railEdgeOffset(theme, true))} / ${POSTER_ASPECT_RATIO} / 2 - 24px
+          );
+        }
 
         &:disabled {
           opacity: 0.4;
@@ -77,6 +88,36 @@ export const LessonRail = css(
       }
     }
 
+    > .fade {
+      display: none;
+      position: absolute;
+      z-index: 1;
+      inset-block: 0;
+      /* The row's end, the direction cards keep coming from as it scrolls:
+         positioning stays logical (inset-inline-end). */
+      inset-inline-end: 0;
+      inline-size: ${EDGE_FADE_WIDTH_PHONE};
+      /* The gradient's own axis stays physical (\`to left\`, not an
+         inline-end keyword): CSS cannot express a gradient direction in
+         logical terms, and the page is permanently RTL, never bilingual,
+         so "left" here can never end up wrong. */
+      background: linear-gradient(
+        to left,
+        ${theme.colors.bg} 0%,
+        color-mix(in srgb, ${theme.colors.bg} 60%, transparent) 50%,
+        transparent 100%
+      );
+      pointer-events: none;
+
+      @media (min-width: ${theme.breakpoints.md}) {
+        inline-size: ${theme.spacing.xxl};
+      }
+
+      &.visible {
+        display: block;
+      }
+    }
+
     > .scrollerGroup {
       overflow-x: auto;
       /* Explicit, not left to default: setting only \`overflow-x\` computes
@@ -90,14 +131,14 @@ export const LessonRail = css(
       overflow-y: hidden;
       overscroll-behavior-inline: contain;
       scroll-snap-type: inline proximity;
-      padding-inline: ${theme.spacing.lg};
+      padding-inline: ${railEdgeOffset(theme, false)};
       padding-block: ${theme.spacing.xs};
-      scroll-padding-inline-start: ${theme.spacing.lg};
+      scroll-padding-inline-start: ${railEdgeOffset(theme, false)};
       scrollbar-width: none;
 
       @media (min-width: ${theme.breakpoints.md}) {
-        padding-inline: ${theme.spacing.xl};
-        scroll-padding-inline-start: ${theme.spacing.xl};
+        padding-inline: ${railEdgeOffset(theme, true)};
+        scroll-padding-inline-start: ${railEdgeOffset(theme, true)};
       }
 
       &::-webkit-scrollbar {
@@ -120,29 +161,21 @@ export const LessonRail = css(
 
       > .scroller {
         display: flex;
-        gap: ${theme.spacing.md};
-
-        @media (min-width: ${theme.breakpoints.md}) {
-          gap: ${theme.spacing.lg};
-        }
+        gap: ${theme.spacing.lg};
 
         > li {
-          flex: 0 0 ${CARD_WIDTH_PHONE};
+          /* The grid's own column width at each of its breakpoints
+             (components/LessonsGrid/styles.ts), computed rather than
+             retyped (helpers.ts, railCardWidth), so the two cannot drift. */
+          flex: 0 0 ${railCardWidth(theme, RAIL_COLUMNS_PHONE, railEdgeOffset(theme, false))};
           scroll-snap-align: start;
 
           @media (min-width: ${theme.breakpoints.md}) {
-            flex-basis: ${CARD_WIDTH_MD};
+            flex-basis: ${railCardWidth(theme, RAIL_COLUMNS_MD, railEdgeOffset(theme, true))};
           }
 
-          @media (min-width: ${theme.breakpoints.lg}) {
-            flex-basis: ${CARD_WIDTH_LG};
-          }
-
-          /* The tile now carries its own fixed proportions (plum area,
-             text block) rather than stretching to match a lesson card's
-             actual, content-dependent height. */
-          &.tile {
-            align-self: flex-start;
+          @media (min-width: ${theme.breakpoints.xl}) {
+            flex-basis: ${railCardWidth(theme, RAIL_COLUMNS_XL, railEdgeOffset(theme, true))};
           }
         }
       }

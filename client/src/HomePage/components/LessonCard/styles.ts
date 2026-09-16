@@ -9,6 +9,11 @@ export const LessonCard = css(
   container-type: inline-size;
   display: flex;
   flex-direction: column;
+  /* Fills its own \`<li>\`: the rail and the grid both stretch every item in
+     a row to the tallest one (a wrapped title, most often), and without
+     this a shorter card would stop at its own natural height instead,
+     leaving the row's bottom edge ragged. */
+  block-size: 100%;
   overflow: hidden;
   border: 1px solid ${theme.colors.border};
   border-radius: ${theme.radii.lg};
@@ -40,6 +45,9 @@ export const LessonCard = css(
     position: relative;
     overflow: hidden;
     aspect-ratio: ${POSTER_ASPECT_RATIO};
+    /* Never distorted: the row's stretch lands in \`.body\` below, not here,
+       so a real portrait never gets cropped or stretched off its ratio. */
+    flex-shrink: 0;
     background: ${theme.colors.primarySoft};
 
     > .image {
@@ -111,6 +119,10 @@ export const LessonCard = css(
   }
 
   > .body {
+    /* Absorbs the row's own stretch (the poster above never does, see
+       \`.poster\`): real content, already top-aligned by default, simply
+       gets more room below it rather than the poster distorting. */
+    flex: 1 1 auto;
     display: flex;
     flex-direction: column;
     gap: ${theme.spacing.xs};

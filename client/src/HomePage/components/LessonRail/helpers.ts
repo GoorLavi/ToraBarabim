@@ -1,6 +1,34 @@
 import type { LessonOccurrence } from '@torabarabim/common';
 
+import type { Theme } from '~/theme/models';
+
 import { SCROLL_STEP_RATIO } from './consts';
+
+// The inline distance from the true viewport edge to the content band's
+// own edge, at any width: below `md` this is just the band's own gutter
+// (`~/styles/contentBand.ts`, `contentGutterInline`); from `md` up it also
+// has to reproduce the band's own cap (`contentBandCap`, `max-inline-size`
+// plus a centring `margin-inline: auto`), since the rail bleeds past the
+// band entirely (`margin-inline: calc(-1 * ...)` in styles.ts) and so gets
+// none of that centring for free once the viewport is wider than the cap.
+// `contentGutterInline` itself only has to get this right for the padding
+// it actually applies, dropping to 0 past that point because the parent's
+// own auto margin already centres it there; the rail, having escaped that
+// parent, is the one place this combined value is needed as a single
+// number, which is why it lives here rather than in contentBand.ts (root
+// CLAUDE.md, "no abstraction before the second real caller").
+export const railEdgeOffset = (theme: Theme, isWide: boolean): string =>
+  isWide ? `max(${theme.spacing.xl}, calc((100vw - ${theme.layout.contentMaxWidth}) / 2))` : theme.spacing.lg;
+
+// The rail's card width at a given column count, computed the same way the
+// grid's own `1fr` columns resolve theirs: the viewport, minus the band's
+// edge offset on both sides, minus the gaps between columns, divided by
+// the column count. Passing `railEdgeOffset`'s own wide value in already
+// reproduces the grid's ceiling at `theme.layout.contentMaxWidth` without a
+// separate `min()`: past that width the offset grows in lockstep with the
+// viewport, so the two cancel and this settles at a constant.
+export const railCardWidth = (theme: Theme, columns: number, edgeOffset: string): string =>
+  `calc((100vw - 2 * ${edgeOffset} - ${columns - 1} * ${theme.spacing.lg}) / ${columns})`;
 
 // `scrollLeft`'s sign in a `direction: rtl` container is not consistent
 // enough to assign directly: deriving the sign from the computed direction
