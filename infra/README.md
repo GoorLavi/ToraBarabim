@@ -180,10 +180,12 @@ aws ssm put-parameter \
 `TelegramBotTokenParamName` on `TorabarabimServer` (default
 `/torabarabim/telegram-bot-token`) carries only the parameter's *name* into the stack;
 the Lambda reads the value itself at invocation time with `ssm:GetParameter` and
-`WithDecryption: true`, scoped to that one parameter's ARN, plus `kms:Decrypt` on the
-account's default `aws/ssm` key. Change the parameter name only if you also pass a
-matching `--parameters TorabarabimServer:TelegramBotTokenParamName=...` on every future
-deploy.
+`WithDecryption: true`, scoped to that one parameter's ARN, plus `kms:Decrypt` scoped by
+a `kms:ViaService` condition to calls made through SSM in this account and region: an
+IAM policy statement cannot identify a KMS key by alias, only by key ARN, and the
+account's default `aws/ssm` key has no ARN of its own to name here. Change the parameter
+name only if you also pass a matching
+`--parameters TorabarabimServer:TelegramBotTokenParamName=...` on every future deploy.
 
 **Verifying it works, without waiting for a real outage:** publish a plain string
 directly to the topic; the formatter recognizes anything that is not CloudWatch's own

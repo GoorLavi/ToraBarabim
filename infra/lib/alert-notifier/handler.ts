@@ -27,7 +27,21 @@ const isTelegramCredentials = (value: unknown): value is TelegramCredentials => 
 
 // A caught value is not guaranteed to be an Error (a thrown string or
 // object is valid JavaScript), so narrow with a check rather than casting.
-const describeError = (error: unknown): string => (error instanceof Error ? error.message : String(error));
+// The AWS SDK's own errors carry their useful identity in `name` (e.g.
+// AccessDeniedException, ParameterNotFound), while `message` is often empty
+// or a generic "UnknownError". Never touches the parameter value or a
+// response body. Every branch must still return something identifying: a
+// bare name-plus-colon with nothing after it is exactly as useless as the
+// empty string this replaced.
+const describeError = (error: unknown): string => {
+  if (!(error instanceof Error)) return String(error);
+  const hasUsefulName = Boolean(error.name) && error.name !== 'Error';
+  const hasMessage = Boolean(error.message) && error.message !== error.name;
+  if (hasUsefulName && hasMessage) return `${error.name}: ${error.message}`;
+  if (hasUsefulName) return error.name;
+  if (hasMessage) return error.message;
+  return error.name || 'Error with no name or message';
+};
 
 const ssmClient = new SSMClient({});
 
