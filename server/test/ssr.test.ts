@@ -103,6 +103,22 @@ describe('SSR rendering seam', () => {
     });
   });
 
+  describe('the document shape', () => {
+    // Regression test for quirks mode: styled-components' streaming
+    // interleave prepends collected CSS to the front of React's first raw
+    // chunk, which is the doctype glued to `<html ...>` by react-dom-server
+    // itself. Without a fix, the doctype either lands after the `<style>`
+    // block (quirks mode) or, from an earlier broken attempt at a fix, twice.
+    test('a rendered page starts with exactly one doctype', async () => {
+      const res = await app.inject({ method: 'GET', url: '/' });
+      assert.equal(res.statusCode, 200);
+      assert.match(res.body, /^<!doctype html>/i);
+
+      const doctypeCount = (res.body.match(/<!doctype html>/gi) ?? []).length;
+      assert.equal(doctypeCount, 1, `expected exactly one doctype, got ${doctypeCount}`);
+    });
+  });
+
   describe('GET /health', () => {
     test('reports ok when the app is mounted the way production mounts it', async () => {
       const res = await app.inject({ method: 'GET', url: '/health' });
