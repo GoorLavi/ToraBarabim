@@ -2,11 +2,7 @@ import type { RabbiHonorific, RabbiProminence } from '@torabarabim/common';
 
 export const BACK_TO_LIST_LABEL = '→ חזרה לרשימת הרבנים';
 export const NEW_RABBI_HEADING = 'רב חדש';
-// Name and photo are the only required fields; title and bio are optional.
-// The exact captured wording repeats itself in the brief handed to this
-// slice, so it could not be confirmed; written fresh, honestly, in its
-// place (see the report for this slice).
-export const TWO_FIELDS_NOTE = 'שם ותמונה הם שדות חובה. אי אפשר לשמור רב בלי תמונה, כי באתר אין כרטיס בלי תמונה. תואר ותקציר אינם חובה.';
+export const REQUIRED_FIELDS_NOTE = 'רק השם הוא שדה חובה. תמונה, תואר ותקציר אפשר להוסיף גם אחר כך.';
 
 export const HONORIFIC_LABEL = 'הרב או הרבנית';
 export const HONORIFIC_HELPER = 'רבנית יכולה ללמד רק שיעורים לנשים. אי אפשר לשנות את התואר אחרי היצירה.';
@@ -61,7 +57,6 @@ export const SAVE_LABEL = 'שמירת הרב';
 export const SAVING_LABEL = 'שומרים...';
 
 export const REQUIRED_NAME_ERROR = 'יש למלא שם רב';
-export const REQUIRED_PHOTO_ERROR = 'יש לצרף תמונת רב';
 export const UNSUPPORTED_TYPE_CLIENT_ERROR = 'ניתן להעלות קובץ מסוג JPG או PNG בלבד';
 export const TOO_LARGE_CLIENT_ERROR = 'התמונה חורגת מהגודל המרבי של 5MB';
 

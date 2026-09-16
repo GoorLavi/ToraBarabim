@@ -128,7 +128,7 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
           <h1 className="heading" dir="auto">
             {pageHeading(form)}
           </h1>
-          <p className="subtext">{consts.TWO_FIELDS_NOTE}</p>
+          <p className="subtext">{consts.REQUIRED_FIELDS_NOTE}</p>
 
           {id ? (
             <ReadOnlyField

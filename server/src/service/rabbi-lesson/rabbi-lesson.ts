@@ -6,6 +6,8 @@ import { db } from '../../db/client';
 import { cities, lessonExceptions, lessons, rabbis } from '../../db/schema';
 import { addDays, todayInIsrael } from '../lesson/israel-time';
 import { applyException, expandLesson, type ResolvedOccurrence } from '../lesson/occurrence';
+import { dismissImportKey } from '../shared/dismiss-import';
+import { provenanceAfterHandEdit } from '../shared/hand-edit';
 import { toPlace } from '../shared/place';
 import { assertAudienceAllowedForRabbi } from '../shared/rabbanit-guard';
 import { toRabbiSummary as toRabbi } from '../shared/rabbi-summary';
@@ -30,6 +32,7 @@ const lessonSelection = {
   startTime: lessons.startTime,
   durationMinutes: lessons.durationMinutes,
   notes: lessons.notes,
+  provenance: lessons.provenance,
   updatedAt: lessons.updatedAt,
 };
 
@@ -59,6 +62,7 @@ const toRecord = (row: JoinedLessonRow): RabbiLessonRecord => ({
   startTime: row.startTime,
   durationMinutes: row.durationMinutes,
   notes: row.notes ?? undefined,
+  provenance: row.provenance,
 });
 
 const verifyCity = async (cityCode: number): Promise<void> => {
@@ -118,6 +122,14 @@ export const create = async (rabbiId: string, input: CreateRabbiLessonInput): Pr
 export const update = async (rabbiId: string, id: string, input: UpdateRabbiLessonInput): Promise<RabbiLessonRecord> => {
   await Promise.all([verifyCity(input.place.cityCode), assertAudienceAllowedForRabbi(rabbiId, input.audience)]);
 
+  const existingRows = await db
+    .select({ provenance: lessons.provenance })
+    .from(lessons)
+    .where(and(eq(lessons.id, id), eq(lessons.rabbiId, rabbiId)))
+    .limit(1);
+  const existing = existingRows[0];
+  if (!existing) throw new LessonNotFoundError(id);
+
   const [row] = await db
     .update(lessons)
     .set({
@@ -139,6 +151,7 @@ export const update = async (rabbiId: string, id: string, input: UpdateRabbiLess
       startTime: input.startTime,
       durationMinutes: input.durationMinutes,
       notes: input.notes ?? null,
+      provenance: provenanceAfterHandEdit(existing.provenance),
       updatedAt: new Date(),
     })
     .where(and(eq(lessons.id, id), eq(lessons.rabbiId, rabbiId)))
@@ -153,14 +166,16 @@ export const update = async (rabbiId: string, id: string, input: UpdateRabbiLess
 export const remove = async (rabbiId: string, id: string): Promise<void> => {
   await db.transaction(async (tx) => {
     const rows = await tx
-      .select({ id: lessons.id })
+      .select({ id: lessons.id, importKey: lessons.importKey })
       .from(lessons)
       .where(and(eq(lessons.id, id), eq(lessons.rabbiId, rabbiId)))
       .limit(1);
-    if (!rows[0]) throw new LessonNotFoundError(id);
+    const row = rows[0];
+    if (!row) throw new LessonNotFoundError(id);
 
     await tx.delete(lessonExceptions).where(eq(lessonExceptions.lessonId, id));
     await tx.delete(lessons).where(eq(lessons.id, id));
+    await dismissImportKey(row.importKey, tx);
   });
 };
 

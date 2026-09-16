@@ -1,4 +1,4 @@
-import type { Weekday } from '@torabarabim/common';
+import type { LessonProvenance, Weekday } from '@torabarabim/common';
 
 import type { LessonFormField } from './models';
 
@@ -7,6 +7,13 @@ export const NEW_LESSON_HEADING = 'שיעור חדש';
 // `validateLessonForm` requires every field on the form except the lesson
 // title, so this states that instead of naming a shorter, wrong subset.
 export const REQUIRED_FIELDS_NOTE = 'כל השדות הם שדות חובה, פרט לשם השיעור.';
+
+// Shown only for a loaded lesson whose `provenance` is not 'manual'
+// (`common/src/agent-import.ts`). No entry for 'manual', so nothing renders.
+export const PROVENANCE_NOTICES: Partial<Record<LessonProvenance, string>> = {
+  imported: 'השיעור הזה מתעדכן אוטומטית מהייבוא השבועי. אם שומרים כאן שינוי, הייבוא כבר לא יעדכן אותו.',
+  imported_edited: 'השיעור נערך כאן ידנית, ולכן הייבוא השבועי כבר לא מעדכן אותו.',
+};
 
 export const RABBI_SECTION_HEADING = 'מי מוסר את השיעור';
 export const RABBI_SEARCH_PLACEHOLDER = 'חיפוש רב לפי שם';

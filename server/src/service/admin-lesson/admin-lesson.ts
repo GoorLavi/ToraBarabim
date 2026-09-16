@@ -4,6 +4,8 @@ import { nanoid } from 'nanoid';
 
 import { db } from '../../db/client';
 import { cities, lessonExceptions, lessons } from '../../db/schema';
+import { dismissImportKey } from '../shared/dismiss-import';
+import { provenanceAfterHandEdit } from '../shared/hand-edit';
 import { assertAudienceAllowedForHonorific, getRabbiHonorific } from '../shared/rabbanit-guard';
 import { LessonNotFoundError, ReferencedRabbiNotFoundError, UnknownCityError } from './errors';
 import type { CreateLessonInput, LessonListQuery, LessonListResult, LessonRecord, UpdateLessonInput } from './models';
@@ -27,6 +29,7 @@ const lessonSelection = {
   startTime: lessons.startTime,
   durationMinutes: lessons.durationMinutes,
   notes: lessons.notes,
+  provenance: lessons.provenance,
   updatedAt: lessons.updatedAt,
 };
 
@@ -56,6 +59,7 @@ const toRecord = (row: JoinedLessonRow): LessonRecord => ({
   startTime: row.startTime,
   durationMinutes: row.durationMinutes,
   notes: row.notes ?? undefined,
+  provenance: row.provenance,
 });
 
 // Verifies the rabbi and city references exist, and that a rabbanit is
@@ -122,6 +126,10 @@ export const create = async (input: CreateLessonInput): Promise<LessonRecord> =>
 export const update = async (id: string, input: UpdateLessonInput): Promise<LessonRecord> => {
   await verifyReferences(input.rabbiId, input.place.cityCode, input.audience);
 
+  const existingRows = await db.select({ provenance: lessons.provenance }).from(lessons).where(eq(lessons.id, id)).limit(1);
+  const existing = existingRows[0];
+  if (!existing) throw new LessonNotFoundError(id);
+
   const [row] = await db
     .update(lessons)
     .set({
@@ -144,6 +152,7 @@ export const update = async (id: string, input: UpdateLessonInput): Promise<Less
       startTime: input.startTime,
       durationMinutes: input.durationMinutes,
       notes: input.notes ?? null,
+      provenance: provenanceAfterHandEdit(existing.provenance),
       updatedAt: new Date(),
     })
     .where(eq(lessons.id, id))
@@ -157,10 +166,12 @@ export const update = async (id: string, input: UpdateLessonInput): Promise<Less
 // thing the admin might not expect to lose.
 export const remove = async (id: string): Promise<void> => {
   await db.transaction(async (tx) => {
-    const rows = await tx.select({ id: lessons.id }).from(lessons).where(eq(lessons.id, id)).limit(1);
-    if (!rows[0]) throw new LessonNotFoundError(id);
+    const rows = await tx.select({ id: lessons.id, importKey: lessons.importKey }).from(lessons).where(eq(lessons.id, id)).limit(1);
+    const row = rows[0];
+    if (!row) throw new LessonNotFoundError(id);
 
     await tx.delete(lessonExceptions).where(eq(lessonExceptions.lessonId, id));
     await tx.delete(lessons).where(eq(lessons.id, id));
+    await dismissImportKey(row.importKey, tx);
   });
 };

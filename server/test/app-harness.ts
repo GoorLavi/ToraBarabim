@@ -1,24 +1,35 @@
 import { readdir } from 'node:fs/promises';
 
 import Fastify, { type FastifyInstance } from 'fastify';
+import type postgres from 'postgres';
 
+import { registerAdminRoutes } from '../src/api/admin';
+import { registerAdminAuthRoutes } from '../src/api/admin/auth';
+import { registerAgentRoutes } from '../src/api/agent';
 import { registerCityRoutes } from '../src/api/cities';
 import { registerHealthRoutes } from '../src/api/health';
 import { registerHomeRoutes } from '../src/api/home';
 import { registerLessonRoutes } from '../src/api/lessons';
+import { registerRabbiRoutes } from '../src/api/rabbi';
+import { registerRabbiAuthRoutes } from '../src/api/rabbi/auth';
 import { registerRabbiDirectoryRoutes } from '../src/api/rabbis';
 import { registerWomenAreaRoutes } from '../src/api/women';
+import { loadConfig } from '../src/config';
 import { db } from '../src/db/client';
+import { registerCookies } from '../src/plugins/cookies';
+import { registerEmptyBodySupport } from '../src/plugins/empty-body';
 import { registerErrorHandler } from '../src/plugins/error-handler';
 import { CLIENT_BUILD_DIR, registerSsr } from '../src/plugins/ssr';
 
 // `db`'s exported type (`server/src/db/client.ts`) is annotated as
 // `PostgresJsDatabase`, which omits `$client`, but drizzle-orm's postgres-js
 // adapter always attaches the underlying `postgres` client under that key at
-// runtime. Needed here only to ping the database and to close the pool so
-// `node --test` can exit on its own.
-type RawPostgresClient = (strings: TemplateStringsArray, ...values: unknown[]) => Promise<unknown>;
-export const rawClient = (db as unknown as { $client: RawPostgresClient & { end: (options?: { timeout?: number }) => Promise<void> } }).$client;
+// runtime. Exported as the real `postgres.Sql` type (not a hand-rolled
+// subset), so a caller gets the whole client: tagged-template queries,
+// `.end()` to let `node --test` exit on its own, and `.begin()` for a test
+// that needs to hold a real transaction open (see agent-import.test.ts's
+// busy-lock test).
+export const rawClient = (db as unknown as { $client: postgres.Sql }).$client;
 
 // A missing or unreachable database must fail the whole suite loudly, with a
 // fix in hand, rather than have every test time out or fail with an opaque
@@ -74,6 +85,32 @@ export const buildApp = async (): Promise<FastifyInstance> => {
   await registerRabbiDirectoryRoutes(app);
   await registerWomenAreaRoutes(app);
   await registerSsr(app);
+  registerErrorHandler(app);
+  return app;
+};
+
+// A second app, for `agent-import.test.ts` only: the agent import routes,
+// plus the admin and rabbi routes the hand-edit and dismiss-on-delete
+// tests write through. No SSR catch-all: this suite never needs it, and
+// skipping it keeps this builder independent of a client build.
+//
+// `agentKey` is required, not read from config internally, so a caller can
+// pass `undefined` explicitly to reproduce `src/index.ts`'s own gate
+// (`if (config.importAgentKey) await registerAgentRoutes(...)`) for an
+// absent key: the agent group is then never registered at all, and a
+// request to it 404s exactly as it would in production, rather than
+// 401ing from a guard that is still mounted.
+export const buildAgentImportTestApp = async (agentKey: string | undefined): Promise<FastifyInstance> => {
+  const config = loadConfig(process.env);
+
+  const app = Fastify({ logger: false });
+  await registerCookies(app, config.sessionSecret);
+  registerEmptyBodySupport(app);
+  await registerAdminAuthRoutes(app);
+  await registerAdminRoutes(app);
+  await registerRabbiAuthRoutes(app);
+  await registerRabbiRoutes(app);
+  if (agentKey) await registerAgentRoutes(app, agentKey);
   registerErrorHandler(app);
   return app;
 };

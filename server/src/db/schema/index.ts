@@ -3,5 +3,6 @@ export * from './admin-users';
 export * from './cities';
 export * from './enums';
 export * from './lesson-exceptions';
+export * from './lesson-imports';
 export * from './lessons';
 export * from './rabbis';

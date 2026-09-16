@@ -1,8 +1,11 @@
 import type { Weekday } from '@torabarabim/common';
 import { z } from 'zod';
 
+import type { LessonProvenance } from '@torabarabim/common';
+
 import { LESSON_AUDIENCES, LESSON_TOPICS } from '../../db/schema/enums';
 import { DEFAULT_ADMIN_PAGE, DEFAULT_ADMIN_PAGE_SIZE, MAX_ADMIN_PAGE_SIZE } from '../admin-shared/consts';
+import { timeOfDaySchema } from '../shared/time';
 
 export const lessonIdParamSchema = z.object({
   id: z.string().trim().min(1),
@@ -18,8 +21,7 @@ export const lessonListQuerySchema = z.object({
 });
 export type LessonListQuery = z.infer<typeof lessonListQuerySchema>;
 
-// 'HH:mm', zero-padded, 24-hour.
-export const timeOfDaySchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "expected 'HH:mm'");
+export { timeOfDaySchema };
 
 // The venue is free text, except `cityCode`, which must resolve to a row in
 // `cities` (checked in the service, not here: a static schema cannot query
@@ -78,6 +80,7 @@ export interface LessonRecord {
   startTime: string;
   durationMinutes: number;
   notes?: string;
+  provenance: LessonProvenance;
 }
 
 export interface LessonListResult {

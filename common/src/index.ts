@@ -1,4 +1,5 @@
 export * from './admin';
+export * from './agent-import';
 export * from './area';
 export * from './area-directory';
 export * from './city';
@@ -9,6 +10,7 @@ export * from './rabbi-directory';
 export * from './place';
 export * from './lesson';
 export * from './lesson-exception';
+export * from './lesson-import-file';
 export * from './lesson-occurrence';
 export * from './rabbi-portal';
 export * from './women-area';

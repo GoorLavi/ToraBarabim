@@ -1,4 +1,4 @@
-import type { Area, LessonAudience, LessonTopic, RabbiHonorific, RabbiProminence } from '@torabarabim/common';
+import type { AgentImportLinkDecision, AgentImportRuleKind, Area, LessonAudience, LessonProvenance, LessonTopic, RabbiHonorific, RabbiProminence } from '@torabarabim/common';
 import { pgEnum } from 'drizzle-orm/pg-core';
 
 // Source of truth for the wire union types, mirrored here because a
@@ -34,6 +34,19 @@ export const LESSON_AUDIENCES = ['men', 'women', 'mixed'] as const satisfies rea
 
 export const RECURRENCE_KINDS = ['weekly', 'once'] as const;
 export const EXCEPTION_KINDS = ['cancelled', 'modified'] as const;
+
+// A lesson's provenance. 'manual' is entered by hand (admin or rabbi panel)
+// and never touched by the import. 'imported' came from the weekly agent
+// and is fair game for the agent to update or delete in place. A hand edit
+// to an 'imported' lesson flips it to 'imported_edited', which the import
+// then treats as protected (never overwritten) the same way it treats
+// 'manual', while still remembering the import_key so a later identical row
+// does not create a duplicate.
+export const LESSON_PROVENANCES = ['manual', 'imported', 'imported_edited'] as const satisfies readonly LessonProvenance[];
+
+export const LESSON_IMPORT_LINK_DECISIONS = ['linked', 'ignored'] as const satisfies readonly AgentImportLinkDecision[];
+export const LESSON_IMPORT_LINK_ORIGINS = ['auto', 'owner'] as const;
+export const LESSON_IMPORT_RULE_KINDS = ['city_alias', 'time_kind', 'audience_alias', 'topic_alias'] as const satisfies readonly AgentImportRuleKind[];
 
 export const RABBI_PROMINENCES = ['local', 'known', 'sought'] as const satisfies readonly RabbiProminence[];
 
@@ -73,3 +86,7 @@ export const exceptionKindEnum = pgEnum('exception_kind', EXCEPTION_KINDS);
 export const rabbiProminenceEnum = pgEnum('rabbi_prominence', RABBI_PROMINENCES);
 export const rabbiHonorificEnum = pgEnum('rabbi_honorific', RABBI_HONORIFICS);
 export const adminRoleEnum = pgEnum('admin_role', ADMIN_ROLES);
+export const lessonProvenanceEnum = pgEnum('lesson_provenance', LESSON_PROVENANCES);
+export const lessonImportLinkDecisionEnum = pgEnum('lesson_import_link_decision', LESSON_IMPORT_LINK_DECISIONS);
+export const lessonImportLinkOriginEnum = pgEnum('lesson_import_link_origin', LESSON_IMPORT_LINK_ORIGINS);
+export const lessonImportRuleKindEnum = pgEnum('lesson_import_rule_kind', LESSON_IMPORT_RULE_KINDS);

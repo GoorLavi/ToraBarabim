@@ -13,6 +13,7 @@ export const toLessonResponse = (record: LessonRecord): LessonResponse => ({
   startTime: record.startTime,
   durationMinutes: record.durationMinutes,
   notes: record.notes,
+  provenance: record.provenance,
 });
 
 export const toLessonListResponse = (result: LessonListResult): LessonListResponse => ({
