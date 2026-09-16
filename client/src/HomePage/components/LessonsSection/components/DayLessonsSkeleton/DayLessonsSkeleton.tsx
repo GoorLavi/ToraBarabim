@@ -13,7 +13,7 @@ import * as styles from './styles';
 export const DayLessonsSkeleton = styled(({ className, headingLabel }: DayLessonsSkeletonProps) => (
   <section className={className} aria-hidden="true">
     <h2 className="title" dir="auto">{headingLabel}</h2>
-    <LessonsGridSkeleton cellCount={INITIAL_VISIBLE_COUNT} />
+    <LessonsGridSkeleton {...{ cellCount: INITIAL_VISIBLE_COUNT }} />
   </section>
 ))`
   ${styles.DayLessonsSkeleton}

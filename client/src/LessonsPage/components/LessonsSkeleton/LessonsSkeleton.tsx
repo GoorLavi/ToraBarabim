@@ -16,7 +16,7 @@ export const LessonsSkeleton = styled(({ className }: LessonsSkeletonProps) => (
       <div className="titleBar" />
       <div className="subtitleBar" />
     </div>
-    <LessonsGridSkeleton cellCount={SKELETON_CARD_COUNT} />
+    <LessonsGridSkeleton {...{ cellCount: SKELETON_CARD_COUNT }} />
   </div>
 ))`
   ${styles.LessonsSkeleton}

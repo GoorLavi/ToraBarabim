@@ -7,7 +7,7 @@ import type { LessonsGridSkeletonProps } from './models';
 import * as styles from './styles';
 
 export const LessonsGridSkeleton = styled(({ className, cellCount }: LessonsGridSkeletonProps) => (
-  <ul className={className}>
+  <ul className={className} aria-hidden="true">
     {skeletonCardKeys(cellCount).map((key) => (
       <li className="cell" key={key}>
         <LessonCardSkeleton />

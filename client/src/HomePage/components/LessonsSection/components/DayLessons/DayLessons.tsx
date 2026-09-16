@@ -29,7 +29,7 @@ export const DayLessons = styled(({ className, headingLabel, items, showSeeAllLi
 
       {countLabel && <p className="count">{countLabel}</p>}
 
-      <LessonsGrid items={visibleItems} />
+      <LessonsGrid {...{ items: visibleItems }} />
 
       {hasMore && (
         <button type="button" className="more" onClick={() => setVisibleCount((count) => count + INITIAL_VISIBLE_COUNT)}>

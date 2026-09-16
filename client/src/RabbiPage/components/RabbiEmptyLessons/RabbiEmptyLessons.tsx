@@ -6,7 +6,6 @@ import { StateCard } from '~/components/StateCard/StateCard';
 import * as pageConsts from '~/RabbiPage/consts';
 import { noLessonsHeading } from '~/RabbiPage/consts';
 
-import * as consts from './consts';
 import type { RabbiEmptyLessonsProps } from './models';
 import * as styles from './styles';
 
@@ -39,9 +38,9 @@ export const RabbiEmptyLessons = styled(
             </div>
 
             {isNationwidePending ? (
-              <LessonsGridSkeleton cellCount={consts.SKELETON_CELL_COUNT} />
+              <LessonsGridSkeleton {...{ cellCount: pageConsts.NATIONWIDE_LESSONS_PAGE_SIZE }} />
             ) : (
-              <LessonsGrid items={nationwideItems ?? []} />
+              <LessonsGrid {...{ items: nationwideItems ?? [] }} />
             )}
           </div>
         )}

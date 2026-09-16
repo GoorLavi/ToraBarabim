@@ -13,7 +13,7 @@ import * as styles from './styles';
 export const DayGroupSkeleton = styled(({ className }: DayGroupSkeletonProps) => (
   <div className={className} aria-hidden="true">
     <div className="bar heading" />
-    <LessonsGridSkeleton cellCount={consts.CELL_COUNT} />
+    <LessonsGridSkeleton {...{ cellCount: consts.CELL_COUNT }} />
   </div>
 ))`
   ${styles.DayGroupSkeleton}

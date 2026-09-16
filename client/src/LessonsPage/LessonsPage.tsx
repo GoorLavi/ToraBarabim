@@ -122,7 +122,7 @@ const renderContent = ({
             </p>
           )}
         </div>
-        <LessonsGrid items={items} />
+        <LessonsGrid {...{ items }} />
         {listQuery.hasNextPage && (
           <QuietButton
             className="loadMore"
@@ -141,7 +141,7 @@ const renderContent = ({
     return (
       <>
         {titleHeading(title)}
-        <LessonsGrid items={primaryItems} />
+        <LessonsGrid {...{ items: primaryItems }} />
       </>
     );
   }
@@ -156,7 +156,7 @@ const renderContent = ({
         <h2 className="dayHeading" dir="auto">
           {dayLabel(fallbackDate)}
         </h2>
-        <LessonsGrid items={fallbackItems} />
+        <LessonsGrid {...{ items: fallbackItems }} />
       </>
     );
   }

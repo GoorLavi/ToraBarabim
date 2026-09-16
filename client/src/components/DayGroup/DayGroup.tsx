@@ -13,7 +13,7 @@ export const DayGroup = styled(({ className, heading, items }: DayGroupProps) =>
     <h2 className="heading" dir="auto">
       {heading}
     </h2>
-    <LessonsGrid items={items} />
+    <LessonsGrid {...{ items }} />
   </section>
 ))`
   ${styles.DayGroup}
