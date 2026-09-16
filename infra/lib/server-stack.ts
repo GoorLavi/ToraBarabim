@@ -95,6 +95,21 @@ export class ServerStack extends Stack {
       },
     });
 
+    // The weekly import agent's key (0031). The server registers
+    // `/v1/agent/imports` only when it is set, so creating it here is what
+    // turns the import on in production. Generated like the session secret,
+    // so no person ever types or pastes it; the owner reads it once, from
+    // Secrets Manager, for the Mac that runs the weekly task.
+    const importAgentKey = new secretsmanager.Secret(this, 'ImportAgentKey', {
+      description: 'Weekly lesson import agent key',
+      generateSecretString: {
+        secretStringTemplate: '{}',
+        generateStringKey: 'value',
+        excludePunctuation: true,
+        passwordLength: 64,
+      },
+    });
+
     const databaseCredentials = props.database.secret;
     if (!databaseCredentials) {
       throw new Error('Database instance has no generated secret; check DatabaseStack credentials setup');
@@ -165,6 +180,7 @@ export class ServerStack extends Stack {
     const sharedSecrets = {
       DATABASE_URL: ecs.Secret.fromSecretsManager(databaseUrlSecret, 'url'),
       SESSION_SECRET: ecs.Secret.fromSecretsManager(sessionSecret, 'value'),
+      IMPORT_AGENT_KEY: ecs.Secret.fromSecretsManager(importAgentKey, 'value'),
     };
 
     const runtimeImage = ecs.ContainerImage.fromAsset(REPO_ROOT, {
