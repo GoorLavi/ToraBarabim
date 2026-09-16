@@ -76,8 +76,20 @@ export const rabbisPageTitle = (): string => `כל הרבנים | שיעורי �
 export const rabbisPageDescription = (directory: RabbiDirectoryResponse): string =>
   `כל הרבנים שמלמדים שיעורי תורה, ${directory.total} רבנים, ב${SITE_NAME}.`;
 
+// women.rabbaniyot.tsx's own document title and description, not in-page
+// copy: RabbisPage/consts.ts owns what a visitor reads on the page itself
+// (`DIRECTORY_COPY.rabbaniyot`).
+export const womenRabbaniyotPageTitle = (): string => `כל הרבניות | שיעורי תורה לפי רבנית | ${SITE_NAME}`;
+
+export const womenRabbaniyotPageDescription = (directory: RabbiDirectoryResponse): string => {
+  const count = directory.total === 1 ? 'רבנית אחת' : `${directory.total} רבניות`;
+  return `כל הרבניות שמלמדות שיעורי תורה לנשים, ${count}, ב${SITE_NAME}.`;
+};
+
 // rabbis.tsx's own structured data, mirroring citiesItemListJsonLd: every
 // rabbi in the loaded page, each with its canonical URL (`rabbiPath`).
+// Reused as-is by women.rabbaniyot.tsx, since it works off the directory
+// response's own shape rather than anything rabbis-specific.
 export const rabbisItemListJsonLd = (directory: RabbiDirectoryResponse): JsonLdObject => ({
   '@context': 'https://schema.org',
   '@type': 'ItemList',

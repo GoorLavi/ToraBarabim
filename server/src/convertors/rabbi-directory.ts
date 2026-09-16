@@ -1,13 +1,9 @@
 import type { City, RabbiDetailResponse, RabbiDirectoryEntry, RabbiDirectoryResponse } from '@torabarabim/common';
 
+import { toCitySummary } from '../service/shared/city-summary';
 import type { RabbiCityRecord, RabbiDirectoryEntryRecord, RabbiListResult } from '../service/rabbi/models';
 
-const toCity = (record: RabbiCityRecord): City => ({
-  id: String(record.code),
-  name: record.nameHe,
-  slug: record.slug,
-  area: record.area,
-});
+const toCity = (record: RabbiCityRecord): City => toCitySummary(record);
 
 const toDirectoryEntry = (record: RabbiDirectoryEntryRecord): RabbiDirectoryEntry => ({
   id: record.id,

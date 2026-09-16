@@ -7,14 +7,21 @@ export const RabbiRail = css(
   gap: ${theme.spacing.md};
 
   > .heading {
-    font-size: ${theme.typography.sectionHeading.phone.fontSize};
-    line-height: ${theme.typography.sectionHeading.phone.lineHeight};
-    font-weight: ${theme.typography.sectionHeading.fontWeight};
-    color: ${theme.colors.text};
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: ${theme.spacing.md};
 
-    @media (min-width: ${theme.breakpoints.md}) {
-      font-size: ${theme.typography.sectionHeading.desktop.fontSize};
-      line-height: ${theme.typography.sectionHeading.desktop.lineHeight};
+    > .title {
+      font-size: ${theme.typography.sectionHeading.phone.fontSize};
+      line-height: ${theme.typography.sectionHeading.phone.lineHeight};
+      font-weight: ${theme.typography.sectionHeading.fontWeight};
+      color: ${theme.colors.text};
+
+      @media (min-width: ${theme.breakpoints.md}) {
+        font-size: ${theme.typography.sectionHeading.desktop.fontSize};
+        line-height: ${theme.typography.sectionHeading.desktop.lineHeight};
+      }
     }
   }
 

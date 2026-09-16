@@ -3,4 +3,5 @@ export interface RabbiSearchFieldProps {
   id?: string;
   value: string;
   onChange: (value: string) => void;
+  ariaLabel: string;
 }

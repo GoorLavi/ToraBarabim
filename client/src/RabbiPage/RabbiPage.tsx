@@ -11,7 +11,7 @@ import { RabbiEmptyLessons } from './components/RabbiEmptyLessons/RabbiEmptyLess
 import { RabbiHero } from './components/RabbiHero/RabbiHero';
 import { RabbiHeroSkeleton } from './components/RabbiHeroSkeleton/RabbiHeroSkeleton';
 import * as consts from './consts';
-import { rabbiErrorCopy, sortByDate } from './helpers';
+import { rabbiErrorCopy, scopeForRabbi, sortByDate } from './helpers';
 import type { RabbiPageProps } from './models';
 import * as styles from './styles';
 import { useNationwideLessons } from './useNationwideLessons';
@@ -19,15 +19,17 @@ import { useRabbiDetail } from './useRabbiDetail';
 import { useRabbiLessons } from './useRabbiLessons';
 
 // The poster is the page (design spec, "the guidance frame states the
-// intent in one line"): call 1 (rabbi detail) and call 2 (the rabbi's own
-// lessons) run together, since both need only the route's rabbiId. Call 3
-// (nationwide lessons) only fires once call 1 says the rabbi has none of
-// their own, never speculatively (useNationwideLessons.ts).
+// intent in one line"): call 1 (rabbi detail) fires from the route's
+// rabbiId alone. Call 2 (the rabbi's own lessons) now waits on call 1's
+// honorific, which decides its scope (useRabbiLessons.ts), so the two no
+// longer run together. Call 3 (nationwide lessons) only fires once call 1
+// says the rabbi has none of their own, never speculatively
+// (useNationwideLessons.ts).
 export const RabbiPage = styled(({ className }: RabbiPageProps) => {
   const { rabbiId = '' } = useParams();
   const rabbiQuery = useRabbiDetail(rabbiId);
-  const lessonsQuery = useRabbiLessons(rabbiId);
   const rabbi = rabbiQuery.data;
+  const lessonsQuery = useRabbiLessons(rabbiId, scopeForRabbi(rabbi));
   const hasNoLessons = rabbi?.lessonCount === 0;
   const nationwideQuery = useNationwideLessons(Boolean(hasNoLessons));
   const errorCopy = rabbiQuery.error ? rabbiErrorCopy(rabbiQuery.error) : null;

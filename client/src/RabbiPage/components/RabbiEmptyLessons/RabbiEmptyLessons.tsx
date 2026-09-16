@@ -40,7 +40,7 @@ export const RabbiEmptyLessons = styled(
             {isNationwidePending ? (
               <LessonsGridSkeleton {...{ cellCount: pageConsts.NATIONWIDE_LESSONS_PAGE_SIZE }} />
             ) : (
-              <LessonsGrid {...{ items: nationwideItems ?? [] }} />
+              <LessonsGrid {...{ items: nationwideItems ?? [], surface: 'general' }} />
             )}
           </div>
         )}

@@ -6,6 +6,8 @@ import { LessonsGrid } from '~/components/LessonsGrid/LessonsGrid';
 import { QuietButton } from '~/components/QuietButton/QuietButton';
 import { StateCard } from '~/components/StateCard/StateCard';
 import { dayLabel } from '~/HomePage/helpers';
+import { AUDIENCE_PARAM } from '~/hooks/consts';
+import { isAudienceFilterValue } from '~/hooks/helpers';
 import { useDateFilter } from '~/hooks/useDateFilter';
 import { useSearchQuery } from '~/hooks/useSearchQuery';
 import { useSelectedCity } from '~/hooks/useSelectedCity';
@@ -30,12 +32,15 @@ import * as styles from './styles';
 import type { LessonsListQueryResult } from './useLessonsList';
 import { useLessonsList } from './useLessonsList';
 
-const readPassThroughFilters = (searchParams: URLSearchParams): PassThroughFilters => ({
-  rabbiId: searchParams.get(consts.RABBI_ID_PARAM) ?? undefined,
-  area: searchParams.get(consts.AREA_PARAM) ?? undefined,
-  topic: searchParams.get(consts.TOPIC_PARAM) ?? undefined,
-  audience: searchParams.get(consts.AUDIENCE_PARAM) ?? undefined,
-});
+const readPassThroughFilters = (searchParams: URLSearchParams): PassThroughFilters => {
+  const audience = searchParams.get(AUDIENCE_PARAM);
+  return {
+    rabbiId: searchParams.get(consts.RABBI_ID_PARAM) ?? undefined,
+    area: searchParams.get(consts.AREA_PARAM) ?? undefined,
+    topic: searchParams.get(consts.TOPIC_PARAM) ?? undefined,
+    audience: isAudienceFilterValue(audience) ? audience : undefined,
+  };
+};
 
 const titleHeading = (title: string): ReactNode => (
   <h1 className="title" dir="auto">
@@ -122,7 +127,7 @@ const renderContent = ({
             </p>
           )}
         </div>
-        <LessonsGrid {...{ items }} />
+        <LessonsGrid {...{ items, surface: 'general' }} />
         {listQuery.hasNextPage && (
           <QuietButton
             className="loadMore"
@@ -141,7 +146,7 @@ const renderContent = ({
     return (
       <>
         {titleHeading(title)}
-        <LessonsGrid {...{ items: primaryItems }} />
+        <LessonsGrid {...{ items: primaryItems, surface: 'general' }} />
       </>
     );
   }
@@ -156,7 +161,7 @@ const renderContent = ({
         <h2 className="dayHeading" dir="auto">
           {dayLabel(fallbackDate)}
         </h2>
-        <LessonsGrid {...{ items: fallbackItems }} />
+        <LessonsGrid {...{ items: fallbackItems, surface: 'general' }} />
       </>
     );
   }

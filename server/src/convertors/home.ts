@@ -21,8 +21,10 @@ const toHomeRow = (row: HomeRowResult): HomeRow => ({
   id: row.id,
   title: row.title,
   items: row.items.map(toLessonOccurrence),
+  womensAreaTileIndex: row.womensAreaTileIndex,
 });
 
 export const toHomeResponse = (result: HomeResult): HomeResponse => ({
   rows: result.rows.map(toHomeRow),
+  womensAreaLessonCount: result.womensAreaLessonCount,
 });

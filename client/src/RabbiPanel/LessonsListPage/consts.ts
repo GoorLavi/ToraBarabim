@@ -19,7 +19,7 @@ export const EMPTY_CTA = 'הוספת השיעור הראשון';
 export const ERROR_MESSAGE = 'לא הצלחנו לטעון את השיעורים שלך';
 export const RETRY_LABEL = 'ניסיון נוסף';
 
-// Duplicated from `AudiencePicker/consts.ts` rather than imported: this
+// Duplicates `~/consts`'s `AUDIENCE_LABELS` rather than importing it: this
 // screen only needs a plain lookup, not the picker itself. Never `מעורב`
 // (design-system.md, Audience wording).
 export const AUDIENCE_LABELS: Record<LessonAudience, string> = {

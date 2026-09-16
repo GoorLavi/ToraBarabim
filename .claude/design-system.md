@@ -166,6 +166,13 @@ do not know who they are.
 The word `בהפרדה` is also not used. The three values above already carry that meaning
 for this audience, and appending it is redundant.
 
+**One exception, and it is bounded to a single control: the closed header audience button
+shows `גברים ונשים` when `גם גברים וגם נשים` is selected.** The full value does not fit the
+button at 375, and the short form keeps both words the reader scans for. Approved by the
+owner. It applies to the closed button only: the list inside the menu, every lesson card,
+the admin screens and the stored value all keep `גם גברים וגם נשים`. Do not cite this
+exception anywhere else, and never shorten the other two values.
+
 **Audience is required.** The admin schema is an enum with no empty case, so a lesson
 without an audience cannot exist and no surface needs to render one. An earlier version
 of this section described a hide-when-empty behaviour; the implementation settled the
@@ -258,6 +265,7 @@ Verify style names with `listAvailableFontsAsync` rather than guessing.
 | Section heading | 20 / 28 | 24 / 32 | 700 |
 | Card title | 18 / 26 | 18 / 26 | 600 |
 | Time in a card | 20 / 24 | 20 / 24 | 600 |
+| Tile count | 36 / 40 | 36 / 40 | 700 |
 | Ticket time | 44 / 48 | 36 / 40 | 700 |
 | Ticket date | 56 / 56 | 64 / 64 | 700 |
 | Ticket venue | 18 / 26 | 20 / 28 | 600 |
@@ -267,6 +275,13 @@ Verify style names with `listAvailableFontsAsync` rather than guessing.
 
 Body is 17 and not 16 deliberately: the audience spans a wide age range and reads this
 outdoors.
+
+**Tile count is the number on the women's-area tile**, the one rail item that is not a
+lesson. It is the only thing on that tile that says how much is behind the door, so it is
+set larger than any other number on a card and never shrinks: when the tile runs out of
+room the emblem shrinks first, then the gaps, then the bottom line goes. It always sits in
+`color.accentOnDark` on the plum field, with its `שיעורים` label at `Tag and caption` in
+`color.textOnPrimaryMuted`. Mirrored from `tileCount` in the theme.
 
 **Ticket time is the one role that gets smaller on a wider screen.** On a phone the start
 time carries the lesson ticket on its own, so it is set at 44 / 48. On desktop the ticket

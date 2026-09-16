@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-export interface CityPickerDrawerProps {
+export interface FilterDrawerProps {
   className?: string;
   ariaLabel: string;
   onDismiss: () => void;

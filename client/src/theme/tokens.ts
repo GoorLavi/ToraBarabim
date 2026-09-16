@@ -80,6 +80,11 @@ export const TYPOGRAPHY: ThemeTypography = {
     desktop: { fontSize: '14px', lineHeight: '20px' },
     fontWeight: 400,
   },
+  tileCount: {
+    phone: { fontSize: '36px', lineHeight: '40px' },
+    desktop: { fontSize: '36px', lineHeight: '40px' },
+    fontWeight: 700,
+  },
 };
 
 export const SPACING: ThemeSpacing = {

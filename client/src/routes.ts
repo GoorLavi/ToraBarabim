@@ -1,6 +1,8 @@
 import type { RouteConfig } from '@react-router/dev/routes';
 import { index, layout, route } from '@react-router/dev/routes';
 
+import { CITY_DETAIL_ROUTE_ID } from './hooks/consts';
+
 export default [
   layout('routes/layout.tsx', [
     index('routes/home.tsx'),
@@ -13,8 +15,13 @@ export default [
     // that could drift out of step with this one is never needed.
     route('rabbis/:rabbiId/:slug?', 'routes/rabbis.$rabbiId/route.tsx'),
     route('cities', 'routes/cities.tsx'),
-    route('cities/:slug', 'routes/cities.$slug/route.tsx'),
+    // Pinned id, read by the header's audience dropdown through
+    // `useRouteLoaderData(CITY_DETAIL_ROUTE_ID)` rather than a hand-typed
+    // string, so the two can never drift apart.
+    route('cities/:slug', 'routes/cities.$slug/route.tsx', { id: CITY_DETAIL_ROUTE_ID }),
     route('areas/:slug', 'routes/areas.$slug/route.tsx'),
+    route('women', 'routes/women/route.tsx'),
+    route('women/rabbaniyot', 'routes/women.rabbaniyot.tsx'),
     route('contact', 'routes/contact.tsx'),
     route('*', 'routes/not-found.tsx'),
   ]),

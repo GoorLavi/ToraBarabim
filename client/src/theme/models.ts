@@ -77,6 +77,11 @@ export interface ThemeTypography {
   // floor, not a licence to shrink further."
   cardTitleCompact: ThemeTypeRole;
   secondaryCompact: ThemeTypeRole;
+  // The women's-area tile's own lesson count, inside its plum area. Numerically
+  // equal to `ticketTime`'s desktop step, but a distinct role: design-system.md
+  // reserves `ticketTime` for the lesson ticket's start time alone. Constant
+  // at every tile width, unlike the responsive roles above.
+  tileCount: ThemeTypeRole;
 }
 
 export interface ThemeSpacing {

@@ -1,4 +1,4 @@
-import type { RabbiHonorific } from '@torabarabim/common';
+import type { LessonAudience, RabbiHonorific } from '@torabarabim/common';
 
 import { SITE_NAME, SITE_ORIGIN } from '../consts';
 import linkPreviewImage from './link-preview.png?no-inline';
@@ -18,6 +18,23 @@ export const RABBI_HONORIFIC_LABELS: Record<RabbiHonorific, string> = {
 
 export const lessonCountLabel = (count: number): string => (count === 1 ? 'שיעור אחד' : `${count} שיעורים`);
 export const cityCountLabel = (count: number): string => (count === 1 ? 'עיר אחת' : `${count} ערים`);
+
+// The fixed page size "load more" pages through (CityPage, WomenPage): one
+// number, so a change to it cannot leave one of them stale. Mirrors the
+// server's own MAX_PAGE_SIZE (server/src/service/shared/consts.ts), the
+// largest page either page is allowed to ask for.
+export const LESSON_LIST_PAGE_SIZE = 50;
+
+// The one copy of the three audience values (design-system.md, "Audience
+// wording"): `מעורב` never appears in this product, and the mixed-audience
+// wording is spelled out rather than a single loaded word. Read by the
+// lesson card, the lesson ticket, the admin and rabbi lesson forms, and the
+// audience picker used by both.
+export const AUDIENCE_LABELS: Record<LessonAudience, string> = {
+  men: 'גברים',
+  women: 'נשים',
+  mixed: 'גם גברים וגם נשים',
+};
 
 const LINK_PREVIEW_IMAGE_WIDTH = 1200;
 const LINK_PREVIEW_IMAGE_HEIGHT = 630;
