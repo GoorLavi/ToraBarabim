@@ -1,0 +1,128 @@
+diff --git a/client/src/AreaPage/components/AreaLessonsGrid/models.ts b/client/src/AreaPage/components/AreaLessonsGrid/models.ts
+new file mode 100644
+--- /dev/null
++++ b/client/src/AreaPage/components/AreaLessonsGrid/models.ts
+@@ -0,0 +1,6 @@
++import type { LessonOccurrence } from '@torabarabim/common';
++
++export interface AreaLessonsGridProps {
++  className?: string;
++  items: LessonOccurrence[];
++}
+diff --git a/client/src/AreaPage/components/AreaLessonsGrid/AreaLessonsGrid.tsx b/client/src/AreaPage/components/AreaLessonsGrid/AreaLessonsGrid.tsx
+new file mode 100644
+--- /dev/null
++++ b/client/src/AreaPage/components/AreaLessonsGrid/AreaLessonsGrid.tsx
+@@ -0,0 +1,18 @@
++import styled from 'styled-components';
++
++import { LessonCard } from '~/HomePage/components/LessonCard/LessonCard';
++
++import type { AreaLessonsGridProps } from './models';
++import * as styles from './styles';
++
++export const AreaLessonsGrid = styled(({ className, items }: AreaLessonsGridProps) => (
++  <ul className={className}>
++    {items.map((lesson) => (
++      <li className="cell" key={`${lesson.lessonId}-${lesson.date}`}>
++        <LessonCard {...{ lesson }} />
++      </li>
++    ))}
++  </ul>
++))`
++  ${styles.AreaLessonsGrid}
++`;
+diff --git a/client/src/AreaPage/components/AreaLessonsGrid/styles.ts b/client/src/AreaPage/components/AreaLessonsGrid/styles.ts
+new file mode 100644
+--- /dev/null
++++ b/client/src/AreaPage/components/AreaLessonsGrid/styles.ts
+@@ -0,0 +1,27 @@
++import { css } from 'styled-components';
++
++export const AreaLessonsGrid = css(
++  ({ theme }) => `
++  list-style: none;
++  margin: 0;
++  padding: 0;
++  display: grid;
++  grid-template-columns: repeat(2, 1fr);
++  gap: ${theme.spacing.lg};
++
++  @media (min-width: ${theme.breakpoints.md}) {
++    grid-template-columns: repeat(3, 1fr);
++  }
++
++  @media (min-width: ${theme.breakpoints.xl}) {
++    grid-template-columns: repeat(4, 1fr);
++  }
++
++  > .cell {
++    display: grid;
++    min-inline-size: 0;
++  }
++`,
++);
+diff --git a/client/src/RabbiPage/components/RabbiLessonsGrid/models.ts b/client/src/RabbiPage/components/RabbiLessonsGrid/models.ts
+new file mode 100644
+--- /dev/null
++++ b/client/src/RabbiPage/components/RabbiLessonsGrid/models.ts
+@@ -0,0 +1,6 @@
++import type { LessonOccurrence } from '@torabarabim/common';
++
++export interface RabbiLessonsGridProps {
++  className?: string;
++  items: LessonOccurrence[];
++}
+diff --git a/client/src/RabbiPage/components/RabbiLessonsGrid/RabbiLessonsGrid.tsx b/client/src/RabbiPage/components/RabbiLessonsGrid/RabbiLessonsGrid.tsx
+new file mode 100644
+--- /dev/null
++++ b/client/src/RabbiPage/components/RabbiLessonsGrid/RabbiLessonsGrid.tsx
+@@ -0,0 +1,18 @@
++import styled from 'styled-components';
++
++import { LessonCard } from '~/HomePage/components/LessonCard/LessonCard';
++
++import type { RabbiLessonsGridProps } from './models';
++import * as styles from './styles';
++
++export const RabbiLessonsGrid = styled(({ className, items }: RabbiLessonsGridProps) => (
++  <ul className={className}>
++    {items.map((lesson) => (
++      <li className="cell" key={`${lesson.lessonId}-${lesson.date}`}>
++        <LessonCard {...{ lesson }} />
++      </li>
++    ))}
++  </ul>
++))`
++  ${styles.RabbiLessonsGrid}
++`;
+diff --git a/client/src/RabbiPage/components/RabbiLessonsGrid/styles.ts b/client/src/RabbiPage/components/RabbiLessonsGrid/styles.ts
+new file mode 100644
+--- /dev/null
++++ b/client/src/RabbiPage/components/RabbiLessonsGrid/styles.ts
+@@ -0,0 +1,26 @@
++import { css } from 'styled-components';
++
++export const RabbiLessonsGrid = css(
++  ({ theme }) => `
++  list-style: none;
++  margin: 0;
++  padding: 0;
++  display: grid;
++  grid-template-columns: repeat(2, 1fr);
++  gap: ${theme.spacing.md};
++
++  @media (min-width: ${theme.breakpoints.md}) {
++    grid-template-columns: repeat(3, 1fr);
++    gap: ${theme.spacing.lg};
++  }
++
++  @media (min-width: ${theme.breakpoints.xl}) {
++    grid-template-columns: repeat(4, 1fr);
++  }
++
++  > .cell {
++    display: grid;
++  }
++`,
++);

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import styled from 'styled-components';
 
-import { LessonCard } from '~/HomePage/components/LessonCard/LessonCard';
+import { LessonsGrid } from '~/components/LessonsGrid/LessonsGrid';
 import { TextLink } from '~/HomePage/components/TextLink/TextLink';
 
 import { SEE_ALL_LABEL } from '../../consts';
@@ -29,13 +29,7 @@ export const DayLessons = styled(({ className, headingLabel, items, showSeeAllLi
 
       {countLabel && <p className="count">{countLabel}</p>}
 
-      <ul className="grid">
-        {visibleItems.map((item) => (
-          <li className="cell" key={`${item.lessonId}-${item.date}`}>
-            <LessonCard lesson={item} />
-          </li>
-        ))}
-      </ul>
+      <LessonsGrid items={visibleItems} />
 
       {hasMore && (
         <button type="button" className="more" onClick={() => setVisibleCount((count) => count + INITIAL_VISIBLE_COUNT)}>

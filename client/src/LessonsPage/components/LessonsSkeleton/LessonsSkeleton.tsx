@@ -1,8 +1,8 @@
 import styled from 'styled-components';
 
-import { LessonCardSkeleton } from '~/HomePage/components/LessonCardSkeleton/LessonCardSkeleton';
+import { LessonsGridSkeleton } from '~/components/LessonsGridSkeleton/LessonsGridSkeleton';
 
-import { SKELETON_CARD_KEYS } from './consts';
+import { SKELETON_CARD_COUNT } from './consts';
 import type { LessonsSkeletonProps } from './models';
 import * as styles from './styles';
 
@@ -16,13 +16,7 @@ export const LessonsSkeleton = styled(({ className }: LessonsSkeletonProps) => (
       <div className="titleBar" />
       <div className="subtitleBar" />
     </div>
-    <ul className="grid">
-      {SKELETON_CARD_KEYS.map((key) => (
-        <li className="cell" key={key}>
-          <LessonCardSkeleton />
-        </li>
-      ))}
-    </ul>
+    <LessonsGridSkeleton cellCount={SKELETON_CARD_COUNT} />
   </div>
 ))`
   ${styles.LessonsSkeleton}
