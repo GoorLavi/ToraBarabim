@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { ADMIN_ROUTES } from '~/AdminPanel/consts';
 import * as parentConsts from '~/AdminPanel/LessonsListPage/consts';
 import { lessonHasOwnTitle, lessonPrimaryLabel, recurrenceWhenLabel } from '~/AdminPanel/LessonsListPage/helpers';
+import { AUDIENCE_LABELS } from '~/consts';
 import { rabbiDisplayName } from '~/helpers';
 
 import type { LessonsTableProps } from './models';
@@ -56,7 +57,7 @@ export const LessonsTable = styled(({ className, rows }: LessonsTableProps) => (
           {row.lesson.place.cityName}
         </span>
         <span className="audience" role="cell" dir="auto">
-          {parentConsts.LESSON_AUDIENCE_LABELS[row.lesson.audience]}
+          {AUDIENCE_LABELS[row.lesson.audience]}
         </span>
         <span className="actions" role="cell">
           <Link className="edit" to={ADMIN_ROUTES.lessonEdit(row.lesson.id)}>

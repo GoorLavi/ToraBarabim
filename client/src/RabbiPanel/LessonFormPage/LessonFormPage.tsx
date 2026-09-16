@@ -7,6 +7,7 @@ import { AudiencePicker } from '~/components/AudiencePicker/AudiencePicker';
 import { CitySelect } from '~/components/CitySelect/CitySelect';
 import { ReadOnlyField } from '~/components/ReadOnlyField/ReadOnlyField';
 import { RecurrenceFields } from '~/components/RecurrenceFields/RecurrenceFields';
+import { AUDIENCE_LABELS } from '~/consts';
 import { directionForValue, rabbiDisplayName } from '~/helpers';
 import { RabbiApiError } from '~/RabbiPanel/api';
 import { RABBI_ROUTES } from '~/RabbiPanel/consts';
@@ -219,7 +220,7 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
           <section className="section" ref={audienceSectionRef}>
             <h2 className="sectionHeading">{consts.AUDIENCE_SECTION_HEADING}</h2>
             {isRabbaniteProfile ? (
-              <ReadOnlyField value={consts.AUDIENCE_LABELS.women} />
+              <ReadOnlyField value={AUDIENCE_LABELS.women} />
             ) : (
               <AudiencePicker
                 audience={form.audience}

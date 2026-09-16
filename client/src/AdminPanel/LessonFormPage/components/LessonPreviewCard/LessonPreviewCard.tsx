@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 
+import { AUDIENCE_LABELS } from '~/consts';
 import { rabbiDisplayName } from '~/helpers';
 
 import * as consts from './consts';
@@ -32,7 +33,7 @@ export const LessonPreviewCard = styled(({ className, rabbi, title, audience, ci
 
         {rabbi && (
           <p className="meta" dir="auto">
-            {audience && <span className="audience">{consts.AUDIENCE_LABELS[audience]}</span>}
+            {audience && <span className="audience">{AUDIENCE_LABELS[audience]}</span>}
             {title && <span className="description"> · {title}</span>}
           </p>
         )}
