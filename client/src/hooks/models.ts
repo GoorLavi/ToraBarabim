@@ -1,4 +1,4 @@
-import type { UseInfiniteQueryResult } from '@tanstack/react-query';
+import type { InfiniteData, UseInfiniteQueryResult } from '@tanstack/react-query';
 import type { AudienceFilter, LessonSearchResponse } from '@torabarabim/common';
 
 // Every chip resolves to one day, never a range: the ratified empty state
@@ -19,4 +19,4 @@ export interface AudienceFilterState {
   clearFilter: () => void;
 }
 
-export type LessonListPagesResult<TError> = UseInfiniteQueryResult<{ pages: LessonSearchResponse[] }, TError>;
+export type LessonListPagesResult<TError> = UseInfiniteQueryResult<InfiniteData<LessonSearchResponse>, TError>;

@@ -32,57 +32,58 @@ const toResolvedCity = (row: CityRow): ResolvedCity => ({ ...row, slug: toSlug(r
 // either, or a user typing one, cannot change what the prefix match does.
 const escapeLikePattern = (value: string): string => value.replace(/[\\%_]/g, (char) => `\\${char}`);
 
-// Every rabbi's honorific and every lesson's city code and audience are
-// each loaded once and joined in memory, so counting general-scope lessons
-// per city never runs a query per row or per city. Shared by `search`
-// (every city, including a zero-count one that still matched the prefix)
-// and `loadCitiesWithLessonCounts` (only cities with at least one), so the
-// scope rule is computed once per request path, not copied between them.
-const loadGeneralScopeLessonCountByCity = async (): Promise<Map<number, number>> => {
-  const [rabbiRows, lessonRows] = await Promise.all([
-    db.select({ id: rabbis.id, honorific: rabbis.honorific }).from(rabbis),
-    db.select({ cityCode: lessons.cityCode, rabbiId: lessons.rabbiId, audience: lessons.audience }).from(lessons),
-  ]);
+// The SQL mirror of `isLessonInScope('general', ...)`. None of this
+// module's three callers (`search`, `listDirectory`, `listSuggestions`)
+// ever run inside a name search, so the name exception never applies here
+// and the rule collapses to "a lesson counts only if its own rabbi is a
+// rav"; the two honorifics are exhaustive, so `= 'rav'` is the same test as
+// `isLessonInScope`'s `!== 'rabbanit'`. `isLessonInScope` itself is a plain
+// TypeScript predicate over an already-loaded row, not an expression
+// Postgres can evaluate, so it cannot run inside this query; this constant
+// is the one place its `general` branch is mirrored by hand for SQL.
+const generalScopeLessonCount = sql<number>`count(case when ${rabbis.honorific} = 'rav' then ${lessons.id} end)::int`;
 
-  const honorificByRabbiId = new Map(rabbiRows.map((row) => [row.id, row.honorific] as const));
+// One aggregation for every city plus its general-scope lesson count,
+// shared by `search`, `listDirectory` and `listSuggestions` below: each
+// attaches its own filter, ordering and limit, but the join, the grouping,
+// and the count above are never copied. The `LEFT JOIN`s keep a city with
+// no lesson at all, or none in scope, in the result with a count of 0
+// rather than dropping it, which `search` depends on (a real city a reader
+// typed still needs to come back, just with nothing to show yet).
+const citiesWithLessonCountQuery = () =>
+  db
+    .select({
+      code: cities.code,
+      nameHe: cities.nameHe,
+      area: cities.area,
+      population: cities.population,
+      lessonCount: generalScopeLessonCount,
+    })
+    .from(cities)
+    .leftJoin(lessons, eq(lessons.cityCode, cities.code))
+    .leftJoin(rabbis, eq(rabbis.id, lessons.rabbiId))
+    // The primary key alone is enough for Postgres to let every other
+    // selected column of `cities` through ungrouped.
+    .groupBy(cities.code)
+    .$dynamic();
 
-  const countByCode = new Map<number, number>();
-  for (const row of lessonRows) {
-    const teacherHonorific = honorificByRabbiId.get(row.rabbiId);
-    if (!teacherHonorific) {
-      throw new Error(`data inconsistency: a lesson references unknown rabbi ${row.rabbiId}`);
-    }
-    if (!isLessonInScope('general', { audience: row.audience, teacherHonorific })) continue;
-    countByCode.set(row.cityCode, (countByCode.get(row.cityCode) ?? 0) + 1);
-  }
-  return countByCode;
-};
-
-// A general surface (the header's city search), so it counts general-scope
-// lessons only, same as `loadCitiesWithLessonCounts` below: a city whose
-// only lessons are a rabbanit's must not look like it has lessons here.
 export const search = async (query: CitySearchQuery): Promise<CitySearchResult[]> => {
   const q = query.q?.trim();
   if (!q) return [];
 
   const pattern = `${escapeLikePattern(q)}%`;
 
-  const [rows, countByCode] = await Promise.all([
-    db
-      .select({ code: cities.code, nameHe: cities.nameHe, area: cities.area })
-      .from(cities)
-      .where(like(cities.nameHe, pattern))
-      // Exact matches first, then largest population first (a city with no
-      // population row sorts last within its tier, never first), then
-      // alphabetically as the final tiebreak.
-      .orderBy(desc(eq(cities.nameHe, q)), sql`${cities.population} DESC NULLS LAST`, asc(cities.nameHe))
-      .limit(CITY_SEARCH_LIMIT),
-    loadGeneralScopeLessonCountByCity(),
-  ]);
+  const rows = await citiesWithLessonCountQuery()
+    .where(like(cities.nameHe, pattern))
+    // Exact matches first, then largest population first (a city with no
+    // population row sorts last within its tier, never first), then
+    // alphabetically as the final tiebreak.
+    .orderBy(desc(eq(cities.nameHe, q)), sql`${cities.population} DESC NULLS LAST`, asc(cities.nameHe))
+    .limit(CITY_SEARCH_LIMIT);
 
   return rows.map((row) => ({
     ...toResolvedCity(row),
-    lessonCount: countByCode.get(row.code) ?? 0,
+    lessonCount: row.lessonCount,
     areaName: AREA_NAMES_HE[row.area],
   }));
 };
@@ -92,13 +93,9 @@ type CityWithLessonSupply = CityWithLessonCount & { population: number | null };
 // `listDirectory` and `listSuggestions` are its two callers: they group and
 // order the result differently, so this only loads and filters.
 const loadCitiesWithLessonCounts = async (): Promise<CityWithLessonSupply[]> => {
-  const [cityRows, countByCode] = await Promise.all([
-    db.select({ code: cities.code, nameHe: cities.nameHe, area: cities.area, population: cities.population }).from(cities),
-    loadGeneralScopeLessonCountByCity(),
-  ]);
-
-  return cityRows
-    .map((row) => ({ ...toResolvedCity(row), population: row.population, lessonCount: countByCode.get(row.code) ?? 0 }))
+  const rows = await citiesWithLessonCountQuery();
+  return rows
+    .map((row) => ({ ...toResolvedCity(row), population: row.population, lessonCount: row.lessonCount }))
     .filter((row) => row.lessonCount > 0);
 };
 

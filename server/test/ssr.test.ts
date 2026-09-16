@@ -24,10 +24,18 @@ const extractCanonical = (html: string): string => {
   return match[1] ?? '';
 };
 
+const escapeForRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// Matches the tag first and reads `content` out of it, rather than assuming
+// `content` follows `property`: nothing in the rendering guarantees attribute
+// order, so the stricter pattern would pass or fail on formatting.
 const extractMetaProperty = (html: string, property: string): string => {
-  const match = new RegExp(`<meta property="${property}" content="([^"]*)"`).exec(html);
-  assert.ok(match, `expected the document to include a <meta property="${property}"> tag`);
-  return match[1] ?? '';
+  const tag = new RegExp(`<meta[^>]*property="${escapeForRegExp(property)}"[^>]*>`).exec(html);
+  assert.ok(tag, `expected the document to include a <meta property="${property}"> tag`);
+
+  const content = /content="([^"]*)"/.exec(tag[0]);
+  assert.ok(content, `expected the <meta property="${property}"> tag to carry a content attribute`);
+  return content[1] ?? '';
 };
 
 // See public-api.test.ts's own comment: the seeded rabbanit, used here only

@@ -336,15 +336,31 @@ describe('public API', () => {
     });
 
     test('matches a known seeded city by prefix, and carries its area name and lesson count', async () => {
-      const res = await app.inject({ method: 'GET', url: `/v1/cities?q=${encodeURIComponent(SEEDED_CITY_PREFIX)}` });
-      assert.equal(res.statusCode, 200);
-      const { items } = res.json() as { items: CitySearchResult[] };
+      const [searchRes, directoryRes] = await Promise.all([
+        app.inject({ method: 'GET', url: `/v1/cities?q=${encodeURIComponent(SEEDED_CITY_PREFIX)}` }),
+        app.inject({ method: 'GET', url: '/v1/cities/directory' }),
+      ]);
+      assert.equal(searchRes.statusCode, 200);
+      assert.equal(directoryRes.statusCode, 200);
+
+      const { items } = searchRes.json() as { items: CitySearchResult[] };
       const city = items.find((candidate) => candidate.name === SEEDED_CITY_NAME);
       assert.ok(city);
       assert.equal(typeof city.areaName, 'string');
       assert.ok(city.areaName.length > 0);
       assert.equal(typeof city.lessonCount, 'number');
       assert.ok(city.lessonCount > 0, 'the seeded city has seeded lessons');
+
+      // `search` and `listDirectory` share one SQL aggregation
+      // (`citiesWithLessonCountQuery`); a real, non-zero count here means a
+      // mismatch between the two call sites would show up as a genuine
+      // number disagreement, not two zeros agreeing by accident.
+      const directoryBody = directoryRes.json() as {
+        areas: { cities: { slug: string; lessonCount: number }[] }[];
+      };
+      const directoryCity = directoryBody.areas.flatMap((area) => area.cities).find((candidate) => candidate.slug === toSlug(SEEDED_CITY_NAME));
+      assert.ok(directoryCity);
+      assert.equal(city.lessonCount, directoryCity.lessonCount);
     });
 
     test('rejects a query over the length limit', async () => {
