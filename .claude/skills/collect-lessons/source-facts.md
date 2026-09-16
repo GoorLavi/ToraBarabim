@@ -23,6 +23,20 @@ thing itself, the site wins and the entry is reported as possibly stale.
   This is the most fragile reading in the whole run: read the colour from the pixels, not
   by eye, and mark the row `needsReview` when unsure.
 
+## yabia-omer.co.il (הרב יגאל כהן)
+- **Blocks automated access, checked 2026-09-16.** `curl` gets `503 server_busy` across
+  the whole domain, and a browser lands on a bot check that never finishes ("The check
+  did not finish... could not stay verified. Please allow cookies"). Read it through
+  Claude in Chrome on the owner's Mac, where the site already trusts the session: he
+  approved opening a browser for any site that blocks automated access. Only if the
+  timetable does not render there either is the source `failed`.
+- **Tell the two failures apart in the file.** If the site itself refuses, the source is
+  `failed` and nothing more can be done that week. If Claude in Chrome is simply not
+  connected, that is a failure of the run's environment, not of the source: still mark
+  the source `failed`, say in `failureReason` that the extension was not connected, and
+  ask the owner to connect it and re-run this one source. The two need completely
+  different things from him.
+
 ## Expected row counts (for the sanity check)
 From the run of 2026-09-15. An order-of-magnitude change fails the source.
 
