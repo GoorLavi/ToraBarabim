@@ -6,7 +6,6 @@ import { eq } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { nanoid } from 'nanoid';
 
-import { loadConfig } from '../src/config';
 import { db } from '../src/db/client';
 import { adminUsers, cities, lessonExceptions, lessonImportDismissedKeys, lessonImportRabbiLinks, lessonImportRules, lessonImportRuns, lessons, rabbis } from '../src/db/schema';
 import { SESSION_COOKIE_NAME, RABBI_SESSION_COOKIE_NAME } from '../src/service/admin-auth/consts';
@@ -28,7 +27,10 @@ const sqlWithBegin = rawClient as unknown as SqlWithBegin;
 const SEEDED_CITY_NAME = 'ירושלים';
 const SEEDED_RABBI_ID = 'rabbi-1';
 
-const agentKey = loadConfig(process.env).importAgentKey as string;
+// The suite invents its own key and hands it to the harness, so it never
+// depends on `IMPORT_AGENT_KEY` being set in the environment it runs in:
+// CI writes a .env without it, and a developer machine may have any value.
+const agentKey = 'test-agent-key-0123456789abcdef0123456789abcdef';
 const AUTH_HEADER = { authorization: `Bearer ${agentKey}` };
 
 const uniqueSuffix = (): string => nanoid(8);

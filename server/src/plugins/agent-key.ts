@@ -4,10 +4,11 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import { AGENT_KEY_BEARER_PREFIX, AGENT_KEY_UNAUTHENTICATED_MESSAGE } from '../service/lesson-import/consts';
 
-// Constant-time string compare: a plain `===` leaks the key's length and
-// where the first mismatched byte is through response timing, which is
-// exactly the class of attack a machine credential over the open internet
-// has to assume someone will try.
+// Constant-time compare for two keys of the same length, which is the
+// guarantee `timingSafeEqual` gives: it requires equal lengths, so a
+// different length still returns early and is observable. What this removes
+// is the byte-by-byte timing of `===`, which tells an attacker how much of
+// a same-length guess was right, one byte at a time.
 const timingSafeStringEqual = (a: string, b: string): boolean => {
   const bufferA = Buffer.from(a);
   const bufferB = Buffer.from(b);

@@ -4,12 +4,11 @@ import { stripLeadingHonorific } from '../shared/name';
 import { toSlug } from '../shared/slug';
 import { BUILT_IN_CITY_ALIASES, BUILT_IN_WEEKDAY_NAMES, BUILT_IN_WEEKDAY_NOTES } from './consts';
 
-// The cleaned, honorific-stripped form of a row's rabbi name, lower-cased
-// through `toSlug` so "אייל עמרמי" and "אייל  עמרמי " key the same link.
-// Kept distinct from `toSlug`'s hyphenated output (a link's `nameKey` reads
-// better as the plain cleaned name), but built on the same normalisation so
-// two spellings that collapse to the same slug also collapse to the same
-// name key.
+// The cleaned, honorific-stripped form of a row's rabbi name: trimmed,
+// lower-cased, inner whitespace collapsed, so "אייל עמרמי" and
+// "אייל  עמרמי " key the same link. Deliberately not `toSlug`: a link's
+// `nameKey` reads better as the plain cleaned name, and nothing here
+// depends on slug-level spelling normalisation.
 export const nameKeyOf = (rabbiName: string): string => stripLeadingHonorific(rabbiName).trim().toLowerCase().replace(/\s+/g, ' ');
 
 // A row's raw rabbi name sometimes carries its own honorific ("הרבנית שרה
