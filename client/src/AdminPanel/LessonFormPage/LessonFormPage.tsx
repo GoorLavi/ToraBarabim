@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import classNames from 'classnames';
 import styled from 'styled-components';
 
 import { AdminApiError } from '~/AdminPanel/api';
 import { LessonPreviewCard } from '~/AdminPanel/components/LessonPreviewCard/LessonPreviewCard';
-import { ADMIN_ROUTES } from '~/AdminPanel/consts';
+import { ADMIN_ROUTES, PRESELECTED_RABBI_PARAM } from '~/AdminPanel/consts';
 import { adminErrorMessage } from '~/AdminPanel/helpers';
 import { useExistingLesson } from '~/AdminPanel/useExistingLesson';
 import { AudiencePicker } from '~/components/AudiencePicker/AudiencePicker';
@@ -31,7 +30,7 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
   const navigate = useNavigate();
 
   const existing = useExistingLesson(id);
-  const preselectedRabbi = usePreselectedRabbi(id ? null : searchParams.get('rabbiId'));
+  const preselectedRabbi = usePreselectedRabbi(id ? null : searchParams.get(PRESELECTED_RABBI_PARAM));
   const saveLesson = useSaveLesson();
 
   const [form, setForm] = useState<LessonFormState>(() => initialFormState(undefined));
@@ -146,9 +145,15 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
 
   return (
     <div className={className}>
-      <Link className="breadcrumb" to={id ? ADMIN_ROUTES.lessonView(id) : ADMIN_ROUTES.lessons}>
-        {id ? consts.BACK_TO_LESSON_LABEL : consts.BACK_TO_LIST_LABEL}
-      </Link>
+      {id ? (
+        <button type="button" className="breadcrumb" onClick={() => (isDirty ? setIsDiscardSheetOpen(true) : leaveEditing())}>
+          {consts.BACK_TO_LESSON_LABEL}
+        </button>
+      ) : (
+        <Link className="breadcrumb" to={ADMIN_ROUTES.lessons}>
+          {consts.BACK_TO_LIST_LABEL}
+        </Link>
+      )}
 
       <div className="layout">
         <form
@@ -292,26 +297,36 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
             </div>
           )}
 
-          <div className={classNames('footer', { editMode: Boolean(id) })}>
+          <div className="footer">
             {id ? (
-              <button
-                type="button"
-                className="cancel"
-                onClick={() => (isDirty ? setIsDiscardSheetOpen(true) : leaveEditing())}
-              >
-                {consts.CANCEL_LABEL}
-              </button>
+              // Edit mode: save leads in DOM order too, not just visually,
+              // so focus order matches what's on screen. Cancel discards
+              // work here instead of being a free navigation, so it gives
+              // up the most thumb-reachable spot. "Save and add another"
+              // does not apply to an existing record (it would silently
+              // rebind the blank form to this record's id and overwrite it
+              // on the next save), so it is not offered in edit mode.
+              <>
+                <button type="submit" className="save" disabled={saveLesson.isPending}>
+                  {saveLesson.isPending ? consts.SAVING_LABEL : consts.SAVE_LABEL}
+                </button>
+                <button type="button" className="cancel" onClick={() => (isDirty ? setIsDiscardSheetOpen(true) : leaveEditing())}>
+                  {consts.CANCEL_LABEL}
+                </button>
+              </>
             ) : (
-              <Link className="cancel" to={ADMIN_ROUTES.lessons}>
-                {consts.CANCEL_LABEL}
-              </Link>
+              <>
+                <Link className="cancel" to={ADMIN_ROUTES.lessons}>
+                  {consts.CANCEL_LABEL}
+                </Link>
+                <button type="button" className="saveAndAddAnother" disabled={saveLesson.isPending} onClick={() => submit('again')}>
+                  {consts.SAVE_AND_ADD_ANOTHER_LABEL}
+                </button>
+                <button type="submit" className="save" disabled={saveLesson.isPending}>
+                  {saveLesson.isPending ? consts.SAVING_LABEL : consts.SAVE_LABEL}
+                </button>
+              </>
             )}
-            <button type="button" className="saveAndAddAnother" disabled={saveLesson.isPending} onClick={() => submit('again')}>
-              {consts.SAVE_AND_ADD_ANOTHER_LABEL}
-            </button>
-            <button type="submit" className="save" disabled={saveLesson.isPending}>
-              {saveLesson.isPending ? consts.SAVING_LABEL : consts.SAVE_LABEL}
-            </button>
           </div>
         </form>
 

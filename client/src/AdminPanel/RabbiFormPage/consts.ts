@@ -1,11 +1,12 @@
-import type { RabbiHonorific, RabbiProminence } from '@torabarabim/common';
+import type { RabbiProminence } from '@torabarabim/common';
 
 import { PROMINENCE_LABELS } from '~/AdminPanel/consts';
+import { RABBI_HONORIFIC_LABELS } from '~/consts';
 
 export const BACK_TO_LIST_LABEL = '→ חזרה לרשימת הרבנים';
 // Edit mode's breadcrumb: the rabbi already exists, so "back" returns to
-// their own view page rather than the list (this slice's brief).
-// Honorific-aware: pass `HONORIFIC_LABELS[form.honorific]`.
+// their own view page rather than the list. Honorific-aware: pass
+// `RABBI_HONORIFIC_LABELS[form.honorific]`.
 export const backToRabbiLabel = (honorific: string): string => `→ חזרה לעמוד ${honorific}`;
 export const NEW_RABBI_HEADING = 'רב חדש';
 export const REQUIRED_FIELDS_NOTE = 'רק השם הוא שדה חובה. תמונה, תואר ותקציר אפשר להוסיף גם אחר כך.';
@@ -13,14 +14,10 @@ export const REQUIRED_FIELDS_NOTE = 'רק השם הוא שדה חובה. תמו�
 export const HONORIFIC_LABEL = 'הרב או הרבנית';
 export const HONORIFIC_HELPER = 'רבנית יכולה ללמד רק שיעורים לנשים. אי אפשר לשנות את התואר אחרי היצירה.';
 export const HONORIFIC_READONLY_NOTE = 'נקבע ביצירת הרב ולא ניתן לשנותו. תואר שגוי דורש מחיקת הרב ויצירתו מחדש.';
-export const HONORIFIC_LABELS: Record<RabbiHonorific, string> = {
-  rav: 'הרב',
-  rabbanit: 'הרבנית',
-};
-// `@torabarabim/common` is types only, so this list is hand-mirrored from
-// the `RabbiHonorific` union (rabbi.ts), the same pattern as
-// `PROMINENCE_OPTIONS` below.
-export const HONORIFIC_OPTIONS: readonly RabbiHonorific[] = Object.keys(HONORIFIC_LABELS) as RabbiHonorific[];
+// The canonical map is `RABBI_HONORIFIC_LABELS` (`~/consts.ts`); read it
+// directly at the call site rather than re-declaring or re-exporting it
+// here, which would just be a second name for the same source of truth.
+export const HONORIFIC_OPTIONS = Object.keys(RABBI_HONORIFIC_LABELS) as (keyof typeof RABBI_HONORIFIC_LABELS)[];
 
 export const NAME_LABEL = 'שם הרב';
 export const NAME_HELPER = 'השם בלבד, בלי "הרב" או "הרבנית". הפנייה נוספת אוטומטית.';
@@ -47,12 +44,6 @@ export const PROMINENCE_HELPER = 'קובעת את מיקום הרב בשורות
 export const PROMINENCE_OPTIONS: readonly RabbiProminence[] = Object.keys(
   PROMINENCE_LABELS,
 ) as RabbiProminence[];
-
-// `RabbiViewPage` needs the same value map for its read-only field, and
-// lifted to `AdminPanel/consts.ts` when it became that second caller. This
-// file keeps its own name for it so `RabbiFormPage.tsx`'s namespaced
-// `consts.PROMINENCE_LABELS` reads unchanged.
-export { PROMINENCE_LABELS } from '~/AdminPanel/consts';
 
 export const PHOTO_LABEL = 'תמונת הרב';
 

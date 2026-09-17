@@ -4,10 +4,11 @@ import type { RabbiProminence } from '@torabarabim/common';
 import classNames from 'classnames';
 import styled from 'styled-components';
 
-import { ADMIN_ROUTES } from '~/AdminPanel/consts';
+import { ADMIN_ROUTES, lessonNewForRabbi, PROMINENCE_LABELS } from '~/AdminPanel/consts';
 import { adminErrorMessage } from '~/AdminPanel/helpers';
 import { PhotoPicker } from '~/components/PhotoPicker/PhotoPicker';
 import { ReadOnlyField } from '~/components/ReadOnlyField/ReadOnlyField';
+import { RABBI_HONORIFIC_LABELS } from '~/consts';
 import { directionForValue, rabbiDisplayName } from '~/helpers';
 
 import { DeleteRabbiButton } from './components/DeleteRabbiButton/DeleteRabbiButton';
@@ -114,14 +115,14 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
     const rabbi = await saveRabbi.save(form, id);
     if (!rabbi) return;
 
-    if (after === 'firstLesson') navigate(`${ADMIN_ROUTES.lessonNew}?rabbiId=${rabbi.id}`);
+    if (after === 'firstLesson') navigate(lessonNewForRabbi(rabbi.id));
     else navigate(id ? ADMIN_ROUTES.rabbiView(rabbi.id) : ADMIN_ROUTES.rabbis);
   };
 
   return (
     <div className={className}>
       <Link className="breadcrumb" to={cancelHref}>
-        {id ? consts.backToRabbiLabel(consts.HONORIFIC_LABELS[form.honorific]) : consts.BACK_TO_LIST_LABEL}
+        {id ? consts.backToRabbiLabel(RABBI_HONORIFIC_LABELS[form.honorific]) : consts.BACK_TO_LIST_LABEL}
       </Link>
 
       <div className="layout">
@@ -141,7 +142,7 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
           {id ? (
             <ReadOnlyField
               label={consts.HONORIFIC_LABEL}
-              value={consts.HONORIFIC_LABELS[form.honorific]}
+              value={RABBI_HONORIFIC_LABELS[form.honorific]}
               helper={consts.HONORIFIC_READONLY_NOTE}
             />
           ) : (
@@ -157,7 +158,7 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
                     aria-checked={form.honorific === value}
                     onClick={() => setForm((prev) => ({ ...prev, honorific: value }))}
                   >
-                    {consts.HONORIFIC_LABELS[value]}
+                    {RABBI_HONORIFIC_LABELS[value]}
                   </button>
                 ))}
               </div>
@@ -208,7 +209,7 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
             >
               {consts.PROMINENCE_OPTIONS.map((value) => (
                 <option key={value} value={value}>
-                  {consts.PROMINENCE_LABELS[value]}
+                  {PROMINENCE_LABELS[value]}
                 </option>
               ))}
             </select>

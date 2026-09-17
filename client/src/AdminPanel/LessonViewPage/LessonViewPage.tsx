@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { LessonPreviewCard } from '~/AdminPanel/components/LessonPreviewCard/LessonPreviewCard';
-import { ADMIN_ROUTES } from '~/AdminPanel/consts';
+import { ADMIN_ROUTES, skeletonFieldKeys } from '~/AdminPanel/consts';
 import { adminErrorMessage, lessonPrimaryLabel, recurrenceWhenLabel } from '~/AdminPanel/helpers';
 import { useExistingLesson } from '~/AdminPanel/useExistingLesson';
 import { ReadOnlyField } from '~/components/ReadOnlyField/ReadOnlyField';
@@ -14,8 +14,6 @@ import * as consts from './consts';
 import { weekdayLabelForPreview } from './helpers';
 import type { LessonViewPageProps } from './models';
 import * as styles from './styles';
-
-const SKELETON_FIELD_COUNT = 8;
 
 // The route-provided `id` is always present for this screen (AdminPanel.tsx
 // mounts it only at `/admin/lessons/:id`); the `| undefined` in the type is
@@ -51,7 +49,7 @@ export const LessonViewPage = styled(({ className }: LessonViewPageProps) => {
             </div>
           </div>
           <div className="skeletonFieldsGrid">
-            {consts.skeletonFieldKeys(SKELETON_FIELD_COUNT).map((key) => (
+            {skeletonFieldKeys(consts.SKELETON_FIELD_COUNT).map((key) => (
               <div key={key} className="skeletonField" />
             ))}
           </div>

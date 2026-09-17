@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { adminErrorMessage } from '~/AdminPanel/helpers';
-import { ADMIN_ROUTES } from '~/AdminPanel/consts';
+import { ADMIN_ROUTES, lessonNewForRabbi } from '~/AdminPanel/consts';
 import { rabbiDisplayName } from '~/helpers';
 
 import { LessonFilterBar } from './components/LessonFilterBar/LessonFilterBar';
@@ -84,7 +84,7 @@ export const LessonsListPage = styled(({ className }: LessonsListPageProps) => {
         <div className="state empty">
           <p className="headline">{consts.noLessonsForRabbiHeadline(rabbiDisplayName(filters.rabbi))}</p>
           <p className="hint">{consts.NO_LESSONS_FOR_RABBI_HINT}</p>
-          <Link className="cta" to={`${ADMIN_ROUTES.lessonNew}?rabbiId=${filters.rabbi.id}`}>
+          <Link className="cta" to={lessonNewForRabbi(filters.rabbi.id)}>
             {consts.ADD_LESSON_FOR_RABBI_LABEL}
           </Link>
         </div>

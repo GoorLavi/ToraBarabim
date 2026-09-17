@@ -5,8 +5,9 @@ export const LOADING_MESSAGE = 'טוענים את פרטי השיעור...';
 export const RETRY_LABEL = 'ניסיון נוסף';
 
 export const TITLE_LABEL = 'שם השיעור';
-// Matches `LessonFormPage`'s own `TITLE_HELPER` wording for the same case.
-// Honorific-aware: pass the loaded rabbi's `HONORIFIC_LABELS[honorific]`.
+// Matches `LessonFormPage`'s own `titleHelper` wording for the same case.
+// Honorific-aware: pass the loaded rabbi's `RABBI_HONORIFIC_LABELS[honorific]`
+// (`~/consts.ts`).
 export const titleEmptyValue = (honorific: string): string => `לא הוזן, ובמקומו מוצג שם ${honorific}`;
 // Falls back to this only when the rabbi itself failed to resolve (see
 // `RABBI_UNKNOWN_LABEL`), so there is no honorific to build the normal
@@ -30,8 +31,4 @@ export const AUDIENCE_LABEL = 'למי מיועד';
 
 export const RABBI_UNKNOWN_LABEL = 'לא נמצאו פרטי הרב';
 
-// `fieldCount` is fixed per render and the list is never reordered or
-// spliced, so no placeholder can change position under a mounted node
-// (same reasoning as `LessonsGridSkeleton`'s `skeletonCardKeys`).
-export const skeletonFieldKeys = (fieldCount: number): string[] =>
-  Array.from({ length: fieldCount }, (_, index) => `skeleton-field-${index}`);
+export const SKELETON_FIELD_COUNT = 8;

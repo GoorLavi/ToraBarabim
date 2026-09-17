@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { ADMIN_ROUTES, PROMINENCE_LABELS } from '~/AdminPanel/consts';
+import { ADMIN_ROUTES, PROMINENCE_LABELS, skeletonFieldKeys } from '~/AdminPanel/consts';
 import { adminErrorMessage } from '~/AdminPanel/helpers';
 import { useExistingRabbi } from '~/AdminPanel/RabbiFormPage/useExistingRabbi';
 import { ReadOnlyField } from '~/components/ReadOnlyField/ReadOnlyField';
@@ -13,8 +13,6 @@ import { RabbiLessonsSection } from './components/RabbiLessonsSection/RabbiLesso
 import * as consts from './consts';
 import type { RabbiViewPageProps } from './models';
 import * as styles from './styles';
-
-const SKELETON_FIELD_COUNT = 5;
 
 // The route-provided `id` is always present for this screen (AdminPanel.tsx
 // mounts it only at `/admin/rabbis/:id`); the `| undefined` in the type is
@@ -44,7 +42,7 @@ export const RabbiViewPage = styled(({ className }: RabbiViewPageProps) => {
         <div className="skeleton" aria-live="polite" aria-label={consts.LOADING_MESSAGE}>
           <div className="skeletonPoster" />
           <div className="skeletonFieldsGrid">
-            {consts.skeletonFieldKeys(SKELETON_FIELD_COUNT).map((key) => (
+            {skeletonFieldKeys(consts.SKELETON_FIELD_COUNT).map((key) => (
               <div key={key} className="skeletonField" />
             ))}
           </div>

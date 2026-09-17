@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { ADMIN_ROUTES } from '~/AdminPanel/consts';
+import { ADMIN_ROUTES, DETAILS_LABEL } from '~/AdminPanel/consts';
 import { lessonHasOwnTitle, lessonPrimaryLabel, recurrenceWhenLabel } from '~/AdminPanel/helpers';
 import * as parentConsts from '~/AdminPanel/LessonsListPage/consts';
 import { AUDIENCE_LABELS } from '~/consts';
@@ -61,7 +61,7 @@ export const LessonsTable = styled(({ className, rows }: LessonsTableProps) => (
         </span>
         <span className="actions" role="cell">
           <Link className="edit" to={ADMIN_ROUTES.lessonView(row.lesson.id)}>
-            {parentConsts.EDIT_LABEL}
+            {DETAILS_LABEL}
           </Link>
         </span>
       </div>

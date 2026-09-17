@@ -28,12 +28,6 @@ export const RECURRENCE_OPTIONS: { value: 'all' | 'weekly' | 'once'; label: stri
 
 export const RECURRING_TAG_LABEL = 'קבוע';
 export const ONE_TIME_TAG_LABEL = 'חד־פעמי';
-// Was 'עריכה': the row action now opens `LessonViewPage`, a read-only
-// screen, so a label promising an edit form would be wrong. Must end up
-// identical to `RabbisListPage/consts.ts`'s `EDIT_LABEL`, which names the
-// same action on the sibling list.
-export const EDIT_LABEL = 'פרטים';
-
 export const LOADING_MESSAGE = 'טוענים שיעורים...';
 export const RETRY_LABEL = 'ניסיון נוסף';
 export const ERROR_MESSAGE = 'לא הצלחנו לטעון את השיעורים';

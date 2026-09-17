@@ -53,6 +53,23 @@ export const WEEKDAY_BARE_LABELS: Record<Weekday, string> = {
 
 export const UNTITLED_RABBI_FALLBACK = 'רב לא ידוע';
 
+// The one construction site for a new-lesson link preselecting its rabbi
+// (`usePreselectedRabbi` is the one reader). Named here because four
+// separate call sites used to hand-build this query string.
+export const PRESELECTED_RABBI_PARAM = 'rabbiId';
+
+// The row shape both `LessonViewPage` and `RabbiViewPage` skeletons need: a
+// fixed field count per render, never reordered or spliced, so no
+// placeholder can change position under a mounted node.
+export const skeletonFieldKeys = (fieldCount: number): string[] =>
+  Array.from({ length: fieldCount }, (_, index) => `skeleton-field-${index}`);
+
+// The one place that says "opens the record's own screen, not its edit
+// form" on a list row. Was 'עריכה' before the view-first redesign; renamed
+// once both `LessonsListPage` and `RabbisListPage` needed it, so it stops
+// being a promise the click no longer keeps.
+export const DETAILS_LABEL = 'פרטים';
+
 // Admin-only: drives the home page's rail order and is never shown to a
 // visitor (design-system.md has no public surface for it). Read by
 // `RabbiFormPage` (as an editable option list) and `RabbiViewPage` (as a
@@ -87,3 +104,5 @@ export const ADMIN_ROUTES = {
   admins: '/admin/admins',
   adminNew: '/admin/admins/new',
 };
+
+export const lessonNewForRabbi = (rabbiId: string): string => `${ADMIN_ROUTES.lessonNew}?${PRESELECTED_RABBI_PARAM}=${rabbiId}`;

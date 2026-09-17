@@ -89,7 +89,7 @@ export const RabbisListPage = css(
       > .thumb {
         flex: 0 0 auto;
         inline-size: 72px;
-        aspect-ratio: 2 / 3;
+        aspect-ratio: 3 / 4;
         border-radius: ${theme.radii.sm};
         background: ${theme.colors.primarySoft};
         opacity: 0.6;

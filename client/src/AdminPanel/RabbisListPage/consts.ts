@@ -11,11 +11,6 @@ export const SEARCH_LABEL = 'חיפוש רבנים';
 // subheading only states what the list response actually carries.
 export const totalCountLabel = (total: number): string => `${total} רבנים במערכת`;
 
-// Was 'עריכה': the row action now opens `RabbiViewPage`, a read-only
-// screen, so a label promising an edit form would be wrong. Must end up
-// identical to `LessonsListPage/consts.ts`'s `EDIT_LABEL`, which names the
-// same action on the sibling list.
-export const EDIT_LABEL = 'פרטים';
 export const NEW_LESSON_LABEL = 'שיעור חדש';
 export const NO_LESSONS_YET_LABEL = 'אין שיעורים עדיין';
 export const lessonCountLabel = (count: number): string => `${count} שיעורים`;
