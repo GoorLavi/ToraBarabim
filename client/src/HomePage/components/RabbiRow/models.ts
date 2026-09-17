@@ -1,8 +1,8 @@
-import type { LessonOccurrence, Rabbi } from '@torabarabim/common';
+import type { Rabbi } from '@torabarabim/common';
 
 export interface RabbiRowProps {
   className?: string;
-  items: LessonOccurrence[] | undefined;
+  rabbis: Rabbi[] | undefined;
   isLoading: boolean;
   isError: boolean;
 }

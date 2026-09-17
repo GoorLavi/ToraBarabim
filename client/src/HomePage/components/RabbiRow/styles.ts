@@ -29,14 +29,19 @@ export const RabbiRow = css(
     }
   }
 
-  > .state {
-    color: ${theme.colors.textSecondary};
-    font-size: ${theme.typography.body.phone.fontSize};
-    line-height: ${theme.typography.body.phone.lineHeight};
+  > .srOnly {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
-  > .state.error {
+  > .error {
     color: ${theme.colors.danger};
+    font-size: ${theme.typography.body.phone.fontSize};
+    line-height: ${theme.typography.body.phone.lineHeight};
   }
 
   > .row {

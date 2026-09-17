@@ -1,4 +1,3 @@
-import classNames from 'classnames';
 import styled from 'styled-components';
 
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
@@ -6,21 +5,21 @@ import { trackEvent } from '~/analytics/mixpanel';
 import { TextLink } from '~/HomePage/components/TextLink/TextLink';
 
 import { RabbiAvatar } from './components/RabbiAvatar/RabbiAvatar';
+import { RabbiAvatarSkeleton } from './components/RabbiAvatarSkeleton/RabbiAvatarSkeleton';
 import * as consts from './consts';
-import { uniqueRabbis } from './helpers';
 import type { RabbiRowProps } from './models';
 import * as styles from './styles';
 
 // A row with nothing in it renders nothing at all, heading included: this
 // site never puts a heading over an empty rail (design-system.md, "Every
-// data screen has three states").
-export const RabbiRow = styled(({ className, items, isLoading, isError }: RabbiRowProps) => {
-  const rabbis = items ? uniqueRabbis(items) : [];
-
-  if (!isLoading && !isError && rabbis.length === 0) return null;
+// data screen has three states"). The server already sorts and filters
+// this list, so an empty list here means the site itself has no rabbis to
+// show, not that a filter matched none.
+export const RabbiRow = styled(({ className, rabbis, isLoading, isError }: RabbiRowProps) => {
+  if (!isLoading && !isError && (!rabbis || rabbis.length === 0)) return null;
 
   return (
-    <section className={className}>
+    <section className={className} aria-busy={isLoading}>
       <div className="heading">
         <h2>{consts.HEADING}</h2>
         <TextLink
@@ -34,20 +33,29 @@ export const RabbiRow = styled(({ className, items, isLoading, isError }: RabbiR
       </div>
 
       {isError && (
-        <p className={classNames('state', 'error')} role="alert">
+        <p className="error" role="alert">
           {consts.ERROR_MESSAGE}
         </p>
       )}
 
       {!isError && isLoading && (
-        <p className={classNames('state', 'loading')} aria-live="polite">
-          {consts.LOADING_MESSAGE}
-        </p>
+        <>
+          <span className="srOnly" aria-live="polite">
+            {consts.LOADING_MESSAGE}
+          </span>
+          <ul className="row" aria-hidden="true">
+            {consts.SKELETON_KEYS.map((key) => (
+              <li key={key}>
+                <RabbiAvatarSkeleton />
+              </li>
+            ))}
+          </ul>
+        </>
       )}
 
       {!isError && !isLoading && (
         <ul className="row">
-          {rabbis.map((rabbi, index) => (
+          {(rabbis ?? []).map((rabbi, index) => (
             <li key={rabbi.id}>
               <RabbiAvatar {...{ rabbi, position: index }} />
             </li>

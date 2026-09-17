@@ -37,6 +37,9 @@ export interface HomeRowResult {
 export interface HomeResult {
   rows: HomeRowResult[];
   womensAreaLessonCount: number;
+  // The "לפי רב" avatar row's rabbis, sorted and capped, as raw rows: the
+  // convertor is what turns them into wire `Rabbi`s.
+  rabbis: RabbiRow[];
 }
 
 // `GET /v1/women`'s summary, built from the same women's-set step `getHome`
@@ -50,7 +53,7 @@ export type WomenAreaResult =
 // lesson count.
 export type WomensSet = Omit<Extract<WomenAreaResult, { kind: 'populated' }>, 'kind'>;
 
-type RabbiRow = typeof rabbis.$inferSelect;
+export type RabbiRow = typeof rabbis.$inferSelect;
 
 // Shared by `getHome` and `getWomenArea`, both of which use the same
 // 14-day window.
@@ -59,4 +62,8 @@ export interface LoadedWindow {
   resolved: ResolvedHomeOccurrence[];
   cityByCode: Map<number, PlaceCityRow>;
   rabbiRows: RabbiRow[];
+  // Every rabbi id with at least one lesson row, regardless of the window:
+  // the same "has a lesson" the rabbi directory means when it decides
+  // which rabbi to list first within a tier.
+  rabbiIdsWithLessons: Set<string>;
 }
