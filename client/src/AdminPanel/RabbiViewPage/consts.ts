@@ -4,10 +4,6 @@ export const EDIT_LABEL = 'עריכה';
 export const LOADING_MESSAGE = 'טוענים את הפרטים...';
 export const RETRY_LABEL = 'ניסיון נוסף';
 
-export const HONORIFIC_LABEL = 'הרב או הרבנית';
-export const NAME_LABEL = 'שם';
-export const TITLE_LABEL = 'תואר';
-export const TITLE_EMPTY_VALUE = 'לא הוזן תואר';
 // Labelled for someone reading another person's record, not the rabbi's
 // own first-person "קצת עליי" in `RabbiPanel/ProfilePage`.
 export const BIO_LABEL = 'תקציר';
@@ -33,4 +29,6 @@ export const LESSONS_EMPTY_HINT = 'הוספת שיעור תפתח כאן את ה
 export const ADD_LESSON_LABEL = 'הוספת שיעור';
 export const seeAllLessonsLabel = (total: number): string => `לכל ${total} השיעורים`;
 
-export const SKELETON_FIELD_COUNT = 5;
+// Prominence and bio: the two fields left in the card once the header
+// absorbed honorific, name and title (see this slice's report, finding 2).
+export const SKELETON_FIELD_COUNT = 2;

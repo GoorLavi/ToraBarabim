@@ -1,10 +1,10 @@
 import { css } from 'styled-components';
 
 // Card padding `md` and gaps one stop down throughout, per design-system.md's
-// "the admin panel is denser than the public site". The poster is bigger
-// than `LessonViewPage`'s inline thumbnail: this page is the rabbi's own
-// record, so the photo is the primary visual rather than a secondary
-// identifier beside a lesson's own heading.
+// "the admin panel is denser than the public site". The header now carries
+// a compact inline poster beside the rabbi's name and title (see this
+// slice's report, finding 2), the same shape as LessonViewPage's header
+// rather than the earlier large, separately laid-out photo panel.
 export const RabbiViewPage = css(
   ({ theme }) => `
   display: flex;
@@ -16,7 +16,7 @@ export const RabbiViewPage = css(
     flex-direction: column;
     align-items: flex-start;
     gap: ${theme.spacing.sm};
-    padding: ${theme.spacing.xl};
+    padding: ${theme.spacing.lg};
     border: 1px solid ${theme.colors.border};
     border-radius: ${theme.radii.lg};
     background: ${theme.colors.surface};
@@ -41,11 +41,39 @@ export const RabbiViewPage = css(
     flex-direction: column;
     gap: ${theme.spacing.lg};
 
-    > .skeletonPoster {
-      inline-size: 160px;
-      aspect-ratio: 3 / 4;
-      border-radius: ${theme.radii.sm};
-      background: ${theme.colors.border};
+    > .skeletonHeader {
+      display: flex;
+      gap: ${theme.spacing.md};
+
+      > .skeletonPoster {
+        flex: 0 0 auto;
+        inline-size: 72px;
+        aspect-ratio: 3 / 4;
+        border-radius: ${theme.radii.sm};
+        background: ${theme.colors.border};
+      }
+
+      > .skeletonLines {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: ${theme.spacing.md};
+
+        > .skeletonLine {
+          block-size: 20px;
+          border-radius: ${theme.radii.sm};
+          background: ${theme.colors.border};
+
+          &.wide {
+            max-inline-size: 320px;
+          }
+
+          &.short {
+            max-inline-size: 160px;
+          }
+        }
+      }
     }
 
     > .skeletonFieldsGrid {
@@ -74,115 +102,114 @@ export const RabbiViewPage = css(
     font-weight: ${theme.typography.fontWeight.semiBold};
   }
 
-  > .layout {
+  > .main {
     display: flex;
-    flex-direction: column-reverse;
-    gap: ${theme.spacing.xl};
+    flex-direction: column;
+    gap: ${theme.spacing.md};
 
-    @media (min-width: ${theme.breakpoints.lg}) {
-      flex-direction: row-reverse;
-      align-items: flex-start;
-
-      > .main {
-        flex: 2;
-      }
-
-      > .poster {
-        flex: 1;
-        position: sticky;
-        inset-block-start: ${theme.spacing.lg};
-      }
-    }
-
-    > .main {
+    > .header {
       display: flex;
-      flex-direction: column;
+      align-items: flex-start;
       gap: ${theme.spacing.md};
 
-      > .head {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: ${theme.spacing.sm};
-
-        @media (min-width: ${theme.breakpoints.md}) {
-          flex-direction: row;
-          align-items: center;
-          justify-content: space-between;
-          gap: ${theme.spacing.md};
-        }
-
-        > .heading {
-          flex: 1;
-          min-inline-size: 0;
-          overflow-wrap: break-word;
-          color: ${theme.colors.text};
-          font-weight: ${theme.typography.pageHeading.fontWeight};
-          font-size: ${theme.typography.sectionHeading.phone.fontSize};
-          line-height: ${theme.typography.sectionHeading.phone.lineHeight};
-
-          @media (min-width: ${theme.breakpoints.md}) {
-            font-size: ${theme.typography.pageHeading.phone.fontSize};
-            line-height: ${theme.typography.pageHeading.phone.lineHeight};
-          }
-        }
-
-        > .editButton {
-          flex: 0 0 auto;
-          align-self: flex-start;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          min-block-size: 48px;
-          padding-inline: ${theme.spacing.lg};
-          border-radius: ${theme.radii.pill};
-          background: ${theme.colors.primary};
-          color: ${theme.colors.textOnPrimary};
-          font-weight: ${theme.typography.fontWeight.semiBold};
-
-          @media (min-width: ${theme.breakpoints.md}) {
-            align-self: center;
-          }
-        }
-      }
-
-      > .fieldsGrid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: ${theme.spacing.sm};
-        padding: ${theme.spacing.md};
-        border: 1px solid ${theme.colors.border};
-        border-radius: ${theme.radii.lg};
-        background: ${theme.colors.surface};
-        box-shadow: ${theme.shadows.card};
-
-        @media (min-width: ${theme.breakpoints.md}) {
-          grid-template-columns: repeat(2, 1fr);
-        }
-
-        > .wide {
-          @media (min-width: ${theme.breakpoints.md}) {
-            grid-column: 1 / -1;
-          }
-        }
-      }
-    }
-
-    > .poster {
-      > .photo {
-        inline-size: 100%;
-        max-inline-size: 200px;
+      > .poster {
+        flex: 0 0 auto;
+        inline-size: 72px;
         aspect-ratio: 3 / 4;
         border-radius: ${theme.radii.sm};
         object-fit: cover;
         background: ${theme.colors.primarySoft};
 
-        @media (min-width: ${theme.breakpoints.md}) {
-          max-inline-size: 280px;
-        }
-
         &.placeholder {
           background: ${theme.colors.primarySoft};
+        }
+      }
+
+      > .identity {
+        flex: 1;
+        min-inline-size: 0;
+        display: flex;
+        flex-direction: column;
+        gap: ${theme.spacing.xs};
+
+        > .head {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: ${theme.spacing.sm};
+
+          @media (min-width: ${theme.breakpoints.md}) {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: ${theme.spacing.md};
+          }
+
+          > .heading {
+            flex: 1;
+            min-inline-size: 0;
+            overflow-wrap: break-word;
+            color: ${theme.colors.text};
+            font-weight: ${theme.typography.pageHeading.fontWeight};
+            font-size: ${theme.typography.sectionHeading.phone.fontSize};
+            line-height: ${theme.typography.sectionHeading.phone.lineHeight};
+
+            @media (min-width: ${theme.breakpoints.md}) {
+              font-size: ${theme.typography.pageHeading.phone.fontSize};
+              line-height: ${theme.typography.pageHeading.phone.lineHeight};
+            }
+          }
+
+          > .editButton {
+            flex: 0 0 auto;
+            align-self: flex-start;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-block-size: 48px;
+            padding-inline: ${theme.spacing.lg};
+            border-radius: ${theme.radii.pill};
+            background: ${theme.colors.primary};
+            color: ${theme.colors.textOnPrimary};
+            font-weight: ${theme.typography.fontWeight.semiBold};
+
+            @media (min-width: ${theme.breakpoints.md}) {
+              align-self: center;
+            }
+          }
+        }
+
+        > .title {
+          overflow-wrap: break-word;
+          color: ${theme.colors.textSecondary};
+          font-weight: ${theme.typography.fontWeight.regular};
+          font-size: ${theme.typography.body.phone.fontSize};
+          line-height: ${theme.typography.body.phone.lineHeight};
+        }
+      }
+    }
+
+    > .fieldsGrid {
+      display: grid;
+      grid-template-columns: 1fr;
+      // Row-gap 0: each row already carries its own block padding and top
+      // hairline (RecordField/styles.ts), so an extra grid gap would double
+      // the space between rows. Column-gap keeps the two side-by-side
+      // fields from touching at md and up.
+      gap: 0 ${theme.spacing.sm};
+      padding: ${theme.spacing.md};
+      border: 1px solid ${theme.colors.border};
+      border-radius: ${theme.radii.lg};
+      background: ${theme.colors.surface};
+      box-shadow: ${theme.shadows.card};
+
+      @media (min-width: ${theme.breakpoints.md}) {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      > .wide {
+        @media (min-width: ${theme.breakpoints.md}) {
+          grid-column: 1 / -1;
         }
       }
     }

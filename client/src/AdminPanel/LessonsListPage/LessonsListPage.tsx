@@ -1,4 +1,3 @@
-import classNames from 'classnames';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -20,12 +19,11 @@ export const LessonsListPage = styled(({ className }: LessonsListPageProps) => {
   const filters = useLessonListFilters();
   const state = useAdminLessonsList(filters.city, filters.rabbi?.id);
 
-  // Zero rows from the server, with no filter that could explain it other
-  // than "this rabbi has none", gets its own copy instead of the
-  // system-wide "no lessons at all" headline (design-system.md, "Every
-  // data screen has three states": the empty state has to name the
-  // constraint that produced no results).
-  const isRabbiOnlyFilterEmpty = state.status === 'success' && state.total === 0 && filters.rabbi !== undefined && filters.activeFilterCount === 1;
+  // Client-side filtering (recurrence, search) over whatever the server
+  // already narrowed by city/rabbi; when the server itself returned zero,
+  // `state.rows` is already empty and this is a no-op, so one check below
+  // covers both a server-side zero result and a client-side one.
+  const rows = state.status === 'success' ? filterRows(state.rows, filters.recurrence, filters.search) : [];
 
   return (
     <div className={className}>
@@ -80,7 +78,14 @@ export const LessonsListPage = styled(({ className }: LessonsListPageProps) => {
         </div>
       )}
 
-      {isRabbiOnlyFilterEmpty && filters.rabbi && (
+      {/* The rabbi filter always gets its own copy, whatever else is set
+          alongside it (a "see all" link can arrive with a city filter still
+          active): the rabbi's own lesson count is the constraint that
+          matters, not the combination. Any other active filter (city,
+          recurrence, search, alone or combined) gets the generic
+          "no matching lessons" copy with a way back to the unfiltered
+          list. Only truly no filters at all claims the system is empty. */}
+      {state.status === 'success' && rows.length === 0 && filters.rabbi && (
         <div className="state empty">
           <p className="headline">{consts.noLessonsForRabbiHeadline(rabbiDisplayName(filters.rabbi))}</p>
           <p className="hint">{consts.NO_LESSONS_FOR_RABBI_HINT}</p>
@@ -90,7 +95,17 @@ export const LessonsListPage = styled(({ className }: LessonsListPageProps) => {
         </div>
       )}
 
-      {state.status === 'success' && state.total === 0 && !isRabbiOnlyFilterEmpty && (
+      {state.status === 'success' && rows.length === 0 && !filters.rabbi && filters.activeFilterCount > 0 && (
+        <div className="state empty">
+          <p className="headline">{consts.NO_MATCHING_LESSONS_HEADLINE}</p>
+          <p className="hint">{consts.NO_MATCHING_LESSONS_HINT}</p>
+          <button type="button" className="cta" onClick={filters.clear}>
+            {consts.CLEAR_FILTERS_LABEL}
+          </button>
+        </div>
+      )}
+
+      {state.status === 'success' && rows.length === 0 && filters.activeFilterCount === 0 && (
         <div className="state empty">
           <p className="headline">{consts.NO_LESSONS_HEADLINE}</p>
           <p className="hint">{consts.NO_LESSONS_HINT}</p>
@@ -100,28 +115,12 @@ export const LessonsListPage = styled(({ className }: LessonsListPageProps) => {
         </div>
       )}
 
-      {state.status === 'success' &&
-        state.total > 0 &&
-        (() => {
-          const rows = filterRows(state.rows, filters.recurrence, filters.search);
-          if (rows.length === 0) {
-            return (
-              <div className={classNames('state', 'empty')}>
-                <p className="headline">{consts.NO_MATCHING_LESSONS_HEADLINE}</p>
-                <p className="hint">{consts.NO_MATCHING_LESSONS_HINT}</p>
-                <button type="button" className="cta" onClick={filters.clear}>
-                  {consts.CLEAR_FILTERS_LABEL}
-                </button>
-              </div>
-            );
-          }
-          return (
-            <>
-              <LessonsTable rows={rows} />
-              <LessonsCardList rows={rows} />
-            </>
-          );
-        })()}
+      {state.status === 'success' && rows.length > 0 && (
+        <>
+          <LessonsTable rows={rows} />
+          <LessonsCardList rows={rows} />
+        </>
+      )}
     </div>
   );
 })`

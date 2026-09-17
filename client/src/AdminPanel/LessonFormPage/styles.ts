@@ -193,18 +193,23 @@ export const LessonFormPage = css(
 
       > .footer {
         display: flex;
-        flex-wrap: wrap;
-        align-items: center;
+        flex-direction: column;
         gap: ${theme.spacing.md};
 
-        // In edit mode, cancel discards work instead of being a free
-        // navigation, so it gives up the most thumb-reachable spot: the
-        // whole row reverses, putting save first.
-        &.editMode {
-          flex-direction: row-reverse;
+        // The DOM order already puts the primary action where it belongs
+        // in each mode (save leads in edit mode, trails in new-lesson
+        // mode): below the md breakpoint the footer stacks in that order
+        // at full width, so three buttons can never wrap and land the
+        // primary action in the least prominent spot. From md up there is
+        // room for a row.
+        @media (min-width: ${theme.breakpoints.md}) {
+          flex-direction: row;
+          flex-wrap: wrap;
+          align-items: center;
         }
 
         > .cancel {
+          inline-size: 100%;
           display: flex;
           align-items: center;
           min-block-size: 48px;
@@ -216,9 +221,14 @@ export const LessonFormPage = css(
           font-size: ${theme.typography.body.phone.fontSize};
           line-height: ${theme.typography.body.phone.lineHeight};
           cursor: pointer;
+
+          @media (min-width: ${theme.breakpoints.md}) {
+            inline-size: auto;
+          }
         }
 
         > .saveAndAddAnother {
+          inline-size: 100%;
           min-block-size: 48px;
           padding-inline: ${theme.spacing.lg};
           border: 1px solid ${theme.colors.primary};
@@ -226,18 +236,27 @@ export const LessonFormPage = css(
           color: ${theme.colors.primary};
           font-weight: ${theme.typography.fontWeight.semiBold};
 
+          @media (min-width: ${theme.breakpoints.md}) {
+            inline-size: auto;
+          }
+
           &:disabled {
             opacity: 0.6;
           }
         }
 
         > .save {
+          inline-size: 100%;
           min-block-size: 48px;
           padding-inline: ${theme.spacing.xl};
           border-radius: ${theme.radii.pill};
           background: ${theme.colors.primary};
           color: ${theme.colors.textOnPrimary};
           font-weight: ${theme.typography.fontWeight.semiBold};
+
+          @media (min-width: ${theme.breakpoints.md}) {
+            inline-size: auto;
+          }
 
           &:disabled {
             opacity: 0.6;

@@ -1,14 +1,21 @@
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { ADMIN_ROUTES, lessonNewForRabbi } from '~/AdminPanel/consts';
-import { adminErrorMessage, lessonPrimaryLabel, recurrenceWhenLabel } from '~/AdminPanel/helpers';
+import { ADMIN_ROUTES, lessonNewForRabbi, skeletonFieldKeys } from '~/AdminPanel/consts';
+import { adminErrorMessage, lessonPrimaryLabel } from '~/AdminPanel/helpers';
 import { lessonsListUrlForRabbi } from '~/AdminPanel/LessonsListPage/helpers';
 import * as parentConsts from '~/AdminPanel/RabbiViewPage/consts';
 
+import { lessonRowMetaLabel } from './helpers';
 import type { RabbiLessonsSectionProps } from './models';
 import * as styles from './styles';
 import { useRabbiLessons } from './useRabbiLessons';
+
+// Skeleton rows, not this section's own field count: an independent query
+// from `RabbiViewPage`'s own profile skeleton, but the two share one
+// loading idiom (shimmer rows at the real row height) rather than this
+// section falling back to a plain loading sentence.
+const SKELETON_ROW_COUNT = 3;
 
 // Owns its own loading, empty and error states, independent of
 // `RabbiViewPage`'s own profile query: a failure fetching the rabbi's
@@ -22,9 +29,11 @@ export const RabbiLessonsSection = styled(({ className, rabbiId, rabbiName, rabb
       <h2 className="heading">{parentConsts.LESSONS_SECTION_HEADING}</h2>
 
       {lessons.isPending && (
-        <p className="state" aria-live="polite">
-          {parentConsts.LESSONS_LOADING_MESSAGE}
-        </p>
+        <ul className="skeletonList" aria-live="polite" aria-label={parentConsts.LESSONS_LOADING_MESSAGE}>
+          {skeletonFieldKeys(SKELETON_ROW_COUNT).map((key) => (
+            <li key={key} className="skeletonRow" />
+          ))}
+        </ul>
       )}
 
       {lessons.isError && (
@@ -52,15 +61,17 @@ export const RabbiLessonsSection = styled(({ className, rabbiId, rabbiName, rabb
             {lessons.data.items.map((lesson) => (
               <li key={lesson.id}>
                 <Link className="row" to={ADMIN_ROUTES.lessonView(lesson.id)}>
-                  <span className="primary" dir="auto">
-                    {lessonPrimaryLabel(lesson, { name: rabbiName, honorific: rabbiHonorific })}
+                  <span className="text">
+                    <span className="primary" dir="auto">
+                      {lessonPrimaryLabel(lesson, { name: rabbiName, honorific: rabbiHonorific })}
+                    </span>
+                    <span className="meta" dir="auto">
+                      {lessonRowMetaLabel(lesson)}
+                    </span>
                   </span>
-                  <span className="when" dir="auto">
-                    {recurrenceWhenLabel(lesson)}
-                  </span>
-                  <span className="time" dir="ltr">
-                    {lesson.startTime}
-                  </span>
+                  <svg className="chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
                 </Link>
               </li>
             ))}

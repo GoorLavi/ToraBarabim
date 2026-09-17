@@ -27,8 +27,12 @@ export const DiscardChangesSheet = css(
       flex-direction: column;
       gap: ${theme.spacing.sm};
 
-      > .confirm {
-        min-block-size: 52px;
+      // The safe choice (staying in the form) is the filled, dominant
+      // button; the destructive one (leaving without saving) is a bordered
+      // ghost in danger text, never a danger fill (design-system.md,
+      // color token table: danger is text only).
+      > .back {
+        min-block-size: 48px;
         border-radius: ${theme.radii.md};
         background: ${theme.colors.primary};
         color: ${theme.colors.textOnPrimary};
@@ -37,9 +41,11 @@ export const DiscardChangesSheet = css(
         line-height: ${theme.typography.body.phone.lineHeight};
       }
 
-      > .back {
+      > .confirm {
         min-block-size: 48px;
-        color: ${theme.colors.textSecondary};
+        border: 1px solid ${theme.colors.danger};
+        border-radius: ${theme.radii.md};
+        color: ${theme.colors.danger};
         font-weight: ${theme.typography.fontWeight.semiBold};
         font-size: ${theme.typography.body.phone.fontSize};
         line-height: ${theme.typography.body.phone.lineHeight};

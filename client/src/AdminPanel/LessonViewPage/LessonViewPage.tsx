@@ -3,10 +3,10 @@ import { Link, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { LessonPreviewCard } from '~/AdminPanel/components/LessonPreviewCard/LessonPreviewCard';
+import { RecordField } from '~/AdminPanel/components/RecordField/RecordField';
 import { ADMIN_ROUTES, skeletonFieldKeys } from '~/AdminPanel/consts';
 import { adminErrorMessage, lessonPrimaryLabel, recurrenceWhenLabel } from '~/AdminPanel/helpers';
 import { useExistingLesson } from '~/AdminPanel/useExistingLesson';
-import { ReadOnlyField } from '~/components/ReadOnlyField/ReadOnlyField';
 import { AUDIENCE_LABELS, RABBI_HONORIFIC_LABELS } from '~/consts';
 import { rabbiDisplayName } from '~/helpers';
 
@@ -27,6 +27,10 @@ export const LessonViewPage = styled(({ className }: LessonViewPageProps) => {
   if (existing.status === 'error') {
     return (
       <div className={className}>
+        <Link className="breadcrumb" to={ADMIN_ROUTES.lessons}>
+          {consts.BACK_TO_LIST_LABEL}
+        </Link>
+
         <div className="state error" role="alert">
           <p className="message">{adminErrorMessage(existing.error)}</p>
           <button type="button" className="retry" onClick={existing.retry}>
@@ -40,6 +44,10 @@ export const LessonViewPage = styled(({ className }: LessonViewPageProps) => {
   if (existing.status !== 'success') {
     return (
       <div className={className}>
+        <Link className="breadcrumb" to={ADMIN_ROUTES.lessons}>
+          {consts.BACK_TO_LIST_LABEL}
+        </Link>
+
         <div className="skeleton" aria-live="polite" aria-label={consts.LOADING_MESSAGE}>
           <div className="skeletonHeader">
             <div className="skeletonPoster" />
@@ -76,14 +84,9 @@ export const LessonViewPage = styled(({ className }: LessonViewPageProps) => {
             )}
 
             <div className="identity">
-              <div className="titleRow">
-                <h1 className="heading" dir="auto">
-                  {lessonPrimaryLabel(lesson, rabbi)}
-                </h1>
-                <Link className="editButton" to={ADMIN_ROUTES.lessonEdit(lesson.id)}>
-                  {consts.EDIT_LABEL}
-                </Link>
-              </div>
+              <h1 className="heading" dir="auto">
+                {lessonPrimaryLabel(lesson, rabbi)}
+              </h1>
 
               {rabbi ? (
                 <Link className="rabbiLink" to={ADMIN_ROUTES.rabbiView(rabbi.id)} dir="auto">
@@ -92,45 +95,52 @@ export const LessonViewPage = styled(({ className }: LessonViewPageProps) => {
               ) : (
                 <span className="rabbiUnknown">{consts.RABBI_UNKNOWN_LABEL}</span>
               )}
+
+              <Link className="editButton" to={ADMIN_ROUTES.lessonEdit(lesson.id)}>
+                {consts.EDIT_LABEL}
+              </Link>
             </div>
           </header>
 
           <div className="fieldsGrid">
-            <ReadOnlyField
+            <RecordField
               className="wide"
               label={consts.TITLE_LABEL}
+              isEmpty={!lesson.title}
               value={
                 lesson.title ??
                 (rabbi ? consts.titleEmptyValue(RABBI_HONORIFIC_LABELS[rabbi.honorific]) : consts.TITLE_EMPTY_VALUE_UNKNOWN_RABBI)
               }
             />
 
-            <ReadOnlyField
+            <RecordField
               label={consts.RECURRENCE_KIND_LABEL}
               value={lesson.recurrence.kind === 'weekly' ? consts.RECURRING_VALUE : consts.ONE_TIME_VALUE}
             />
-            <ReadOnlyField label={consts.WHEN_LABEL} value={recurrenceWhenLabel(lesson)} />
+            <RecordField label={consts.WHEN_LABEL} value={recurrenceWhenLabel(lesson)} />
 
-            <ReadOnlyField label={consts.START_TIME_LABEL} value={lesson.startTime} valueDir="ltr" />
-            <ReadOnlyField label={consts.DURATION_LABEL} value={consts.durationValue(lesson.durationMinutes)} />
+            <RecordField label={consts.START_TIME_LABEL} value={lesson.startTime} valueDir="ltr" />
+            <RecordField label={consts.DURATION_LABEL} value={consts.durationValue(lesson.durationMinutes)} />
 
-            <ReadOnlyField label={consts.CITY_LABEL} value={lesson.place.cityName} />
-            <ReadOnlyField label={consts.PLACE_NAME_LABEL} value={lesson.place.name} />
-            <ReadOnlyField className="wide" label={consts.STREET_LABEL} value={lesson.place.street} />
-            {lesson.place.floor && <ReadOnlyField label={consts.FLOOR_LABEL} value={lesson.place.floor} />}
+            <RecordField label={consts.CITY_LABEL} value={lesson.place.cityName} />
+            <RecordField label={consts.PLACE_NAME_LABEL} value={lesson.place.name} />
+            <RecordField className="wide" label={consts.STREET_LABEL} value={lesson.place.street} />
+            {lesson.place.floor && <RecordField label={consts.FLOOR_LABEL} value={lesson.place.floor} />}
 
-            <ReadOnlyField label={consts.AUDIENCE_LABEL} value={AUDIENCE_LABELS[lesson.audience]} />
+            <RecordField label={consts.AUDIENCE_LABEL} value={AUDIENCE_LABELS[lesson.audience]} />
           </div>
         </div>
 
         <aside className="preview">
           <LessonPreviewCard
-            rabbi={rabbi}
-            title={lesson.title ?? ''}
-            audience={lesson.audience}
-            cityName={lesson.place.cityName}
-            weekdayLabel={weekdayLabelForPreview(lesson)}
-            startTime={lesson.startTime}
+            {...{
+              rabbi,
+              title: lesson.title ?? '',
+              audience: lesson.audience,
+              cityName: lesson.place.cityName,
+              weekdayLabel: weekdayLabelForPreview(lesson),
+              startTime: lesson.startTime,
+            }}
           />
         </aside>
       </div>

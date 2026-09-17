@@ -11,7 +11,7 @@ export const LessonViewPage = css(
     flex-direction: column;
     align-items: flex-start;
     gap: ${theme.spacing.sm};
-    padding: ${theme.spacing.xl};
+    padding: ${theme.spacing.lg};
     border: 1px solid ${theme.colors.border};
     border-radius: ${theme.radii.lg};
     background: ${theme.colors.surface};
@@ -99,8 +99,12 @@ export const LessonViewPage = css(
 
   > .layout {
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: column;
     gap: ${theme.spacing.xl};
+
+    > .preview {
+      display: none;
+    }
 
     @media (min-width: ${theme.breakpoints.lg}) {
       flex-direction: row;
@@ -111,6 +115,7 @@ export const LessonViewPage = css(
       }
 
       > .preview {
+        display: block;
         flex: 1;
         position: sticky;
         inset-block-start: ${theme.spacing.lg};
@@ -120,7 +125,7 @@ export const LessonViewPage = css(
     > .main {
       display: flex;
       flex-direction: column;
-      gap: ${theme.spacing.lg};
+      gap: ${theme.spacing.md};
 
       > .header {
         display: flex;
@@ -149,52 +154,44 @@ export const LessonViewPage = css(
           min-inline-size: 0;
           display: flex;
           flex-direction: column;
-          gap: ${theme.spacing.sm};
+          gap: ${theme.spacing.xs};
 
-          > .titleRow {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: ${theme.spacing.sm};
+          // Below the md breakpoint, the DOM order (heading, rabbi link,
+          // edit button) is also the visual order, so the lesson's own
+          // title and its rabbi stay adjacent with the edit button on its
+          // own row beneath both. From md up the row wraps and order puts
+          // the edit button beside the heading, pushing the rabbi link
+          // onto its own full-width line below, matching the previous
+          // layout.
+          @media (min-width: ${theme.breakpoints.md}) {
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-items: center;
+            column-gap: ${theme.spacing.md};
+            row-gap: ${theme.spacing.sm};
+          }
+
+          > .heading {
+            flex: 1 1 auto;
+            min-inline-size: 0;
+            overflow-wrap: break-word;
+            color: ${theme.colors.text};
+            font-weight: ${theme.typography.pageHeading.fontWeight};
+            font-size: ${theme.typography.sectionHeading.phone.fontSize};
+            line-height: ${theme.typography.sectionHeading.phone.lineHeight};
 
             @media (min-width: ${theme.breakpoints.md}) {
-              flex-direction: row;
-              align-items: center;
-              justify-content: space-between;
-              gap: ${theme.spacing.md};
+              order: 1;
+              font-size: ${theme.typography.pageHeading.phone.fontSize};
+              line-height: ${theme.typography.pageHeading.phone.lineHeight};
             }
+          }
 
-            > .heading {
-              flex: 1;
-              min-inline-size: 0;
-              overflow-wrap: break-word;
-              color: ${theme.colors.text};
-              font-weight: ${theme.typography.pageHeading.fontWeight};
-              font-size: ${theme.typography.sectionHeading.phone.fontSize};
-              line-height: ${theme.typography.sectionHeading.phone.lineHeight};
-
-              @media (min-width: ${theme.breakpoints.md}) {
-                font-size: ${theme.typography.pageHeading.phone.fontSize};
-                line-height: ${theme.typography.pageHeading.phone.lineHeight};
-              }
-            }
-
-            > .editButton {
-              flex: 0 0 auto;
-              align-self: flex-start;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              min-block-size: 48px;
-              padding-inline: ${theme.spacing.lg};
-              border-radius: ${theme.radii.pill};
-              background: ${theme.colors.primary};
-              color: ${theme.colors.textOnPrimary};
-              font-weight: ${theme.typography.fontWeight.semiBold};
-
-              @media (min-width: ${theme.breakpoints.md}) {
-                align-self: center;
-              }
+          > .rabbiLink,
+          > .rabbiUnknown {
+            @media (min-width: ${theme.breakpoints.md}) {
+              order: 3;
+              flex-basis: 100%;
             }
           }
 
@@ -215,13 +212,38 @@ export const LessonViewPage = css(
             font-size: ${theme.typography.body.phone.fontSize};
             line-height: ${theme.typography.body.phone.lineHeight};
           }
+
+          > .editButton {
+            flex: 0 0 auto;
+            align-self: flex-start;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-block-size: 48px;
+            padding-inline: ${theme.spacing.lg};
+            margin-block-start: ${theme.spacing.sm};
+            border-radius: ${theme.radii.pill};
+            background: ${theme.colors.primary};
+            color: ${theme.colors.textOnPrimary};
+            font-weight: ${theme.typography.fontWeight.semiBold};
+
+            @media (min-width: ${theme.breakpoints.md}) {
+              order: 2;
+              align-self: center;
+              margin-block-start: 0;
+            }
+          }
         }
       }
 
       > .fieldsGrid {
         display: grid;
         grid-template-columns: 1fr;
-        gap: ${theme.spacing.sm};
+        // Row-gap 0: each row already carries its own block padding and top
+        // hairline (RecordField/styles.ts), so an extra grid gap would
+        // double the space between rows. Column-gap keeps the two
+        // side-by-side fields from touching at md and up.
+        gap: 0 ${theme.spacing.sm};
         padding: ${theme.spacing.md};
         border: 1px solid ${theme.colors.border};
         border-radius: ${theme.radii.lg};

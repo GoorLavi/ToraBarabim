@@ -2,11 +2,10 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { RecordField } from '~/AdminPanel/components/RecordField/RecordField';
 import { ADMIN_ROUTES, PROMINENCE_LABELS, skeletonFieldKeys } from '~/AdminPanel/consts';
 import { adminErrorMessage } from '~/AdminPanel/helpers';
 import { useExistingRabbi } from '~/AdminPanel/RabbiFormPage/useExistingRabbi';
-import { ReadOnlyField } from '~/components/ReadOnlyField/ReadOnlyField';
-import { RABBI_HONORIFIC_LABELS } from '~/consts';
 import { rabbiDisplayName } from '~/helpers';
 
 import { RabbiLessonsSection } from './components/RabbiLessonsSection/RabbiLessonsSection';
@@ -26,6 +25,10 @@ export const RabbiViewPage = styled(({ className }: RabbiViewPageProps) => {
   if (existingRabbi.isError) {
     return (
       <div className={className}>
+        <Link className="breadcrumb" to={ADMIN_ROUTES.rabbis}>
+          {consts.BACK_TO_LIST_LABEL}
+        </Link>
+
         <div className="state error" role="alert">
           <p className="message">{adminErrorMessage(existingRabbi.error)}</p>
           <button type="button" className="retry" onClick={() => existingRabbi.refetch()}>
@@ -39,8 +42,18 @@ export const RabbiViewPage = styled(({ className }: RabbiViewPageProps) => {
   if (existingRabbi.isPending) {
     return (
       <div className={className}>
+        <Link className="breadcrumb" to={ADMIN_ROUTES.rabbis}>
+          {consts.BACK_TO_LIST_LABEL}
+        </Link>
+
         <div className="skeleton" aria-live="polite" aria-label={consts.LOADING_MESSAGE}>
-          <div className="skeletonPoster" />
+          <div className="skeletonHeader">
+            <div className="skeletonPoster" />
+            <div className="skeletonLines">
+              <div className="skeletonLine wide" />
+              <div className="skeletonLine short" />
+            </div>
+          </div>
           <div className="skeletonFieldsGrid">
             {skeletonFieldKeys(consts.SKELETON_FIELD_COUNT).map((key) => (
               <div key={key} className="skeletonField" />
@@ -59,33 +72,36 @@ export const RabbiViewPage = styled(({ className }: RabbiViewPageProps) => {
         {consts.BACK_TO_LIST_LABEL}
       </Link>
 
-      <div className="layout">
-        <div className="main">
-          <div className="head">
-            <h1 className="heading" dir="auto">
-              {rabbiDisplayName(rabbi)}
-            </h1>
-            <Link className="editButton" to={ADMIN_ROUTES.rabbiEdit(rabbi.id)}>
-              {consts.EDIT_LABEL}
-            </Link>
-          </div>
-
-          <div className="fieldsGrid">
-            <ReadOnlyField label={consts.HONORIFIC_LABEL} value={RABBI_HONORIFIC_LABELS[rabbi.honorific]} />
-            <ReadOnlyField label={consts.NAME_LABEL} value={rabbi.name} />
-            <ReadOnlyField label={consts.TITLE_LABEL} value={rabbi.title ?? consts.TITLE_EMPTY_VALUE} />
-            <ReadOnlyField label={consts.PROMINENCE_LABEL} value={PROMINENCE_LABELS[rabbi.prominence]} />
-            <ReadOnlyField className="wide" label={consts.BIO_LABEL} value={rabbi.bio ?? consts.BIO_EMPTY_VALUE} />
-          </div>
-        </div>
-
-        <aside className="poster">
+      <div className="main">
+        <header className="header">
           {rabbi.photoUrl && !hasPhotoLoadFailed ? (
-            <img className="photo" src={rabbi.photoUrl} alt="" onError={() => setHasPhotoLoadFailed(true)} />
+            <img className="poster" src={rabbi.photoUrl} alt="" onError={() => setHasPhotoLoadFailed(true)} />
           ) : (
-            <div className="photo placeholder" aria-hidden="true" />
+            <div className="poster placeholder" aria-hidden="true" />
           )}
-        </aside>
+
+          <div className="identity">
+            <div className="head">
+              <h1 className="heading" dir="auto">
+                {rabbiDisplayName(rabbi)}
+              </h1>
+              <Link className="editButton" to={ADMIN_ROUTES.rabbiEdit(rabbi.id)}>
+                {consts.EDIT_LABEL}
+              </Link>
+            </div>
+
+            {rabbi.title && (
+              <p className="title" dir="auto">
+                {rabbi.title}
+              </p>
+            )}
+          </div>
+        </header>
+
+        <div className="fieldsGrid">
+          <RecordField label={consts.PROMINENCE_LABEL} value={PROMINENCE_LABELS[rabbi.prominence]} />
+          <RecordField className="wide" label={consts.BIO_LABEL} isEmpty={!rabbi.bio} value={rabbi.bio ?? consts.BIO_EMPTY_VALUE} />
+        </div>
       </div>
 
       <RabbiLessonsSection rabbiId={rabbi.id} rabbiName={rabbi.name} rabbiHonorific={rabbi.honorific} />

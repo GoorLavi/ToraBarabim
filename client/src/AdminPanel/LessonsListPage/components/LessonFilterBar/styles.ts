@@ -2,13 +2,18 @@ import { css } from 'styled-components';
 
 export const LessonFilterBar = css(
   ({ theme }) => `
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: ${theme.spacing.sm};
+
   > .rabbiChip {
+    inline-size: fit-content;
     display: flex;
     align-items: center;
     gap: ${theme.spacing.xs};
     min-block-size: 48px;
     padding-inline: ${theme.spacing.lg};
-    margin-block-end: ${theme.spacing.sm};
     border: 1px solid ${theme.colors.primary};
     border-radius: ${theme.radii.pill};
     background: ${theme.colors.primarySoft};
@@ -47,10 +52,15 @@ export const LessonFilterBar = css(
     flex-direction: column;
     align-items: stretch;
     gap: ${theme.spacing.sm};
-    margin-block-start: ${theme.spacing.sm};
 
+    // Open on a phone, the panel is its own full-width row below the chip
+    // and the toggle (the outer bar's own flex-wrap forces the wrap, since
+    // a bare flex item would otherwise only be as wide as its widest
+    // child). From md up the panel is always open and this width is
+    // dropped, so its controls sit inline with the chip instead.
     &.open {
       display: flex;
+      inline-size: 100%;
     }
 
     > .sort {
@@ -86,7 +96,7 @@ export const LessonFilterBar = css(
       flex-direction: row;
       align-items: center;
       flex-wrap: wrap;
-      margin-block-start: 0;
+      inline-size: auto;
 
       > .search {
         flex: 1;

@@ -37,7 +37,9 @@ export const formatIsraeliDate = (isoDate: string): string => israeliDateFormatt
 
 // `Date#getUTCDay` is specified to always return 0-6, so this narrowing
 // from `number` to the `Weekday` literal union is safe by construction.
-const asWeekday = (day: number): Weekday => day as Weekday;
+// The one place this narrowing is written; `LessonViewPage/helpers.ts` and
+// `LessonFormPage/helpers.ts` both import it rather than repeating it.
+export const asWeekday = (day: number): Weekday => day as Weekday;
 
 // Groups sorted, de-duplicated weekdays into runs of consecutive days, so
 // `weeklyRecurrenceLabel` can collapse a run into a range instead of

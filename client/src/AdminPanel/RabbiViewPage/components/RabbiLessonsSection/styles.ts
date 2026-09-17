@@ -51,41 +51,66 @@ export const RabbiLessonsSection = css(
     }
   }
 
+  > .skeletonList {
+    display: flex;
+    flex-direction: column;
+
+    > .skeletonRow {
+      min-block-size: 66px;
+      padding-block: ${theme.spacing.sm};
+      border-radius: ${theme.radii.md};
+      background: ${theme.colors.border};
+      opacity: 0.5;
+
+      &:not(:first-child) {
+        margin-block-start: ${theme.spacing.sm};
+      }
+    }
+  }
+
   > .list {
     display: flex;
     flex-direction: column;
-    gap: ${theme.spacing.sm};
 
     > li > .row {
       display: flex;
-      flex-wrap: wrap;
       align-items: center;
       gap: ${theme.spacing.sm};
-      min-block-size: 48px;
-      padding-inline: ${theme.spacing.sm};
-      border: 1px solid ${theme.colors.border};
-      border-radius: ${theme.radii.md};
+      min-block-size: 66px;
+      padding-block: ${theme.spacing.sm};
       color: ${theme.colors.text};
 
-      > .primary {
+      &:not(:first-child) {
+        border-block-start: 1px solid ${theme.colors.border};
+      }
+
+      > .text {
         flex: 1;
-        min-inline-size: 120px;
-        font-weight: ${theme.typography.fontWeight.semiBold};
-        font-size: ${theme.typography.body.phone.fontSize};
-        line-height: ${theme.typography.body.phone.lineHeight};
-        overflow-wrap: break-word;
+        min-inline-size: 0;
+        display: flex;
+        flex-direction: column;
+        gap: ${theme.spacing.xs};
+
+        > .primary {
+          font-weight: ${theme.typography.fontWeight.semiBold};
+          font-size: ${theme.typography.body.phone.fontSize};
+          line-height: ${theme.typography.body.phone.lineHeight};
+          overflow-wrap: break-word;
+        }
+
+        > .meta {
+          color: ${theme.colors.textSecondary};
+          font-size: ${theme.typography.secondary.phone.fontSize};
+          line-height: ${theme.typography.secondary.phone.lineHeight};
+          overflow-wrap: break-word;
+        }
       }
 
-      > .when {
+      > .chevron {
+        flex-shrink: 0;
+        inline-size: 20px;
+        block-size: 20px;
         color: ${theme.colors.textSecondary};
-        font-size: ${theme.typography.secondary.phone.fontSize};
-        line-height: ${theme.typography.secondary.phone.lineHeight};
-      }
-
-      > .time {
-        color: ${theme.colors.textSecondary};
-        font-size: ${theme.typography.secondary.phone.fontSize};
-        line-height: ${theme.typography.secondary.phone.lineHeight};
       }
     }
   }

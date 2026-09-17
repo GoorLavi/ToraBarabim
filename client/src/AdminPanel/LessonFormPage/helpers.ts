@@ -1,6 +1,7 @@
-import type { CreateLessonRequest, Lesson, Rabbi, Weekday } from '@torabarabim/common';
+import type { CreateLessonRequest, Lesson, Rabbi } from '@torabarabim/common';
 
 import { WEEKDAY_LABELS } from '~/AdminPanel/consts';
+import { asWeekday } from '~/AdminPanel/helpers';
 import type { SelectedCity } from '~/components/CitySelect/models';
 import { rabbiDisplayName } from '~/helpers';
 
@@ -69,9 +70,7 @@ export const previewWeekdayLabel = (form: LessonFormState): string | undefined =
     return form.weekdays.map((weekday) => WEEKDAY_LABELS[weekday]).join(' / ');
   }
   if (!form.date) return undefined;
-  // `Date#getUTCDay` is specified to always return 0-6, so this narrowing
-  // from `number` to the `Weekday` literal union is safe by construction.
-  const weekday = new Date(`${form.date}T00:00:00Z`).getUTCDay() as Weekday;
+  const weekday = asWeekday(new Date(`${form.date}T00:00:00Z`).getUTCDay());
   return WEEKDAY_LABELS[weekday];
 };
 

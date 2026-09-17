@@ -42,8 +42,14 @@ export const useExistingLesson = (id: string | undefined): ExistingLessonState =
     void lessonQuery.refetch();
   };
 
-  const firstError = lessonQuery.error ?? rabbiQuery.error;
-  if (firstError instanceof AdminApiError) return { status: 'error', error: firstError, retry };
+  // Only a failed *lesson* fetch is fatal to this screen: `retry` only
+  // re-fetches the lesson, and a rabbi that fails to resolve degrades to
+  // `rabbi: undefined` below instead, which `LessonViewPage` already
+  // renders correctly (`RABBI_UNKNOWN_LABEL`, the honorific-fallback
+  // constants). Folding `rabbiQuery.error` in here used to blank the whole
+  // page on a rabbi-fetch failure with a retry button that could never fix
+  // it.
+  if (lessonQuery.error instanceof AdminApiError) return { status: 'error', error: lessonQuery.error, retry };
 
   const isPending = lessonQuery.isPending || (Boolean(rabbiId) && rabbiQuery.isPending);
 

@@ -1,10 +1,7 @@
-import type { Lesson, Weekday } from '@torabarabim/common';
+import type { Lesson } from '@torabarabim/common';
 
 import { WEEKDAY_LABELS } from '~/AdminPanel/consts';
-
-// `Date#getUTCDay` is specified to always return 0-6, so this narrowing
-// from `number` to the `Weekday` literal union is safe by construction.
-const asWeekday = (day: number): Weekday => day as Weekday;
+import { asWeekday } from '~/AdminPanel/helpers';
 
 // Feeds the live public preview from a saved, always-valid `Lesson`, unlike
 // `LessonFormPage/helpers.ts`'s `previewWeekdayLabel`, which tolerates an
