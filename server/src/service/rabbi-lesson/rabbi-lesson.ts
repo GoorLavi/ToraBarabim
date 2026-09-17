@@ -1,17 +1,16 @@
-import type { Lesson, LessonException, LessonOccurrence as WireLessonOccurrence, Weekday } from '@torabarabim/common';
+import type { LessonOccurrence as WireLessonOccurrence, Weekday } from '@torabarabim/common';
 import { and, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
 import { db } from '../../db/client';
 import { cities, lessonExceptions, lessons, rabbis } from '../../db/schema';
+import { UPCOMING_OCCURRENCE_WINDOW_DAYS } from '../lesson/consts';
 import { addDays, todayInIsrael } from '../lesson/israel-time';
-import { applyException, expandLesson, type ResolvedOccurrence } from '../lesson/occurrence';
+import { applyException, compareOccurrences, expandLesson, resolveRecord, toExceptionDomain, toLessonDomain } from '../lesson/occurrence';
 import { dismissImportKey } from '../shared/dismiss-import';
 import { provenanceAfterHandEdit } from '../shared/hand-edit';
-import { toPlace } from '../shared/place';
 import { assertAudienceAllowedForRabbi } from '../shared/rabbanit-guard';
 import { toRabbiSummary as toRabbi } from '../shared/rabbi-summary';
-import { UPCOMING_OCCURRENCE_WINDOW_DAYS } from './consts';
 import { LessonNotFoundError, UnknownCityError } from './errors';
 import type { CreateRabbiLessonInput, RabbiLessonListQuery, RabbiLessonListResult, RabbiLessonRecord, UpdateRabbiLessonInput } from './models';
 
@@ -179,63 +178,10 @@ export const remove = async (rabbiId: string, id: string): Promise<void> => {
   });
 };
 
-type LessonRow = typeof lessons.$inferSelect;
-type ExceptionRow = typeof lessonExceptions.$inferSelect;
-
-const toLessonDomain = (row: LessonRow): Lesson => ({
-  id: row.id,
-  title: row.title ?? undefined,
-  rabbiId: row.rabbiId,
-  place: { name: row.placeName, street: row.placeStreet, floor: row.placeFloor ?? undefined, cityCode: row.cityCode },
-  topic: row.topic ?? undefined,
-  audience: row.audience,
-  recurrence:
-    row.recurrenceKind === 'weekly'
-      ? { kind: 'weekly', weekdays: row.recurrenceWeekdays as Weekday[] }
-      : { kind: 'once', date: row.recurrenceDate as string },
-  startTime: row.startTime,
-  durationMinutes: row.durationMinutes,
-  notes: row.notes ?? undefined,
-});
-
-const toExceptionDomain = (row: ExceptionRow): LessonException =>
-  row.kind === 'cancelled'
-    ? { kind: 'cancelled', lessonId: row.lessonId, date: row.date, reason: row.reason ?? undefined }
-    : {
-        kind: 'modified',
-        lessonId: row.lessonId,
-        date: row.date,
-        startTime: row.startTime ?? undefined,
-        place:
-          row.placeName !== null && row.placeStreet !== null && row.cityCode !== null
-            ? { name: row.placeName, street: row.placeStreet, floor: row.placeFloor ?? undefined, cityCode: row.cityCode }
-            : undefined,
-        substituteRabbiId: row.substituteRabbiId ?? undefined,
-        note: row.note ?? undefined,
-      };
-
-const MINUTES_PER_DAY = 24 * 60;
-const addMinutes = (startTime: string, minutes: number): string => {
-  const [hoursText, minutesText] = startTime.split(':');
-  const total = Number(hoursText) * 60 + Number(minutesText) + minutes;
-  const wrapped = ((total % MINUTES_PER_DAY) + MINUTES_PER_DAY) % MINUTES_PER_DAY;
-  const hours = Math.floor(wrapped / 60);
-  const mins = wrapped % 60;
-  return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
-};
-
-const STATUS_ORDER = { scheduled: 0, cancelled: 1 } as const;
-const compareOccurrences = (a: ResolvedOccurrence, b: ResolvedOccurrence): number => {
-  if (a.date !== b.date) return a.date < b.date ? -1 : 1;
-  const byStatus = STATUS_ORDER[a.status] - STATUS_ORDER[b.status];
-  if (byStatus !== 0) return byStatus;
-  return a.startTime < b.startTime ? -1 : a.startTime > b.startTime ? 1 : 0;
-};
-
 // Reuses the same recurrence-expansion primitives (`expandLesson`,
-// `applyException`) as the public search and the home page, rather than a
-// second copy of the recurrence maths, per the house rule on the
-// recurrence expansion.
+// `applyException`, `resolveRecord`) as the public search and the home
+// page, rather than a second copy of the recurrence maths, per the house
+// rule on the recurrence expansion.
 export const listUpcomingOccurrences = async (rabbiId: string, now: Date): Promise<WireLessonOccurrence[]> => {
   const from = todayInIsrael(now);
   // `expandLesson` treats `to` as inclusive, so the last day of the window
@@ -249,10 +195,9 @@ export const listUpcomingOccurrences = async (rabbiId: string, now: Date): Promi
     db.select().from(lessons).where(eq(lessons.rabbiId, rabbiId)),
   ]);
 
-  const rabbiById = new Map(rabbiRows.map((row) => [row.id, row] as const));
+  const rabbiById = new Map(rabbiRows.map((row) => [row.id, toRabbi(row)] as const));
   const cityByCode = new Map(cityRows.map((row) => [row.code, row] as const));
-  const own = rabbiById.get(rabbiId);
-  if (!own) throw new Error(`data inconsistency: authenticated rabbi '${rabbiId}' has no rabbi row`);
+  if (!rabbiById.has(rabbiId)) throw new Error(`data inconsistency: authenticated rabbi '${rabbiId}' has no rabbi row`);
 
   const lessonIds = lessonRows.map((row) => row.id);
   const exceptionRows = lessonIds.length
@@ -269,22 +214,5 @@ export const listUpcomingOccurrences = async (rabbiId: string, now: Date): Promi
     .map((raw) => applyException(raw, exceptionByKey.get(`${raw.lesson.id}:${raw.date}`)))
     .sort(compareOccurrences);
 
-  return occurrences.map((occurrence) => {
-    const substituteRabbiRow = occurrence.substituteRabbiId ? rabbiById.get(occurrence.substituteRabbiId) : undefined;
-    return {
-      lessonId: occurrence.lesson.id,
-      date: occurrence.date,
-      startTime: occurrence.startTime,
-      endTime: addMinutes(occurrence.startTime, occurrence.lesson.durationMinutes),
-      status: occurrence.status,
-      title: occurrence.lesson.title,
-      topic: occurrence.lesson.topic,
-      audience: occurrence.lesson.audience,
-      rabbi: toRabbi(own),
-      place: toPlace(occurrence.place, cityByCode),
-      substituteRabbi: substituteRabbiRow ? toRabbi(substituteRabbiRow) : undefined,
-      cancellationReason: occurrence.cancellationReason,
-      note: occurrence.note,
-    };
-  });
+  return occurrences.map((occurrence) => resolveRecord(occurrence, rabbiById, cityByCode));
 };

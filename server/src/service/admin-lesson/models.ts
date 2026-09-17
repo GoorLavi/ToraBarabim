@@ -5,11 +5,17 @@ import type { LessonProvenance } from '@torabarabim/common';
 
 import { LESSON_AUDIENCES, LESSON_TOPICS } from '../../db/schema/enums';
 import { DEFAULT_ADMIN_PAGE, DEFAULT_ADMIN_PAGE_SIZE, MAX_ADMIN_PAGE_SIZE } from '../admin-shared/consts';
+import type { ResolvedLessonOccurrence } from '../lesson/models';
 import { timeOfDaySchema } from '../shared/time';
 
 export const lessonIdParamSchema = z.object({
   id: z.string().trim().min(1),
 });
+
+export const lessonOccurrenceListParamsSchema = z.object({
+  lessonId: z.string().trim().min(1),
+});
+export type LessonOccurrenceListParams = z.infer<typeof lessonOccurrenceListParamsSchema>;
 
 // `cityId` is the city's official code (`cities.code`), the same id `GET
 // /v1/cities` hands back as `City.id`.
@@ -88,4 +94,13 @@ export interface LessonListResult {
   page: number;
   pageSize: number;
   total: number;
+}
+
+// One lesson's recurrence rule expanded across the same window as a
+// rabbi's own upcoming occurrences, so an admin can see exactly what a
+// cancel or a move on this lesson would act on. `ResolvedLessonOccurrence`
+// is reused, not redefined: the shape an admin needs here is identical to
+// what the public search and a rabbi's own occurrences already produce.
+export interface AdminOccurrenceListResult {
+  items: ResolvedLessonOccurrence[];
 }

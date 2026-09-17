@@ -1,11 +1,11 @@
 import type { FastifyInstance, FastifyReply } from 'fastify';
 import { ZodError } from 'zod';
 
-import { toLessonListResponse, toLessonResponse } from '../../../convertors/admin-lesson';
+import { toLessonListResponse, toLessonResponse, toOccurrenceListResponse } from '../../../convertors/admin-lesson';
 import { requireAdminAuth } from '../../../plugins/admin-guard';
 import * as adminLessonService from '../../../service/admin-lesson/admin-lesson';
 import { LessonNotFoundError, ReferencedRabbiNotFoundError, UnknownCityError } from '../../../service/admin-lesson/errors';
-import { createLessonSchema, lessonIdParamSchema, lessonListQuerySchema, updateLessonSchema } from '../../../service/admin-lesson/models';
+import { createLessonSchema, lessonIdParamSchema, lessonListQuerySchema, lessonOccurrenceListParamsSchema, updateLessonSchema } from '../../../service/admin-lesson/models';
 import { RabbanitAudienceMustBeWomenError } from '../../../service/shared/errors';
 
 const GENERIC_ERROR_MESSAGE = 'אירעה שגיאה בשרת, נסו שוב מאוחר יותר';
@@ -54,6 +54,19 @@ export const registerAdminLessonRoutes = async (app: FastifyInstance): Promise<v
       return reply.send(toLessonResponse(record));
     } catch (error) {
       return handleError(reply, error, 'GET /v1/admin/lessons/:id');
+    }
+  });
+
+  // Scoped to one lesson: "what is coming up for this lesson", the read
+  // model behind cancelling or moving a single date. Distinct from a
+  // rabbi's cross-lesson `GET /v1/rabbi/occurrences`.
+  app.get('/v1/admin/lessons/:lessonId/occurrences', { preHandler: requireAdminAuth }, async (request, reply) => {
+    try {
+      const { lessonId } = lessonOccurrenceListParamsSchema.parse(request.params);
+      const result = await adminLessonService.listOccurrencesForLesson(lessonId, new Date());
+      return reply.send(toOccurrenceListResponse(result));
+    } catch (error) {
+      return handleError(reply, error, 'GET /v1/admin/lessons/:lessonId/occurrences');
     }
   });
 
