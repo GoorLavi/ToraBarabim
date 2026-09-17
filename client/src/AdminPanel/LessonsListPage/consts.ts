@@ -37,12 +37,12 @@ export const NO_LESSONS_HINT = 'הוספת השיעור הראשון תפתח כ
 export const NO_MATCHING_LESSONS_HEADLINE = 'לא נמצאו שיעורים תואמים';
 export const NO_MATCHING_LESSONS_HINT = 'נסה לצמצם את הסינון או לנקות אותו כדי לראות את כל השיעורים.';
 
-// Shown instead of `NO_LESSONS_HEADLINE` whenever the rabbi filter is active
-// and matched nothing, regardless of what else is set alongside it (a
-// rabbi's "see all" link can arrive with a city filter still active): that
-// rabbi genuinely has no lessons yet, not "the system is empty"
-// (design-system.md, "Every data screen has three states": the empty state
-// has to name the constraint that produced no results).
+// Shown instead of `NO_LESSONS_HEADLINE` when the rabbi filter is the *only*
+// active one and matched nothing: then that rabbi genuinely has no lessons
+// yet, and saying "the system is empty" would name the wrong constraint
+// (design-system.md, "Every data screen has three states"). With another
+// filter alongside it this copy would be a guess, so that case falls through
+// to the generic no-match state, which offers the way back instead.
 export const noLessonsForRabbiHeadline = (rabbiDisplay: string): string => `עדיין אין שיעורים של ${rabbiDisplay}`;
 export const NO_LESSONS_FOR_RABBI_HINT = 'הוספת שיעור תפתח כאן את הרשימה.';
 export const ADD_LESSON_FOR_RABBI_LABEL = 'הוספת שיעור';

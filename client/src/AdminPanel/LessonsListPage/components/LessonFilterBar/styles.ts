@@ -53,11 +53,14 @@ export const LessonFilterBar = css(
     align-items: stretch;
     gap: ${theme.spacing.sm};
 
-    // Open on a phone, the panel is its own full-width row below the chip
-    // and the toggle (the outer bar's own flex-wrap forces the wrap, since
-    // a bare flex item would otherwise only be as wide as its widest
-    // child). From md up the panel is always open and this width is
-    // dropped, so its controls sit inline with the chip instead.
+    /* Open on a phone, the panel is its own full-width row below the chip
+       and the toggle (the outer bar's own flex-wrap forces the wrap, since a
+       bare flex item would otherwise only be as wide as its widest child).
+       From md up this width is dropped inside the media query below, which
+       has to re-target the open class and not the panel alone: a media query
+       adds no specificity, so resetting the width on the plain panel selector
+       would lose to the more specific open one, and a panel opened narrow
+       would keep its full width after the viewport grew. */
     &.open {
       display: flex;
       inline-size: 100%;
@@ -96,7 +99,17 @@ export const LessonFilterBar = css(
       flex-direction: row;
       align-items: center;
       flex-wrap: wrap;
-      inline-size: auto;
+
+      /* Takes the bar's remaining width instead of shrinking to its content:
+         without this the panel is a bare flex item sized to its children, and
+         the search field's own flex has nothing left to stretch into. */
+      flex: 1 1 auto;
+      min-inline-size: 0;
+
+      &,
+      &.open {
+        inline-size: auto;
+      }
 
       > .search {
         flex: 1;

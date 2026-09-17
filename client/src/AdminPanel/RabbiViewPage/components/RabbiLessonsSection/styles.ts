@@ -68,14 +68,14 @@ export const RabbiLessonsSection = css(
     display: flex;
     flex-direction: column;
 
-    // The hairline belongs to the li's position among its siblings, not
-    // the row's position inside its own li (a row is always its li's only
-    // child, so :not(:first-child) on .row itself would never match).
-    > li:not(:first-child) > .row {
+    /* The hairline belongs to the item's position among its siblings, not
+       the row's position inside its own item (a row is always its item's
+       only child, so :not(:first-child) on .row itself would never match). */
+    > .item:not(:first-child) > .row {
       border-block-start: 1px solid ${theme.colors.border};
     }
 
-    > li > .row {
+    > .item > .row {
       display: flex;
       align-items: center;
       gap: ${theme.spacing.sm};

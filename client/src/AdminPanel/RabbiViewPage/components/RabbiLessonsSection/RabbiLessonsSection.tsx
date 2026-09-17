@@ -11,12 +11,6 @@ import type { RabbiLessonsSectionProps } from './models';
 import * as styles from './styles';
 import { useRabbiLessons } from './useRabbiLessons';
 
-// Skeleton rows, not this section's own field count: an independent query
-// from `RabbiViewPage`'s own profile skeleton, but the two share one
-// loading idiom (shimmer rows at the real row height) rather than this
-// section falling back to a plain loading sentence.
-const SKELETON_ROW_COUNT = 3;
-
 // Owns its own loading, empty and error states, independent of
 // `RabbiViewPage`'s own profile query: a failure fetching the rabbi's
 // lessons must never blank the rabbi's name, photo or edit button above it
@@ -30,7 +24,7 @@ export const RabbiLessonsSection = styled(({ className, rabbiId, rabbiName, rabb
 
       {lessons.isPending && (
         <ul className="skeletonList" aria-live="polite" aria-label={parentConsts.LESSONS_LOADING_MESSAGE}>
-          {skeletonFieldKeys(SKELETON_ROW_COUNT).map((key) => (
+          {skeletonFieldKeys(parentConsts.SKELETON_LESSON_ROW_COUNT).map((key) => (
             <li key={key} className="skeletonRow" />
           ))}
         </ul>
@@ -59,7 +53,7 @@ export const RabbiLessonsSection = styled(({ className, rabbiId, rabbiName, rabb
         <>
           <ul className="list">
             {lessons.data.items.map((lesson) => (
-              <li key={lesson.id}>
+              <li key={lesson.id} className="item">
                 <Link className="row" to={ADMIN_ROUTES.lessonView(lesson.id)}>
                   <span className="text">
                     <span className="primary" dir="auto">

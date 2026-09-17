@@ -102,6 +102,11 @@ export const LessonViewPage = css(
     flex-direction: column;
     gap: ${theme.spacing.xl};
 
+    /* The public preview is a desktop-only aside by design, not a layout
+       accident: the approved frames carry it at the inline end from lg up and
+       omit it from the 390 frame entirely. On a phone the admin came to read
+       the record, and a ~470px marketing card ahead of it pushes the lesson's
+       own heading and its one action below the fold. */
     > .preview {
       display: none;
     }
@@ -144,9 +149,6 @@ export const LessonViewPage = css(
             inline-size: 140px;
           }
 
-          &.placeholder {
-            background: ${theme.colors.primarySoft};
-          }
         }
 
         > .identity {
@@ -252,12 +254,6 @@ export const LessonViewPage = css(
 
         @media (min-width: ${theme.breakpoints.md}) {
           grid-template-columns: repeat(2, 1fr);
-        }
-
-        > .wide {
-          @media (min-width: ${theme.breakpoints.md}) {
-            grid-column: 1 / -1;
-          }
         }
       }
     }

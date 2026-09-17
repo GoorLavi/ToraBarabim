@@ -25,6 +25,9 @@ export const LessonsListPage = styled(({ className }: LessonsListPageProps) => {
   // covers both a server-side zero result and a client-side one.
   const rows = state.status === 'success' ? filterRows(state.rows, filters.recurrence, filters.search) : [];
 
+  const isEmpty = state.status === 'success' && rows.length === 0;
+  const isRabbiOnlyFilter = Boolean(filters.rabbi) && filters.activeFilterCount === 1;
+
   return (
     <div className={className}>
       <div className="head">
@@ -78,14 +81,14 @@ export const LessonsListPage = styled(({ className }: LessonsListPageProps) => {
         </div>
       )}
 
-      {/* The rabbi filter always gets its own copy, whatever else is set
-          alongside it (a "see all" link can arrive with a city filter still
-          active): the rabbi's own lesson count is the constraint that
-          matters, not the combination. Any other active filter (city,
-          recurrence, search, alone or combined) gets the generic
-          "no matching lessons" copy with a way back to the unfiltered
-          list. Only truly no filters at all claims the system is empty. */}
-      {state.status === 'success' && rows.length === 0 && filters.rabbi && (
+      {/* One empty state at a time, chosen by which filters are actually on.
+          The rabbi branch is gated on the rabbi filter being the only one:
+          with a city or a search term alongside it, "this rabbi has no
+          lessons yet" can be flatly false, since they may have ten that the
+          other filter excluded, and what the admin needs then is the way back
+          that the generic branch offers. Only no filters at all may claim the
+          system itself is empty. */}
+      {isEmpty && isRabbiOnlyFilter && filters.rabbi && (
         <div className="state empty">
           <p className="headline">{consts.noLessonsForRabbiHeadline(rabbiDisplayName(filters.rabbi))}</p>
           <p className="hint">{consts.NO_LESSONS_FOR_RABBI_HINT}</p>
@@ -95,7 +98,7 @@ export const LessonsListPage = styled(({ className }: LessonsListPageProps) => {
         </div>
       )}
 
-      {state.status === 'success' && rows.length === 0 && !filters.rabbi && filters.activeFilterCount > 0 && (
+      {isEmpty && !isRabbiOnlyFilter && filters.activeFilterCount > 0 && (
         <div className="state empty">
           <p className="headline">{consts.NO_MATCHING_LESSONS_HEADLINE}</p>
           <p className="hint">{consts.NO_MATCHING_LESSONS_HINT}</p>
@@ -105,7 +108,7 @@ export const LessonsListPage = styled(({ className }: LessonsListPageProps) => {
         </div>
       )}
 
-      {state.status === 'success' && rows.length === 0 && filters.activeFilterCount === 0 && (
+      {isEmpty && filters.activeFilterCount === 0 && (
         <div className="state empty">
           <p className="headline">{consts.NO_LESSONS_HEADLINE}</p>
           <p className="hint">{consts.NO_LESSONS_HINT}</p>

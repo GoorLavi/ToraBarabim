@@ -3,28 +3,9 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Route, Routes } from 'react-router-dom';
 
 import { rabbiFixture } from '~/rabbiFixture';
+import { installMockFetch, jsonResponse, NEVER_RESOLVES } from '~/storyMocks';
 
 import { RabbiPage } from './RabbiPage';
-
-// No live API in Storybook's own preview server (unlike the app itself,
-// which vite.config.ts proxies to the real API in dev): every route this
-// page calls is answered here instead. Chains onto whatever `window.fetch`
-// already is, so this and CityPage.stories.tsx can both install a mock in
-// either load order without clobbering each other.
-const jsonResponse = (status: number, body: unknown): Response =>
-  new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
-
-const NEVER_RESOLVES = new Promise<Response>(() => {});
-
-const installMockFetch = (respond: (url: URL) => Response | Promise<Response> | null): void => {
-  const previousFetch = window.fetch;
-  window.fetch = (async (input, init) => {
-    const url = input instanceof Request ? new URL(input.url) : new URL(input.toString(), window.location.origin);
-    const result = respond(url);
-    if (result) return result;
-    return previousFetch(input, init);
-  }) as typeof fetch;
-};
 
 const rabbiDetail = (overrides: Partial<RabbiDetailResponse>): RabbiDetailResponse => ({
   ...rabbiFixture({

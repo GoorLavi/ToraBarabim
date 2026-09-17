@@ -118,11 +118,9 @@ export const RabbiViewPage = css(
         aspect-ratio: 3 / 4;
         border-radius: ${theme.radii.sm};
         object-fit: cover;
+        /* The same soft fill whether the photo is missing or merely failed to
+           load, so a broken URL degrades exactly like no photo at all. */
         background: ${theme.colors.primarySoft};
-
-        &.placeholder {
-          background: ${theme.colors.primarySoft};
-        }
       }
 
       > .identity {
@@ -205,12 +203,6 @@ export const RabbiViewPage = css(
 
       @media (min-width: ${theme.breakpoints.md}) {
         grid-template-columns: repeat(2, 1fr);
-      }
-
-      > .wide {
-        @media (min-width: ${theme.breakpoints.md}) {
-          grid-column: 1 / -1;
-        }
       }
     }
   }

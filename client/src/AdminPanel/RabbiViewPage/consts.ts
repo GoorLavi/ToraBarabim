@@ -32,3 +32,8 @@ export const seeAllLessonsLabel = (total: number): string => `לכל ${total} ה
 // Prominence and bio: the two fields left in the card once the header
 // absorbed honorific, name and title (see this slice's report, finding 2).
 export const SKELETON_FIELD_COUNT = 2;
+
+// `RabbiLessonsSection`'s own loading rows. It runs an independent query, so
+// it shows its own shimmer at the real row height rather than a loading
+// sentence, which would be a second loading idiom on one screen.
+export const SKELETON_LESSON_ROW_COUNT = 3;

@@ -29,6 +29,9 @@ export const FLOOR_LABEL = 'קומה או הוראות הגעה';
 
 export const AUDIENCE_LABEL = 'למי מיועד';
 
-export const RABBI_UNKNOWN_LABEL = 'לא נמצאו פרטי הרב';
+// Covers every way the rabbi query can fail, not just a 404: the old
+// wording asserted "not found" for what may have been a 500 or a dropped
+// connection, which made a deleted rabbi and a broken request read alike.
+export const RABBI_UNKNOWN_LABEL = 'לא ניתן לטעון את פרטי הרב';
 
 export const SKELETON_FIELD_COUNT = 8;
