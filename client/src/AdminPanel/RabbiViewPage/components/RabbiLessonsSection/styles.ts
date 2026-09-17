@@ -54,23 +54,26 @@ export const RabbiLessonsSection = css(
   > .skeletonList {
     display: flex;
     flex-direction: column;
+    gap: ${theme.spacing.sm};
 
     > .skeletonRow {
-      min-block-size: 66px;
-      padding-block: ${theme.spacing.sm};
+      block-size: 66px;
       border-radius: ${theme.radii.md};
-      background: ${theme.colors.border};
-      opacity: 0.5;
-
-      &:not(:first-child) {
-        margin-block-start: ${theme.spacing.sm};
-      }
+      background: ${theme.colors.primarySoft};
+      opacity: 0.6;
     }
   }
 
   > .list {
     display: flex;
     flex-direction: column;
+
+    // The hairline belongs to the li's position among its siblings, not
+    // the row's position inside its own li (a row is always its li's only
+    // child, so :not(:first-child) on .row itself would never match).
+    > li:not(:first-child) > .row {
+      border-block-start: 1px solid ${theme.colors.border};
+    }
 
     > li > .row {
       display: flex;
@@ -79,10 +82,6 @@ export const RabbiLessonsSection = css(
       min-block-size: 66px;
       padding-block: ${theme.spacing.sm};
       color: ${theme.colors.text};
-
-      &:not(:first-child) {
-        border-block-start: 1px solid ${theme.colors.border};
-      }
 
       > .text {
         flex: 1;
