@@ -3,9 +3,10 @@ import { css } from 'styled-components';
 // Two columns below `md`, three from `md` to `xl`, four from `xl` up
 // (.claude/design-system.md, "The lesson grid steps"). `min-inline-size: 0`
 // guards against a grid item's default `min-width: auto`, which would let a
-// long unbreakable string push its column past its track.
-export const LessonsGrid = css(
-  ({ theme }) => `
+// long unbreakable string push its column past its track. `maxColumns` only
+// overrides the `xl` step: every caller that omits it keeps today's four.
+export const LessonsGrid = css<{ maxColumns?: number }>(
+  ({ theme, maxColumns }) => `
   list-style: none;
   margin: 0;
   padding: 0;
@@ -18,7 +19,7 @@ export const LessonsGrid = css(
   }
 
   @media (min-width: ${theme.breakpoints.xl}) {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(${maxColumns ?? 4}, 1fr);
   }
 
   > .cell {

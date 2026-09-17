@@ -44,6 +44,14 @@ export const TICKET_FINE_GAP = '2px';
 // card below this (design spec, "Height hugs content with a floor of 380").
 export const CARD_MIN_BLOCK_SIZE_DESKTOP = '380px';
 
+// Reaches the 48px tap-target floor for each linked rabbi name via
+// padding-block, with an equal negative margin-block cancelling the added
+// height so the ticket's own rhythm is unchanged (LOCKED PLAN, "reaching a
+// real 48px target"). `cardTitle` and `tagAndCaption` are the same size at
+// both breakpoints, so one value covers both.
+export const NAME_LINK_BLOCK_PADDING = '11px'; // (48 - cardTitle's 26px line height) / 2
+export const SUBSTITUTE_LINK_BLOCK_PADDING = '14px'; // (48 - tagAndCaption's 20px line height) / 2
+
 // With no poster the main panel has only text in it, so the card caps
 // narrower on desktop rather than becoming a wide, mostly empty band
 // (design spec, "No photo").

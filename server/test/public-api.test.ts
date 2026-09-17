@@ -13,7 +13,9 @@ import type {
 } from '@torabarabim/common';
 import type { FastifyInstance } from 'fastify';
 
+import { selectAreaPreview } from '../src/service/lesson/area-preview';
 import { addDays, nextDateOnWeekday, todayInIsrael } from '../src/service/lesson/israel-time';
+import type { ResolvedLessonOccurrence } from '../src/service/lesson/models';
 import { rabbiNameSchema, stripLeadingHonorific } from '../src/service/shared/name';
 import { toSlug } from '../src/service/shared/slug';
 import { assertClientBuilt, assertDatabaseReachable, buildApp, rawClient } from './app-harness';
@@ -576,6 +578,65 @@ describe('public API', () => {
     test('a genuinely missing rabbi returns 404', async () => {
       const res = await app.inject({ method: 'GET', url: '/v1/rabbis/does-not-exist' });
       assert.equal(res.statusCode, 404);
+    });
+  });
+
+  // A pure function, exercised directly rather than through a write route:
+  // the lesson page's area preview relies on it to never link to the page
+  // it is already on, and to never render one lesson two or three times in
+  // a thin area. See `service/lesson/area-preview.ts`.
+  describe('selectAreaPreview', () => {
+    const buildOccurrence = (lessonId: string, date: string): ResolvedLessonOccurrence => ({
+      lessonId,
+      date,
+      startTime: '20:00',
+      endTime: '21:00',
+      status: 'scheduled',
+      audience: 'men',
+      rabbi: { id: `rabbi-of-${lessonId}`, name: 'שם הרב', honorific: 'rav', slug: `slug-${lessonId}` },
+      place: { name: 'בית מדרש', street: 'רחוב הרצל', city: 'עיר', citySlug: 'ir', area: 'center' },
+    });
+
+    test('excludes every occurrence of the excluded lesson', () => {
+      const items = [buildOccurrence('lesson-a', '2026-01-01'), buildOccurrence('lesson-b', '2026-01-02')];
+      const result = selectAreaPreview(items, 'lesson-a', 10);
+      assert.ok(!result.some((item) => item.lessonId === 'lesson-a'));
+      assert.equal(result.length, 1);
+    });
+
+    // A 7-day search window can hold several occurrences of one
+    // weekly-or-daily lesson; without de-duplication a thin area would
+    // render the same lesson two or three times.
+    test('keeps only the first occurrence of a repeated lesson', () => {
+      const items = [
+        buildOccurrence('lesson-b', '2026-01-02'),
+        buildOccurrence('lesson-b', '2026-01-09'),
+        buildOccurrence('lesson-c', '2026-01-03'),
+      ];
+      const result = selectAreaPreview(items, 'lesson-a', 10);
+      assert.equal(result.filter((item) => item.lessonId === 'lesson-b').length, 1);
+      assert.equal(result.find((item) => item.lessonId === 'lesson-b')?.date, '2026-01-02');
+    });
+
+    test('preserves the incoming order', () => {
+      const items = [buildOccurrence('lesson-c', '2026-01-03'), buildOccurrence('lesson-b', '2026-01-02')];
+      const result = selectAreaPreview(items, 'lesson-a', 10);
+      assert.deepEqual(result.map((item) => item.lessonId), ['lesson-c', 'lesson-b']);
+    });
+
+    test('caps at the limit', () => {
+      const items = [
+        buildOccurrence('lesson-a', '2026-01-01'),
+        buildOccurrence('lesson-b', '2026-01-02'),
+        buildOccurrence('lesson-c', '2026-01-03'),
+      ];
+      const result = selectAreaPreview(items, 'lesson-x', 2);
+      assert.equal(result.length, 2);
+    });
+
+    test('returns [] when nothing qualifies', () => {
+      const items = [buildOccurrence('lesson-a', '2026-01-01')];
+      assert.deepEqual(selectAreaPreview(items, 'lesson-a', 10), []);
     });
   });
 

@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
 
-import type { CityDirectoryResponse } from '@torabarabim/common';
+import type { CityDirectoryResponse, LessonOccurrence, LessonSearchResponse } from '@torabarabim/common';
 import type { FastifyInstance } from 'fastify';
 
 import { HEALTH_RENDER_PROBE_PATH } from '../src/api/health/consts';
+import { addDays, nextDateOnWeekday, todayInIsrael } from '../src/service/lesson/israel-time';
+import { toAreaSlug } from '../src/service/shared/consts';
 
 // Read-only: the one constant this suite needs from the client workspace, to
 // assert a document's canonical against the same origin the route modules
@@ -42,6 +44,11 @@ const extractMetaProperty = (html: string, property: string): string => {
 // to confirm the sitemap lists her page, not to assert anything about her
 // lessons.
 const SEEDED_RABBANIT_ID = 'rabbi-9';
+
+// A weekly, Sunday-through-Thursday lesson; see
+// `server/src/db/seed/lessons.ts`. Used here only to reach a real lesson
+// page, not to assert anything about its recurrence.
+const SEEDED_LESSON_ID = 'lesson-1';
 
 describe('SSR rendering seam', () => {
   let app: FastifyInstance;
@@ -236,6 +243,55 @@ describe('SSR rendering seam', () => {
       assert.equal(rabbaniyotCanonical, `${SITE_ORIGIN}/women/rabbaniyot`);
 
       assert.equal(extractMetaProperty(women.body, 'og:title'), 'שיעורי תורה לנשים | תורה ברבים');
+    });
+  });
+
+  describe("the lesson page's onward links", () => {
+    // Test 2 of the plan: the rabbi link and the area link both exist in the
+    // fully rendered document, never only after hydration, and the area
+    // link resolves. The area preview itself is deferred behind Suspense,
+    // but the rabbi link is not, so a full-body read is enough either way:
+    // `app.inject` only resolves once the response has finished streaming,
+    // so `page.body` here is always the complete document, not a partial
+    // first chunk.
+    test('the rendered lesson page links to the rabbi and to the area, and the area link resolves', async () => {
+      const date = nextDateOnWeekday(todayInIsrael(new Date()), 0);
+      const occurrenceRes = await app.inject({
+        method: 'GET',
+        url: `/v1/lessons/${SEEDED_LESSON_ID}/occurrences/${date}`,
+      });
+      assert.equal(occurrenceRes.statusCode, 200);
+      const occurrence = occurrenceRes.json() as LessonOccurrence;
+
+      const rabbiHref = `/rabbis/${encodeURIComponent(occurrence.rabbi.id)}/${encodeURIComponent(occurrence.rabbi.slug)}`;
+      const areaHref = `/areas/${encodeURIComponent(toAreaSlug(occurrence.place.area))}`;
+
+      // The area link in the rendered document only exists because the area
+      // preview resolves to a non-empty list: it renders one `AreaLink` per
+      // preview card, and the preview excludes `SEEDED_LESSON_ID` itself. If
+      // the seed ever leaves this lesson as the only one in its area, that
+      // link disappears and the assertion below would fail pointing at the
+      // rabbi-link/area-link feature rather than at the seed. Confirm the
+      // precondition explicitly first, so a seed change fails here instead.
+      const from = todayInIsrael(new Date());
+      const areaLessonsRes = await app.inject({
+        method: 'GET',
+        url: `/v1/lessons?area=${occurrence.place.area}&from=${from}&to=${addDays(from, 13)}&pageSize=50`,
+      });
+      assert.equal(areaLessonsRes.statusCode, 200);
+      const areaLessons = areaLessonsRes.json() as LessonSearchResponse;
+      assert.ok(
+        areaLessons.items.some((item) => item.lessonId !== SEEDED_LESSON_ID),
+        `expected another lesson in area "${occurrence.place.area}" besides ${SEEDED_LESSON_ID} for the area preview to be non-empty`,
+      );
+
+      const page = await app.inject({ method: 'GET', url: `/lesson/${SEEDED_LESSON_ID}/${date}` });
+      assert.equal(page.statusCode, 200);
+      assert.ok(page.body.includes(`href="${rabbiHref}"`), `expected the document to link to ${rabbiHref}`);
+      assert.ok(page.body.includes(`href="${areaHref}"`), `expected the document to link to ${areaHref}`);
+
+      const areaPage = await app.inject({ method: 'GET', url: areaHref });
+      assert.equal(areaPage.statusCode, 200);
     });
   });
 

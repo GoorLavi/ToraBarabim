@@ -4,6 +4,7 @@ import {
   CARD_MAX_INLINE_SIZE_NO_POSTER_DESKTOP,
   CARD_MIN_BLOCK_SIZE_DESKTOP,
   GOOGLE_MAPS_BUTTON_HOVER_COLOR,
+  NAME_LINK_BLOCK_PADDING,
   NOTCH_DIAMETER,
   PANEL_BLOCK_PADDING_PHONE,
   PERFORATION_DASH,
@@ -13,6 +14,7 @@ import {
   POSTER_WIDTH_PHONE,
   STUB_DIVIDER_LENGTH_DESKTOP,
   STUB_WHEN_ROW_GAP_DESKTOP,
+  SUBSTITUTE_LINK_BLOCK_PADDING,
   TEXT_COLUMN_INLINE_PADDING_DESKTOP,
   TICKET_FINE_GAP,
   WAZE_BUTTON_HOVER_COLOR,
@@ -525,29 +527,119 @@ export const TicketShell = css(
       }
 
       /* A clarification, not a classification: plain text beside the role
-         it qualifies, never the audience tag's raised pill. */
+         it qualifies, never the audience tag's raised pill. The original
+         rabbi's name is its own link (LessonTicket.tsx), so this is a flex
+         row rather than one composed string. */
       > .teacherRow > .teacher > .substituteTag {
-        color: ${theme.colors.textOnPrimaryMuted};
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: ${theme.spacing.xs};
         font-size: ${theme.typography.tagAndCaption.phone.fontSize};
         line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
 
+        /* Separates the teacher block into its two real groups: what
+           happened to this lesson, and who you will actually hear. The gap
+           is derived from the tap-target rule rather than written as a
+           measurement: both this link and the name link below carry their
+           own block padding as a bigger hit area, so the visible clearance
+           between them is that padding plus the \`sm\` floor the design
+           system requires between two different actions, landing at 33px.
+           Frame 5-2 drew a flat 32px; the tap-target rule outranks the
+           frame. */
+        margin-block-end: calc(${SUBSTITUTE_LINK_BLOCK_PADDING} + ${NAME_LINK_BLOCK_PADDING} + ${theme.spacing.sm} - ${theme.spacing.xs});
+
         @media (min-width: ${theme.breakpoints.lg}) {
-          margin-block-end: ${theme.spacing.xs};
+          margin-block-end: calc(${SUBSTITUTE_LINK_BLOCK_PADDING} + ${NAME_LINK_BLOCK_PADDING} + ${theme.spacing.sm});
+        }
+
+        > .prefix {
+          color: ${theme.colors.textOnPrimaryMuted};
+        }
+
+        > .originalRabbiLink {
+          display: inline-flex;
+          align-items: center;
+          padding-block: ${SUBSTITUTE_LINK_BLOCK_PADDING};
+          margin-block: calc(-1 * ${SUBSTITUTE_LINK_BLOCK_PADDING});
+          color: ${theme.colors.textOnPrimary};
+          text-decoration: underline;
+          text-underline-offset: 3px;
+
+          @media (hover: hover) and (pointer: fine) {
+            &:hover {
+              background: ${theme.colors.surfaceOnPrimary};
+              border-radius: ${theme.radii.sm};
+            }
+          }
+
+          &:active {
+            background: ${theme.colors.surfaceOnPrimary};
+            border-radius: ${theme.radii.sm};
+          }
+
+          &:focus-visible {
+            outline: 2px solid ${theme.colors.textOnPrimary};
+            outline-offset: 2px;
+            border-radius: ${theme.radii.sm};
+          }
         }
       }
 
       /* Card title, not Section heading: the venue above is the one line a
          person going out tonight actually needs, and a louder rabbi name
-         would outrank it (design spec). */
+         would outrank it (design spec). Typography stays on \`.name\` itself
+         (inherited into the link inside it); \`.nameLink\` only carries the
+         link's own layout and affordance. */
       > .teacherRow > .teacher > .name {
         color: ${theme.colors.textOnPrimary};
         font-weight: ${theme.typography.cardTitle.fontWeight};
         font-size: ${theme.typography.cardTitle.phone.fontSize};
         line-height: ${theme.typography.cardTitle.phone.lineHeight};
-        overflow-wrap: break-word;
+        max-inline-size: 100%;
+        /* \`break-word\` keeps the box's min-content size at its longest
+           unbreakable run, which is what overflows the narrow column beside
+           a poster for a pathologically long name; only \`anywhere\` actually
+           shrinks it (LOCKED PLAN fix round 2, item 3). */
+        overflow-wrap: anywhere;
 
         @media (min-width: ${theme.breakpoints.lg}) {
           margin-block-end: ${TICKET_FINE_GAP};
+        }
+
+        /* The rabbi's name is the link, made visibly tappable with an
+           underline rather than colour alone, which the plum field cannot
+           carry. No chevron: beside a poster the column is 154px at 390,
+           where an ordinary three-word name measures 137-147, so the
+           chevron's 24px was enough on its own to wrap every common name on
+           the most widespread phone widths. The anchor, not the h1, takes
+           the padding/negative-margin pair: it is the block-level box the
+           padding needs to actually apply to. */
+        > .nameLink {
+          display: inline-flex;
+          padding-block: ${NAME_LINK_BLOCK_PADDING};
+          margin-block: calc(-1 * ${NAME_LINK_BLOCK_PADDING});
+          color: inherit;
+          text-decoration: underline;
+          text-underline-offset: 3px;
+
+          @media (hover: hover) and (pointer: fine) {
+            &:hover {
+              background: ${theme.colors.surfaceOnPrimary};
+              border-radius: ${theme.radii.sm};
+            }
+          }
+
+          &:active {
+            background: ${theme.colors.surfaceOnPrimary};
+            border-radius: ${theme.radii.sm};
+          }
+
+          &:focus-visible {
+            outline: 2px solid ${theme.colors.textOnPrimary};
+            outline-offset: 2px;
+            border-radius: ${theme.radii.sm};
+          }
         }
       }
 

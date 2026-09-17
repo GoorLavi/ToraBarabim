@@ -19,6 +19,12 @@ export const RABBI_HONORIFIC_LABELS: Record<RabbiHonorific, string> = {
 export const lessonCountLabel = (count: number): string => (count === 1 ? 'שיעור אחד' : `${count} שיעורים`);
 export const cityCountLabel = (count: number): string => (count === 1 ? 'עיר אחת' : `${count} ערים`);
 
+// Read by AreaLink (the city page's own title block and CityEmptyState) and
+// by AreaLessonsPreview's own heading link, which renders the label directly
+// without AreaLink since that line needs heading semantics, not a Secondary
+// link.
+export const areaLinkLabel = (areaName: string): string => `לכל השיעורים באזור ${areaName}`;
+
 // The fixed page size "load more" pages through (CityPage, WomenPage): one
 // number, so a change to it cannot leave one of them stale. Mirrors the
 // server's own MAX_PAGE_SIZE (server/src/service/shared/consts.ts), the

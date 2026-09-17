@@ -1,11 +1,11 @@
 import styled from 'styled-components';
 
 import * as pageConsts from '~/CityPage/consts';
+import { AreaLink } from '~/components/AreaLink/AreaLink';
 import { StateCard } from '~/components/StateCard/StateCard';
 import { DayGroup } from '~/components/DayGroup/DayGroup';
 import { DayGroupSkeleton } from '~/components/DayGroupSkeleton/DayGroupSkeleton';
 
-import { AreaLink } from '../AreaLink/AreaLink';
 import type { CityEmptyStateProps } from './models';
 import * as styles from './styles';
 

@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
 import { useResultsShownTracking } from '~/analytics/useResultsShownTracking';
+import { AreaLink } from '~/components/AreaLink/AreaLink';
 import { BackLink } from '~/components/BackLink/BackLink';
 import { DayGroup } from '~/components/DayGroup/DayGroup';
 import { DayGroupSkeleton } from '~/components/DayGroupSkeleton/DayGroupSkeleton';
@@ -15,7 +16,6 @@ import { TitleSkeleton } from '~/components/TitleSkeleton/TitleSkeleton';
 import { BACK_TO_ALL_CITIES_LABEL } from '~/consts';
 import { dayGroupHeading, groupByDay } from '~/helpers';
 
-import { AreaLink } from './components/AreaLink/AreaLink';
 import { CityEmptyState } from './components/CityEmptyState/CityEmptyState';
 import * as consts from './consts';
 import { cityErrorCopy } from './helpers';

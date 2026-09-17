@@ -1,4 +1,6 @@
+import type { Rabbi } from '@torabarabim/common';
 import classNames from 'classnames';
+import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
@@ -6,7 +8,7 @@ import { navigationClickProps } from '~/analytics/helpers';
 import { trackEvent } from '~/analytics/mixpanel';
 import { todayInIsrael } from '~/HomePage/helpers';
 import { AUDIENCE_LABELS } from '~/consts';
-import { rabbiDisplayName } from '~/helpers';
+import { rabbiDisplayName, rabbiPath } from '~/helpers';
 import * as pageConsts from '~/LessonPage/consts';
 import { teachingRabbiOf } from '~/LessonPage/helpers';
 
@@ -30,6 +32,18 @@ import * as styles from './styles';
 // Both brand marks are a flat list of `<path>`s, each with its own literal fill, so one
 // renderer covers both icons.
 const renderIconPath = ({ d, fill }: { d: string; fill: string }, index: number) => <path key={index} d={d} fill={fill} />;
+
+// Shared by the original rabbi's link and the teaching rabbi's link below: a
+// single name in the ticket, not a ranked list, so there is no real position
+// to report.
+const trackRabbiClick = (rabbi: Rabbi, displayName: string): void => {
+  trackEvent(MIXPANEL_EVENTS.rabbiClick, {
+    rabbiId: rabbi.id,
+    rabbiName: displayName,
+    surface: 'lessonPage',
+    position: 0,
+  });
+};
 
 // The loading state is this same shell with nothing inside it
 // (`LessonTicketSkeleton`), so every shape rule lives in `TicketShell` and
@@ -161,17 +175,27 @@ export const LessonTicket = styled(({ className, occurrence }: LessonTicketProps
           <div className="teacherRow">
             <div className="teacher">
               <span className="role" dir="auto">
-                {roleLabel(isSubstitute, teachingRabbi.honorific)}
+                {roleLabel(teachingRabbi.honorific)}
               </span>
 
               {isSubstitute && (
-                <span className="substituteTag" dir="auto">
-                  {pageConsts.originalRabbiTagLabel(rabbiDisplayName(occurrence.rabbi))}
+                <span className="substituteTag">
+                  <span className="prefix">{pageConsts.SUBSTITUTE_PREFIX_LABEL}</span>
+                  <Link
+                    className="originalRabbiLink"
+                    to={rabbiPath(occurrence.rabbi)}
+                    dir="auto"
+                    onClick={() => trackRabbiClick(occurrence.rabbi, rabbiDisplayName(occurrence.rabbi))}
+                  >
+                    {rabbiDisplayName(occurrence.rabbi)}
+                  </Link>
                 </span>
               )}
 
-              <h1 className="name" dir="auto">
-                {rabbiName}
+              <h1 className="name">
+                <Link className="nameLink" to={rabbiPath(teachingRabbi)} dir="auto" onClick={() => trackRabbiClick(teachingRabbi, rabbiName)}>
+                  {rabbiName}
+                </Link>
               </h1>
 
               {teachingRabbi.title && (

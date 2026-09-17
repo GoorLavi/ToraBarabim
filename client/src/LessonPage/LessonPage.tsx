@@ -7,6 +7,7 @@ import { BackLink } from '~/components/BackLink/BackLink';
 import { NotFoundScreen } from '~/components/NotFoundScreen/NotFoundScreen';
 import { cityPath } from '~/helpers';
 
+import { AreaLessonsPreview } from './components/AreaLessonsPreview/AreaLessonsPreview';
 import { LessonDetails } from './components/LessonDetails/LessonDetails';
 import { LessonDetailsSkeleton } from './components/LessonDetailsSkeleton/LessonDetailsSkeleton';
 import { LessonTicket } from './components/LessonTicket/LessonTicket';
@@ -17,7 +18,7 @@ import type { LessonPageProps } from './models';
 import * as styles from './styles';
 import { useLessonOccurrence } from './useLessonOccurrence';
 
-export const LessonPage = styled(({ className }: LessonPageProps) => {
+export const LessonPage = styled(({ className, areaPreview }: LessonPageProps) => {
   const { lessonId = '', date = '' } = useParams();
   const query = useLessonOccurrence(lessonId, date);
   const occurrence = query.data;
@@ -76,6 +77,8 @@ export const LessonPage = styled(({ className }: LessonPageProps) => {
             note={occurrence.note}
             teachingRabbiHonorific={teachingRabbiOf(occurrence).honorific}
           />
+
+          <AreaLessonsPreview {...{ areaPreview }} />
 
           <BackLink to="/" label={consts.BACK_TO_ALL_LESSONS_LABEL} />
         </>

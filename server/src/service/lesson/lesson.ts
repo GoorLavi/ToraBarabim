@@ -1,4 +1,4 @@
-import type { Lesson, LessonException, Rabbi, Weekday } from '@torabarabim/common';
+import type { Area, AudienceScope, Lesson, LessonException, Rabbi, Weekday } from '@torabarabim/common';
 import { and, eq, gte, inArray, lte } from 'drizzle-orm';
 
 import { db } from '../../db/client';
@@ -6,7 +6,9 @@ import { cities, lessonExceptions, lessons, rabbis } from '../../db/schema';
 import { isLessonInScope, matchesAudienceFilter } from '../shared/audience-scope';
 import { toRabbiSummary as toRabbi } from '../shared/rabbi-summary';
 import { toPlace, type PlaceCityRow } from '../shared/place';
-import { DEFAULT_RANGE_DAYS, MAX_RANGE_DAYS } from './consts';
+import { DEFAULT_PAGE } from '../shared/consts';
+import { selectAreaPreview } from './area-preview';
+import { AREA_PREVIEW_FETCH_SIZE, AREA_PREVIEW_LIMIT, DEFAULT_RANGE_DAYS, MAX_RANGE_DAYS } from './consts';
 import { InvalidDateRangeError, LessonNotFoundError, LessonOccurrenceNotFoundError } from './errors';
 import { addDays, compareIsoDates, daysBetween, todayInIsrael } from './israel-time';
 import type {
@@ -242,6 +244,26 @@ export const search = async (rawQuery: LessonSearchQuery, now: Date): Promise<Le
     .map((occurrence) => resolveRecord(occurrence, rabbiById, cityByCode));
 
   return { items, page: query.page, pageSize: query.pageSize, total };
+};
+
+// The lesson page's area preview: other lessons in the same `Area` (the
+// region enum, never the lesson's own city), soonest first, excluding the
+// lesson the reader is already on. Builds a complete `LessonSearchQuery`
+// itself, leaving `from`/`to` undefined so `resolveRange` applies the
+// default window that `AREA_PREVIEW_FETCH_SIZE` is sized against.
+export const searchAreaPreview = async (
+  params: { area: Area; excludeLessonId: string; scope: AudienceScope },
+  now: Date,
+): Promise<ResolvedLessonOccurrence[]> => {
+  const query: LessonSearchQuery = {
+    area: params.area,
+    scope: params.scope,
+    page: DEFAULT_PAGE,
+    pageSize: AREA_PREVIEW_FETCH_SIZE,
+  };
+
+  const result = await search(query, now);
+  return selectAreaPreview(result.items, params.excludeLessonId, AREA_PREVIEW_LIMIT);
 };
 
 // Resolves one lesson's recurrence rule for a single date, with any

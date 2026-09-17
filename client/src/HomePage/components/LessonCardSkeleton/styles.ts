@@ -1,6 +1,7 @@
 import { css } from 'styled-components';
 
-import { POSTER_ASPECT_RATIO, SKELETON_BODY_HEIGHT } from '~/HomePage/consts';
+import { CARD_WIDE_THRESHOLD } from '~/HomePage/components/LessonCard/consts';
+import { POSTER_ASPECT_RATIO } from '~/HomePage/consts';
 
 // Static, no timer-driven motion (design-system.md, Feel: "No heavy
 // animation"; "any moving element is driven by the person, never on a
@@ -8,6 +9,7 @@ import { POSTER_ASPECT_RATIO, SKELETON_BODY_HEIGHT } from '~/HomePage/consts';
 // component only owns the card's own box and internal shape.
 export const LessonCardSkeleton = css(
   ({ theme }) => `
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -37,7 +39,22 @@ export const LessonCardSkeleton = css(
     justify-content: center;
     gap: ${theme.spacing.sm};
     padding: ${theme.spacing.md};
-    block-size: ${SKELETON_BODY_HEIGHT};
+    /* Mirrors the real LessonCard's own text block instead of an
+       independently chosen height: card title line-height, two secondary
+       lines, and the same block padding, stepped at the same
+       CARD_WIDE_THRESHOLD so the two never disagree on how much room a
+       loaded card actually needs. */
+    block-size: calc(
+      2 * ${theme.spacing.md} + ${theme.typography.cardTitleCompact.phone.lineHeight} + 2 * ${theme.spacing.xs} + 2 *
+        ${theme.typography.secondaryCompact.phone.lineHeight}
+    );
+
+    @container (min-inline-size: ${CARD_WIDE_THRESHOLD}) {
+      block-size: calc(
+        2 * ${theme.spacing.md} + ${theme.typography.cardTitle.phone.lineHeight} + 2 * ${theme.spacing.xs} + 2 *
+          ${theme.typography.secondary.phone.lineHeight}
+      );
+    }
 
     > .titleBar,
     > .metaBar,

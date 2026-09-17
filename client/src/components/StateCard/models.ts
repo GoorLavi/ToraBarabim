@@ -17,8 +17,9 @@ export interface StateCardProps {
   variant: 'surface' | 'empty';
   // 'h1' when this card is the page's only heading (a route or a record
   // that never resolved, with no other heading rendered on screen). 'h2'
-  // when it sits under a heading the page already rendered.
-  headingLevel: 'h1' | 'h2';
+  // when it sits under a heading the page already rendered. 'h3' when that
+  // heading is itself an `h2` immediately above the card (AreaLessonsPreview).
+  headingLevel: 'h1' | 'h2' | 'h3';
   heading: ReactNode;
   body?: ReactNode;
   action?: StateCardAction;
