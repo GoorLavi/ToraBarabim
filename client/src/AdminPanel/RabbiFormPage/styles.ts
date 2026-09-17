@@ -83,12 +83,12 @@ export const RabbiFormPage = css(
       > .heading {
         color: ${theme.colors.text};
         font-weight: ${theme.typography.pageHeading.fontWeight};
-        font-size: ${theme.typography.sectionHeading.phone.fontSize};
-        line-height: ${theme.typography.sectionHeading.phone.lineHeight};
+        font-size: ${theme.typography.pageHeading.phone.fontSize};
+        line-height: ${theme.typography.pageHeading.phone.lineHeight};
 
         @media (min-width: ${theme.breakpoints.md}) {
-          font-size: ${theme.typography.pageHeading.phone.fontSize};
-          line-height: ${theme.typography.pageHeading.phone.lineHeight};
+          font-size: ${theme.typography.pageHeading.desktop.fontSize};
+          line-height: ${theme.typography.pageHeading.desktop.lineHeight};
         }
       }
 
