@@ -1,3 +1,4 @@
+import type { RabbiHonorific } from '@torabarabim/common';
 import { useSearchParams } from 'react-router-dom';
 
 import type { SelectedCity } from '~/components/CitySelect/models';
@@ -9,11 +10,13 @@ export interface LessonListFiltersState extends LessonListUrlFilters {
   selectCity: (city: SelectedCity | undefined) => void;
   selectRecurrence: (recurrence: RecurrenceFilter) => void;
   setSearch: (search: string) => void;
+  clearRabbi: () => void;
   clear: () => void;
   activeFilterCount: number;
 }
 
 const isRecurrenceFilter = (value: string | null): value is RecurrenceFilter => value === 'weekly' || value === 'once';
+const isRabbiHonorific = (value: string | null): value is RabbiHonorific => value === 'rav' || value === 'rabbanit';
 
 // A search someone can share lives in the URL, not in component state
 // (client/CLAUDE.md, Data and State): every filter on this screen is a
@@ -24,6 +27,13 @@ export const useLessonListFilters = (): LessonListFiltersState => {
   const cityId = searchParams.get(consts.CITY_ID_PARAM);
   const cityName = searchParams.get(consts.CITY_NAME_PARAM);
   const city = cityId && cityName ? { id: cityId, name: cityName } : undefined;
+
+  const rabbiId = searchParams.get(consts.RABBI_ID_PARAM);
+  const rabbiName = searchParams.get(consts.RABBI_NAME_PARAM);
+  const rabbiHonorificParam = searchParams.get(consts.RABBI_HONORIFIC_PARAM);
+  const rabbi =
+    rabbiId && rabbiName && isRabbiHonorific(rabbiHonorificParam) ? { id: rabbiId, name: rabbiName, honorific: rabbiHonorificParam } : undefined;
+
   const recurrenceParam = searchParams.get(consts.RECURRENCE_PARAM);
   const recurrence: RecurrenceFilter = isRecurrenceFilter(recurrenceParam) ? recurrenceParam : 'all';
   const search = searchParams.get(consts.SEARCH_PARAM) ?? '';
@@ -60,9 +70,19 @@ export const useLessonListFilters = (): LessonListFiltersState => {
     });
   };
 
+  const clearRabbi = (): void => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete(consts.RABBI_ID_PARAM);
+      next.delete(consts.RABBI_NAME_PARAM);
+      next.delete(consts.RABBI_HONORIFIC_PARAM);
+      return next;
+    });
+  };
+
   const clear = (): void => setSearchParams(new URLSearchParams());
 
-  const activeFilterCount = [Boolean(city), recurrence !== 'all', Boolean(search)].filter(Boolean).length;
+  const activeFilterCount = [Boolean(city), Boolean(rabbi), recurrence !== 'all', Boolean(search)].filter(Boolean).length;
 
-  return { city, recurrence, search, selectCity, selectRecurrence, setSearch, clear, activeFilterCount };
+  return { city, rabbi, recurrence, search, selectCity, selectRecurrence, setSearch, clearRabbi, clear, activeFilterCount };
 };

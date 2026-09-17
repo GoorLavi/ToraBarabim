@@ -2,12 +2,13 @@ import { css } from 'styled-components';
 
 // A horizontal row, not the public poster grid: eleven of twelve rabbis
 // carry no photo today, so the name (what an admin actually scans for)
-// leads and the poster is a small leading thumbnail, still fixed at the
-// ratified 2:3 ratio (design-system.md, "The poster image").
+// leads and the poster is a small leading thumbnail, fixed at the ratified
+// 3:4 ratio (design-system.md, "The poster image": 2:3 was a corrected
+// defect, not the shipped value).
 export const RabbiCard = css(
   ({ theme }) => `
   display: flex;
-  align-items: stretch;
+  align-items: flex-start;
   gap: ${theme.spacing.md};
   padding: ${theme.spacing.md};
   border: 1px solid ${theme.colors.border};
@@ -18,7 +19,7 @@ export const RabbiCard = css(
   > .photo {
     flex: 0 0 auto;
     inline-size: 72px;
-    aspect-ratio: 2 / 3;
+    aspect-ratio: 3 / 4;
     border-radius: ${theme.radii.sm};
     object-fit: cover;
     background: ${theme.colors.primarySoft};
@@ -66,6 +67,7 @@ export const RabbiCard = css(
         font-weight: ${theme.typography.fontWeight.semiBold};
         font-size: ${theme.typography.secondary.phone.fontSize};
         line-height: ${theme.typography.secondary.phone.lineHeight};
+        text-decoration: none;
       }
 
       > .edit {

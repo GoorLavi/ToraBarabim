@@ -246,6 +246,16 @@ different sentences and they are not interchangeable:
 
 - **A screenshot is never proof of correctness.** Rendering the UI is design judgment.
   Say "the design is right", never "it works".
+- **A change with a design is rendered in Storybook and approved by `tora-designer`
+  before it goes to the human or into a pull request.** Every screen the change
+  touches, in every state it has, on mocked data. This is a gate, not a courtesy: the
+  app needs a database and a root `.env` that a sandbox does not have, so Storybook is
+  the only place most agents can see a screen at all, and a design nobody has looked at
+  is not ready however clean its build. A `fix` verdict is fixed and rendered again,
+  and the loop repeats until the verdict is `approved`.
+- **The stories are part of the builder's slice, like the tests.** They are what keeps
+  that loop to minutes rather than a project of its own, and a screen with no story is
+  a screen that silently skips the gate.
 - **A test is written against a defect or a guarantee, never against a coverage
   target.** The suite exists because this project shipped bugs a test would have
   caught; each one earned its assertion.

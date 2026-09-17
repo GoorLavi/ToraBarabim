@@ -6,7 +6,13 @@ import { ThemeProvider } from 'styled-components';
 import { GlobalStyle } from '../src/styles/GlobalStyle';
 import { ARGAMAN_VE_ZAHAV_THEME } from '../src/theme/themes';
 
-const queryClient = new QueryClient();
+// `retry: false`: TanStack Query's default retry (3, with backoff) means an
+// error-state story sits there retrying before it shows its error, reading
+// as a hang rather than a designed error state. One client shared by every
+// story, not a fresh one per story: every mocked story already answers a
+// distinct URL (a story-specific id or slug) rather than a shared query key,
+// so nothing here risks one story showing another's cached data.
+const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
 const preview: Preview = {
   decorators: [

@@ -1,12 +1,16 @@
 import type {
+  AdminOccurrenceListResponse,
   AdminUser,
   AdminUserListItem,
   AdminUserListResponse,
   CreateAdminUserRequest,
+  CreateLessonExceptionRequest,
   CreateLessonRequest,
   CreateRabbiAccountRequest,
   CreateRabbiRequest,
   DeleteImpactPreview,
+  LessonExceptionListResponse,
+  LessonExceptionResponse,
   LessonListResponse,
   LessonResponse,
   RabbiAccountCreatedResponse,
@@ -15,6 +19,7 @@ import type {
   RabbiResponse,
   ResetRabbiPasswordResponse,
   UpdateAdminUserRequest,
+  UpdateLessonExceptionRequest,
   UpdateLessonRequest,
   UpdateRabbiAccountRequest,
   UpdateRabbiRequest,
@@ -185,6 +190,44 @@ export const createAdminLesson = (body: CreateLessonRequest): Promise<LessonResp
 // 404 if the lesson does not exist.
 export const updateAdminLesson = (id: string, body: UpdateLessonRequest): Promise<LessonResponse> =>
   request(url(`/v1/admin/lessons/${id}`).toString(), { method: 'PATCH', headers: JSON_HEADERS, body: JSON.stringify(body) });
+
+// GET /v1/admin/lessons/:lessonId/occurrences
+// 200 with AdminOccurrenceListResponse: this lesson's own recurrence
+// expanded over a 14-day window counting today, exceptions already
+// applied, including an empty items array. 404 if the lesson does not exist.
+export const fetchAdminOccurrences = (lessonId: string): Promise<AdminOccurrenceListResponse> =>
+  request(url(`/v1/admin/lessons/${lessonId}/occurrences`).toString());
+
+// GET /v1/admin/lessons/:lessonId/exceptions
+// 200 with LessonExceptionListResponse, including an empty items array.
+// 404 if the lesson does not exist.
+export const fetchAdminLessonExceptions = (lessonId: string): Promise<LessonExceptionListResponse> =>
+  request(url(`/v1/admin/lessons/${lessonId}/exceptions`).toString());
+
+// POST /v1/admin/lessons/:lessonId/exceptions
+// 201 with LessonExceptionResponse. 400 invalid_request / date_not_in_recurrence /
+// unknown_rabbi / unknown_city. 404 if the lesson does not exist. 409
+// duplicate_exception if one already exists for that date.
+export const createAdminLessonException = (lessonId: string, body: CreateLessonExceptionRequest): Promise<LessonExceptionResponse> =>
+  request(url(`/v1/admin/lessons/${lessonId}/exceptions`).toString(), { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(body) });
+
+// PATCH /v1/admin/lessons/:lessonId/exceptions/:exceptionId
+// 200 with LessonExceptionResponse. Same 400s as create. 404 if the lesson or exception does not exist.
+export const updateAdminLessonException = (
+  lessonId: string,
+  exceptionId: number,
+  body: UpdateLessonExceptionRequest,
+): Promise<LessonExceptionResponse> =>
+  request(url(`/v1/admin/lessons/${lessonId}/exceptions/${exceptionId}`).toString(), {
+    method: 'PATCH',
+    headers: JSON_HEADERS,
+    body: JSON.stringify(body),
+  });
+
+// DELETE /v1/admin/lessons/:lessonId/exceptions/:exceptionId
+// 204 on success. 404 if the lesson or exception does not exist.
+export const deleteAdminLessonException = (lessonId: string, exceptionId: number): Promise<void> =>
+  request(url(`/v1/admin/lessons/${lessonId}/exceptions/${exceptionId}`).toString(), { method: 'DELETE' });
 
 // GET /v1/admin/admin-users
 // 200 with AdminUserListResponse, including an empty items array.

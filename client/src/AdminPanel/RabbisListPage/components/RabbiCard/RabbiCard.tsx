@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { ADMIN_ROUTES } from '~/AdminPanel/consts';
+import { ADMIN_ROUTES, DETAILS_LABEL, lessonNewForRabbi } from '~/AdminPanel/consts';
 import * as parentConsts from '~/AdminPanel/RabbisListPage/consts';
 import { rabbiDisplayName } from '~/helpers';
 
@@ -31,10 +31,10 @@ export const RabbiCard = styled(({ className, row }: RabbiCardProps) => {
         <p className="count">{row.lessonCount === 0 ? parentConsts.NO_LESSONS_YET_LABEL : parentConsts.lessonCountLabel(row.lessonCount)}</p>
 
         <div className="actions">
-          <Link className="edit" to={ADMIN_ROUTES.rabbiEdit(row.rabbi.id)}>
-            {parentConsts.EDIT_LABEL}
+          <Link className="edit" to={ADMIN_ROUTES.rabbiView(row.rabbi.id)}>
+            {DETAILS_LABEL}
           </Link>
-          <Link className="newLesson" to={`${ADMIN_ROUTES.lessonNew}?rabbiId=${row.rabbi.id}`}>
+          <Link className="newLesson" to={lessonNewForRabbi(row.rabbi.id)}>
             {parentConsts.NEW_LESSON_LABEL}
           </Link>
         </div>

@@ -11,7 +11,6 @@ export const SEARCH_LABEL = 'חיפוש רבנים';
 // subheading only states what the list response actually carries.
 export const totalCountLabel = (total: number): string => `${total} רבנים במערכת`;
 
-export const EDIT_LABEL = 'עריכה';
 export const NEW_LESSON_LABEL = 'שיעור חדש';
 export const NO_LESSONS_YET_LABEL = 'אין שיעורים עדיין';
 export const lessonCountLabel = (count: number): string => `${count} שיעורים`;

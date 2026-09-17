@@ -7,17 +7,15 @@ import { expect, userEvent, within } from 'storybook/test';
 import styled from 'styled-components';
 
 import type { SelectedCity } from '~/hooks/models';
+import { jsonResponse, NEVER_RESOLVES } from '~/storyMocks';
 
 import { RECENT_CITIES_STORAGE_KEY } from './consts';
 import { CityPicker } from './CityPicker';
 
-// No live API in Storybook's own preview server: see RabbiPage.stories.tsx
-// for why every route this feature calls is answered here instead.
-const jsonResponse = (status: number, body: unknown): Response =>
-  new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
-
-const NEVER_RESOLVES = new Promise<Response>(() => {});
-
+// This feature's own `installMockFetch`, not `~/storyMocks`'s: every other
+// mocked story answers by URL alone, but this one also needs
+// `suggestionsScenario` (module-level, set by the decorator before render)
+// to tell two stories' requests to the same parameterless endpoint apart.
 type SuggestionsScenario = 'loaded' | 'loading' | 'empty' | 'error';
 
 // Read at fetch time, set by each story's own decorator before it renders:

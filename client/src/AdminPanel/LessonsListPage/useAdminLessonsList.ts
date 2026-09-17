@@ -17,10 +17,10 @@ export type AdminLessonsListState =
 // its own venue, so only rabbis need a separate lookup (capped at
 // `MAX_ADMIN_PAGE_SIZE`, see the report for this slice), joined onto each
 // lesson in memory, never queried per row.
-export const useAdminLessonsList = (city: SelectedCity | undefined): AdminLessonsListState => {
+export const useAdminLessonsList = (city: SelectedCity | undefined, rabbiId: string | undefined): AdminLessonsListState => {
   const lessonsQuery = useQuery({
-    queryKey: ADMIN_QUERY_KEYS.lessons({ cityId: city?.id, pageSize: MAX_ADMIN_PAGE_SIZE }),
-    queryFn: () => fetchAdminLessons({ cityId: city?.id, pageSize: MAX_ADMIN_PAGE_SIZE }),
+    queryKey: ADMIN_QUERY_KEYS.lessons({ cityId: city?.id, rabbiId, pageSize: MAX_ADMIN_PAGE_SIZE }),
+    queryFn: () => fetchAdminLessons({ cityId: city?.id, rabbiId, pageSize: MAX_ADMIN_PAGE_SIZE }),
   });
   const rabbisQuery = useQuery({
     queryKey: ADMIN_QUERY_KEYS.rabbis({ pageSize: MAX_ADMIN_PAGE_SIZE }),

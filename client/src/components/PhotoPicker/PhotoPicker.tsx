@@ -6,7 +6,7 @@ import * as consts from './consts';
 import type { PhotoPickerProps } from './models';
 import * as styles from './styles';
 
-// A file picker with a fixed 2:3 preview frame that never disappears and
+// A file picker with a fixed 3:4 preview frame that never disappears and
 // never changes height (rabbi-panel-copy.md, section 6), plus the real
 // upload states a caller can opt into via `uploadStatus`: uploading (the
 // new file's preview, dimmed, with a progress bar) and failed (the

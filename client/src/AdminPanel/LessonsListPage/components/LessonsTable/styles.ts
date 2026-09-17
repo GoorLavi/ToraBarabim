@@ -1,9 +1,12 @@
 import { css } from 'styled-components';
 
 // Lesson and rabbi lead (the only thing identifying a row), then when,
-// city, audience, actions: matches the DOM order in `LessonsTable.tsx`,
-// which reads right-to-left in this RTL layout.
-const GRID_COLUMNS = '2fr 1fr 140px 110px 90px';
+// city, audience, actions: matches the DOM order in LessonsTable.tsx, which
+// reads right-to-left in this RTL layout. Explicit proportions rather than
+// letting column one take a bare 1fr of the slack: that left an empty band
+// of roughly 455px between the lesson title and the "when" column's own
+// content at the 1232 content width.
+const GRID_COLUMNS = 'minmax(0, 1.4fr) minmax(0, 1fr) 140px 160px 96px';
 
 export const LessonsTable = css(
   ({ theme }) => `
@@ -43,18 +46,16 @@ export const LessonsTable = css(
 
     > .when {
       display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 2px;
+      align-items: center;
+      gap: ${theme.spacing.sm};
 
-      > .time {
-        color: ${theme.colors.textSecondary};
-        font-size: ${theme.typography.secondary.phone.fontSize};
-        line-height: ${theme.typography.secondary.phone.lineHeight};
+      > .whenText {
+        overflow-wrap: break-word;
       }
 
       > .tag {
-        width: fit-content;
+        flex: 0 0 auto;
+        inline-size: fit-content;
         padding-inline: ${theme.spacing.xs};
         border-radius: ${theme.radii.sm};
         background: ${theme.colors.accentSoft};
@@ -80,8 +81,22 @@ export const LessonsTable = css(
     }
 
     > .actions > .edit {
+      display: flex;
+      align-items: center;
+      min-block-size: 48px;
       color: ${theme.colors.primary};
       font-weight: ${theme.typography.fontWeight.semiBold};
+      text-decoration: none;
+
+      @media (hover: hover) and (pointer: fine) {
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+
+      &:focus-visible {
+        text-decoration: underline;
+      }
     }
   }
 `,

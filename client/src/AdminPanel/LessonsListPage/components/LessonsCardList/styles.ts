@@ -38,8 +38,6 @@ export const LessonsCardList = css(
     }
 
     > .meta {
-      display: flex;
-      gap: ${theme.spacing.sm};
       color: ${theme.colors.textSecondary};
       font-size: ${theme.typography.secondary.phone.fontSize};
       line-height: ${theme.typography.secondary.phone.lineHeight};
@@ -68,6 +66,17 @@ export const LessonsCardList = css(
       align-items: center;
       color: ${theme.colors.primary};
       font-weight: ${theme.typography.fontWeight.semiBold};
+      text-decoration: none;
+
+      @media (hover: hover) and (pointer: fine) {
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+
+      &:focus-visible {
+        text-decoration: underline;
+      }
     }
   }
 `,

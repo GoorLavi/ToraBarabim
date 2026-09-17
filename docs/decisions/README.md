@@ -100,3 +100,4 @@ The real alternatives and why each lost. If there was no alternative, say so.
 | [0030](0030-weekly-agent-imports-scraped-lessons.md) | A weekly agent collects and imports scraped lessons, and fixed code decides every write | accepted, supersedes [0009](0009-scraped-lessons-stay-out.md) |
 | [0031](0031-import-agent-writes-with-its-own-key.md) | The import agent writes to production with its own key, without a per-run approval | accepted |
 | [0032](0032-import-matches-rabbis-by-name-and-site.md) | The import matches rabbis by name and site, and learns only what the owner confirmed | accepted |
+| [0033](0033-a-one-time-lesson-outside-the-two-week-window-cannot-be-cancelled-yet.md) | A one-time lesson outside the two-week window cannot be cancelled yet | accepted, to be fixed in its own change |
