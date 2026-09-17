@@ -13,10 +13,15 @@ const rabbiResponse = (overrides: Partial<RabbiResponse>): RabbiResponse => ({
   ...overrides,
 });
 
+// Also carries `LessonFormPage.stories.tsx`'s edited rabbi (`story-edit-
+// rabbi`): that file's `RabbiPicker` search hits this exact same unfiltered
+// `/v1/admin/rabbis?page=1&pageSize=50` request, and whichever file's mock
+// last loaded answers both (see that file's own comment on this).
 const rabbisList: RabbiResponse[] = [
   rabbiResponse({ id: 'rabbi-1', name: 'אברהם כהן' }),
   rabbiResponse({ id: 'rabbi-2', name: 'משה לוי' }),
   rabbiResponse({ id: 'rabbi-3', name: 'נתן צבי אשכנזי הכהן' }),
+  rabbiResponse({ id: 'story-edit-rabbi', name: 'יעקב מזרחי', title: 'ראש ישיבה' }),
 ];
 
 const lesson = (overrides: Partial<LessonResponse>): LessonResponse => ({
@@ -88,7 +93,14 @@ installMockFetch((url) => {
     return jsonResponse(200, { items: populatedLessons, page: 1, pageSize: 50, total: populatedLessons.length });
   }
 
-  return jsonResponse(200, { items: [], page: 1, pageSize: 50, total: 0 });
+  // Falls through rather than answering every other cityId/rabbiId
+  // combination: `RabbiViewPage` and `RabbiLessonsSection` mock this same
+  // shared endpoint from their own story files, and each file's mock
+  // chains onto the last (`.storybook/preview.tsx`), so a catch-all here
+  // would swallow their requests too depending on which file's module
+  // happened to load last (mirrors `AreaPage.stories.tsx`'s own comment on
+  // this same trap).
+  return null;
 });
 
 // See RabbiPage.stories.tsx for why this uses `Routes`'s `location` override

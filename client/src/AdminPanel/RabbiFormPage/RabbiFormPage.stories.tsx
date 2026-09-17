@@ -8,8 +8,13 @@ import { installMockFetch, jsonResponse } from '~/storyMocks';
 
 import { RabbiFormPage } from './RabbiFormPage';
 
+// A distinct id from `LessonFormPage.stories.tsx`'s own edited rabbi:
+// `.storybook/preview.tsx` shares one `QueryClient` across every story, and
+// both files fetch a single rabbi by id under the identical
+// `['admin', 'rabbis', id]` key, so sharing an id would let one file's
+// cached rabbi bleed into the other's story.
 const rabbi: RabbiResponse = {
-  ...rabbiFixture({ id: 'story-edit-rabbi', name: 'יעקב מזרחי', title: 'ראש ישיבה', bio: 'ראש ישיבת "אור התורה" ומגידי השיעור הוותיקים בעיר.' }),
+  ...rabbiFixture({ id: 'story-editable-rabbi', name: 'יעקב מזרחי', title: 'ראש ישיבה', bio: 'ראש ישיבת "אור התורה" ומגידי השיעור הוותיקים בעיר.' }),
   prominence: 'known',
 };
 
@@ -49,7 +54,10 @@ export const EditMode: Story = {};
 export const EditModeDiscardChangesSheet: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const nameInput = await canvas.findByLabelText('שם הרב');
+    // Not `getByLabelText`: the name field's `<label>` also wraps its own
+    // helper text after the input, so the label's full accessible name is
+    // the field label plus that helper sentence, not the field label alone.
+    const nameInput = await canvas.findByDisplayValue(rabbi.name);
     await userEvent.type(nameInput, ' הי');
     await userEvent.click(canvas.getByRole('link', { name: 'ביטול' }));
     await within(document.body).findByRole('dialog', { name: 'לצאת בלי לשמור?' });

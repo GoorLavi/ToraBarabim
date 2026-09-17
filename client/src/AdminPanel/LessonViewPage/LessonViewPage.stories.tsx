@@ -47,7 +47,7 @@ installMockFetch((url) => {
     );
   }
   if (url.pathname === '/v1/admin/lessons/story-untitled') {
-    return jsonResponse(200, lesson({ id: 'story-untitled', title: undefined, topic: undefined, rabbiId: 'story-rabbanit' }));
+    return jsonResponse(200, lesson({ id: 'story-untitled', title: undefined, topic: undefined, rabbiId: 'story-untitled-rabbi' }));
   }
   if (url.pathname === '/v1/admin/lessons/story-onetime') {
     return jsonResponse(200, lesson({ id: 'story-onetime', recurrence: { kind: 'once', date: '2026-10-08' } }));
@@ -66,8 +66,13 @@ installMockFetch((url) => {
   if (url.pathname === '/v1/admin/rabbis/story-longnames-rabbi') {
     return jsonResponse(200, rabbiResponse({ id: 'story-longnames-rabbi', name: 'נתן צבי אשכנזי הכהן', title: 'ראש כולל ורב השכונה' }));
   }
-  if (url.pathname === '/v1/admin/rabbis/story-rabbanit') {
-    return jsonResponse(200, rabbiResponse({ id: 'story-rabbanit', name: 'שרה גולדברג', honorific: 'rabbanit', title: undefined }));
+  // Distinct id from `RabbiViewPage.stories.tsx`'s own rabbanit: both files
+  // fetch a single rabbi by id under the identical `['admin', 'rabbis',
+  // id]` key, and `.storybook/preview.tsx` shares one `QueryClient` across
+  // every story, so a shared id would let one file's cached rabbi bleed
+  // into the other's story.
+  if (url.pathname === '/v1/admin/rabbis/story-untitled-rabbi') {
+    return jsonResponse(200, rabbiResponse({ id: 'story-untitled-rabbi', name: 'שרה גולדברג', honorific: 'rabbanit', title: undefined }));
   }
   // The rabbi fetch that fails while the lesson itself loads fine:
   // `useExistingLesson` only treats a failed *lesson* fetch as fatal, so

@@ -72,7 +72,18 @@ installMockFetch((url) => {
     // `RabbiViewPage`'s own profile fetch above, and this state was never
     // seen before this slice.
     if (rabbiId === 'story-lessonserror') return jsonResponse(500, { error: 'internal_error', message: 'שגיאה' });
-    return jsonResponse(200, { items: [], page: 1, pageSize: 5, total: 0 });
+    // The other rabbis this file loads a profile for, where the lessons
+    // section itself is not what the story is testing: a genuinely empty
+    // list is the right answer for exactly these ids, never a catch-all for
+    // every id. `RabbiLessonsSection` and `LessonsListPage` mock this same
+    // shared endpoint from their own story files, and each file's mock
+    // chains onto the last (`.storybook/preview.tsx`), so answering for an
+    // id this file does not own would swallow their requests too depending
+    // on which file's module happened to load last.
+    if (rabbiId && ['story-rabbanit', 'story-nophoto', 'story-notitlebio', 'story-emptylessons'].includes(rabbiId)) {
+      return jsonResponse(200, { items: [], page: 1, pageSize: 5, total: 0 });
+    }
+    return null;
   }
 
   return null;
