@@ -101,10 +101,16 @@ export const RabbiViewPage = css(
 
       > .head {
         display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: ${theme.spacing.md};
+        flex-direction: column;
+        align-items: flex-start;
+        gap: ${theme.spacing.sm};
+
+        @media (min-width: ${theme.breakpoints.md}) {
+          flex-direction: row;
+          align-items: center;
+          justify-content: space-between;
+          gap: ${theme.spacing.md};
+        }
 
         > .heading {
           flex: 1;
@@ -123,6 +129,7 @@ export const RabbiViewPage = css(
 
         > .editButton {
           flex: 0 0 auto;
+          align-self: flex-start;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -132,6 +139,10 @@ export const RabbiViewPage = css(
           background: ${theme.colors.primary};
           color: ${theme.colors.textOnPrimary};
           font-weight: ${theme.typography.fontWeight.semiBold};
+
+          @media (min-width: ${theme.breakpoints.md}) {
+            align-self: center;
+          }
         }
       }
 

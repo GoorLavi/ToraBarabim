@@ -228,15 +228,39 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
           <RabbiAccountSection rabbiId={id} rabbiName={form.name} />
 
           <div className="footer">
-            <Link className="cancel" to={ADMIN_ROUTES.rabbis}>
-              {consts.CANCEL_LABEL}
-            </Link>
-            <button type="button" className="saveAndAddLesson" disabled={saveRabbi.isSaving} onClick={() => void submit('firstLesson')}>
-              {consts.SAVE_AND_ADD_LESSON_LABEL}
-            </button>
-            <button type="submit" className="save" disabled={saveRabbi.isSaving}>
-              {saveRabbi.isSaving ? consts.SAVING_LABEL : consts.SAVE_LABEL}
-            </button>
+            {id ? (
+              <>
+                <button type="submit" className="save" disabled={saveRabbi.isSaving}>
+                  {saveRabbi.isSaving ? consts.SAVING_LABEL : consts.SAVE_LABEL}
+                </button>
+                <button type="button" className="saveAndAddLesson" disabled={saveRabbi.isSaving} onClick={() => void submit('firstLesson')}>
+                  {consts.SAVE_AND_ADD_LESSON_LABEL}
+                </button>
+                <Link
+                  className="cancel"
+                  to={cancelHref}
+                  onClick={(event) => {
+                    if (!isDirty) return;
+                    event.preventDefault();
+                    setIsDiscardSheetOpen(true);
+                  }}
+                >
+                  {consts.CANCEL_LABEL}
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link className="cancel" to={cancelHref}>
+                  {consts.CANCEL_LABEL}
+                </Link>
+                <button type="button" className="saveAndAddLesson" disabled={saveRabbi.isSaving} onClick={() => void submit('firstLesson')}>
+                  {consts.SAVE_AND_ADD_LESSON_LABEL}
+                </button>
+                <button type="submit" className="save" disabled={saveRabbi.isSaving}>
+                  {saveRabbi.isSaving ? consts.SAVING_LABEL : consts.SAVE_LABEL}
+                </button>
+              </>
+            )}
           </div>
 
           {id && (
@@ -250,6 +274,16 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
           <RabbiPreviewCard photoUrl={previewPhotoUrl} name={form.name.trim() ? rabbiDisplayName({ name: form.name, honorific: form.honorific }) : ''} />
         </aside>
       </div>
+
+      {isDiscardSheetOpen && (
+        <DiscardChangesSheet
+          onDiscard={() => {
+            setIsDiscardSheetOpen(false);
+            navigate(cancelHref);
+          }}
+          onDismiss={() => setIsDiscardSheetOpen(false)}
+        />
+      )}
     </div>
   );
 })`
