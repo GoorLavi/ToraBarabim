@@ -88,6 +88,8 @@ export const ADMIN_QUERY_KEYS = {
   rabbiAccount: (id: string) => ['admin', 'rabbis', id, 'account'] as const,
   lessons: (filters: AdminLessonFilters) => ['admin', 'lessons', 'search', filters] as const,
   lesson: (id: string) => ['admin', 'lessons', id] as const,
+  lessonOccurrences: (lessonId: string) => ['admin', 'lessons', lessonId, 'occurrences'] as const,
+  lessonExceptions: (lessonId: string) => ['admin', 'lessons', lessonId, 'exceptions'] as const,
   adminUsers: (filters: AdminUserFilters) => ['admin', 'admin-users', 'search', filters] as const,
 };
 

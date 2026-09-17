@@ -1,4 +1,4 @@
-import type { LessonResponse, RabbiResponse } from '@torabarabim/common';
+import type { LessonExceptionResponse, LessonOccurrence, LessonResponse, RabbiResponse } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Route, Routes } from 'react-router-dom';
 
@@ -24,6 +24,20 @@ const lesson = (overrides: Partial<LessonResponse>): LessonResponse => ({
   startTime: '20:30',
   durationMinutes: 60,
   provenance: 'manual',
+  ...overrides,
+});
+
+// A plain scheduled date with no exception: the occurrences section's
+// baseline row, no tag, both write actions enabled.
+const scheduledOccurrence = (lessonId: string, overrides: Partial<LessonOccurrence> = {}): LessonOccurrence => ({
+  lessonId,
+  date: '2026-09-18',
+  startTime: '20:30',
+  endTime: '21:30',
+  status: 'scheduled',
+  audience: 'mixed',
+  rabbi: rabbiResponse({}),
+  place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', floor: undefined, city: 'חיפה', citySlug: 'haifa', area: 'haifa' },
   ...overrides,
 });
 
@@ -59,6 +73,23 @@ installMockFetch((url) => {
   if (url.pathname === '/v1/admin/lessons/story-error') return jsonResponse(500, { error: 'internal_error', message: 'שגיאה' });
   if (url.pathname === '/v1/admin/lessons/story-loading') return NEVER_RESOLVES;
 
+  // The occurrences section's own dedicated lesson ids: each isolates one
+  // state of `useLessonOccurrences` without disturbing the fixtures above,
+  // which every other `LessonViewPage` story still depends on.
+  if (url.pathname === '/v1/admin/lessons/story-occ-empty') return jsonResponse(200, lesson({ id: 'story-occ-empty' }));
+  if (url.pathname === '/v1/admin/lessons/story-occ-loading') return jsonResponse(200, lesson({ id: 'story-occ-loading' }));
+  if (url.pathname === '/v1/admin/lessons/story-occ-error') return jsonResponse(200, lesson({ id: 'story-occ-error' }));
+  if (url.pathname === '/v1/admin/lessons/story-occ-exceptions-error') return jsonResponse(200, lesson({ id: 'story-occ-exceptions-error' }));
+  if (url.pathname === '/v1/admin/lessons/story-occ-longdata') {
+    return jsonResponse(
+      200,
+      lesson({
+        id: 'story-occ-longdata',
+        place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', cityCode: 4000, cityName: 'חיפה' },
+      }),
+    );
+  }
+
   if (url.pathname === '/v1/admin/rabbis/story-rabbi') return jsonResponse(200, rabbiResponse({}));
   if (url.pathname === '/v1/admin/rabbis/story-nophoto-rabbi') {
     return jsonResponse(200, rabbiResponse({ id: 'story-nophoto-rabbi', name: 'משה לוי', title: undefined, photoUrl: undefined }));
@@ -79,6 +110,109 @@ installMockFetch((url) => {
   // this must degrade to `RABBI_UNKNOWN_LABEL` with the rest of the lesson
   // rendering normally, never a blank page.
   if (url.pathname === '/v1/admin/rabbis/story-rabbi-failing') return jsonResponse(500, { error: 'internal_error', message: 'שגיאה' });
+
+  if (url.pathname === '/v1/admin/lessons/story-populated/occurrences') {
+    return jsonResponse(200, {
+      items: [
+        scheduledOccurrence('story-populated', { date: '2026-09-18' }),
+        // Moved: time differs from the lesson's own 20:30, place unchanged.
+        scheduledOccurrence('story-populated', { date: '2026-09-25', startTime: '21:15', endTime: '22:15' }),
+        // Place changed: time unchanged, venue differs from the lesson's own.
+        scheduledOccurrence('story-populated', {
+          date: '2026-10-02',
+          place: { name: 'בית מדרש נוסף', street: 'הרצל 12', floor: undefined, city: 'חיפה', citySlug: 'haifa', area: 'haifa' },
+        }),
+        // Cancelled, with a reason.
+        scheduledOccurrence('story-populated', {
+          date: '2026-10-09',
+          status: 'cancelled',
+          cancellationReason: 'הרב נוסע לשמחה משפחתית',
+        }),
+      ] satisfies LessonOccurrence[],
+    });
+  }
+  if (url.pathname === '/v1/admin/lessons/story-populated/exceptions') {
+    return jsonResponse(200, {
+      items: [
+        { id: 21, lessonId: 'story-populated', kind: 'modified', date: '2026-09-25', startTime: '21:15' },
+        {
+          id: 22,
+          lessonId: 'story-populated',
+          kind: 'modified',
+          date: '2026-10-02',
+          place: { name: 'בית מדרש נוסף', street: 'הרצל 12', cityCode: 4000, cityName: 'חיפה' },
+        },
+        { id: 23, lessonId: 'story-populated', kind: 'cancelled', date: '2026-10-09', reason: 'הרב נוסע לשמחה משפחתית' },
+      ] satisfies LessonExceptionResponse[],
+    });
+  }
+
+  if (url.pathname === '/v1/admin/lessons/story-occ-empty/occurrences') return jsonResponse(200, { items: [] });
+  if (url.pathname === '/v1/admin/lessons/story-occ-empty/exceptions') return jsonResponse(200, { items: [] });
+
+  if (url.pathname === '/v1/admin/lessons/story-occ-loading/occurrences') return NEVER_RESOLVES;
+  if (url.pathname === '/v1/admin/lessons/story-occ-loading/exceptions') return NEVER_RESOLVES;
+
+  if (url.pathname === '/v1/admin/lessons/story-occ-error/occurrences') return jsonResponse(500, { error: 'internal_error', message: 'שגיאה' });
+  if (url.pathname === '/v1/admin/lessons/story-occ-error/exceptions') return jsonResponse(200, { items: [] });
+
+  // Occurrences resolve, exceptions fail: the section degrades to a
+  // read-only list rather than blanking (LessonViewPage/components/
+  // OccurrencesSection/useLessonOccurrences.ts's 'exceptionsUnavailable').
+  if (url.pathname === '/v1/admin/lessons/story-occ-exceptions-error/occurrences') {
+    return jsonResponse(200, {
+      items: [
+        scheduledOccurrence('story-occ-exceptions-error', { date: '2026-09-18' }),
+        scheduledOccurrence('story-occ-exceptions-error', {
+          date: '2026-09-25',
+          status: 'cancelled',
+          cancellationReason: 'חג',
+        }),
+      ] satisfies LessonOccurrence[],
+    });
+  }
+  if (url.pathname === '/v1/admin/lessons/story-occ-exceptions-error/exceptions') {
+    return jsonResponse(500, { error: 'internal_error', message: 'שגיאה' });
+  }
+
+  // Long real data: a long venue name that has to wrap without breaking
+  // the row, and a long, free-text cancellation reason.
+  if (url.pathname === '/v1/admin/lessons/story-occ-longdata/occurrences') {
+    return jsonResponse(200, {
+      items: [
+        scheduledOccurrence('story-occ-longdata', {
+          date: '2026-09-18',
+          place: {
+            name: 'בית מדרש "אהבת ישראל" של קהילת יוצאי מרוקו, מרכז קהילתי נאות שקד',
+            street: 'שדרות ירושלים 128, קומה שנייה, כניסה מהחצר האחורית',
+            floor: undefined,
+            city: 'קריית ביאליק',
+            citySlug: 'kiryat-bialik',
+            area: 'haifa',
+          },
+        }),
+        scheduledOccurrence('story-occ-longdata', {
+          date: '2026-09-25',
+          status: 'cancelled',
+          cancellationReason:
+            'השיעור מבוטל השבוע עקב אירוע קהילתי בבית הכנסת, השיעור הבא יתקיים כרגיל בשבוע הבא באותה השעה ובאותו המקום',
+        }),
+      ] satisfies LessonOccurrence[],
+    });
+  }
+  if (url.pathname === '/v1/admin/lessons/story-occ-longdata/exceptions') {
+    return jsonResponse(200, {
+      items: [{ id: 31, lessonId: 'story-occ-longdata', kind: 'cancelled', date: '2026-09-25', reason: 'השיעור מבוטל השבוע עקב אירוע קהילתי בבית הכנסת, השיעור הבא יתקיים כרגיל בשבוע הבא באותה השעה ובאותו המקום' }],
+    } satisfies { items: LessonExceptionResponse[] });
+  }
+
+  // Every lesson story above reaches `OccurrencesSection`, which fetches
+  // its own occurrences and exceptions: every id not given a dedicated
+  // fixture above gets an empty window here, so a story about the fields
+  // grid or the header is not also, incidentally, a story about this
+  // section.
+  if (/^\/v1\/admin\/lessons\/[^/]+\/occurrences$/.test(url.pathname)) return jsonResponse(200, { items: [] });
+  if (/^\/v1\/admin\/lessons\/[^/]+\/exceptions$/.test(url.pathname)) return jsonResponse(200, { items: [] });
 
   return null;
 });
@@ -108,3 +242,11 @@ export const RabbiFetchFailed: Story = { decorators: [withRoute('story-rabbi-unk
 export const NotFound: Story = { decorators: [withRoute('story-notfound')] };
 export const ServerError: Story = { decorators: [withRoute('story-error')] };
 export const Loading: Story = { decorators: [withRoute('story-loading')] };
+
+// The occurrences section's own states, each on a lesson whose other
+// fields are unremarkable so the section is the only thing under test.
+export const OccurrencesEmpty: Story = { decorators: [withRoute('story-occ-empty')] };
+export const OccurrencesLoading: Story = { decorators: [withRoute('story-occ-loading')] };
+export const OccurrencesError: Story = { decorators: [withRoute('story-occ-error')] };
+export const OccurrencesExceptionsUnavailable: Story = { decorators: [withRoute('story-occ-exceptions-error')] };
+export const OccurrencesLongData: Story = { decorators: [withRoute('story-occ-longdata')] };

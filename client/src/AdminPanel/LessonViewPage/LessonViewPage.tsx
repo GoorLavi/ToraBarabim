@@ -10,6 +10,7 @@ import { useExistingLesson } from '~/AdminPanel/useExistingLesson';
 import { AUDIENCE_LABELS, RABBI_HONORIFIC_LABELS } from '~/consts';
 import { rabbiDisplayName } from '~/helpers';
 
+import { OccurrencesSection } from './components/OccurrencesSection/OccurrencesSection';
 import * as consts from './consts';
 import { weekdayLabelForPreview } from './helpers';
 import type { LessonViewPageProps } from './models';
@@ -131,6 +132,8 @@ export const LessonViewPage = styled(({ className }: LessonViewPageProps) => {
 
             <RecordField label={consts.AUDIENCE_LABEL} value={AUDIENCE_LABELS[lesson.audience]} />
           </div>
+
+          <OccurrencesSection className="occurrences" lessonId={lesson.id} lesson={lesson} />
         </div>
 
         <aside className="preview">
