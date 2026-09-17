@@ -54,3 +54,11 @@ export const buildMovePlace = (form: MoveFormState): LessonPlace | undefined => 
   if (!form.placeOverrideEnabled || !form.city) return undefined;
   return { name: form.placeName.trim(), street: form.street.trim(), floor: form.floor.trim() || undefined, cityCode: Number(form.city.id) };
 };
+
+// True while the scrollable form has content below what is currently
+// visible. Read by `useScrollBottomFade`, which is the only caller: kept
+// pure and here so that hook stays a thin subscription over it.
+export const hasMoreToScrollBelow = (element: HTMLElement): boolean => {
+  const maxScroll = element.scrollHeight - element.clientHeight;
+  return maxScroll > 1 && element.scrollTop < maxScroll - 1;
+};
