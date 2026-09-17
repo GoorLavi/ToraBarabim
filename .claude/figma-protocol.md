@@ -14,10 +14,13 @@ The Figma server may also need the human to authorize it before any tool works. 
 claude.ai connector settings or with `claude mcp` in an interactive terminal. You
 cannot do it for them, and you must not ask them for a token or a callback URL.
 
-A stray authorization warning at session start, on its own, is a known duplicate of
-that same prompt and does not mean Figma is disconnected. Trust `whoami`'s own answer
-over the warning: if it answers, the grant is live regardless of what was logged
-earlier in the session.
+**A session-start warning that `plugin:figma:figma` needs authorization is expected
+and means nothing is wrong.** The Figma skill pack ships its own definition of the
+same server, and that second copy was never authorized because nothing uses it. The
+authorized connector is a different entry and works. `whoami` is what settles it, so
+never conclude from that warning that Figma is disconnected: one session reported
+exactly that to the human and it was false. Do not remove the skill pack to silence
+it either; it is what provides the skills the section below requires.
 
 ## Load the skill first, always
 
@@ -52,6 +55,14 @@ Pass both, so the file lands in the ToraBarabim project rather than the plan's l
 drafts folder. `whoami` may list other plans on the same grant; they belong to other
 projects, so never create ToraBarabim work in one of them.
 
+**Creation is the only moment that decides where the file lives and what it is
+called, so both are settled before the call, never after.** Without a `projectId` the
+file lands in drafts, and no tool of yours can move it out or rename it; the human is
+left doing it by hand. So a create call carries the `projectId` above and a final
+Hebrew name the human would recognize in a list. If either is missing or you are
+guessing at the name, **stop and ask** rather than creating something that will have
+to be cleaned up.
+
 A newly created file is safe by construction: it is never a shared library, so you may
 write to it freely.
 
@@ -66,7 +77,7 @@ one becomes a manual cleanup task for the human. If you must create a throwaway,
 it so it is obviously disposable and say in your report that the human has to delete
 it.
 
-## You cannot duplicate a file, and the safety rule depends on it
+## You cannot duplicate a file, which is why the unit of work is a page
 
 There is **no way for you to duplicate an existing Figma file.** `create_new_file`
 makes a blank file and nothing copies into it. `clone()` exists only on nodes and
@@ -74,12 +85,10 @@ pages, and always parents the copy inside the same file. The only cross-file API
 import-by-key for published library assets, which pull single components or styles,
 not a file.
 
-So "work on a duplicate" has a human precondition: **the human duplicates the
-canonical file in the Figma UI and hands you the new file key.** Confirm the key you
-were given is not the canonical one, then write only there.
-
-`page.clone()` is not a substitute. Running it means writing to the canonical file,
-which is the exact thing the rule forbids.
+This is what shapes the rule above: since a safe copy of a file is not something you
+can make, the copy you work on is a **page** inside the file, made with
+`page.clone()`, and the file itself is the project's own. A whole-file duplicate is
+the human's to make in the Figma UI, and only they can hand you its key.
 
 ## The rules that bite (full detail is in the skill)
 
@@ -111,11 +120,22 @@ which is the exact thing the rule forbids.
 - A failed script is atomic and changed nothing. Read the error, fix it, then retry.
   Do not retry blind.
 
-## Never overwrite a shared library
+## Where you work: the project's file, never drafts
 
-Work only on a drafts file you created, or a duplicate the human handed you. Before
-any write to an existing file key, confirm which of the two it is. If you cannot tell,
-stop and ask. The human promotes a duplicate to canonical, not you.
+The work belongs in the ToraBarabim project's own file, so that what the human opens
+is the real thing rather than a copy someone has to reconcile later. Drafts were the
+old rule and produced exactly that: a file nobody could move out, because nothing at
+file level is yours to move.
+
+- **A small change is made in place**, beside the original, inside the file itself.
+- **A large change gets its own page**, next to the source page, and lives there for as
+  many rounds as the design needs. Once the human approves it, the source page is
+  updated from it and the extra page is deleted.
+- **Nothing is deleted until the human has approved the design it belongs to.** Not the
+  extra page, not the original. Figma keeps version history, but that is a recovery
+  path, not a licence.
+- **A published library is still off limits.** Before any write to an existing file
+  key, confirm the file is not one. If you cannot tell, stop and ask.
 
 ## Looking at your own work
 

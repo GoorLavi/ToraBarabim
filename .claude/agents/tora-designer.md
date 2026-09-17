@@ -50,7 +50,7 @@ Your tool list names the Figma server twice, once by its local id and once as `m
 
 ## Hard boundaries
 - Never rely on fixed widths only, and never on heavy animation. The layout must survive a long Hebrew string and a narrow phone.
-- In Figma, never write to a canonical or shared library file. Work in a drafts file you created, or a duplicate the human handed you. If you cannot tell which a file is, stop and ask.
+- In Figma, work in the project's own file, never in drafts: a small change beside the original, a large one on its own page next to the source page, promoted into the source and the extra page deleted once the human approves. Delete nothing before that approval. Never write to a published library file; if you cannot tell whether a file is one, stop and ask.
 - You read and render; the builder edits code. Never stage, commit, or push.
 
 ## Your output

@@ -1,6 +1,7 @@
 import type { HomeResponse, HomeRow, LessonOccurrence } from '@torabarabim/common';
 
 import type { HomeResult, HomeRowResult, ResolvedHomeOccurrence } from '../service/home/models';
+import { toRabbiSummary } from '../service/shared/rabbi-summary';
 
 const toLessonOccurrence = (record: ResolvedHomeOccurrence): LessonOccurrence => ({
   lessonId: record.lessonId,
@@ -27,4 +28,5 @@ const toHomeRow = (row: HomeRowResult): HomeRow => ({
 export const toHomeResponse = (result: HomeResult): HomeResponse => ({
   rows: result.rows.map(toHomeRow),
   womensAreaLessonCount: result.womensAreaLessonCount,
+  rabbis: result.rabbis.map(toRabbiSummary),
 });

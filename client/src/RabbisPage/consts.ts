@@ -10,7 +10,6 @@ export const RABBIS_QUERY_KEYS = {
 // requests as possible.
 export const RABBI_DIRECTORY_PAGE_SIZE = 50;
 
-export const ORDER_LABEL = 'לפי סדר האלף־בית';
 export const SEARCH_FIELD_ID = 'rabbis-search-field';
 
 // One copy table per directory, rather than a second page component:
