@@ -14,7 +14,7 @@ import { CitySelect } from '~/components/CitySelect/CitySelect';
 import { ReadOnlyField } from '~/components/ReadOnlyField/ReadOnlyField';
 import { RecurrenceFields } from '~/components/RecurrenceFields/RecurrenceFields';
 import { directionForValue } from '~/helpers';
-import { AUDIENCE_LABELS } from '~/consts';
+import { AUDIENCE_LABELS, RABBI_HONORIFIC_LABELS } from '~/consts';
 
 import { DiscardChangesSheet } from './components/DiscardChangesSheet/DiscardChangesSheet';
 import { RabbiPicker } from './components/RabbiPicker/RabbiPicker';
@@ -187,7 +187,9 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
                 value={form.title}
                 onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
               />
-              <span className="helper">{consts.TITLE_HELPER}</span>
+              <span className="helper">
+                {form.rabbi ? consts.titleHelper(RABBI_HONORIFIC_LABELS[form.rabbi.honorific]) : consts.TITLE_HELPER_NO_RABBI}
+              </span>
             </label>
           </section>
 

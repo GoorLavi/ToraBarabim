@@ -5,7 +5,8 @@ import { PROMINENCE_LABELS } from '~/AdminPanel/consts';
 export const BACK_TO_LIST_LABEL = '→ חזרה לרשימת הרבנים';
 // Edit mode's breadcrumb: the rabbi already exists, so "back" returns to
 // their own view page rather than the list (this slice's brief).
-export const BACK_TO_RABBI_LABEL = '→ חזרה לעמוד הרב';
+// Honorific-aware: pass `HONORIFIC_LABELS[form.honorific]`.
+export const backToRabbiLabel = (honorific: string): string => `→ חזרה לעמוד ${honorific}`;
 export const NEW_RABBI_HEADING = 'רב חדש';
 export const REQUIRED_FIELDS_NOTE = 'רק השם הוא שדה חובה. תמונה, תואר ותקציר אפשר להוסיף גם אחר כך.';
 
@@ -63,11 +64,14 @@ export const SAVING_LABEL = 'שומרים...';
 // `DiscardChangesSheet`'s copy, edit mode only: cancelling with unsaved
 // changes confirms before discarding them, the same dirty-check
 // confirm-sheet pattern as `RabbiPanel/UpcomingPage`'s
-// `CancelOccurrenceSheet`. Placeholder copy, Hebrew-editor review.
+// `CancelOccurrenceSheet`. Identical, word for word, to
+// `LessonFormPage/components/DiscardChangesSheet/consts.ts`'s copy: the two
+// sheets confirm the same action and are slated to be lifted into one
+// shared component, so they read as one voice already.
 export const DISCARD_CHANGES_HEADING = 'לצאת בלי לשמור?';
-export const DISCARD_CHANGES_BODY = 'השינויים שביצעת לא יישמרו אם תצאו עכשיו.';
-export const DISCARD_CHANGES_CONFIRM_LABEL = 'יציאה בלי שמירה';
-export const DISCARD_CHANGES_BACK_LABEL = 'המשך בעריכה';
+export const DISCARD_CHANGES_BODY = 'השינויים שעשית לא יישמרו.';
+export const DISCARD_CHANGES_CONFIRM_LABEL = 'כן, לצאת בלי לשמור';
+export const DISCARD_CHANGES_BACK_LABEL = 'חזרה לעריכה';
 
 export const REQUIRED_NAME_ERROR = 'יש למלא שם רב';
 export const UNSUPPORTED_TYPE_CLIENT_ERROR = 'ניתן להעלות קובץ מסוג JPG או PNG בלבד';

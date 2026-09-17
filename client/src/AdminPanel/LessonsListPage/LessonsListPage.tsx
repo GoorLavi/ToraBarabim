@@ -34,7 +34,13 @@ export const LessonsListPage = styled(({ className }: LessonsListPageProps) => {
           <h1 className="title">{consts.HEADING}</h1>
           {state.status === 'success' && (
             <p className="subheading">
-              {filters.rabbi ? consts.rabbiFilteredCountLabel(state.total, rabbiDisplayName(filters.rabbi)) : consts.totalCountLabel(state.total)}
+              {filters.rabbi ? (
+                <>
+                  {consts.rabbiFilteredCountPrefix(state.total)} <span dir="auto">{rabbiDisplayName(filters.rabbi)}</span>
+                </>
+              ) : (
+                consts.totalCountLabel(state.total)
+              )}
               {state.total > state.loadedCount && ` · ${consts.partialLoadNote(state.loadedCount, state.total)}`}
             </p>
           )}
@@ -76,7 +82,7 @@ export const LessonsListPage = styled(({ className }: LessonsListPageProps) => {
 
       {isRabbiOnlyFilterEmpty && filters.rabbi && (
         <div className="state empty">
-          <p className="headline">{consts.NO_LESSONS_FOR_RABBI_HEADLINE}</p>
+          <p className="headline">{consts.noLessonsForRabbiHeadline(rabbiDisplayName(filters.rabbi))}</p>
           <p className="hint">{consts.NO_LESSONS_FOR_RABBI_HINT}</p>
           <Link className="cta" to={`${ADMIN_ROUTES.lessonNew}?rabbiId=${filters.rabbi.id}`}>
             {consts.ADD_LESSON_FOR_RABBI_LABEL}

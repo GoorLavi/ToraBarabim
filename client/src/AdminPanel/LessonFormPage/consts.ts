@@ -4,8 +4,10 @@ import type { LessonFormField } from './models';
 
 export const BACK_TO_LIST_LABEL = '→ חזרה לרשימת השיעורים';
 // The edit path's breadcrumb: it leaves editing for the single lesson's
-// view page, not the list, so it is worded and routed to match.
-export const BACK_TO_LESSON_LABEL = '→ חזרה לצפייה בשיעור';
+// view page, not the list, so it is worded and routed to match. Not
+// "צפייה בשיעור": on a site that is not a recording archive, that phrase
+// reads as watching a recording.
+export const BACK_TO_LESSON_LABEL = '→ חזרה לעמוד השיעור';
 export const NEW_LESSON_HEADING = 'שיעור חדש';
 // `validateLessonForm` requires every field on the form except the lesson
 // title, so this states that instead of naming a shorter, wrong subset.
@@ -29,7 +31,12 @@ export const rabbiLessonCountLabel = (count: number): string => (count === 0 ? '
 
 export const DETAILS_SECTION_HEADING = 'פרטי השיעור';
 export const TITLE_LABEL = 'שם השיעור';
-export const TITLE_HELPER = 'אם לא ימולא, יוצג במקומו שם הרב.';
+// Honorific-aware: mirrors `LessonViewPage/consts.ts`'s `titleEmptyValue`
+// for the same case, so the two never drift back apart.
+export const titleHelper = (honorific: string): string => `אם לא ימולא, יוצג במקומו שם ${honorific}.`;
+// Shown before a rabbi is picked, when there is no honorific yet to build
+// the normal message from.
+export const TITLE_HELPER_NO_RABBI = 'אם לא ימולא, יוצג במקומו שם הרב.';
 
 export const WHEN_SECTION_HEADING = 'מתי מתקיים השיעור';
 
@@ -42,9 +49,9 @@ export const STREET_LABEL = 'רחוב ומספר';
 export const STREET_HELPER = 'הכתובת המלאה תוצג בעמוד השיעור עצמו בלבד.';
 // Optional: a floor or arrival note, for a lesson held in a building where
 // finding the right door or floor is not obvious from the street address alone.
-export const FLOOR_LABEL = 'קומה / הערת הגעה';
+export const FLOOR_LABEL = 'קומה או הוראות הגעה';
 
-export const AUDIENCE_SECTION_HEADING = 'קהל היעד';
+export const AUDIENCE_SECTION_HEADING = 'למי מיועד';
 export const AUDIENCE_HELPER = 'יש לבחור אחת מהאפשרויות.';
 
 export const CANCEL_LABEL = 'ביטול';

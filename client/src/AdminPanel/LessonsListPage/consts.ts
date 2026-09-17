@@ -29,11 +29,10 @@ export const RECURRENCE_OPTIONS: { value: 'all' | 'weekly' | 'once'; label: stri
 export const RECURRING_TAG_LABEL = 'קבוע';
 export const ONE_TIME_TAG_LABEL = 'חד־פעמי';
 // Was 'עריכה': the row action now opens `LessonViewPage`, a read-only
-// screen, so a label promising an edit form would be wrong. Placeholder
-// pending Hebrew-editor review; must end up identical to
-// `RabbisListPage/consts.ts`'s `EDIT_LABEL`, which names the same action on
-// the sibling list.
-export const EDIT_LABEL = 'פתיחה';
+// screen, so a label promising an edit form would be wrong. Must end up
+// identical to `RabbisListPage/consts.ts`'s `EDIT_LABEL`, which names the
+// same action on the sibling list.
+export const EDIT_LABEL = 'פרטים';
 
 export const LOADING_MESSAGE = 'טוענים שיעורים...';
 export const RETRY_LABEL = 'ניסיון נוסף';
@@ -46,20 +45,26 @@ export const NO_MATCHING_LESSONS_HINT = 'נסה לצמצם את הסינון א�
 
 // Shown instead of `NO_LESSONS_HEADLINE` when the rabbi filter is the only
 // active one and it matched nothing: that rabbi genuinely has no lessons
-// yet, not "the system is empty" (placeholder copy, Hebrew-editor review).
-export const NO_LESSONS_FOR_RABBI_HEADLINE = 'לרב הזה עדיין אין שיעורים';
-export const NO_LESSONS_FOR_RABBI_HINT = 'הוספת שיעור תפתח כאן את רשימת השיעורים של הרב.';
-export const ADD_LESSON_FOR_RABBI_LABEL = 'הוספת שיעור לרב';
+// yet, not "the system is empty" (design-system.md, "Every data screen has
+// three states": the empty state has to name the constraint that produced
+// no results).
+export const noLessonsForRabbiHeadline = (rabbiDisplay: string): string => `עדיין אין שיעורים של ${rabbiDisplay}`;
+export const NO_LESSONS_FOR_RABBI_HINT = 'הוספת שיעור תפתח כאן את הרשימה.';
+export const ADD_LESSON_FOR_RABBI_LABEL = 'הוספת שיעור';
 
-export const rabbiChipRemoveLabel = (rabbiDisplay: string): string => `${rabbiDisplay}, הסרת הסינון`;
+export const rabbiChipRemoveLabel = (rabbiDisplay: string): string => `הסרת הסינון לפי ${rabbiDisplay}`;
 
 // The server returns `total` across the whole system but this screen loads
 // only one page of it (see `useAdminLessonsList`), so the honest subheading
 // names the loaded count too whenever the two differ, rather than
 // implying every lesson is on screen.
 export const totalCountLabel = (total: number): string => `${total} שיעורים במערכת`;
-// The rabbi-filtered variant: `total` here already excludes every other
-// rabbi's lessons, so the "במערכת" (system-wide) wording above would be a
-// lie. Placeholder copy, Hebrew-editor review.
-export const rabbiFilteredCountLabel = (total: number, rabbiDisplay: string): string => `${total} שיעורים אצל ${rabbiDisplay}`;
+// The rabbi-filtered variant of `totalCountLabel`: `total` here already
+// excludes every other rabbi's lessons, so the "במערכת" (system-wide)
+// wording above would be a lie. "של", never "ל" + the display name, to
+// sidestep the "ל"+"ה" contraction ambiguity. Returns the prefix only,
+// without the rabbi's name: the name comes from the server and needs its
+// own `dir='auto'` span at the call site (client/CLAUDE.md, Hebrew and Text
+// Direction), so it cannot be baked into one plain string.
+export const rabbiFilteredCountPrefix = (total: number): string => (total === 1 ? 'שיעור אחד של' : `${total} שיעורים של`);
 export const partialLoadNote = (loaded: number, total: number): string => `מוצגים ${loaded} מתוך ${total} השיעורים`;

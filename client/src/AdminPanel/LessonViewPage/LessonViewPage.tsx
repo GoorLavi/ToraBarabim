@@ -7,7 +7,7 @@ import { ADMIN_ROUTES } from '~/AdminPanel/consts';
 import { adminErrorMessage, lessonPrimaryLabel, recurrenceWhenLabel } from '~/AdminPanel/helpers';
 import { useExistingLesson } from '~/AdminPanel/useExistingLesson';
 import { ReadOnlyField } from '~/components/ReadOnlyField/ReadOnlyField';
-import { AUDIENCE_LABELS } from '~/consts';
+import { AUDIENCE_LABELS, RABBI_HONORIFIC_LABELS } from '~/consts';
 import { rabbiDisplayName } from '~/helpers';
 
 import * as consts from './consts';
@@ -98,7 +98,14 @@ export const LessonViewPage = styled(({ className }: LessonViewPageProps) => {
           </header>
 
           <div className="fieldsGrid">
-            <ReadOnlyField className="wide" label={consts.TITLE_LABEL} value={lesson.title ?? consts.TITLE_EMPTY_VALUE} />
+            <ReadOnlyField
+              className="wide"
+              label={consts.TITLE_LABEL}
+              value={
+                lesson.title ??
+                (rabbi ? consts.titleEmptyValue(RABBI_HONORIFIC_LABELS[rabbi.honorific]) : consts.TITLE_EMPTY_VALUE_UNKNOWN_RABBI)
+              }
+            />
 
             <ReadOnlyField
               label={consts.RECURRENCE_KIND_LABEL}

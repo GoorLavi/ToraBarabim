@@ -121,7 +121,7 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
   return (
     <div className={className}>
       <Link className="breadcrumb" to={cancelHref}>
-        {id ? consts.BACK_TO_RABBI_LABEL : consts.BACK_TO_LIST_LABEL}
+        {id ? consts.backToRabbiLabel(consts.HONORIFIC_LABELS[form.honorific]) : consts.BACK_TO_LIST_LABEL}
       </Link>
 
       <div className="layout">
