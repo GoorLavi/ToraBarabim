@@ -247,14 +247,6 @@ export const LessonViewPage = css(
           color: ${theme.colors.textOnPrimary};
           font-weight: ${theme.typography.fontWeight.semiBold};
           text-decoration: none;
-
-          /* A small nudge so the button optically centres on the heading's
-             first line rather than the whole poster+identity row it sits
-             beside: the header aligns its children to flex-start, which lines
-             their tops up rather than their vertical centres. */
-          @media (min-width: ${theme.breakpoints.md}) {
-            margin-block-start: ${theme.spacing.xs};
-          }
         }
       }
 
