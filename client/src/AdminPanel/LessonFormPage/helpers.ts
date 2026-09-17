@@ -1,5 +1,6 @@
-import type { CreateLessonRequest, Lesson, Rabbi } from '@torabarabim/common';
+import type { CreateLessonRequest, Lesson, Rabbi, Weekday } from '@torabarabim/common';
 
+import { WEEKDAY_LABELS } from '~/AdminPanel/consts';
 import type { SelectedCity } from '~/components/CitySelect/models';
 import { rabbiDisplayName } from '~/helpers';
 
@@ -65,11 +66,41 @@ export const validateLessonForm = (form: LessonFormState): LessonFormErrors => {
 export const previewWeekdayLabel = (form: LessonFormState): string | undefined => {
   if (form.recurrenceKind === 'weekly') {
     if (form.weekdays.length === 0) return undefined;
-    return form.weekdays.map((weekday) => consts.WEEKDAY_LABELS_FULL[weekday]).join(' / ');
+    return form.weekdays.map((weekday) => WEEKDAY_LABELS[weekday]).join(' / ');
   }
   if (!form.date) return undefined;
-  const weekday = new Date(`${form.date}T00:00:00Z`).getUTCDay();
-  return consts.WEEKDAY_LABELS_FULL[weekday];
+  // `Date#getUTCDay` is specified to always return 0-6, so this narrowing
+  // from `number` to the `Weekday` literal union is safe by construction.
+  const weekday = new Date(`${form.date}T00:00:00Z`).getUTCDay() as Weekday;
+  return WEEKDAY_LABELS[weekday];
+};
+
+// Whether the form has moved away from what was loaded, for the edit
+// path's cancel-confirm sheet. Weekday sets compare unordered, since
+// toggling days off and back on can leave the array in a different order
+// than the server returned without the selection actually having changed.
+export const isLessonFormDirty = (current: LessonFormState, baseline: LessonFormState): boolean => {
+  if (current.rabbi?.id !== baseline.rabbi?.id) return true;
+  if (current.title.trim() !== baseline.title.trim()) return true;
+  if (current.recurrenceKind !== baseline.recurrenceKind) return true;
+
+  if (current.recurrenceKind === 'weekly') {
+    const currentDays = [...current.weekdays].sort();
+    const baselineDays = [...baseline.weekdays].sort();
+    if (currentDays.length !== baselineDays.length || currentDays.some((day, index) => day !== baselineDays[index])) return true;
+  } else if (current.date !== baseline.date) {
+    return true;
+  }
+
+  if (current.startTime !== baseline.startTime) return true;
+  if (current.durationMinutes !== baseline.durationMinutes) return true;
+  if (current.city?.id !== baseline.city?.id) return true;
+  if (current.placeName.trim() !== baseline.placeName.trim()) return true;
+  if (current.street.trim() !== baseline.street.trim()) return true;
+  if (current.floor.trim() !== baseline.floor.trim()) return true;
+  if (current.audience !== baseline.audience) return true;
+
+  return false;
 };
 
 // Assumes the form already passed validation, so `form.rabbi`/`city`/

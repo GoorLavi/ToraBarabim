@@ -31,7 +31,7 @@ export const RabbiCard = styled(({ className, row }: RabbiCardProps) => {
         <p className="count">{row.lessonCount === 0 ? parentConsts.NO_LESSONS_YET_LABEL : parentConsts.lessonCountLabel(row.lessonCount)}</p>
 
         <div className="actions">
-          <Link className="edit" to={ADMIN_ROUTES.rabbiEdit(row.rabbi.id)}>
+          <Link className="edit" to={ADMIN_ROUTES.rabbiView(row.rabbi.id)}>
             {parentConsts.EDIT_LABEL}
           </Link>
           <Link className="newLesson" to={`${ADMIN_ROUTES.lessonNew}?rabbiId=${row.rabbi.id}`}>

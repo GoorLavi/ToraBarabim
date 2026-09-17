@@ -1,6 +1,11 @@
 import type { RabbiHonorific, RabbiProminence } from '@torabarabim/common';
 
+import { PROMINENCE_LABELS } from '~/AdminPanel/consts';
+
 export const BACK_TO_LIST_LABEL = '→ חזרה לרשימת הרבנים';
+// Edit mode's breadcrumb: the rabbi already exists, so "back" returns to
+// their own view page rather than the list (this slice's brief).
+export const BACK_TO_RABBI_LABEL = '→ חזרה לעמוד הרב';
 export const NEW_RABBI_HEADING = 'רב חדש';
 export const REQUIRED_FIELDS_NOTE = 'רק השם הוא שדה חובה. תמונה, תואר ותקציר אפשר להוסיף גם אחר כך.';
 
@@ -28,26 +33,25 @@ export const TITLE_HELPER = 'לא חובה. מופיע בשורה קטנה מת�
 export const BIO_LABEL = 'קצת על הרב';
 export const BIO_HELPER = 'לא חובה. מוצג בעמוד הרב באתר.';
 
-// Admin-only: drives the home page's rail order and is never shown to a
-// visitor (design-system.md has no public surface for it).
 export const PROMINENCE_LABEL = 'בולטות הרב';
 export const PROMINENCE_HELPER = 'קובעת את מיקום הרב בשורות עמוד הבית. ברירת המחדל היא "אזורי".';
-export const PROMINENCE_LABELS: Record<RabbiProminence, string> = {
-  local: 'אזורי',
-  known: 'מוכר',
-  sought: 'מבוקש',
-};
 
 // `@torabarabim/common` is types only by decision: no "main"/"exports" entry
 // point, so nothing runtime can be imported from it, only `import type`. This
 // list is therefore hand-mirrored from the `RabbiProminence` union in that
-// package (home.ts). `PROMINENCE_LABELS` above is typed as
+// package (home.ts). The imported `PROMINENCE_LABELS` is typed as
 // `Record<RabbiProminence, string>`, which is exhaustive: if the union gains
-// a member, this file fails to build until it is given a Hebrew label, which
-// is the thing a person actually needs to supply.
+// a member, `AdminPanel/consts.ts` fails to build until it is given a Hebrew
+// label, which is the thing a person actually needs to supply.
 export const PROMINENCE_OPTIONS: readonly RabbiProminence[] = Object.keys(
   PROMINENCE_LABELS,
 ) as RabbiProminence[];
+
+// `RabbiViewPage` needs the same value map for its read-only field, and
+// lifted to `AdminPanel/consts.ts` when it became that second caller. This
+// file keeps its own name for it so `RabbiFormPage.tsx`'s namespaced
+// `consts.PROMINENCE_LABELS` reads unchanged.
+export { PROMINENCE_LABELS } from '~/AdminPanel/consts';
 
 export const PHOTO_LABEL = 'תמונת הרב';
 
@@ -55,6 +59,15 @@ export const CANCEL_LABEL = 'ביטול';
 export const SAVE_AND_ADD_LESSON_LABEL = 'שמירת הרב והוספת שיעור ראשון';
 export const SAVE_LABEL = 'שמירת הרב';
 export const SAVING_LABEL = 'שומרים...';
+
+// `DiscardChangesSheet`'s copy, edit mode only: cancelling with unsaved
+// changes confirms before discarding them, the same dirty-check
+// confirm-sheet pattern as `RabbiPanel/UpcomingPage`'s
+// `CancelOccurrenceSheet`. Placeholder copy, Hebrew-editor review.
+export const DISCARD_CHANGES_HEADING = 'לצאת בלי לשמור?';
+export const DISCARD_CHANGES_BODY = 'השינויים שביצעת לא יישמרו אם תצאו עכשיו.';
+export const DISCARD_CHANGES_CONFIRM_LABEL = 'יציאה בלי שמירה';
+export const DISCARD_CHANGES_BACK_LABEL = 'המשך בעריכה';
 
 export const REQUIRED_NAME_ERROR = 'יש למלא שם רב';
 export const UNSUPPORTED_TYPE_CLIENT_ERROR = 'ניתן להעלות קובץ מסוג JPG או PNG בלבד';

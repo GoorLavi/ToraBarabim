@@ -2,6 +2,27 @@ import { css } from 'styled-components';
 
 export const LessonFilterBar = css(
   ({ theme }) => `
+  > .rabbiChip {
+    display: flex;
+    align-items: center;
+    gap: ${theme.spacing.xs};
+    min-block-size: 48px;
+    padding-inline: ${theme.spacing.lg};
+    margin-block-end: ${theme.spacing.sm};
+    border: 1px solid ${theme.colors.primary};
+    border-radius: ${theme.radii.pill};
+    background: ${theme.colors.primarySoft};
+    color: ${theme.colors.primary};
+    font-weight: ${theme.typography.fontWeight.semiBold};
+    font-size: ${theme.typography.body.phone.fontSize};
+    line-height: ${theme.typography.body.phone.lineHeight};
+
+    > .clearGlyph {
+      inline-size: 20px;
+      block-size: 20px;
+    }
+  }
+
   > .mobileToggle {
     display: flex;
     align-items: center;

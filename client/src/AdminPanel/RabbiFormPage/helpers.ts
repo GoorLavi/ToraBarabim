@@ -1,3 +1,5 @@
+import type { RabbiResponse } from '@torabarabim/common';
+
 import { rabbiDisplayName } from '~/helpers';
 
 import * as consts from './consts';
@@ -37,3 +39,15 @@ export const validatePhotoFile = (file: File): string | undefined => {
   if (file.size > consts.CLIENT_MAX_PHOTO_BYTES) return consts.TOO_LARGE_CLIENT_ERROR;
   return undefined;
 };
+
+// Backs edit mode's cancel confirm-sheet: whether the draft differs from
+// the record as loaded, so cancelling with nothing to lose skips the
+// confirmation. `honorific` is excluded, it cannot change after creation
+// (`HONORIFIC_READONLY_NOTE`), so it is never part of what "discard" would
+// discard.
+export const isRabbiFormDirty = (form: RabbiFormState, existingRabbi: RabbiResponse): boolean =>
+  form.name.trim() !== existingRabbi.name ||
+  form.title.trim() !== (existingRabbi.title ?? '') ||
+  form.bio.trim() !== (existingRabbi.bio ?? '') ||
+  form.prominence !== existingRabbi.prominence ||
+  form.photoFile !== undefined;

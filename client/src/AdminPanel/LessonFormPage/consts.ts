@@ -3,6 +3,9 @@ import type { LessonProvenance, Weekday } from '@torabarabim/common';
 import type { LessonFormField } from './models';
 
 export const BACK_TO_LIST_LABEL = '→ חזרה לרשימת השיעורים';
+// The edit path's breadcrumb: it leaves editing for the single lesson's
+// view page, not the list, so it is worded and routed to match.
+export const BACK_TO_LESSON_LABEL = '→ חזרה לצפייה בשיעור';
 export const NEW_LESSON_HEADING = 'שיעור חדש';
 // `validateLessonForm` requires every field on the form except the lesson
 // title, so this states that instead of naming a shorter, wrong subset.
@@ -29,7 +32,6 @@ export const TITLE_LABEL = 'שם השיעור';
 export const TITLE_HELPER = 'אם לא ימולא, יוצג במקומו שם הרב.';
 
 export const WHEN_SECTION_HEADING = 'מתי מתקיים השיעור';
-export const WEEKDAY_LABELS_FULL = ['יום ראשון', 'יום שני', 'יום שלישי', 'יום רביעי', 'יום חמישי', 'יום שישי', 'שבת'];
 
 export const WHERE_SECTION_HEADING = 'איפה מתקיים השיעור';
 export const CITY_LABEL = 'עיר';

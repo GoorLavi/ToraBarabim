@@ -2,8 +2,8 @@ import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { ADMIN_ROUTES } from '~/AdminPanel/consts';
+import { lessonHasOwnTitle, lessonPrimaryLabel, recurrenceWhenLabel } from '~/AdminPanel/helpers';
 import * as parentConsts from '~/AdminPanel/LessonsListPage/consts';
-import { lessonHasOwnTitle, lessonPrimaryLabel, recurrenceWhenLabel } from '~/AdminPanel/LessonsListPage/helpers';
 import { AUDIENCE_LABELS } from '~/consts';
 import { rabbiDisplayName } from '~/helpers';
 
@@ -18,9 +18,9 @@ export const LessonsCardList = styled(({ className, rows }: LessonsCardListProps
       <li key={row.lesson.id} className="card">
         <div className="lesson">
           <span className="primary" dir="auto">
-            {lessonPrimaryLabel(row)}
+            {lessonPrimaryLabel(row.lesson, row.rabbi)}
           </span>
-          {lessonHasOwnTitle(row) && row.rabbi && (
+          {lessonHasOwnTitle(row.lesson) && row.rabbi && (
             <span className="secondary" dir="auto">
               {rabbiDisplayName(row.rabbi)}
             </span>
@@ -40,7 +40,7 @@ export const LessonsCardList = styled(({ className, rows }: LessonsCardListProps
           </span>
         </div>
 
-        <Link className="edit" to={ADMIN_ROUTES.lessonEdit(row.lesson.id)}>
+        <Link className="edit" to={ADMIN_ROUTES.lessonView(row.lesson.id)}>
           {parentConsts.EDIT_LABEL}
         </Link>
       </li>

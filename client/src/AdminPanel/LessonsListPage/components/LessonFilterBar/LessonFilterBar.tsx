@@ -4,20 +4,45 @@ import styled from 'styled-components';
 
 import * as parentConsts from '~/AdminPanel/LessonsListPage/consts';
 import { CitySelect } from '~/components/CitySelect/CitySelect';
-import { directionForValue } from '~/helpers';
+import { directionForValue, rabbiDisplayName } from '~/helpers';
 
 import type { LessonFilterBarProps } from './models';
 import * as styles from './styles';
 
 // On a phone the controls collapse behind a single "סינון · N" button
 // (mobile-only for this screen, per the brief); on desktop the panel is
-// always open, driven purely by the `@media` block in styles.ts.
+// always open, driven purely by the `@media` block in styles.ts. The rabbi
+// chip is the exception: unlike city, recurrence and search, there is no
+// picker for it here (a rabbi filter only ever arrives via URL, from
+// `RabbiViewPage`'s "see all" link), so it renders outside the collapsible
+// panel and stays visible whichever state the panel is in.
 export const LessonFilterBar = styled(
-  ({ className, city, onSelectCity, recurrence, onSelectRecurrence, search, onSearchChange, onClear, activeFilterCount }: LessonFilterBarProps) => {
+  ({
+    className,
+    city,
+    onSelectCity,
+    rabbi,
+    onClearRabbi,
+    recurrence,
+    onSelectRecurrence,
+    search,
+    onSearchChange,
+    onClear,
+    activeFilterCount,
+  }: LessonFilterBarProps) => {
     const [isPanelOpen, setIsPanelOpen] = useState(false);
 
     return (
       <div className={className}>
+        {rabbi && (
+          <button type="button" className="rabbiChip" aria-label={parentConsts.rabbiChipRemoveLabel(rabbiDisplayName(rabbi))} onClick={onClearRabbi}>
+            <span dir="auto">{rabbiDisplayName(rabbi)}</span>
+            <svg className="clearGlyph" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+          </button>
+        )}
+
         <button
           type="button"
           className="mobileToggle"

@@ -4,6 +4,7 @@ import styled from 'styled-components';
 
 import { adminErrorMessage } from '~/AdminPanel/helpers';
 import { ADMIN_ROUTES } from '~/AdminPanel/consts';
+import { rabbiDisplayName } from '~/helpers';
 
 import { LessonFilterBar } from './components/LessonFilterBar/LessonFilterBar';
 import { LessonsCardList } from './components/LessonsCardList/LessonsCardList';
@@ -17,7 +18,14 @@ import { useLessonListFilters } from './useLessonListFilters';
 
 export const LessonsListPage = styled(({ className }: LessonsListPageProps) => {
   const filters = useLessonListFilters();
-  const state = useAdminLessonsList(filters.city);
+  const state = useAdminLessonsList(filters.city, filters.rabbi?.id);
+
+  // Zero rows from the server, with no filter that could explain it other
+  // than "this rabbi has none", gets its own copy instead of the
+  // system-wide "no lessons at all" headline (design-system.md, "Every
+  // data screen has three states": the empty state has to name the
+  // constraint that produced no results).
+  const isRabbiOnlyFilterEmpty = state.status === 'success' && state.total === 0 && filters.rabbi !== undefined && filters.activeFilterCount === 1;
 
   return (
     <div className={className}>
@@ -26,7 +34,7 @@ export const LessonsListPage = styled(({ className }: LessonsListPageProps) => {
           <h1 className="title">{consts.HEADING}</h1>
           {state.status === 'success' && (
             <p className="subheading">
-              {consts.totalCountLabel(state.total)}
+              {filters.rabbi ? consts.rabbiFilteredCountLabel(state.total, rabbiDisplayName(filters.rabbi)) : consts.totalCountLabel(state.total)}
               {state.total > state.loadedCount && ` · ${consts.partialLoadNote(state.loadedCount, state.total)}`}
             </p>
           )}
@@ -39,6 +47,8 @@ export const LessonsListPage = styled(({ className }: LessonsListPageProps) => {
       <LessonFilterBar
         city={filters.city}
         onSelectCity={filters.selectCity}
+        rabbi={filters.rabbi}
+        onClearRabbi={filters.clearRabbi}
         recurrence={filters.recurrence}
         onSelectRecurrence={filters.selectRecurrence}
         search={filters.search}
@@ -64,7 +74,17 @@ export const LessonsListPage = styled(({ className }: LessonsListPageProps) => {
         </div>
       )}
 
-      {state.status === 'success' && state.total === 0 && (
+      {isRabbiOnlyFilterEmpty && filters.rabbi && (
+        <div className="state empty">
+          <p className="headline">{consts.NO_LESSONS_FOR_RABBI_HEADLINE}</p>
+          <p className="hint">{consts.NO_LESSONS_FOR_RABBI_HINT}</p>
+          <Link className="cta" to={`${ADMIN_ROUTES.lessonNew}?rabbiId=${filters.rabbi.id}`}>
+            {consts.ADD_LESSON_FOR_RABBI_LABEL}
+          </Link>
+        </div>
+      )}
+
+      {state.status === 'success' && state.total === 0 && !isRabbiOnlyFilterEmpty && (
         <div className="state empty">
           <p className="headline">{consts.NO_LESSONS_HEADLINE}</p>
           <p className="hint">{consts.NO_LESSONS_HINT}</p>

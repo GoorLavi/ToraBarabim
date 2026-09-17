@@ -197,12 +197,25 @@ export const LessonFormPage = css(
         align-items: center;
         gap: ${theme.spacing.md};
 
+        // In edit mode, cancel discards work instead of being a free
+        // navigation, so it gives up the most thumb-reachable spot: the
+        // whole row reverses, putting save first.
+        &.editMode {
+          flex-direction: row-reverse;
+        }
+
         > .cancel {
           display: flex;
           align-items: center;
           min-block-size: 48px;
+          border: none;
+          background: none;
+          padding: 0;
           color: ${theme.colors.textSecondary};
           font-weight: ${theme.typography.fontWeight.semiBold};
+          font-size: ${theme.typography.body.phone.fontSize};
+          line-height: ${theme.typography.body.phone.lineHeight};
+          cursor: pointer;
         }
 
         > .saveAndAddAnother {

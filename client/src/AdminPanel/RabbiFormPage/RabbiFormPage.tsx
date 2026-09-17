@@ -11,10 +11,11 @@ import { ReadOnlyField } from '~/components/ReadOnlyField/ReadOnlyField';
 import { directionForValue, rabbiDisplayName } from '~/helpers';
 
 import { DeleteRabbiButton } from './components/DeleteRabbiButton/DeleteRabbiButton';
+import { DiscardChangesSheet } from './components/DiscardChangesSheet/DiscardChangesSheet';
 import { RabbiAccountSection } from './components/RabbiAccountSection/RabbiAccountSection';
 import { RabbiPreviewCard } from './components/RabbiPreviewCard/RabbiPreviewCard';
 import * as consts from './consts';
-import { pageHeading, validatePhotoFile, validateRabbiForm } from './helpers';
+import { isRabbiFormDirty, pageHeading, validatePhotoFile, validateRabbiForm } from './helpers';
 import type { RabbiFormErrors, RabbiFormPageProps, RabbiFormState } from './models';
 import * as styles from './styles';
 import { useExistingRabbi } from './useExistingRabbi';
@@ -43,6 +44,7 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
   const [form, setForm] = useState<RabbiFormState>(emptyForm);
   const [isLoadedFromExisting, setIsLoadedFromExisting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<RabbiFormErrors>({});
+  const [isDiscardSheetOpen, setIsDiscardSheetOpen] = useState(false);
 
   useEffect(() => {
     if (existingRabbi.data && !isLoadedFromExisting) {
@@ -91,6 +93,12 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
   const nameError = fieldErrors.name ?? (saveRabbi.stepError?.step === 'name' ? adminErrorMessage(saveRabbi.stepError.error) : undefined);
   const photoError = fieldErrors.photo ?? (saveRabbi.stepError?.step === 'photo' ? adminErrorMessage(saveRabbi.stepError.error) : undefined);
 
+  // Edit mode only: whether the draft has unsaved changes, so cancelling
+  // with nothing to lose skips the discard confirm-sheet (this slice's
+  // brief, "the same dirty-check confirm-sheet pattern").
+  const isDirty = Boolean(id && existingRabbi.data && isRabbiFormDirty(form, existingRabbi.data));
+  const cancelHref = id ? ADMIN_ROUTES.rabbiView(id) : ADMIN_ROUTES.rabbis;
+
   const handleSelectFile = (file: File): void => {
     const clientError = validatePhotoFile(file);
     setFieldErrors((prev) => ({ ...prev, photo: clientError }));
@@ -107,13 +115,13 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
     if (!rabbi) return;
 
     if (after === 'firstLesson') navigate(`${ADMIN_ROUTES.lessonNew}?rabbiId=${rabbi.id}`);
-    else navigate(ADMIN_ROUTES.rabbis);
+    else navigate(id ? ADMIN_ROUTES.rabbiView(rabbi.id) : ADMIN_ROUTES.rabbis);
   };
 
   return (
     <div className={className}>
-      <Link className="breadcrumb" to={ADMIN_ROUTES.rabbis}>
-        {consts.BACK_TO_LIST_LABEL}
+      <Link className="breadcrumb" to={cancelHref}>
+        {id ? consts.BACK_TO_RABBI_LABEL : consts.BACK_TO_LIST_LABEL}
       </Link>
 
       <div className="layout">

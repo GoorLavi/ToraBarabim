@@ -1,88 +1,15 @@
-import type { Lesson, LessonListResponse, RabbiListResponse, Weekday } from '@torabarabim/common';
+import type { Lesson, LessonListResponse, RabbiListResponse } from '@torabarabim/common';
 
-import { rabbiDisplayName } from '~/helpers';
+import { ADMIN_ROUTES } from '~/AdminPanel/consts';
 
+import type { AdminLessonRow, RabbiFilterValue, RecurrenceFilter } from './models';
 import * as consts from './consts';
-import type { AdminLessonRow, RecurrenceFilter } from './models';
 
 // The venue lives on the lesson itself now, so joining a row is just
 // attaching its rabbi; there is no separate place record to look up.
 export const joinLessonRows = (lessons: LessonListResponse['items'], rabbis: RabbiListResponse['items']): AdminLessonRow[] => {
   const rabbiMap = new Map(rabbis.map((rabbi) => [rabbi.id, rabbi]));
   return lessons.map((lesson) => ({ lesson, rabbi: rabbiMap.get(lesson.rabbiId) }));
-};
-
-const israeliDateFormatter = new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Jerusalem' });
-
-export const formatIsraeliDate = (isoDate: string): string => israeliDateFormatter.format(new Date(`${isoDate}T00:00:00Z`));
-
-// `Date#getUTCDay` is specified to always return 0-6, so this narrowing
-// from `number` to the `Weekday` literal union is safe by construction.
-const asWeekday = (day: number): Weekday => day as Weekday;
-
-// Groups sorted, de-duplicated weekdays into runs of consecutive days, so
-// `weeklyRecurrenceLabel` can collapse a run into a range instead of
-// spelling out every day.
-const weekdayRuns = (weekdays: Weekday[]): Weekday[][] => {
-  const sorted = [...new Set(weekdays)].sort((a, b) => a - b);
-  const runs: Weekday[][] = [];
-  for (const day of sorted) {
-    const lastRun = runs[runs.length - 1];
-    const lastDayInRun = lastRun?.[lastRun.length - 1];
-    if (lastDayInRun !== undefined && day === lastDayInRun + 1) lastRun?.push(day);
-    else runs.push([day]);
-  }
-  return runs;
-};
-
-const joinWithConjunction = (items: string[]): string => {
-  if (items.length <= 1) return items.join('');
-  return `${items.slice(0, -1).join(', ')} ו${items[items.length - 1]}`;
-};
-
-// A run built by `weekdayRuns` is never empty; this reads its edges
-// without `noUncheckedIndexedAccess` losing track of that.
-const runRangeLabel = (run: Weekday[]): string | undefined => {
-  const [firstDay] = run;
-  const lastDay = run[run.length - 1];
-  if (firstDay === undefined || lastDay === undefined) return undefined;
-  return `${consts.WEEKDAY_BARE_LABELS[firstDay]} עד ${consts.WEEKDAY_BARE_LABELS[lastDay]}`;
-};
-
-// A recurring lesson's weekdays collapsed onto one line: a single day
-// stays `כל יום שני`, a run of three or more consecutive days becomes a
-// range (`כל יום, ראשון עד חמישי`), and any other combination is a
-// comma-and-conjunction list (`כל ראשון, שלישי וחמישי`). A long list of
-// full weekday names joined with `/` used to wrap to several lines on
-// both the card and the table row it sits in.
-export const weeklyRecurrenceLabel = (weekdays: Weekday[]): string => {
-  const [onlyDay] = weekdays;
-  if (weekdays.length === 1 && onlyDay !== undefined) return `כל ${consts.WEEKDAY_LABELS[onlyDay]}`;
-
-  const runs = weekdayRuns(weekdays);
-  const [onlyRun] = runs;
-  if (runs.length === 1 && onlyRun && onlyRun.length >= 3) {
-    const rangeLabel = runRangeLabel(onlyRun);
-    if (rangeLabel) return `כל יום, ${rangeLabel}`;
-  }
-
-  const segments = runs.flatMap((run) => {
-    if (run.length >= 3) {
-      const rangeLabel = runRangeLabel(run);
-      return rangeLabel ? [rangeLabel] : [];
-    }
-    return run.map((day) => consts.WEEKDAY_BARE_LABELS[day]);
-  });
-  return `כל ${joinWithConjunction(segments)}`;
-};
-
-// A lesson's rendered "when" line: weekday name(s) for a recurring lesson,
-// or the weekday plus the calendar date for a one-time one, matching the
-// brief's `כל יום שלישי` / `יום שלישי, 16.12.2025` examples.
-export const recurrenceWhenLabel = (lesson: Lesson): string => {
-  if (lesson.recurrence.kind === 'weekly') return weeklyRecurrenceLabel(lesson.recurrence.weekdays);
-  const weekday = asWeekday(new Date(`${lesson.recurrence.date}T00:00:00Z`).getUTCDay());
-  return `${consts.WEEKDAY_LABELS[weekday]}, ${formatIsraeliDate(lesson.recurrence.date)}`;
 };
 
 // Ranks a lesson by how soon its next occurrence is, counting today as 0.
@@ -125,8 +52,15 @@ const rowMatchesSearch = (row: AdminLessonRow, search: string): boolean => {
 export const filterRows = (rows: AdminLessonRow[], recurrence: RecurrenceFilter, search: string): AdminLessonRow[] =>
   rows.filter((row) => rowMatchesRecurrence(row, recurrence) && rowMatchesSearch(row, search));
 
-// Matches the public `LessonCard`'s rule: the lesson's own title leads, and
-// the rabbi's composed display name is what fills in when there is none.
-export const lessonPrimaryLabel = (row: AdminLessonRow): string =>
-  row.lesson.title ?? (row.rabbi ? rabbiDisplayName(row.rabbi) : consts.UNTITLED_RABBI_FALLBACK);
-export const lessonHasOwnTitle = (row: AdminLessonRow): boolean => Boolean(row.lesson.title);
+// The one place this screen's filtered URL is built from a rabbi record
+// (`RabbiViewPage`'s "see all" overflow link is the only caller): keeps the
+// three param names in one place rather than a second hand-built query
+// string drifting from `useLessonListFilters`'s reader.
+export const lessonsListUrlForRabbi = (rabbi: RabbiFilterValue): string => {
+  const params = new URLSearchParams({
+    [consts.RABBI_ID_PARAM]: rabbi.id,
+    [consts.RABBI_NAME_PARAM]: rabbi.name,
+    [consts.RABBI_HONORIFIC_PARAM]: rabbi.honorific,
+  });
+  return `${ADMIN_ROUTES.lessons}?${params.toString()}`;
+};

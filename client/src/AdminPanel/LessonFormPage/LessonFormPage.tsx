@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import classNames from 'classnames';
 import styled from 'styled-components';
 
 import { AdminApiError } from '~/AdminPanel/api';
+import { LessonPreviewCard } from '~/AdminPanel/components/LessonPreviewCard/LessonPreviewCard';
 import { ADMIN_ROUTES } from '~/AdminPanel/consts';
 import { adminErrorMessage } from '~/AdminPanel/helpers';
+import { useExistingLesson } from '~/AdminPanel/useExistingLesson';
 import { AudiencePicker } from '~/components/AudiencePicker/AudiencePicker';
 import { CitySelect } from '~/components/CitySelect/CitySelect';
 import { ReadOnlyField } from '~/components/ReadOnlyField/ReadOnlyField';
@@ -13,13 +16,12 @@ import { RecurrenceFields } from '~/components/RecurrenceFields/RecurrenceFields
 import { directionForValue } from '~/helpers';
 import { AUDIENCE_LABELS } from '~/consts';
 
-import { LessonPreviewCard } from './components/LessonPreviewCard/LessonPreviewCard';
+import { DiscardChangesSheet } from './components/DiscardChangesSheet/DiscardChangesSheet';
 import { RabbiPicker } from './components/RabbiPicker/RabbiPicker';
 import * as consts from './consts';
-import { initialFormState, lessonToFormState, pageHeading, previewWeekdayLabel, validateLessonForm } from './helpers';
+import { initialFormState, isLessonFormDirty, lessonToFormState, pageHeading, previewWeekdayLabel, validateLessonForm } from './helpers';
 import type { LessonFormErrors, LessonFormPageProps, LessonFormState } from './models';
 import * as styles from './styles';
-import { useExistingLesson } from './useExistingLesson';
 import { usePreselectedRabbi } from './usePreselectedRabbi';
 import { useSaveLesson } from './useSaveLesson';
 
@@ -36,6 +38,7 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
   const [isLoadedFromExisting, setIsLoadedFromExisting] = useState(false);
   const [hasAppliedPreselect, setHasAppliedPreselect] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<LessonFormErrors>({});
+  const [isDiscardSheetOpen, setIsDiscardSheetOpen] = useState(false);
 
   const rabbiSectionRef = useRef<HTMLElement>(null);
   const whenSectionRef = useRef<HTMLElement>(null);
@@ -106,6 +109,11 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
 
   const failingSections = consts.SECTION_DEFS.filter((section) => section.fields.some((field) => fieldErrors[field]));
 
+  // Only meaningful in edit mode: whether the form has moved away from
+  // what was loaded, gating the cancel-confirm sheet below.
+  const loadedForm = existing.status === 'success' ? lessonToFormState(existing.data.lesson, existing.data.rabbi, existing.data.city) : undefined;
+  const isDirty = Boolean(id && loadedForm && isLessonFormDirty(form, loadedForm));
+
   const submit = (afterSave: 'list' | 'again'): void => {
     const errors = validateLessonForm(effectiveForm);
     setFieldErrors(errors);
@@ -121,21 +129,25 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
       { form: effectiveForm, existingLessonId: id },
       {
         onSuccess: () => {
-          if (afterSave === 'list') {
-            navigate(ADMIN_ROUTES.lessons);
-          } else {
+          if (afterSave === 'again') {
             setForm(initialFormState(undefined));
             setFieldErrors({});
+            return;
           }
+          navigate(id ? ADMIN_ROUTES.lessonView(id) : ADMIN_ROUTES.lessons);
         },
       },
     );
   };
 
+  const leaveEditing = (): void => {
+    if (id) navigate(ADMIN_ROUTES.lessonView(id));
+  };
+
   return (
     <div className={className}>
-      <Link className="breadcrumb" to={ADMIN_ROUTES.lessons}>
-        {consts.BACK_TO_LIST_LABEL}
+      <Link className="breadcrumb" to={id ? ADMIN_ROUTES.lessonView(id) : ADMIN_ROUTES.lessons}>
+        {id ? consts.BACK_TO_LESSON_LABEL : consts.BACK_TO_LIST_LABEL}
       </Link>
 
       <div className="layout">
@@ -278,10 +290,20 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
             </div>
           )}
 
-          <div className="footer">
-            <Link className="cancel" to={ADMIN_ROUTES.lessons}>
-              {consts.CANCEL_LABEL}
-            </Link>
+          <div className={classNames('footer', { editMode: Boolean(id) })}>
+            {id ? (
+              <button
+                type="button"
+                className="cancel"
+                onClick={() => (isDirty ? setIsDiscardSheetOpen(true) : leaveEditing())}
+              >
+                {consts.CANCEL_LABEL}
+              </button>
+            ) : (
+              <Link className="cancel" to={ADMIN_ROUTES.lessons}>
+                {consts.CANCEL_LABEL}
+              </Link>
+            )}
             <button type="button" className="saveAndAddAnother" disabled={saveLesson.isPending} onClick={() => submit('again')}>
               {consts.SAVE_AND_ADD_ANOTHER_LABEL}
             </button>
@@ -302,6 +324,10 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
           />
         </aside>
       </div>
+
+      {isDiscardSheetOpen && (
+        <DiscardChangesSheet onConfirm={leaveEditing} onDismiss={() => setIsDiscardSheetOpen(false)} />
+      )}
     </div>
   );
 })`

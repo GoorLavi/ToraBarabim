@@ -8,11 +8,12 @@ import type { LessonPreviewCardProps } from './models';
 import * as styles from './styles';
 
 // Closely mirrors the public `LessonCard`'s visual treatment (poster,
-// medallion, title, audience/description line, city), fed live from the
-// form's draft state rather than a saved `LessonOccurrence`, which is why
-// this is its own component and not a direct reuse (client/CLAUDE.md: a
-// child component lifts only once a second parent needs the exact same
-// props shape).
+// medallion, title, audience/description line, city), fed from plain
+// primitives rather than a saved `LessonOccurrence`, which is why this is
+// its own component and not a direct reuse. Lifted here from
+// `LessonFormPage/components/` once `LessonViewPage` became a second
+// caller (client/CLAUDE.md: a child component lifts to the nearest folder
+// both parents can see).
 export const LessonPreviewCard = styled(({ className, rabbi, title, audience, cityName, weekdayLabel, startTime }: LessonPreviewCardProps) => (
   <div className={className}>
     <p className="label">{consts.PREVIEW_LABEL}</p>
