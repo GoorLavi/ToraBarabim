@@ -43,6 +43,17 @@ export const RabbiPicker = css(
     font-weight: ${theme.typography.fontWeight.semiBold};
     font-size: ${theme.typography.secondary.phone.fontSize};
     line-height: ${theme.typography.secondary.phone.lineHeight};
+    text-decoration: none;
+
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    &:focus-visible {
+      text-decoration: underline;
+    }
   }
 
   > .popover {

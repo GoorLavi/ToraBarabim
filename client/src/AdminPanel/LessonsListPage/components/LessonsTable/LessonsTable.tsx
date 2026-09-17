@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { ADMIN_ROUTES, DETAILS_LABEL } from '~/AdminPanel/consts';
-import { lessonHasOwnTitle, lessonPrimaryLabel, recurrenceWhenLabel } from '~/AdminPanel/helpers';
+import { lessonHasOwnTitle, lessonPrimaryLabel } from '~/AdminPanel/helpers';
+import { lessonDayTimeLabel } from '~/AdminPanel/LessonsListPage/helpers';
 import * as parentConsts from '~/AdminPanel/LessonsListPage/consts';
 import { AUDIENCE_LABELS } from '~/consts';
 import { rabbiDisplayName } from '~/helpers';
@@ -47,9 +48,8 @@ export const LessonsTable = styled(({ className, rows }: LessonsTableProps) => (
           )}
         </span>
         <span className="when" role="cell">
-          <span dir="auto">{recurrenceWhenLabel(row.lesson)}</span>
-          <span className="time" dir="ltr">
-            {row.lesson.startTime}
+          <span className="whenText" dir="auto">
+            {lessonDayTimeLabel(row.lesson)}
           </span>
           <span className="tag">{row.lesson.recurrence.kind === 'weekly' ? parentConsts.RECURRING_TAG_LABEL : parentConsts.ONE_TIME_TAG_LABEL}</span>
         </span>

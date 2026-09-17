@@ -15,6 +15,17 @@ export const AdminFormPage = css(
     min-block-size: 48px;
     color: ${theme.colors.primary};
     font-weight: ${theme.typography.fontWeight.semiBold};
+    text-decoration: none;
+
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    &:focus-visible {
+      text-decoration: underline;
+    }
   }
 
   > .form {
@@ -101,6 +112,17 @@ export const AdminFormPage = css(
         min-block-size: 48px;
         color: ${theme.colors.textSecondary};
         font-weight: ${theme.typography.fontWeight.semiBold};
+        text-decoration: none;
+
+        @media (hover: hover) and (pointer: fine) {
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+
+        &:focus-visible {
+          text-decoration: underline;
+        }
       }
 
       > .submit {

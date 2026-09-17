@@ -1,9 +1,16 @@
 import type { Lesson, LessonListResponse, RabbiListResponse } from '@torabarabim/common';
 
 import { ADMIN_ROUTES } from '~/AdminPanel/consts';
+import { recurrenceWhenLabel } from '~/AdminPanel/helpers';
 
 import type { AdminLessonRow, RabbiFilterValue, RecurrenceFilter } from './models';
 import * as consts from './consts';
+
+// One line for a row's day and start time, joined the same way as
+// RabbiLessonsSection's `lessonRowMetaLabel`: shared by `LessonsCardList`
+// and `LessonsTable`, the two children that each render it beside their own
+// recurrence tag.
+export const lessonDayTimeLabel = (lesson: Lesson): string => `${recurrenceWhenLabel(lesson)} · ${lesson.startTime}`;
 
 // The venue lives on the lesson itself now, so joining a row is just
 // attaching its rabbi; there is no separate place record to look up.

@@ -38,6 +38,17 @@ export const RabbiFormPage = css(
     min-block-size: 48px;
     color: ${theme.colors.primary};
     font-weight: ${theme.typography.fontWeight.semiBold};
+    text-decoration: none;
+
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    &:focus-visible {
+      text-decoration: underline;
+    }
   }
 
   > .layout {
@@ -171,6 +182,17 @@ export const RabbiFormPage = css(
           min-block-size: 48px;
           color: ${theme.colors.textSecondary};
           font-weight: ${theme.typography.fontWeight.semiBold};
+          text-decoration: none;
+
+          @media (hover: hover) and (pointer: fine) {
+            &:hover {
+              text-decoration: underline;
+            }
+          }
+
+          &:focus-visible {
+            text-decoration: underline;
+          }
         }
 
         > .saveAndAddLesson {

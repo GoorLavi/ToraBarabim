@@ -38,6 +38,17 @@ export const LessonFormPage = css(
     min-block-size: 48px;
     color: ${theme.colors.primary};
     font-weight: ${theme.typography.fontWeight.semiBold};
+    text-decoration: none;
+
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    &:focus-visible {
+      text-decoration: underline;
+    }
   }
 
   > .layout {
@@ -220,10 +231,21 @@ export const LessonFormPage = css(
           font-weight: ${theme.typography.fontWeight.semiBold};
           font-size: ${theme.typography.body.phone.fontSize};
           line-height: ${theme.typography.body.phone.lineHeight};
+          text-decoration: none;
           cursor: pointer;
 
           @media (min-width: ${theme.breakpoints.md}) {
             inline-size: auto;
+          }
+
+          @media (hover: hover) and (pointer: fine) {
+            &:hover {
+              text-decoration: underline;
+            }
+          }
+
+          &:focus-visible {
+            text-decoration: underline;
           }
         }
 

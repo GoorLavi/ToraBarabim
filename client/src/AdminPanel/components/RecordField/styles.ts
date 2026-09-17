@@ -10,7 +10,7 @@ import { css } from 'styled-components';
 export const RecordField = css(
   ({ theme }) => `
   display: flex;
-  align-items: flex-start;
+  align-items: baseline;
   gap: ${theme.spacing.sm};
   padding-block: ${theme.spacing.sm};
 

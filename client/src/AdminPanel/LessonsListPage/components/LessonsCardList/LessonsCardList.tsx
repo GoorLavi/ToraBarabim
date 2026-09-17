@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { ADMIN_ROUTES, DETAILS_LABEL } from '~/AdminPanel/consts';
-import { lessonHasOwnTitle, lessonPrimaryLabel, recurrenceWhenLabel } from '~/AdminPanel/helpers';
+import { lessonHasOwnTitle, lessonPrimaryLabel } from '~/AdminPanel/helpers';
+import { lessonDayTimeLabel } from '~/AdminPanel/LessonsListPage/helpers';
 import * as parentConsts from '~/AdminPanel/LessonsListPage/consts';
 import { AUDIENCE_LABELS } from '~/consts';
 import { rabbiDisplayName } from '~/helpers';
@@ -27,9 +28,8 @@ export const LessonsCardList = styled(({ className, rows }: LessonsCardListProps
           )}
         </div>
 
-        <div className="meta">
-          <span dir="auto">{recurrenceWhenLabel(row.lesson)}</span>
-          <span dir="ltr">{row.lesson.startTime}</span>
+        <div className="meta" dir="auto">
+          {lessonDayTimeLabel(row.lesson)}
         </div>
 
         <div className="tags">

@@ -121,7 +121,7 @@ export const LessonViewPage = styled(({ className }: LessonViewPageProps) => {
             />
             <RecordField label={consts.WHEN_LABEL} value={recurrenceWhenLabel(lesson)} />
 
-            <RecordField label={consts.START_TIME_LABEL} value={lesson.startTime} valueDir="ltr" />
+            <RecordField label={consts.START_TIME_LABEL} value={lesson.startTime} />
             <RecordField label={consts.DURATION_LABEL} value={consts.durationValue(lesson.durationMinutes)} />
 
             <RecordField label={consts.CITY_LABEL} value={lesson.place.cityName} />
