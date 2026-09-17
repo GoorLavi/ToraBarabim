@@ -14,6 +14,11 @@ The Figma server may also need the human to authorize it before any tool works. 
 claude.ai connector settings or with `claude mcp` in an interactive terminal. You
 cannot do it for them, and you must not ask them for a token or a callback URL.
 
+A stray authorization warning at session start, on its own, is a known duplicate of
+that same prompt and does not mean Figma is disconnected. Trust `whoami`'s own answer
+over the warning: if it answers, the grant is live regardless of what was logged
+earlier in the session.
+
 ## Load the skill first, always
 
 - Before the first `use_figma` call, load the `figma-use` skill. Before the first
