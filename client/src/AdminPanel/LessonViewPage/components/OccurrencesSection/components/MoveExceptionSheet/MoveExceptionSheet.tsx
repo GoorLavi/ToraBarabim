@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import styled from 'styled-components';
 
+import { RecordField } from '~/AdminPanel/components/RecordField/RecordField';
 import { adminErrorMessage } from '~/AdminPanel/helpers';
 import * as parentConsts from '~/AdminPanel/LessonViewPage/components/OccurrencesSection/consts';
 import { useMoveOccurrenceException } from '~/AdminPanel/LessonViewPage/components/OccurrencesSection/useMoveOccurrenceException';
 import { FLOOR_LABEL } from '~/AdminPanel/LessonViewPage/consts';
 import { CitySelect } from '~/components/CitySelect/CitySelect';
 import { ResponsiveSheet } from '~/components/ResponsiveSheet/ResponsiveSheet';
-import { directionForValue } from '~/helpers';
+import { directionForValue, rabbiDisplayName } from '~/helpers';
 
 import { buildMovePlace, initialMoveFormState, validateMoveForm } from './helpers';
 import type { MoveExceptionSheetProps, MoveFormErrors } from './models';
@@ -17,13 +18,6 @@ export const MoveExceptionSheet = styled(({ className, lessonId, row, onDismiss 
   const move = useMoveOccurrenceException();
   const [form, setForm] = useState(() => initialMoveFormState(row));
   const [fieldErrors, setFieldErrors] = useState<MoveFormErrors>({});
-
-  // Move only ever opens on a scheduled row, so an existing exception here
-  // is always 'modified' (see `helpers.ts`'s `existingPlace`); its
-  // substitute rabbi and note have no control on this sheet, so they are
-  // carried through unchanged rather than dropped by the full-replacement
-  // write the server does.
-  const existingModified = row.existingException?.kind === 'modified' ? row.existingException : undefined;
 
   const handleSubmit = (): void => {
     const errors = validateMoveForm(form);
@@ -37,8 +31,11 @@ export const MoveExceptionSheet = styled(({ className, lessonId, row, onDismiss 
         existingExceptionId: row.existingException?.id,
         startTime: form.startTime,
         place: buildMovePlace(form),
-        substituteRabbiId: existingModified?.substituteRabbiId,
-        note: existingModified?.note,
+        // Neither has a control on this sheet, so both are carried through
+        // unchanged from what the occurrence already resolved, rather than
+        // dropped by the full-replacement write the server does.
+        substituteRabbiId: row.substituteRabbi?.id,
+        note: row.note,
       },
       { onSuccess: onDismiss },
     );
@@ -111,6 +108,17 @@ export const MoveExceptionSheet = styled(({ className, lessonId, row, onDismiss 
           </div>
         )}
 
+        {/* Read only: this sheet edits the time and place, and has no
+            control for either, but an admin editing a date should never
+            have to guess whether something else is already attached to
+            it. */}
+        {(row.substituteRabbi || row.note) && (
+          <div className="readOnlyFields">
+            {row.substituteRabbi && <RecordField label={parentConsts.SUBSTITUTE_RABBI_LABEL} value={rabbiDisplayName(row.substituteRabbi)} />}
+            {row.note && <RecordField label={parentConsts.NOTE_LABEL} value={row.note} />}
+          </div>
+        )}
+
         <p className="scopeNote">{parentConsts.MOVE_SCOPE_NOTE}</p>
 
         {move.isError && (
@@ -121,7 +129,7 @@ export const MoveExceptionSheet = styled(({ className, lessonId, row, onDismiss 
       </div>
 
       <div className="actions">
-        <button type="button" className="save" disabled={move.isPending} onClick={handleSubmit}>
+        <button type="button" className="save" disabled={move.isPending} aria-busy={move.isPending} onClick={handleSubmit}>
           {move.isPending ? parentConsts.MOVE_SAVING_LABEL : parentConsts.MOVE_SAVE_LABEL}
         </button>
         <button type="button" className="back" disabled={move.isPending} onClick={onDismiss}>

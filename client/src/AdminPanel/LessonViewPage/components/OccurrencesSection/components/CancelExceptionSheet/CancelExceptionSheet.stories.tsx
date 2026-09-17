@@ -18,6 +18,8 @@ const row = (overrides: Partial<OccurrenceRowData> = {}): OccurrenceRowData => (
   placeChanged: false,
   hasExistingException: false,
   existingException: undefined,
+  substituteRabbi: undefined,
+  note: undefined,
   ...overrides,
 });
 

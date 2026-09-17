@@ -43,18 +43,13 @@ export const cancelSheetBody = (dateLabel: string, time: string, isWeeklyRecurre
   return isWeeklyRecurrence ? `${opening} שאר המועדים נשארים כרגיל, ו${restoreClause}` : `${opening} ${restoreClause}`;
 };
 export const CANCEL_REASON_LABEL = 'סיבת הביטול';
-// Two lines: the disclosure is the half that cannot be undone once
-// published, so it gets its own line rather than sitting mid-sentence
-// where a skimming eye misses it. The second line keeps the field from
-// reading as a warning not to write anything: a reason is genuinely
-// useful to someone who already planned to come.
-export const CANCEL_REASON_HELPER_LINE_1 = 'לא חובה. הסיבה מוצגת באתר לכל מי שנכנס לעמוד השיעור.';
-export const CANCEL_REASON_HELPER_LINE_2 = 'משפט קצר עוזר למי שתכנן להגיע.';
-// The approved fallback if the two lines above do not fit the sheet on a
-// phone; a layout call for the designer's render, not used unless that
-// render says so (see the report for this slice).
-export const CANCEL_REASON_HELPER_SINGLE_LINE = 'לא חובה. הסיבה מוצגת באתר לכל מי שנכנס לעמוד השיעור, ועוזרת למי שתכנן להגיע.';
+// The two-line version rendered as three at 390 (the designer's own
+// layout call), so this single line is what ships: it still carries both
+// the optionality and the disclosure, tied to the textarea via
+// `aria-describedby`.
+export const CANCEL_REASON_HELPER = 'לא חובה. הסיבה מוצגת באתר לכל מי שנכנס לעמוד השיעור, ועוזרת למי שתכנן להגיע.';
 export const CANCEL_CONFIRM_LABEL = 'כן, לבטל את המועד';
+export const CANCEL_SAVING_LABEL = 'מבטלים...';
 export const CANCEL_BACK_LABEL = 'חזרה';
 
 export const MOVE_SHEET_HEADING = 'שינוי המועד הזה';
@@ -72,6 +67,11 @@ export const MOVE_CITY_LABEL = 'עיר';
 export const MOVE_CITY_PLACEHOLDER = 'בחירת עיר';
 export const MOVE_PLACE_NAME_LABEL = 'שם המקום';
 export const MOVE_STREET_LABEL = 'רחוב ומספר';
+
+// Read only on this sheet: it edits the time and place, and has no control
+// for either, so these are shown, never blank fields to fill in.
+export const SUBSTITUTE_RABBI_LABEL = 'רב ממלא מקום';
+export const NOTE_LABEL = 'הערה';
 
 export const REQUIRED_START_TIME_ERROR = 'יש למלא שעת התחלה';
 export const REQUIRED_CITY_ERROR = 'יש לבחור עיר';

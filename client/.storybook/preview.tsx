@@ -14,23 +14,33 @@ import { ARGAMAN_VE_ZAHAV_THEME } from '../src/theme/themes';
 // so nothing here risks one story showing another's cached data.
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
+// Storybook renders in its own preview document, whose `<html>` the app does
+// not render, so the attributes `root.tsx` puts there have to be reproduced
+// here. On the document element rather than on a wrapper, because a portal
+// (`ResponsiveSheet`) appends to `document.body` and therefore inherits from
+// the document root and nothing else: a wrapper would leave every sheet
+// rendering as an unmarked, left-to-right English subtree, which is what a
+// native `type='time'` control reads to decide how to display itself. The app
+// does not need this, so it does not do it: this is the harness catching up
+// with the app, not a second place that decides direction.
+if (typeof document !== 'undefined') {
+  document.documentElement.lang = 'he';
+  document.documentElement.dir = 'rtl';
+}
+
 const preview: Preview = {
   decorators: [
+    // MemoryRouter: `LessonCard` is a real `<Link>` now (routes to a lesson
+    // page), and `Link` throws outside a Router context.
     (Story) => (
-      // Storybook renders in its own preview document, separate from
-      // index.html, so this is the one other place that sets dir/lang.
-      // MemoryRouter: `LessonCard` is a real `<Link>` now (routes to a
-      // lesson page), and `Link` throws outside a Router context.
-      <div dir="rtl" lang="he">
-        <ThemeProvider theme={ARGAMAN_VE_ZAHAV_THEME}>
-          <GlobalStyle />
-          <QueryClientProvider client={queryClient}>
-            <MemoryRouter>
-              <Story />
-            </MemoryRouter>
-          </QueryClientProvider>
-        </ThemeProvider>
-      </div>
+      <ThemeProvider theme={ARGAMAN_VE_ZAHAV_THEME}>
+        <GlobalStyle />
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter>
+            <Story />
+          </MemoryRouter>
+        </QueryClientProvider>
+      </ThemeProvider>
     ),
   ],
 };

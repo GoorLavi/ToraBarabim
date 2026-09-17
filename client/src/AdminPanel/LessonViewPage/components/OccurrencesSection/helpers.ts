@@ -44,6 +44,8 @@ export const joinOccurrencesWithExceptions = (
       placeChanged,
       hasExistingException: occurrence.status === 'cancelled' || movedFromTime !== undefined || placeChanged,
       existingException: exceptionByDate.get(occurrence.date),
+      substituteRabbi: occurrence.substituteRabbi,
+      note: occurrence.note,
     };
   });
 };

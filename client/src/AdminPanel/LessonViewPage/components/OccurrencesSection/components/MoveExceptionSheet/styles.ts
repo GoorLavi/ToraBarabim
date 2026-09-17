@@ -26,6 +26,10 @@ export const MoveExceptionSheet = css(
       min-block-size: 0;
       overflow-y: auto;
       margin-block-start: ${theme.spacing.md};
+      /* The scrolling region's own trailing space: without it the last
+         field sits flush against the sticky actions footer's top border,
+         which reads as the field being cut off rather than simply ending. */
+      padding-block-end: ${theme.spacing.md};
       display: flex;
       flex-direction: column;
       gap: ${theme.spacing.md};
@@ -103,6 +107,16 @@ export const MoveExceptionSheet = css(
         border-inline-start: 2px solid ${theme.colors.primarySoft};
       }
 
+      /* The two fields this sheet cannot edit, only show. Grouped the same
+         way placeFields above is, so the read-only pair reads as its own
+         block rather than as more editable fields. */
+      > .readOnlyFields {
+        display: flex;
+        flex-direction: column;
+        padding-inline-start: ${theme.spacing.md};
+        border-inline-start: 2px solid ${theme.colors.border};
+      }
+
       > .scopeNote {
         color: ${theme.colors.textSecondary};
         font-size: ${theme.typography.secondary.phone.fontSize};
@@ -140,6 +154,7 @@ export const MoveExceptionSheet = css(
 
         &:disabled {
           opacity: 0.6;
+          cursor: not-allowed;
         }
       }
 
@@ -149,6 +164,11 @@ export const MoveExceptionSheet = css(
         font-weight: ${theme.typography.fontWeight.semiBold};
         font-size: ${theme.typography.body.phone.fontSize};
         line-height: ${theme.typography.body.phone.lineHeight};
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
       }
     }
   }

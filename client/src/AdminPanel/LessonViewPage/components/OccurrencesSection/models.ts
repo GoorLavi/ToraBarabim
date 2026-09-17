@@ -1,4 +1,4 @@
-import type { LessonExceptionResponse, LessonResponse } from '@torabarabim/common';
+import type { LessonExceptionResponse, LessonResponse, Rabbi } from '@torabarabim/common';
 
 // One occurrence date, joined from `AdminOccurrenceListResponse` (the
 // resolved time/place/status for this date) and `LessonExceptionListResponse`
@@ -19,6 +19,16 @@ export interface OccurrenceRowData {
   // in any of name, street, or city: one flag for the whole place, never
   // one per field, matching the design's single "המקום שונה" tag.
   placeChanged: boolean;
+  // Already resolved to a full `Rabbi` (name, honorific) by the
+  // occurrences endpoint, straight off `LessonOccurrence.substituteRabbi`:
+  // no separate fetch is needed to show who is teaching, only to change
+  // who. The move sheet shows this read only; nothing here can set it.
+  substituteRabbi: Rabbi | undefined;
+  // The occurrence's own resolved note, off `LessonOccurrence.note`. Shown
+  // read only next to the substitute rabbi for the same reason: a date's
+  // move sheet edits the time and place, and should not hide the two other
+  // things already attached to it.
+  note: string | undefined;
   // True when this date already carries an exception record (cancelled,
   // or modified in its time or place), computed once here from the
   // occurrence's own resolved fields, so it is known even while the

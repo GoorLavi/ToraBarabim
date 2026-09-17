@@ -45,14 +45,9 @@ export const CancelExceptionSheet = css(
       }
 
       > .helper {
-        display: flex;
-        flex-direction: column;
-
-        > .helperLine {
-          color: ${theme.colors.textSecondary};
-          font-size: ${theme.typography.secondary.phone.fontSize};
-          line-height: ${theme.typography.secondary.phone.lineHeight};
-        }
+        color: ${theme.colors.textSecondary};
+        font-size: ${theme.typography.secondary.phone.fontSize};
+        line-height: ${theme.typography.secondary.phone.lineHeight};
       }
     }
 
@@ -69,8 +64,29 @@ export const CancelExceptionSheet = css(
       flex-direction: column;
       gap: ${theme.spacing.sm};
 
+      /* Mirrors LessonFormPage and RabbiFormPage's own DiscardChangesSheet,
+         the panel's existing answer to a safe-versus-destructive confirm:
+         the safe choice (back, staying as is) is the filled, dominant
+         button; the destructive one (confirm, cancelling the date) is a
+         bordered ghost in danger text, never a danger fill
+         (design-system.md's color token table: danger is text only). */
       > .confirm {
-        min-block-size: 52px;
+        min-block-size: 48px;
+        border: 1px solid ${theme.colors.danger};
+        border-radius: ${theme.radii.md};
+        color: ${theme.colors.danger};
+        font-weight: ${theme.typography.fontWeight.semiBold};
+        font-size: ${theme.typography.body.phone.fontSize};
+        line-height: ${theme.typography.body.phone.lineHeight};
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
+
+      > .back {
+        min-block-size: 48px;
         border-radius: ${theme.radii.md};
         background: ${theme.colors.primary};
         color: ${theme.colors.textOnPrimary};
@@ -80,15 +96,8 @@ export const CancelExceptionSheet = css(
 
         &:disabled {
           opacity: 0.6;
+          cursor: not-allowed;
         }
-      }
-
-      > .back {
-        min-block-size: 48px;
-        color: ${theme.colors.textSecondary};
-        font-weight: ${theme.typography.fontWeight.semiBold};
-        font-size: ${theme.typography.body.phone.fontSize};
-        line-height: ${theme.typography.body.phone.lineHeight};
       }
     }
   }

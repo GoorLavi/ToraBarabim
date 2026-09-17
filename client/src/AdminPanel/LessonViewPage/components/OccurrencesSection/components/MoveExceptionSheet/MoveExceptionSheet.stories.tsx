@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, within } from 'storybook/test';
 
 import type { OccurrenceRowData } from '~/AdminPanel/LessonViewPage/components/OccurrencesSection/models';
+import { rabbiFixture } from '~/rabbiFixture';
 import { installMockFetch, jsonResponse, NEVER_RESOLVES } from '~/storyMocks';
 
 import { MoveExceptionSheet } from './MoveExceptionSheet';
@@ -18,13 +19,16 @@ const row = (overrides: Partial<OccurrenceRowData> = {}): OccurrenceRowData => (
   placeChanged: false,
   hasExistingException: false,
   existingException: undefined,
+  substituteRabbi: undefined,
+  note: undefined,
   ...overrides,
 });
 
-// A date already moved to a different venue, including a floor and a
-// substitute rabbi the sheet has no control for: reopening it should show
-// the override already filled in, not a blank toggle (the fix this file
-// exists to prove; see the report for this round).
+// A date already moved to a different venue, including a floor, a
+// substitute rabbi, and a note, none of which this sheet has a control
+// for: reopening it should show the place override already filled in
+// (not a blank toggle) and the substitute rabbi and note read only (the
+// two fixes this file exists to prove; see the report for this round).
 const alreadyMovedRow = row({
   startTime: '21:15',
   movedFromTime: '20:30',
@@ -42,6 +46,8 @@ const alreadyMovedRow = row({
     substituteRabbiId: 'rabbi-substitute',
     note: 'הרב הקבוע בחופשה',
   },
+  substituteRabbi: rabbiFixture({ id: 'rabbi-substitute', name: 'דוד לוינסון' }),
+  note: 'הרב הקבוע בחופשה',
 });
 
 installMockFetch((url, method) => {

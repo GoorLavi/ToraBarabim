@@ -36,14 +36,8 @@ export const CancelExceptionSheet = styled(({ className, lessonId, row, isWeekly
           onChange={(event) => setReason(event.target.value)}
           aria-describedby={reasonHelperId}
         />
-        {/* Two lines: the disclosure (the reason is published) is the half
-            that cannot be undone once acted on, so it gets its own line
-            rather than sitting mid-sentence where a skimming eye misses
-            it. If this ever has to collapse to one line for space, use
-            `CANCEL_REASON_HELPER_SINGLE_LINE` instead (see consts.ts). */}
         <span id={reasonHelperId} className="helper">
-          <span className="helperLine">{parentConsts.CANCEL_REASON_HELPER_LINE_1}</span>
-          <span className="helperLine">{parentConsts.CANCEL_REASON_HELPER_LINE_2}</span>
+          {parentConsts.CANCEL_REASON_HELPER}
         </span>
       </label>
 
@@ -54,8 +48,8 @@ export const CancelExceptionSheet = styled(({ className, lessonId, row, isWeekly
       )}
 
       <div className="actions">
-        <button type="button" className="confirm" disabled={cancel.isPending} onClick={handleConfirm}>
-          {parentConsts.CANCEL_CONFIRM_LABEL}
+        <button type="button" className="confirm" disabled={cancel.isPending} aria-busy={cancel.isPending} onClick={handleConfirm}>
+          {cancel.isPending ? parentConsts.CANCEL_SAVING_LABEL : parentConsts.CANCEL_CONFIRM_LABEL}
         </button>
         <button type="button" className="back" disabled={cancel.isPending} onClick={onDismiss}>
           {parentConsts.CANCEL_BACK_LABEL}
