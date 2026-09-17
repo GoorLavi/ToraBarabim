@@ -39,6 +39,15 @@ export const RabbiPicker = css(
   }
 
   > .notListed {
+    /* A quiet helper link is still a tap target: the design system's 48px
+       floor has no exemption for small or secondary links, and these are the
+       ones that get forgotten. Reached through block padding on the anchor
+       rather than a min-block-size, so the link box grows in place without
+       becoming a block that reflows the field above it. */
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 48px;
     color: ${theme.colors.primary};
     font-weight: ${theme.typography.fontWeight.semiBold};
     font-size: ${theme.typography.secondary.phone.fontSize};
