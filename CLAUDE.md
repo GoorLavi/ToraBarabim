@@ -408,8 +408,11 @@ Figma is where new design happens; code is the source of truth for what ships.
   in `.claude/design-system.md`. Figma mirrors code, not the other way around.
 - **Figma is upstream for new design.** A redesign starts in Figma, gets approved, is
   implemented in code, and then the tokens and the design system update to match.
-- **Never write to a shared or canonical file.** Work in a drafts file you created, or
-  a duplicate the human handed you. If you cannot tell which a file is, stop and ask.
+- **Work in the project's own file, never in drafts.** A small change is made beside
+  the original inside that file; a large one gets a page of its own next to the source
+  page, and once the human approves it, the source is updated from it and the extra
+  page is deleted. Deleting anything needs the human to have approved it first. A
+  published library is still off limits. The exact shape is in the protocol below.
 - `tora-designer` owns Figma. The setup steps and the API traps are in
   [.claude/figma-protocol.md](.claude/figma-protocol.md): read it before the first
   write.
