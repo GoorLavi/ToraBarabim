@@ -56,6 +56,11 @@ export const OccurrencesSection = styled(({ className, lesson }: OccurrencesSect
         </div>
       )}
 
+      {/* No widening action here, against both the design system's empty-state
+          rule and the approved frame, which draws one. The endpoint takes no
+          window parameter, so the control would return the same empty list.
+          Accepted deliberately in decision 0035; a window parameter, which
+          decision 0033 also needs, is what removes this exception. */}
       {state.status === 'empty' && (
         <div className="state">
           <p className="headline">{consts.EMPTY_HEADLINE}</p>

@@ -101,3 +101,5 @@ The real alternatives and why each lost. If there was no alternative, say so.
 | [0031](0031-import-agent-writes-with-its-own-key.md) | The import agent writes to production with its own key, without a per-run approval | accepted |
 | [0032](0032-import-matches-rabbis-by-name-and-site.md) | The import matches rabbis by name and site, and learns only what the owner confirmed | accepted |
 | [0033](0033-a-one-time-lesson-outside-the-two-week-window-cannot-be-cancelled-yet.md) | A one-time lesson outside the two-week window cannot be cancelled yet | accepted, to be fixed in its own change |
+| [0034](0034-an-admin-acts-on-a-rabbis-date-and-the-rabbi-is-not-told.md) | An admin cancels or moves a rabbi's date, and the rabbi is not told | accepted |
+| [0035](0035-the-occurrences-empty-state-names-the-window-and-offers-nothing.md) | The occurrences empty state names the window and offers nothing | accepted, a known exception to the empty-state rule |
