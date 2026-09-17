@@ -14,6 +14,7 @@ export interface MoveFormState {
   city: SelectedCity | undefined;
   placeName: string;
   street: string;
+  floor: string;
 }
 
 export type MoveFormField = 'startTime' | 'city' | 'placeName' | 'street';

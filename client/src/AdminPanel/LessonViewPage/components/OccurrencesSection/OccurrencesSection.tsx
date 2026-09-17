@@ -8,20 +8,30 @@ import { MoveExceptionSheet } from './components/MoveExceptionSheet/MoveExceptio
 import { OccurrenceRow } from './components/OccurrenceRow/OccurrenceRow';
 import * as consts from './consts';
 import { canWriteRow } from './helpers';
-import type { ActiveSheet, OccurrencesSectionProps } from './models';
+import type { ActiveSheet, OccurrenceRowData, OccurrencesSectionProps } from './models';
 import * as styles from './styles';
 import { useLessonOccurrences } from './useLessonOccurrences';
 import { useRestoreOccurrenceException } from './useRestoreOccurrenceException';
 
-export const OccurrencesSection = styled(({ className, lessonId, lesson }: OccurrencesSectionProps) => {
+export const OccurrencesSection = styled(({ className, lesson }: OccurrencesSectionProps) => {
+  const lessonId = lesson.id;
+  const isWeeklyRecurrence = lesson.recurrence.kind === 'weekly';
   const state = useLessonOccurrences(lessonId, lesson);
   const restore = useRestoreOccurrenceException();
   const [activeSheet, setActiveSheet] = useState<ActiveSheet>(undefined);
 
+  const closeSheet = (): void => setActiveSheet(undefined);
+  const openCancelSheet = (row: OccurrenceRowData): void => setActiveSheet({ kind: 'cancel', row });
+  const openMoveSheet = (row: OccurrenceRowData): void => setActiveSheet({ kind: 'move', row });
+  const restoreRow = (exceptionId: number | undefined): void => {
+    if (exceptionId === undefined) return;
+    restore.mutate({ lessonId, exceptionId });
+  };
+
   return (
     <section className={className}>
       <h2 className="heading">{consts.SECTION_HEADING}</h2>
-      <p className="note">{consts.SECTION_NOTE}</p>
+      <p className="note">{consts.sectionNote(isWeeklyRecurrence)}</p>
 
       {restore.isError && (
         <p className="mutationError" role="alert">
@@ -65,20 +75,19 @@ export const OccurrencesSection = styled(({ className, lessonId, lesson }: Occur
           )}
 
           {state.rows.map((row) => {
-            const isRestoringThis = restore.isPending && restore.variables?.exceptionId === row.exceptionId;
+            const isRestoringThis = restore.isPending && restore.variables?.exceptionId === row.existingException?.id;
             return (
               <OccurrenceRow
                 key={row.date}
                 className="row"
-                row={row}
-                canWrite={canWriteRow(row)}
-                onCancelClick={() => setActiveSheet({ kind: 'cancel', row })}
-                onMoveClick={() => setActiveSheet({ kind: 'move', row })}
-                onRestoreClick={() => {
-                  if (row.exceptionId === undefined) return;
-                  restore.mutate({ lessonId, exceptionId: row.exceptionId });
+                {...{
+                  row,
+                  canWrite: canWriteRow(row),
+                  onCancelClick: () => openCancelSheet(row),
+                  onMoveClick: () => openMoveSheet(row),
+                  onRestoreClick: () => restoreRow(row.existingException?.id),
+                  isRestoring: isRestoringThis,
                 }}
-                isRestoring={isRestoringThis}
               />
             );
           })}
@@ -86,9 +95,9 @@ export const OccurrencesSection = styled(({ className, lessonId, lesson }: Occur
       )}
 
       {activeSheet?.kind === 'cancel' && (
-        <CancelExceptionSheet lessonId={lessonId} row={activeSheet.row} onDismiss={() => setActiveSheet(undefined)} />
+        <CancelExceptionSheet {...{ lessonId, row: activeSheet.row, isWeeklyRecurrence, onDismiss: closeSheet }} />
       )}
-      {activeSheet?.kind === 'move' && <MoveExceptionSheet lessonId={lessonId} row={activeSheet.row} onDismiss={() => setActiveSheet(undefined)} />}
+      {activeSheet?.kind === 'move' && <MoveExceptionSheet {...{ lessonId, row: activeSheet.row, onDismiss: closeSheet }} />}
     </section>
   );
 })`

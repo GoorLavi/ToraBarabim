@@ -1,16 +1,26 @@
 export const SECTION_HEADING = 'המועדים הקרובים';
-export const SECTION_NOTE = 'כל שינוי כאן חל על התאריך הזה בלבד ונשמר מיד. השיעור הקבוע לא משתנה.';
+// The trailing clause is only true of a recurring lesson: a one-time
+// lesson has no "regular lesson" behind this date to leave unchanged.
+// `sectionNote` below renders it only when `lesson.recurrence.kind ===
+// 'weekly'`; the base sentence reads correctly on its own either way.
+export const SECTION_NOTE_BASE = 'כל שינוי כאן חל על התאריך הזה בלבד ונשמר מיד.';
+export const SECTION_NOTE_RECURRING_CLAUSE = 'השיעור הקבוע לא משתנה.';
+export const sectionNote = (isWeeklyRecurrence: boolean): string =>
+  isWeeklyRecurrence ? `${SECTION_NOTE_BASE} ${SECTION_NOTE_RECURRING_CLAUSE}` : SECTION_NOTE_BASE;
 
 export const LOADING_LABEL = 'טוענים את המועדים הקרובים...';
 
-export const ERROR_HEADLINE = 'לא הצלחנו לטעון את המועדים הקרובים';
+export const ERROR_HEADLINE = 'לא הצלחנו לטעון את המועדים';
 export const ERROR_HINT = 'ייתכן שהחיבור נקטע. אפשר לנסות שוב.';
 export const RETRY_LABEL = 'ניסיון נוסף';
 
 export const EMPTY_HEADLINE = 'אין מועדים בשבועיים הקרובים';
-export const EMPTY_HINT = 'השיעור נשאר כרגיל, הוא פשוט לא חל בטווח הזה.';
+export const EMPTY_HINT = 'השיעור נשאר במקומו, הוא פשוט לא מתקיים בשבועיים האלה.';
 
-export const EXCEPTIONS_UNAVAILABLE_MESSAGE = 'לא ניתן לטעון את פרטי החריגים כרגע, ולכן אי אפשר לערוך או להחזיר מועדים ששונו כבר. אפשר לנסות שוב.';
+// Covers a cancelled row too, not only a moved one: `hasExistingException`
+// (helpers.ts) is true for both, and a cancelled row loses its restore
+// button the same way a moved row loses its edit ability.
+export const EXCEPTIONS_UNAVAILABLE_MESSAGE = 'פרטי השינויים לא נטענו כרגע, ולכן לא ניתן לערוך או להחזיר מועדים שכבר שונו או בוטלו. אפשר לנסות שוב.';
 
 export const CANCELLED_TAG_LABEL = 'המועד בוטל';
 export const PLACE_CHANGED_TAG_LABEL = 'המקום שונה';
@@ -19,12 +29,31 @@ export const movedFromLabel = (time: string): string => `הוזז מ-${time}`;
 export const CANCEL_OCCURRENCE_LABEL = 'ביטול המועד';
 export const MOVE_OCCURRENCE_LABEL = 'שינוי שעה או מקום';
 export const RESTORE_OCCURRENCE_LABEL = 'החזרת המועד';
-export const ROW_UNAVAILABLE_LABEL = 'לא ניתן לערוך כרגע';
 
 export const CANCEL_SHEET_HEADING = 'לבטל את השיעור בתאריך הזה?';
-export const cancelSheetBody = (dateLabel: string, time: string): string =>
-  `בתאריך ${dateLabel} בשעה ${time}, השיעור לא יוצג יותר באתר. שאר המועדים נשארים כרגיל, ואפשר להחזיר את המועד בכל רגע.`;
-export const CANCEL_REASON_LABEL = 'סיבת הביטול (לא חובה)';
+// `dateLabel` already opens with the weekday name (`occurrenceDateLabel`,
+// helpers.ts), so gluing it after "בתאריך" read as "בתאריך יום שלישי,
+// 16.12.2025", the date naming its own kind twice. The restore clause is
+// only true of a recurring lesson's other dates ("שאר המועדים"), so
+// `cancelSheetBody` renders it only when `isWeeklyRecurrence`; a one-time
+// lesson still gets the plain "can restore" sentence on its own.
+export const cancelSheetBody = (dateLabel: string, time: string, isWeeklyRecurrence: boolean): string => {
+  const opening = `השיעור ב${dateLabel} בשעה ${time} לא יוצג יותר באתר.`;
+  const restoreClause = 'אפשר להחזיר את המועד בכל רגע.';
+  return isWeeklyRecurrence ? `${opening} שאר המועדים נשארים כרגיל, ו${restoreClause}` : `${opening} ${restoreClause}`;
+};
+export const CANCEL_REASON_LABEL = 'סיבת הביטול';
+// Two lines: the disclosure is the half that cannot be undone once
+// published, so it gets its own line rather than sitting mid-sentence
+// where a skimming eye misses it. The second line keeps the field from
+// reading as a warning not to write anything: a reason is genuinely
+// useful to someone who already planned to come.
+export const CANCEL_REASON_HELPER_LINE_1 = 'לא חובה. הסיבה מוצגת באתר לכל מי שנכנס לעמוד השיעור.';
+export const CANCEL_REASON_HELPER_LINE_2 = 'משפט קצר עוזר למי שתכנן להגיע.';
+// The approved fallback if the two lines above do not fit the sheet on a
+// phone; a layout call for the designer's render, not used unless that
+// render says so (see the report for this slice).
+export const CANCEL_REASON_HELPER_SINGLE_LINE = 'לא חובה. הסיבה מוצגת באתר לכל מי שנכנס לעמוד השיעור, ועוזרת למי שתכנן להגיע.';
 export const CANCEL_CONFIRM_LABEL = 'כן, לבטל את המועד';
 export const CANCEL_BACK_LABEL = 'חזרה';
 
@@ -33,7 +62,10 @@ export const MOVE_START_TIME_LABEL = 'שעת התחלה חדשה';
 export const MOVE_PLACE_TOGGLE = 'השיעור יתקיים במקום אחר';
 export const MOVE_SCOPE_NOTE = 'השינוי חל על התאריך הזה בלבד.';
 export const MOVE_SAVE_LABEL = 'שמירת השינוי';
-export const MOVE_SAVING_LABEL = 'שומר...';
+// First person plural, matching the rest of the admin panel's voice
+// (`LOADING_LABEL` above, "טוענים"): the singular "שומר" is the rabbi
+// panel's own voice, copied in here by mistake.
+export const MOVE_SAVING_LABEL = 'שומרים...';
 export const MOVE_BACK_LABEL = 'חזרה';
 
 export const MOVE_CITY_LABEL = 'עיר';

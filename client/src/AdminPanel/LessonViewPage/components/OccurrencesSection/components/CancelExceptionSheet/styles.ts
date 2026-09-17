@@ -43,6 +43,17 @@ export const CancelExceptionSheet = css(
         font-size: ${theme.typography.body.phone.fontSize};
         line-height: ${theme.typography.body.phone.lineHeight};
       }
+
+      > .helper {
+        display: flex;
+        flex-direction: column;
+
+        > .helperLine {
+          color: ${theme.colors.textSecondary};
+          font-size: ${theme.typography.secondary.phone.fontSize};
+          line-height: ${theme.typography.secondary.phone.lineHeight};
+        }
+      }
     }
 
     > .error {

@@ -41,8 +41,18 @@ const scheduledOccurrence = (lessonId: string, overrides: Partial<LessonOccurren
   ...overrides,
 });
 
-installMockFetch((url) => {
-  if (url.pathname === '/v1/admin/lessons/story-populated') return jsonResponse(200, lesson({}));
+installMockFetch((url, method) => {
+  // `story-populated`'s own id, not the `lesson()` factory's default
+  // `'story-lesson'`: `LessonViewPage` reads `lesson.id` straight off this
+  // response body to address the occurrences and exceptions endpoints
+  // below (`OccurrencesSection`), so a body whose `id` disagrees with the
+  // url it was fetched from sends those requests to the wrong fixture and
+  // they fall through to the generic empty-window default further down.
+  // That is exactly what happened here before this line existed: this
+  // story rendered the empty state although its occurrences and
+  // exceptions fixtures were both defined and correct, which is a story
+  // bug, not a defect in the join itself (see the report for this round).
+  if (url.pathname === '/v1/admin/lessons/story-populated') return jsonResponse(200, lesson({ id: 'story-populated' }));
   if (url.pathname === '/v1/admin/lessons/story-nophoto') return jsonResponse(200, lesson({ id: 'story-nophoto', rabbiId: 'story-nophoto-rabbi' }));
   if (url.pathname === '/v1/admin/lessons/story-longnames') {
     return jsonResponse(
@@ -110,6 +120,14 @@ installMockFetch((url) => {
   // this must degrade to `RABBI_UNKNOWN_LABEL` with the rest of the lesson
   // rendering normally, never a blank page.
   if (url.pathname === '/v1/admin/rabbis/story-rabbi-failing') return jsonResponse(500, { error: 'internal_error', message: 'שגיאה' });
+
+  // Every handler below this line answers a GET list. None of them checks
+  // the method on its own, so a POST/PATCH/DELETE from a sheet opened out
+  // of one of these page-level stories (rather than the sheets' own
+  // dedicated stories, which do check method) falls through here instead
+  // of silently matching a list handler and "succeeding" with the wrong
+  // response shape.
+  if (method !== 'GET' && /\/(occurrences|exceptions)$/.test(url.pathname)) return null;
 
   if (url.pathname === '/v1/admin/lessons/story-populated/occurrences') {
     return jsonResponse(200, {

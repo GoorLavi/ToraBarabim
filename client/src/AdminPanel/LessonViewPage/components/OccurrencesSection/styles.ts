@@ -97,14 +97,21 @@ export const OccurrencesSection = css(
         line-height: ${theme.typography.secondary.phone.lineHeight};
       }
 
+      /* A bordered pill, not the filled one the section's own error state
+         uses (above): distinct enough to read as "try again", not styled
+         as heavily as the primary action a genuine dead end offers. An
+         underlined plain-text button here read as a link on a normal
+         load, not as something waiting to be pressed. */
       > .retry {
         display: flex;
         align-items: center;
         min-block-size: 48px;
-        padding-inline: ${theme.spacing.md};
+        padding-inline: ${theme.spacing.lg};
+        border: 1px solid ${theme.colors.border};
+        border-radius: ${theme.radii.pill};
+        background: ${theme.colors.surface};
         color: ${theme.colors.primary};
         font-weight: ${theme.typography.fontWeight.semiBold};
-        text-decoration: underline;
       }
     }
   }

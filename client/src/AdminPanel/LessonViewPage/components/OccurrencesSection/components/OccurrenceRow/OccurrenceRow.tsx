@@ -8,10 +8,15 @@ import * as styles from './styles';
 
 export const OccurrenceRow = styled(({ className, row, canWrite, onCancelClick, onMoveClick, onRestoreClick, isRestoring }: OccurrenceRowProps) => {
   const isCancelled = row.status === 'cancelled';
-  // A moved or place-changed row already carries an exception, so it can be
-  // restored directly; a plain scheduled row has nothing to restore
-  // (design doc's three occurrence states: scheduled, moved, cancelled).
-  const isModified = !isCancelled && (row.movedFromTime !== undefined || row.placeChanged);
+  // A moved or place-changed row already carries an exception (computed
+  // once by the join, `models.ts`'s `hasExistingException`), which governs
+  // whether a write needs that exception's id (`canWrite`, passed down).
+  // Restore itself only ever shows on a cancelled row: the designer's call
+  // is that the same label reading as "un-cancel" on one row and "revert my
+  // move" on another is one label meaning two things in one list. A
+  // "return this date to normal" action for a moved row is a different,
+  // not-yet-built action with its own label.
+  const isModified = row.hasExistingException && !isCancelled;
 
   return (
     <article className={classNames(className, { cancelled: isCancelled })}>
@@ -25,19 +30,30 @@ export const OccurrenceRow = styled(({ className, row, canWrite, onCancelClick, 
           </span>
         </div>
 
-        <p className="place" dir="auto">
-          {row.placeName}, {row.cityName}
+        {/* Each part isolated in its own `bdi`, never one `dir="auto"` over
+            both: `auto` resolves from the first strong character, so a
+            venue name starting with a Latin letter or a digit would flip
+            the whole line and throw the city to the wrong side of the
+            comma. The comma itself sits outside either isolate. */}
+        <p className="place">
+          <bdi dir="auto">{row.placeName}</bdi>
+          {', '}
+          <bdi dir="auto">{row.cityName}</bdi>
         </p>
 
         {isCancelled && (
           <div className="tags">
-            <span className="tag cancelled">{parentConsts.CANCELLED_TAG_LABEL}</span>
+            <span className="tag">{parentConsts.CANCELLED_TAG_LABEL}</span>
           </div>
         )}
+        {/* A cancelled row gets no change tags at all: cancelled beats any
+            other change on the same date. When both moved, the order is
+            fixed: time first, then place, never merged into one tag, since
+            the two fields change independently. */}
         {isModified && (
           <div className="tags">
-            {row.movedFromTime && <span className="tag moved">{parentConsts.movedFromLabel(row.movedFromTime)}</span>}
-            {row.placeChanged && <span className="tag moved">{parentConsts.PLACE_CHANGED_TAG_LABEL}</span>}
+            {row.movedFromTime && <span className="tag">{parentConsts.movedFromLabel(row.movedFromTime)}</span>}
+            {row.placeChanged && <span className="tag">{parentConsts.PLACE_CHANGED_TAG_LABEL}</span>}
           </div>
         )}
 
@@ -61,16 +77,9 @@ export const OccurrenceRow = styled(({ className, row, canWrite, onCancelClick, 
             <button type="button" className="action" onClick={onMoveClick} disabled={!canWrite}>
               {parentConsts.MOVE_OCCURRENCE_LABEL}
             </button>
-            {isModified && (
-              <button type="button" className="action" onClick={onRestoreClick} disabled={!canWrite || isRestoring}>
-                {parentConsts.RESTORE_OCCURRENCE_LABEL}
-              </button>
-            )}
           </>
         )}
       </div>
-
-      {!canWrite && <p className="unavailable">{parentConsts.ROW_UNAVAILABLE_LABEL}</p>}
     </article>
   );
 })`

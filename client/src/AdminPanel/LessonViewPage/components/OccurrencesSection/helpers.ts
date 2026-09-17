@@ -15,41 +15,41 @@ const hasPlaceChanged = (lesson: LessonResponse, place: LessonOccurrence['place'
 
 // One occurrence date needs two independent fetches: `AdminOccurrenceListResponse`
 // for the resolved time/place/status, and `LessonExceptionListResponse` for
-// the numeric exception id a write has to address. This is the one place
-// that join happens, by date, so no row is ever fetched on its own (root
-// CLAUDE.md, Async and data access).
+// the exception record a write has to address. This is the one place that
+// join happens, by date, so no row is ever fetched on its own (root
+// CLAUDE.md, Async and data access). `hasExistingException` is computed
+// once here, off the occurrence's own resolved fields, and reused by both
+// `canWriteRow` (below) and `OccurrenceRow.tsx` (whether Restore renders),
+// rather than each recomputing it.
 export const joinOccurrencesWithExceptions = (
   occurrences: LessonOccurrence[],
   exceptions: LessonExceptionResponse[],
   lesson: LessonResponse,
 ): OccurrenceRowData[] => {
-  const exceptionIdByDate = new Map(exceptions.map((exception) => [exception.date, exception.id] as const));
+  const exceptionByDate = new Map(exceptions.map((exception) => [exception.date, exception] as const));
 
-  return occurrences.map((occurrence) => ({
-    date: occurrence.date,
-    dateLabel: occurrenceDateLabel(occurrence.date),
-    startTime: occurrence.startTime,
-    status: occurrence.status,
-    placeName: occurrence.place.name,
-    cityName: occurrence.place.city,
-    cancellationReason: occurrence.cancellationReason,
-    exceptionId: exceptionIdByDate.get(occurrence.date),
-    movedFromTime: occurrence.status === 'scheduled' && occurrence.startTime !== lesson.startTime ? lesson.startTime : undefined,
-    placeChanged: occurrence.status === 'scheduled' && hasPlaceChanged(lesson, occurrence.place),
-  }));
+  return occurrences.map((occurrence) => {
+    const movedFromTime = occurrence.status === 'scheduled' && occurrence.startTime !== lesson.startTime ? lesson.startTime : undefined;
+    const placeChanged = occurrence.status === 'scheduled' && hasPlaceChanged(lesson, occurrence.place);
+
+    return {
+      date: occurrence.date,
+      dateLabel: occurrenceDateLabel(occurrence.date),
+      startTime: occurrence.startTime,
+      status: occurrence.status,
+      placeName: occurrence.place.name,
+      cityName: occurrence.place.city,
+      cancellationReason: occurrence.cancellationReason,
+      movedFromTime,
+      placeChanged,
+      hasExistingException: occurrence.status === 'cancelled' || movedFromTime !== undefined || placeChanged,
+      existingException: exceptionByDate.get(occurrence.date),
+    };
+  });
 };
 
-// True when this date already carries an exception record, whether or not
-// its id actually resolved: cancelled and moved are both derived straight
-// off the occurrence's own resolved fields, so this is known even while
-// the exceptions fetch is still failing. Writing to a date in this state
-// has to address the existing exception (PATCH/DELETE), so it needs the
-// id; a plain scheduled date can always be written with a fresh POST.
-export const hasExistingException = (row: OccurrenceRowData): boolean =>
-  row.status === 'cancelled' || row.movedFromTime !== undefined || row.placeChanged;
-
 // False only when a date already has an exception and the exceptions fetch
-// that would carry its id has failed (`OccurrencesSection.tsx`'s
-// `exceptionsUnavailable` state passes every row through this with an
-// empty exceptions list, so `exceptionId` is undefined everywhere).
-export const canWriteRow = (row: OccurrenceRowData): boolean => !hasExistingException(row) || row.exceptionId !== undefined;
+// that would carry it has failed (`OccurrencesSection.tsx`'s
+// `exceptionsUnavailable` state passes every row through this join with an
+// empty exceptions list, so `existingException` is undefined everywhere).
+export const canWriteRow = (row: OccurrenceRowData): boolean => !row.hasExistingException || row.existingException !== undefined;

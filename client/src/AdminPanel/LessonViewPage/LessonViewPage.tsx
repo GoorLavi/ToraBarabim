@@ -133,7 +133,7 @@ export const LessonViewPage = styled(({ className }: LessonViewPageProps) => {
             <RecordField label={consts.AUDIENCE_LABEL} value={AUDIENCE_LABELS[lesson.audience]} />
           </div>
 
-          <OccurrencesSection className="occurrences" lessonId={lesson.id} lesson={lesson} />
+          <OccurrencesSection className="occurrences" {...{ lesson }} />
         </div>
 
         <aside className="preview">

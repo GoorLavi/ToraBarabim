@@ -16,7 +16,17 @@ export const useLessonOccurrences = (lessonId: string, lesson: LessonResponse): 
   const occurrencesQuery = useQuery({ queryKey: ADMIN_QUERY_KEYS.lessonOccurrences(lessonId), queryFn: () => fetchAdminOccurrences(lessonId) });
   const exceptionsQuery = useQuery({ queryKey: ADMIN_QUERY_KEYS.lessonExceptions(lessonId), queryFn: () => fetchAdminLessonExceptions(lessonId) });
 
-  if (occurrencesQuery.error instanceof AdminApiError) {
+  // Gated on `isError`, not on `error instanceof AdminApiError`: a
+  // malformed response throws something `request` never wrapped, and
+  // gating on the instance check alone left that case with `isPending`
+  // false and `data` still undefined, which read as 'pending' forever
+  // with nothing logged. The instance check only chooses whether there is
+  // a recognised error to fall through on quietly or an unexpected one
+  // worth a console line.
+  if (occurrencesQuery.isError) {
+    if (!(occurrencesQuery.error instanceof AdminApiError)) {
+      console.error('unexpected error loading lesson occurrences', { lessonId, error: occurrencesQuery.error });
+    }
     return { status: 'error', retry: () => void occurrencesQuery.refetch() };
   }
 
@@ -24,7 +34,10 @@ export const useLessonOccurrences = (lessonId: string, lesson: LessonResponse): 
 
   if (occurrencesQuery.data.items.length === 0) return { status: 'empty' };
 
-  const exceptionsFailed = exceptionsQuery.error instanceof AdminApiError;
+  const exceptionsFailed = exceptionsQuery.isError;
+  if (exceptionsFailed && !(exceptionsQuery.error instanceof AdminApiError)) {
+    console.error('unexpected error loading lesson exceptions', { lessonId, error: exceptionsQuery.error });
+  }
   if (!exceptionsFailed && exceptionsQuery.isPending) return { status: 'pending' };
 
   const exceptions = exceptionsFailed || !exceptionsQuery.data ? [] : exceptionsQuery.data.items;

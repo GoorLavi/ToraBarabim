@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { adminErrorMessage } from '~/AdminPanel/helpers';
 import * as parentConsts from '~/AdminPanel/LessonViewPage/components/OccurrencesSection/consts';
 import { useMoveOccurrenceException } from '~/AdminPanel/LessonViewPage/components/OccurrencesSection/useMoveOccurrenceException';
+import { FLOOR_LABEL } from '~/AdminPanel/LessonViewPage/consts';
 import { CitySelect } from '~/components/CitySelect/CitySelect';
 import { ResponsiveSheet } from '~/components/ResponsiveSheet/ResponsiveSheet';
 import { directionForValue } from '~/helpers';
@@ -17,19 +18,34 @@ export const MoveExceptionSheet = styled(({ className, lessonId, row, onDismiss 
   const [form, setForm] = useState(() => initialMoveFormState(row));
   const [fieldErrors, setFieldErrors] = useState<MoveFormErrors>({});
 
+  // Move only ever opens on a scheduled row, so an existing exception here
+  // is always 'modified' (see `helpers.ts`'s `existingPlace`); its
+  // substitute rabbi and note have no control on this sheet, so they are
+  // carried through unchanged rather than dropped by the full-replacement
+  // write the server does.
+  const existingModified = row.existingException?.kind === 'modified' ? row.existingException : undefined;
+
   const handleSubmit = (): void => {
     const errors = validateMoveForm(form);
     setFieldErrors(errors);
     if (Object.keys(errors).length > 0) return;
 
     move.mutate(
-      { lessonId, date: row.date, existingExceptionId: row.exceptionId, startTime: form.startTime, place: buildMovePlace(form) },
+      {
+        lessonId,
+        date: row.date,
+        existingExceptionId: row.existingException?.id,
+        startTime: form.startTime,
+        place: buildMovePlace(form),
+        substituteRabbiId: existingModified?.substituteRabbiId,
+        note: existingModified?.note,
+      },
       { onSuccess: onDismiss },
     );
   };
 
   return (
-    <ResponsiveSheet className={className} ariaLabel={parentConsts.MOVE_SHEET_HEADING} onDismiss={onDismiss}>
+    <ResponsiveSheet className={className} {...{ ariaLabel: parentConsts.MOVE_SHEET_HEADING, onDismiss }}>
       <h2 className="heading">{parentConsts.MOVE_SHEET_HEADING}</h2>
 
       <div className="form">
@@ -81,6 +97,16 @@ export const MoveExceptionSheet = styled(({ className, lessonId, row, onDismiss 
                 onChange={(event) => setForm((prev) => ({ ...prev, street: event.target.value }))}
               />
               {fieldErrors.street && <span className="error">{fieldErrors.street}</span>}
+            </label>
+
+            <label className="field">
+              <span className="label">{FLOOR_LABEL}</span>
+              <input
+                type="text"
+                dir={directionForValue(form.floor)}
+                value={form.floor}
+                onChange={(event) => setForm((prev) => ({ ...prev, floor: event.target.value }))}
+              />
             </label>
           </div>
         )}

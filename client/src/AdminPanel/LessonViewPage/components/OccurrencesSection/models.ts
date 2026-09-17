@@ -1,10 +1,9 @@
-import type { LessonResponse } from '@torabarabim/common';
+import type { LessonExceptionResponse, LessonResponse } from '@torabarabim/common';
 
 // One occurrence date, joined from `AdminOccurrenceListResponse` (the
 // resolved time/place/status for this date) and `LessonExceptionListResponse`
-// (the numeric id of the exception on this date, if any). See
-// `helpers.ts`'s `joinOccurrencesWithExceptions`, the one place that join
-// happens.
+// (the exception record on this date, if any). See `helpers.ts`'s
+// `joinOccurrencesWithExceptions`, the one place that join happens.
 export interface OccurrenceRowData {
   date: string;
   dateLabel: string;
@@ -13,12 +12,6 @@ export interface OccurrenceRowData {
   placeName: string;
   cityName: string;
   cancellationReason: string | undefined;
-  // The exception's id when the exceptions list resolved and this date
-  // carries one. Undefined either because the date has no exception yet,
-  // or because the exceptions fetch failed and the id could not be
-  // resolved (see `OccurrencesSection.tsx`'s `exceptionsUnavailable`
-  // state): `hasExistingException` below is what tells those two apart.
-  exceptionId: number | undefined;
   // The lesson's own recurring start time, present only when this date's
   // time was moved away from it.
   movedFromTime: string | undefined;
@@ -26,6 +19,21 @@ export interface OccurrenceRowData {
   // in any of name, street, or city: one flag for the whole place, never
   // one per field, matching the design's single "המקום שונה" tag.
   placeChanged: boolean;
+  // True when this date already carries an exception record (cancelled,
+  // or modified in its time or place), computed once here from the
+  // occurrence's own resolved fields, so it is known even while the
+  // exceptions fetch is failing. Writing to a date in this state has to
+  // address the existing exception (PATCH/DELETE), so it needs
+  // `existingException`; a plain scheduled date can always be written
+  // with a fresh POST.
+  hasExistingException: boolean;
+  // The exception this date's row is built from, present only when the
+  // exceptions fetch resolved and this date carries one. Carrying the
+  // whole record, not just its id, lets the move sheet prefill from, and
+  // save over, every field it does not itself present a control for
+  // (`place.floor`, `substituteRabbiId`, `note`), so a time-only edit
+  // does not null them out on the full-replacement write the server does.
+  existingException: LessonExceptionResponse | undefined;
 }
 
 export type OccurrencesSectionState =
@@ -33,9 +41,9 @@ export type OccurrencesSectionState =
   | { status: 'error'; retry: () => void }
   | { status: 'empty' }
   // Occurrences resolved but the exceptions fetch failed: the list still
-  // renders (every field a row needs besides the exception id comes
-  // straight off the occurrence itself), but a date that already carries
-  // an exception cannot be edited or restored without that id.
+  // renders (every field a row needs besides the exception itself comes
+  // straight off the occurrence), but a date that already carries an
+  // exception cannot be edited or restored without it.
   | { status: 'exceptionsUnavailable'; rows: OccurrenceRowData[]; retry: () => void }
   | { status: 'success'; rows: OccurrenceRowData[] };
 
@@ -43,6 +51,5 @@ export type ActiveSheet = { kind: 'cancel' | 'move'; row: OccurrenceRowData } | 
 
 export interface OccurrencesSectionProps {
   className?: string;
-  lessonId: string;
   lesson: LessonResponse;
 }
