@@ -337,6 +337,14 @@ cancels the gutter and re-applies the same value as its own inline padding, so t
 card lines up under its heading and the last card still gets trailing space. Nothing about
 this may be written as a left or a right.
 
+**The admin panel is denser than the public site.** The public spacing rules are written
+for a first-time visitor reading outdoors. The panel is an internal tool used repeatedly
+by a small trusted group, so it steps one stop tighter on the same base-4 scale: card
+padding `md` (12) rather than `lg` (16), gaps one stop down, and a record's fields render
+as a label-and-value list rather than one card per group. **Type sizes and the 48px tap
+target do not change: density comes from spacing, never from smaller text or smaller
+targets.**
+
 ### Radii
 Four values, and no others.
 
