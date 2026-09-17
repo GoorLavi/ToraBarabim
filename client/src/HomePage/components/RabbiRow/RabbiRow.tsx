@@ -19,7 +19,7 @@ export const RabbiRow = styled(({ className, rabbis, isLoading, isError }: Rabbi
   if (!isLoading && !isError && (!rabbis || rabbis.length === 0)) return null;
 
   return (
-    <section className={className}>
+    <section className={className} aria-busy={isLoading}>
       <div className="heading">
         <h2>{consts.HEADING}</h2>
         <TextLink
@@ -39,13 +39,18 @@ export const RabbiRow = styled(({ className, rabbis, isLoading, isError }: Rabbi
       )}
 
       {!isError && isLoading && (
-        <ul className="row" aria-hidden="true">
-          {consts.SKELETON_KEYS.map((key) => (
-            <li key={key}>
-              <RabbiAvatarSkeleton />
-            </li>
-          ))}
-        </ul>
+        <>
+          <span className="srOnly" aria-live="polite">
+            {consts.LOADING_MESSAGE}
+          </span>
+          <ul className="row" aria-hidden="true">
+            {consts.SKELETON_KEYS.map((key) => (
+              <li key={key}>
+                <RabbiAvatarSkeleton />
+              </li>
+            ))}
+          </ul>
+        </>
       )}
 
       {!isError && !isLoading && (

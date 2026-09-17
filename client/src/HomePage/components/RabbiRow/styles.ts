@@ -29,6 +29,15 @@ export const RabbiRow = css(
     }
   }
 
+  > .srOnly {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
   > .error {
     color: ${theme.colors.danger};
     font-size: ${theme.typography.body.phone.fontSize};
