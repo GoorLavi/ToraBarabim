@@ -29,7 +29,7 @@ export const RabbisPage = styled(({ className, directory }: RabbisPageProps) => 
     ? consts.NO_RESULTS_SUBLINE
     : isSearchActive
       ? rabbiMatchCountLabel(filteredRabbis)
-      : `${rabbiCountLabel(rabbis.length, directory)} · ${consts.ORDER_LABEL}`;
+      : rabbiCountLabel(rabbis.length, directory);
 
   return (
     <main className={className}>

@@ -29,14 +29,10 @@ export const RabbiRow = css(
     }
   }
 
-  > .state {
-    color: ${theme.colors.textSecondary};
+  > .error {
+    color: ${theme.colors.danger};
     font-size: ${theme.typography.body.phone.fontSize};
     line-height: ${theme.typography.body.phone.lineHeight};
-  }
-
-  > .state.error {
-    color: ${theme.colors.danger};
   }
 
   > .row {

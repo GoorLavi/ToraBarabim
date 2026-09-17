@@ -1,10 +1,14 @@
-import type { RabbiProminence } from '@torabarabim/common';
-
 // The length of the home window in days, counting today as day one.
 export const HOME_WINDOW_DAYS = 14;
 
 export const MAX_ITEMS_PER_ROW = 12;
 export const MIN_ITEMS_PER_ROW = 3;
+
+// The "לפי רב" avatar row's cap. At the widest supported layout exactly
+// twelve avatars fill the rail edge to edge, so any cap of twelve or less
+// ends the row flush and reads as "these are all the rabbis there are".
+// Sixteen always leaves the next avatar peeking, at every width.
+export const HOME_RABBI_ROW_CAP = 16;
 
 // The women's-area tile's slot within the row that carries it: the fourth
 // item (0-based index 3), at every width.
@@ -25,10 +29,3 @@ export const WOMENS_AREA_TILE_ROW_CADENCE = 3;
 
 // 0-based index of the first candidate row (the second row).
 export const WOMENS_AREA_TILE_FIRST_CANDIDATE_ROW = 1;
-
-// Lower rank sorts first: sought, then known, then local.
-export const PROMINENCE_RANK: Record<RabbiProminence, number> = {
-  sought: 0,
-  known: 1,
-  local: 2,
-};

@@ -12,8 +12,9 @@ export interface AdminUser {
   isSuper: boolean;
 }
 
-// `prominence` is an admin-only field: it drives home-row sort order and
-// must never appear on the public `Rabbi` type or any public response.
+// `prominence` is an admin-only field: it orders the home page's rabbi row
+// and the public rabbi directory, and must never appear on the public
+// `Rabbi` type or any public response.
 // `slug` is also excluded here: it is derived server-side from `name`, an
 // admin never sends one, so a create or update request never carries it.
 // `honorific` is optional here, unlike on the read-side `Rabbi`: the
