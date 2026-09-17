@@ -23,7 +23,7 @@ export const RabbiPreviewCard = css(
 
     > .photo {
       inline-size: 100%;
-      aspect-ratio: 2 / 3;
+      aspect-ratio: 3 / 4;
       object-fit: cover;
       background: ${theme.colors.primarySoft};
 
