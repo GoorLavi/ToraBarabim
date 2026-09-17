@@ -4,22 +4,23 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components';
 
 import { AdminApiError } from '~/AdminPanel/api';
-import { ADMIN_ROUTES } from '~/AdminPanel/consts';
+import { LessonPreviewCard } from '~/AdminPanel/components/LessonPreviewCard/LessonPreviewCard';
+import { ADMIN_ROUTES, PRESELECTED_RABBI_PARAM } from '~/AdminPanel/consts';
 import { adminErrorMessage } from '~/AdminPanel/helpers';
+import { useExistingLesson } from '~/AdminPanel/useExistingLesson';
 import { AudiencePicker } from '~/components/AudiencePicker/AudiencePicker';
 import { CitySelect } from '~/components/CitySelect/CitySelect';
 import { ReadOnlyField } from '~/components/ReadOnlyField/ReadOnlyField';
 import { RecurrenceFields } from '~/components/RecurrenceFields/RecurrenceFields';
 import { directionForValue } from '~/helpers';
-import { AUDIENCE_LABELS } from '~/consts';
+import { AUDIENCE_LABELS, RABBI_HONORIFIC_LABELS } from '~/consts';
 
-import { LessonPreviewCard } from './components/LessonPreviewCard/LessonPreviewCard';
+import { DiscardChangesSheet } from './components/DiscardChangesSheet/DiscardChangesSheet';
 import { RabbiPicker } from './components/RabbiPicker/RabbiPicker';
 import * as consts from './consts';
-import { initialFormState, lessonToFormState, pageHeading, previewWeekdayLabel, validateLessonForm } from './helpers';
+import { initialFormState, isLessonFormDirty, lessonToFormState, pageHeading, previewWeekdayLabel, validateLessonForm } from './helpers';
 import type { LessonFormErrors, LessonFormPageProps, LessonFormState } from './models';
 import * as styles from './styles';
-import { useExistingLesson } from './useExistingLesson';
 import { usePreselectedRabbi } from './usePreselectedRabbi';
 import { useSaveLesson } from './useSaveLesson';
 
@@ -29,13 +30,14 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
   const navigate = useNavigate();
 
   const existing = useExistingLesson(id);
-  const preselectedRabbi = usePreselectedRabbi(id ? null : searchParams.get('rabbiId'));
+  const preselectedRabbi = usePreselectedRabbi(id ? null : searchParams.get(PRESELECTED_RABBI_PARAM));
   const saveLesson = useSaveLesson();
 
   const [form, setForm] = useState<LessonFormState>(() => initialFormState(undefined));
   const [isLoadedFromExisting, setIsLoadedFromExisting] = useState(false);
   const [hasAppliedPreselect, setHasAppliedPreselect] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<LessonFormErrors>({});
+  const [isDiscardSheetOpen, setIsDiscardSheetOpen] = useState(false);
 
   const rabbiSectionRef = useRef<HTMLElement>(null);
   const whenSectionRef = useRef<HTMLElement>(null);
@@ -106,6 +108,11 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
 
   const failingSections = consts.SECTION_DEFS.filter((section) => section.fields.some((field) => fieldErrors[field]));
 
+  // Only meaningful in edit mode: whether the form has moved away from
+  // what was loaded, gating the cancel-confirm sheet below.
+  const loadedForm = existing.status === 'success' ? lessonToFormState(existing.data.lesson, existing.data.rabbi, existing.data.city) : undefined;
+  const isDirty = Boolean(id && loadedForm && isLessonFormDirty(form, loadedForm));
+
   const submit = (afterSave: 'list' | 'again'): void => {
     const errors = validateLessonForm(effectiveForm);
     setFieldErrors(errors);
@@ -121,22 +128,32 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
       { form: effectiveForm, existingLessonId: id },
       {
         onSuccess: () => {
-          if (afterSave === 'list') {
-            navigate(ADMIN_ROUTES.lessons);
-          } else {
+          if (afterSave === 'again') {
             setForm(initialFormState(undefined));
             setFieldErrors({});
+            return;
           }
+          navigate(id ? ADMIN_ROUTES.lessonView(id) : ADMIN_ROUTES.lessons);
         },
       },
     );
   };
 
+  const leaveEditing = (): void => {
+    if (id) navigate(ADMIN_ROUTES.lessonView(id));
+  };
+
   return (
     <div className={className}>
-      <Link className="breadcrumb" to={ADMIN_ROUTES.lessons}>
-        {consts.BACK_TO_LIST_LABEL}
-      </Link>
+      {id ? (
+        <button type="button" className="breadcrumb" onClick={() => (isDirty ? setIsDiscardSheetOpen(true) : leaveEditing())}>
+          {consts.BACK_TO_LESSON_LABEL}
+        </button>
+      ) : (
+        <Link className="breadcrumb" to={ADMIN_ROUTES.lessons}>
+          {consts.BACK_TO_LIST_LABEL}
+        </Link>
+      )}
 
       <div className="layout">
         <form
@@ -175,7 +192,9 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
                 value={form.title}
                 onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
               />
-              <span className="helper">{consts.TITLE_HELPER}</span>
+              <span className="helper">
+                {form.rabbi ? consts.titleHelper(RABBI_HONORIFIC_LABELS[form.rabbi.honorific]) : consts.TITLE_HELPER_NO_RABBI}
+              </span>
             </label>
           </section>
 
@@ -279,15 +298,35 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
           )}
 
           <div className="footer">
-            <Link className="cancel" to={ADMIN_ROUTES.lessons}>
-              {consts.CANCEL_LABEL}
-            </Link>
-            <button type="button" className="saveAndAddAnother" disabled={saveLesson.isPending} onClick={() => submit('again')}>
-              {consts.SAVE_AND_ADD_ANOTHER_LABEL}
-            </button>
-            <button type="submit" className="save" disabled={saveLesson.isPending}>
-              {saveLesson.isPending ? consts.SAVING_LABEL : consts.SAVE_LABEL}
-            </button>
+            {id ? (
+              // Edit mode: save leads in DOM order too, not just visually,
+              // so focus order matches what's on screen. Cancel discards
+              // work here instead of being a free navigation, so it gives
+              // up the most thumb-reachable spot. "Save and add another"
+              // does not apply to an existing record (it would silently
+              // rebind the blank form to this record's id and overwrite it
+              // on the next save), so it is not offered in edit mode.
+              <>
+                <button type="submit" className="save" disabled={saveLesson.isPending}>
+                  {saveLesson.isPending ? consts.SAVING_LABEL : consts.SAVE_LABEL}
+                </button>
+                <button type="button" className="cancel" onClick={() => (isDirty ? setIsDiscardSheetOpen(true) : leaveEditing())}>
+                  {consts.CANCEL_LABEL}
+                </button>
+              </>
+            ) : (
+              <>
+                <Link className="cancel" to={ADMIN_ROUTES.lessons}>
+                  {consts.CANCEL_LABEL}
+                </Link>
+                <button type="button" className="saveAndAddAnother" disabled={saveLesson.isPending} onClick={() => submit('again')}>
+                  {consts.SAVE_AND_ADD_ANOTHER_LABEL}
+                </button>
+                <button type="submit" className="save" disabled={saveLesson.isPending}>
+                  {saveLesson.isPending ? consts.SAVING_LABEL : consts.SAVE_LABEL}
+                </button>
+              </>
+            )}
           </div>
         </form>
 
@@ -302,6 +341,10 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
           />
         </aside>
       </div>
+
+      {isDiscardSheetOpen && (
+        <DiscardChangesSheet onConfirm={leaveEditing} onDismiss={() => setIsDiscardSheetOpen(false)} />
+      )}
     </div>
   );
 })`

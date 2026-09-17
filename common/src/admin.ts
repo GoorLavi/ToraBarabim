@@ -2,6 +2,7 @@ import type { LessonProvenance } from './agent-import';
 import type { RabbiProminence } from './home';
 import type { LessonException } from './lesson-exception';
 import type { Lesson, ResolvedLessonPlace } from './lesson';
+import type { LessonOccurrence } from './lesson-occurrence';
 import type { Rabbi, RabbiHonorific } from './rabbi';
 
 // Never carries passwordHash: that stays server-side.
@@ -12,8 +13,9 @@ export interface AdminUser {
   isSuper: boolean;
 }
 
-// `prominence` is an admin-only field: it drives home-row sort order and
-// must never appear on the public `Rabbi` type or any public response.
+// `prominence` is an admin-only field: it orders the home page's rabbi row
+// and the public rabbi directory, and must never appear on the public
+// `Rabbi` type or any public response.
 // `slug` is also excluded here: it is derived server-side from `name`, an
 // admin never sends one, so a create or update request never carries it.
 // `honorific` is optional here, unlike on the read-side `Rabbi`: the
@@ -90,6 +92,15 @@ export interface LessonListResponse {
 
 export interface LessonExceptionListResponse {
   items: LessonExceptionResponse[];
+}
+
+// A single lesson's own upcoming occurrences, the read model behind
+// cancelling or moving one date from the admin lesson screen. Distinct
+// from `RabbiOccurrenceListResponse` (`rabbi-portal.ts`): that one is a
+// rabbi's cross-lesson "what's coming up for me", this one is scoped to
+// one lesson id.
+export interface AdminOccurrenceListResponse {
+  items: LessonOccurrence[];
 }
 
 // An administrator's view of a rabbi's login account. Never carries

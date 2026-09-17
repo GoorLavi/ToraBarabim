@@ -1,3 +1,5 @@
+import type { RabbiProminence, Weekday } from '@torabarabim/common';
+
 import type { AdminLessonFilters, AdminRabbiFilters, AdminUserFilters } from './models';
 
 // Mirrors `server/src/service/admin-shared/consts.ts`'s `MAX_ADMIN_PAGE_SIZE`.
@@ -22,6 +24,62 @@ export const NOT_FOUND_MESSAGE = 'הרשומה המבוקשת לא נמצאה';
 // design, so this is written fresh (see the report for this slice).
 export const RATE_LIMITED_MESSAGE = 'יותר מדי ניסיונות כניסה. נסה שוב בעוד כמה דקות';
 
+// `Record`, not an array, so indexing by `Weekday` needs no bounds check:
+// every `Weekday` (0-6) has an entry by construction. Read by
+// `recurrenceWhenLabel`/`weeklyRecurrenceLabel` below, shared by
+// `LessonsListPage` and `RabbiViewPage`'s inline lesson rows, and by
+// `LessonFormPage`'s live preview and `LessonViewPage`'s "when" fields.
+export const WEEKDAY_LABELS: Record<Weekday, string> = {
+  0: 'יום ראשון',
+  1: 'יום שני',
+  2: 'יום שלישי',
+  3: 'יום רביעי',
+  4: 'יום חמישי',
+  5: 'יום שישי',
+  6: 'שבת',
+};
+
+// Bare weekday names, without the repeated 'יום', for joining several
+// weekdays into one line (see `weeklyRecurrenceLabel` in `helpers.ts`).
+export const WEEKDAY_BARE_LABELS: Record<Weekday, string> = {
+  0: 'ראשון',
+  1: 'שני',
+  2: 'שלישי',
+  3: 'רביעי',
+  4: 'חמישי',
+  5: 'שישי',
+  6: 'שבת',
+};
+
+export const UNTITLED_RABBI_FALLBACK = 'רב לא ידוע';
+
+// The one construction site for a new-lesson link preselecting its rabbi
+// (`usePreselectedRabbi` is the one reader). Named here because four
+// separate call sites used to hand-build this query string.
+export const PRESELECTED_RABBI_PARAM = 'rabbiId';
+
+// The row shape both `LessonViewPage` and `RabbiViewPage` skeletons need: a
+// fixed field count per render, never reordered or spliced, so no
+// placeholder can change position under a mounted node.
+export const skeletonFieldKeys = (fieldCount: number): string[] =>
+  Array.from({ length: fieldCount }, (_, index) => `skeleton-field-${index}`);
+
+// The one place that says "opens the record's own screen, not its edit
+// form" on a list row. Was 'עריכה' before the view-first redesign; renamed
+// once both `LessonsListPage` and `RabbisListPage` needed it, so it stops
+// being a promise the click no longer keeps.
+export const DETAILS_LABEL = 'פרטים';
+
+// Admin-only: drives the home page's rail order and is never shown to a
+// visitor (design-system.md has no public surface for it). Read by
+// `RabbiFormPage` (as an editable option list) and `RabbiViewPage` (as a
+// read-only value), the nearest ancestor both share.
+export const PROMINENCE_LABELS: Record<RabbiProminence, string> = {
+  local: 'אזורי',
+  known: 'מוכר',
+  sought: 'מבוקש',
+};
+
 export const ADMIN_QUERY_KEYS = {
   session: () => ['admin', 'session'] as const,
   rabbis: (filters: AdminRabbiFilters) => ['admin', 'rabbis', 'search', filters] as const,
@@ -30,6 +88,8 @@ export const ADMIN_QUERY_KEYS = {
   rabbiAccount: (id: string) => ['admin', 'rabbis', id, 'account'] as const,
   lessons: (filters: AdminLessonFilters) => ['admin', 'lessons', 'search', filters] as const,
   lesson: (id: string) => ['admin', 'lessons', id] as const,
+  lessonOccurrences: (lessonId: string) => ['admin', 'lessons', lessonId, 'occurrences'] as const,
+  lessonExceptions: (lessonId: string) => ['admin', 'lessons', lessonId, 'exceptions'] as const,
   adminUsers: (filters: AdminUserFilters) => ['admin', 'admin-users', 'search', filters] as const,
 };
 
@@ -37,10 +97,14 @@ export const ADMIN_ROUTES = {
   login: '/admin/login',
   lessons: '/admin/lessons',
   lessonNew: '/admin/lessons/new',
-  lessonEdit: (id: string) => `/admin/lessons/${id}`,
+  lessonView: (id: string) => `/admin/lessons/${id}`,
+  lessonEdit: (id: string) => `/admin/lessons/${id}/edit`,
   rabbis: '/admin/rabbis',
   rabbiNew: '/admin/rabbis/new',
-  rabbiEdit: (id: string) => `/admin/rabbis/${id}`,
+  rabbiView: (id: string) => `/admin/rabbis/${id}`,
+  rabbiEdit: (id: string) => `/admin/rabbis/${id}/edit`,
   admins: '/admin/admins',
   adminNew: '/admin/admins/new',
 };
+
+export const lessonNewForRabbi = (rabbiId: string): string => `${ADMIN_ROUTES.lessonNew}?${PRESELECTED_RABBI_PARAM}=${rabbiId}`;

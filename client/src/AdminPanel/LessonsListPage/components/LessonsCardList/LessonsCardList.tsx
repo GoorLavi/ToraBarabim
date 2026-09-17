@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { ADMIN_ROUTES } from '~/AdminPanel/consts';
+import { ADMIN_ROUTES, DETAILS_LABEL } from '~/AdminPanel/consts';
+import { lessonHasOwnTitle, lessonPrimaryLabel } from '~/AdminPanel/helpers';
+import { lessonDayTimeLabel } from '~/AdminPanel/LessonsListPage/helpers';
 import * as parentConsts from '~/AdminPanel/LessonsListPage/consts';
-import { lessonHasOwnTitle, lessonPrimaryLabel, recurrenceWhenLabel } from '~/AdminPanel/LessonsListPage/helpers';
 import { AUDIENCE_LABELS } from '~/consts';
 import { rabbiDisplayName } from '~/helpers';
 
@@ -18,18 +19,17 @@ export const LessonsCardList = styled(({ className, rows }: LessonsCardListProps
       <li key={row.lesson.id} className="card">
         <div className="lesson">
           <span className="primary" dir="auto">
-            {lessonPrimaryLabel(row)}
+            {lessonPrimaryLabel(row.lesson, row.rabbi)}
           </span>
-          {lessonHasOwnTitle(row) && row.rabbi && (
+          {lessonHasOwnTitle(row.lesson) && row.rabbi && (
             <span className="secondary" dir="auto">
               {rabbiDisplayName(row.rabbi)}
             </span>
           )}
         </div>
 
-        <div className="meta">
-          <span dir="auto">{recurrenceWhenLabel(row.lesson)}</span>
-          <span dir="ltr">{row.lesson.startTime}</span>
+        <div className="meta" dir="auto">
+          {lessonDayTimeLabel(row.lesson)}
         </div>
 
         <div className="tags">
@@ -40,8 +40,8 @@ export const LessonsCardList = styled(({ className, rows }: LessonsCardListProps
           </span>
         </div>
 
-        <Link className="edit" to={ADMIN_ROUTES.lessonEdit(row.lesson.id)}>
-          {parentConsts.EDIT_LABEL}
+        <Link className="edit" to={ADMIN_ROUTES.lessonView(row.lesson.id)}>
+          {DETAILS_LABEL}
         </Link>
       </li>
     ))}

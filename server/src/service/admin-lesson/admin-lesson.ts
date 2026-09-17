@@ -1,14 +1,18 @@
 import type { LessonAudience, Weekday } from '@torabarabim/common';
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
 import { db } from '../../db/client';
-import { cities, lessonExceptions, lessons } from '../../db/schema';
+import { cities, lessonExceptions, lessons, rabbis } from '../../db/schema';
+import { UPCOMING_OCCURRENCE_WINDOW_DAYS } from '../lesson/consts';
+import { addDays, todayInIsrael } from '../lesson/israel-time';
+import { applyException, compareOccurrences, expandLesson, resolveRecord, toExceptionDomain, toLessonDomain } from '../lesson/occurrence';
 import { dismissImportKey } from '../shared/dismiss-import';
 import { provenanceAfterHandEdit } from '../shared/hand-edit';
 import { assertAudienceAllowedForHonorific, getRabbiHonorific } from '../shared/rabbanit-guard';
+import { toRabbiSummary as toRabbi } from '../shared/rabbi-summary';
 import { LessonNotFoundError, ReferencedRabbiNotFoundError, UnknownCityError } from './errors';
-import type { CreateLessonInput, LessonListQuery, LessonListResult, LessonRecord, UpdateLessonInput } from './models';
+import type { AdminOccurrenceListResult, CreateLessonInput, LessonListQuery, LessonListResult, LessonRecord, UpdateLessonInput } from './models';
 
 // A lesson's `cityCode` always resolves (the column is `NOT NULL` and
 // references `cities.code`), so an inner join never drops a row.
@@ -174,4 +178,37 @@ export const remove = async (id: string): Promise<void> => {
     await tx.delete(lessons).where(eq(lessons.id, id));
     await dismissImportKey(row.importKey, tx);
   });
+};
+
+// One lesson's recurrence rule expanded across the same fixed window a
+// rabbi's own upcoming occurrences uses (`UPCOMING_OCCURRENCE_WINDOW_DAYS`),
+// so an admin sees exactly what a cancel or a move on this lesson would
+// act on. Reuses `expandLesson`/`applyException`/`resolveRecord`, per the
+// house rule on the recurrence expansion: a third hand-rolled copy is
+// exactly what that rule exists to prevent.
+export const listOccurrencesForLesson = async (lessonId: string, now: Date): Promise<AdminOccurrenceListResult> => {
+  const [lessonRow] = await db.select().from(lessons).where(eq(lessons.id, lessonId)).limit(1);
+  if (!lessonRow) throw new LessonNotFoundError(lessonId);
+
+  const from = todayInIsrael(now);
+  const to = addDays(from, UPCOMING_OCCURRENCE_WINDOW_DAYS - 1);
+
+  const [rabbiRows, cityRows, exceptionRows] = await Promise.all([
+    db.select().from(rabbis),
+    db.select({ code: cities.code, nameHe: cities.nameHe, area: cities.area }).from(cities),
+    db
+      .select()
+      .from(lessonExceptions)
+      .where(and(eq(lessonExceptions.lessonId, lessonId), gte(lessonExceptions.date, from), lte(lessonExceptions.date, to))),
+  ]);
+
+  const rabbiById = new Map(rabbiRows.map((row) => [row.id, toRabbi(row)] as const));
+  const cityByCode = new Map(cityRows.map((row) => [row.code, row] as const));
+  const exceptionByKey = new Map(exceptionRows.map((row) => [`${row.lessonId}:${row.date}`, toExceptionDomain(row)] as const));
+
+  const occurrences = expandLesson(toLessonDomain(lessonRow), from, to)
+    .map((raw) => applyException(raw, exceptionByKey.get(`${raw.lesson.id}:${raw.date}`)))
+    .sort(compareOccurrences);
+
+  return { items: occurrences.map((occurrence) => resolveRecord(occurrence, rabbiById, cityByCode)) };
 };

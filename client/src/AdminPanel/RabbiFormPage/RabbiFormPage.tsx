@@ -4,17 +4,19 @@ import type { RabbiProminence } from '@torabarabim/common';
 import classNames from 'classnames';
 import styled from 'styled-components';
 
-import { ADMIN_ROUTES } from '~/AdminPanel/consts';
+import { ADMIN_ROUTES, lessonNewForRabbi, PROMINENCE_LABELS } from '~/AdminPanel/consts';
 import { adminErrorMessage } from '~/AdminPanel/helpers';
 import { PhotoPicker } from '~/components/PhotoPicker/PhotoPicker';
 import { ReadOnlyField } from '~/components/ReadOnlyField/ReadOnlyField';
+import { RABBI_HONORIFIC_LABELS } from '~/consts';
 import { directionForValue, rabbiDisplayName } from '~/helpers';
 
 import { DeleteRabbiButton } from './components/DeleteRabbiButton/DeleteRabbiButton';
+import { DiscardChangesSheet } from './components/DiscardChangesSheet/DiscardChangesSheet';
 import { RabbiAccountSection } from './components/RabbiAccountSection/RabbiAccountSection';
 import { RabbiPreviewCard } from './components/RabbiPreviewCard/RabbiPreviewCard';
 import * as consts from './consts';
-import { pageHeading, validatePhotoFile, validateRabbiForm } from './helpers';
+import { isRabbiFormDirty, pageHeading, validatePhotoFile, validateRabbiForm } from './helpers';
 import type { RabbiFormErrors, RabbiFormPageProps, RabbiFormState } from './models';
 import * as styles from './styles';
 import { useExistingRabbi } from './useExistingRabbi';
@@ -43,6 +45,7 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
   const [form, setForm] = useState<RabbiFormState>(emptyForm);
   const [isLoadedFromExisting, setIsLoadedFromExisting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<RabbiFormErrors>({});
+  const [isDiscardSheetOpen, setIsDiscardSheetOpen] = useState(false);
 
   useEffect(() => {
     if (existingRabbi.data && !isLoadedFromExisting) {
@@ -91,6 +94,12 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
   const nameError = fieldErrors.name ?? (saveRabbi.stepError?.step === 'name' ? adminErrorMessage(saveRabbi.stepError.error) : undefined);
   const photoError = fieldErrors.photo ?? (saveRabbi.stepError?.step === 'photo' ? adminErrorMessage(saveRabbi.stepError.error) : undefined);
 
+  // Edit mode only: whether the draft has unsaved changes, so cancelling
+  // with nothing to lose skips the discard confirm-sheet (this slice's
+  // brief, "the same dirty-check confirm-sheet pattern").
+  const isDirty = Boolean(id && existingRabbi.data && isRabbiFormDirty(form, existingRabbi.data));
+  const cancelHref = id ? ADMIN_ROUTES.rabbiView(id) : ADMIN_ROUTES.rabbis;
+
   const handleSelectFile = (file: File): void => {
     const clientError = validatePhotoFile(file);
     setFieldErrors((prev) => ({ ...prev, photo: clientError }));
@@ -106,14 +115,14 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
     const rabbi = await saveRabbi.save(form, id);
     if (!rabbi) return;
 
-    if (after === 'firstLesson') navigate(`${ADMIN_ROUTES.lessonNew}?rabbiId=${rabbi.id}`);
-    else navigate(ADMIN_ROUTES.rabbis);
+    if (after === 'firstLesson') navigate(lessonNewForRabbi(rabbi.id));
+    else navigate(id ? ADMIN_ROUTES.rabbiView(rabbi.id) : ADMIN_ROUTES.rabbis);
   };
 
   return (
     <div className={className}>
-      <Link className="breadcrumb" to={ADMIN_ROUTES.rabbis}>
-        {consts.BACK_TO_LIST_LABEL}
+      <Link className="breadcrumb" to={cancelHref}>
+        {id ? consts.backToRabbiLabel(RABBI_HONORIFIC_LABELS[form.honorific]) : consts.BACK_TO_LIST_LABEL}
       </Link>
 
       <div className="layout">
@@ -133,7 +142,7 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
           {id ? (
             <ReadOnlyField
               label={consts.HONORIFIC_LABEL}
-              value={consts.HONORIFIC_LABELS[form.honorific]}
+              value={RABBI_HONORIFIC_LABELS[form.honorific]}
               helper={consts.HONORIFIC_READONLY_NOTE}
             />
           ) : (
@@ -149,7 +158,7 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
                     aria-checked={form.honorific === value}
                     onClick={() => setForm((prev) => ({ ...prev, honorific: value }))}
                   >
-                    {consts.HONORIFIC_LABELS[value]}
+                    {RABBI_HONORIFIC_LABELS[value]}
                   </button>
                 ))}
               </div>
@@ -200,7 +209,7 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
             >
               {consts.PROMINENCE_OPTIONS.map((value) => (
                 <option key={value} value={value}>
-                  {consts.PROMINENCE_LABELS[value]}
+                  {PROMINENCE_LABELS[value]}
                 </option>
               ))}
             </select>
@@ -220,15 +229,39 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
           <RabbiAccountSection rabbiId={id} rabbiName={form.name} />
 
           <div className="footer">
-            <Link className="cancel" to={ADMIN_ROUTES.rabbis}>
-              {consts.CANCEL_LABEL}
-            </Link>
-            <button type="button" className="saveAndAddLesson" disabled={saveRabbi.isSaving} onClick={() => void submit('firstLesson')}>
-              {consts.SAVE_AND_ADD_LESSON_LABEL}
-            </button>
-            <button type="submit" className="save" disabled={saveRabbi.isSaving}>
-              {saveRabbi.isSaving ? consts.SAVING_LABEL : consts.SAVE_LABEL}
-            </button>
+            {id ? (
+              <>
+                <button type="submit" className="save" disabled={saveRabbi.isSaving}>
+                  {saveRabbi.isSaving ? consts.SAVING_LABEL : consts.SAVE_LABEL}
+                </button>
+                <button type="button" className="saveAndAddLesson" disabled={saveRabbi.isSaving} onClick={() => void submit('firstLesson')}>
+                  {consts.SAVE_AND_ADD_LESSON_LABEL}
+                </button>
+                <Link
+                  className="cancel"
+                  to={cancelHref}
+                  onClick={(event) => {
+                    if (!isDirty) return;
+                    event.preventDefault();
+                    setIsDiscardSheetOpen(true);
+                  }}
+                >
+                  {consts.CANCEL_LABEL}
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link className="cancel" to={cancelHref}>
+                  {consts.CANCEL_LABEL}
+                </Link>
+                <button type="button" className="saveAndAddLesson" disabled={saveRabbi.isSaving} onClick={() => void submit('firstLesson')}>
+                  {consts.SAVE_AND_ADD_LESSON_LABEL}
+                </button>
+                <button type="submit" className="save" disabled={saveRabbi.isSaving}>
+                  {saveRabbi.isSaving ? consts.SAVING_LABEL : consts.SAVE_LABEL}
+                </button>
+              </>
+            )}
           </div>
 
           {id && (
@@ -242,6 +275,16 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
           <RabbiPreviewCard photoUrl={previewPhotoUrl} name={form.name.trim() ? rabbiDisplayName({ name: form.name, honorific: form.honorific }) : ''} />
         </aside>
       </div>
+
+      {isDiscardSheetOpen && (
+        <DiscardChangesSheet
+          onDiscard={() => {
+            setIsDiscardSheetOpen(false);
+            navigate(cancelHref);
+          }}
+          onDismiss={() => setIsDiscardSheetOpen(false)}
+        />
+      )}
     </div>
   );
 })`

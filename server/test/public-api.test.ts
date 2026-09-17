@@ -9,14 +9,17 @@ import type {
   LessonSearchResponse,
   RabbiDirectoryEntry,
   RabbiDirectoryResponse,
+  RabbiProminence,
   WomenAreaResponse,
 } from '@torabarabim/common';
 import type { FastifyInstance } from 'fastify';
 
+import { HOME_RABBI_ROW_CAP } from '../src/service/home/consts';
 import { selectAreaPreview } from '../src/service/lesson/area-preview';
 import { addDays, nextDateOnWeekday, todayInIsrael } from '../src/service/lesson/israel-time';
 import type { ResolvedLessonOccurrence } from '../src/service/lesson/models';
 import { rabbiNameSchema, stripLeadingHonorific } from '../src/service/shared/name';
+import { PROMINENCE_RANK } from '../src/service/shared/rabbi-order';
 import { toSlug } from '../src/service/shared/slug';
 import { assertClientBuilt, assertDatabaseReachable, buildApp, rawClient } from './app-harness';
 
@@ -40,6 +43,31 @@ const SEEDED_RABBANIT_VENUE_TEXT = 'בית יעל';
 // The rav's women-only lesson seeded for the women's area; see
 // `server/src/db/seed/lessons.ts`.
 const SEEDED_WOMEN_LESSON_ID = 'lesson-27';
+
+// The wire `Rabbi` never carries `prominence`, so the ordering assertions
+// read the seeded tiers from here, mirrored by hand from
+// `server/src/db/seed/lessons.ts`. rabbi-9 is the rabbanit and never
+// reaches the general home row. The database a developer runs the suite
+// against also holds imported rabbis whose tier is not known here, so the
+// assertions below check the seeded rabbis as a subsequence rather than
+// demanding that every rabbi in the response appear in this table.
+// Enough of the seeded rabbis to make the ordering assertion meaningful,
+// and low enough to survive the row's cap filling up with imported rabbis.
+const MIN_SEEDED_RABBIS_IN_ROW = 4;
+
+const SEEDED_TIER_BY_RABBI_ID: Record<string, RabbiProminence> = {
+  'rabbi-1': 'sought',
+  'rabbi-2': 'local',
+  'rabbi-3': 'known',
+  'rabbi-4': 'local',
+  'rabbi-5': 'known',
+  'rabbi-6': 'sought',
+  'rabbi-7': 'local',
+  'rabbi-8': 'known',
+  'rabbi-9': 'sought',
+  'rabbi-10': 'local',
+  'rabbi-11': 'known',
+};
 
 // A 14-day window, wide enough that a weekly lesson's next occurrence is
 // always inside it no matter what day the suite happens to run on, and
@@ -319,6 +347,34 @@ describe('public API', () => {
     }
   });
 
+  // The "לפי רב" avatar row: sorted by tier (sought before known before
+  // local), capped at 16, and never carrying a rabbanit (0026: she stays
+  // off the general home surfaces).
+  test('GET /v1/home returns a rabbi list sorted by tier, capped at 16, with no rabbanit in it', async () => {
+    const res = await app.inject({ method: 'GET', url: '/v1/home' });
+    assert.equal(res.statusCode, 200);
+
+    const body = res.json() as HomeResponse;
+    assert.ok(Array.isArray(body.rabbis));
+    assert.ok(body.rabbis.length > 0);
+    assert.ok(body.rabbis.length <= HOME_RABBI_ROW_CAP, 'the avatar row must never exceed its cap');
+    assert.ok(!body.rabbis.some((rabbi) => rabbi.honorific === 'rabbanit'));
+
+    let previousRank = -1;
+    let checkedCount = 0;
+    for (const rabbi of body.rabbis) {
+      const tier = SEEDED_TIER_BY_RABBI_ID[rabbi.id];
+      if (!tier) continue;
+      const rank = PROMINENCE_RANK[tier];
+      assert.ok(rank >= previousRank, `expected ${rabbi.id} (tier ${tier}) not to sort before an already-seen, higher tier`);
+      previousRank = rank;
+      checkedCount += 1;
+    }
+    // Without this the loop above would assert nothing at all the moment
+    // the seed ids change, and pass in silence.
+    assert.ok(checkedCount >= MIN_SEEDED_RABBIS_IN_ROW, `expected at least ${MIN_SEEDED_RABBIS_IN_ROW} seeded rabbis in the row, saw ${checkedCount}`);
+  });
+
   // Test 8: a populated summary lists both a rabbanit and a rav among the
   // teachers (the women's set is defined by audience, not by teacher), and
   // at least one city.
@@ -557,6 +613,45 @@ describe('public API', () => {
       const rabbanit = womenBody.items.find((item) => item.id === SEEDED_RABBANIT_ID);
       assert.ok(rabbanit);
       assert.equal(rabbanit.name, SEEDED_RABBANIT_NAME);
+    });
+
+    // Ordering rule 1: prominence tier, sought first. rabbi-1 and rabbi-6
+    // are seeded 'sought'; rabbi-2, 'local', must never sort before them.
+    test('returns the sought-after rabbis first', async () => {
+      const res = await app.inject({ method: 'GET', url: '/v1/rabbis?pageSize=50' });
+      assert.equal(res.statusCode, 200);
+      const body = res.json() as RabbiDirectoryResponse;
+
+      const indexOf = (id: string): number => body.items.findIndex((item) => item.id === id);
+      const soughtIndex = indexOf('rabbi-1');
+      const otherSoughtIndex = indexOf('rabbi-6');
+      const localIndex = indexOf('rabbi-2');
+      assert.ok(soughtIndex !== -1 && otherSoughtIndex !== -1 && localIndex !== -1);
+      assert.ok(soughtIndex < localIndex, 'a sought rabbi must sort before a local one');
+      assert.ok(otherSoughtIndex < localIndex, 'a sought rabbi must sort before a local one');
+    });
+
+    // Pagination is stable: two pages fetched separately never overlap, and
+    // concatenating them equals the prefix of one larger page, which is
+    // exactly what the client relies on when it fetches `/rabbis` page by
+    // page and concatenates the results itself.
+    test('pagination is stable: two pageSize=5 pages never duplicate an id, and concatenate to the pageSize=50 prefix', async () => {
+      const [page1Res, page2Res, allRes] = await Promise.all([
+        app.inject({ method: 'GET', url: '/v1/rabbis?page=1&pageSize=5' }),
+        app.inject({ method: 'GET', url: '/v1/rabbis?page=2&pageSize=5' }),
+        app.inject({ method: 'GET', url: '/v1/rabbis?pageSize=50' }),
+      ]);
+      assert.equal(page1Res.statusCode, 200);
+      assert.equal(page2Res.statusCode, 200);
+      assert.equal(allRes.statusCode, 200);
+
+      const page1Ids = (page1Res.json() as RabbiDirectoryResponse).items.map((item) => item.id);
+      const page2Ids = (page2Res.json() as RabbiDirectoryResponse).items.map((item) => item.id);
+      const allIds = (allRes.json() as RabbiDirectoryResponse).items.map((item) => item.id);
+
+      const combinedIds = [...page1Ids, ...page2Ids];
+      assert.equal(new Set(combinedIds).size, combinedIds.length, 'no id must appear in both pages');
+      assert.deepEqual(combinedIds, allIds.slice(0, combinedIds.length));
     });
   });
 

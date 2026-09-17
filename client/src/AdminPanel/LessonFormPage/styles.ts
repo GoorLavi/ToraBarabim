@@ -32,12 +32,28 @@ export const LessonFormPage = css(
   }
 
   > .breadcrumb {
+    /* The same class lands on a Link when creating a lesson and on a button
+       when editing one, and the global reset leaves a button's user-agent
+       padding alone, so without this the breadcrumb indents differently
+       between the two modes. */
     align-self: flex-start;
     display: flex;
     align-items: center;
     min-block-size: 48px;
+    padding: 0;
     color: ${theme.colors.primary};
     font-weight: ${theme.typography.fontWeight.semiBold};
+    text-decoration: none;
+
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    &:focus-visible {
+      text-decoration: underline;
+    }
   }
 
   > .layout {
@@ -68,12 +84,12 @@ export const LessonFormPage = css(
       > .heading {
         color: ${theme.colors.text};
         font-weight: ${theme.typography.pageHeading.fontWeight};
-        font-size: ${theme.typography.sectionHeading.phone.fontSize};
-        line-height: ${theme.typography.sectionHeading.phone.lineHeight};
+        font-size: ${theme.typography.pageHeading.phone.fontSize};
+        line-height: ${theme.typography.pageHeading.phone.lineHeight};
 
         @media (min-width: ${theme.breakpoints.md}) {
-          font-size: ${theme.typography.pageHeading.phone.fontSize};
-          line-height: ${theme.typography.pageHeading.phone.lineHeight};
+          font-size: ${theme.typography.pageHeading.desktop.fontSize};
+          line-height: ${theme.typography.pageHeading.desktop.lineHeight};
         }
       }
 
@@ -193,19 +209,53 @@ export const LessonFormPage = css(
 
       > .footer {
         display: flex;
-        flex-wrap: wrap;
-        align-items: center;
+        flex-direction: column;
         gap: ${theme.spacing.md};
 
+        /* The DOM order already puts the primary action where it belongs
+           in each mode (save leads in edit mode, trails in new-lesson
+           mode): below the md breakpoint the footer stacks in that order
+           at full width, so three buttons can never wrap and land the
+           primary action in the least prominent spot. From md up there is
+           room for a row. */
+        @media (min-width: ${theme.breakpoints.md}) {
+          flex-direction: row;
+          flex-wrap: wrap;
+          align-items: center;
+        }
+
         > .cancel {
+          inline-size: 100%;
           display: flex;
           align-items: center;
           min-block-size: 48px;
+          border: none;
+          background: none;
+          padding: 0;
           color: ${theme.colors.textSecondary};
           font-weight: ${theme.typography.fontWeight.semiBold};
+          font-size: ${theme.typography.body.phone.fontSize};
+          line-height: ${theme.typography.body.phone.lineHeight};
+          text-decoration: none;
+          cursor: pointer;
+
+          @media (min-width: ${theme.breakpoints.md}) {
+            inline-size: auto;
+          }
+
+          @media (hover: hover) and (pointer: fine) {
+            &:hover {
+              text-decoration: underline;
+            }
+          }
+
+          &:focus-visible {
+            text-decoration: underline;
+          }
         }
 
         > .saveAndAddAnother {
+          inline-size: 100%;
           min-block-size: 48px;
           padding-inline: ${theme.spacing.lg};
           border: 1px solid ${theme.colors.primary};
@@ -213,18 +263,27 @@ export const LessonFormPage = css(
           color: ${theme.colors.primary};
           font-weight: ${theme.typography.fontWeight.semiBold};
 
+          @media (min-width: ${theme.breakpoints.md}) {
+            inline-size: auto;
+          }
+
           &:disabled {
             opacity: 0.6;
           }
         }
 
         > .save {
+          inline-size: 100%;
           min-block-size: 48px;
           padding-inline: ${theme.spacing.xl};
           border-radius: ${theme.radii.pill};
           background: ${theme.colors.primary};
           color: ${theme.colors.textOnPrimary};
           font-weight: ${theme.typography.fontWeight.semiBold};
+
+          @media (min-width: ${theme.breakpoints.md}) {
+            inline-size: auto;
+          }
 
           &:disabled {
             opacity: 0.6;

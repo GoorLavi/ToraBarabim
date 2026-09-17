@@ -10,12 +10,13 @@ import { isLessonInScope, isRabbiInDirectoryScope } from '../shared/audience-sco
 import { AREA_NAMES_HE } from '../shared/consts';
 import { toCitySummary } from '../shared/city-summary';
 import { toPlace, type PlaceCityRow } from '../shared/place';
+import { compareRabbiOrder, PROMINENCE_RANK } from '../shared/rabbi-order';
 import { toRabbiSummary as toRabbi } from '../shared/rabbi-summary';
 import {
+  HOME_RABBI_ROW_CAP,
   HOME_WINDOW_DAYS,
   MAX_ITEMS_PER_ROW,
   MIN_ITEMS_PER_ROW,
-  PROMINENCE_RANK,
   WOMENS_AREA_TILE_FIRST_CANDIDATE_ROW,
   WOMENS_AREA_TILE_INDEX,
   WOMENS_AREA_TILE_MIN_LESSONS,
@@ -240,6 +241,7 @@ const loadWindow = async (now: Date): Promise<LoadedWindow> => {
 
   const rabbiRowById = new Map(rabbiRows.map((row) => [row.id, row] as const));
   const cityByCode = new Map(cityRows.map((row) => [row.code, row] as const));
+  const rabbiIdsWithLessons = new Set(lessonRows.map((row) => row.rabbiId));
 
   const lessonDomainById = new Map(lessonRows.map((row) => [row.id, toLessonDomain(row)] as const));
   const lessonIds = [...lessonDomainById.keys()];
@@ -262,11 +264,25 @@ const loadWindow = async (now: Date): Promise<LoadedWindow> => {
     .filter((occurrence) => occurrence.status === 'scheduled')
     .map((occurrence) => resolveRecord(occurrence, rabbiRowById, cityByCode));
 
-  return { from, resolved, cityByCode, rabbiRows };
+  return { from, resolved, cityByCode, rabbiRows, rabbiIdsWithLessons };
 };
 
 export const getHome = async (now: Date): Promise<HomeResult> => {
-  const { from: today, resolved: allResolved, cityByCode } = await loadWindow(now);
+  const { from: today, resolved: allResolved, cityByCode, rabbiRows, rabbiIdsWithLessons } = await loadWindow(now);
+
+  // The "לפי רב" avatar row: every rabbi in the general directory scope
+  // (0026: a rabbanit stays off this general surface, exactly as she does
+  // off the rows below), ordered by the shared tier/has-lessons/name/id
+  // rule and capped for the row's measured width.
+  const homeRabbis = [...rabbiRows]
+    .filter((row) => isRabbiInDirectoryScope('general', row.honorific))
+    .sort((a, b) =>
+      compareRabbiOrder(
+        { id: a.id, name: a.name, prominence: a.prominence, hasLessons: rabbiIdsWithLessons.has(a.id) },
+        { id: b.id, name: b.name, prominence: b.prominence, hasLessons: rabbiIdsWithLessons.has(b.id) },
+      ),
+    )
+    .slice(0, HOME_RABBI_ROW_CAP);
 
   const { lessonCount: womensAreaLessonCount } = buildWomensSet(allResolved, cityByCode);
 
@@ -323,7 +339,7 @@ export const getHome = async (now: Date): Promise<HomeResult> => {
     }
   }
 
-  return { rows, womensAreaLessonCount };
+  return { rows, womensAreaLessonCount, rabbis: homeRabbis };
 };
 
 export const getWomenArea = async (now: Date): Promise<WomenAreaResult> => {

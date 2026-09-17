@@ -4,25 +4,9 @@ import { Route, Routes } from 'react-router-dom';
 
 import { resolveTargetDate } from '~/HomePage/helpers';
 import { rabbiFixture } from '~/rabbiFixture';
+import { installMockFetch, jsonResponse, NEVER_RESOLVES } from '~/storyMocks';
 
 import { WomenPage } from './WomenPage';
-
-// No live API in Storybook's own preview server: see RabbiPage.stories.tsx
-// for why every route this page calls is answered here instead.
-const jsonResponse = (status: number, body: unknown): Response =>
-  new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
-
-const NEVER_RESOLVES = new Promise<Response>(() => {});
-
-const installMockFetch = (respond: (url: URL) => Response | Promise<Response> | null): void => {
-  const previousFetch = window.fetch;
-  window.fetch = (async (input, init) => {
-    const url = input instanceof Request ? new URL(input.url) : new URL(input.toString(), window.location.origin);
-    const result = respond(url);
-    if (result) return result;
-    return previousFetch(input, init);
-  }) as typeof fetch;
-};
 
 const rabbanit = rabbiFixture({ id: 'story-rabbanit', name: 'שרה גולדברג', honorific: 'rabbanit' });
 const rav = rabbiFixture({ id: 'story-rav', name: 'אברהם כהן' });

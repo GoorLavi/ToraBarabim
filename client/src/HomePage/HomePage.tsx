@@ -36,7 +36,7 @@ export const HomePage = styled(({ className }: HomePageProps) => {
     audience: audienceFilter,
   };
 
-  const homeRowsQuery = useHomeRows(mode === 'rail');
+  const homeRowsQuery = useHomeRows();
   const lessonsQuery = useLessonSearch(filters, mode === 'filtered');
 
   const browseItems = mode === 'rail' ? flattenHomeRows(homeRowsQuery.data) : lessonsQuery.data?.items;
@@ -81,7 +81,7 @@ export const HomePage = styled(({ className }: HomePageProps) => {
           )}
         </div>
 
-        <RabbiRow items={browseItems} isLoading={isBrowseLoading} isError={isBrowseError} />
+        <RabbiRow {...{ rabbis: homeRowsQuery.data?.rabbis, isLoading: homeRowsQuery.isPending, isError: homeRowsQuery.isError }} />
 
         <CityGrid items={browseItems} isLoading={isBrowseLoading} isError={isBrowseError} onSelectCity={selectCity} />
 

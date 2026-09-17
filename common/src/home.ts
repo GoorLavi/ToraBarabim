@@ -1,7 +1,9 @@
 import type { LessonOccurrence } from './lesson-occurrence';
+import type { Rabbi } from './rabbi';
 
-// A rabbi's prominence tier drives sort order within a home row only; it
-// never appears on `Rabbi` or on any occurrence the client receives.
+// A rabbi's prominence tier drives sort order within a home row and across
+// the "לפי רב" avatar row and the public rabbi directory; it never appears
+// on `Rabbi` or on any occurrence the client receives.
 export type RabbiProminence = 'local' | 'known' | 'sought';
 
 export type HomeRowId = 'area' | 'today' | 'bothAudiences' | 'weekly';
@@ -23,4 +25,10 @@ export interface HomeResponse {
   // `WomenAreaResponse`'s `lessonCount` when populated, since both are built
   // from the same women's-set step.
   womensAreaLessonCount: number;
+  // The "לפי רב" avatar row's rabbis, already sorted and capped
+  // server-side (see `rabbiService.list`'s ordering, shared by both
+  // surfaces). Always present, always an array, so the client never
+  // branches on it being missing. Excludes rabbaniyot, matching the rest of
+  // this general-scope response.
+  rabbis: Rabbi[];
 }

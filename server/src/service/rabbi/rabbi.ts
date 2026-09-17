@@ -3,6 +3,7 @@ import { eq, inArray, sql } from 'drizzle-orm';
 import { db } from '../../db/client';
 import { cities, lessons, rabbis } from '../../db/schema';
 import { isRabbiInDirectoryScope } from '../shared/audience-scope';
+import { compareRabbiOrder } from '../shared/rabbi-order';
 import { toRabbiSummary } from '../shared/rabbi-summary';
 import { toSlug } from '../shared/slug';
 import { RabbiNotFoundError } from './errors';
@@ -65,10 +66,24 @@ const toDirectoryEntry = (row: RabbiRow, stats: LessonStats): RabbiDirectoryEntr
   cities: stats.cities,
 });
 
+// One query for every rabbi id with at least one lesson, so ordering rule
+// 2 (has-lessons before none, within a tier) is decided for the whole list
+// before paging, not just for the page's own rows: a per-row query here
+// would run once per rabbi instead of once total.
+const loadRabbiIdsWithLessons = async (): Promise<Set<string>> => {
+  const rows = await db.selectDistinct({ rabbiId: lessons.rabbiId }).from(lessons);
+  return new Set(rows.map((row) => row.rabbiId));
+};
+
 export const list = async (query: RabbiListQuery): Promise<RabbiListResult> => {
-  const rows = await db.select().from(rabbis);
+  const [rows, rabbiIdsWithLessons] = await Promise.all([db.select().from(rabbis), loadRabbiIdsWithLessons()]);
   const scoped = rows.filter((row) => isRabbiInDirectoryScope(query.scope, row.honorific));
-  const sorted = [...scoped].sort((a, b) => collator.compare(a.name, b.name));
+  const sorted = [...scoped].sort((a, b) =>
+    compareRabbiOrder(
+      { id: a.id, name: a.name, prominence: a.prominence, hasLessons: rabbiIdsWithLessons.has(a.id) },
+      { id: b.id, name: b.name, prominence: b.prominence, hasLessons: rabbiIdsWithLessons.has(b.id) },
+    ),
+  );
 
   const total = sorted.length;
   const start = (query.page - 1) * query.pageSize;

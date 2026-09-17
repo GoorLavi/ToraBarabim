@@ -1,28 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { userEvent, within } from 'storybook/test';
 
+import { installMockFetch, jsonResponse } from '~/storyMocks';
+
 import { LoginPage } from './LoginPage';
 
-// No live API in Storybook's own preview server: every route this page
-// calls is answered here instead. Chains onto whatever `window.fetch`
-// already is, and installs/restores through `beforeEach` so the mock
-// never leaks into a story outside this file.
-const jsonResponse = (status: number, body: unknown): Response =>
-  new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
-
-const installMockFetch = (respond: (url: URL) => Response | Promise<Response> | null): (() => void) => {
-  const previousFetch = window.fetch;
-  window.fetch = (async (input, init) => {
-    const url = input instanceof Request ? new URL(input.url) : new URL(input.toString(), window.location.origin);
-    const result = respond(url);
-    if (result) return result;
-    return previousFetch(input, init);
-  }) as typeof fetch;
-  return () => {
-    window.fetch = previousFetch;
-  };
-};
-
+// Installs/restores through `beforeEach` so the mock never leaks into a
+// story outside this file; see `~/storyMocks` for why every route this page
+// calls has to be answered here at all.
 const meta: Meta<typeof LoginPage> = {
   title: 'RabbiPanel/LoginPage',
   component: LoginPage,

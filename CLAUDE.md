@@ -246,6 +246,16 @@ different sentences and they are not interchangeable:
 
 - **A screenshot is never proof of correctness.** Rendering the UI is design judgment.
   Say "the design is right", never "it works".
+- **A change with a design is rendered in Storybook and approved by `tora-designer`
+  before it goes to the human or into a pull request.** Every screen the change
+  touches, in every state it has, on mocked data. This is a gate, not a courtesy: the
+  app needs a database and a root `.env` that a sandbox does not have, so Storybook is
+  the only place most agents can see a screen at all, and a design nobody has looked at
+  is not ready however clean its build. A `fix` verdict is fixed and rendered again,
+  and the loop repeats until the verdict is `approved`.
+- **The stories are part of the builder's slice, like the tests.** They are what keeps
+  that loop to minutes rather than a project of its own, and a screen with no story is
+  a screen that silently skips the gate.
 - **A test is written against a defect or a guarantee, never against a coverage
   target.** The suite exists because this project shipped bugs a test would have
   caught; each one earned its assertion.
@@ -408,8 +418,11 @@ Figma is where new design happens; code is the source of truth for what ships.
   in `.claude/design-system.md`. Figma mirrors code, not the other way around.
 - **Figma is upstream for new design.** A redesign starts in Figma, gets approved, is
   implemented in code, and then the tokens and the design system update to match.
-- **Never write to a shared or canonical file.** Work in a drafts file you created, or
-  a duplicate the human handed you. If you cannot tell which a file is, stop and ask.
+- **Work in the project's own file, never in drafts.** A small change is made beside
+  the original inside that file; a large one gets a page of its own next to the source
+  page, and once the human approves it, the source is updated from it and the extra
+  page is deleted. Deleting anything needs the human to have approved it first. A
+  published library is still off limits. The exact shape is in the protocol below.
 - `tora-designer` owns Figma. The setup steps and the API traps are in
   [.claude/figma-protocol.md](.claude/figma-protocol.md): read it before the first
   write.

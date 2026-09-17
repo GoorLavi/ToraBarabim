@@ -22,7 +22,7 @@ export const PhotoPicker = css(
     position: relative;
     flex-shrink: 0;
     inline-size: 160px;
-    aspect-ratio: 2 / 3;
+    aspect-ratio: 3 / 4;
     border-radius: ${theme.radii.md};
     overflow: hidden;
     background: ${theme.colors.primarySoft};
