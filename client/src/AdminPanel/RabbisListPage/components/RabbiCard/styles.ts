@@ -8,7 +8,7 @@ import { css } from 'styled-components';
 export const RabbiCard = css(
   ({ theme }) => `
   display: flex;
-  align-items: stretch;
+  align-items: flex-start;
   gap: ${theme.spacing.md};
   padding: ${theme.spacing.md};
   border: 1px solid ${theme.colors.border};
@@ -67,6 +67,7 @@ export const RabbiCard = css(
         font-weight: ${theme.typography.fontWeight.semiBold};
         font-size: ${theme.typography.secondary.phone.fontSize};
         line-height: ${theme.typography.secondary.phone.lineHeight};
+        text-decoration: none;
       }
 
       > .edit {

@@ -95,6 +95,17 @@ export const LessonViewPage = css(
     min-block-size: 48px;
     color: ${theme.colors.primary};
     font-weight: ${theme.typography.fontWeight.semiBold};
+    text-decoration: none;
+
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    &:focus-visible {
+      text-decoration: underline;
+    }
   }
 
   > .layout {
@@ -132,108 +143,117 @@ export const LessonViewPage = css(
       flex-direction: column;
       gap: ${theme.spacing.md};
 
+      /* No order property anywhere in this header: the edit button is a
+         sibling of the poster+identity group in both the DOM and the CSS, so
+         visual order always matches DOM order at every width. */
       > .header {
         display: flex;
-        align-items: flex-start;
+        flex-direction: column;
         gap: ${theme.spacing.md};
 
-        > .poster {
-          flex: 0 0 auto;
-          inline-size: 96px;
-          aspect-ratio: 3 / 4;
-          border-radius: ${theme.radii.sm};
-          object-fit: cover;
-          background: ${theme.colors.primarySoft};
-
-          @media (min-width: ${theme.breakpoints.md}) {
-            inline-size: 140px;
-          }
-
+        @media (min-width: ${theme.breakpoints.md}) {
+          flex-direction: row;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: ${theme.spacing.lg};
         }
 
-        > .identity {
-          flex: 1;
-          min-inline-size: 0;
+        > .titleRow {
           display: flex;
-          flex-direction: column;
-          gap: ${theme.spacing.xs};
+          align-items: flex-start;
+          gap: ${theme.spacing.md};
+          min-inline-size: 0;
 
-          // Below the md breakpoint, the DOM order (heading, rabbi link,
-          // edit button) is also the visual order, so the lesson's own
-          // title and its rabbi stay adjacent with the edit button on its
-          // own row beneath both. From md up the row wraps and order puts
-          // the edit button beside the heading, pushing the rabbi link
-          // onto its own full-width line below, matching the previous
-          // layout.
           @media (min-width: ${theme.breakpoints.md}) {
-            flex-direction: row;
-            flex-wrap: wrap;
-            align-items: center;
-            column-gap: ${theme.spacing.md};
-            row-gap: ${theme.spacing.sm};
+            flex: 1;
           }
 
-          > .heading {
-            flex: 1 1 auto;
-            min-inline-size: 0;
-            overflow-wrap: break-word;
-            color: ${theme.colors.text};
-            font-weight: ${theme.typography.pageHeading.fontWeight};
-            font-size: ${theme.typography.sectionHeading.phone.fontSize};
-            line-height: ${theme.typography.sectionHeading.phone.lineHeight};
+          > .poster {
+            flex: 0 0 auto;
+            inline-size: 96px;
+            aspect-ratio: 3 / 4;
+            border-radius: ${theme.radii.sm};
+            object-fit: cover;
+            background: ${theme.colors.primarySoft};
 
             @media (min-width: ${theme.breakpoints.md}) {
-              order: 1;
+              inline-size: 140px;
+            }
+          }
+
+          > .identity {
+            flex: 1;
+            min-inline-size: 0;
+            display: flex;
+            flex-direction: column;
+            gap: ${theme.spacing.xs};
+
+            > .heading {
+              overflow-wrap: break-word;
+              color: ${theme.colors.text};
+              font-weight: ${theme.typography.pageHeading.fontWeight};
               font-size: ${theme.typography.pageHeading.phone.fontSize};
               line-height: ${theme.typography.pageHeading.phone.lineHeight};
+
+              @media (min-width: ${theme.breakpoints.md}) {
+                font-size: ${theme.typography.pageHeading.desktop.fontSize};
+                line-height: ${theme.typography.pageHeading.desktop.lineHeight};
+              }
+            }
+
+            > .rabbiLink,
+            > .rabbiUnknown {
+              align-self: flex-start;
+              overflow-wrap: break-word;
+              font-size: ${theme.typography.body.phone.fontSize};
+              line-height: ${theme.typography.body.phone.lineHeight};
+            }
+
+            > .rabbiLink {
+              display: flex;
+              align-items: center;
+              min-block-size: 48px;
+              color: ${theme.colors.primary};
+              font-weight: ${theme.typography.fontWeight.semiBold};
+              text-decoration: none;
+
+              @media (hover: hover) and (pointer: fine) {
+                &:hover {
+                  text-decoration: underline;
+                }
+              }
+
+              &:focus-visible {
+                text-decoration: underline;
+              }
+            }
+
+            > .rabbiUnknown {
+              color: ${theme.colors.textSecondary};
             }
           }
+        }
 
-          > .rabbiLink,
-          > .rabbiUnknown {
-            @media (min-width: ${theme.breakpoints.md}) {
-              order: 3;
-              flex-basis: 100%;
-            }
-          }
+        > .editButton {
+          flex: 0 0 auto;
+          align-self: flex-start;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-block-size: 48px;
+          padding-inline: ${theme.spacing.lg};
+          border-radius: ${theme.radii.pill};
+          background: ${theme.colors.primary};
+          color: ${theme.colors.textOnPrimary};
+          font-weight: ${theme.typography.fontWeight.semiBold};
+          text-decoration: none;
 
-          > .rabbiLink {
-            align-self: flex-start;
-            display: flex;
-            align-items: center;
-            min-block-size: 48px;
-            overflow-wrap: break-word;
-            color: ${theme.colors.primary};
-            font-weight: ${theme.typography.fontWeight.semiBold};
-            font-size: ${theme.typography.body.phone.fontSize};
-            line-height: ${theme.typography.body.phone.lineHeight};
-          }
-
-          > .rabbiUnknown {
-            color: ${theme.colors.textSecondary};
-            font-size: ${theme.typography.body.phone.fontSize};
-            line-height: ${theme.typography.body.phone.lineHeight};
-          }
-
-          > .editButton {
-            flex: 0 0 auto;
-            align-self: flex-start;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-block-size: 48px;
-            padding-inline: ${theme.spacing.lg};
-            margin-block-start: ${theme.spacing.sm};
-            border-radius: ${theme.radii.pill};
-            background: ${theme.colors.primary};
-            color: ${theme.colors.textOnPrimary};
-            font-weight: ${theme.typography.fontWeight.semiBold};
-
-            @media (min-width: ${theme.breakpoints.md}) {
-              order: 2;
-              align-self: center;
-              margin-block-start: 0;
-            }
+          /* A small nudge so the button optically centres on the heading's
+             first line rather than the whole poster+identity row it sits
+             beside: the header aligns its children to flex-start, which lines
+             their tops up rather than their vertical centres. */
+          @media (min-width: ${theme.breakpoints.md}) {
+            margin-block-start: ${theme.spacing.xs};
           }
         }
       }

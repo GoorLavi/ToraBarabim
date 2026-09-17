@@ -77,29 +77,31 @@ export const LessonViewPage = styled(({ className }: LessonViewPageProps) => {
       <div className="layout">
         <div className="main">
           <header className="header">
-            {rabbi?.photoUrl && !hasPhotoLoadFailed ? (
-              <img className="poster" src={rabbi.photoUrl} alt="" onError={() => setHasPhotoLoadFailed(true)} />
-            ) : (
-              <div className="poster placeholder" aria-hidden="true" />
-            )}
-
-            <div className="identity">
-              <h1 className="heading" dir="auto">
-                {lessonPrimaryLabel(lesson, rabbi)}
-              </h1>
-
-              {rabbi ? (
-                <Link className="rabbiLink" to={ADMIN_ROUTES.rabbiView(rabbi.id)} dir="auto">
-                  {rabbiDisplayName(rabbi)}
-                </Link>
+            <div className="titleRow">
+              {rabbi?.photoUrl && !hasPhotoLoadFailed ? (
+                <img className="poster" src={rabbi.photoUrl} alt="" onError={() => setHasPhotoLoadFailed(true)} />
               ) : (
-                <span className="rabbiUnknown">{consts.RABBI_UNKNOWN_LABEL}</span>
+                <div className="poster placeholder" aria-hidden="true" />
               )}
 
-              <Link className="editButton" to={ADMIN_ROUTES.lessonEdit(lesson.id)}>
-                {consts.EDIT_LABEL}
-              </Link>
+              <div className="identity">
+                <h1 className="heading" dir="auto">
+                  {lessonPrimaryLabel(lesson, rabbi)}
+                </h1>
+
+                {rabbi ? (
+                  <Link className="rabbiLink" to={ADMIN_ROUTES.rabbiView(rabbi.id)} dir="auto">
+                    {rabbiDisplayName(rabbi)}
+                  </Link>
+                ) : (
+                  <span className="rabbiUnknown">{consts.RABBI_UNKNOWN_LABEL}</span>
+                )}
+              </div>
             </div>
+
+            <Link className="editButton" to={ADMIN_ROUTES.lessonEdit(lesson.id)}>
+              {consts.EDIT_LABEL}
+            </Link>
           </header>
 
           <div className="fieldsGrid">

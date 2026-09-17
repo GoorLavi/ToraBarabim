@@ -95,6 +95,13 @@ The root rules cover class names, `>`, `&` nesting, and `classNames`. On top of 
   own, and the block must carry a comment naming what put that DOM out of reach** (a
   portal, a third-party widget). Without the stated reason it reads as a violation of
   the "never write flat selectors" rule and gets deleted in review.
+- **Never put a backtick inside a comment in a `css` block, and write those comments as
+  `/* */` rather than `//`.** The block is a tagged template literal, so a backtick ends
+  the template wherever it appears, including somewhere CSS would consider a comment.
+  It fails as `TS1005: ',' expected` pointing at a line that looks fine, usually not the
+  line that caused it, so it costs far more to diagnose than to avoid. Name the property
+  or selector in plain words instead of quoting it in backticks. This has bitten three
+  separate agents, which is why it is written down rather than left to be rediscovered.
 - **Tokens come from the theme, not from raw values.** The theme is the code mirror of
   `.claude/design-system.md`. A raw hex or a raw pixel font size in a component is a
   bug.

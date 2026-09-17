@@ -48,6 +48,7 @@ export const RabbiLessonsSection = css(
       font-weight: ${theme.typography.fontWeight.semiBold};
       display: flex;
       align-items: center;
+      text-decoration: none;
     }
   }
 
@@ -67,12 +68,25 @@ export const RabbiLessonsSection = css(
   > .list {
     display: flex;
     flex-direction: column;
+    gap: ${theme.spacing.sm};
 
-    /* The hairline belongs to the item's position among its siblings, not
-       the row's position inside its own item (a row is always its item's
-       only child, so :not(:first-child) on .row itself would never match). */
-    > .item:not(:first-child) > .row {
-      border-block-start: 1px solid ${theme.colors.border};
+    /* The hairline moves off the row and into the gap between rows, so the
+       8px gap stays real separation between two adjacent tap targets
+       (design-system.md, "Row list has zero separation between adjacent tap
+       targets"), rather than sitting beside one of them. Positioned on the
+       item, not the row, for the same reason :not(:first-child) used to
+       target the row directly: a row is always its item's only child. */
+    > .item {
+      position: relative;
+
+      &:not(:first-child)::before {
+        content: '';
+        position: absolute;
+        inset-inline: 0;
+        inset-block-start: calc(${theme.spacing.sm} / -2);
+        block-size: 1px;
+        background: ${theme.colors.border};
+      }
     }
 
     > .item > .row {
@@ -82,6 +96,7 @@ export const RabbiLessonsSection = css(
       min-block-size: 66px;
       padding-block: ${theme.spacing.sm};
       color: ${theme.colors.text};
+      text-decoration: none;
 
       > .text {
         flex: 1;
@@ -121,6 +136,17 @@ export const RabbiLessonsSection = css(
     min-block-size: 48px;
     color: ${theme.colors.primary};
     font-weight: ${theme.typography.fontWeight.semiBold};
+    text-decoration: none;
+
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    &:focus-visible {
+      text-decoration: underline;
+    }
   }
 `,
 );

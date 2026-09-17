@@ -74,28 +74,29 @@ export const RabbiViewPage = styled(({ className }: RabbiViewPageProps) => {
 
       <div className="main">
         <header className="header">
-          {rabbi.photoUrl && !hasPhotoLoadFailed ? (
-            <img className="poster" src={rabbi.photoUrl} alt="" onError={() => setHasPhotoLoadFailed(true)} />
-          ) : (
-            <div className="poster placeholder" aria-hidden="true" />
-          )}
+          <div className="titleRow">
+            {rabbi.photoUrl && !hasPhotoLoadFailed ? (
+              <img className="poster" src={rabbi.photoUrl} alt="" onError={() => setHasPhotoLoadFailed(true)} />
+            ) : (
+              <div className="poster placeholder" aria-hidden="true" />
+            )}
 
-          <div className="identity">
-            <div className="head">
+            <div className="identity">
               <h1 className="heading" dir="auto">
                 {rabbiDisplayName(rabbi)}
               </h1>
-              <Link className="editButton" to={ADMIN_ROUTES.rabbiEdit(rabbi.id)}>
-                {consts.EDIT_LABEL}
-              </Link>
-            </div>
 
-            {rabbi.title && (
-              <p className="title" dir="auto">
-                {rabbi.title}
-              </p>
-            )}
+              {rabbi.title && (
+                <p className="title" dir="auto">
+                  {rabbi.title}
+                </p>
+              )}
+            </div>
           </div>
+
+          <Link className="editButton" to={ADMIN_ROUTES.rabbiEdit(rabbi.id)}>
+            {consts.EDIT_LABEL}
+          </Link>
         </header>
 
         <div className="fieldsGrid">

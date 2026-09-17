@@ -43,6 +43,7 @@ export const RabbisListPage = css(
       background: ${theme.colors.primary};
       color: ${theme.colors.textOnPrimary};
       font-weight: ${theme.typography.fontWeight.semiBold};
+      text-decoration: none;
     }
   }
 
@@ -151,6 +152,7 @@ export const RabbisListPage = css(
       background: ${theme.colors.primary};
       color: ${theme.colors.textOnPrimary};
       font-weight: ${theme.typography.fontWeight.semiBold};
+      text-decoration: none;
     }
   }
 `,
