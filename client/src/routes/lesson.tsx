@@ -14,11 +14,9 @@ import { teachingRabbiOf } from '~/LessonPage/helpers';
 import { LessonPage } from '~/LessonPage/LessonPage';
 import type { AreaPreview } from '~/LessonPage/models';
 
-import { AREA_PREVIEW_LIMIT } from '../../../server/src/service/lesson/consts';
-import { AREA_NAMES_HE, toAreaSlug } from '../../../server/src/service/shared/consts';
 import { SITE_ORIGIN } from '../../consts';
 import * as consts from './consts';
-import { loadAreaLessonsPreview, loadLessonOccurrence } from './lesson.server';
+import { loadAreaLessonsPreview, loadLessonOccurrence, resolveAreaPreviewMeta } from './lesson.server';
 
 interface LessonRouteData {
   occurrence: LessonOccurrence;
@@ -40,9 +38,7 @@ export const loader = async ({ params }: LoaderFunctionArgs): Promise<LessonRout
 
   const occurrence = await loadLessonOccurrence(lessonId, date);
   const areaPreview: AreaPreview = {
-    areaName: AREA_NAMES_HE[occurrence.place.area],
-    areaSlug: toAreaSlug(occurrence.place.area),
-    limit: AREA_PREVIEW_LIMIT,
+    ...resolveAreaPreviewMeta(occurrence),
     lessons: loadAreaLessonsPreview(occurrence),
   };
 

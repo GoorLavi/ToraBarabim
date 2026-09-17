@@ -4,9 +4,11 @@ import { ZodError } from 'zod';
 import type { AreaPreviewLessons } from '~/LessonPage/models';
 
 import { toLessonOccurrence } from '../../../server/src/convertors/lesson';
+import { AREA_PREVIEW_LIMIT } from '../../../server/src/service/lesson/consts';
 import { LessonNotFoundError, LessonOccurrenceNotFoundError } from '../../../server/src/service/lesson/errors';
 import * as lessonService from '../../../server/src/service/lesson/lesson';
 import { lessonOccurrenceParamsSchema } from '../../../server/src/service/lesson/models';
+import { AREA_NAMES_HE, toAreaSlug } from '../../../server/src/service/shared/consts';
 import { UNCACHEABLE_ERROR_HEADERS } from './consts';
 
 // The `.server` suffix is React Router's build-time boundary: see
@@ -41,6 +43,17 @@ export const loadLessonOccurrence = async (rawLessonId: string, rawDate: string)
 // audience, never the teaching rabbi's honorific.
 const areaPreviewScopeFor = (occurrence: LessonOccurrence): AudienceScope =>
   occurrence.audience === 'women' ? 'women' : 'general';
+
+// Everything about the area preview that needs no query, resolved here
+// rather than in the route module so the server constants it reads stay
+// behind the `.server` boundary above.
+export const resolveAreaPreviewMeta = (
+  occurrence: LessonOccurrence,
+): { areaName: string; areaSlug: string; limit: number } => ({
+  areaName: AREA_NAMES_HE[occurrence.place.area],
+  areaSlug: toAreaSlug(occurrence.place.area),
+  limit: AREA_PREVIEW_LIMIT,
+});
 
 // Deferred by the loader (never awaited there), so this never holds up the
 // ticket. Fails open: a failed area search is a below-the-fold nicety, not a

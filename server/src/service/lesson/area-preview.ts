@@ -11,14 +11,15 @@ export const selectAreaPreview = (
   limit: number,
 ): ResolvedLessonOccurrence[] => {
   const seenLessonIds = new Set<string>();
-  const deduplicated: ResolvedLessonOccurrence[] = [];
+  const selected: ResolvedLessonOccurrence[] = [];
 
   for (const item of items) {
     if (item.lessonId === excludeLessonId) continue;
     if (seenLessonIds.has(item.lessonId)) continue;
     seenLessonIds.add(item.lessonId);
-    deduplicated.push(item);
+    selected.push(item);
+    if (selected.length === limit) break;
   }
 
-  return deduplicated.slice(0, limit);
+  return selected;
 };
