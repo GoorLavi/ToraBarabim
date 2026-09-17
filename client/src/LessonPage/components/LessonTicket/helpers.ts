@@ -1,7 +1,7 @@
 import type { LessonOccurrence, Place, RabbiHonorific } from '@torabarabim/common';
 
 import { LESSON_TOPIC_LABELS } from '~/HomePage/components/LessonCard/consts';
-import { SUBSTITUTE_ROLE_LABEL, TEACHING_RABBI_ROLE_LABEL } from '~/LessonPage/consts';
+import { TEACHING_RABBI_ROLE_LABEL } from '~/LessonPage/consts';
 
 const ISRAEL_TIME_ZONE = 'Asia/Jerusalem';
 const weekdayFormatter = new Intl.DateTimeFormat('he-IL', { weekday: 'long', timeZone: ISRAEL_TIME_ZONE });
@@ -51,11 +51,12 @@ export const endTimeLabel = (endTime: string): string => `עד ${endTime}`;
 export const kickerLabel = (occurrence: LessonOccurrence): string | undefined =>
   occurrence.title ?? (occurrence.topic ? LESSON_TOPIC_LABELS[occurrence.topic] : undefined);
 
-// The label above the rabbi's name: what the lecturer is called normally,
-// versus what to call the fact that this occurrence has a substitute. Its
-// own slot, never sharing one with `kickerLabel`.
-export const roleLabel = (isSubstitute: boolean, teachingRabbiHonorific: RabbiHonorific): string =>
-  isSubstitute ? SUBSTITUTE_ROLE_LABEL : TEACHING_RABBI_ROLE_LABEL[teachingRabbiHonorific];
+// The label above the rabbi's name, describing whoever is actually teaching
+// this occurrence. A substitute needs no wording of its own: the line below
+// already says `במקום <the usual rabbi>`. Its own slot, never sharing one
+// with `kickerLabel`.
+export const roleLabel = (teachingRabbiHonorific: RabbiHonorific): string =>
+  TEACHING_RABBI_ROLE_LABEL[teachingRabbiHonorific];
 
 // Street and city only, never `floor`: a floor is an arrival note ("קומה
 // 2"), not part of a geocodable address, and passing it to Waze/Google Maps

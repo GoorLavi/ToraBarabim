@@ -12,27 +12,47 @@ import { lessonPath } from '~/helpers';
 import * as lessonPageConsts from '~/LessonPage/consts';
 import { teachingRabbiOf } from '~/LessonPage/helpers';
 import { LessonPage } from '~/LessonPage/LessonPage';
+import type { AreaPreview } from '~/LessonPage/models';
 
 import { SITE_ORIGIN } from '../../consts';
 import * as consts from './consts';
-import { loadLessonOccurrence } from './lesson.server';
+import { loadAreaLessonsPreview, loadLessonOccurrence, resolveAreaPreviewMeta } from './lesson.server';
 
-export const loader = async ({ params }: LoaderFunctionArgs): Promise<LessonOccurrence> => {
+interface LessonRouteData {
+  occurrence: LessonOccurrence;
+  // `areaName`, `areaSlug`, and `limit` are resolved synchronously from
+  // `occurrence.place.area` and the server's own constant, so the heading and
+  // the skeleton can paint before any query resolves. Only `lessons` is a
+  // promise, never awaited here: the ticket is a 404 or a 500 without
+  // `occurrence`, but the area preview's lessons are a below-the-fold nicety
+  // that must never hold up the shell. The route component resolves it
+  // inside a `Suspense` boundary.
+  areaPreview: AreaPreview;
+}
+
+export const loader = async ({ params }: LoaderFunctionArgs): Promise<LessonRouteData> => {
   const { lessonId, date } = params;
   if (!lessonId || !date) {
     throw new Response('השיעור לא נמצא', { status: 404, headers: consts.UNCACHEABLE_ERROR_HEADERS });
   }
 
-  return loadLessonOccurrence(lessonId, date);
+  const occurrence = await loadLessonOccurrence(lessonId, date);
+  const areaPreview: AreaPreview = {
+    ...resolveAreaPreviewMeta(occurrence),
+    lessons: loadAreaLessonsPreview(occurrence),
+  };
+
+  return { occurrence, areaPreview };
 };
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   if (!data) return [];
+  const { occurrence } = data;
 
-  const teachingRabbi = teachingRabbiOf(data);
-  const url = `${SITE_ORIGIN}${lessonPath(data)}`;
-  const title = consts.lessonPageTitle(data, teachingRabbi);
-  const description = consts.lessonPageDescription(data, teachingRabbi);
+  const teachingRabbi = teachingRabbiOf(occurrence);
+  const url = `${SITE_ORIGIN}${lessonPath(occurrence)}`;
+  const title = consts.lessonPageTitle(occurrence, teachingRabbi);
+  const description = consts.lessonPageDescription(occurrence, teachingRabbi);
 
   return [
     { title },
@@ -43,7 +63,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     { property: 'og:description', content: description },
     { property: 'og:url', content: url },
     ...SITE_WIDE_META,
-    { 'script:ld+json': consts.lessonEventJsonLd(data, teachingRabbi) },
+    { 'script:ld+json': consts.lessonEventJsonLd(occurrence, teachingRabbi) },
   ];
 };
 
@@ -53,19 +73,21 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 // in lesson.server.ts sets `Cache-Control: no-store` itself.
 export const headers: HeadersFunction = ({ errorHeaders }) => errorHeaders ?? consts.PUBLIC_CACHE_HEADERS;
 
-export default function LessonRoute({ loaderData }: { loaderData: LessonOccurrence }) {
+export default function LessonRoute({ loaderData }: { loaderData: LessonRouteData }) {
+  const { occurrence, areaPreview } = loaderData;
+
   // Seeds the same key `useLessonOccurrence` reads (LessonPage/useLessonOccurrence.ts),
   // so the ticket's first paint already has the loader's data and never
   // re-fetches on hydration. Mirrors rabbis.$rabbiId/route.tsx.
   const [queryClient] = useState(() => {
     const client = new QueryClient();
-    client.setQueryData(lessonPageConsts.LESSON_PAGE_QUERY_KEYS.occurrence(loaderData.lessonId, loaderData.date), loaderData);
+    client.setQueryData(lessonPageConsts.LESSON_PAGE_QUERY_KEYS.occurrence(occurrence.lessonId, occurrence.date), occurrence);
     return client;
   });
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <LessonPage />
+      <LessonPage {...{ areaPreview }} />
     </HydrationBoundary>
   );
 }

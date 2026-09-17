@@ -28,14 +28,18 @@ export const TEACHING_RABBI_ROLE_LABEL: Record<RabbiHonorific, string> = {
   rabbanit: 'תעביר את השיעור',
 };
 
-// Not keyed by honorific: no screen names a substitute, and the women-only
-// rule is not enforced on substitutes (decision 0026).
-export const SUBSTITUTE_ROLE_LABEL = 'הפעם מגיד השיעור';
-
-// Takes an already-composed display name (`rabbiDisplayName`), so this
-// never prepends the honorific a second time.
-export const originalRabbiTagLabel = (displayName: string): string => `במקום ${displayName}`;
+// The muted prefix in the substitute line ("במקום הרב X"). The rest of the
+// line is now its own link (LessonTicket.tsx), so the two are separate text
+// nodes rather than one composed string.
+export const SUBSTITUTE_PREFIX_LABEL = 'במקום';
 
 export const otherLessonsInCityLabel = (city: string): string => `לשיעורים אחרים ב${city}`;
 export const NO_REASON_GIVEN_LABEL = 'לא נמסרה סיבה';
 export const CANCELLED_HEADING_LABEL = 'השיעור מבוטל בתאריך הזה';
+
+// Trimmed to drop the area name: the section's `h2` link
+// (AreaLessonsPreview.tsx) already names the area directly above this card,
+// so repeating it here would rebuild the duplication the heading-plus-link
+// rework just removed.
+export const AREA_PREVIEW_EMPTY_HEADING = 'אין שיעורים נוספים בשבוע הקרוב';
+export const AREA_PREVIEW_EMPTY_BODY = 'ייתכן שיתווספו שיעורים בקרוב.';

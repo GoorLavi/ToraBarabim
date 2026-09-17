@@ -35,7 +35,8 @@ export type LessonSurface =
   | 'rabbiPage'
   | 'cityPage'
   | 'areaPage'
-  | 'womensArea';
+  | 'womensArea'
+  | 'lessonPage';
 
 // The four screens that fire `Results Shown` (RabbisPage, CitiesPage and
 // RabbiPage's lessons section do not, by design). Distinct from
@@ -75,7 +76,7 @@ export type SeeAllTarget = 'rabbis' | 'cities' | 'lessons';
 // like every other surface here, rather than a bare string literal, so a
 // second surface is a one-line addition instead of a signature change.
 export type SeeAllSurface = 'home';
-export type RabbiClickSurface = 'homeRabbiRow' | 'rabbisPage' | 'cityPage';
+export type RabbiClickSurface = 'homeRabbiRow' | 'rabbisPage' | 'cityPage' | 'lessonPage';
 export type NavigationProvider = 'waze' | 'googleMaps';
 export type AppSurface = 'public' | 'rabbiPanel' | 'adminPanel';
 export type Viewport = 'mobile' | 'desktop';

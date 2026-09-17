@@ -33,7 +33,6 @@ export const CONTACT_US_LABEL = 'כתבו לנו';
 
 export const cityHeading = (cityName: string): string => `שיעורים ב${cityName}`;
 export const citySubheading = (count: number): string => `${lessonCountLabel(count)} בשבועיים הקרובים`;
-export const areaLinkLabel = (areaName: string): string => `לכל השיעורים באזור ${areaName}`;
 export const whoTeachesHeading = (cityName: string): string => `${WHO_TEACHES_HEADING_PREFIX}${cityName}`;
 export const loadMoreLabel = (cityName: string): string => `עוד שיעורים ב${cityName}`;
 export const LOAD_MORE_ERROR_LABEL = 'לא הצלחנו לטעון עוד שיעורים, נסו שוב';
