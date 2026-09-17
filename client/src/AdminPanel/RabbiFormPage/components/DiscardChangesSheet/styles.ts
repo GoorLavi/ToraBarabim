@@ -27,10 +27,10 @@ export const DiscardChangesSheet = css(
       flex-direction: column;
       gap: ${theme.spacing.sm};
 
-      // The safe choice (staying in the form) is the filled, dominant
-      // button; the destructive one (leaving without saving) is a bordered
-      // ghost in danger text, never a danger fill (design-system.md,
-      // color token table: danger is text only).
+      /* The safe choice (staying in the form) is the filled, dominant
+         button; the destructive one (leaving without saving) is a bordered
+         ghost in danger text, never a danger fill (design-system.md,
+         color token table: danger is text only). */
       > .back {
         min-block-size: 48px;
         border-radius: ${theme.radii.md};

@@ -203,10 +203,10 @@ export const RabbiViewPage = css(
     > .fieldsGrid {
       display: grid;
       grid-template-columns: 1fr;
-      // Row-gap 0: each row already carries its own block padding and top
-      // hairline (RecordField/styles.ts), so an extra grid gap would double
-      // the space between rows. Column-gap keeps the two side-by-side
-      // fields from touching at md and up.
+      /* Row-gap 0: each row already carries its own block padding and top
+         hairline (RecordField/styles.ts), so an extra grid gap would double
+         the space between rows. Column-gap keeps the two side-by-side
+         fields from touching at md and up. */
       gap: 0 ${theme.spacing.sm};
       padding: ${theme.spacing.md};
       border: 1px solid ${theme.colors.border};

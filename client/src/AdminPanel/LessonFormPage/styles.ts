@@ -32,10 +32,15 @@ export const LessonFormPage = css(
   }
 
   > .breadcrumb {
+    /* The same class lands on a Link when creating a lesson and on a button
+       when editing one, and the global reset leaves a button's user-agent
+       padding alone, so without this the breadcrumb indents differently
+       between the two modes. */
     align-self: flex-start;
     display: flex;
     align-items: center;
     min-block-size: 48px;
+    padding: 0;
     color: ${theme.colors.primary};
     font-weight: ${theme.typography.fontWeight.semiBold};
     text-decoration: none;
@@ -207,12 +212,12 @@ export const LessonFormPage = css(
         flex-direction: column;
         gap: ${theme.spacing.md};
 
-        // The DOM order already puts the primary action where it belongs
-        // in each mode (save leads in edit mode, trails in new-lesson
-        // mode): below the md breakpoint the footer stacks in that order
-        // at full width, so three buttons can never wrap and land the
-        // primary action in the least prominent spot. From md up there is
-        // room for a row.
+        /* The DOM order already puts the primary action where it belongs
+           in each mode (save leads in edit mode, trails in new-lesson
+           mode): below the md breakpoint the footer stacks in that order
+           at full width, so three buttons can never wrap and land the
+           primary action in the least prominent spot. From md up there is
+           room for a row. */
         @media (min-width: ${theme.breakpoints.md}) {
           flex-direction: row;
           flex-wrap: wrap;
