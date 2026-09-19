@@ -5,7 +5,7 @@ import type { JsonLdObject } from './models';
 import { TITLE as CONTACT_TITLE } from '~/ContactPage/consts';
 import { kickerLabel } from '~/LessonPage/components/LessonTicket/helpers';
 import { TITLE_UNFILTERED as LESSONS_TITLE } from '~/LessonsPage/consts';
-import { cityPath, rabbiDisplayName, rabbiPath } from '~/helpers';
+import { cityPath, lessonPath, rabbiDisplayName, rabbiPath } from '~/helpers';
 
 import { RABBI_HONORIFIC_LABELS } from '~/consts';
 
@@ -150,6 +150,8 @@ export const lessonEventJsonLd = (occurrence: LessonOccurrence, teachingRabbi: R
   '@context': 'https://schema.org',
   '@type': 'Event',
   name: `${lessonSubjectLabel(occurrence)} עם ${rabbiDisplayName(teachingRabbi)}`,
+  description: lessonPageDescription(occurrence, teachingRabbi),
+  ...(teachingRabbi.photoUrl ? { image: teachingRabbi.photoUrl } : {}),
   startDate: israelDateTime(occurrence.date, occurrence.startTime),
   endDate: israelDateTime(occurrence.date, occurrence.endTime),
   eventStatus:
@@ -164,6 +166,13 @@ export const lessonEventJsonLd = (occurrence: LessonOccurrence, teachingRabbi: R
       addressCountry: 'IL',
     },
   },
+  // The venue hosts the lesson, so it is the organizer; the site only lists
+  // it. There is no page to link to: a place is text on a lesson, not an
+  // entity with a URL of its own (common/src/place.ts).
+  organizer: {
+    '@type': 'Organization',
+    name: occurrence.place.name,
+  },
   performer: {
     '@type': 'Person',
     name: teachingRabbi.name,
@@ -172,6 +181,21 @@ export const lessonEventJsonLd = (occurrence: LessonOccurrence, teachingRabbi: R
     ...(teachingRabbi.bio ? { description: teachingRabbi.bio } : {}),
     ...(teachingRabbi.photoUrl ? { image: teachingRabbi.photoUrl } : {}),
   },
+  // Every lesson is free and open, which schema.org says as a zero-priced
+  // offer. A cancelled occurrence carries none at all: `availability` has no
+  // value that means "cancelled", and the in-stock one would contradict the
+  // `eventStatus` directly above.
+  ...(occurrence.status === 'cancelled'
+    ? {}
+    : {
+        offers: {
+          '@type': 'Offer',
+          price: 0,
+          priceCurrency: 'ILS',
+          availability: 'https://schema.org/InStock',
+          url: `${SITE_ORIGIN}${lessonPath(occurrence)}`,
+        },
+      }),
 });
 
 // contact.tsx's and lessons.tsx's own document titles and descriptions.
