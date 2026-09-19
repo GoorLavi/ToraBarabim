@@ -28,9 +28,12 @@ const extractCanonical = (html: string): string => {
 
 // A page carries root.tsx's site-wide `WebSite` block as well as its own
 // structured data, so this picks by `@type` rather than taking the first
-// block it finds.
+// block it finds. Tolerates other attributes on the tag for the same reason
+// `extractMetaProperty` below does: nothing in the rendering guarantees the
+// tag carries `type` and nothing else, so a stricter pattern would fail on
+// an added `nonce` while the JSON-LD itself was perfectly valid.
 const extractJsonLd = (html: string, type: string): Record<string, unknown> => {
-  const blocks = [...html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs)].map(
+  const blocks = [...html.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>(.*?)<\/script>/gs)].map(
     (match) => JSON.parse(match[1] ?? '{}') as Record<string, unknown>,
   );
 
