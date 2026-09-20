@@ -5,6 +5,7 @@ import type { CityDirectoryResponse, LessonOccurrence, LessonSearchResponse } fr
 import type { FastifyInstance } from 'fastify';
 
 import { HEALTH_RENDER_PROBE_PATH } from '../src/api/health/consts';
+import { buildRequestBody } from '../src/plugins/ssr';
 import { addDays, nextDateOnWeekday, todayInIsrael } from '../src/service/lesson/israel-time';
 import { toAreaSlug } from '../src/service/shared/consts';
 
@@ -351,5 +352,34 @@ describe('SSR rendering seam', () => {
       assert.match(res.body, /<loc>[^<]*\/women\/rabbaniyot<\/loc>/);
       assert.match(res.body, new RegExp(`<loc>[^<]*/rabbis/${SEEDED_RABBANIT_ID}/[^<]*</loc>`));
     });
+  });
+});
+
+// Exercised directly rather than through `app.inject`: no route in the client
+// build exports an `action`, so a body forwarded through the catch-all is
+// never read back, and a test driving the app could only ever assert the 405
+// the suite above already covers. It needs neither the database nor the
+// client build, so it sits outside that suite's `before`.
+describe('the SSR catch-all request body', () => {
+  test('a parsed JSON body is serialized again as JSON', () => {
+    assert.deepEqual(buildRequestBody({ probe: true }, 'application/json; charset=utf-8'), {
+      content: '{"probe":true}',
+      contentType: 'application/json',
+    });
+  });
+
+  // A JSON body of `"hello"` parses to the same string a `text/plain` body
+  // of hello does, which is why the content type, not `typeof`, picks the
+  // branch. Forwarding this one unquoted would not be valid JSON.
+  test('a JSON body that is a bare string keeps its quotes', () => {
+    assert.deepEqual(buildRequestBody('hello', 'application/json'), { content: '"hello"', contentType: 'application/json' });
+  });
+
+  test('a text/plain body is forwarded unchanged under its own type', () => {
+    assert.deepEqual(buildRequestBody('hello', 'text/plain; charset=utf-8'), { content: 'hello', contentType: 'text/plain; charset=utf-8' });
+  });
+
+  test('a request with no body forwards none', () => {
+    assert.equal(buildRequestBody(undefined, undefined), undefined);
   });
 });
