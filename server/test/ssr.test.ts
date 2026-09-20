@@ -198,6 +198,34 @@ describe('SSR rendering seam', () => {
     });
   });
 
+  describe('a non-GET request through the SSR catch-all', () => {
+    // Regression test for the production defect diagnosed from CloudWatch
+    // (bursts of 500s since 17 September): `toFetchRequest` used to rebuild
+    // the Fetch `Request` body by re-reading `request.raw`, but every content
+    // type parser registered ahead of this catch-all (Fastify's built-in
+    // JSON parser, and `empty-body.ts`'s `*` fallback) had already read that
+    // stream to completion, so undici threw `Response body object should
+    // not be disturbed or locked` before the request ever reached the
+    // router. No route here exports an `action`, so once the request
+    // actually reaches the router it answers a real 405, never a 500; that
+    // is what these assert, for both a body shape the JSON parser never
+    // touches and one it does.
+    test('an empty body reaches the router as a 405, not a crash', async () => {
+      const res = await app.inject({ method: 'POST', url: '/rabbis' });
+      assert.equal(res.statusCode, 405);
+    });
+
+    test('a JSON body reaches the router as a 405, not a crash', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/rabbis',
+        payload: JSON.stringify({ probe: true }),
+        headers: { 'content-type': 'application/json' },
+      });
+      assert.equal(res.statusCode, 405);
+    });
+  });
+
   describe('per-page SEO', () => {
     test('the home page and the rabbis index carry distinct titles and distinct canonicals', async () => {
       const home = await app.inject({ method: 'GET', url: '/' });

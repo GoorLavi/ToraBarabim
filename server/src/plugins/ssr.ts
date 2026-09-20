@@ -43,6 +43,18 @@ const SERVER_BUILD_PATH = path.join(__dirname, '../../../client/build/server/ind
 // route.
 const STATIC_ASSET_PATTERN = /^\/(?:assets\/.+|favicon\.svg|robots\.txt|outage\.html)$/;
 
+// Every content type parser registered ahead of this catch-all (Fastify's
+// built-in JSON parser, and `empty-body.ts`'s `*` fallback) has already read
+// `request.raw` to completion by the time a handler runs, so `request.body`
+// is the only place left to read the body from: it is either `undefined`
+// (no body, or an empty body under an unrecognised type) or the object
+// Fastify's JSON parser produced. Re-reading `request.raw` here, as this
+// used to, hands undici an already-disturbed stream and throws.
+const buildRequestBody = (request: FastifyRequest): string | undefined => {
+  if (request.body === undefined) return undefined;
+  return JSON.stringify(request.body);
+};
+
 // No official Fastify adapter exists for React Router 7 (only Express), so
 // this hand-builds the Web Fetch `Request` the framework's own
 // `createRequestHandler` expects from Fastify's Node request, then writes
@@ -59,14 +71,27 @@ const toFetchRequest = (request: FastifyRequest): Request => {
     }
   }
 
+  // A GET or HEAD Request cannot carry a body at all (undici throws), so the
+  // method guard stays even though every parser already leaves `body`
+  // `undefined` for those methods in practice.
   const hasBody = request.method !== 'GET' && request.method !== 'HEAD';
+  const body = hasBody ? buildRequestBody(request) : undefined;
+  if (body !== undefined) {
+    // The body is re-serialized from the already-parsed value, not copied
+    // byte-for-byte from the wire, so the original `content-length` no
+    // longer describes it and a copied `content-encoding` would falsely
+    // claim the reconstructed plain-JSON body is still compressed.
+    headers.delete('content-length');
+    headers.delete('content-encoding');
+    headers.set('content-type', 'application/json');
+  }
+
   return new Request(url, {
     method: request.method,
     headers,
-    // `duplex: 'half'` is required by undici whenever `body` is a stream.
-    ...(hasBody
-      ? { body: Readable.toWeb(request.raw) as unknown as ReadableStream, duplex: 'half' as const }
-      : {}),
+    // `duplex` is only required by undici when `body` is a stream; a string
+    // body needs no half-duplex negotiation.
+    ...(body !== undefined ? { body } : {}),
   });
 };
 
