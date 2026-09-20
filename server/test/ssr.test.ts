@@ -26,6 +26,22 @@ const extractCanonical = (html: string): string => {
   return match[1] ?? '';
 };
 
+// A page carries root.tsx's site-wide `WebSite` block as well as its own
+// structured data, so this picks by `@type` rather than taking the first
+// block it finds. Tolerates other attributes on the tag for the same reason
+// `extractMetaProperty` below does: nothing in the rendering guarantees the
+// tag carries `type` and nothing else, so a stricter pattern would fail on
+// an added `nonce` while the JSON-LD itself was perfectly valid.
+const extractJsonLd = (html: string, type: string): Record<string, unknown> => {
+  const blocks = [...html.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>(.*?)<\/script>/gs)].map(
+    (match) => JSON.parse(match[1] ?? '{}') as Record<string, unknown>,
+  );
+
+  const block = blocks.find((candidate) => candidate['@type'] === type);
+  assert.ok(block, `expected the document to include a ${type} JSON-LD block`);
+  return block;
+};
+
 const escapeForRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 // Matches the tag first and reads `content` out of it, rather than assuming
@@ -243,6 +259,35 @@ describe('SSR rendering seam', () => {
       assert.equal(rabbaniyotCanonical, `${SITE_ORIGIN}/women/rabbaniyot`);
 
       assert.equal(extractMetaProperty(women.body, 'og:title'), 'שיעורי תורה לנשים | תורה ברבים');
+    });
+
+    // Search Console reported all four of these missing on 2026-09-19. They
+    // are what makes a lesson eligible for an Event rich result, and nothing
+    // on the page shows whether they are there, so a regression would
+    // surface only weeks later in another Search Console report.
+    test("the lesson page's Event data carries a description, an organizer and a free offer", async () => {
+      const date = nextDateOnWeekday(todayInIsrael(new Date()), 0);
+      const page = await app.inject({ method: 'GET', url: `/lesson/${SEEDED_LESSON_ID}/${date}` });
+      assert.equal(page.statusCode, 200);
+
+      const event = extractJsonLd(page.body, 'Event');
+      assert.ok(event['description'], 'expected the Event to carry a description');
+
+      const organizer = event['organizer'] as Record<string, unknown> | undefined;
+      assert.equal(organizer?.['@type'], 'Organization');
+      assert.ok(organizer?.['name'], 'expected the Event\'s organizer to be named');
+
+      const offers = event['offers'] as Record<string, unknown> | undefined;
+      assert.equal(offers?.['@type'], 'Offer');
+      assert.equal(offers?.['price'], 0);
+      assert.equal(offers?.['priceCurrency'], 'ILS');
+
+      // The Event's `image` and the performer's portrait are the same photo,
+      // so assert that they agree rather than that either exists: CI seeds
+      // without portraits (`db:seed:no-photos`) while production has them,
+      // and a presence assertion would only hold in one of the two.
+      const performer = event['performer'] as Record<string, unknown> | undefined;
+      assert.equal(event['image'], performer?.['image']);
     });
   });
 
