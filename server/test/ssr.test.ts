@@ -226,6 +226,23 @@ describe('SSR rendering seam', () => {
     });
   });
 
+  describe('the root-level error boundary', () => {
+    // Regression test for a production 500 on every bot POST to an unmatched
+    // path (e.g. /wp-login.php): that path matches only the catch-all route,
+    // which has no action and no ErrorBoundary of its own, so the resulting
+    // error bubbles past it to the root route. React Router then renders
+    // root.tsx's Layout wrapping its ErrorBoundary in place of Layout's usual
+    // child, the default-exported Root, which was the only place ThemeProvider
+    // was mounted. Every styled-component in the error tree then read an
+    // undefined theme and threw, turning the one screen meant to survive a
+    // crash into a second crash: a bare 500 instead of this page.
+    test('a POST matched only by the catch-all renders the themed error page instead of crashing', async () => {
+      const res = await app.inject({ method: 'POST', url: '/wp-login.php' });
+      assert.equal(res.statusCode, 405);
+      assert.match(res.body, /משהו השתבש\. נסו לרענן את הדף\./);
+    });
+  });
+
   describe('per-page SEO', () => {
     test('the home page and the rabbis index carry distinct titles and distinct canonicals', async () => {
       const home = await app.inject({ method: 'GET', url: '/' });
