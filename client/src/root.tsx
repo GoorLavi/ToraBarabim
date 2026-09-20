@@ -70,9 +70,18 @@ export function Layout({ children }: { children: ReactNode }) {
         <Links />
       </head>
       <body>
-        {/* `#root` matches GlobalStyle's `html, body, #root { height: 100% }`
-            selector, kept so that rule needs no change for this migration. */}
-        <div id="root">{children}</div>
+        {/* ThemeProvider lives here, not in Root below, because React Router
+            renders this Layout for both the normal tree and the root-level
+            ErrorBoundary: an error attributed to the root route substitutes
+            ErrorBoundary for Root's element entirely, so a provider that only
+            wrapped Root's own render never reached it, and any styled-
+            component in the error tree reading `theme` threw. */}
+        <ThemeProvider theme={ARGAMAN_VE_ZAHAV_THEME}>
+          <GlobalStyle />
+          {/* `#root` matches GlobalStyle's `html, body, #root { height: 100% }`
+              selector, kept so that rule needs no change for this migration. */}
+          <div id="root">{children}</div>
+        </ThemeProvider>
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -90,13 +99,10 @@ export default function Root() {
   );
 
   return (
-    <ThemeProvider theme={ARGAMAN_VE_ZAHAV_THEME}>
-      <GlobalStyle />
-      <QueryClientProvider client={queryClient}>
-        <Analytics />
-        <Outlet />
-      </QueryClientProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <Analytics />
+      <Outlet />
+    </QueryClientProvider>
   );
 }
 
