@@ -1,7 +1,7 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 
 import { db } from '../../db/client';
-import { cities, places } from '../../db/schema';
+import { cities, lessons, places, rabbis } from '../../db/schema';
 import { toSlug } from '../shared/slug';
 import { PLACE_SIMILAR_LIMIT } from './consts';
 import { PlaceNotFoundError } from './errors';
@@ -25,7 +25,30 @@ const basePlaceQuery = () => db.select(placeSelection).from(places).innerJoin(ci
 
 type JoinedPlaceRow = Awaited<ReturnType<typeof basePlaceQuery>>[number];
 
-const toRecord = (row: JoinedPlaceRow): PlaceRecord => ({
+// General-scope lesson count per place id, in one query no matter how many
+// ids are passed: the same shape as rabbi.ts's `loadLessonStats`. Counts
+// `lessons` rows, not expanded occurrences, so a single cancelled date never
+// changes it, exactly like `RabbiDirectoryEntry.lessonCount`. Scoped to
+// `honorific = 'rav'` because a rabbanit's lesson never appears on a place's
+// own occurrence list either (that list is built with `scope: 'general'`,
+// see lesson/lesson.ts); the two honorifics are exhaustive, so this is the
+// same predicate city.ts's `generalScopeLessonCount` mirrors by hand for SQL.
+const loadPlaceLessonCounts = async (placeIds: string[]): Promise<Map<string, number>> => {
+  if (placeIds.length === 0) return new Map();
+
+  const rows = await db
+    .select({ placeId: lessons.placeId, count: sql<number>`count(*)::int` })
+    .from(lessons)
+    .innerJoin(rabbis, eq(lessons.rabbiId, rabbis.id))
+    .where(and(inArray(lessons.placeId, placeIds), eq(rabbis.honorific, 'rav')))
+    .groupBy(lessons.placeId);
+
+  return new Map(
+    rows.filter((row): row is { placeId: string; count: number } => row.placeId !== null).map((row) => [row.placeId, row.count] as const),
+  );
+};
+
+const toRecord = (row: JoinedPlaceRow, lessonCount: number): PlaceRecord => ({
   id: row.id,
   slug: row.slug,
   name: row.name,
@@ -36,13 +59,34 @@ const toRecord = (row: JoinedPlaceRow): PlaceRecord => ({
   citySlug: toSlug(row.cityName),
   area: row.area,
   photoUrl: row.photoUrl ?? undefined,
+  lessonCount,
 });
 
 // Every active place, unfiltered and unpaged: the list is small and
-// curated, never a search surface. Alphabetical by name, Hebrew collation.
+// curated, never a search surface. Places with a lesson sort first (what
+// the public directory orders by), then Hebrew collation on the city name,
+// then the place name, then id as a final, deterministic tie-break.
 export const list = async (): Promise<PlaceListResult> => {
   const rows = await basePlaceQuery().where(eq(places.isActive, true));
-  return { items: rows.map(toRecord).sort((a, b) => collator.compare(a.name, b.name)) };
+  const countByPlace = await loadPlaceLessonCounts(rows.map((row) => row.id));
+
+  const items = rows
+    .map((row) => toRecord(row, countByPlace.get(row.id) ?? 0))
+    .sort((a, b) => {
+      const aHasLessons = a.lessonCount > 0;
+      const bHasLessons = b.lessonCount > 0;
+      if (aHasLessons !== bHasLessons) return aHasLessons ? -1 : 1;
+
+      const byCity = collator.compare(a.cityName, b.cityName);
+      if (byCity !== 0) return byCity;
+
+      const byName = collator.compare(a.name, b.name);
+      if (byName !== 0) return byName;
+
+      return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+    });
+
+  return { items };
 };
 
 // 404 on inactive, not 410: deactivation is reversible, so a deactivated
@@ -51,7 +95,8 @@ export const getById = async (id: string): Promise<PlaceRecord> => {
   const rows = await basePlaceQuery().where(and(eq(places.id, id), eq(places.isActive, true))).limit(1);
   const row = rows[0];
   if (!row) throw new PlaceNotFoundError(id);
-  return toRecord(row);
+  const countByPlace = await loadPlaceLessonCounts([row.id]);
+  return toRecord(row, countByPlace.get(row.id) ?? 0);
 };
 
 export interface SimilarAddressCandidate {
@@ -103,5 +148,7 @@ export const findSimilar = async (query: SimilarPlaceQuery): Promise<PlaceRecord
     return collator.compare(a.name, b.name);
   });
 
-  return matches.slice(0, PLACE_SIMILAR_LIMIT).map(toRecord);
+  const limited = matches.slice(0, PLACE_SIMILAR_LIMIT);
+  const countByPlace = await loadPlaceLessonCounts(limited.map((row) => row.id));
+  return limited.map((row) => toRecord(row, countByPlace.get(row.id) ?? 0));
 };

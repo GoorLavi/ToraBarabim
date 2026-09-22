@@ -12,6 +12,7 @@ export const toPlace = (record: PlaceRecord): Place => ({
   citySlug: record.citySlug,
   area: record.area,
   photoUrl: record.photoUrl,
+  lessonCount: record.lessonCount,
 });
 
 export const toPlaceListResponse = (result: PlaceListResult): PlaceListResponse => ({ items: result.items.map(toPlace) });

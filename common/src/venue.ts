@@ -68,4 +68,9 @@ export interface Place {
   citySlug: string;
   area: Area;
   photoUrl?: string;
+  // How many lessons (recurring definitions, not expanded occurrences) this
+  // place hosts, in the same general scope its own occurrence list is built
+  // with: a rabbanit's lesson counts toward neither. A single cancelled date
+  // never changes this number, mirroring `RabbiDirectoryEntry.lessonCount`.
+  lessonCount: number;
 }

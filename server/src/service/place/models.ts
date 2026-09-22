@@ -28,6 +28,9 @@ export interface PlaceRecord {
   citySlug: string;
   area: Area;
   photoUrl?: string;
+  // General-scope lesson count: see `loadPlaceLessonCounts` in `place.ts`
+  // for what it counts and why a rabbanit's lesson is excluded.
+  lessonCount: number;
 }
 
 export interface PlaceListResult {
