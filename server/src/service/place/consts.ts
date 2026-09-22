@@ -22,6 +22,14 @@ export const PLACE_PHOTO_MIN_HEIGHT = 450;
 // person now, so asking them to satisfy a ratio by hand would be false.
 export const INVALID_PHOTO_MESSAGE = `התמונה לא מתאימה. צריך תמונה לרוחב, לפחות ${PLACE_PHOTO_MIN_WIDTH} על ${PLACE_PHOTO_MIN_HEIGHT} פיקסלים.`;
 
+// The one wording of the unsupported-file-type rejection, kept identical to
+// the client's own copy (`components/PhotoPicker/consts.ts`'s
+// `UNSUPPORTED_TYPE_ERROR`) so the same rejection never reads two ways
+// depending on which side caught it first. Both upload routes (admin/places
+// and place/profile) send it. A place accepts only jpg or png; a rabbi photo
+// also accepts webp, so that route keeps its own, genuinely different wording.
+export const UNSUPPORTED_PHOTO_TYPE_MESSAGE = 'אפשר להעלות קובץ JPG או PNG בלבד';
+
 // Inclusive band: 16:9 is 1.777, comfortably inside.
 export const PLACE_PHOTO_MIN_ASPECT_RATIO = 1.5;
 export const PLACE_PHOTO_MAX_ASPECT_RATIO = 2.0;

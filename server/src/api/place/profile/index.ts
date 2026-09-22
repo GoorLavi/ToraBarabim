@@ -7,7 +7,7 @@ import { requirePlaceAuth } from '../../../plugins/place-guard';
 import { PlaceNotFoundError, UnknownCityError } from '../../../service/place-portal/errors';
 import { updatePlaceProfileSchema } from '../../../service/place-portal/models';
 import * as placeProfileService from '../../../service/place-portal/profile';
-import { INVALID_PHOTO_MESSAGE } from '../../../service/place/consts';
+import { INVALID_PHOTO_MESSAGE, UNSUPPORTED_PHOTO_TYPE_MESSAGE } from '../../../service/place/consts';
 import {
   MalformedPlacePhotoHeaderError,
   PlacePhotoAspectRatioError,
@@ -15,6 +15,7 @@ import {
   PlacePhotoTooSmallError,
   UnsupportedPlacePhotoTypeError,
 } from '../../../service/place/errors';
+import { photoTooLargeMessage } from '../../../service/shared/consts';
 
 const GENERIC_ERROR_MESSAGE = 'אירעה שגיאה בשרת, נסו שוב מאוחר יותר';
 const PLACE_NOT_FOUND_MESSAGE = 'פרופיל המקום לא נמצא';
@@ -27,11 +28,6 @@ const hasCode = (error: unknown, code: string): boolean =>
   typeof error === 'object' && error !== null && 'code' in error && error.code === code;
 const isMultipartFileTooLargeError = (error: unknown): boolean => hasCode(error, MULTIPART_FILE_TOO_LARGE_CODE);
 const isInvalidMultipartContentTypeError = (error: unknown): boolean => hasCode(error, MULTIPART_INVALID_CONTENT_TYPE_CODE);
-
-const fileTooLargeMessage = (maxBytes: number): string => {
-  const megabytes = Math.max(1, Math.round(maxBytes / (1024 * 1024)));
-  return `התמונה חורגת מהגודל המרבי המותר של ${megabytes} מגה-בייט`;
-};
 
 const handleError = (reply: FastifyReply, error: unknown, routeLabel: string): FastifyReply => {
   if (error instanceof ZodError) {
@@ -47,11 +43,11 @@ const handleError = (reply: FastifyReply, error: unknown, routeLabel: string): F
   }
 
   if (error instanceof UnsupportedPlacePhotoTypeError) {
-    return reply.status(400).send({ error: 'unsupported_file_type', message: 'ניתן להעלות תמונה מסוג jpg או png בלבד' });
+    return reply.status(400).send({ error: 'unsupported_file_type', message: UNSUPPORTED_PHOTO_TYPE_MESSAGE });
   }
 
   if (error instanceof PlacePhotoTooLargeError) {
-    return reply.status(413).send({ error: 'file_too_large', message: fileTooLargeMessage(error.maxBytes) });
+    return reply.status(413).send({ error: 'file_too_large', message: photoTooLargeMessage(error.maxBytes) });
   }
 
   if (error instanceof MalformedPlacePhotoHeaderError || error instanceof PlacePhotoTooSmallError || error instanceof PlacePhotoAspectRatioError) {
@@ -59,7 +55,7 @@ const handleError = (reply: FastifyReply, error: unknown, routeLabel: string): F
   }
 
   if (isMultipartFileTooLargeError(error)) {
-    return reply.status(413).send({ error: 'file_too_large', message: fileTooLargeMessage(loadConfig(process.env).maxUploadBytes) });
+    return reply.status(413).send({ error: 'file_too_large', message: photoTooLargeMessage(loadConfig(process.env).maxUploadBytes) });
   }
 
   if (isInvalidMultipartContentTypeError(error)) {
