@@ -69,7 +69,7 @@ const errorQuery: LessonSearchQueryState = {
 const populatedQuery: LessonSearchQueryState = {
   isPending: false,
   isError: false,
-  data: { items: todayItems, page: 1, pageSize: 50, total: todayItems.length },
+  data: { items: todayItems, page: 1, pageSize: 50, total: todayItems.length, appliedFilters: {} },
   error: null,
   refetch: () => {},
   dataUpdatedAt: 0,
@@ -81,7 +81,7 @@ const populatedQuery: LessonSearchQueryState = {
 const emptyWithFallbackQuery: LessonSearchQueryState = {
   isPending: false,
   isError: false,
-  data: { items: futureDayItems, page: 1, pageSize: 50, total: futureDayItems.length },
+  data: { items: futureDayItems, page: 1, pageSize: 50, total: futureDayItems.length, appliedFilters: {} },
   error: null,
   refetch: () => {},
   dataUpdatedAt: 0,
@@ -92,7 +92,7 @@ const emptyWithFallbackQuery: LessonSearchQueryState = {
 const terminalEmptyQuery: LessonSearchQueryState = {
   isPending: false,
   isError: false,
-  data: { items: [], page: 1, pageSize: 50, total: 0 },
+  data: { items: [], page: 1, pageSize: 50, total: 0, appliedFilters: {} },
   error: null,
   refetch: () => {},
   dataUpdatedAt: 0,
