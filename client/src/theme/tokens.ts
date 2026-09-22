@@ -7,8 +7,16 @@ import type { ThemeBreakpoints, ThemeLayout, ThemeRadii, ThemeShadows, ThemeSpac
 // Assistant was drawn for Hebrew rather than derived from a Latin family, and
 // stays readable at small sizes for an audience that spans a wide age range.
 // Only 400/600/700 ship: the family's thin weights fail this audience.
+const ASSISTANT_FONT_FAMILY = "'Assistant', system-ui, -apple-system, Arial, sans-serif";
+
+// The second family, used nowhere but the two dedication lines that carry a
+// person's name (design-system.md, "The second family, and the dedication
+// roles"). A request to reuse it elsewhere is a request to change what it
+// means.
+const FRANK_RUHL_LIBRE_FONT_FAMILY = "'Frank Ruhl Libre', serif";
+
 export const TYPOGRAPHY: ThemeTypography = {
-  fontFamily: "'Assistant', system-ui, -apple-system, Arial, sans-serif",
+  fontFamily: ASSISTANT_FONT_FAMILY,
   fontWeight: {
     regular: 400,
     semiBold: 600,
@@ -85,6 +93,32 @@ export const TYPOGRAPHY: ThemeTypography = {
     desktop: { fontSize: '36px', lineHeight: '40px' },
     fontWeight: 700,
   },
+  dedicationFormula: {
+    fontFamily: ASSISTANT_FONT_FAMILY,
+    fontSize: '24px',
+    lineHeight: '32px',
+    fontWeight: 400,
+    letterSpacing: '0.04em',
+  },
+  dedicationName: {
+    fontFamily: FRANK_RUHL_LIBRE_FONT_FAMILY,
+    fontSize: '52px',
+    lineHeight: '60px',
+    fontWeight: 700,
+  },
+  dedicationParent: {
+    fontFamily: FRANK_RUHL_LIBRE_FONT_FAMILY,
+    fontSize: '32px',
+    lineHeight: '40px',
+    fontWeight: 700,
+  },
+  dedicationClosing: {
+    fontFamily: ASSISTANT_FONT_FAMILY,
+    fontSize: '20px',
+    lineHeight: '28px',
+    fontWeight: 400,
+    letterSpacing: '0.12em',
+  },
 };
 
 export const SPACING: ThemeSpacing = {
@@ -110,6 +144,8 @@ export const RADII: ThemeRadii = {
 export const SHADOWS: ThemeShadows = {
   card: '0 1px 2px rgba(28,26,23,0.04), 0 1px 3px rgba(28,26,23,0.06)',
   raised: '0 4px 16px rgba(28,26,23,0.10)',
+  dedicationOnPrimary: '0 2px 6px rgba(0,0,0,0.38)',
+  dedicationOnPage: '0 1px 2px rgba(32,27,29,0.25)',
 };
 
 export const BREAKPOINTS: ThemeBreakpoints = {

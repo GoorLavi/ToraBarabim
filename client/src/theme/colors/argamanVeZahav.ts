@@ -19,5 +19,7 @@ export const argamanVeZahavColors: ThemeColors = {
   borderOnPrimary: 'rgba(255, 255, 255, 0.3)',
   surfaceOnPrimary: 'rgba(255, 255, 255, 0.12)',
   danger: '#A32A22',
+  dedication: '#B28027',
+  dedicationMuted: '#8C6621',
   scrim: 'rgba(32, 27, 29, 0.45)',
 };

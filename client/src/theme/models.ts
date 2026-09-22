@@ -25,6 +25,12 @@ export interface ThemeColors {
   // White at 12% opacity: a tag or pill fill on a `primary` field.
   surfaceOnPrimary: string;
   danger: string;
+  // A dedication's text on the page field. Its `primary`-field counterpart
+  // is `accentOnDark`, so the dark variant adds no color of its own.
+  dedication: string;
+  // A dedication's closing line on the page field, the one line that steps
+  // back.
+  dedicationMuted: string;
   // `text` at 45% opacity: the backdrop behind a `ResponsiveSheet`'s panel
   // and every sheet built on it (the date picker's mobile sheet, the city
   // picker's drawer). Alpha over the page rather than a flat color, so it
@@ -41,6 +47,24 @@ export interface ThemeTypeRole {
   phone: ThemeTypeSize;
   desktop: ThemeTypeSize;
   fontWeight: number;
+}
+
+// The four dedication roles (design-system.md, "The second family, and the
+// dedication roles") are single-value at every width, so they have nothing
+// for a `phone`/`desktop` split to respond to, and they carry a family and a
+// tracking no role above needs. Forcing them into `ThemeTypeRole` by
+// duplicating one value into both widths would claim a responsive step that
+// does not exist.
+export interface ThemeDedicationTypeRole {
+  fontFamily: string;
+  fontSize: string;
+  lineHeight: string;
+  fontWeight: number;
+  // Authored in `em`, never `%`, and present on exactly two of the four
+  // roles. Absent (not `'0em'`) on the other two, so there is nothing here
+  // for a later pass to "tidy" into consistency: doing that would space out
+  // a person's name.
+  letterSpacing?: string;
 }
 
 export interface ThemeTypography {
@@ -82,6 +106,20 @@ export interface ThemeTypography {
   // reserves `ticketTime` for the lesson ticket's start time alone. Constant
   // at every tile width, unlike the responsive roles above.
   tileCount: ThemeTypeRole;
+  // The opening formula line of a dedication ("לעילוי נשמת" and its two
+  // siblings), in Assistant. Carries tracking: the one role of the four that
+  // is a short fixed phrase rather than a person's name.
+  dedicationFormula: ThemeDedicationTypeRole;
+  // The honoured person's name, in Frank Ruhl Libre. No tracking: loosening
+  // it would space out a name.
+  dedicationName: ThemeDedicationTypeRole;
+  // The parent particle line ("בן"/"בת" and the father's name), in Frank
+  // Ruhl Libre. Also carries a name, so also no tracking. The donor credit
+  // line reuses this role rather than getting one of its own.
+  dedicationParent: ThemeDedicationTypeRole;
+  // The closing line ("תנצב״ה"), in Assistant. Carries tracking: it is the
+  // one line that steps back, and the wider tracking is part of that.
+  dedicationClosing: ThemeDedicationTypeRole;
 }
 
 export interface ThemeSpacing {
@@ -105,6 +143,11 @@ export interface ThemeRadii {
 export interface ThemeShadows {
   card: string;
   raised: string;
+  // Lifts a dedication's gold text off the plum field. Not `raised`: that
+  // separates a surface from the page, this gives depth to text on a field.
+  dedicationOnPrimary: string;
+  // The same job on the page field, where far less contrast is needed.
+  dedicationOnPage: string;
 }
 
 export interface ThemeBreakpoints {
