@@ -1,5 +1,5 @@
 import type { LessonProvenance } from './agent-import';
-import type { DedicationHonorific, DedicationType, HonoredGender } from './dedication';
+import type { DedicationHonorific, DedicationText, DedicationType, HonoredGender } from './dedication';
 import type { RabbiProminence } from './home';
 import type { LessonException } from './lesson-exception';
 import type { Lesson, ResolvedLessonPlace } from './lesson';
@@ -173,7 +173,9 @@ export type AdminDedicationState = 'upcoming' | 'live' | 'ended' | 'takenDown';
 // An administrator's full view of one dedication record, including its
 // clean stored name fields. Never sent to the public home response, which
 // only ever carries the composed `Dedication` (`dedication.ts`) inside a
-// `DedicationGroup`.
+// `DedicationGroup`. `display` is the same composed segments a visitor
+// would see, reusing the one composer (`server/src/service/dedication/text.ts`)
+// through the public convertor, never a second composition path.
 export interface AdminDedication {
   id: string;
   type: DedicationType;
@@ -187,6 +189,7 @@ export interface AdminDedication {
   endsOn: string;
   takenDownReason?: string;
   state: AdminDedicationState;
+  display: DedicationText;
   createdAt: string;
   updatedAt: string;
 }
@@ -198,3 +201,32 @@ export type DedicationPreviewRequest = Pick<
   AdminDedication,
   'type' | 'honoredName' | 'honorific' | 'honoredGender' | 'parentName' | 'donorFamilyName' | 'closingLineEnabled'
 >;
+
+// The preview response is the same four segments a visitor would see, never
+// a bespoke shape.
+export type DedicationPreviewResponse = DedicationText;
+
+// A create request carries every stored field except the id and the
+// server-managed timestamps and takedown state. An update is a full
+// replacement, not a merge, matching `UpdateLessonRequest`: this feature's
+// two independence rules (honorific never derived from gender and back, the
+// suffix never derived from type) are exactly the kind of thing a partial
+// merge could silently violate by leaving a stale field behind.
+export type CreateDedicationRequest = Pick<
+  AdminDedication,
+  'type' | 'honoredName' | 'honorific' | 'honoredGender' | 'parentName' | 'donorFamilyName' | 'closingLineEnabled' | 'startsOn' | 'endsOn'
+>;
+export type UpdateDedicationRequest = CreateDedicationRequest;
+
+// Taking a dedication down always carries the reason it was pulled; the
+// route rejects a request without one with a 400.
+export interface TakedownDedicationRequest {
+  reason: string;
+}
+
+export interface DedicationListResponse {
+  items: AdminDedication[];
+  page: number;
+  pageSize: number;
+  total: number;
+}
