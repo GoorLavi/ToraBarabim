@@ -403,15 +403,56 @@ readability anywhere. At a 1280 viewport the 24px side gutter leaves a 1232 band
 1328 up the band caps at 1280 and the page centres. Wider than that, only the margins
 grow.
 
-**The lesson grid steps: two columns on a phone, three from `md` 768, four from `xl`
-1280.** Every step down is real and must be built, not treated as a wide-screen
-afterthought: a small laptop lands on three columns, not a squeezed four. The cell is
-296px in the 1232 band and 308px in the full 1280 band, with the 3:4 poster following the
-cell.
+**The lesson grid steps: two columns on a phone, three from `md` 768, four from 1200.**
+Every step down is real and must be built, not treated as a wide-screen afterthought: a
+small laptop lands on three columns, not a squeezed four.
 
-Those are the cells at the steps themselves. **Between them the cell is unbounded, and in
-the three-column range it grows to 400px**, which nothing in this file has ever ratified.
-See "How the lesson card is bounded between 1024 and 1280" under Open.
+**The fourth column lands at 1200, not at `xl` 1280.** 1200 is its own layout width,
+`theme.layout.fourColumnWidth`, rather than a new entry on the `sm` / `md` / `lg` / `xl`
+scale: inserting one between `lg` and `xl` would mean renaming `xl` in every file that
+reads it, and this width is a property of the columns, not of a class of device. `xl`
+1280 stays exactly what it is, the content cap, and **nothing about the card changes
+there any more.**
+
+**The band holds at 860px from `md` 768 to 1200, and that is the one exception to the
+1280 cap above.** It is scoped to a single range and ratified here rather than left as
+drift. Without the hold the cell is the band divided by three throughout the three-column
+range and reaches **357px at 1199**, where the poster alone is 357 by 476 and one rail
+fills a laptop screen. That is the grid's own arithmetic, so the rail and the grid have it
+identically; it was never a rail defect.
+
+**860 is chosen so the held cell is exactly the cell four columns give at 1200.**
+(860 - 2 x 16) / 3 = 276, and (1200 - 2 x 24 - 3 x 16) / 4 = 276: the same number on both
+sides of the step, so **nothing changes size at 1200**, a fourth card simply arrives. The
+hold starts binding at a 908 viewport, which is where three columns reach 276 on their
+own, so nothing jumps there either, and no `lg` media query is involved. **276 is not a
+derived compromise: it is the size the owner ratified from a live 1200px render**
+(2026-09-22, "looks amazing"), and the hold exists to carry that one size across the whole
+three-column range.
+
+The cell, end to end: 163.5 at 375, 171 at 390, 229.33 at 768, growing to 276 by 908, held
+at 276 through to 1200, 276 again at 1200 on four columns, 296 at 1280, 308 from 1328 up.
+**It never decreases at any width from 768 up.**
+
+**A mid-range fourth column was considered once and rejected, on a shape that no longer
+applies.** A step at 1152 paired with a hold tuned to 308 (the 1328 ceiling, not the
+step's own cell) would land the held cell far above the cell the step produces: a second
+size inversion. Tuning the hold to the step's own cell removes it, which is what 860/1200
+does: both sides are 276.
+
+The cost is real and is accepted here rather than hidden. Between 908 and 1200 the page
+does not use its full width: at 1024 the margins are 82px on each side, at 1199 they are
+169.5px. And **this is a page-wide hold, not a grid-only one**: the header band, the
+footer and every page body hold with it. That is not incidental, it is what makes it
+legitimate, because a grid narrower than the heading above it reads as a broken page. A
+rail is not harmed by the hold, because a rail bleeds past the band on purpose and its
+peek grows with the margin, exactly as it already does above 1328.
+
+**Rollout note:** ratified 2026-09-22 for the rail; syncing the grid's own fourth-column
+breakpoint and the seven pages that share the content band to this same 1200/860 pair is
+the required next step (a rail whose column count diverges from the grid's at the same
+width is a second card size with its own breakpoint, not one size across the site) and is
+tracked as a separate, immediate follow-up, not a closed gap.
 
 Not five. The reason is the poster, not the text: measured in Assistant, the widest line a
 card carries is the audience and topic line at 172px, and the longest rabbi name in the
@@ -448,36 +489,60 @@ of the same lessons.
 
 - **The card is one size across the whole site, and that size comes from the grid.** A
   rail card and a grid card are the same card at the same screen width: the grid's column
-  width, because columns must fill the content band exactly. 163.5 at 375, 229 at 768,
-  315 at 1024, 296 at 1280, 308 from 1328 up. The card gets *smaller* at 1280, where the
-  grid steps from three columns to four; that is the grid's rule and the rail follows it.
-- **Gap `sm` (8) below `md`, `lg` (16) from `md` up, in a rail. A grid keeps `lg` (16) at
-  every width.** Heading to cards `lg` (16), which measures 20 because of the scroller's
-  own 4px focus-ring padding.
+  width, because columns must fill the content band exactly. 163.5 at 375, 229.33 at 768,
+  276 from 908 through to 1200, 296 at 1280, 308 from 1328 up. It never decreases at any
+  width from 768 up: the 12px dip at 1280 that earlier versions of this file described is
+  gone, because the fourth column now lands at 1200 against a band held to meet it.
+- **The rail and the grid must take the fourth column at the same width, 1200. They must
+  never diverge in column count.** Moving only the rail was proposed when this was
+  ratified and rejected: a rail card that is the grid's column at one width and not at
+  another is no longer "one size across the whole site", it is a second card size with a
+  breakpoint of its own, and the first person to compare a rail with the grid below it
+  would read it as a bug. The rail and the grid differ in exactly one thing, the gap, and
+  that difference is the peek mechanism below. *(Rollout: the rail moved first,
+  2026-09-22; syncing `LessonsGrid` and the seven pages sharing the content band to the
+  same 1200/860 pair is the immediate next step, not a closed gap. Until it lands, this
+  bullet describes the intended state, not what has shipped.)*
+- **A rail's gap is `sm` (8) at every width. A grid keeps `lg` (16) at every width.**
+  Heading to cards `lg` (16), which measures 20 because of the scroller's own 4px
+  focus-ring padding.
 
-  The 8 on a phone is ratified (owner, 2026-09-22, "אפשר להוריד ל-8px"), and it supersedes
-  the earlier "gap `lg` (16) everywhere, in a rail and in a grid alike" **for the rail
-  only**. It buys the peek back on a phone, where there was none: see the arithmetic
-  below. It is bounded twice, and both bounds matter. The grid's cells still sit 16 apart.
-  And **the card's own width is still computed against a 16 gap**, because the card is the
-  grid's column and must not change size: 163.5 at 375 before this change and 163.5 after.
-  Those are two different uses of `lg` in the same file, the row's own gap and the grid
-  gap the column width is derived from, and unifying them would resize every card on the
-  site.
+  The 8 is ratified twice: on a phone (owner, 2026-09-22, "אפשר להוריד ל-8px") and at 1200
+  on a wide screen (owner, 2026-09-22, live in DevTools). It supersedes both the original
+  "gap `lg` (16) everywhere, in a rail and in a grid alike" and the "`sm` below `md`, `lg`
+  from `md` up" split that followed it. One value in a rail, one in a grid, no breakpoint
+  step in either. The split existed only because nobody had looked at the middle range,
+  where 8 buys exactly what it buys at both ends: at 768 the peek goes from 8px, which
+  reads as a page margin, to 32px, which reads as more row.
+
+  It is bounded twice, and both bounds matter. The grid's cells still sit 16 apart. And
+  **the card's own width is still computed against a 16 gap**, because the card is the
+  grid's column and must not change size: 163.5 at 375 before this change and 163.5 after,
+  276 at 1200 before and after. Those are two different uses of `lg` in the same file, the
+  row's own gap and the grid gap the column width is derived from, and unifying them would
+  resize every card on the site. **That is the whole mechanism:** the row closes up a gap
+  the card's width was never told about, and the difference surfaces at the row's
+  scrolling edge as peek.
 
   **8 is the floor, not a step on the way down.** Two adjacent cards are two adjacent tap
   targets, and the mobile-first rule above gives them at least 8px of real separation, not
   an optical one: that exemption is bounded to a grid of identical cells such as a date
-  picker and does not reach here.
+  picker and does not reach here. **It does not get a token of its own either.** It is
+  `theme.spacing.sm`. A `railGap` token would be a second name for 8 that could drift from
+  the tap-target floor that actually governs it, and the thing that needed a home was the
+  rule, not the number.
 - **The rail runs full-bleed to the screen edge, with the page gutter as its inner
   padding.** The first card still lines up under the heading, and the row visibly carries
   on past the content band instead of ending with it.
 - **The peek at the row's scrolling edge is the signal that there is more**, together
   with the arrows from `md` up. A sliver of the next card's poster and its rounded corner
-  stays visible past the last full card: 16 at every phone width, 8 from `md` to 1328, and
-  growing with the centring margin above that. Nothing is drawn to produce it. It falls
-  out of the row's own arithmetic, written out below, so it adds no height beneath the
-  cards and names no side.
+  stays visible past the last full card: 16 at every phone width, 32 from `md` 768 to 908,
+  growing with the held band's own margin from 908 to 1200 (90 at 1024, 177.5 at 1199),
+  40 from 1200 to 1328, and growing with the centring margin above 1328 (96 at 1440).
+  Nothing is drawn to produce it. It falls out of the row's own arithmetic, written out
+  below, so it adds no height beneath the cards and names no side. **It never collapses to
+  nothing at any width**, which is new: it was 8px at 768 and again at 1280 before this
+  pass.
 - **A scroll-progress track was specified here, built, and then removed** (owner,
   2026-09-22). It was a 4px bar below the row whose thumb was the fraction of the row
   currently visible, so it said *how much more* as well as *that there is more*, and it was
@@ -510,14 +575,22 @@ of the same lessons.
 
   **peek = gutter + (columns - 1) x (16 - gap) - gap**
 
-  Below `md` that is 16 + 1 x 8 - 8 = **16 at every phone width**, from a 320 screen to a
+  With the row's gap at `sm` (8) at every width, that is **gutter + (columns - 1) x 8 -
+  8**. Below `md`: 16 + 1 x 8 - 8 = **16 at every phone width**, from a 320 screen to a
   430 one, because every term in it is a constant there. It is a real sliver of the next
   card's poster and its rounded corner, about a tenth of a 163.5 card. It was 0 before the
   gap was ratified down to 8, and a bare 16px at the scrolling edge read as the page margin
-  rather than as more row. From `md` to 1328 the gap is still 16, so the formula collapses
-  to gutter minus gap and the peek stays 8. Past 1328 the gutter is the centring margin and
-  grows with the viewport, so the peek grows with it: 64 at 1440. The peek says that there
-  is more; since the track went, nothing says how much.
+  rather than as more row. At three columns: 24 + 2 x 8 - 8 = **32 from 768 to 908**, where
+  the gutter is still the page's own 24; from 908 the gutter is the held band's centring
+  margin and grows with the viewport, so the peek grows with it, 90 at 1024 and 177.5 at
+  1199. At four columns: 24 + 3 x 8 - 8 = **40 from 1200 through 1328**, then the centring
+  margin takes over again, 96 at 1440.
+
+  **The step at 1200 is a peek seam, not a size seam.** The card is 276 on both sides of
+  it, the arrows do not move because their centring is derived from that width, and the
+  page gutter is the only thing that changes: the fourth card, 177.5px of peek at 1199,
+  becomes a whole card, and a fifth peeks by 40. The peek says that there is more; since
+  the track went, nothing says how much.
 - **Peek cannot be brought back by padding, only by narrowing the card.** Making the
   scroller's padding asymmetric, keeping it at the start for heading alignment and dropping
   it at the end, was proposed and rejected (2026-09-22). End padding sits past the last
@@ -544,10 +617,10 @@ of the same lessons.
   a quarter of a 171px card. At 768 the button overlaps the leading card's poster by about
   17%, clear of its text, which is the accepted cost.
   The poster is 3:4 of the card, so its centre moves with the card and **is calculated
-  from the same width formula, never stored as a number**: below 1280 the grid is three
-  columns, so the card is wider and the poster taller, and a fixed value sits 56px off
-  centre at 1200. The 197 in the Figma frame is what that calculation gives at 1280, not a
-  constant. At the ends they go **disabled, never hidden**, so the row does not shift.
+  from the same width formula, never stored as a number**: between `md` and the width the
+  band starts holding, the card is still growing into its three columns, so a fixed value
+  sits 44px off centre at 768. The 197 in the Figma frame is what that calculation gives
+  at 1280, not a constant. At the ends they go **disabled, never hidden**, so the row does not shift.
 - **Snap by proximity, never mandatorily.** Mandatory snapping fights a fast flick and
   feels grabby, which is the opposite of what this site is for.
 - A flick must not navigate the browser backwards.
@@ -574,20 +647,22 @@ of the same lessons.
   does the work for now. If most lessons in a given area turn out to be for one audience,
   this decision is wrong and needs revisiting.
 
-- **How the lesson card is bounded between 1024 and 1280.** The column count steps at
-  `md` 768 and `xl` 1280, and `xl` is the content cap itself, so the three-column range is
-  512px of viewport growth with no step in it. The cell is the band divided by three
-  throughout: 229 at 768, the ratified 315 at 1024, and **400 at 1279**, where the poster
-  alone is 400 by 533 and one rail fills a laptop screen. Then it drops to 296 the instant
-  a fourth column lands. This is the grid's own arithmetic, so the rail and the grid have
-  it identically; it is not a rail defect and it predates the rail's own tokens. No column
-  count fixes it on its own: three columns stay under 315 only below about 1025, and four
-  columns clear 280 only above about 1216, so the two conditions cannot both be met by
-  moving the step. Bounding it means either accepting a larger ceiling at a compromise
-  step, or holding the band at its 1024 width through the range and letting the margins
-  take the rest, which is a second content width and contradicts "one value, and it binds
-  every page". The owner has called the tile too big; which of the two is not decided, and
-  it wants a record rather than a styling patch.
+- **Whether the card's ceiling at the widest widths should come down from 308.** The hold
+  above bounds the three-column range; from 1328 up the cell is 308, four columns in the
+  full 1280 band. The owner called that size too big on a live wide-desktop render
+  (2026-09-22). Only three things can lower it, and each costs something already settled:
+  a fifth column, which makes the poster a 243 by 324 thumbnail and is rejected above; a
+  narrower site content band, which reopens 1280 for every page rather than for one range;
+  or the rail card ceasing to be the grid's column, which reverses "the card is one size
+  across the whole site". And none of them is a strong lever on what the complaint is
+  actually about, which is height: the card is 1.75 times as tall as it is wide, so a rail
+  plus its heading is about 595px at 308 and fills a laptop fold on its own. Narrowing the
+  card to 272 buys 48px of that. The strong lever is the 3:4 poster, and that is
+  structural. Two things come before reopening any of it. The seed portraits are drawn 2:3
+  against a 3:4 frame, so a local render throws away 11% of each poster's height and zooms
+  the drawn composition by 12.5%, and the art is flat brand colour rather than
+  photography, which reads far heavier at 308 by 411 than a photograph will. Fix the seed
+  art, ship the hold above, and look again.
 
 Decided against, so not open and not to be reopened casually:
 
