@@ -7,7 +7,7 @@ export const ownershipNote = (rabbiName: string): string =>
   `השיעור רשום על שמך ומופיע באתר תחת "${rabbiName}". כל השדות חובה, חוץ משם השיעור.`;
 
 export const TITLE_LABEL = 'שם השיעור';
-export const TITLE_HELPER = 'לא חובה. בלי שם, יופיע באתר שמך.';
+export const TITLE_HELPER = 'לא חובה. בלי שם, השיעור יוצג באתר לפי הנושא שנבחר.';
 
 export const WHEN_SECTION_HEADING = 'מתי מתקיים השיעור';
 export const WEEKDAYS_LABEL = 'כל שבוע, בימים';

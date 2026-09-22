@@ -12,7 +12,7 @@ export const NEW_HEADING = 'שיעור חדש';
 export const EDIT_HEADING = 'עריכת שיעור';
 
 export const TITLE_LABEL = 'שם השיעור';
-export const TITLE_HELPER = 'לא חובה. בלי שם, יופיע באתר שמך.';
+export const TITLE_HELPER = 'לא חובה. בלי שם, השיעור יוצג באתר לפי הנושא שנבחר.';
 
 export const WHEN_SECTION_HEADING = 'מתי מתקיים השיעור';
 export const AUDIENCE_SECTION_HEADING = 'למי השיעור מיועד';
