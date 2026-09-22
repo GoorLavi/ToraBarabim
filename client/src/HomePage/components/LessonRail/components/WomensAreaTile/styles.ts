@@ -1,27 +1,24 @@
 import { css } from 'styled-components';
 
 import { CARD_WIDE_THRESHOLD } from '~/HomePage/components/LessonCard/consts';
-import {
-  RAIL_COLUMNS_MD,
-  RAIL_COLUMNS_PHONE,
-  RAIL_COLUMNS_WIDE,
-  RAIL_COLUMNS_XL,
-  RAIL_FOUR_COL_BREAKPOINT,
-} from '~/HomePage/components/LessonRail/consts';
-import { railCardWidth, railEdgeOffset, type RailEdgeZone } from '~/HomePage/components/LessonRail/helpers';
+import { RAIL_CARD_WIDTH_DESKTOP, RAIL_COLUMNS_PHONE } from '~/HomePage/components/LessonRail/consts';
+import { railCardWidth, railEdgeOffset } from '~/HomePage/components/LessonRail/helpers';
 import { POSTER_ASPECT_RATIO } from '~/HomePage/consts';
 import type { Theme } from '~/theme/models';
 
 import { EMBLEM_SIZE_FLOOR, EMBLEM_WIDTH_FACTOR } from './consts';
 
-// The same breakpoints and the same formula the rail's own `<li>` already
-// uses to size a card (LessonRail/styles.ts, LessonRail/helpers.ts): this is
-// the one place the tile's rendered width is computed, so reusing it here
-// for the emblem, rather than a CSS percentage that would resolve against
-// `.plum`'s own narrower content box, keeps a single source of truth
-// instead of a second number that could drift from it.
-const emblemInlineSize = (theme: Theme, columns: number, zone: RailEdgeZone): string =>
-  `max(${EMBLEM_SIZE_FLOOR}px, calc(${EMBLEM_WIDTH_FACTOR} * ${railCardWidth(theme, columns, railEdgeOffset(theme, zone))}))`;
+// The same phone formula the rail's own `<li>` uses to size a card
+// (LessonRail/styles.ts, LessonRail/helpers.ts): this is the one place the
+// tile's rendered width is computed, so reusing it here for the emblem,
+// rather than a CSS percentage that would resolve against `.plum`'s own
+// narrower content box, keeps a single source of truth instead of a second
+// number that could drift from it. From `md` up the card width is the fixed
+// RAIL_CARD_WIDTH_DESKTOP, so no formula is needed there.
+const emblemInlineSizePhone = (theme: Theme): string =>
+  `max(${EMBLEM_SIZE_FLOOR}px, calc(${EMBLEM_WIDTH_FACTOR} * ${railCardWidth(theme, RAIL_COLUMNS_PHONE, railEdgeOffset(theme, 'gutter'))}))`;
+
+const emblemInlineSizeDesktop = `max(${EMBLEM_SIZE_FLOOR}px, calc(${EMBLEM_WIDTH_FACTOR} * ${RAIL_CARD_WIDTH_DESKTOP}))`;
 
 export const WomensAreaTile = css(
   ({ theme }) => `
@@ -83,10 +80,8 @@ export const WomensAreaTile = css(
 
     > .emblem {
       flex-shrink: 0;
-      /* 44 percent of the CARD's own width (consts.ts, EMBLEM_WIDTH_FACTOR),
-         stepped at the same three breakpoints the card width itself steps
-         at (LessonRail/helpers.ts, railCardWidth). */
-      inline-size: ${emblemInlineSize(theme, RAIL_COLUMNS_PHONE, 'gutter')};
+      /* 44 percent of the CARD's own width (consts.ts, EMBLEM_WIDTH_FACTOR). */
+      inline-size: ${emblemInlineSizePhone(theme)};
       /* The height follows the width rather than repeating the same
          calculation: a second, independent height formula could drift
          from the width one, and the ratio already gives a square for free.
@@ -96,19 +91,10 @@ export const WomensAreaTile = css(
       aspect-ratio: 1;
 
       @media (min-width: ${theme.breakpoints.md}) {
-        /* Held, matching the fix in LessonRail/styles.ts: without it the
-           emblem would grow past what \`.plum\` (which follows the same
-           held card width via the \`<li>\`'s own flex-basis) actually has
-           room for between \`md\` and RAIL_FOUR_COL_BREAKPOINT. */
-        inline-size: ${emblemInlineSize(theme, RAIL_COLUMNS_MD, 'held')};
-      }
-
-      @media (min-width: ${RAIL_FOUR_COL_BREAKPOINT}) {
-        inline-size: ${emblemInlineSize(theme, RAIL_COLUMNS_WIDE, 'full')};
-      }
-
-      @media (min-width: ${theme.breakpoints.xl}) {
-        inline-size: ${emblemInlineSize(theme, RAIL_COLUMNS_XL, 'full')};
+        /* Fixed, matching LessonRail/styles.ts: the card width no longer
+           grows with the viewport from \`md\` up, so the emblem is sized
+           against the same constant (RAIL_CARD_WIDTH_DESKTOP). */
+        inline-size: ${emblemInlineSizeDesktop};
       }
     }
 

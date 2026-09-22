@@ -2,42 +2,31 @@ import type { LessonOccurrence } from '@torabarabim/common';
 
 import type { Theme } from '~/theme/models';
 
-import { RAIL_HELD_BAND_WIDTH, SCROLL_STEP_RATIO } from './consts';
+import { SCROLL_STEP_RATIO } from './consts';
 
-// Which of the rail's three horizontal bands the inline edge offset is
+// Which of the rail's two horizontal bands the inline edge offset is
 // computed for: `gutter` below `md`, where it is just the page's own side
-// padding; `held` from `md` up to RAIL_FOUR_COL_BREAKPOINT, where the rail
-// (like the grid, design-system.md "Horizontal rails") holds its band at
-// RAIL_HELD_BAND_WIDTH rather than growing with the viewport, so its
-// 3-column card does not balloon the way it would on the naked formula;
-// `full` from RAIL_FOUR_COL_BREAKPOINT up, where the band is the site's
-// real content cap (`theme.layout.contentMaxWidth`). That expression is a flat
+// padding; `full` from `md` up, where the band is the site's real content
+// cap (`theme.layout.contentMaxWidth`). That expression is a flat
 // `theme.spacing.xl` below `xl` itself, since the viewport has not yet
-// reached the cap, so the 4-column card born at RAIL_FOUR_COL_BREAKPOINT
-// grows continuously straight through the real `>= xl` case with no jump at
-// 1280; using `held` there instead would leave the card flat and then jump
-// it at 1280, the same kind of discontinuity this fix exists to remove. A
-// boolean cannot express three states, so this replaced one that tried to.
-export type RailEdgeZone = 'gutter' | 'held' | 'full';
+// reached the cap, and grows past it above `xl`.
+export type RailEdgeZone = 'gutter' | 'full';
 
 // The inline distance from the true viewport edge to the rail's own band
 // edge, at any width: below `md` this is just the band's own gutter
 // (`~/styles/contentBand.ts`, `contentGutterInline`); from `md` up it also
-// has to reproduce a band cap, since the rail bleeds past the band entirely
-// (`margin-inline: calc(-1 * ...)` in styles.ts) and so gets none of the
-// band's own centring for free once the viewport is wider than that cap.
-// `held` reproduces that cap against RAIL_HELD_BAND_WIDTH; `full` reproduces
-// it against the site's real `theme.layout.contentMaxWidth`. Both mirror
-// `contentGutterInline`'s own centring formula; the rail, having escaped
-// that parent, is the one place this combined value is needed as a single
-// number, which is why it lives here rather than in contentBand.ts (root
-// CLAUDE.md, "no abstraction before the second real caller").
+// has to reproduce the band's cap, since the rail bleeds past the band
+// entirely (`margin-inline: calc(-1 * ...)` in styles.ts) and so gets none
+// of the band's own centring for free once the viewport is wider than that
+// cap. This mirrors `contentGutterInline`'s own centring formula; the rail,
+// having escaped that parent, is the one place this combined value is
+// needed as a single number, which is why it lives here rather than in
+// contentBand.ts (root CLAUDE.md, "no abstraction before the second real
+// caller").
 export const railEdgeOffset = (theme: Theme, zone: RailEdgeZone): string => {
   switch (zone) {
     case 'gutter':
       return theme.spacing.lg;
-    case 'held':
-      return `max(${theme.spacing.xl}, calc((100vw - ${RAIL_HELD_BAND_WIDTH}) / 2))`;
     case 'full':
       return `max(${theme.spacing.xl}, calc((100vw - ${theme.layout.contentMaxWidth}) / 2))`;
   }
@@ -46,17 +35,14 @@ export const railEdgeOffset = (theme: Theme, zone: RailEdgeZone): string => {
 // The rail's card width at a given column count, computed the same way the
 // grid's own `1fr` columns resolve theirs: the viewport, minus the band's
 // edge offset on both sides, minus the gaps between columns, divided by
-// the column count. Passing `railEdgeOffset`'s own `held` or `full` value in
-// already reproduces the matching band's ceiling without a separate
-// `min()`: past that band's own width, the offset grows in lockstep with
-// the viewport, so the two cancel and this settles at a constant.
+// the column count. Phone-only now: from `md` up the card is a fixed width
+// (RAIL_CARD_WIDTH_DESKTOP, consts.ts), not a column count against the
+// viewport, so this formula is only ever called with RAIL_COLUMNS_PHONE and
+// the `gutter` offset.
 // The `theme.spacing.lg` here is the grid's own gap, which this width is
-// derived from and which must stay 16 at every width for the card to match
-// the grid's column, regardless of the column count or edge zone passed in.
-// It is independent of the row's own `gap` in styles.ts, `sm` at every
-// width so the difference from this always-`lg` sizing gap surfaces as peek
-// throughout: unifying the two would resize the card, not just the space
-// between cards.
+// derived from and which must stay 16 regardless of the row's own `gap` in
+// styles.ts (`sm` on a phone), so the difference between the two surfaces
+// as peek.
 export const railCardWidth = (theme: Theme, columns: number, edgeOffset: string): string =>
   `calc((100vw - 2 * ${edgeOffset} - ${columns - 1} * ${theme.spacing.lg}) / ${columns})`;
 

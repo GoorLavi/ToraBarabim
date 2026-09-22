@@ -487,62 +487,34 @@ around.
 The unfiltered home page is rows of cards that scroll sideways, each row a different cut
 of the same lessons.
 
-- **The card is one size across the whole site, and that size comes from the grid.** A
-  rail card and a grid card are the same card at the same screen width: the grid's column
-  width, because columns must fill the content band exactly. 163.5 at 375, 229.33 at 768,
-  276 from 908 through to 1200, 296 at 1280, 308 from 1328 up. It never decreases at any
-  width from 768 up: the 12px dip at 1280 that earlier versions of this file described is
-  gone, because the fourth column now lands at 1200 against a band held to meet it.
-- **The rail and the grid must take the fourth column at the same width, 1200. They must
-  never diverge in column count.** Moving only the rail was proposed when this was
-  ratified and rejected: a rail card that is the grid's column at one width and not at
-  another is no longer "one size across the whole site", it is a second card size with a
-  breakpoint of its own, and the first person to compare a rail with the grid below it
-  would read it as a bug. The rail and the grid differ in exactly one thing, the gap, and
-  that difference is the peek mechanism below. *(Rollout: the rail moved first,
-  2026-09-22; syncing `LessonsGrid` and the seven pages sharing the content band to the
-  same 1200/860 pair is the immediate next step, not a closed gap. Until it lands, this
-  bullet describes the intended state, not what has shipped.)*
-- **A rail's gap is `sm` (8) at every width. A grid keeps `lg` (16) at every width.**
-  Heading to cards `lg` (16), which measures 20 because of the scroller's own 4px
-  focus-ring padding.
-
-  The 8 is ratified twice: on a phone (owner, 2026-09-22, "אפשר להוריד ל-8px") and at 1200
-  on a wide screen (owner, 2026-09-22, live in DevTools). It supersedes both the original
-  "gap `lg` (16) everywhere, in a rail and in a grid alike" and the "`sm` below `md`, `lg`
-  from `md` up" split that followed it. One value in a rail, one in a grid, no breakpoint
-  step in either. The split existed only because nobody had looked at the middle range,
-  where 8 buys exactly what it buys at both ends: at 768 the peek goes from 8px, which
-  reads as a page margin, to 32px, which reads as more row.
-
-  It is bounded twice, and both bounds matter. The grid's cells still sit 16 apart. And
-  **the card's own width is still computed against a 16 gap**, because the card is the
-  grid's column and must not change size: 163.5 at 375 before this change and 163.5 after,
-  276 at 1200 before and after. Those are two different uses of `lg` in the same file, the
-  row's own gap and the grid gap the column width is derived from, and unifying them would
-  resize every card on the site. **That is the whole mechanism:** the row closes up a gap
-  the card's width was never told about, and the difference surfaces at the row's
-  scrolling edge as peek.
-
-  **8 is the floor, not a step on the way down.** Two adjacent cards are two adjacent tap
-  targets, and the mobile-first rule above gives them at least 8px of real separation, not
-  an optical one: that exemption is bounded to a grid of identical cells such as a date
-  picker and does not reach here. **It does not get a token of its own either.** It is
-  `theme.spacing.sm`. A `railGap` token would be a second name for 8 that could drift from
-  the tap-target floor that actually governs it, and the thing that needed a home was the
-  rule, not the number.
+- **Below `md`, the card is one size with the grid: the grid's column width**, because a
+  phone grid's columns must still fill the content band exactly. 163.5 at 375, 229.33 at
+  768. From `md` up, see the next bullet: the rail and the grid no longer compute the same
+  card the same way, on purpose.
+- **From `md` (768) up, the rail's card is a fixed 308px and never grows past it.**
+  (Owner, 2026-09-22: "אני רוצה שכמות הכרטיסים תגדל לא גודל הכרטיסים יגדל... לא הייתי רוצה
+  שכרטיס יגדל יותר מהגודל הזה.") 308 is the size the site already used at its widest
+  (≥1328 under the old scheme), so nothing on the page gets bigger than it already was;
+  what changes is that the row no longer waits for a breakpoint to add a card. There is no
+  column-count ladder to maintain here any more: however many 308px cards fit the
+  available width, at any viewport, is exactly how many show, with no upper bound. This
+  superseded a same-day held-band scheme (860px band, a 1200px breakpoint) that chased a
+  fixed column count instead of a fixed card size; it is gone, not layered under this.
+- **The gap is `sm` (8) below `md`, `lg` (16) from `md` up.** From `md` up this matches the
+  grid's own gap once more (see the next bullet on why the grid and the rail can still
+  differ in column behaviour without differing in gap). The phone value stays ratified
+  from 2026-09-22 ("אפשר להוריד ל-8px") for the same reason as always: it is what buys the
+  peek on a phone, where a flat 16 would read as a page margin rather than more row.
+- **Peek is no longer a manufactured gap mismatch; it falls out of fixed-width arithmetic.**
+  A real viewport is essentially never an exact multiple of (308 + 16), so a partial card
+  shows at the row's scrolling edge on its own, at every desktop width, with nothing drawn
+  and nothing computed on purpose to produce it. Below `md` the old mechanism still
+  applies (the card's own width is still derived from a 16 gap while the row runs 8, and
+  the difference surfaces as a real 16px peek at every phone width) because the phone
+  range still uses a derived, not fixed, card width.
 - **The rail runs full-bleed to the screen edge, with the page gutter as its inner
   padding.** The first card still lines up under the heading, and the row visibly carries
   on past the content band instead of ending with it.
-- **The peek at the row's scrolling edge is the signal that there is more**, together
-  with the arrows from `md` up. A sliver of the next card's poster and its rounded corner
-  stays visible past the last full card: 16 at every phone width, 32 from `md` 768 to 908,
-  growing with the held band's own margin from 908 to 1200 (90 at 1024, 177.5 at 1199),
-  40 from 1200 to 1328, and growing with the centring margin above 1328 (96 at 1440).
-  Nothing is drawn to produce it. It falls out of the row's own arithmetic, written out
-  below, so it adds no height beneath the cards and names no side. **It never collapses to
-  nothing at any width**, which is new: it was 8px at 768 and again at 1280 before this
-  pass.
 - **A scroll-progress track was specified here, built, and then removed** (owner,
   2026-09-22). It was a 4px bar below the row whose thumb was the fraction of the row
   currently visible, so it said *how much more* as well as *that there is more*, and it was
