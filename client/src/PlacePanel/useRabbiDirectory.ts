@@ -11,13 +11,13 @@ export interface RabbiDirectoryState {
   isError: boolean;
 }
 
-// Shared by `LessonsListPage` (resolving each lesson's own `rabbiId` to a
-// display name) and `LessonFormPage`'s rabbi picker (choosing one): two real
-// callers, so this sits at the panel's top level, mirroring
-// `RabbiPanel/useRabbiProfile.ts`. Both audience scopes are fetched, since a
-// place may name a rav or a rabbanit. See `api.ts`'s
-// `fetchRabbiDirectoryPage` for why this reads the public directory at its
-// largest page size instead of a real search.
+// Resolves each lesson's own `rabbiId` back to a display name for
+// `LessonsListPage`. Both audience scopes are fetched, since a place may
+// host a rav or a rabbanit. Unlike the picker's own
+// `LessonFormPage/components/RabbiSelect/useRabbiSearch.ts`, this asks no
+// `q` and so still reads the public directory at its largest page size per
+// scope (`api.ts`'s `fetchRabbiDirectoryPage`): a rabbi past the fiftieth in
+// either scope has no name shown here (see `LessonListItem/models.ts`).
 export const useRabbiDirectory = (): RabbiDirectoryState => {
   const general = useQuery({ queryKey: PLACE_QUERY_KEYS.rabbiDirectory('general'), queryFn: () => fetchRabbiDirectoryPage('general') });
   const women = useQuery({ queryKey: PLACE_QUERY_KEYS.rabbiDirectory('women'), queryFn: () => fetchRabbiDirectoryPage('women') });

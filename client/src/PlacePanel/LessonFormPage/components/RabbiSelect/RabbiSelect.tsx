@@ -4,22 +4,18 @@ import classNames from 'classnames';
 import styled from 'styled-components';
 
 import { directionForValue, rabbiDisplayName } from '~/helpers';
-import { useRabbiDirectory } from '~/PlacePanel/useRabbiDirectory';
 
 import * as consts from './consts';
-import { filterRabbisByName } from './helpers';
 import type { RabbiSelectProps } from './models';
 import * as styles from './styles';
+import { useRabbiSearch } from './useRabbiSearch';
 
-// A searchable rabbi combobox, filtering client-side over
-// `useRabbiDirectory`'s already-fetched page rather than a server search
-// (see `PlacePanel/api.ts`): a place names any rabbi it hosts, with no
+// A searchable rabbi combobox: a place names any rabbi it hosts, with no
 // consent step (`common/src/place-portal.ts`).
 export const RabbiSelect = styled(({ className, rabbi, onSelectRabbi, errorMessage }: RabbiSelectProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const directory = useRabbiDirectory();
-  const results = filterRabbisByName(directory.items, query);
+  const results = useRabbiSearch(query);
 
   const close = (event: FocusEvent<HTMLDivElement>): void => {
     if (!event.currentTarget.contains(event.relatedTarget)) setIsOpen(false);
@@ -48,12 +44,12 @@ export const RabbiSelect = styled(({ className, rabbi, onSelectRabbi, errorMessa
             dir={directionForValue(query)}
           />
 
-          {directory.isError && <p className="hint">{consts.RABBI_DIRECTORY_ERROR_MESSAGE}</p>}
-          {!directory.isError && !directory.isPending && results.length === 0 && <p className="hint">{consts.RABBI_NO_RESULTS_MESSAGE}</p>}
+          {results.isError && <p className="hint">{consts.RABBI_DIRECTORY_ERROR_MESSAGE}</p>}
+          {!results.isError && !results.isPending && results.items.length === 0 && <p className="hint">{consts.RABBI_NO_RESULTS_MESSAGE}</p>}
 
-          {results.length > 0 && (
+          {results.items.length > 0 && (
             <ul className="results" role="listbox">
-              {results.map((item) => (
+              {results.items.map((item) => (
                 <li key={item.id}>
                   <button
                     type="button"

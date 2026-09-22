@@ -1,20 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 import type { UseQueryResult } from '@tanstack/react-query';
-import type { PlaceProfileResponse } from '@torabarabim/common';
+import type { PlaceSessionUser } from '@torabarabim/common';
 
-import { fetchProfile, PlaceApiError } from './api';
+import { fetchMe, PlaceApiError } from './api';
 import { PLACE_QUERY_KEYS } from './consts';
 
-// There is no dedicated `/v1/place/me`, unlike the rabbi panel's
-// `/v1/rabbi/me` (`RabbiPanel/useRabbiSession.ts`): `GET /v1/place/profile`
-// is place-authenticated and 401s exactly the same way a session probe
-// would, so it doubles as one here. `RequirePlaceSession` reads this for its
-// gate and `PlaceShell` reads it for the greeting; both share the exact
-// query key `ProfilePage` fetches with, so there is only ever one request in
-// flight for it.
-export const usePlaceSession = (): UseQueryResult<PlaceProfileResponse, PlaceApiError> =>
+// The one place the place's own session is checked to gate `/place/*`, read
+// by `RequirePlaceSession`. Distinct from `usePlaceProfile`, the full read
+// the panel's own screens use, mirroring `RabbiPanel/useRabbiSession.ts` and
+// `useRabbiProfile.ts`'s own split.
+export const usePlaceSession = (): UseQueryResult<PlaceSessionUser, PlaceApiError> =>
   useQuery({
-    queryKey: PLACE_QUERY_KEYS.profile(),
-    queryFn: fetchProfile,
+    queryKey: PLACE_QUERY_KEYS.session(),
+    queryFn: fetchMe,
     retry: false,
   });

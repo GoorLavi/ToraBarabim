@@ -39,10 +39,7 @@ export const PlaceEmptyLessons = styled(({ className, cityName, widenedItems, is
           {isWidenedPending ? (
             <LessonsGridSkeleton {...{ cellCount: pageConsts.WIDENED_CITY_LESSONS_PAGE_SIZE }} />
           ) : (
-            // 'cityPage' stands in for a 'placePage' click surface that does
-            // not exist yet in analytics/consts.ts (outside this builder's
-            // prefixes): flagged in the build report rather than added here.
-            <LessonsGrid {...{ items: widenedItems ?? [], surface: 'general', clickSurface: 'cityPage' as const }} />
+            <LessonsGrid {...{ items: widenedItems ?? [], surface: 'general', clickSurface: 'placePage' as const }} />
           )}
         </div>
       )}

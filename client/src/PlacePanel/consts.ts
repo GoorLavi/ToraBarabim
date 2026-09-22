@@ -14,6 +14,7 @@ export const NOT_FOUND_MESSAGE = 'הרשומה המבוקשת לא נמצאה';
 export const RATE_LIMITED_MESSAGE = 'יותר מדי ניסיונות כניסה. יש לנסות שוב בעוד כמה דקות';
 
 export const PLACE_QUERY_KEYS = {
+  session: () => ['place', 'session'] as const,
   profile: () => ['place', 'profile'] as const,
   lessons: () => ['place', 'lessons'] as const,
   lesson: (id: string) => ['place', 'lessons', id] as const,
@@ -21,9 +22,10 @@ export const PLACE_QUERY_KEYS = {
   // `PlaceLessonResponse` carries only the bare `rabbiId` (see
   // `LessonFormPage/useExistingLesson.ts`).
   lessonRabbi: (rabbiId: string) => ['place', 'lessons', 'rabbi', rabbiId] as const,
-  // See `useRabbiDirectory.ts`: the public directory, read as a stand-in for
-  // a place-scoped rabbi search endpoint that does not exist yet.
-  rabbiDirectory: (scope: 'general' | 'women') => ['place', 'rabbiDirectory', scope] as const,
+  // See `api.ts`'s `fetchRabbiDirectoryPage`: the public directory, read
+  // without `q` by `useRabbiDirectory` and with it by the picker's own
+  // `useRabbiSearch`, since there is still no place-scoped rabbi endpoint.
+  rabbiDirectory: (scope: 'general' | 'women', q?: string) => ['place', 'rabbiDirectory', scope, q] as const,
 };
 
 export const PLACE_ROUTES = {

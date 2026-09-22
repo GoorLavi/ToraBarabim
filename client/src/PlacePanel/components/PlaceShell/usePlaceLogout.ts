@@ -1,21 +1,27 @@
-import { useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type { UseMutationResult } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 
+import { logout, PlaceApiError } from '~/PlacePanel/api';
 import { PLACE_QUERY_KEYS, PLACE_ROUTES } from '~/PlacePanel/consts';
 
-// There is no `POST /v1/place/logout` yet, unlike the rabbi panel's
-// `useRabbiLogout.ts` (which calls `/v1/rabbi/logout`), so this cannot end
-// the place's httpOnly session cookie server-side: it only drops the
-// cached profile query and sends the browser to `/login`. Deliberately
-// fail-open until the endpoint exists: the cookie stays valid, on this
-// device, until it expires on its own. Flagged in the build report rather
-// than left silent, per root CLAUDE.md's "Escalate Before Bending a Rule".
-export const usePlaceLogout = (): (() => void) => {
+export const usePlaceLogout = (): UseMutationResult<void, PlaceApiError, void> => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
-  return () => {
-    queryClient.removeQueries({ queryKey: PLACE_QUERY_KEYS.profile() });
+  const endSession = (): void => {
+    queryClient.removeQueries({ queryKey: PLACE_QUERY_KEYS.session() });
     navigate(PLACE_ROUTES.login, { replace: true });
   };
+
+  return useMutation({
+    mutationFn: logout,
+    onSuccess: endSession,
+    // A 401 means the session the request tried to end is already gone, so
+    // the place is logged out either way. Anything else left the session
+    // alive on the server, and saying so beats a silent no-op button.
+    onError: (error) => {
+      if (error.status === 401) endSession();
+    },
+  });
 };

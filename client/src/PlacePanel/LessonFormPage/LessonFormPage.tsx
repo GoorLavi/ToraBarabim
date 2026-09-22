@@ -11,7 +11,7 @@ import { AUDIENCE_LABELS } from '~/consts';
 import { directionForValue } from '~/helpers';
 import { PLACE_ROUTES } from '~/PlacePanel/consts';
 import { placeErrorMessage } from '~/PlacePanel/helpers';
-import { usePlaceSession } from '~/PlacePanel/usePlaceSession';
+import { usePlaceProfile } from '~/PlacePanel/usePlaceProfile';
 
 import { RabbiSelect } from './components/RabbiSelect/RabbiSelect';
 import * as consts from './consts';
@@ -30,7 +30,7 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const profile = usePlaceSession();
+  const profile = usePlaceProfile();
   const existing = useExistingLesson(id);
   const saveLesson = useSaveLesson();
 

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import styled from 'styled-components';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
 import { StateCard } from '~/components/StateCard/StateCard';
 
 import { PlaceListRow } from './components/PlaceListRow/PlaceListRow';
@@ -14,11 +16,9 @@ import { usePlaceDirectory } from './usePlaceDirectory';
 
 // Follows RabbisPage: one column at 375, two from `md`; the search field
 // filters the already-loaded directory client-side rather than a second
-// request. No trackEvent(retryClick) or trackEvent(resultsShown) calls:
-// RetrySurface has no 'placesPage' member yet (analytics/consts.ts, outside
-// this builder's prefixes), and RabbisPage does not fire `resultsShown`
-// either, by the same design this directory follows
-// (analytics/consts.ts, "RabbisPage... do not, by design").
+// request. No trackEvent(resultsShown): RabbisPage does not fire it either,
+// by the same design this directory follows (analytics/consts.ts,
+// "RabbisPage... do not, by design").
 export const PlacesPage = styled(({ className }: PlacesPageProps) => {
   const query = usePlaceDirectory();
   const [search, setSearch] = useState('');
@@ -79,7 +79,14 @@ export const PlacesPage = styled(({ className }: PlacesPageProps) => {
           headingLevel="h2"
           heading={consts.LOAD_ERROR_HEADING}
           body={consts.LOAD_ERROR_BODY}
-          action={{ actionLabel: consts.RETRY_LABEL, actionStyle: 'primary', onAction: () => query.refetch() }}
+          action={{
+            actionLabel: consts.RETRY_LABEL,
+            actionStyle: 'primary',
+            onAction: () => {
+              trackEvent(MIXPANEL_EVENTS.retryClick, { surface: 'placesPage' });
+              query.refetch();
+            },
+          }}
         />
       )}
 

@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
 import { PLACE_ROUTES } from '~/PlacePanel/consts';
-import { usePlaceSession } from '~/PlacePanel/usePlaceSession';
+import { usePlaceProfile } from '~/PlacePanel/usePlaceProfile';
 
 import * as consts from './consts';
 import type { PlaceShellProps } from './models';
@@ -14,9 +14,12 @@ import { usePlaceLogout } from './usePlaceLogout';
 
 // Two tabs, not three: this panel has nothing like RabbiShell's "upcoming"
 // tab, since a place cannot cancel or move a single date (build brief:
-// there is no exception surface here at all).
+// there is no exception surface here at all). The greeting reads the
+// place's own profile, not the session record, mirroring
+// `RabbiShell`'s reasoning: it should not go stale the moment the place
+// edits its name.
 export const PlaceShell = styled(({ className }: PlaceShellProps) => {
-  const session = usePlaceSession();
+  const profile = usePlaceProfile();
   const logout = usePlaceLogout();
 
   return (
@@ -48,16 +51,22 @@ export const PlaceShell = styled(({ className }: PlaceShellProps) => {
           </nav>
 
           <div className="account">
-            {session.data && (
+            {profile.data && (
               <span className="name" dir="auto">
-                {session.data.name}
+                {profile.data.name}
               </span>
             )}
-            <button type="button" className="logout" onClick={logout}>
+            <button type="button" className="logout" onClick={() => logout.mutate()} disabled={logout.isPending}>
               {consts.LOGOUT_LABEL}
             </button>
           </div>
         </div>
+
+        {logout.isError && (
+          <p className="logoutError" role="alert">
+            {consts.LOGOUT_ERROR_MESSAGE}
+          </p>
+        )}
       </header>
 
       <main className="content">

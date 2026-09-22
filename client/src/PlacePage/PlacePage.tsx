@@ -1,6 +1,8 @@
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
 import { BackLink } from '~/components/BackLink/BackLink';
 import { DayGroup } from '~/components/DayGroup/DayGroup';
 import { DayGroupSkeleton } from '~/components/DayGroupSkeleton/DayGroupSkeleton';
@@ -63,10 +65,14 @@ export const PlacePage = styled(({ className }: PlacePageProps) => {
           headingLevel="h1"
           heading={errorCopy.heading}
           body={errorCopy.body}
-          // No trackEvent(retryClick) here: RetrySurface (analytics/consts.ts)
-          // has no 'placePageDetail' member yet and that file is outside this
-          // builder's prefixes. Flagged in the build report.
-          action={{ actionLabel: consts.RETRY_LABEL, actionStyle: 'primary', onAction: () => placeQuery.refetch() }}
+          action={{
+            actionLabel: consts.RETRY_LABEL,
+            actionStyle: 'primary',
+            onAction: () => {
+              trackEvent(MIXPANEL_EVENTS.retryClick, { surface: 'placePageDetail' });
+              placeQuery.refetch();
+            },
+          }}
         />
       )}
 
@@ -82,8 +88,14 @@ export const PlacePage = styled(({ className }: PlacePageProps) => {
               headingLevel="h2"
               heading={consts.LESSONS_ERROR_HEADING}
               body={consts.LESSONS_ERROR_BODY}
-              // See the detail error above: same analytics gap, same flag.
-              action={{ actionLabel: consts.RETRY_LABEL, actionStyle: 'primary', onAction: () => lessonsQuery.refetch() }}
+              action={{
+                actionLabel: consts.RETRY_LABEL,
+                actionStyle: 'primary',
+                onAction: () => {
+                  trackEvent(MIXPANEL_EVENTS.retryClick, { surface: 'placePageLessons' });
+                  lessonsQuery.refetch();
+                },
+              }}
             />
           )}
 
@@ -105,11 +117,7 @@ export const PlacePage = styled(({ className }: PlacePageProps) => {
                     heading: dayGroupHeading(group.date),
                     items: group.items,
                     surface: 'general' as const,
-                    // 'cityPage' stands in for a 'placePage' click surface
-                    // that does not exist yet in analytics/consts.ts
-                    // (outside this builder's prefixes): flagged in the
-                    // build report rather than added here.
-                    clickSurface: 'cityPage' as const,
+                    clickSurface: 'placePage' as const,
                   }}
                 />
               ))}

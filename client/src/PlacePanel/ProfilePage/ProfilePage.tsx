@@ -7,7 +7,7 @@ import { PhotoPicker } from '~/components/PhotoPicker/PhotoPicker';
 import { directionForValue } from '~/helpers';
 import { PLACE_ROUTES } from '~/PlacePanel/consts';
 import { placeErrorMessage } from '~/PlacePanel/helpers';
-import { usePlaceSession } from '~/PlacePanel/usePlaceSession';
+import { usePlaceProfile } from '~/PlacePanel/usePlaceProfile';
 
 import * as consts from './consts';
 import { formStateFromProfile, validatePlacePhotoFile, validateProfileForm } from './helpers';
@@ -21,7 +21,7 @@ import { useSaveProfile } from './useSaveProfile';
 // pointing at this place displays everywhere on the site, and that is the
 // feature rather than a hazard (build brief).
 export const ProfilePage = styled(({ className }: ProfilePageProps) => {
-  const profile = usePlaceSession();
+  const profile = usePlaceProfile();
   const saveProfile = useSaveProfile();
   const photoUpload = usePhotoUpload();
   const navigate = useNavigate();

@@ -4,6 +4,7 @@ import type {
   PlaceLessonListResponse,
   PlaceLessonResponse,
   PlaceProfileResponse,
+  PlaceSessionUser,
   PlaceUpdateLessonRequest,
   RabbiDetailResponse,
   RabbiDirectoryResponse,
@@ -63,16 +64,19 @@ const request = async <T>(url: string, init?: RequestInit): Promise<T> => {
 
 const url = (path: string): URL => new URL(path, window.location.origin);
 
-// Login is the shared `POST /v1/panel/login` (see `PanelLogin`). There is no
-// `POST /v1/place/logout` or `GET /v1/place/me` yet, unlike the rabbi panel's
-// pair: only the six endpoints below are live for a place account today. See
-// `usePlaceSession.ts` and `components/PlaceShell/usePlaceLogout.ts` for how
-// this panel copes with that gap in the meantime.
+// Login is the shared `POST /v1/panel/login` (see `PanelLogin`).
+
+// POST /v1/place/logout
+// 204 always, clears the session cookie.
+export const logout = (): Promise<void> => request(url('/v1/place/logout').toString(), { method: 'POST' });
+
+// GET /v1/place/me
+// 200 with PlaceSessionUser when a valid session cookie is present, 401 otherwise.
+export const fetchMe = (): Promise<PlaceSessionUser> => request(url('/v1/place/me').toString());
 
 // GET /v1/place/profile
 // 200 with PlaceProfileResponse. 404 if the place row behind the session is gone.
-// 401 with no valid session cookie: this doubles as the session probe, see
-// `usePlaceSession.ts`.
+// 401 with no valid session cookie.
 export const fetchProfile = (): Promise<PlaceProfileResponse> => request(url('/v1/place/profile').toString());
 
 // PATCH /v1/place/profile
@@ -118,21 +122,22 @@ export const updateLesson = (id: string, body: PlaceUpdateLessonRequest): Promis
 // constant, since the client has no access to the server's.
 const MAX_RABBI_DIRECTORY_PAGE_SIZE = 50;
 
-// GET /v1/rabbis?page&pageSize&scope (the public directory, no place auth,
+// GET /v1/rabbis?page&pageSize&scope&q (the public directory, no place auth,
 // not credentialed).
 // 200 with one page of RabbiDirectoryResponse.
-// There is no place-scoped rabbi search endpoint: `PlaceCreateLessonRequest`
-// needs a `rabbiId`, so this panel needs some way to find one, and this is
-// the only live public read of the rabbi list. Reading it at its largest
-// page size per scope, rather than a real search, is a named, bounded
-// workaround (see `useRabbiDirectory.ts` and the build report): a rabbi
-// past the fiftieth in either scope is silently unreachable from this
-// picker today.
-export const fetchRabbiDirectoryPage = (scope: AudienceScope): Promise<RabbiDirectoryResponse> => {
+// There is still no place-scoped rabbi endpoint: `PlaceCreateLessonRequest`
+// needs a `rabbiId`, so this panel reads the public directory instead. `q`,
+// when passed, narrows server-side within the scope already asked for, so a
+// rabbanit stays reachable only through the women's scope. Used with `q` by
+// the picker (`LessonFormPage/components/RabbiSelect/useRabbiSearch.ts`) and
+// without it by `useRabbiDirectory`, which resolves every lesson's own
+// `rabbiId` back to a name and so still reads the largest page per scope.
+export const fetchRabbiDirectoryPage = (scope: AudienceScope, q?: string): Promise<RabbiDirectoryResponse> => {
   const target = url('/v1/rabbis');
   target.searchParams.set('page', '1');
   target.searchParams.set('pageSize', String(MAX_RABBI_DIRECTORY_PAGE_SIZE));
   target.searchParams.set('scope', scope);
+  if (q) target.searchParams.set('q', q);
   return request(target.toString());
 };
 
