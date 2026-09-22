@@ -28,6 +28,17 @@ export const ReadOnlyField = css(
     line-height: ${theme.typography.body.phone.lineHeight};
   }
 
+  /* A locked value reads quieter than an editable field, not louder
+     (design gate finding, PlacePicker nits): a neutral, untinted fill
+     instead of \`primarySoft\`, which elsewhere on the same screen marks
+     something that does need attention (PickerControl/styles.ts's own
+     \`.inactiveTag\`). */
+  &.quiet > .value {
+    background: ${theme.colors.bg};
+    color: ${theme.colors.textSecondary};
+    font-weight: ${theme.typography.fontWeight.regular};
+  }
+
   > .helper {
     color: ${theme.colors.textSecondary};
     font-size: ${theme.typography.secondary.phone.fontSize};

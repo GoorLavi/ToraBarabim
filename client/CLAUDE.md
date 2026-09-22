@@ -164,7 +164,7 @@ The root rules cover class names, `>`, `&` nesting, and `classNames`. On top of 
 ## Storybook
 
 The mock layer is hand-written, not msw
-([0034](../docs/decisions/0034-storybook-mocks-fetch-with-an-in-house-layer-not-msw.md)).
+([0035](../docs/decisions/0035-storybook-mocks-fetch-with-an-in-house-layer-not-msw.md)).
 Storybook has no API behind it, so a story declares the network it needs under
 `parameters.apiMocks.handlers`, keyed by name (`{ area: http.get('/v1/areas/:slug', ...) }`).
 A meta declares the defaults and a story overrides only the keys it changes. Everything

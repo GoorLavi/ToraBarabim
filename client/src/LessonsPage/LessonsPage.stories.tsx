@@ -16,7 +16,7 @@ const lesson = (overrides: Partial<LessonOccurrence>): LessonOccurrence => ({
   topic: 'halacha',
   audience: 'men',
   rabbi: rabbiFixture({ id: 'r1', name: 'אליהו בן דוד' }),
-  place: { name: 'בית הכנסת הגדול', street: 'שדרות הנשיא 12', city: 'חיפה', citySlug: 'חיפה', area: 'haifa' },
+  venue: { kind: 'address', name: 'בית הכנסת הגדול', street: 'שדרות הנשיא 12', city: 'חיפה', citySlug: 'חיפה', area: 'haifa' },
   ...overrides,
 });
 
@@ -40,7 +40,7 @@ const populatedLessons: LessonOccurrence[] = [
     audience: 'women',
     title: undefined,
     topic: undefined,
-    place: { name: 'אולם קהילתי', street: 'רחוב הרצל 8', city: 'קריית ביאליק', citySlug: 'קריית-ביאליק', area: 'haifa' },
+    venue: { kind: 'address', name: 'אולם קהילתי', street: 'רחוב הרצל 8', city: 'קריית ביאליק', citySlug: 'קריית-ביאליק', area: 'haifa' },
   }),
 ];
 

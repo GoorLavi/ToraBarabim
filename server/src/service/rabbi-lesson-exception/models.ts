@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { lessonExceptionSchema, type LessonExceptionInput } from '../admin-lesson-exception/models';
-import type { LessonPlaceRecord } from '../admin-lesson/models';
+import type { LessonAddressRecord } from '../shared/models';
 
 export const lessonIdParamSchema = z.object({
   lessonId: z.string().trim().min(1),
@@ -24,7 +24,7 @@ export interface LessonExceptionRecord {
   kind: 'cancelled' | 'modified';
   reason?: string;
   startTime?: string;
-  place?: LessonPlaceRecord;
+  address?: LessonAddressRecord;
   substituteRabbiId?: string;
   note?: string;
 }

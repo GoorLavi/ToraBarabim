@@ -41,7 +41,7 @@ export const cardAriaLabel = (lesson: LessonOccurrence): string => {
     AUDIENCE_LABELS[lesson.audience],
   ];
   if (description) parts.push(description);
-  parts.push(lesson.place.city);
+  parts.push(lesson.venue.city);
   if (lesson.status === 'cancelled') parts.push(CANCELLED_LABEL);
 
   return parts.join(', ');

@@ -17,6 +17,8 @@ import {
   SUBSTITUTE_LINK_BLOCK_PADDING,
   TEXT_COLUMN_INLINE_PADDING_DESKTOP,
   TICKET_FINE_GAP,
+  VENUE_LINK_BLOCK_PADDING_DESKTOP,
+  VENUE_LINK_BLOCK_PADDING_PHONE,
   WAZE_BUTTON_HOVER_COLOR,
 } from './consts';
 
@@ -324,7 +326,7 @@ export const TicketShell = css(
         }
       }
 
-      > .place {
+      > .address {
         display: flex;
         flex-direction: column;
         align-items: flex-start;
@@ -335,7 +337,7 @@ export const TicketShell = css(
         }
       }
 
-      > .place > .venue {
+      > .address > .venue {
         color: ${theme.colors.textOnPrimary};
         font-weight: ${theme.typography.ticketVenue.fontWeight};
         font-size: ${theme.typography.ticketVenue.phone.fontSize};
@@ -347,9 +349,46 @@ export const TicketShell = css(
           line-height: ${theme.typography.ticketVenue.desktop.lineHeight};
           margin-block-end: ${theme.spacing.xs};
         }
+
+        /* Only a place venue links out (LessonTicket.tsx,
+           \`venue.kind === 'place'\`); an address-only venue stays plain text
+           with no affordance to click. The anchor, not the \`p\`, carries the
+           padding/negative-margin pair that reaches the 48px tap target,
+           mirroring \`.teacherRow > .teacher > .name > .nameLink\`. */
+        > .venueLink {
+          display: inline-flex;
+          padding-block: ${VENUE_LINK_BLOCK_PADDING_PHONE};
+          margin-block: calc(-1 * ${VENUE_LINK_BLOCK_PADDING_PHONE});
+          color: inherit;
+          text-decoration: underline;
+          text-underline-offset: 3px;
+
+          @media (min-width: ${theme.breakpoints.lg}) {
+            padding-block: ${VENUE_LINK_BLOCK_PADDING_DESKTOP};
+            margin-block: calc(-1 * ${VENUE_LINK_BLOCK_PADDING_DESKTOP});
+          }
+
+          @media (hover: hover) and (pointer: fine) {
+            &:hover {
+              background: ${theme.colors.surfaceOnPrimary};
+              border-radius: ${theme.radii.sm};
+            }
+          }
+
+          &:active {
+            background: ${theme.colors.surfaceOnPrimary};
+            border-radius: ${theme.radii.sm};
+          }
+
+          &:focus-visible {
+            outline: 2px solid ${theme.colors.textOnPrimary};
+            outline-offset: 2px;
+            border-radius: ${theme.radii.sm};
+          }
+        }
       }
 
-      > .place > .city {
+      > .address > .city {
         color: ${theme.colors.textOnPrimaryMuted};
         font-size: ${theme.typography.secondary.phone.fontSize};
         line-height: ${theme.typography.secondary.phone.lineHeight};
@@ -364,7 +403,7 @@ export const TicketShell = css(
          house number to the wrong side at the break (design-system.md,
          "Hebrew and right-to-left"). It stays on one line and truncates
          instead. */
-      > .place > .address {
+      > .address > .street {
         inline-size: 100%;
         color: ${theme.colors.textOnPrimaryMuted};
         font-size: ${theme.typography.secondary.phone.fontSize};
@@ -380,7 +419,7 @@ export const TicketShell = css(
 
       /* A classification, styled as a small raised block: it earns the pill
          the substitute's clarification below does not. */
-      > .place > .audienceTag {
+      > .address > .audienceTag {
         display: inline-flex;
         width: fit-content;
         padding-block: ${TICKET_FINE_GAP};
@@ -395,7 +434,7 @@ export const TicketShell = css(
 
       /* A real gap between two distinct actions, not the ticket's usual
          optical-adjustment spacing (design direction for the nav row). */
-      > .place > .navRow {
+      > .address > .navRow {
         inline-size: 100%;
         display: flex;
         flex-wrap: wrap;
@@ -403,7 +442,7 @@ export const TicketShell = css(
         margin-block-start: ${theme.spacing.lg};
       }
 
-      > .place > .navRow > .heading {
+      > .address > .navRow > .heading {
         inline-size: 100%;
         margin-block-end: ${theme.spacing.sm};
         color: ${theme.colors.textOnPrimaryMuted};
@@ -412,7 +451,7 @@ export const TicketShell = css(
         line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
       }
 
-      > .place > .navRow > .navButton {
+      > .address > .navRow > .navButton {
         /* 160, not 140: the Google Maps label's own min-content width is
            ~152-160px, and a lower basis let it wrap inside the button
            instead of the row wrapping to stacked full-width buttons. */

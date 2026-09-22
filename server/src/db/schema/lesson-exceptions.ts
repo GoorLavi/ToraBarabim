@@ -17,13 +17,15 @@ export const lessonExceptions = pgTable(
     kind: exceptionKindEnum('kind').notNull(),
     reason: text('reason'),
     startTime: text('start_time'),
-    // A 'modified' exception may override the lesson's venue for that one
-    // date. `placeName`, `placeStreet` and `cityCode` are set together or
-    // not at all; `placeFloor` is optional but can only be set alongside
-    // them, never on its own. Enforced by `lesson_exceptions_shape` below.
-    placeName: text('place_name'),
-    placeStreet: text('place_street'),
-    placeFloor: text('place_floor'),
+    // A 'modified' exception may override the lesson's address for that one
+    // date. `addressName`, `addressStreet` and `cityCode` are set together
+    // or not at all; `addressFloor` is optional but can only be set
+    // alongside them, never on its own. Enforced by `lesson_exceptions_shape`
+    // below. The properties are `address*`; the columns stay `place_*`
+    // because renaming a column is a migration, and this rename has none.
+    addressName: text('place_name'),
+    addressStreet: text('place_street'),
+    addressFloor: text('place_floor'),
     cityCode: integer('city_code').references(() => cities.code),
     substituteRabbiId: text('substitute_rabbi_id').references(() => rabbis.id),
     note: text('note'),
@@ -34,8 +36,8 @@ export const lessonExceptions = pgTable(
     unique('lesson_exceptions_lesson_date').on(table.lessonId, table.date),
     check(
       'lesson_exceptions_shape',
-      sql`(${table.kind} = 'cancelled' AND ${table.startTime} IS NULL AND ${table.placeName} IS NULL AND ${table.placeStreet} IS NULL AND ${table.placeFloor} IS NULL AND ${table.cityCode} IS NULL AND ${table.substituteRabbiId} IS NULL)
-       OR (${table.kind} = 'modified' AND ${table.reason} IS NULL AND (${table.placeName} IS NULL) = (${table.placeStreet} IS NULL) AND (${table.placeName} IS NULL) = (${table.cityCode} IS NULL) AND (${table.placeFloor} IS NULL OR ${table.placeName} IS NOT NULL))`,
+      sql`(${table.kind} = 'cancelled' AND ${table.startTime} IS NULL AND ${table.addressName} IS NULL AND ${table.addressStreet} IS NULL AND ${table.addressFloor} IS NULL AND ${table.cityCode} IS NULL AND ${table.substituteRabbiId} IS NULL)
+       OR (${table.kind} = 'modified' AND ${table.reason} IS NULL AND (${table.addressName} IS NULL) = (${table.addressStreet} IS NULL) AND (${table.addressName} IS NULL) = (${table.cityCode} IS NULL) AND (${table.addressFloor} IS NULL OR ${table.addressName} IS NOT NULL))`,
     ),
   ],
 );

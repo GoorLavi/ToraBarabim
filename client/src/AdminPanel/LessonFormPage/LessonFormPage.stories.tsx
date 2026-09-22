@@ -14,7 +14,7 @@ const lesson: LessonResponse = {
   id: 'story-edit-lesson',
   title: 'עיונים בפרשת השבוע',
   rabbiId: rabbi.id,
-  place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', cityCode: 4000, cityName: 'חיפה' },
+  venue: { kind: 'address', name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', cityCode: 4000, cityName: 'חיפה' },
   topic: 'parasha',
   audience: 'mixed',
   recurrence: { kind: 'weekly', weekdays: [2] },
@@ -34,12 +34,17 @@ const rabbisForPicker: RabbiResponse[] = [
 
 // Only the requests the edit-mode form actually fires on mount are
 // answered: the existing lesson, the rabbi it unlocks, the rabbi search
-// above, and its lesson-count summary for the already-picked rabbi.
+// above, its lesson-count summary for the already-picked rabbi, and
+// `PlacePicker`'s own two calls (the whole place list, fired unconditionally
+// on mount, and the duplicate hint, fired once this lesson's already-loaded
+// address name and street settle).
 const editModeHandlers = {
   lesson: http.get('/v1/admin/lessons/:id', jsonResolver(lesson)),
   rabbi: http.get('/v1/admin/rabbis/:id', jsonResolver(rabbi)),
   rabbis: http.get('/v1/admin/rabbis', jsonResolver({ items: rabbisForPicker, page: 1, pageSize: 50, total: rabbisForPicker.length })),
   rabbiLessonCount: http.get('/v1/admin/lessons', jsonResolver({ items: [lesson], page: 1, pageSize: 1, total: 4 })),
+  places: http.get('/v1/places', jsonResolver({ items: [] })),
+  similarPlaces: http.get('/v1/places/similar', jsonResolver({ items: [] })),
 };
 
 const withEditRoute = (Story: React.ComponentType): React.ReactElement => (

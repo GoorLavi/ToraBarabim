@@ -22,7 +22,7 @@ const todayItems: LessonOccurrence[] = [
     topic: 'parasha',
     audience: 'mixed',
     rabbi: rabbiFixture({ id: 'rabbi-1', name: 'יעקב מזרחי', title: 'דיין' }),
-    place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'נתניה', citySlug: 'נתניה', area: 'sharon' },
+    venue: { kind: 'address', name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'נתניה', citySlug: 'נתניה', area: 'sharon' },
   },
   {
     lessonId: 'lesson-2',
@@ -34,7 +34,7 @@ const todayItems: LessonOccurrence[] = [
     topic: 'gemara',
     audience: 'men',
     rabbi: rabbiFixture({ id: 'rabbi-2', name: 'אברהם כהן', title: 'ראש ישיבה' }),
-    place: { name: 'בית הכנסת "אוהל יעקב"', street: 'רחוב הרב קוק 12', city: 'נתניה', citySlug: 'נתניה', area: 'sharon' },
+    venue: { kind: 'address', name: 'בית הכנסת "אוהל יעקב"', street: 'רחוב הרב קוק 12', city: 'נתניה', citySlug: 'נתניה', area: 'sharon' },
   },
 ];
 
@@ -49,7 +49,7 @@ const futureDayItems: LessonOccurrence[] = [
     topic: 'other',
     audience: 'women',
     rabbi: rabbiFixture({ id: 'rabbi-4', name: 'שלמה אביטן' }),
-    place: { name: 'בית הכנסת "אור החיים"', street: 'רחוב טרומפלדור 5', city: 'נתניה', citySlug: 'נתניה', area: 'south' },
+    venue: { kind: 'address', name: 'בית הכנסת "אור החיים"', street: 'רחוב טרומפלדור 5', city: 'נתניה', citySlug: 'נתניה', area: 'south' },
   },
 ];
 
@@ -69,7 +69,7 @@ const errorQuery: LessonSearchQueryState = {
 const populatedQuery: LessonSearchQueryState = {
   isPending: false,
   isError: false,
-  data: { items: todayItems, page: 1, pageSize: 50, total: todayItems.length },
+  data: { items: todayItems, page: 1, pageSize: 50, total: todayItems.length, appliedFilters: {} },
   error: null,
   refetch: () => {},
   dataUpdatedAt: 0,
@@ -81,7 +81,7 @@ const populatedQuery: LessonSearchQueryState = {
 const emptyWithFallbackQuery: LessonSearchQueryState = {
   isPending: false,
   isError: false,
-  data: { items: futureDayItems, page: 1, pageSize: 50, total: futureDayItems.length },
+  data: { items: futureDayItems, page: 1, pageSize: 50, total: futureDayItems.length, appliedFilters: {} },
   error: null,
   refetch: () => {},
   dataUpdatedAt: 0,
@@ -92,7 +92,7 @@ const emptyWithFallbackQuery: LessonSearchQueryState = {
 const terminalEmptyQuery: LessonSearchQueryState = {
   isPending: false,
   isError: false,
-  data: { items: [], page: 1, pageSize: 50, total: 0 },
+  data: { items: [], page: 1, pageSize: 50, total: 0, appliedFilters: {} },
   error: null,
   refetch: () => {},
   dataUpdatedAt: 0,

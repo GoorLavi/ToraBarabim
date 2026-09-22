@@ -1,3 +1,15 @@
+// The three weights design-system.md's Type section says this site uses
+// (400 body, 600 card titles and names, 700 headings): the app itself loads
+// Assistant through a `<link>` in root.tsx's document `<head>`, which
+// Storybook's own preview document never renders, so every story fell back
+// to the platform's system font and every design review judged type size,
+// line length and wrapping in the wrong typeface. Self-hosted here rather
+// than linked, unlike the app: Storybook has no document head to add a link
+// tag to, and a self-hosted @fontsource import is the direct equivalent.
+import '@fontsource/assistant/400.css';
+import '@fontsource/assistant/600.css';
+import '@fontsource/assistant/700.css';
+
 import type { Preview } from '@storybook/react-vite';
 import { focusManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';

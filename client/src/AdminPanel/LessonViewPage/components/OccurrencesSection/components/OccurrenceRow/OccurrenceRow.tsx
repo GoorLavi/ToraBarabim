@@ -25,7 +25,7 @@ export const OccurrenceRow = styled(({ className, row, canWrite, onCancelClick, 
           </span>
         </div>
 
-        <p className="place" dir="auto">
+        <p className="address" dir="auto">
           {row.placeName}, {row.cityName}
         </p>
 

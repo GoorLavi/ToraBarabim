@@ -203,8 +203,8 @@ export interface ExistingLessonSnapshot {
   id: string;
   rabbiId: string;
   title: string | null;
-  placeName: string;
-  placeStreet: string;
+  addressName: string;
+  addressStreet: string;
   cityCode: number;
   topic: LessonTopic | null;
   audience: LessonAudience;

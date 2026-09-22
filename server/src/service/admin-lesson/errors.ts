@@ -15,12 +15,21 @@ export class ReferencedRabbiNotFoundError extends Error {
   }
 }
 
-// Fires when a create/update names a place.cityCode that does not resolve
-// to a row in `cities`. Cities are reference data, chosen never created.
-// Maps to 400.
+// Fires when a create/update names an address's cityCode that does not
+// resolve to a row in `cities`. Cities are reference data, chosen never
+// created. Maps to 400.
 export class UnknownCityError extends Error {
   constructor(public readonly cityCode: number) {
     super(`Expected a known city code, got '${cityCode}'`);
     this.name = 'UnknownCityError';
+  }
+}
+
+// Fires when a create/update names a venue.placeId that does not resolve to
+// an active place. Maps to 400.
+export class ReferencedPlaceNotFoundError extends Error {
+  constructor(public readonly placeId: string) {
+    super(`Expected an existing, active place, found none with id '${placeId}'`);
+    this.name = 'ReferencedPlaceNotFoundError';
   }
 }

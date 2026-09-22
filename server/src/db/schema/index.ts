@@ -5,4 +5,5 @@ export * from './enums';
 export * from './lesson-exceptions';
 export * from './lesson-imports';
 export * from './lessons';
+export * from './places';
 export * from './rabbis';

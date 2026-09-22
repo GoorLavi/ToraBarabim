@@ -5,6 +5,7 @@ import type { CityDirectoryResponse, LessonOccurrence, LessonSearchResponse } fr
 import type { FastifyInstance } from 'fastify';
 
 import { HEALTH_RENDER_PROBE_PATH } from '../src/api/health/consts';
+import { buildRequestBody } from '../src/plugins/ssr';
 import { addDays, nextDateOnWeekday, todayInIsrael } from '../src/service/lesson/israel-time';
 import { toAreaSlug } from '../src/service/shared/consts';
 
@@ -214,6 +215,51 @@ describe('SSR rendering seam', () => {
     });
   });
 
+  describe('a non-GET request through the SSR catch-all', () => {
+    // Regression test for the production defect diagnosed from CloudWatch
+    // (bursts of 500s since 17 September): `toFetchRequest` used to rebuild
+    // the Fetch `Request` body by re-reading `request.raw`, but every content
+    // type parser registered ahead of this catch-all (Fastify's built-in
+    // JSON parser, and `empty-body.ts`'s `*` fallback) had already read that
+    // stream to completion, so undici threw `Response body object should
+    // not be disturbed or locked` before the request ever reached the
+    // router. No route here exports an `action`, so once the request
+    // actually reaches the router it answers a real 405, never a 500; that
+    // is what these assert, for both a body shape the JSON parser never
+    // touches and one it does.
+    test('an empty body reaches the router as a 405, not a crash', async () => {
+      const res = await app.inject({ method: 'POST', url: '/rabbis' });
+      assert.equal(res.statusCode, 405);
+    });
+
+    test('a JSON body reaches the router as a 405, not a crash', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/rabbis',
+        payload: JSON.stringify({ probe: true }),
+        headers: { 'content-type': 'application/json' },
+      });
+      assert.equal(res.statusCode, 405);
+    });
+  });
+
+  describe('the root-level error boundary', () => {
+    // Regression test for a production 500 on every bot POST to an unmatched
+    // path (e.g. /wp-login.php): that path matches only the catch-all route,
+    // which has no action and no ErrorBoundary of its own, so the resulting
+    // error bubbles past it to the root route. React Router then renders
+    // root.tsx's Layout wrapping its ErrorBoundary in place of Layout's usual
+    // child, the default-exported Root, which was the only place ThemeProvider
+    // was mounted. Every styled-component in the error tree then read an
+    // undefined theme and threw, turning the one screen meant to survive a
+    // crash into a second crash: a bare 500 instead of this page.
+    test('a POST matched only by the catch-all renders the themed error page instead of crashing', async () => {
+      const res = await app.inject({ method: 'POST', url: '/wp-login.php' });
+      assert.equal(res.statusCode, 405);
+      assert.match(res.body, /משהו השתבש\. נסו לרענן את הדף\./);
+    });
+  });
+
   describe('per-page SEO', () => {
     test('the home page and the rabbis index carry distinct titles and distinct canonicals', async () => {
       const home = await app.inject({ method: 'GET', url: '/' });
@@ -309,7 +355,7 @@ describe('SSR rendering seam', () => {
       const occurrence = occurrenceRes.json() as LessonOccurrence;
 
       const rabbiHref = `/rabbis/${encodeURIComponent(occurrence.rabbi.id)}/${encodeURIComponent(occurrence.rabbi.slug)}`;
-      const areaHref = `/areas/${encodeURIComponent(toAreaSlug(occurrence.place.area))}`;
+      const areaHref = `/areas/${encodeURIComponent(toAreaSlug(occurrence.venue.area))}`;
 
       // The area link in the rendered document only exists because the area
       // preview resolves to a non-empty list: it renders one `AreaLink` per
@@ -321,13 +367,13 @@ describe('SSR rendering seam', () => {
       const from = todayInIsrael(new Date());
       const areaLessonsRes = await app.inject({
         method: 'GET',
-        url: `/v1/lessons?area=${occurrence.place.area}&from=${from}&to=${addDays(from, 13)}&pageSize=50`,
+        url: `/v1/lessons?area=${occurrence.venue.area}&from=${from}&to=${addDays(from, 13)}&pageSize=50`,
       });
       assert.equal(areaLessonsRes.statusCode, 200);
       const areaLessons = areaLessonsRes.json() as LessonSearchResponse;
       assert.ok(
         areaLessons.items.some((item) => item.lessonId !== SEEDED_LESSON_ID),
-        `expected another lesson in area "${occurrence.place.area}" besides ${SEEDED_LESSON_ID} for the area preview to be non-empty`,
+        `expected another lesson in area "${occurrence.venue.area}" besides ${SEEDED_LESSON_ID} for the area preview to be non-empty`,
       );
 
       const page = await app.inject({ method: 'GET', url: `/lesson/${SEEDED_LESSON_ID}/${date}` });
@@ -351,5 +397,34 @@ describe('SSR rendering seam', () => {
       assert.match(res.body, /<loc>[^<]*\/women\/rabbaniyot<\/loc>/);
       assert.match(res.body, new RegExp(`<loc>[^<]*/rabbis/${SEEDED_RABBANIT_ID}/[^<]*</loc>`));
     });
+  });
+});
+
+// Exercised directly rather than through `app.inject`: no route in the client
+// build exports an `action`, so a body forwarded through the catch-all is
+// never read back, and a test driving the app could only ever assert the 405
+// the suite above already covers. It needs neither the database nor the
+// client build, so it sits outside that suite's `before`.
+describe('the SSR catch-all request body', () => {
+  test('a parsed JSON body is serialized again as JSON', () => {
+    assert.deepEqual(buildRequestBody({ probe: true }, 'application/json; charset=utf-8'), {
+      content: '{"probe":true}',
+      contentType: 'application/json',
+    });
+  });
+
+  // A JSON body of `"hello"` parses to the same string a `text/plain` body
+  // of hello does, which is why the content type, not `typeof`, picks the
+  // branch. Forwarding this one unquoted would not be valid JSON.
+  test('a JSON body that is a bare string keeps its quotes', () => {
+    assert.deepEqual(buildRequestBody('hello', 'application/json'), { content: '"hello"', contentType: 'application/json' });
+  });
+
+  test('a text/plain body is forwarded unchanged under its own type', () => {
+    assert.deepEqual(buildRequestBody('hello', 'text/plain; charset=utf-8'), { content: 'hello', contentType: 'text/plain; charset=utf-8' });
+  });
+
+  test('a request with no body forwards none', () => {
+    assert.equal(buildRequestBody(undefined, undefined), undefined);
   });
 });

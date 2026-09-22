@@ -30,14 +30,18 @@ Everything else is a proxy for that.
 ## What the site is made of
 
 - **A lesson** happens weekly on set weekdays, or once on a date. It has a start time,
-  a length, a rabbi, a place, and an audience. Title, topic, and notes are optional.
+  a length, a rabbi, a venue, and an audience. Title, topic, and notes are optional.
+  Its venue is either a registered place or an address typed in by hand, never both.
 - **An exception** overrides a single date of a recurring lesson: cancelled, or moved
   in time, place, or speaker. It never changes the rule itself, so cancelling one week
   cannot affect any other week.
 - **A rabbi** has a name, an optional title, a biography, and a tall portrait poster.
   The poster is structural rather than decorative: every rabbi has one, and screens may
   be designed around its presence.
-- **A place** is a synagogue, yeshiva, or kollel, with an address, inside a city.
+- **A place** is a synagogue, yeshiva, or kollel, with an address, inside a city. It is
+  registered by an administrator, has a page of its own listing everything held there,
+  and signs in to keep those listings correct. A lesson whose venue is typed in by hand
+  is not a place and never becomes one on its own.
 - **A city** comes from the official data.gov.il locality list and is chosen, never
   invented.
 

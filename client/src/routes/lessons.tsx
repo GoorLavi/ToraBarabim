@@ -1,9 +1,8 @@
 import type { MetaFunction } from 'react-router';
 
-import { SITE_WIDE_META } from '~/consts';
-
 import { SITE_ORIGIN } from '../../consts';
 import * as consts from './consts';
+import { DEFAULT_OG_IMAGE_META, SITE_WIDE_META_BASE } from './meta';
 
 // Deliberately the bare path, with no query string. Every filtered view of
 // this page (a city, a date, a search term) is the same set of lessons
@@ -20,7 +19,8 @@ export const meta: MetaFunction = () => [
   { property: 'og:title', content: consts.lessonsPageTitle() },
   { property: 'og:description', content: consts.LESSONS_PAGE_DESCRIPTION },
   { property: 'og:url', content: CANONICAL },
-  ...SITE_WIDE_META,
+  ...SITE_WIDE_META_BASE,
+  ...DEFAULT_OG_IMAGE_META,
 ];
 
 export { LessonsPage as default } from '~/LessonsPage/LessonsPage';

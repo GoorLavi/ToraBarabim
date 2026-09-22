@@ -27,7 +27,7 @@ export const Empty: Story = {
 // lines, e.g. a venue name plus a floor note.
 export const LongValueWraps: Story = {
   args: {
-    label: 'שם המקום',
+    label: 'שם בית הכנסת או המוסד',
     value: 'בית מדרש "אהבת ישראל" של קהילת יוצאי מרוקו, קומה שנייה, כניסה מהחצר האחורית ליד גן הילדים',
   },
 };

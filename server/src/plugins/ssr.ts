@@ -43,6 +43,34 @@ const SERVER_BUILD_PATH = path.join(__dirname, '../../../client/build/server/ind
 // route.
 const STATIC_ASSET_PATTERN = /^\/(?:assets\/.+|favicon\.svg|robots\.txt|outage\.html)$/;
 
+// Fastify's own default parser key, mirrored here because `text/plain` is
+// the only non-JSON content type that reaches a handler with a body at all.
+const TEXT_PLAIN_CONTENT_TYPE = 'text/plain';
+
+// Every content type parser registered ahead of this catch-all has already
+// read `request.raw` to completion by the time a handler runs, so
+// `request.body` is the only place left to read the body from. Re-reading
+// `request.raw` here, as this used to, hands undici an already-disturbed
+// stream and throws.
+//
+// Exactly two parsers can leave a body behind, and they need opposite
+// treatment: Fastify's JSON parser yields a parsed value that has to be
+// serialized again, while its `text/plain` parser yields the exact string
+// that arrived, which goes on untouched under its own type. The content
+// type is what tells them apart, never `typeof`, because a JSON body of
+// `"hello"` parses to a string too and forwarding that one unquoted would
+// not be valid JSON. Every other type reaches a handler with no body at
+// all: multipart is read through `request.parts()` instead, and
+// `empty-body.ts` accepts only an empty body and answers 415 for the rest.
+//
+// Takes the two values it reads rather than the request, so the branch can
+// be exercised without building one.
+export const buildRequestBody = (body: unknown, contentType: string | undefined): { content: string; contentType: string } | undefined => {
+  if (body === undefined) return undefined;
+  if (typeof body === 'string' && contentType?.startsWith(TEXT_PLAIN_CONTENT_TYPE)) return { content: body, contentType };
+  return { content: JSON.stringify(body), contentType: 'application/json' };
+};
+
 // No official Fastify adapter exists for React Router 7 (only Express), so
 // this hand-builds the Web Fetch `Request` the framework's own
 // `createRequestHandler` expects from Fastify's Node request, then writes
@@ -59,14 +87,28 @@ const toFetchRequest = (request: FastifyRequest): Request => {
     }
   }
 
+  // A GET or HEAD Request cannot carry a body at all (undici throws), so the
+  // method guard stays even though every parser already leaves `body`
+  // `undefined` for those methods in practice.
   const hasBody = request.method !== 'GET' && request.method !== 'HEAD';
+  const body = hasBody ? buildRequestBody(request.body, request.headers['content-type']) : undefined;
+  if (body !== undefined) {
+    // `content-length` is dropped rather than recomputed: a re-serialized
+    // JSON body is no longer the length that arrived, and undici sets the
+    // header itself from the string it is handed. A copied
+    // `content-encoding` would falsely claim the forwarded body is still
+    // compressed, which it never is once a parser has read it.
+    headers.delete('content-length');
+    headers.delete('content-encoding');
+    headers.set('content-type', body.contentType);
+  }
+
   return new Request(url, {
     method: request.method,
     headers,
-    // `duplex: 'half'` is required by undici whenever `body` is a stream.
-    ...(hasBody
-      ? { body: Readable.toWeb(request.raw) as unknown as ReadableStream, duplex: 'half' as const }
-      : {}),
+    // `duplex` is only required by undici when `body` is a stream; a string
+    // body needs no half-duplex negotiation.
+    ...(body !== undefined ? { body: body.content } : {}),
   });
 };
 

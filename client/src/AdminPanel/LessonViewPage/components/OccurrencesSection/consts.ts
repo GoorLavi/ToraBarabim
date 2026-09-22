@@ -13,11 +13,11 @@ export const EMPTY_HINT = 'השיעור נשאר כרגיל, הוא פשוט ל�
 export const EXCEPTIONS_UNAVAILABLE_MESSAGE = 'לא ניתן לטעון את פרטי החריגים כרגע, ולכן אי אפשר לערוך או להחזיר מועדים ששונו כבר. אפשר לנסות שוב.';
 
 export const CANCELLED_TAG_LABEL = 'המועד בוטל';
-export const PLACE_CHANGED_TAG_LABEL = 'המקום שונה';
+export const PLACE_CHANGED_TAG_LABEL = 'הכתובת שונתה';
 export const movedFromLabel = (time: string): string => `הוזז מ-${time}`;
 
 export const CANCEL_OCCURRENCE_LABEL = 'ביטול המועד';
-export const MOVE_OCCURRENCE_LABEL = 'שינוי שעה או מקום';
+export const MOVE_OCCURRENCE_LABEL = 'שינוי שעה או כתובת';
 export const RESTORE_OCCURRENCE_LABEL = 'החזרת המועד';
 export const ROW_UNAVAILABLE_LABEL = 'לא ניתן לערוך כרגע';
 
@@ -30,7 +30,7 @@ export const CANCEL_BACK_LABEL = 'חזרה';
 
 export const MOVE_SHEET_HEADING = 'שינוי המועד הזה';
 export const MOVE_START_TIME_LABEL = 'שעת התחלה חדשה';
-export const MOVE_PLACE_TOGGLE = 'השיעור יתקיים במקום אחר';
+export const MOVE_PLACE_TOGGLE = 'השיעור יתקיים בכתובת אחרת';
 export const MOVE_SCOPE_NOTE = 'השינוי חל על התאריך הזה בלבד.';
 export const MOVE_SAVE_LABEL = 'שמירת השינוי';
 export const MOVE_SAVING_LABEL = 'שומר...';
@@ -38,10 +38,10 @@ export const MOVE_BACK_LABEL = 'חזרה';
 
 export const MOVE_CITY_LABEL = 'עיר';
 export const MOVE_CITY_PLACEHOLDER = 'בחירת עיר';
-export const MOVE_PLACE_NAME_LABEL = 'שם המקום';
+export const MOVE_PLACE_NAME_LABEL = 'שם בית הכנסת או המוסד';
 export const MOVE_STREET_LABEL = 'רחוב ומספר';
 
 export const REQUIRED_START_TIME_ERROR = 'יש למלא שעת התחלה';
 export const REQUIRED_CITY_ERROR = 'יש לבחור עיר';
-export const REQUIRED_PLACE_NAME_ERROR = 'יש למלא שם מקום';
-export const REQUIRED_STREET_ERROR = 'יש למלא כתובת';
+export const REQUIRED_PLACE_NAME_ERROR = 'יש למלא את שם בית הכנסת או המוסד';
+export const REQUIRED_STREET_ERROR = 'יש למלא רחוב ומספר';

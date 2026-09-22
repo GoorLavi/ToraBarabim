@@ -25,7 +25,7 @@ const lesson = (overrides: Partial<LessonResponse>): LessonResponse => ({
   id: 'l1',
   title: 'עיונים בפרשת השבוע',
   rabbiId: 'story-populated',
-  place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', cityCode: 4000, cityName: 'חיפה' },
+  venue: { kind: 'address', name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', cityCode: 4000, cityName: 'חיפה' },
   topic: 'parasha',
   audience: 'mixed',
   recurrence: { kind: 'weekly', weekdays: [2] },

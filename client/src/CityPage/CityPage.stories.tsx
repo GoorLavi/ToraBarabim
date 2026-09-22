@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Route, Routes } from 'react-router-dom';
 
 import { rabbiFixture } from '~/rabbiFixture';
+import { placeholderPhoto } from '~/storyMocks';
 
 import { errorResolver, http, jsonResolver, loadingResolver, queryOf, respondWithJson } from '../../.storybook/apiMocks';
 import { CityPage } from './CityPage';
@@ -15,9 +16,12 @@ const cityDetail = (overrides: Partial<CityDetailResponse>): CityDetailResponse 
   areaName: 'חיפה והקריות',
   areaSlug: 'חיפה-והקריות',
   rabbis: [
-    rabbiFixture({ id: 'r1', name: 'אברהם כהן', title: 'ראש ישיבה', photoUrl: 'https://example.invalid/r1.jpg' }),
-    rabbiFixture({ id: 'r2', name: 'משה לוי' }),
-    rabbiFixture({ id: 'r3', name: 'נתן צבי אשכנזי הכהן', photoUrl: 'https://example.invalid/r3.jpg' }),
+    rabbiFixture({ id: 'r1', name: 'אברהם כהן', title: 'ראש ישיבה', photoUrl: placeholderPhoto(900, 1200) }),
+    // Pinned rather than left to default: this rail deliberately mixes a
+    // photoless rabbi in among two with a photo, and rabbiFixture now
+    // defaults one in unless the key is stated (design gate finding F10).
+    rabbiFixture({ id: 'r2', name: 'משה לוי', photoUrl: undefined }),
+    rabbiFixture({ id: 'r3', name: 'נתן צבי אשכנזי הכהן', photoUrl: placeholderPhoto(900, 1200) }),
   ],
   ...overrides,
 });
@@ -32,7 +36,7 @@ const lesson = (overrides: Partial<LessonOccurrence>): LessonOccurrence => ({
   topic: 'parasha',
   audience: 'mixed',
   rabbi: rabbiFixture({ id: 'r1', name: 'אברהם כהן' }),
-  place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'חיפה', citySlug: 'חיפה', area: 'haifa' },
+  venue: { kind: 'address', name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'חיפה', citySlug: 'חיפה', area: 'haifa' },
   ...overrides,
 });
 
@@ -52,7 +56,7 @@ const areaLessons: LessonOccurrence[] = [
   lesson({
     lessonId: 'a1',
     rabbi: rabbiFixture({ id: 'r9', name: 'שמעון אזולאי' }),
-    place: { name: 'בית מדרש', street: 'הרצל 1', city: 'טבריה', citySlug: 'טבריה', area: 'north' },
+    venue: { kind: 'address', name: 'בית מדרש', street: 'הרצל 1', city: 'טבריה', citySlug: 'טבריה', area: 'north' },
   }),
 ];
 

@@ -27,7 +27,7 @@ const lesson = (overrides: Partial<LessonOccurrence>): LessonOccurrence => ({
   topic: 'parasha',
   audience: 'mixed',
   rabbi: RABBI_1,
-  place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'נתניה', citySlug: 'נתניה', area: 'sharon' },
+  venue: { kind: 'address', name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'נתניה', citySlug: 'נתניה', area: 'sharon' },
   ...overrides,
 });
 

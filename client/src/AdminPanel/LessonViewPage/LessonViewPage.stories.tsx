@@ -17,7 +17,7 @@ const lesson = (overrides: Partial<LessonResponse>): LessonResponse => ({
   id: 'story-lesson',
   title: 'עיונים בפרשת השבוע',
   rabbiId: 'story-rabbi',
-  place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', cityCode: 4000, cityName: 'חיפה' },
+  venue: { kind: 'address', name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', cityCode: 4000, cityName: 'חיפה' },
   topic: 'parasha',
   audience: 'mixed',
   recurrence: { kind: 'weekly', weekdays: [2] },
@@ -37,20 +37,20 @@ const scheduledOccurrence = (lessonId: string, overrides: Partial<LessonOccurren
   status: 'scheduled',
   audience: 'mixed',
   rabbi: rabbiResponse({}),
-  place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', floor: undefined, city: 'חיפה', citySlug: 'haifa', area: 'haifa' },
+  venue: { kind: 'address', name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', floor: undefined, city: 'חיפה', citySlug: 'haifa', area: 'haifa' },
   ...overrides,
 });
 
 const LONG_CANCELLATION_REASON = 'השיעור מבוטל השבוע עקב אירוע קהילתי בבית הכנסת, השיעור הבא יתקיים כרגיל בשבוע הבא באותה השעה ובאותו המקום';
 
-const additionalPlace = { name: 'בית מדרש נוסף', street: 'הרצל 12', floor: undefined, city: 'חיפה', citySlug: 'haifa', area: 'haifa' } as const;
+const additionalVenue = { kind: 'address', name: 'בית מדרש נוסף', street: 'הרצל 12', floor: undefined, city: 'חיפה', citySlug: 'haifa', area: 'haifa' } as const;
 
 const populatedOccurrences: LessonOccurrence[] = [
   scheduledOccurrence('story-populated', { date: '2026-09-18' }),
   // Moved: time differs from the lesson's own 20:30, place unchanged.
   scheduledOccurrence('story-populated', { date: '2026-09-25', startTime: '21:15', endTime: '22:15' }),
   // Place changed: time unchanged, venue differs from the lesson's own.
-  scheduledOccurrence('story-populated', { date: '2026-10-02', place: additionalPlace }),
+  scheduledOccurrence('story-populated', { date: '2026-10-02', venue: additionalVenue }),
   // Cancelled, with a reason.
   scheduledOccurrence('story-populated', { date: '2026-10-09', status: 'cancelled', cancellationReason: 'הרב נוסע לשמחה משפחתית' }),
 ];
@@ -62,7 +62,7 @@ const populatedExceptions: LessonExceptionResponse[] = [
     lessonId: 'story-populated',
     kind: 'modified',
     date: '2026-10-02',
-    place: { name: 'בית מדרש נוסף', street: 'הרצל 12', cityCode: 4000, cityName: 'חיפה' },
+    address: { name: 'בית מדרש נוסף', street: 'הרצל 12', cityCode: 4000, cityName: 'חיפה' },
   },
   { id: 23, lessonId: 'story-populated', kind: 'cancelled', date: '2026-10-09', reason: 'הרב נוסע לשמחה משפחתית' },
 ];
@@ -72,7 +72,8 @@ const populatedExceptions: LessonExceptionResponse[] = [
 const longDataOccurrences: LessonOccurrence[] = [
   scheduledOccurrence('story-occ-longdata', {
     date: '2026-09-18',
-    place: {
+    venue: {
+      kind: 'address',
       name: 'בית מדרש "אהבת ישראל" של קהילת יוצאי מרוקו, מרכז קהילתי נאות שקד',
       street: 'שדרות ירושלים 128, קומה שנייה, כניסה מהחצר האחורית',
       floor: undefined,
@@ -150,7 +151,8 @@ export const LongTitleAndVenue: Story = {
           lesson({
             id: 'story-longnames',
             title: 'שיעור עיון מעמיק בהלכות שבת ומועדים לפי שולחן ערוך ומנהגי קהילות המזרח',
-            place: {
+            venue: {
+              kind: 'address',
               name: 'בית מדרש "אהבת ישראל" של קהילת יוצאי מרוקו, מרכז קהילתי נאות שקד',
               street: 'שדרות ירושלים 128, קומה שנייה',
               cityCode: 4000,

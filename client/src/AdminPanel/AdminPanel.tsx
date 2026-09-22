@@ -9,6 +9,9 @@ import { LessonFormPage } from './LessonFormPage/LessonFormPage';
 import { LessonsListPage } from './LessonsListPage/LessonsListPage';
 import { LessonViewPage } from '~/AdminPanel/LessonViewPage/LessonViewPage';
 import { LoginPage } from './LoginPage/LoginPage';
+import { PlaceFormPage } from './PlaceFormPage/PlaceFormPage';
+import { PlacesListPage } from './PlacesListPage/PlacesListPage';
+import { PlaceViewPage } from './PlaceViewPage/PlaceViewPage';
 import { RabbiFormPage } from './RabbiFormPage/RabbiFormPage';
 import { RabbisListPage } from './RabbisListPage/RabbisListPage';
 import { RabbiViewPage } from '~/AdminPanel/RabbiViewPage/RabbiViewPage';
@@ -31,6 +34,10 @@ export const AdminPanel = () => (
         <Route path="rabbis/new" element={<RabbiFormPage />} />
         <Route path="rabbis/:id" element={<RabbiViewPage />} />
         <Route path="rabbis/:id/edit" element={<RabbiFormPage />} />
+        <Route path="places" element={<PlacesListPage />} />
+        <Route path="places/new" element={<PlaceFormPage />} />
+        <Route path="places/:id" element={<PlaceViewPage />} />
+        <Route path="places/:id/edit" element={<PlaceFormPage />} />
         <Route element={<RequireSuperAdmin />}>
           <Route path="admins" element={<AdminsListPage />} />
           <Route path="admins/new" element={<AdminFormPage />} />

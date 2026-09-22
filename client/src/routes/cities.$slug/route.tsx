@@ -7,11 +7,11 @@ import { isRouteErrorResponse, redirect, useRouteError } from 'react-router';
 import * as cityPageConsts from '~/CityPage/consts';
 import { CityPage } from '~/CityPage/CityPage';
 import { StateCard } from '~/components/StateCard/StateCard';
-import { SITE_WIDE_META } from '~/consts';
 import { cityPath } from '~/helpers';
 
 import { SITE_ORIGIN } from '../../../consts';
 import { PUBLIC_CACHE_HEADERS } from '../consts';
+import { DEFAULT_OG_IMAGE_META, SITE_WIDE_META_BASE } from '../meta';
 import * as consts from './consts';
 import { loadCityDetail } from './city-detail.server';
 
@@ -48,7 +48,8 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     { property: 'og:title', content: title },
     { property: 'og:description', content: description },
     { property: 'og:url', content: url },
-    ...SITE_WIDE_META,
+    ...SITE_WIDE_META_BASE,
+    ...DEFAULT_OG_IMAGE_META,
   ];
 };
 

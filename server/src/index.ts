@@ -10,6 +10,9 @@ import { registerCityRoutes } from './api/cities';
 import { registerHealthRoutes } from './api/health';
 import { registerHomeRoutes } from './api/home';
 import { registerLessonRoutes } from './api/lessons';
+import { registerPanelAuthRoutes } from './api/panel/auth';
+import { registerPlacePortalRoutes } from './api/place';
+import { registerPlaceRoutes } from './api/places';
 import { registerRabbiRoutes } from './api/rabbi';
 import { registerRabbiAuthRoutes } from './api/rabbi/auth';
 import { registerRabbiDirectoryRoutes } from './api/rabbis';
@@ -53,12 +56,15 @@ const start = async (): Promise<void> => {
   await registerHomeRoutes(app);
   await registerCityRoutes(app);
   await registerAreaRoutes(app);
+  await registerPlaceRoutes(app);
   await registerRabbiDirectoryRoutes(app);
   await registerWomenAreaRoutes(app);
   await registerAdminAuthRoutes(app);
   await registerAdminRoutes(app);
+  await registerPanelAuthRoutes(app);
   await registerRabbiAuthRoutes(app);
   await registerRabbiRoutes(app);
+  await registerPlacePortalRoutes(app);
   // Fail closed: with no `IMPORT_AGENT_KEY` configured, the whole agent
   // import surface is unregistered, not merely unauthenticated, so a
   // request to it 404s exactly as if the routes did not exist.
