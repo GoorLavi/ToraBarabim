@@ -2,14 +2,13 @@ import { css } from 'styled-components';
 
 import { POSTER_ASPECT_RATIO } from '~/HomePage/consts';
 
-import { EDGE_FADE_WIDTH_PHONE, RAIL_COLUMNS_MD, RAIL_COLUMNS_PHONE, RAIL_COLUMNS_XL } from './consts';
+import { RAIL_COLUMNS_MD, RAIL_COLUMNS_PHONE, RAIL_COLUMNS_XL } from './consts';
 import { railCardWidth, railEdgeOffset } from './helpers';
 
 export const LessonRail = css(
   ({ theme }) => `
   display: flex;
   flex-direction: column;
-  gap: ${theme.spacing.lg};
 
   > .heading {
     font-size: ${theme.typography.sectionHeading.phone.fontSize};
@@ -26,6 +25,7 @@ export const LessonRail = css(
 
   > .scrollerWrap {
     position: relative;
+    margin-block-start: ${theme.spacing.lg};
     /* Cancels the content band's own edge offset exactly, so the scroller
        reaches the same edge the band itself reaches at every width, not
        just up to its cap (helpers.ts, railEdgeOffset). */
@@ -38,7 +38,7 @@ export const LessonRail = css(
     > .arrow {
       display: none;
 
-      @media (min-width: ${theme.breakpoints.lg}) {
+      @media (min-width: ${theme.breakpoints.md}) {
         display: flex;
         align-items: center;
         justify-content: center;
@@ -88,36 +88,6 @@ export const LessonRail = css(
       }
     }
 
-    > .fade {
-      display: none;
-      position: absolute;
-      z-index: 1;
-      inset-block: 0;
-      /* The row's end, the direction cards keep coming from as it scrolls:
-         positioning stays logical (inset-inline-end). */
-      inset-inline-end: 0;
-      inline-size: ${EDGE_FADE_WIDTH_PHONE};
-      /* The gradient's own axis stays physical (\`to left\`, not an
-         inline-end keyword): CSS cannot express a gradient direction in
-         logical terms, and the page is permanently RTL, never bilingual,
-         so "left" here can never end up wrong. */
-      background: linear-gradient(
-        to left,
-        ${theme.colors.bg} 0%,
-        color-mix(in srgb, ${theme.colors.bg} 60%, transparent) 50%,
-        transparent 100%
-      );
-      pointer-events: none;
-
-      @media (min-width: ${theme.breakpoints.md}) {
-        inline-size: ${theme.spacing.xxl};
-      }
-
-      &.visible {
-        display: block;
-      }
-    }
-
     > .scrollerGroup {
       overflow-x: auto;
       /* Explicit, not left to default: setting only \`overflow-x\` computes
@@ -145,23 +115,13 @@ export const LessonRail = css(
         display: none;
       }
 
-      @media (pointer: fine) {
-        scrollbar-width: thin;
-
-        &::-webkit-scrollbar {
-          display: block;
-          block-size: 6px;
-        }
-
-        &::-webkit-scrollbar-thumb {
-          background: ${theme.colors.border};
-          border-radius: ${theme.radii.pill};
-        }
-      }
-
       > .scroller {
         display: flex;
-        gap: ${theme.spacing.lg};
+        gap: ${theme.spacing.sm};
+
+        @media (min-width: ${theme.breakpoints.md}) {
+          gap: ${theme.spacing.lg};
+        }
 
         > li {
           /* The grid's own column width at each of its breakpoints

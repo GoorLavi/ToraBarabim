@@ -27,6 +27,11 @@ export const railEdgeOffset = (theme: Theme, isWide: boolean): string =>
 // reproduces the grid's ceiling at `theme.layout.contentMaxWidth` without a
 // separate `min()`: past that width the offset grows in lockstep with the
 // viewport, so the two cancel and this settles at a constant.
+// The `theme.spacing.lg` here is the grid's own gap, which this width is
+// derived from and which must stay 16 at every width for the card to match
+// the grid's column. It is independent of the row's own `gap` in styles.ts
+// (`sm` below `md`, `lg` from `md` up): unifying the two would resize the
+// card, not just the space between cards.
 export const railCardWidth = (theme: Theme, columns: number, edgeOffset: string): string =>
   `calc((100vw - 2 * ${edgeOffset} - ${columns - 1} * ${theme.spacing.lg}) / ${columns})`;
 
@@ -55,18 +60,27 @@ export const railSlots = (items: LessonOccurrence[], womensAreaTileIndex: number
   return slots;
 };
 
+interface RailScrollMetrics {
+  maxScroll: number;
+  distanceFromStart: number;
+}
+
+// Browser engines disagree on `scrollLeft`'s origin and sign in RTL (0..-max
+// in some, 0..+max in others): `Math.abs` against the known travel distance
+// avoids needing to know which convention applies here.
+const railScrollMetrics = (element: HTMLElement): RailScrollMetrics => ({
+  maxScroll: element.scrollWidth - element.clientWidth,
+  distanceFromStart: Math.abs(element.scrollLeft),
+});
+
 export interface RailScrollEdges {
   atStart: boolean;
   atEnd: boolean;
 }
 
 export const railScrollEdges = (element: HTMLElement): RailScrollEdges => {
-  const maxScroll = element.scrollWidth - element.clientWidth;
+  const { maxScroll, distanceFromStart } = railScrollMetrics(element);
   if (maxScroll <= 1) return { atStart: true, atEnd: true };
 
-  // Browser engines also disagree on `scrollLeft`'s origin and sign in
-  // RTL (0..-max in some, 0..+max in others): `Math.abs` against the known
-  // travel distance avoids needing to know which convention applies here.
-  const distanceFromStart = Math.abs(element.scrollLeft);
   return { atStart: distanceFromStart <= 1, atEnd: distanceFromStart >= maxScroll - 1 };
 };
