@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { InactiveTag } from '~/AdminPanel/components/InactiveTag/InactiveTag';
+import { InactiveTag } from '~/components/InactiveTag/InactiveTag';
 import { RecordField } from '~/AdminPanel/components/RecordField/RecordField';
 import { ADMIN_ROUTES, skeletonFieldKeys } from '~/AdminPanel/consts';
 import { adminErrorMessage } from '~/AdminPanel/helpers';

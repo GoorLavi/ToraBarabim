@@ -4,6 +4,7 @@ import classNames from 'classnames';
 import styled from 'styled-components';
 
 import { directionForValue } from '~/helpers';
+import { InactiveTag } from '~/components/InactiveTag/InactiveTag';
 
 import { placeAddressLine, toPickedPlace } from '../../helpers';
 import * as parentConsts from '../../consts';
@@ -35,7 +36,7 @@ export const PickerControl = styled(({ className, place, onSelectPlace, onClearP
           {place ? (
             <span className="name" dir="auto">
               {place.name}
-              {!place.isActive && <span className="inactiveTag">{parentConsts.INACTIVE_PLACE_TAG}</span>}
+              {!place.isActive && <InactiveTag />}
             </span>
           ) : (
             <span className="label">{parentConsts.PICKER_PLACEHOLDER}</span>

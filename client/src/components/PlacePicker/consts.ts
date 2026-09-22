@@ -10,8 +10,6 @@ export const OR_LABEL = 'או';
 export const CANCEL_PLACE_LABEL = 'ביטול הבחירה והקלדת כתובת';
 export const CANCEL_PLACE_ARIA_LABEL = 'ביטול בחירת המקום והקלדת הכתובת בשדות שמתחת';
 
-export const INACTIVE_PLACE_TAG = 'לא פעיל';
-
 export const LOCKED_REASON = 'הכתובת נלקחת מהמקום שנבחר ואי אפשר לערוך אותה כאן.';
 
 // Relocated as-is from the two lesson forms' own `consts.ts` (not new

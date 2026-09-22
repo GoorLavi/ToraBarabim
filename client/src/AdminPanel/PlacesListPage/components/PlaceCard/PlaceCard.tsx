@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { InactiveTag } from '~/AdminPanel/components/InactiveTag/InactiveTag';
+import { InactiveTag } from '~/components/InactiveTag/InactiveTag';
 import { ADMIN_ROUTES, DETAILS_LABEL } from '~/AdminPanel/consts';
 import { placeAddressLine } from '~/components/PlacePicker/helpers';
 

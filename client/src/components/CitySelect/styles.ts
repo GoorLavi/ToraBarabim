@@ -26,6 +26,7 @@ export const CitySelect = css(
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      text-align: start;
     }
 
     > .chevron {
