@@ -76,7 +76,8 @@ export const LessonCard = styled(({ className, lesson, surface, clickContext }: 
 
         {lesson.substituteRabbi && (
           <p className="substituteNote" dir="auto">
-            {consts.SUBSTITUTE_LABEL} {SUBSTITUTE_PREFIX_BY_HONORIFIC[lesson.rabbi.honorific]} {rabbiDisplayName(lesson.rabbi)}
+            {consts.SUBSTITUTE_LABEL} {SUBSTITUTE_PREFIX_BY_HONORIFIC[lesson.rabbi.honorific]}{' '}
+            <span dir="auto">{rabbiDisplayName(lesson.rabbi)}</span>
           </p>
         )}
       </div>

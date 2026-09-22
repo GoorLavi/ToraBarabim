@@ -24,7 +24,7 @@ export const EMPTY_FIRST_HINT =
 export const EMPTY_FIRST_CTA = 'הוספת השיעור הראשון';
 
 export const EMPTY_WINDOW_HEADLINE = 'אין מועדים בשבועיים הקרובים';
-export const EMPTY_WINDOW_HINT = 'השיעורים שלך לא השתנו, הם פשוט לא מתקיימים בשבועיים האלה.';
+export const EMPTY_WINDOW_HINT = 'השיעורים שלך נשארו כרגיל, הם פשוט לא מתקיימים בשבועיים האלה.';
 export const EMPTY_WINDOW_CTA = 'לשיעורים שלי';
 
 export const ERROR_HEADLINE = 'לא הצלחנו לטעון את המועדים';
@@ -55,7 +55,7 @@ export const MOVE_STREET_LABEL = 'רחוב ומספר';
 
 export const REQUIRED_START_TIME_ERROR = 'יש למלא שעת התחלה';
 export const REQUIRED_CITY_ERROR = 'יש לבחור עיר';
-export const REQUIRED_PLACE_NAME_ERROR = 'יש למלא שם בית כנסת או מוסד';
+export const REQUIRED_PLACE_NAME_ERROR = 'יש למלא את שם בית הכנסת או המוסד';
 export const REQUIRED_STREET_ERROR = 'יש למלא רחוב ומספר';
 
 // Duplicated from `LessonsListPage/consts.ts` rather than imported: the two

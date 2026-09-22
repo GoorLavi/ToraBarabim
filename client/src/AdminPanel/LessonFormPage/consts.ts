@@ -61,7 +61,7 @@ export const SAVING_LABEL = 'שומרים...';
 
 export const REQUIRED_RABBI_ERROR = 'יש לבחור רב';
 export const REQUIRED_CITY_ERROR = 'יש לבחור עיר';
-export const REQUIRED_ADDRESS_NAME_ERROR = 'יש למלא שם בית כנסת או מוסד';
+export const REQUIRED_ADDRESS_NAME_ERROR = 'יש למלא את שם בית הכנסת או המוסד';
 export const REQUIRED_STREET_ERROR = 'יש למלא רחוב ומספר';
 export const REQUIRED_AUDIENCE_ERROR = 'יש לבחור קהל יעד';
 export const REQUIRED_START_TIME_ERROR = 'יש למלא שעת התחלה';

@@ -43,5 +43,5 @@ export const MOVE_STREET_LABEL = 'רחוב ומספר';
 
 export const REQUIRED_START_TIME_ERROR = 'יש למלא שעת התחלה';
 export const REQUIRED_CITY_ERROR = 'יש לבחור עיר';
-export const REQUIRED_PLACE_NAME_ERROR = 'יש למלא שם בית כנסת או מוסד';
+export const REQUIRED_PLACE_NAME_ERROR = 'יש למלא את שם בית הכנסת או המוסד';
 export const REQUIRED_STREET_ERROR = 'יש למלא רחוב ומספר';

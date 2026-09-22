@@ -53,7 +53,7 @@ export const kickerLabel = (occurrence: LessonOccurrence): string | undefined =>
 
 // The label above the rabbi's name, describing whoever is actually teaching
 // this occurrence. A substitute needs no wording of its own: the line below
-// already says `במקום <the usual rabbi>`. Its own slot, never sharing one
+// already says `במקומו של <the usual rabbi>`. Its own slot, never sharing one
 // with `kickerLabel`.
 export const roleLabel = (teachingRabbiHonorific: RabbiHonorific): string =>
   TEACHING_RABBI_ROLE_LABEL[teachingRabbiHonorific];
