@@ -32,8 +32,8 @@ export const railEdgeOffset = (theme: Theme, zone: RailEdgeZone): string => {
 // The rail's card width at a given column count, computed the same way the
 // grid's own `1fr` columns resolve theirs: the viewport, minus the band's
 // edge offset on both sides, minus the gaps between columns, divided by
-// the column count. Phone-only now: from `md` up the card is a fixed width
-// (RAIL_CARD_WIDTH_DESKTOP, consts.ts), not a column count against the
+// the column count. Phone-only now: from `sm` up the card is one of a fixed
+// ladder of per-tier widths (consts.ts), not a column count against the
 // viewport, so this formula is only ever called with RAIL_COLUMNS_PHONE and
 // the `gutter` offset.
 // The `theme.spacing.lg` here is the grid's own gap, which this width is
@@ -42,37 +42,6 @@ export const railEdgeOffset = (theme: Theme, zone: RailEdgeZone): string => {
 // as peek.
 export const railCardWidth = (theme: Theme, columns: number, edgeOffset: string): string =>
   `calc((100vw - 2 * ${edgeOffset} - ${columns - 1} * ${theme.spacing.lg}) / ${columns})`;
-
-// What `repeat(auto-fill, minmax(min, max))` computes for a bounded,
-// wrapping grid: as many columns as fit at `min`, grown evenly up to `max`
-// with whatever space that leaves over. Used by useRailCardWidth.ts against
-// the scroller's own measured width, not by a CSS grid track (consts.ts,
-// RAIL_CARD_WIDTH_MIN, says why the CSS-only version does not work for an
-// unbounded, scrollable row).
-//
-// A bare greedy auto-fill (always take the most columns that fit at `min`)
-// produces a sharp "plateau then cliff": the card sits flat at the `max`
-// ceiling across a wide range of container widths, then one extra pixel
-// adds a column and every card drops straight to the `min` floor, an 18%
-// jump in one resize step (owner, 2026-09-22: found this jarring at the
-// container width a common laptop window happens to land on). At the exact
-// moment a new column first fits, its width lands at (or barely above) the
-// `min` floor by construction; every other column count in between sits
-// comfortably higher, well clear of it (e.g. 279px and 282px at widths
-// already approved the same day). So the fix only steps back one column
-// when the greedy choice's width falls near the floor specifically (within
-// a fifth of the min/max range above it), not merely below the range's
-// midpoint: a midpoint cut also caught those already-approved widths and
-// silently reverted them to fewer, larger cards, which this avoids.
-export const idealRailCardWidth = (containerWidth: number, min: number, max: number, gap: number): number => {
-  const widthFor = (columns: number): number => (containerWidth - (columns - 1) * gap) / columns;
-
-  const maxColumns = Math.max(1, Math.floor((containerWidth + gap) / (min + gap)));
-  const nearFloorThreshold = min + (max - min) * 0.2;
-  const columns = maxColumns > 1 && widthFor(maxColumns) < nearFloorThreshold ? maxColumns - 1 : maxColumns;
-
-  return Math.min(max, widthFor(columns));
-};
 
 // `scrollLeft`'s sign in a `direction: rtl` container is not consistent
 // enough to assign directly: deriving the sign from the computed direction

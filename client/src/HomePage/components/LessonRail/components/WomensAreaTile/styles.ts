@@ -1,7 +1,13 @@
 import { css } from 'styled-components';
 
 import { CARD_WIDE_THRESHOLD } from '~/HomePage/components/LessonCard/consts';
-import { RAIL_CARD_WIDTH_DESKTOP, RAIL_COLUMNS_PHONE } from '~/HomePage/components/LessonRail/consts';
+import {
+  RAIL_CARD_WIDTH_MD,
+  RAIL_CARD_WIDTH_SM,
+  RAIL_CARD_WIDTH_WIDE,
+  RAIL_CARD_WIDTH_XWIDE,
+  RAIL_COLUMNS_PHONE,
+} from '~/HomePage/components/LessonRail/consts';
 import { railCardWidth, railEdgeOffset } from '~/HomePage/components/LessonRail/helpers';
 import { POSTER_ASPECT_RATIO } from '~/HomePage/consts';
 import type { Theme } from '~/theme/models';
@@ -13,12 +19,12 @@ import { EMBLEM_SIZE_FLOOR, EMBLEM_WIDTH_FACTOR } from './consts';
 // tile's rendered width is computed, so reusing it here for the emblem,
 // rather than a CSS percentage that would resolve against `.plum`'s own
 // narrower content box, keeps a single source of truth instead of a second
-// number that could drift from it. From `md` up the card width is the fixed
-// RAIL_CARD_WIDTH_DESKTOP, so no formula is needed there.
+// number that could drift from it. From `sm` up the card width is one of
+// the tier's own fixed constants, so no formula is needed there.
 const emblemInlineSizePhone = (theme: Theme): string =>
   `max(${EMBLEM_SIZE_FLOOR}px, calc(${EMBLEM_WIDTH_FACTOR} * ${railCardWidth(theme, RAIL_COLUMNS_PHONE, railEdgeOffset(theme, 'gutter'))}))`;
 
-const emblemInlineSizeDesktop = `max(${EMBLEM_SIZE_FLOOR}px, calc(${EMBLEM_WIDTH_FACTOR} * ${RAIL_CARD_WIDTH_DESKTOP}))`;
+const emblemInlineSize = (cardWidth: string): string => `max(${EMBLEM_SIZE_FLOOR}px, calc(${EMBLEM_WIDTH_FACTOR} * ${cardWidth}))`;
 
 export const WomensAreaTile = css(
   ({ theme }) => `
@@ -90,11 +96,23 @@ export const WomensAreaTile = css(
       block-size: auto;
       aspect-ratio: 1;
 
+      /* Fixed, matching LessonRail/styles.ts's own ladder: one card width
+         constant per tier from \`sm\` up, so the emblem tracks the card
+         exactly at every step. */
+      @media (min-width: ${theme.breakpoints.sm}) {
+        inline-size: ${emblemInlineSize(RAIL_CARD_WIDTH_SM)};
+      }
+
       @media (min-width: ${theme.breakpoints.md}) {
-        /* Fixed, matching LessonRail/styles.ts: the card width no longer
-           grows with the viewport from \`md\` up, so the emblem is sized
-           against the same constant (RAIL_CARD_WIDTH_DESKTOP). */
-        inline-size: ${emblemInlineSizeDesktop};
+        inline-size: ${emblemInlineSize(RAIL_CARD_WIDTH_MD)};
+      }
+
+      @media (min-width: ${theme.layout.fourColumnWidth}) {
+        inline-size: ${emblemInlineSize(RAIL_CARD_WIDTH_WIDE)};
+      }
+
+      @media (min-width: ${theme.layout.xwideRailWidth}) {
+        inline-size: ${emblemInlineSize(RAIL_CARD_WIDTH_XWIDE)};
       }
     }
 

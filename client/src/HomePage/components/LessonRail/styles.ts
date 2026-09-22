@@ -2,7 +2,7 @@ import { css } from 'styled-components';
 
 import { POSTER_ASPECT_RATIO } from '~/HomePage/consts';
 
-import { RAIL_CARD_WIDTH_DESKTOP, RAIL_CARD_WIDTH_PROPERTY, RAIL_COLUMNS_PHONE } from './consts';
+import { RAIL_CARD_WIDTH_MD, RAIL_CARD_WIDTH_SM, RAIL_CARD_WIDTH_WIDE, RAIL_CARD_WIDTH_XWIDE, RAIL_COLUMNS_PHONE } from './consts';
 import { railCardWidth, railEdgeOffset } from './helpers';
 
 export const LessonRail = css(
@@ -45,18 +45,14 @@ export const LessonRail = css(
         position: absolute;
         z-index: 1;
         /* Centred on the poster, not the whole card: half the poster's own
-           height (the desktop card ceiling divided by POSTER_ASPECT_RATIO,
+           height (the tier's own card width divided by POSTER_ASPECT_RATIO,
            the same formula LessonCard's own poster uses) minus half the
            button's own 48px, so the button's centre lands on the poster's
-           centre rather than its own top edge. Pinned to the 308px ceiling
-           (RAIL_CARD_WIDTH_DESKTOP) rather than to the card's own measured
-           width (useRailCardWidth.ts): a sibling cannot read another
-           element's resolved flex-basis in \`calc()\`, and the drift this
-           approximation costs tops out at 32px at the 260px floor, inside
-           the 44px off-centre this design already accepts elsewhere
-           (design-system.md, "Horizontal rails", the phone-derived arrow
-           centring). */
-        inset-block-start: calc(${RAIL_CARD_WIDTH_DESKTOP} / ${POSTER_ASPECT_RATIO} / 2 - 24px);
+           centre rather than its own top edge. One value per tier from md
+           up (design-system.md, "Horizontal rails": 130.67 at 232, 160 at
+           276, 173.33 at 296), each derived from that tier's own card width
+           constant, never a bare number. */
+        inset-block-start: calc(${RAIL_CARD_WIDTH_MD} / ${POSTER_ASPECT_RATIO} / 2 - 24px);
         inline-size: 48px;
         block-size: 48px;
         border: 1px solid ${theme.colors.border};
@@ -73,6 +69,14 @@ export const LessonRail = css(
           inline-size: 20px;
           block-size: 20px;
         }
+      }
+
+      @media (min-width: ${theme.layout.fourColumnWidth}) {
+        inset-block-start: calc(${RAIL_CARD_WIDTH_WIDE} / ${POSTER_ASPECT_RATIO} / 2 - 24px);
+      }
+
+      @media (min-width: ${theme.layout.xwideRailWidth}) {
+        inset-block-start: calc(${RAIL_CARD_WIDTH_XWIDE} / ${POSTER_ASPECT_RATIO} / 2 - 24px);
       }
 
       &.prev {
@@ -116,12 +120,12 @@ export const LessonRail = css(
         /* \`sm\` at every width (owner, 2026-09-22: fixed at 8). Below \`md\`
            this is deliberately narrower than railCardWidth's own sizing
            math (which always bakes in \`lg\`, helpers.ts), so the difference
-           surfaces as peek. From \`md\` up the card is a fixed width
-           (RAIL_CARD_WIDTH_DESKTOP) rather than a viewport-derived formula,
-           so peek there is a property of the row's own fixed-width
-           arithmetic rather than of this gap; \`sm\` still holds as the
-           floor two adjacent cards must keep as real tap-target
-           separation (design-system.md, "8 is the floor"). */
+           surfaces as peek. From \`sm\` up the card is a fixed width per
+           tier rather than a viewport-derived formula, so peek there is a
+           property of the row's own fixed-width arithmetic rather than of
+           this gap; \`sm\` still holds as the floor two adjacent cards must
+           keep as real tap-target separation (design-system.md, "8 is the
+           floor"). */
         gap: ${theme.spacing.sm};
 
         > li {
@@ -131,16 +135,25 @@ export const LessonRail = css(
           flex: 0 0 ${railCardWidth(theme, RAIL_COLUMNS_PHONE, railEdgeOffset(theme, 'gutter'))};
           scroll-snap-align: start;
 
+          /* A ladder of fixed widths, one per tier (design-system.md,
+             "Horizontal rails"): inside a tier the card never recomputes,
+             and only the whole-card count on screen changes as the window
+             moves. Each media query below only widens the ceiling; later,
+             larger min-widths override earlier ones as the viewport grows. */
+          @media (min-width: ${theme.breakpoints.sm}) {
+            flex-basis: ${RAIL_CARD_WIDTH_SM};
+          }
+
           @media (min-width: ${theme.breakpoints.md}) {
-            /* Not a column-count formula: however many cards fit the
-               viewport is how many show, with no upper bound. The width
-               itself comes from useRailCardWidth.ts (a ResizeObserver on
-               the scroller's own container, consts.ts explains why a CSS
-               \`minmax()\` track cannot do this for an unbounded, scrollable
-               row), between RAIL_CARD_WIDTH_MIN and this ceiling. The
-               fallback is what renders before the first measurement lands
-               (SSR, first paint), so there is no flash of an unsized card. */
-            flex-basis: var(${RAIL_CARD_WIDTH_PROPERTY}, ${RAIL_CARD_WIDTH_DESKTOP});
+            flex-basis: ${RAIL_CARD_WIDTH_MD};
+          }
+
+          @media (min-width: ${theme.layout.fourColumnWidth}) {
+            flex-basis: ${RAIL_CARD_WIDTH_WIDE};
+          }
+
+          @media (min-width: ${theme.layout.xwideRailWidth}) {
+            flex-basis: ${RAIL_CARD_WIDTH_XWIDE};
           }
         }
       }
