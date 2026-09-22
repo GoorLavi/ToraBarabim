@@ -196,7 +196,7 @@ Seventeen color tokens. The theme defines all seventeen.
 | `color.bg` | Page background |
 | `color.surface` | Cards, fields, anything sitting on the page background |
 | `color.primary` | Primary buttons, links, the header band, the date medallion |
-| `color.primaryStrong` | Hover and pressed state of anything using `primary` |
+| `color.primaryStrong` | Hover and pressed state of anything using `primary`, and the one deep field that closes the home page |
 | `color.primarySoft` | Tinted background: quiet bands, inactive chips, avatar fallbacks |
 | `color.accent` | Time and date graphics, large numerals. See the contrast rule below |
 | `color.accentSoft` | Tinted background in accent contexts |
