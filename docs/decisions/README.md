@@ -101,3 +101,4 @@ The real alternatives and why each lost. If there was no alternative, say so.
 | [0031](0031-import-agent-writes-with-its-own-key.md) | The import agent writes to production with its own key, without a per-run approval | accepted |
 | [0032](0032-import-matches-rabbis-by-name-and-site.md) | The import matches rabbis by name and site, and learns only what the owner confirmed | accepted |
 | [0033](0033-a-one-time-lesson-outside-the-two-week-window-cannot-be-cancelled-yet.md) | A one-time lesson outside the two-week window cannot be cancelled yet | accepted, to be fixed in its own change |
+| [0034](0034-storybook-mocks-fetch-with-an-in-house-layer-not-msw.md) | Storybook mocks `fetch` with an in-house layer, not msw | accepted |

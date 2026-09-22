@@ -3,8 +3,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Route, Routes } from 'react-router-dom';
 
 import { rabbiFixture } from '~/rabbiFixture';
-import { installMockFetch, jsonResponse, NEVER_RESOLVES } from '~/storyMocks';
 
+import { errorResolver, http, jsonResolver, loadingResolver, queryOf, respondWithJson } from '../../.storybook/apiMocks';
 import { CityPage } from './CityPage';
 
 const cityDetail = (overrides: Partial<CityDetailResponse>): CityDetailResponse => ({
@@ -36,66 +36,34 @@ const lesson = (overrides: Partial<LessonOccurrence>): LessonOccurrence => ({
   ...overrides,
 });
 
-installMockFetch((url) => {
-  // `URL#pathname` is always percent-encoded, even for a plain assignment
-  // like `new URL('/v1/cities/עיר')`: comparing it against a literal Hebrew
-  // string never matches, which is exactly the 404 this looked like before
-  // decoding it back.
-  const pathname = decodeURIComponent(url.pathname);
+const emptyLessons = { items: [], page: 1, pageSize: 24, total: 0 };
 
-  if (pathname === '/v1/cities/עיר-מלאה') return jsonResponse(200, cityDetail({ name: 'עיר-מלאה', slug: 'עיר-מלאה' }));
-  if (pathname === '/v1/cities/עיר-ריקה') {
-    return jsonResponse(
-      200,
-      cityDetail({
-        id: '46',
-        name: 'עיר-ריקה',
-        slug: 'עיר-ריקה',
-        area: 'north',
-        areaName: 'הצפון',
-        areaSlug: 'הצפון',
-        rabbis: [],
-      }),
-    );
-  }
-  if (pathname === '/v1/cities/שם-עיר-לא-קיים') return jsonResponse(404, { error: 'city_not_found', message: 'לא נמצאה' });
-  if (pathname === '/v1/cities/עיר-שגיאה') return jsonResponse(500, { error: 'internal_error', message: 'שגיאה' });
-  if (pathname === '/v1/cities/עיר-טעינה') return NEVER_RESOLVES;
+const cityHandler = (detail: CityDetailResponse) => http.get('/v1/cities/:slug', jsonResolver(detail));
+const lessonsHandler = (items: LessonOccurrence[]) =>
+  http.get('/v1/lessons', jsonResolver({ items, page: 1, pageSize: 24, total: items.length }));
 
-  if (pathname === '/v1/lessons') {
-    if (url.searchParams.get('city') === '4000') {
-      return jsonResponse(200, {
-        items: [
-          lesson({ lessonId: 'l1', date: '2026-09-10', startTime: '20:30' }),
-          lesson({ lessonId: 'l2', date: '2026-09-10', startTime: '06:00', rabbi: rabbiFixture({ id: 'r2', name: 'משה לוי' }) }),
-          lesson({ lessonId: 'l3', date: '2026-09-13', startTime: '19:00', audience: 'women', title: undefined, topic: undefined }),
-        ],
-        page: 1,
-        pageSize: 24,
-        total: 3,
-      });
-    }
-    if (url.searchParams.get('city') === '46') {
-      return jsonResponse(200, { items: [], page: 1, pageSize: 24, total: 0 });
-    }
-    if (url.searchParams.get('area') === 'north') {
-      return jsonResponse(200, {
-        items: [
-          lesson({
-            lessonId: 'a1',
-            rabbi: rabbiFixture({ id: 'r9', name: 'שמעון אזולאי' }),
-            place: { name: 'בית מדרש', street: 'הרצל 1', city: 'טבריה', citySlug: 'טבריה', area: 'north' },
-          }),
-        ],
-        page: 1,
-        pageSize: 24,
-        total: 1,
-      });
-    }
-    return jsonResponse(200, { items: [], page: 1, pageSize: 24, total: 0 });
-  }
+const populatedLessons: LessonOccurrence[] = [
+  lesson({ lessonId: 'l1', date: '2026-09-10', startTime: '20:30' }),
+  lesson({ lessonId: 'l2', date: '2026-09-10', startTime: '06:00', rabbi: rabbiFixture({ id: 'r2', name: 'משה לוי' }) }),
+  lesson({ lessonId: 'l3', date: '2026-09-13', startTime: '19:00', audience: 'women', title: undefined, topic: undefined }),
+];
 
-  return null;
+const areaLessons: LessonOccurrence[] = [
+  lesson({
+    lessonId: 'a1',
+    rabbi: rabbiFixture({ id: 'r9', name: 'שמעון אזולאי' }),
+    place: { name: 'בית מדרש', street: 'הרצל 1', city: 'טבריה', citySlug: 'טבריה', area: 'north' },
+  }),
+];
+
+const emptyCityDetail = cityDetail({
+  id: '46',
+  name: 'עיר-ריקה',
+  slug: 'עיר-ריקה',
+  area: 'north',
+  areaName: 'הצפון',
+  areaSlug: 'הצפון',
+  rabbis: [],
 });
 
 // See RabbiPage.stories.tsx for why this uses `Routes`'s `location` override
@@ -109,13 +77,39 @@ const withRoute = (citySlug: string) => (Story: React.ComponentType) => (
 const meta: Meta<typeof CityPage> = {
   title: 'CityPage/CityPage',
   component: CityPage,
+  parameters: { apiMocks: { handlers: { lessons: lessonsHandler([]) } } },
 };
 
 export default meta;
 type Story = StoryObj<typeof CityPage>;
 
-export const Populated: Story = { decorators: [withRoute('עיר-מלאה')] };
-export const EmptyWidenedToArea: Story = { decorators: [withRoute('עיר-ריקה')] };
-export const NotFound: Story = { decorators: [withRoute('שם-עיר-לא-קיים')] };
-export const ServerError: Story = { decorators: [withRoute('עיר-שגיאה')] };
-export const Loading: Story = { decorators: [withRoute('עיר-טעינה')] };
+export const Populated: Story = {
+  decorators: [withRoute('עיר-מלאה')],
+  parameters: { apiMocks: { handlers: { city: cityHandler(cityDetail({ name: 'עיר-מלאה', slug: 'עיר-מלאה' })), lessons: lessonsHandler(populatedLessons) } } },
+};
+// The city has no lessons, so the page widens its own request to the whole area.
+export const EmptyWidenedToArea: Story = {
+  decorators: [withRoute('עיר-ריקה')],
+  parameters: {
+    apiMocks: {
+      handlers: {
+        city: cityHandler(emptyCityDetail),
+        lessons: http.get('/v1/lessons', ({ request }) =>
+          respondWithJson(queryOf(request).has('area') ? { items: areaLessons, page: 1, pageSize: 24, total: 1 } : emptyLessons),
+        ),
+      },
+    },
+  },
+};
+export const NotFound: Story = {
+  decorators: [withRoute('שם-עיר-לא-קיים')],
+  parameters: { apiMocks: { handlers: { city: http.get('/v1/cities/:slug', errorResolver(404, 'city_not_found', 'לא נמצאה')) } } },
+};
+export const ServerError: Story = {
+  decorators: [withRoute('עיר-שגיאה')],
+  parameters: { apiMocks: { handlers: { city: http.get('/v1/cities/:slug', errorResolver()) } } },
+};
+export const Loading: Story = {
+  decorators: [withRoute('עיר-טעינה')],
+  parameters: { apiMocks: { handlers: { city: http.get('/v1/cities/:slug', loadingResolver) } } },
+};

@@ -3,8 +3,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Route, Routes } from 'react-router-dom';
 
 import { rabbiFixture } from '~/rabbiFixture';
-import { installMockFetch, jsonResponse, NEVER_RESOLVES } from '~/storyMocks';
 
+import { errorResolver, http, jsonResolver, loadingResolver, queryOf, respondWithJson } from '../../.storybook/apiMocks';
 import { RabbiPage } from './RabbiPage';
 
 const rabbiDetail = (overrides: Partial<RabbiDetailResponse>): RabbiDetailResponse => ({
@@ -36,81 +36,45 @@ const lesson = (overrides: Partial<LessonOccurrence>): LessonOccurrence => ({
   ...overrides,
 });
 
-installMockFetch((url) => {
-  if (url.pathname === '/v1/rabbis/story-populated') return jsonResponse(200, rabbiDetail({ id: 'story-populated' }));
-  if (url.pathname === '/v1/rabbis/story-nophoto') {
-    return jsonResponse(200, rabbiDetail({ id: 'story-nophoto', photoUrl: undefined, title: undefined }));
-  }
-  if (url.pathname === '/v1/rabbis/story-longname') {
-    return jsonResponse(
-      200,
-      rabbiDetail({
-        ...rabbiFixture({ id: 'story-longname', name: 'נתן צבי אשכנזי הכהן' }),
-        cities: [
-          { id: '1', name: 'חיפה', slug: 'חיפה', area: 'haifa' },
-          { id: '2', name: 'ירושלים', slug: 'ירושלים', area: 'jerusalem' },
-          { id: '3', name: 'תל אביב', slug: 'תל-אביב', area: 'telAviv' },
-        ],
-      }),
-    );
-  }
-  if (url.pathname === '/v1/rabbis/story-empty') {
-    return jsonResponse(
-      200,
-      rabbiDetail({
-        ...rabbiFixture({ id: 'story-empty', name: 'שרה גולדברג', honorific: 'rabbanit' }),
-        lessonCount: 0,
-        cities: [],
-      }),
-    );
-  }
-  if (url.pathname === '/v1/rabbis/story-notfound') return jsonResponse(404, { error: 'rabbi_not_found', message: 'לא נמצא' });
-  if (url.pathname === '/v1/rabbis/story-error') return jsonResponse(500, { error: 'internal_error', message: 'שגיאה' });
-  if (url.pathname === '/v1/rabbis/story-loading') return NEVER_RESOLVES;
+const rabbiHandler = (detail: RabbiDetailResponse) => http.get('/v1/rabbis/:rabbiId', jsonResolver(detail));
 
-  if (url.pathname === '/v1/lessons') {
-    if (url.searchParams.get('rabbiId') === 'story-populated') {
-      return jsonResponse(200, {
-        items: [
-          lesson({ lessonId: 'l1', date: '2026-09-10', startTime: '20:30' }),
-          lesson({
-            lessonId: 'l2',
-            date: '2026-09-11',
-            startTime: '06:00',
-            title: undefined,
-            topic: 'gemara',
-            place: {
-              name: 'בית מדרש אוהל יעקב, מרכז קהילתי נאות שקד',
-              street: 'הרב קוק 12',
-              city: 'חיפה',
-              citySlug: 'חיפה',
-              area: 'haifa',
-            },
-          }),
-          lesson({ lessonId: 'l3', date: '2026-09-13', startTime: '19:00', audience: 'women' }),
-        ],
-        page: 1,
-        pageSize: 20,
-        total: 3,
-      });
-    }
-    if (!url.searchParams.get('rabbiId')) {
-      // The nationwide fallback for the empty-rabbi state.
-      return jsonResponse(200, {
-        items: [
-          lesson({ lessonId: 'n1', rabbi: rabbiFixture({ id: 'other-1', name: 'אברהם כהן' }) }),
-          lesson({ lessonId: 'n2', rabbi: rabbiFixture({ id: 'other-2', name: 'משה לוי' }) }),
-        ],
-        page: 1,
-        pageSize: 4,
-        total: 2,
-      });
-    }
-    return jsonResponse(200, { items: [], page: 1, pageSize: 20, total: 0 });
-  }
+const populatedLessons: LessonOccurrence[] = [
+  lesson({ lessonId: 'l1', date: '2026-09-10', startTime: '20:30' }),
+  lesson({
+    lessonId: 'l2',
+    date: '2026-09-11',
+    startTime: '06:00',
+    title: undefined,
+    topic: 'gemara',
+    place: {
+      name: 'בית מדרש אוהל יעקב, מרכז קהילתי נאות שקד',
+      street: 'הרב קוק 12',
+      city: 'חיפה',
+      citySlug: 'חיפה',
+      area: 'haifa',
+    },
+  }),
+  lesson({ lessonId: 'l3', date: '2026-09-13', startTime: '19:00', audience: 'women' }),
+];
 
-  return null;
-});
+// The nationwide fallback the page fetches for the empty-rabbi state: a
+// lessons request with no `rabbiId`.
+const nationwideLessons = {
+  items: [
+    lesson({ lessonId: 'n1', rabbi: rabbiFixture({ id: 'other-1', name: 'אברהם כהן' }) }),
+    lesson({ lessonId: 'n2', rabbi: rabbiFixture({ id: 'other-2', name: 'משה לוי' }) }),
+  ],
+  page: 1,
+  pageSize: 4,
+  total: 2,
+};
+
+const lessonsHandler = (rabbiLessons: LessonOccurrence[]) =>
+  http.get('/v1/lessons', ({ request }) =>
+    respondWithJson(
+      queryOf(request).has('rabbiId') ? { items: rabbiLessons, page: 1, pageSize: 20, total: rabbiLessons.length } : nationwideLessons,
+    ),
+  );
 
 // The global Storybook decorator (.storybook/preview.tsx) already wraps
 // every story in one MemoryRouter; a second, nested one throws ("You should
@@ -130,15 +94,60 @@ const withRoute = (rabbiId: string) => (Story: React.ComponentType) => (
 const meta: Meta<typeof RabbiPage> = {
   title: 'RabbiPage/RabbiPage',
   component: RabbiPage,
+  parameters: { apiMocks: { handlers: { lessons: lessonsHandler([]) } } },
 };
 
 export default meta;
 type Story = StoryObj<typeof RabbiPage>;
 
-export const Populated: Story = { decorators: [withRoute('story-populated')] };
-export const NoPhoto: Story = { decorators: [withRoute('story-nophoto')] };
-export const VeryLongName: Story = { decorators: [withRoute('story-longname')] };
-export const EmptyWidenedToCountry: Story = { decorators: [withRoute('story-empty')] };
-export const NotFound: Story = { decorators: [withRoute('story-notfound')] };
-export const ServerError: Story = { decorators: [withRoute('story-error')] };
-export const Loading: Story = { decorators: [withRoute('story-loading')] };
+export const Populated: Story = {
+  decorators: [withRoute('story-populated')],
+  parameters: { apiMocks: { handlers: { rabbi: rabbiHandler(rabbiDetail({ id: 'story-populated' })), lessons: lessonsHandler(populatedLessons) } } },
+};
+export const NoPhoto: Story = {
+  decorators: [withRoute('story-nophoto')],
+  parameters: { apiMocks: { handlers: { rabbi: rabbiHandler(rabbiDetail({ id: 'story-nophoto', photoUrl: undefined, title: undefined })) } } },
+};
+export const VeryLongName: Story = {
+  decorators: [withRoute('story-longname')],
+  parameters: {
+    apiMocks: {
+      handlers: {
+        rabbi: rabbiHandler(
+          rabbiDetail({
+            ...rabbiFixture({ id: 'story-longname', name: 'נתן צבי אשכנזי הכהן' }),
+            cities: [
+              { id: '1', name: 'חיפה', slug: 'חיפה', area: 'haifa' },
+              { id: '2', name: 'ירושלים', slug: 'ירושלים', area: 'jerusalem' },
+              { id: '3', name: 'תל אביב', slug: 'תל-אביב', area: 'telAviv' },
+            ],
+          }),
+        ),
+      },
+    },
+  },
+};
+export const EmptyWidenedToCountry: Story = {
+  decorators: [withRoute('story-empty')],
+  parameters: {
+    apiMocks: {
+      handlers: {
+        rabbi: rabbiHandler(
+          rabbiDetail({ ...rabbiFixture({ id: 'story-empty', name: 'שרה גולדברג', honorific: 'rabbanit' }), lessonCount: 0, cities: [] }),
+        ),
+      },
+    },
+  },
+};
+export const NotFound: Story = {
+  decorators: [withRoute('story-notfound')],
+  parameters: { apiMocks: { handlers: { rabbi: http.get('/v1/rabbis/:rabbiId', errorResolver(404, 'rabbi_not_found', 'לא נמצא')) } } },
+};
+export const ServerError: Story = {
+  decorators: [withRoute('story-error')],
+  parameters: { apiMocks: { handlers: { rabbi: http.get('/v1/rabbis/:rabbiId', errorResolver()) } } },
+};
+export const Loading: Story = {
+  decorators: [withRoute('story-loading')],
+  parameters: { apiMocks: { handlers: { rabbi: http.get('/v1/rabbis/:rabbiId', loadingResolver) } } },
+};

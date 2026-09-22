@@ -1,25 +1,21 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { userEvent, within } from 'storybook/test';
 
-import { installMockFetch, jsonResponse } from '~/storyMocks';
-
+import { errorResolver, http } from '../../../.storybook/apiMocks';
 import { LoginPage } from './LoginPage';
 
-// Installs/restores through `beforeEach` so the mock never leaks into a
-// story outside this file; see `~/storyMocks` for why every route this page
-// calls has to be answered here at all.
 const meta: Meta<typeof LoginPage> = {
   title: 'RabbiPanel/LoginPage',
   component: LoginPage,
-  beforeEach: () =>
-    installMockFetch((url) => {
-      // Not logged in, so the login form renders instead of redirecting.
-      if (url.pathname === '/v1/rabbi/me') return jsonResponse(401, { error: 'unauthenticated', message: 'לא מחובר' });
-      if (url.pathname === '/v1/rabbi/login') {
-        return jsonResponse(401, { error: 'invalid_credentials', message: 'אימייל, שם משתמש או סיסמה שגויים' });
-      }
-      return null;
-    }),
+  parameters: {
+    apiMocks: {
+      handlers: {
+        // Not logged in, so the login form renders instead of redirecting.
+        session: http.get('/v1/rabbi/me', errorResolver(401, 'unauthenticated', 'לא מחובר')),
+        login: http.post('/v1/rabbi/login', errorResolver(401, 'invalid_credentials', 'אימייל, שם משתמש או סיסמה שגויים')),
+      },
+    },
+  },
 };
 
 export default meta;
