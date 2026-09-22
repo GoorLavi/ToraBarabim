@@ -61,6 +61,13 @@ const sniff = (bytes: Buffer): 'jpg' | 'png' => {
   throw new UnsupportedPlacePhotoTypeError();
 };
 
+const CONTENT_TYPE_BY_KIND: Record<'jpg' | 'png', string> = { jpg: 'image/jpeg', png: 'image/png' };
+
+export interface ValidatedPlacePhoto {
+  contentType: string;
+  extension: 'jpg' | 'png';
+}
+
 // Validates a place photo, in order: size, type, real dimensions (read from
 // the header, never decoded), the two floors, then the aspect ratio band.
 // Rejects rather than crops: the owner's call, to avoid an image-decoding
@@ -75,7 +82,11 @@ const sniff = (bytes: Buffer): 'jpg' | 'png' => {
 // constant: it is already documented as "maximum size for a single
 // upload", the same config the rabbi photo route reads, not a rabbi-only
 // setting that happens to share a name.
-export const validatePlacePhoto = (bytes: Buffer): void => {
+//
+// Returns the sniffed content type and extension on success, so the one
+// caller that needs them to store the file (`admin-place`, `place-portal`)
+// never re-sniffs the same bytes a second time.
+export const validatePlacePhoto = (bytes: Buffer): ValidatedPlacePhoto => {
   const { maxUploadBytes } = loadConfig(process.env);
   if (bytes.byteLength > maxUploadBytes) throw new PlacePhotoTooLargeError(maxUploadBytes);
 
@@ -89,4 +100,6 @@ export const validatePlacePhoto = (bytes: Buffer): void => {
   if (ratio < PLACE_PHOTO_MIN_ASPECT_RATIO || ratio > PLACE_PHOTO_MAX_ASPECT_RATIO) {
     throw new PlacePhotoAspectRatioError(width, height);
   }
+
+  return { contentType: CONTENT_TYPE_BY_KIND[kind], extension: kind };
 };

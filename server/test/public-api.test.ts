@@ -416,6 +416,67 @@ describe('public API', () => {
         assert.equal(item.venue.street, 'רחוב הביטול 1');
       });
     });
+
+    // The search page's heading names what narrowed the results, read off
+    // this echo rather than off the first result: the case that matters
+    // most is exactly when `items` comes back empty and there is nothing
+    // else to read a name from.
+    describe('applied filter echo', () => {
+      const cleanupPlaceIds = new Set<string>();
+
+      afterEach(async () => {
+        for (const id of cleanupPlaceIds) await db.delete(places).where(eq(places.id, id));
+        cleanupPlaceIds.clear();
+      });
+
+      const jerusalemCode = async (): Promise<number> => {
+        const rows = await db.select({ code: cities.code }).from(cities).where(eq(cities.nameHe, SEEDED_CITY_NAME)).limit(1);
+        const row = rows[0];
+        if (!row) throw new Error('expected the seeded city to exist');
+        return row.code;
+      };
+
+      test('a resolved rabbiId echoes the bare name and honorific, never the resolved place', async () => {
+        const res = await app.inject({ method: 'GET', url: `/v1/lessons?rabbiId=${SEEDED_RABBI_ID}&${searchWindowQuery()}` });
+        assert.equal(res.statusCode, 200);
+        const body = res.json() as LessonSearchResponse;
+        assert.deepEqual(body.appliedFilters.rabbi, { name: SEEDED_RABBI_NAME, honorific: 'rav' });
+        assert.equal(body.appliedFilters.place, undefined);
+      });
+
+      test('an unresolvable rabbiId is a normal empty 200 with no name echoed', async () => {
+        const res = await app.inject({ method: 'GET', url: `/v1/lessons?rabbiId=does-not-exist&${searchWindowQuery()}` });
+        assert.equal(res.statusCode, 200);
+        const body = res.json() as LessonSearchResponse;
+        assert.deepEqual(body.items, []);
+        assert.equal(body.appliedFilters.rabbi, undefined);
+      });
+
+      test('a resolved placeId echoes the place name, even once the place is deactivated', async () => {
+        const cityCode = await jerusalemCode();
+        const placeId = `test-place-${nanoid(8)}`;
+        await db.insert(places).values({ id: placeId, slug: placeId, name: 'מקום בדיקה לתצוגה', street: 'רחוב הבדיקה 1', cityCode });
+        cleanupPlaceIds.add(placeId);
+
+        const res = await app.inject({ method: 'GET', url: `/v1/lessons?placeId=${placeId}&${searchWindowQuery()}` });
+        assert.equal(res.statusCode, 200);
+        assert.deepEqual((res.json() as LessonSearchResponse).appliedFilters.place, { name: 'מקום בדיקה לתצוגה' });
+
+        await db.update(places).set({ isActive: false }).where(eq(places.id, placeId));
+
+        const afterDeactivation = await app.inject({ method: 'GET', url: `/v1/lessons?placeId=${placeId}&${searchWindowQuery()}` });
+        assert.equal(afterDeactivation.statusCode, 200);
+        assert.deepEqual((afterDeactivation.json() as LessonSearchResponse).appliedFilters.place, { name: 'מקום בדיקה לתצוגה' });
+      });
+
+      test('an unresolvable placeId is a normal empty 200 with no place name echoed', async () => {
+        const res = await app.inject({ method: 'GET', url: `/v1/lessons?placeId=does-not-exist&${searchWindowQuery()}` });
+        assert.equal(res.statusCode, 200);
+        const body = res.json() as LessonSearchResponse;
+        assert.deepEqual(body.items, []);
+        assert.equal(body.appliedFilters.place, undefined);
+      });
+    });
   });
 
   describe('GET /v1/lessons/:lessonId/occurrences/:date', () => {

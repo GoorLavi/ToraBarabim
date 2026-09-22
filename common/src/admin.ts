@@ -1,4 +1,5 @@
 import type { LessonProvenance } from './agent-import';
+import type { Area } from './area';
 import type { RabbiProminence } from './home';
 import type { LessonException } from './lesson-exception';
 import type { Lesson } from './lesson';
@@ -162,5 +163,72 @@ export type CreateAdminUserRequest = {
 };
 
 export type UpdateAdminUserRequest = {
+  isActive: boolean;
+};
+
+// An administrator's view of a registered place: everything a place's own
+// portal can edit, plus `isActive`, the entire delete mechanism (0004).
+// There is no delete request type: deactivating is the only removal a
+// place ever gets, done through `UpdatePlaceRequest` like any other field.
+export interface AdminPlaceResponse {
+  id: string;
+  slug: string;
+  name: string;
+  street: string;
+  floor?: string;
+  cityCode: number;
+  cityName: string;
+  area: Area;
+  photoUrl?: string;
+  isActive: boolean;
+}
+
+export type CreatePlaceRequest = {
+  name: string;
+  street: string;
+  floor?: string;
+  cityCode: number;
+};
+
+// A partial patch: omitting `floor` leaves it as is, `null` clears it, a
+// string sets it. `isActive` toggles through this same request, not a
+// separate route.
+export type UpdatePlaceRequest = Partial<Omit<CreatePlaceRequest, 'floor'>> & {
+  floor?: string | null;
+  isActive?: boolean;
+};
+
+export interface AdminPlaceListResponse {
+  items: AdminPlaceResponse[];
+  page: number;
+  pageSize: number;
+  total: number;
+}
+
+// An administrator's view of a place's login account. Mirrors
+// `RabbiAccountResponse` exactly, the same one-account-per-owner shape for
+// the other panel role.
+export interface PlaceAccountResponse {
+  id: string;
+  email: string;
+  username?: string;
+  placeId: string;
+  isActive: boolean;
+}
+
+export type CreatePlaceAccountRequest = {
+  email: string;
+  username: string;
+};
+
+export type PlaceAccountCreatedResponse = PlaceAccountResponse & {
+  temporaryPassword: string;
+};
+
+export interface ResetPlacePasswordResponse {
+  temporaryPassword: string;
+}
+
+export type UpdatePlaceAccountRequest = {
   isActive: boolean;
 };

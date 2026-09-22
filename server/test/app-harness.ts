@@ -11,6 +11,7 @@ import { registerHealthRoutes } from '../src/api/health';
 import { registerHomeRoutes } from '../src/api/home';
 import { registerLessonRoutes } from '../src/api/lessons';
 import { registerPanelAuthRoutes } from '../src/api/panel/auth';
+import { registerPlacePortalRoutes } from '../src/api/place';
 import { registerPlaceRoutes } from '../src/api/places';
 import { registerRabbiRoutes } from '../src/api/rabbi';
 import { registerRabbiAuthRoutes } from '../src/api/rabbi/auth';
@@ -131,6 +132,24 @@ export const buildAdminTestApp = async (): Promise<FastifyInstance> => {
   registerEmptyBodySupport(app);
   await registerAdminAuthRoutes(app);
   await registerAdminRoutes(app);
+  registerErrorHandler(app);
+  return app;
+};
+
+// A fourth app, for `place-api.test.ts` only: cookies, the shared panel
+// login door, and the place portal's own routes. Every fixture (the place,
+// its account) is built through the admin-place service directly, not
+// through the admin routes, so this app carries none of the admin route
+// group: what is under test here is the place guard and the place portal
+// write path, not the admin surface that provisions it.
+export const buildPlaceTestApp = async (): Promise<FastifyInstance> => {
+  const config = loadConfig(process.env);
+
+  const app = Fastify({ logger: false });
+  await registerCookies(app, config.sessionSecret);
+  registerEmptyBodySupport(app);
+  await registerPanelAuthRoutes(app);
+  await registerPlacePortalRoutes(app);
   registerErrorHandler(app);
   return app;
 };

@@ -23,4 +23,8 @@ export const toLessonSearchResponse = (result: LessonSearchResult): LessonSearch
   page: result.page,
   pageSize: result.pageSize,
   total: result.total,
+  appliedFilters: {
+    rabbi: result.appliedFilters.rabbi ? { name: result.appliedFilters.rabbi.name, honorific: result.appliedFilters.rabbi.honorific } : undefined,
+    place: result.appliedFilters.place,
+  },
 });

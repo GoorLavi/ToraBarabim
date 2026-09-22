@@ -57,11 +57,22 @@ export const search = async (rawQuery: LessonSearchQuery, now: Date): Promise<Le
   const cityByCode = new Map(cityRows.map((row) => [row.code, row] as const));
   const placeById = new Map(placeRows.map((row) => [row.id, row] as const));
 
+  // Both maps are already loaded above to resolve every occurrence, so
+  // echoing the filter's own display name costs no extra query. `placeById`
+  // is unfiltered by `is_active` (see the comment above), so a deactivated
+  // place still echoes its last-known name rather than going silent right
+  // when the empty result most needs one. Computed before the early return
+  // below, since an eliminated area does not itself un-resolve a rabbi or
+  // a place filter sent alongside it.
+  const appliedRabbi = query.rabbiId ? rabbiById.get(query.rabbiId) : undefined;
+  const appliedPlaceRow = query.placeId ? placeById.get(query.placeId) : undefined;
+  const appliedFilters = { rabbi: appliedRabbi, place: appliedPlaceRow ? { name: appliedPlaceRow.name } : undefined };
+
   const eligibleCityCodes =
     query.area !== undefined ? cityRows.filter((row) => row.area === query.area).map((row) => row.code) : undefined;
 
   if (eligibleCityCodes?.length === 0) {
-    return { items: [], page: query.page, pageSize: query.pageSize, total: 0 };
+    return { items: [], page: query.page, pageSize: query.pageSize, total: 0, appliedFilters };
   }
 
   // `q` searches the rabbi's name, the lesson's own free-text venue name
@@ -162,7 +173,7 @@ export const search = async (rawQuery: LessonSearchQuery, now: Date): Promise<Le
     .slice(start, start + query.pageSize)
     .map((occurrence) => resolveRecord(occurrence, rabbiById, cityByCode, placeById));
 
-  return { items, page: query.page, pageSize: query.pageSize, total };
+  return { items, page: query.page, pageSize: query.pageSize, total, appliedFilters };
 };
 
 // The lesson page's area preview: other lessons in the same `Area` (the

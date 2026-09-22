@@ -72,9 +72,19 @@ export interface ResolvedLessonOccurrence {
   note?: string;
 }
 
+// The resolved rabbi/place record behind a `rabbiId`/`placeId` filter that
+// was actually applied, so the convertor can echo just the display name.
+// `undefined` means that filter was not sent, or was sent but named
+// nothing this search recognised.
+export interface AppliedSearchFilters {
+  rabbi?: Rabbi;
+  place?: { name: string };
+}
+
 export interface LessonSearchResult {
   items: ResolvedLessonOccurrence[];
   page: number;
   pageSize: number;
   total: number;
+  appliedFilters: AppliedSearchFilters;
 }
