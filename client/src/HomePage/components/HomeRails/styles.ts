@@ -4,10 +4,10 @@ export const HomeRails = css(
   ({ theme }) => `
   display: flex;
   flex-direction: column;
-  gap: ${theme.spacing.xxl};
+  gap: ${theme.spacing.xl};
 
   @media (min-width: ${theme.breakpoints.md}) {
-    gap: ${theme.spacing.xxxl};
+    gap: ${theme.spacing.xxl};
   }
 
   > .srOnly {
