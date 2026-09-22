@@ -1,13 +1,19 @@
-// Copy approved by `tora-hebrew-editor` (build brief for the crop step),
-// except `CROP_STEP_HINT`'s second sentence: new copy naming what the frame
-// discards, not yet reviewed.
+// Split into three sentences, each exactly as `tora-hebrew-editor` approved
+// it, so `CROP_STEP_HINT_WHEEL_NOTE` can hide below `md` (styles.ts, design
+// gate round 6) without rewording anything.
 export const CROP_STEP_TITLE = 'התאמת התמונה';
-export const CROP_STEP_HINT =
-  'גוררים את התמונה כדי להזיז אותה, וצובטים כדי להגדיל או להקטין. במחשב אפשר להגדיל ולהקטין עם גלגלת העכבר. מה שנשאר מחוץ למסגרת לא יופיע באתר.';
-// PLACEHOLDER: shown instead of CROP_STEP_HINT when hasNoFramingRoom is true
-// (design gate finding F6). Not reviewed by `tora-hebrew-editor`; route this
-// wording for review before it ships.
-export const CROP_STEP_HINT_NO_FRAMING_ROOM = 'התמונה כבר בגודל המתאים למסגרת, אין צורך להזיז או להגדיל. אפשר ללחוץ על אישור.';
+export const CROP_STEP_HINT_DRAG_AND_PINCH = 'גוררים את התמונה כדי להזיז אותה, וצובטים כדי להגדיל או להקטין.';
+export const CROP_STEP_HINT_WHEEL_NOTE = 'במחשב גלגלת העכבר מגדילה ומקטינה.';
+export const CROP_STEP_HINT_FRAME_DISCARD = 'מה שנשאר מחוץ למסגרת לא יופיע באתר.';
+// Replaces the hint above when the photo is already exactly 16:9 with no
+// zoom headroom, so dragging and pinching do nothing. It says there is
+// nothing to move rather than that moving is not required: this line exists
+// for the person whose finger already failed, and "not required" tells them
+// they could have. It names a ratio, not a size, because that is what the
+// condition tests. It also deliberately does not tell them to press the
+// confirm button, which would put a second copy of `CROP_CONFIRM_LABEL` in
+// this file and point at a label that no longer exists the day it changes.
+export const CROP_STEP_HINT_NO_FRAMING_ROOM = 'התמונה כבר מתאימה למסגרת בדיוק, ואין מה להזיז או להגדיל.';
 export const CROP_CONFIRM_LABEL = 'אישור';
 export const CROP_PROCESSING_LABEL = 'מכינים...';
 export const CROP_CANCEL_LABEL = 'ביטול';

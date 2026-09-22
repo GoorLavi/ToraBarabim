@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { placeholderPhoto } from '~/storyMocks';
+
 import * as consts from './consts';
 import { PhotoPicker } from './PhotoPicker';
 
@@ -57,19 +59,14 @@ export const Portrait3x4UploadFailed: Story = {
 
 // A real, decodable image file, generated at runtime so the story never
 // depends on a remote host (`~/storyMocks`'s own reasoning): `width` by
-// `height` of flat colour is enough for the crop step to read real pixel
-// dimensions from it.
+// `height`. Built from `placeholderPhoto` itself, the same source every
+// PhotoCropStep story reads, rather than a second flat-colour drawing of its
+// own that could quietly drift from it (design gate round 6): a flat fill
+// here gave `Landscape16x9CropStepOpen` a featureless grey rectangle to
+// render, which a horizon and a corner mark let a reviewer actually judge.
 const createGeneratedImageFile = async (width: number, height: number): Promise<File> => {
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const context = canvas.getContext('2d');
-  if (context) {
-    context.fillStyle = '#cccccc';
-    context.fillRect(0, 0, width, height);
-  }
-  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
-  return new File([blob ?? new Blob()], 'photo.png', { type: 'image/png' });
+  const blob = await (await fetch(placeholderPhoto(width, height))).blob();
+  return new File([blob], 'photo.svg', { type: 'image/svg+xml' });
 };
 
 const selectGeneratedFile = async (canvasElement: HTMLElement, width: number, height: number): Promise<void> => {
@@ -98,6 +95,9 @@ export const Landscape16x9CropStepOpen: Story = {
   args: { aspectRatio: '16:9', previewUrl: undefined, hasExistingPhoto: false },
   play: async ({ canvasElement }) => {
     await selectGeneratedFile(canvasElement, 1600, 1000);
-    await waitFor(() => expect(document.querySelector('.viewport')).toBeInTheDocument());
+    // `.window`, not the pre-branch `.viewport`: the crop step's own frame
+    // element was renamed and this assertion was not, so it had stopped
+    // asserting anything true (design gate round 6).
+    await waitFor(() => expect(document.querySelector('.window')).toBeInTheDocument());
   },
 };

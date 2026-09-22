@@ -1,5 +1,7 @@
 import { css } from 'styled-components';
 
+import * as consts from './consts';
+
 export const PhotoCropStep = css(
   ({ theme }) => `
   position: fixed;
@@ -24,9 +26,9 @@ export const PhotoCropStep = css(
 
     > .title {
       color: ${theme.colors.text};
-      font-weight: ${theme.typography.fontWeight.semiBold};
-      font-size: ${theme.typography.body.phone.fontSize};
-      line-height: ${theme.typography.body.phone.lineHeight};
+      font-weight: ${theme.typography.fontWeight.bold};
+      font-size: ${theme.typography.sectionHeading.phone.fontSize};
+      line-height: ${theme.typography.sectionHeading.phone.lineHeight};
     }
   }
 
@@ -46,6 +48,17 @@ export const PhotoCropStep = css(
       cursor: grabbing;
     }
 
+    /* There is nothing to drag or pinch once the photo already fills the
+       window at its floor (PhotoCropStep.tsx's hasNoFramingRoom), so the
+       grab affordance would promise a gesture that does nothing. */
+    &.noFramingRoom {
+      cursor: default;
+
+      &:active {
+        cursor: default;
+      }
+    }
+
     /* Sized in script from the stage's own measured content box
        (PhotoCropStep.tsx, helpers.ts's windowSizeForStage), so it arrives as
        custom properties the same way the image's own size and offset do
@@ -54,14 +67,6 @@ export const PhotoCropStep = css(
       position: relative;
       inline-size: var(--crop-window-width);
       block-size: var(--crop-window-height);
-      border-radius: ${theme.radii.md};
-      border: 1px solid ${theme.colors.borderOnPrimary};
-      /* Paints the stage outside this box, right up to the stage's own
-         clipped edge, rather than hiding it: the source photo stays visible
-         and dimmed there instead of vanishing behind flat black (design gate
-         F3/F4). The stage's own overflow: hidden is what stops this from
-         spreading onto the header or the footer. */
-      box-shadow: 0 0 0 9999px ${theme.colors.scrim};
 
       /* Deliberately not clipped here (overflow stays visible): the photo
          below is sized and positioned in window-local coordinates exactly as
@@ -85,6 +90,27 @@ export const PhotoCropStep = css(
         user-select: none;
         pointer-events: none;
       }
+
+      /* A sibling painted after the image, not a property on the window
+         itself: a child always paints above its parent's own background,
+         border and box-shadow, so putting the frame and the scrim on the
+         window left the photo covering both wherever cover-scale made it
+         fill the box, which by definition is everywhere (design gate round
+         6, "the frame and its scrim never paint"). This element carries no
+         content of its own, only the frame's visual treatment, on top. */
+      > .mask {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        border-radius: ${theme.radii.md};
+        border: 1px solid ${theme.colors.borderOnPrimary};
+        /* Paints the stage outside this box, right up to the stage's own
+           clipped edge, rather than hiding it: the source photo stays
+           visible and dimmed there instead of vanishing behind flat black
+           (design gate F3/F4). The stage's own overflow: hidden is what
+           stops this from spreading onto the header or the footer. */
+        box-shadow: 0 0 0 9999px ${theme.colors.scrim};
+      }
     }
   }
 
@@ -96,11 +122,33 @@ export const PhotoCropStep = css(
     flex-direction: column;
     gap: ${theme.spacing.md};
 
+    /* Nothing else on this site runs a button or a line of text the full
+       width of a desktop viewport (design gate round 6, "on desktop the
+       chrome runs the full viewport width"). Capped at the frame's own
+       historical desktop width and centred, so the actions sit under the
+       frame rather than spanning the window behind it. */
+    @media (min-width: ${theme.breakpoints.md}) {
+      max-inline-size: ${consts.CROP_WINDOW_MAX_WIDTH_PX}px;
+      margin-inline: auto;
+    }
+
     > .hint {
       text-align: center;
       color: ${theme.colors.textSecondary};
-      font-size: ${theme.typography.tagAndCaption.phone.fontSize};
-      line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
+      font-size: ${theme.typography.secondary.phone.fontSize};
+      line-height: ${theme.typography.secondary.phone.lineHeight};
+
+      /* A third line of caption about a mouse reads as noise on a phone,
+         where nobody has one (design gate round 6). The sentence itself is
+         untouched, only its visibility: hiding it here is a layout
+         decision, not a rewording of reviewed Hebrew. */
+      > .wheelNote {
+        display: none;
+
+        @media (min-width: ${theme.breakpoints.md}) {
+          display: inline;
+        }
+      }
     }
 
     > .actions {

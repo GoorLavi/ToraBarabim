@@ -1,6 +1,7 @@
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import classNames from 'classnames';
 import styled from 'styled-components';
 
 import * as helpers from '../../helpers';
@@ -207,7 +208,7 @@ export const PhotoCropStep = styled(({ className, file, imageUrl, sourceDimensio
       </div>
 
       <div
-        className="stage"
+        className={classNames('stage', { noFramingRoom: hasNoFramingRoom })}
         ref={stageRef}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
@@ -240,12 +241,23 @@ export const PhotoCropStep = styled(({ className, file, imageUrl, sourceDimensio
                 } as CSSProperties
               }
             />
+            <div className="mask" aria-hidden="true" />
           </div>
         )}
       </div>
 
       <div className="footer">
-        <p className="hint">{hasNoFramingRoom ? consts.CROP_STEP_HINT_NO_FRAMING_ROOM : consts.CROP_STEP_HINT}</p>
+        <p className="hint">
+          {hasNoFramingRoom ? (
+            consts.CROP_STEP_HINT_NO_FRAMING_ROOM
+          ) : (
+            <>
+              {consts.CROP_STEP_HINT_DRAG_AND_PINCH}{' '}
+              <span className="wheelNote">{consts.CROP_STEP_HINT_WHEEL_NOTE}{' '}</span>
+              {consts.CROP_STEP_HINT_FRAME_DISCARD}
+            </>
+          )}
+        </p>
 
         <div className="actions">
           <button type="button" className="cancel" onClick={onCancel}>

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { waitFor } from 'storybook/test';
 
 import { placeholderPhoto } from '~/storyMocks';
 
@@ -56,16 +57,23 @@ export const PhotoAtExactFloor: Story = {
 // from the default, centered opening position. Dispatched on `.stage`, the
 // drag target since the design gate's F3/F4 fix (the small `.window` frame
 // is no longer the only place a drag is recognised).
+//
+// Queries `document`, not `canvasElement`: `PhotoCropStep` portals onto
+// `document.body`, outside the root Storybook mounts the story into, so
+// `canvasElement.querySelector` never finds it (design gate round 6, "does
+// not drag"). Waits for `.window` rather than `.stage`, which exists the
+// instant the portal mounts: `.window` only renders once the crop step's own
+// `ResizeObserver` has measured the stage and set a transform, and a drag
+// dispatched before that has nowhere to move a still-unset transform.
 export const MidDragFraming: Story = {
   args: { file: wideFile, imageUrl: placeholderPhoto(2400, 1000), sourceDimensions: { width: 2400, height: 1000 } },
-  play: async ({ canvasElement }) => {
-    const stage = canvasElement.querySelector<HTMLElement>('.stage');
-    if (!stage) return;
+  play: async () => {
+    await waitFor(() => {
+      if (!document.querySelector('.window')) throw new Error('crop window not yet sized');
+    });
 
-    // Waits for the crop step's own `ResizeObserver` to report the stage's
-    // size before dragging it: a drag dispatched before that measurement
-    // lands has nowhere to move a still-unset transform.
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    const stage = document.querySelector<HTMLElement>('.stage');
+    if (!stage) throw new Error('crop stage missing after window sized');
 
     const rect = stage.getBoundingClientRect();
     const startPoint = { clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2 };

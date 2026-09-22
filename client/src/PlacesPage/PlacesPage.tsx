@@ -29,11 +29,11 @@ export const PlacesPage = styled(({ className }: PlacesPageProps) => {
   const filteredPlaces = filterPlacesByName(places, trimmedSearch);
   const hasNoResults = query.isSuccess && !isBoardEmpty && trimmedSearch !== '' && filteredPlaces.length === 0;
   const isSearchActive = trimmedSearch !== '' && !hasNoResults;
-  const subline = hasNoResults
-    ? consts.NO_RESULTS_SUBLINE
-    : isSearchActive
-      ? consts.placeMatchCountLabel(filteredPlaces.length)
-      : consts.placeCountLabel(places.length);
+  // Nothing at all when the search matched nothing: this slot is a counter,
+  // and a counter at zero says less than the card below it, which names the
+  // term and offers a way out (Hebrew editor's pass: the two lines said the
+  // same thing 120px apart).
+  const subline = hasNoResults ? undefined : isSearchActive ? consts.placeMatchCountLabel(filteredPlaces.length) : consts.placeCountLabel(places.length);
 
   return (
     <main className={className}>
@@ -46,7 +46,7 @@ export const PlacesPage = styled(({ className }: PlacesPageProps) => {
         ) : (
           <>
             <h1 className="heading">{consts.PAGE_TITLE}</h1>
-            {!query.isError && !isBoardEmpty && <p className="sub">{subline}</p>}
+            {!query.isError && !isBoardEmpty && subline && <p className="sub">{subline}</p>}
           </>
         )}
       </div>

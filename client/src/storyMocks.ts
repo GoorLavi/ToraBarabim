@@ -46,6 +46,10 @@ export const NEVER_RESOLVES = new Promise<Response>(() => {});
 // review framing at all (design gate finding, "two smaller things"). Still
 // generic enough to read as a plain placeholder everywhere else this is used
 // (a rabbi portrait, a place hero), not a real picture.
+//
+// The marker is a quiet neutral, not `color.danger` or anything close to it:
+// an earlier, more saturated red read as an error badge sitting on top of
+// every poster this fixture feeds (design gate round 6).
 export const placeholderPhoto = (width: number, height: number): string => {
   const horizonY = Math.round(height * 0.6);
   const markerRadius = Math.max(10, Math.round(Math.min(width, height) * 0.08));
@@ -56,7 +60,7 @@ export const placeholderPhoto = (width: number, height: number): string => {
       `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">` +
         `<rect width="${width}" height="${horizonY}" fill="#cfd8dc"/>` +
         `<rect y="${horizonY}" width="${width}" height="${height - horizonY}" fill="#8d99a3"/>` +
-        `<circle cx="${markerRadius + 10}" cy="${markerRadius + 10}" r="${markerRadius}" fill="#c0392b"/>` +
+        `<circle cx="${markerRadius + 10}" cy="${markerRadius + 10}" r="${markerRadius}" fill="#5a6670"/>` +
         `</svg>`,
     )
   );

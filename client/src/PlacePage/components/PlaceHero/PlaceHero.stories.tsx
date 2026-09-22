@@ -1,11 +1,14 @@
 import type { Place } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
+import { placeholderPhoto } from '~/storyMocks';
+
 import { PlaceHero } from './PlaceHero';
 
-const PLACEHOLDER_PHOTO =
-  'data:image/svg+xml;utf8,' +
-  encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180"><rect width="320" height="180" fill="lightgray"/></svg>');
+// A horizon and a corner mark, not a flat fill, so a reviewer can actually
+// judge how the hero crops the photo (design gate round 6): the two stories
+// where that matters are exactly this one and AdminPanel/RabbiCard's.
+const PLACEHOLDER_PHOTO = placeholderPhoto(320, 180);
 
 const place = (overrides: Partial<Place>): Place => ({
   id: 'place-1',

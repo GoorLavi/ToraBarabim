@@ -16,7 +16,6 @@ export const BOARD_EMPTY_HEADING = 'עדיין אין מקומות בלוח';
 export const BOARD_EMPTY_BODY = 'הלוח נבנה בימים אלה. אם אתם מכירים שיעור, כתבו לנו ונוסיף אותו.';
 export const CONTACT_US_LABEL = 'כתבו לנו';
 
-export const NO_RESULTS_SUBLINE = 'לא נמצאו תוצאות';
 export const NO_RESULTS_HEADING_PREFIX = 'לא מצאנו תוצאות עבור "';
 export const NO_RESULTS_HEADING_SUFFIX = '"';
 export const NO_RESULTS_BODY = 'אולי השם כתוב אצלנו קצת אחרת. אפשר לנקות את החיפוש ולעבור על כל הרשימה.';

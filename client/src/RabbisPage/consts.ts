@@ -52,7 +52,6 @@ export const RETRY_LABEL = 'נסו שוב';
 
 export const CONTACT_US_LABEL = 'כתבו לנו';
 
-export const NO_RESULTS_SUBLINE = 'לא נמצאו תוצאות';
 export const NO_RESULTS_BODY = 'אולי השם כתוב אצלנו קצת אחרת. אפשר לנקות את החיפוש ולעבור על כל הרשימה.';
 export const CLEAR_SEARCH_LABEL = 'ניקוי החיפוש';
 
