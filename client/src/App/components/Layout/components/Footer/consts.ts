@@ -2,5 +2,6 @@ export const WORDMARK = 'תורה ברבים';
 export const CONTACT_LABEL = 'יצירת קשר';
 export const CITIES_LABEL = 'לכל הערים';
 export const RABBIS_LABEL = 'לכל הרבנים';
+export const PLACES_LABEL = 'לכל המקומות';
 export const LESSONS_LABEL = 'לכל השיעורים';
 export const WOMEN_LABEL = 'שיעורים לנשים';
