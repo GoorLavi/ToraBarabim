@@ -151,10 +151,11 @@ const israelDateTime = (isoDate: string, clockTime: string): string => `${isoDat
 // a lesson that is not happening. `venuePhotoUrl` is resolved by the route's
 // own `.server` loader (`lesson.server.ts`, `loadVenuePhoto`): the wire
 // `LessonVenue` carries no photo of its own, so `location.image` has no
-// other source. No `organizer`: the claim it used to rest on, that the venue
-// organizes the lesson, was never quite true, it duplicated `location` as an
-// `Organization` with no URL, and schema.org's own Event guidance does not
-// call for one.
+// other source. `organizer` is the venue itself, named the same as
+// `location`: a place-backed venue has its own page, so it carries the same
+// `venueUrl` as `location`'s `@id`/`url`, and that page is who Search
+// Console credits with hosting the lesson; a free-text address has no page
+// to point at, so it is named without one.
 export const lessonEventJsonLd = (
   occurrence: LessonOccurrence,
   teachingRabbi: Rabbi,
@@ -184,6 +185,11 @@ export const lessonEventJsonLd = (
       },
       ...(venueUrl ? { '@id': venueUrl, url: venueUrl } : {}),
       ...(venue.kind === 'place' && venuePhotoUrl ? { image: venuePhotoUrl } : {}),
+    },
+    organizer: {
+      '@type': 'Organization',
+      name: venue.name,
+      ...(venueUrl ? { url: venueUrl } : {}),
     },
     performer: {
       '@type': 'Person',
