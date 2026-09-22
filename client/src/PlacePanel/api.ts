@@ -1,9 +1,12 @@
 import type {
+  AudienceScope,
   PlaceCreateLessonRequest,
   PlaceLessonListResponse,
   PlaceLessonResponse,
   PlaceProfileResponse,
   PlaceUpdateLessonRequest,
+  RabbiDetailResponse,
+  RabbiDirectoryResponse,
   UpdatePlaceProfileRequest,
 } from '@torabarabim/common';
 
@@ -109,3 +112,33 @@ export const createLesson = (body: PlaceCreateLessonRequest): Promise<PlaceLesso
 // 200 with PlaceLessonResponse. 400 invalid_request. 404 as above.
 export const updateLesson = (id: string, body: PlaceUpdateLessonRequest): Promise<PlaceLessonResponse> =>
   request(url(`/v1/place/lessons/${id}`).toString(), { method: 'PATCH', headers: JSON_HEADERS, body: JSON.stringify(body) });
+
+// The largest page the public directory allows, mirroring the server's own
+// MAX_PAGE_SIZE (server/src/service/shared/consts.ts): a hand-mirrored
+// constant, since the client has no access to the server's.
+const MAX_RABBI_DIRECTORY_PAGE_SIZE = 50;
+
+// GET /v1/rabbis?page&pageSize&scope (the public directory, no place auth,
+// not credentialed).
+// 200 with one page of RabbiDirectoryResponse.
+// There is no place-scoped rabbi search endpoint: `PlaceCreateLessonRequest`
+// needs a `rabbiId`, so this panel needs some way to find one, and this is
+// the only live public read of the rabbi list. Reading it at its largest
+// page size per scope, rather than a real search, is a named, bounded
+// workaround (see `useRabbiDirectory.ts` and the build report): a rabbi
+// past the fiftieth in either scope is silently unreachable from this
+// picker today.
+export const fetchRabbiDirectoryPage = (scope: AudienceScope): Promise<RabbiDirectoryResponse> => {
+  const target = url('/v1/rabbis');
+  target.searchParams.set('page', '1');
+  target.searchParams.set('pageSize', String(MAX_RABBI_DIRECTORY_PAGE_SIZE));
+  target.searchParams.set('scope', scope);
+  return request(target.toString());
+};
+
+// GET /v1/rabbis/:rabbiId (the public detail read, no place auth).
+// 200 with RabbiDetailResponse. 404 when the rabbi no longer exists.
+// Used to resolve an existing lesson's own `rabbiId` back to a name when
+// editing, independent of `fetchRabbiDirectoryPage`'s fiftieth-rabbi cap:
+// this always finds the one rabbi it asks for, by id.
+export const fetchRabbiById = (rabbiId: string): Promise<RabbiDetailResponse> => request(url(`/v1/rabbis/${encodeURIComponent(rabbiId)}`).toString());

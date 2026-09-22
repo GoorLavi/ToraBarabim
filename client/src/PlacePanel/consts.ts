@@ -14,10 +14,16 @@ export const NOT_FOUND_MESSAGE = 'הרשומה המבוקשת לא נמצאה';
 export const RATE_LIMITED_MESSAGE = 'יותר מדי ניסיונות כניסה. יש לנסות שוב בעוד כמה דקות';
 
 export const PLACE_QUERY_KEYS = {
-  session: () => ['place', 'session'] as const,
   profile: () => ['place', 'profile'] as const,
   lessons: () => ['place', 'lessons'] as const,
   lesson: (id: string) => ['place', 'lessons', id] as const,
+  // The rabbi assigned to a lesson being edited, resolved separately since
+  // `PlaceLessonResponse` carries only the bare `rabbiId` (see
+  // `LessonFormPage/useExistingLesson.ts`).
+  lessonRabbi: (rabbiId: string) => ['place', 'lessons', 'rabbi', rabbiId] as const,
+  // See `useRabbiDirectory.ts`: the public directory, read as a stand-in for
+  // a place-scoped rabbi search endpoint that does not exist yet.
+  rabbiDirectory: (scope: 'general' | 'women') => ['place', 'rabbiDirectory', scope] as const,
 };
 
 export const PLACE_ROUTES = {
