@@ -1,7 +1,5 @@
 import { css } from 'styled-components';
 
-import { contentBandCap, contentGutterInline } from '~/styles/contentBand';
-
 // This page's own block-to-block gap and title-block gap: 20px and 2px,
 // neither of which matches a spacing token (the scale is
 // 4/8/12/16/24/32/48/64). Measured off the frame as drawn rather than
@@ -11,14 +9,24 @@ const TITLE_BLOCK_GAP = '2px';
 
 export const LessonsPage = css(
   ({ theme }) => `
-  ${contentGutterInline(theme)}
-  ${contentBandCap(theme)}
+  /* No content-band cap: this page is one lesson grid (components/
+     LessonsGrid) end to end, which caps its cards at their own fixed
+     ceiling instead of the page capping its width, so the column count
+     grows with the viewport rather than the margins (owner-approved
+     reversal, for lesson-grid pages, of the sitewide 1280 cap;
+     design-system.md, "Maximum content width 1280px" and the LessonsGrid
+     rollout note). A plain, constant gutter replaces contentGutterInline's
+     own drop-to-zero-above-1328 behaviour, which existed only to hand the
+     saved padding to that cap's centring margin: with no cap here there is
+     nothing to hand it to, and the gutter has to hold at every width. */
+  padding-inline: ${theme.spacing.lg};
   padding-block: ${theme.spacing.xl} ${theme.spacing.xxl};
   display: flex;
   flex-direction: column;
   gap: ${CONTENT_GAP};
 
   @media (min-width: ${theme.breakpoints.md}) {
+    padding-inline: ${theme.spacing.xl};
     padding-block-end: ${theme.spacing.xxxl};
     gap: ${theme.spacing.xl};
   }

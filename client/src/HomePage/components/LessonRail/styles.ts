@@ -108,18 +108,16 @@ export const LessonRail = css(
 
       > .scroller {
         display: flex;
-        /* \`sm\` on a phone, deliberately below railCardWidth's own sizing
+        /* \`sm\` at every width (owner, 2026-09-22: fixed at 8). Below \`md\`
+           this is deliberately narrower than railCardWidth's own sizing
            math (which always bakes in \`lg\`, helpers.ts), so the difference
            surfaces as peek. From \`md\` up the card is a fixed width
            (RAIL_CARD_WIDTH_DESKTOP) rather than a viewport-derived formula,
-           so peek no longer depends on a gap mismatch: a fixed-width row
-           already shows a partial card at the edge on almost any real
-           viewport, and \`lg\` matches the grid's own gap. */
+           so peek there is a property of the row's own fixed-width
+           arithmetic rather than of this gap; \`sm\` still holds as the
+           floor two adjacent cards must keep as real tap-target
+           separation (design-system.md, "8 is the floor"). */
         gap: ${theme.spacing.sm};
-
-        @media (min-width: ${theme.breakpoints.md}) {
-          gap: ${theme.spacing.lg};
-        }
 
         > li {
           /* The grid's own phone column width (components/LessonsGrid/

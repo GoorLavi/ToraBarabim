@@ -6,29 +6,26 @@ import { SCROLL_STEP_RATIO } from './consts';
 
 // Which of the rail's two horizontal bands the inline edge offset is
 // computed for: `gutter` below `md`, where it is just the page's own side
-// padding; `full` from `md` up, where the band is the site's real content
-// cap (`theme.layout.contentMaxWidth`). That expression is a flat
-// `theme.spacing.xl` below `xl` itself, since the viewport has not yet
-// reached the cap, and grows past it above `xl`.
+// padding; `full` from `md` up, matching HomePage's own constant gutter
+// (styles.ts) now that the home page's band is deliberately uncapped
+// (owner, 2026-09-22: more cards on a wide screen, not bigger ones). Both
+// are flat values, not a growing one: a growing offset here would recreate
+// the same effective width cap the rail card's fixed width was meant to
+// escape, just moved into the row's own padding instead of its card.
 export type RailEdgeZone = 'gutter' | 'full';
 
 // The inline distance from the true viewport edge to the rail's own band
-// edge, at any width: below `md` this is just the band's own gutter
-// (`~/styles/contentBand.ts`, `contentGutterInline`); from `md` up it also
-// has to reproduce the band's cap, since the rail bleeds past the band
-// entirely (`margin-inline: calc(-1 * ...)` in styles.ts) and so gets none
-// of the band's own centring for free once the viewport is wider than that
-// cap. This mirrors `contentGutterInline`'s own centring formula; the rail,
-// having escaped that parent, is the one place this combined value is
-// needed as a single number, which is why it lives here rather than in
-// contentBand.ts (root CLAUDE.md, "no abstraction before the second real
-// caller").
+// edge, at any width: below `md` this is the band's own gutter; from `md`
+// up it is HomePage's own constant gutter (styles.ts), since the rail
+// bleeds past the band entirely (`margin-inline: calc(-1 * ...)` in
+// styles.ts) and has to reproduce that gutter itself to keep its first
+// card aligned under the heading above it.
 export const railEdgeOffset = (theme: Theme, zone: RailEdgeZone): string => {
   switch (zone) {
     case 'gutter':
       return theme.spacing.lg;
     case 'full':
-      return `max(${theme.spacing.xl}, calc((100vw - ${theme.layout.contentMaxWidth}) / 2))`;
+      return theme.spacing.xl;
   }
 };
 
