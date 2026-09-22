@@ -55,8 +55,8 @@ export const LessonTicket = styled(({ className, occurrence }: LessonTicketProps
   const isNoPoster = !teachingRabbi.photoUrl;
   const kicker = kickerLabel(occurrence);
   const duration = computeDurationMinutes(occurrence.startTime, occurrence.endTime);
-  const wazeUrl = wazeHref(occurrence.place);
-  const googleMapsUrl = googleMapsHref(occurrence.place);
+  const wazeUrl = wazeHref(occurrence.venue);
+  const googleMapsUrl = googleMapsHref(occurrence.venue);
   const showNavRow = !isCancelled && Boolean(wazeUrl) && Boolean(googleMapsUrl);
   const rabbiName = rabbiDisplayName(teachingRabbi);
 
@@ -120,13 +120,13 @@ export const LessonTicket = styled(({ className, occurrence }: LessonTicketProps
         <div className={classNames('body', { noPoster: isNoPoster })}>
           <div className="address">
             <p className="venue" dir="auto">
-              {occurrence.place.name}
+              {occurrence.venue.name}
             </p>
             <p className="street" dir="auto">
-              {addressLine(occurrence.place.street, occurrence.place.floor)}
+              {addressLine(occurrence.venue.street, occurrence.venue.floor)}
             </p>
             <p className="city" dir="auto">
-              {occurrence.place.city}
+              {occurrence.venue.city}
             </p>
 
             <span className="audienceTag" dir="auto">

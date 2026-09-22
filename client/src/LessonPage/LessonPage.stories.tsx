@@ -42,7 +42,7 @@ const lesson = (overrides: Partial<LessonOccurrence>): LessonOccurrence => ({
   topic: 'parasha',
   audience: 'mixed',
   rabbi: rabbiFixture({ id: 'rabbi-1', name: 'יעקב מזרחי' }),
-  place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'נתניה', citySlug: 'נתניה', area: 'sharon' },
+  venue: { kind: 'address', name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'נתניה', citySlug: 'נתניה', area: 'sharon' },
   ...overrides,
 });
 
@@ -87,7 +87,8 @@ installMockFetch((url) => {
           name: 'פרופסור יהודה אריה לייב הכהן שוורצנברג-אייזנשטיין',
           photoUrl: PLACEHOLDER_PHOTO,
         }),
-        place: {
+        venue: {
+          kind: 'address',
           name: 'בית הכנסת הגדול "היכל התורה והתפילה"',
           street: 'רחוב הרב קוק הראשי 128',
           city: 'קריית מלאכי והמושבים הסמוכים לה בעוטף עזה',

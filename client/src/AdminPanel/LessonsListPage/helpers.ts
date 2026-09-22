@@ -2,6 +2,7 @@ import type { Lesson, LessonListResponse, RabbiListResponse } from '@torabarabim
 
 import { ADMIN_ROUTES } from '~/AdminPanel/consts';
 import { recurrenceWhenLabel } from '~/AdminPanel/helpers';
+import { venuePanelCityName } from '~/helpers';
 
 import type { AdminLessonRow, RabbiFilterValue, RecurrenceFilter } from './models';
 import * as consts from './consts';
@@ -10,7 +11,7 @@ import * as consts from './consts';
 // RabbiLessonsSection's `lessonRowMetaLabel`: shared by `LessonsCardList`
 // and `LessonsTable`, the two children that each render it beside their own
 // recurrence tag.
-export const lessonDayTimeLabel = (lesson: Lesson): string => `${recurrenceWhenLabel(lesson)} · ${lesson.startTime}`;
+export const lessonDayTimeLabel = (lesson: Pick<Lesson, 'recurrence' | 'startTime'>): string => `${recurrenceWhenLabel(lesson)} · ${lesson.startTime}`;
 
 // The venue lives on the lesson itself now, so joining a row is just
 // attaching its rabbi; there is no separate place record to look up.
@@ -22,7 +23,7 @@ export const joinLessonRows = (lessons: LessonListResponse['items'], rabbis: Rab
 // Ranks a lesson by how soon its next occurrence is, counting today as 0.
 // A one-time lesson whose date has already passed sorts last: it is not
 // "coming up" for anyone reading this list.
-export const soonestOffsetDays = (lesson: Lesson, today: Date): number => {
+export const soonestOffsetDays = (lesson: Pick<Lesson, 'recurrence'>, today: Date): number => {
   if (lesson.recurrence.kind === 'once') {
     const date = new Date(`${lesson.recurrence.date}T00:00:00Z`);
     const diff = Math.round((date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
@@ -46,7 +47,7 @@ const rowMatchesRecurrence = (row: AdminLessonRow, filter: RecurrenceFilter): bo
 const rowMatchesSearch = (row: AdminLessonRow, search: string): boolean => {
   const query = search.trim().toLowerCase();
   if (!query) return true;
-  const haystack = [row.lesson.title, row.rabbi?.name, row.lesson.place.name, row.lesson.place.street, row.lesson.place.cityName]
+  const haystack = [row.lesson.title, row.rabbi?.name, row.lesson.venue.name, row.lesson.venue.street, venuePanelCityName(row.lesson.venue)]
     .filter(Boolean)
     .join(' ')
     .toLowerCase();

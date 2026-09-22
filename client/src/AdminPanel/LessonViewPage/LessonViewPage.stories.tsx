@@ -17,7 +17,7 @@ const lesson = (overrides: Partial<LessonResponse>): LessonResponse => ({
   id: 'story-lesson',
   title: 'עיונים בפרשת השבוע',
   rabbiId: 'story-rabbi',
-  place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', cityCode: 4000, cityName: 'חיפה' },
+  venue: { kind: 'address', name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', cityCode: 4000, cityName: 'חיפה' },
   topic: 'parasha',
   audience: 'mixed',
   recurrence: { kind: 'weekly', weekdays: [2] },
@@ -37,7 +37,7 @@ const scheduledOccurrence = (lessonId: string, overrides: Partial<LessonOccurren
   status: 'scheduled',
   audience: 'mixed',
   rabbi: rabbiResponse({}),
-  place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', floor: undefined, city: 'חיפה', citySlug: 'haifa', area: 'haifa' },
+  venue: { kind: 'address', name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', floor: undefined, city: 'חיפה', citySlug: 'haifa', area: 'haifa' },
   ...overrides,
 });
 
@@ -51,7 +51,8 @@ installMockFetch((url) => {
         id: 'story-longnames',
         title: 'שיעור עיון מעמיק בהלכות שבת ומועדים לפי שולחן ערוך ומנהגי קהילות המזרח',
         rabbiId: 'story-longnames-rabbi',
-        place: {
+        venue: {
+          kind: 'address',
           name: 'בית מדרש "אהבת ישראל" של קהילת יוצאי מרוקו, מרכז קהילתי נאות שקד',
           street: 'שדרות ירושלים 128, קומה שנייה',
           cityCode: 4000,
@@ -85,7 +86,7 @@ installMockFetch((url) => {
       200,
       lesson({
         id: 'story-occ-longdata',
-        place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', cityCode: 4000, cityName: 'חיפה' },
+        venue: { kind: 'address', name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', cityCode: 4000, cityName: 'חיפה' },
       }),
     );
   }
@@ -120,7 +121,7 @@ installMockFetch((url) => {
         // Place changed: time unchanged, venue differs from the lesson's own.
         scheduledOccurrence('story-populated', {
           date: '2026-10-02',
-          place: { name: 'בית מדרש נוסף', street: 'הרצל 12', floor: undefined, city: 'חיפה', citySlug: 'haifa', area: 'haifa' },
+          venue: { kind: 'address', name: 'בית מדרש נוסף', street: 'הרצל 12', floor: undefined, city: 'חיפה', citySlug: 'haifa', area: 'haifa' },
         }),
         // Cancelled, with a reason.
         scheduledOccurrence('story-populated', {
@@ -140,7 +141,7 @@ installMockFetch((url) => {
           lessonId: 'story-populated',
           kind: 'modified',
           date: '2026-10-02',
-          place: { name: 'בית מדרש נוסף', street: 'הרצל 12', cityCode: 4000, cityName: 'חיפה' },
+          address: { name: 'בית מדרש נוסף', street: 'הרצל 12', cityCode: 4000, cityName: 'חיפה' },
         },
         { id: 23, lessonId: 'story-populated', kind: 'cancelled', date: '2026-10-09', reason: 'הרב נוסע לשמחה משפחתית' },
       ] satisfies LessonExceptionResponse[],
@@ -182,7 +183,8 @@ installMockFetch((url) => {
       items: [
         scheduledOccurrence('story-occ-longdata', {
           date: '2026-09-18',
-          place: {
+          venue: {
+            kind: 'address',
             name: 'בית מדרש "אהבת ישראל" של קהילת יוצאי מרוקו, מרכז קהילתי נאות שקד',
             street: 'שדרות ירושלים 128, קומה שנייה, כניסה מהחצר האחורית',
             floor: undefined,

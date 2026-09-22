@@ -21,7 +21,7 @@ const lesson = (overrides: Partial<LessonOccurrence>): LessonOccurrence => ({
   topic: 'machshava',
   audience: 'women',
   rabbi: rabbanit,
-  place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'חיפה', citySlug: 'חיפה', area: 'haifa' },
+  venue: { kind: 'address', name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'חיפה', citySlug: 'חיפה', area: 'haifa' },
   ...overrides,
 });
 
@@ -87,7 +87,7 @@ installMockFetch((url) => {
     if (area === 'north') {
       if (url.searchParams.get('pageSize') === '24' && !q) {
         return jsonResponse(200, {
-          items: [lesson({ lessonId: 'area1', date: '2026-09-12', place: { name: 'בית מדרש', street: 'הרצל 1', city: 'טבריה', citySlug: 'טבריה', area: 'north' } })],
+          items: [lesson({ lessonId: 'area1', date: '2026-09-12', venue: { kind: 'address', name: 'בית מדרש', street: 'הרצל 1', city: 'טבריה', citySlug: 'טבריה', area: 'north' } })],
           page: 1,
           pageSize: 24,
           total: 1,

@@ -1,4 +1,4 @@
-import type { AreaSummary, City, LessonOccurrence, Rabbi } from '@torabarabim/common';
+import type { AreaSummary, City, LessonOccurrence, LessonVenue, LessonVenuePanel, Rabbi } from '@torabarabim/common';
 
 import { RABBI_HONORIFIC_LABELS } from './consts';
 import type { DayGroup } from './models';
@@ -59,6 +59,38 @@ export const groupByDay = (items: LessonOccurrence[]): DayGroup[] => {
   }
   return groups;
 };
+
+// True on any difference between a lesson's own venue and one occurrence's
+// resolved venue, in any combination the union allows (RabbiPanel's Upcoming
+// page and AdminPanel's lesson view both need this to flag a moved date).
+// The lesson side is always a panel's own read of its lesson
+// (`LessonResponse`/`RabbiLessonResponse`), so it is `LessonVenuePanel`, not
+// `LessonVenue`: its address arm carries `cityName` rather than `city`
+// (`common/src/venue.ts`), which is why the two sides are compared by
+// different field names below rather than sharing one shape.
+// An exception's override is always a free-text address, never a place
+// reference (`LessonException`), so a lesson venue of 'place' paired with an
+// occurrence venue of 'place' is always the same place, and a lesson venue of
+// 'address' paired with an occurrence venue of 'place' cannot occur.
+export const hasVenueChanged = (lessonVenue: LessonVenuePanel, occurrenceVenue: LessonVenue): boolean => {
+  if (lessonVenue.kind === 'place') return occurrenceVenue.kind === 'address';
+  // Unreachable while an exception can only override to free text; would
+  // become reachable if an exception ever gained its own place reference.
+  if (occurrenceVenue.kind === 'place') return false;
+  return (
+    lessonVenue.name !== occurrenceVenue.name ||
+    lessonVenue.street !== occurrenceVenue.street ||
+    lessonVenue.cityName !== occurrenceVenue.city
+  );
+};
+
+// A panel's read of a venue (`LessonResponse`/`RabbiLessonResponse`) puts
+// the city's display name on a different field per arm of the union
+// (`common/src/venue.ts`, `LessonVenuePanel`): `cityName` when the venue is
+// free text, `city` when it names a registered place. Every panel render
+// site that only wants the city text goes through this rather than
+// re-deriving the split.
+export const venuePanelCityName = (venue: LessonVenuePanel): string => (venue.kind === 'place' ? venue.city : venue.cityName);
 
 const ISRAEL_TIME_ZONE = 'Asia/Jerusalem';
 const SATURDAY = 6;

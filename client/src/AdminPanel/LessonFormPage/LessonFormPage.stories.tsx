@@ -14,7 +14,7 @@ const lesson: LessonResponse = {
   id: 'story-edit-lesson',
   title: 'עיונים בפרשת השבוע',
   rabbiId: rabbi.id,
-  place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', cityCode: 4000, cityName: 'חיפה' },
+  venue: { kind: 'address', name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', cityCode: 4000, cityName: 'חיפה' },
   topic: 'parasha',
   audience: 'mixed',
   recurrence: { kind: 'weekly', weekdays: [2] },

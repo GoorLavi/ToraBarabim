@@ -24,10 +24,17 @@ export const lessonToFormState = (lesson: RabbiLessonResponse): LessonFormState 
   date: lesson.recurrence.kind === 'once' ? lesson.recurrence.date : '',
   startTime: lesson.startTime,
   durationMinutes: String(lesson.durationMinutes),
-  city: { id: String(lesson.place.cityCode), name: lesson.place.cityName },
-  addressName: lesson.place.name,
-  street: lesson.place.street,
-  floor: lesson.place.floor ?? '',
+  // `RabbiLessonResponse.venue` is `LessonVenuePanel`: only the address arm
+  // carries a numeric `cityCode`, the id `CitySelect` needs. The place arm
+  // has nothing valid to prefill it with (its `placeId` is for a picker
+  // that does not exist yet, Wave 5/6). City starts unset for a
+  // place-backed lesson, and `validateLessonForm` requires the rabbi to
+  // reselect it rather than let a form built for a free-text address
+  // quietly resubmit one that happens to share the place's current city.
+  city: lesson.venue.kind === 'address' ? { id: String(lesson.venue.cityCode), name: lesson.venue.cityName } : undefined,
+  addressName: lesson.venue.name,
+  street: lesson.venue.street,
+  floor: lesson.venue.floor ?? '',
   audience: lesson.audience,
 });
 
@@ -76,7 +83,8 @@ export const buildLessonPayload = (form: LessonFormState): RabbiCreateLessonRequ
 
   return {
     title: form.title.trim() || undefined,
-    place: {
+    venue: {
+      kind: 'address',
       name: form.addressName.trim(),
       street: form.street.trim(),
       floor: form.floor.trim() || undefined,

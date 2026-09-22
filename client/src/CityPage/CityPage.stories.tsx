@@ -32,7 +32,7 @@ const lesson = (overrides: Partial<LessonOccurrence>): LessonOccurrence => ({
   topic: 'parasha',
   audience: 'mixed',
   rabbi: rabbiFixture({ id: 'r1', name: 'אברהם כהן' }),
-  place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'חיפה', citySlug: 'חיפה', area: 'haifa' },
+  venue: { kind: 'address', name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'חיפה', citySlug: 'חיפה', area: 'haifa' },
   ...overrides,
 });
 
@@ -84,7 +84,7 @@ installMockFetch((url) => {
           lesson({
             lessonId: 'a1',
             rabbi: rabbiFixture({ id: 'r9', name: 'שמעון אזולאי' }),
-            place: { name: 'בית מדרש', street: 'הרצל 1', city: 'טבריה', citySlug: 'טבריה', area: 'north' },
+            venue: { kind: 'address', name: 'בית מדרש', street: 'הרצל 1', city: 'טבריה', citySlug: 'טבריה', area: 'north' },
           }),
         ],
         page: 1,

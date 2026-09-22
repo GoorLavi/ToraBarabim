@@ -100,7 +100,7 @@ export const weeklyRecurrenceLabel = (weekdays: Weekday[]): string => {
 // A lesson's rendered "when" line: weekday name(s) for a recurring lesson,
 // or the weekday plus the calendar date for a one-time one, matching the
 // brief's `כל יום שלישי` / `יום שלישי, 16.12.2025` examples.
-export const recurrenceWhenLabel = (lesson: Lesson): string => {
+export const recurrenceWhenLabel = (lesson: Pick<Lesson, 'recurrence'>): string => {
   if (lesson.recurrence.kind === 'weekly') return weeklyRecurrenceLabel(lesson.recurrence.weekdays);
   const weekday = asWeekday(new Date(`${lesson.recurrence.date}T00:00:00Z`).getUTCDay());
   return `${consts.WEEKDAY_LABELS[weekday]}, ${formatIsraeliDate(lesson.recurrence.date)}`;
@@ -111,6 +111,6 @@ export const recurrenceWhenLabel = (lesson: Lesson): string => {
 // Takes the lesson and its rabbi separately, rather than a joined row type
 // owned by one caller, since `LessonsListPage` and `RabbiViewPage` (the
 // two callers) each join a lesson to its rabbi differently.
-export const lessonPrimaryLabel = (lesson: Lesson, rabbi: Pick<Rabbi, 'name' | 'honorific'> | undefined): string =>
+export const lessonPrimaryLabel = (lesson: Pick<Lesson, 'title'>, rabbi: Pick<Rabbi, 'name' | 'honorific'> | undefined): string =>
   lesson.title ?? (rabbi ? rabbiDisplayName(rabbi) : consts.UNTITLED_RABBI_FALLBACK);
-export const lessonHasOwnTitle = (lesson: Lesson): boolean => Boolean(lesson.title);
+export const lessonHasOwnTitle = (lesson: Pick<Lesson, 'title'>): boolean => Boolean(lesson.title);

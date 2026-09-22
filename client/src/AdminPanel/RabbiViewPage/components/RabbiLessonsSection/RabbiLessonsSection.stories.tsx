@@ -10,7 +10,7 @@ const lesson = (overrides: Partial<LessonResponse>): LessonResponse => ({
   id: 'lesson-1',
   title: 'הלכות שבת',
   rabbiId: 'story-rabbi',
-  place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', cityCode: 4000, cityName: 'חיפה' },
+  venue: { kind: 'address', name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', cityCode: 4000, cityName: 'חיפה' },
   topic: 'halacha',
   audience: 'men',
   recurrence: { kind: 'weekly', weekdays: [2] },
@@ -43,7 +43,8 @@ installMockFetch((url) => {
           title: 'שולחן ערוך אורח חיים, הלכות תפילה וברכות השחר לפרטי פרטים',
           recurrence: { kind: 'weekly', weekdays: [0, 2, 4] },
           startTime: '06:15',
-          place: {
+          venue: {
+            kind: 'address',
             name: 'בית מדרש אוהל יעקב, מרכז קהילתי נאות שקד',
             street: 'הרב קוק 12',
             cityCode: 4000,

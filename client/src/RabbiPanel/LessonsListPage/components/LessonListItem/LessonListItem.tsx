@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { AUDIENCE_LABELS } from '~/consts';
+import { venuePanelCityName } from '~/helpers';
 import { RABBI_ROUTES } from '~/RabbiPanel/consts';
 import * as parentConsts from '~/RabbiPanel/LessonsListPage/consts';
 import { lessonPrimaryLabel, whenLabel } from '~/RabbiPanel/LessonsListPage/helpers';
@@ -25,7 +26,7 @@ export const LessonListItem = styled(({ className, lesson }: LessonListItemProps
       <span className="tag">{lesson.recurrence.kind === 'weekly' ? parentConsts.RECURRING_TAG_LABEL : parentConsts.ONE_TIME_TAG_LABEL}</span>
       <span className="tag">{AUDIENCE_LABELS[lesson.audience]}</span>
       <span className="tag" dir="auto">
-        {lesson.place.cityName}
+        {venuePanelCityName(lesson.venue)}
       </span>
     </div>
 

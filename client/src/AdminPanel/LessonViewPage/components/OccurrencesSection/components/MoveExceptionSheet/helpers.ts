@@ -7,7 +7,7 @@ import type { MoveFormErrors, MoveFormState } from './models';
 
 // The place fields always start blank, never prefilled from a date that is
 // already moved: `row.cityName`/`row.placeName` are resolved display text
-// with no city id behind them (`LessonOccurrence.place` carries no
+// with no city id behind them (`LessonOccurrence.venue` carries no
 // `cityCode`), so there is nothing valid to prefill `CitySelect` with. The
 // rabbi panel's own move sheet has the same gap; see the report for this
 // slice.

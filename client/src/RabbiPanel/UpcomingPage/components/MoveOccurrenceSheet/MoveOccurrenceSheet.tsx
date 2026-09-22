@@ -23,7 +23,7 @@ export const MoveOccurrenceSheet = styled(({ className, occurrence, onDismiss }:
     if (Object.keys(errors).length > 0) return;
 
     move.mutate(
-      { lessonId: occurrence.lessonId, date: occurrence.date, startTime: form.startTime, place: buildMovePlace(form) },
+      { lessonId: occurrence.lessonId, date: occurrence.date, startTime: form.startTime, address: buildMovePlace(form) },
       { onSuccess: onDismiss },
     );
   };

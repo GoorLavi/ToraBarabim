@@ -2,6 +2,7 @@ import type { LessonExceptionResponse, LessonOccurrence, LessonResponse } from '
 
 import { WEEKDAY_LABELS } from '~/AdminPanel/consts';
 import { asWeekday, formatIsraeliDate } from '~/AdminPanel/helpers';
+import { hasVenueChanged } from '~/helpers';
 
 import type { OccurrenceRowData } from './models';
 
@@ -9,9 +10,6 @@ export const occurrenceDateLabel = (isoDate: string): string => {
   const weekday = asWeekday(new Date(`${isoDate}T00:00:00Z`).getUTCDay());
   return `${WEEKDAY_LABELS[weekday]}, ${formatIsraeliDate(isoDate)}`;
 };
-
-const hasPlaceChanged = (lesson: LessonResponse, place: LessonOccurrence['place']): boolean =>
-  lesson.place.name !== place.name || lesson.place.street !== place.street || lesson.place.cityName !== place.city;
 
 // One occurrence date needs two independent fetches: `AdminOccurrenceListResponse`
 // for the resolved time/place/status, and `LessonExceptionListResponse` for
@@ -30,12 +28,12 @@ export const joinOccurrencesWithExceptions = (
     dateLabel: occurrenceDateLabel(occurrence.date),
     startTime: occurrence.startTime,
     status: occurrence.status,
-    placeName: occurrence.place.name,
-    cityName: occurrence.place.city,
+    placeName: occurrence.venue.name,
+    cityName: occurrence.venue.city,
     cancellationReason: occurrence.cancellationReason,
     exceptionId: exceptionIdByDate.get(occurrence.date),
     movedFromTime: occurrence.status === 'scheduled' && occurrence.startTime !== lesson.startTime ? lesson.startTime : undefined,
-    placeChanged: occurrence.status === 'scheduled' && hasPlaceChanged(lesson, occurrence.place),
+    placeChanged: occurrence.status === 'scheduled' && hasVenueChanged(lesson.venue, occurrence.venue),
   }));
 };
 

@@ -17,10 +17,9 @@ export type ExistingLessonState =
   | { status: 'error'; error: AdminApiError; retry: () => void }
   | { status: 'success'; data: ExistingLessonData };
 
-// The venue is on the lesson itself now (`lesson.place`), so no place fetch
+// The venue is on the lesson itself now (`lesson.venue`), so no place fetch
 // is needed to load an existing lesson: just the lesson, then the rabbi it
-// unlocks. `LessonResponse.place` already carries the resolved `cityName`,
-// so no separate city lookup is needed either.
+// unlocks.
 export const useExistingLesson = (id: string | undefined): ExistingLessonState => {
   const lessonQuery = useQuery({
     queryKey: ADMIN_QUERY_KEYS.lesson(id ?? ''),
@@ -57,7 +56,15 @@ export const useExistingLesson = (id: string | undefined): ExistingLessonState =
 
   if (isPending || !lessonQuery.data) return { status: 'pending' };
 
-  const city: SelectedCity = { id: String(lessonQuery.data.place.cityCode), name: lessonQuery.data.place.cityName };
+  // `LessonResponse.venue` is `LessonVenuePanel`: only the address arm
+  // carries a numeric `cityCode`, the id `CitySelect` needs. The place arm
+  // has nothing valid to prefill it with (its `placeId` is for a picker
+  // that does not exist yet, Wave 5/6). City starts unset for a
+  // place-backed lesson, and `validateLessonForm` requires the admin to
+  // reselect it rather than let a form built for a free-text address
+  // quietly resubmit one that happens to share the place's current city.
+  const city: SelectedCity | undefined =
+    lessonQuery.data.venue.kind === 'address' ? { id: String(lessonQuery.data.venue.cityCode), name: lessonQuery.data.venue.cityName } : undefined;
 
   return {
     status: 'success',

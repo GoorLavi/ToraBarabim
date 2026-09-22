@@ -1,4 +1,4 @@
-import type { CreateLessonRequest, Lesson, Rabbi } from '@torabarabim/common';
+import type { CreateLessonRequest, LessonResponse, Rabbi } from '@torabarabim/common';
 
 import { WEEKDAY_LABELS } from '~/AdminPanel/consts';
 import { asWeekday } from '~/AdminPanel/helpers';
@@ -23,7 +23,7 @@ export const initialFormState = (preselectedRabbi: Rabbi | undefined): LessonFor
   audience: undefined,
 });
 
-export const lessonToFormState = (lesson: Lesson, rabbi: Rabbi | undefined, city: SelectedCity | undefined): LessonFormState => ({
+export const lessonToFormState = (lesson: LessonResponse, rabbi: Rabbi | undefined, city: SelectedCity | undefined): LessonFormState => ({
   rabbi,
   title: lesson.title ?? '',
   recurrenceKind: lesson.recurrence.kind,
@@ -32,9 +32,9 @@ export const lessonToFormState = (lesson: Lesson, rabbi: Rabbi | undefined, city
   startTime: lesson.startTime,
   durationMinutes: String(lesson.durationMinutes),
   city,
-  addressName: lesson.place.name,
-  street: lesson.place.street,
-  floor: lesson.place.floor ?? '',
+  addressName: lesson.venue.name,
+  street: lesson.venue.street,
+  floor: lesson.venue.floor ?? '',
   audience: lesson.audience,
 });
 
@@ -112,7 +112,8 @@ export const buildLessonPayload = (form: LessonFormState): CreateLessonRequest =
   return {
     title: form.title.trim() || undefined,
     rabbiId: form.rabbi.id,
-    place: {
+    venue: {
+      kind: 'address',
       name: form.addressName.trim(),
       street: form.street.trim(),
       floor: form.floor.trim() || undefined,

@@ -16,4 +16,4 @@ export const rowTitle = (lesson: LessonOccurrence): string | undefined =>
 // both required on `ResolvedAddress`, so only the leading audience segment can ever
 // be the sole content.
 export const rowVenueLine = (lesson: LessonOccurrence): string =>
-  `${AUDIENCE_LABELS[lesson.audience]} · ${lesson.place.name}, ${lesson.place.city}`;
+  `${AUDIENCE_LABELS[lesson.audience]} · ${lesson.venue.name}, ${lesson.venue.city}`;

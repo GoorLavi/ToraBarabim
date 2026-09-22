@@ -12,15 +12,15 @@ export interface MoveOccurrenceInput {
   lessonId: string;
   date: string;
   startTime: string;
-  place: LessonAddress | undefined;
+  address: LessonAddress | undefined;
 }
 
 export const useMoveOccurrence = (): UseMutationResult<RabbiLessonExceptionResponse, RabbiApiError, MoveOccurrenceInput> => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ lessonId, date, startTime, place }: MoveOccurrenceInput) =>
-      upsertOccurrenceException(lessonId, date, { kind: 'modified', date, startTime, place }),
+    mutationFn: ({ lessonId, date, startTime, address }: MoveOccurrenceInput) =>
+      upsertOccurrenceException(lessonId, date, { kind: 'modified', date, startTime, address }),
     onSuccess: (_data, { lessonId, date }) => {
       void queryClient.invalidateQueries({ queryKey: RABBI_QUERY_KEYS.occurrences() });
       trackEvent(MIXPANEL_EVENTS.occurrenceMoved, { lessonId, date });

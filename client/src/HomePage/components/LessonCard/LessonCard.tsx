@@ -71,7 +71,7 @@ export const LessonCard = styled(({ className, lesson, surface, clickContext }: 
         </p>
 
         <p className="city" dir="auto">
-          {lesson.place.city}
+          {lesson.venue.city}
         </p>
 
         {lesson.substituteRabbi && (
