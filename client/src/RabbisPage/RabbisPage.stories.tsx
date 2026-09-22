@@ -56,6 +56,19 @@ type Story = StoryObj<typeof RabbisPage>;
 
 export const Populated: Story = {};
 
+// The one branch the design system calls a real state and every other story
+// here skips: `rabbiFixture` supplies a poster unless the key is stated, so
+// a photoless rabbi has to say so explicitly (design gate round 8).
+export const WithoutPhoto: Story = {
+  beforeEach: () =>
+    installMockFetch((url) => {
+      if (url.pathname === '/v1/rabbis') {
+        return jsonResponse(200, directoryResponse([rabbiEntry('r3', 'יוסף חדד', [haifa], { photoUrl: undefined })]));
+      }
+      return null;
+    }),
+};
+
 // The other `directory` value: distinct page title, search label and count
 // grammar (`consts.ts`'s `DIRECTORY_COPY`, `helpers.ts`'s `rabbiCountLabel`),
 // so this is not the same screen with different data.
