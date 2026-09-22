@@ -1,37 +1,31 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { RABBI_ROUTES } from '~/RabbiPanel/consts';
-import { rabbiErrorMessage } from '~/RabbiPanel/helpers';
-import { useRabbiSession } from '~/RabbiPanel/useRabbiSession';
-
 import * as consts from './consts';
-import type { LoginFormState, LoginPageProps } from './models';
+import { panelErrorMessage } from './helpers';
+import type { PanelLoginFormState, PanelLoginProps } from './models';
 import * as styles from './styles';
-import { useRabbiLogin } from './useRabbiLogin';
+import { usePanelLogin } from './usePanelLogin';
 
-export const LoginPage = styled(({ className }: LoginPageProps) => {
-  const session = useRabbiSession();
-  const location = useLocation();
-  const login = useRabbiLogin();
-  const [form, setForm] = useState<LoginFormState>({ identifier: '', password: '' });
-
-  // Already signed in (e.g. followed a stale link to /rabbi/login): go
-  // straight back to wherever the guard would have sent them.
-  if (session.data) {
-    const from = (location.state as { from?: string } | null)?.from;
-    return <Navigate to={from ?? RABBI_ROUTES.upcoming} replace />;
-  }
+// The one shared login door for a rabbi or a place account. No role badge
+// under the wordmark: nobody's role is known until the server answers, so
+// any badge shown before that would be wrong for half the people arriving.
+// The destination after a successful login (`landingPath`) is likewise the
+// server's call, never computed here.
+export const PanelLogin = styled(({ className }: PanelLoginProps) => {
+  const [searchParams] = useSearchParams();
+  const from = searchParams.get('from') ?? undefined;
+  const login = usePanelLogin();
+  const [form, setForm] = useState<PanelLoginFormState>({ identifier: '', password: '' });
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
-    login.mutate({ identifier: form.identifier, password: form.password });
+    login.mutate({ identifier: form.identifier, password: form.password, from });
   };
 
-  const from = (location.state as { from?: string } | null)?.from;
-  if (login.isSuccess) return <Navigate to={from ?? RABBI_ROUTES.upcoming} replace />;
+  if (login.isSuccess) return <Navigate to={login.data.landingPath} replace />;
 
   return (
     <div className={className}>
@@ -40,7 +34,6 @@ export const LoginPage = styled(({ className }: LoginPageProps) => {
           <span className="wordmark" dir="auto">
             {consts.WORDMARK}
           </span>
-          <span className="badge">{consts.BADGE_LABEL}</span>
         </div>
 
         <div className="card">
@@ -50,7 +43,7 @@ export const LoginPage = styled(({ className }: LoginPageProps) => {
           <form className="form" onSubmit={handleSubmit} noValidate>
             {login.isError && (
               <p className="error" role="alert">
-                {rabbiErrorMessage(login.error, { 401: consts.INVALID_CREDENTIALS_ERROR, 429: consts.RATE_LIMITED_ERROR })}
+                {panelErrorMessage(login.error)}
               </p>
             )}
 
@@ -103,5 +96,5 @@ export const LoginPage = styled(({ className }: LoginPageProps) => {
     </div>
   );
 })`
-  ${styles.LoginPage}
+  ${styles.PanelLogin}
 `;

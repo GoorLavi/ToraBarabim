@@ -4,12 +4,12 @@ import type { WomenAreaResponse } from '@torabarabim/common';
 import type { HeadersFunction, MetaFunction } from 'react-router';
 
 import { StateCard } from '~/components/StateCard/StateCard';
-import { SITE_WIDE_META } from '~/consts';
 import { ERROR_BODY, ERROR_HEADING, RETRY_LABEL, WOMEN_PAGE_QUERY_KEYS } from '~/WomenPage/consts';
 import { WomenPage } from '~/WomenPage/WomenPage';
 
 import { SITE_ORIGIN } from '../../../consts';
 import { PUBLIC_CACHE_HEADERS } from '../consts';
+import { DEFAULT_OG_IMAGE_META, SITE_WIDE_META_BASE } from '../meta';
 import * as consts from './consts';
 import { loadWomenAreaSummary } from './women-area.server';
 
@@ -36,7 +36,8 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     { property: 'og:title', content: consts.WOMEN_PAGE_TITLE },
     { property: 'og:description', content: consts.WOMEN_PAGE_DESCRIPTION },
     { property: 'og:url', content: url },
-    ...SITE_WIDE_META,
+    ...SITE_WIDE_META_BASE,
+    ...DEFAULT_OG_IMAGE_META,
   ];
 };
 

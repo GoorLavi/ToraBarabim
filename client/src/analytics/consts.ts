@@ -53,6 +53,7 @@ export type RetrySurface =
   | 'homeRoute'
   | 'citiesRoute'
   | 'rabbisRoute'
+  | 'placesRoute'
   | 'lessonRoute'
   | 'citiesPage'
   | 'lessonsPage'

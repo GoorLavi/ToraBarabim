@@ -2,7 +2,7 @@ import { css } from 'styled-components';
 
 import * as consts from './consts';
 
-export const LoginPage = css(
+export const PanelLogin = css(
   ({ theme }) => `
   block-size: 100%;
 
@@ -40,17 +40,6 @@ export const LoginPage = css(
         font-weight: ${theme.typography.fontWeight.bold};
         font-size: ${theme.typography.pageHeading.phone.fontSize};
         line-height: ${theme.typography.pageHeading.phone.lineHeight};
-      }
-
-      > .badge {
-        padding-block: ${theme.spacing.xs};
-        padding-inline: ${theme.spacing.sm};
-        border-radius: ${theme.radii.pill};
-        background: ${theme.colors.primarySoft};
-        color: ${theme.colors.primary};
-        font-weight: ${theme.typography.fontWeight.semiBold};
-        font-size: ${theme.typography.tagAndCaption.phone.fontSize};
-        line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
       }
     }
 
@@ -197,8 +186,8 @@ export const LoginPage = css(
        reacts to, rather than on the button itself. Scoped to ":has(.field
        :focus-within)" rather than plain ":focus-within" so the submit
        button keeping focus after a failed login (nothing else claims it)
-       does not also hide the button: only the email and password fields
-       carry ".field". */
+       does not also hide the button: only the identifier and password
+       fields carry ".field". */
     &:has(.field:focus-within) ~ .whatsapp {
       opacity: 0;
       pointer-events: none;

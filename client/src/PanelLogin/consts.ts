@@ -1,23 +1,38 @@
 export const WORDMARK = 'תורה ברבים';
-export const BADGE_LABEL = 'אזור אישי';
-// Nobody is known yet at this screen, so every string here is
-// gender-neutral by construction (plural-impersonal or "יש ל"), never
-// masculine by default. See RabbiPanel/consts.ts's `Record<RabbiHonorific>`
-// pattern for the pages that speak to a signed-in rabbi.
+
+// Role-neutral by construction: nobody's role (rabbi or place) is known
+// before login, so this heading and subtext have to read fine for either.
+// Reused verbatim from the rabbi login page's own gender-neutral copy
+// rather than written fresh; see the builder's report for this slice.
 export const HEADING = 'ברוכים הבאים';
 export const SUBTEXT = 'כאן אפשר לעדכן את השיעורים ואת הפרטים שמופיעים באתר.';
 export const IDENTIFIER_LABEL = 'אימייל או שם משתמש';
 export const PASSWORD_LABEL = 'סיסמה';
 export const SUBMIT_LABEL = 'כניסה';
 export const SUBMIT_PENDING_LABEL = 'מתחברים...';
+
+// The one string both shipped login pages already used verbatim: nothing to
+// lose and nothing to write.
 export const INVALID_CREDENTIALS_ERROR = 'אימייל, שם משתמש או סיסמה שגויים';
-export const RATE_LIMITED_ERROR = 'יותר מדי ניסיונות כניסה. נסה שוב בעוד כמה דקות';
+// Editor-approved for this slice. Matches the server's own account-deactivated
+// message (server/src/api/panel/auth/index.ts).
+export const DEACTIVATED_ERROR = 'החשבון אינו פעיל. אפשר לפנות למי שהקים אותו כדי להפעיל אותו מחדש.';
+
+// TODO: resolves once the editor supplies copy for a login failure that is
+// neither invalid credentials, a deactivated account, nor the rate limit
+// (a server error, or the request never reaching the server at all).
+// Placeholder only, not approved Hebrew: see the builder's report for this
+// slice.
+export const GENERIC_ERROR_PLACEHOLDER = '[טרם אושר ניסוח: שגיאה כללית בהתחברות]';
+
 export const FORGOT_PASSWORD_NOTE =
   'שכחת סיסמה? החשבון נפתח עבורך על ידי מי שהקים אותו, ואיפוס הסיסמה נעשה דרכו.';
 
 // International format, required by the wa.me link syntax.
 export const WHATSAPP_SUPPORT_PHONE = '972527570636';
-export const WHATSAPP_SUPPORT_MESSAGE = 'שלום, נתקלתי בבעיה בהתחברות לפאנל הרבנים ואשמח לעזרה.';
+// Genericised from the rabbi-only page's message: this door now also serves
+// place accounts, so the prefilled text no longer names a specific panel.
+export const WHATSAPP_SUPPORT_MESSAGE = 'שלום, נתקלתי בבעיה בהתחברות לפאנל ואשמח לעזרה.';
 export const WHATSAPP_SUPPORT_HREF = `https://wa.me/${WHATSAPP_SUPPORT_PHONE}?text=${encodeURIComponent(WHATSAPP_SUPPORT_MESSAGE)}`;
 export const WHATSAPP_SUPPORT_TOOLTIP = 'פנו אלינו בוואצאפ';
 
@@ -35,6 +50,7 @@ export const WHATSAPP_BUTTON_COLOR_HOVER = '#17853F';
 // since it has to be found without reading.
 export const WHATSAPP_BUTTON_SIZE = '56px';
 
-// No z-index scale exists yet in this codebase; this is the one place that
-// needs to sit above everything else on the login page.
+// No z-index scale exists yet in this codebase for a fixed page element like
+// this; it is the one place that needs to sit above everything else on the
+// login page.
 export const WHATSAPP_BUTTON_Z_INDEX = 10;

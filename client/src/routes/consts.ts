@@ -1,11 +1,11 @@
-import type { CityDirectoryResponse, LessonOccurrence, Rabbi, RabbiDirectoryResponse } from '@torabarabim/common';
+import type { CityDirectoryResponse, LessonOccurrence, PlaceListResponse, Rabbi, RabbiDirectoryResponse } from '@torabarabim/common';
 
 import type { JsonLdObject } from './models';
 
 import { TITLE as CONTACT_TITLE } from '~/ContactPage/consts';
 import { kickerLabel } from '~/LessonPage/components/LessonTicket/helpers';
 import { TITLE_UNFILTERED as LESSONS_TITLE } from '~/LessonsPage/consts';
-import { cityPath, lessonPath, rabbiDisplayName, rabbiPath } from '~/helpers';
+import { cityPath, lessonPath, placePath, rabbiDisplayName, rabbiPath } from '~/helpers';
 
 import { RABBI_HONORIFIC_LABELS } from '~/consts';
 
@@ -145,56 +145,68 @@ const israelDateTime = (isoDate: string, clockTime: string): string => `${isoDat
 // this occurrence (LessonPage/helpers.ts's `teachingRabbiOf`), never the
 // lesson's own rabbi when a substitute is assigned, and a cancelled
 // occurrence says so through `eventStatus` rather than silently describing
-// a lesson that is not happening.
-export const lessonEventJsonLd = (occurrence: LessonOccurrence, teachingRabbi: Rabbi): JsonLdObject => ({
-  '@context': 'https://schema.org',
-  '@type': 'Event',
-  name: `${lessonSubjectLabel(occurrence)} עם ${rabbiDisplayName(teachingRabbi)}`,
-  description: lessonPageDescription(occurrence, teachingRabbi),
-  ...(teachingRabbi.photoUrl ? { image: teachingRabbi.photoUrl } : {}),
-  startDate: israelDateTime(occurrence.date, occurrence.startTime),
-  endDate: israelDateTime(occurrence.date, occurrence.endTime),
-  eventStatus:
-    occurrence.status === 'cancelled' ? 'https://schema.org/EventCancelled' : 'https://schema.org/EventScheduled',
-  location: {
-    '@type': 'Place',
-    name: occurrence.venue.name,
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: occurrence.venue.street,
-      addressLocality: occurrence.venue.city,
-      addressCountry: 'IL',
-    },
-  },
-  // The venue hosts the lesson, so it is the organizer; the site only lists it.
-  organizer: {
-    '@type': 'Organization',
-    name: occurrence.venue.name,
-  },
-  performer: {
-    '@type': 'Person',
-    name: teachingRabbi.name,
-    honorificPrefix: RABBI_HONORIFIC_LABELS[teachingRabbi.honorific],
-    url: `${SITE_ORIGIN}${rabbiPath(teachingRabbi)}`,
-    ...(teachingRabbi.bio ? { description: teachingRabbi.bio } : {}),
+// a lesson that is not happening. `venuePhotoUrl` is resolved by the route's
+// own `.server` loader (`lesson.server.ts`, `loadVenuePhoto`): the wire
+// `LessonVenue` carries no photo of its own, so `location.image` has no
+// other source. No `organizer`: the claim it used to rest on, that the venue
+// organizes the lesson, was never quite true, it duplicated `location` as an
+// `Organization` with no URL, and schema.org's own Event guidance does not
+// call for one.
+export const lessonEventJsonLd = (
+  occurrence: LessonOccurrence,
+  teachingRabbi: Rabbi,
+  venuePhotoUrl: string | undefined,
+): JsonLdObject => {
+  const { venue } = occurrence;
+  const venueUrl = venue.kind === 'place' ? `${SITE_ORIGIN}${placePath({ id: venue.placeId, slug: venue.slug })}` : undefined;
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Event',
+    name: `${lessonSubjectLabel(occurrence)} עם ${rabbiDisplayName(teachingRabbi)}`,
+    description: lessonPageDescription(occurrence, teachingRabbi),
     ...(teachingRabbi.photoUrl ? { image: teachingRabbi.photoUrl } : {}),
-  },
-  // Every lesson is free and open, which schema.org says as a zero-priced
-  // offer. A cancelled occurrence carries none at all: `availability` has no
-  // value that means "cancelled", and the in-stock one would contradict the
-  // `eventStatus` directly above.
-  ...(occurrence.status === 'cancelled'
-    ? {}
-    : {
-        offers: {
-          '@type': 'Offer',
-          price: 0,
-          priceCurrency: 'ILS',
-          availability: 'https://schema.org/InStock',
-          url: `${SITE_ORIGIN}${lessonPath(occurrence)}`,
-        },
-      }),
-});
+    startDate: israelDateTime(occurrence.date, occurrence.startTime),
+    endDate: israelDateTime(occurrence.date, occurrence.endTime),
+    eventStatus:
+      occurrence.status === 'cancelled' ? 'https://schema.org/EventCancelled' : 'https://schema.org/EventScheduled',
+    location: {
+      '@type': 'Place',
+      name: venue.name,
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: venue.street,
+        addressLocality: venue.city,
+        addressCountry: 'IL',
+      },
+      ...(venueUrl ? { '@id': venueUrl, url: venueUrl } : {}),
+      ...(venue.kind === 'place' && venuePhotoUrl ? { image: venuePhotoUrl } : {}),
+    },
+    performer: {
+      '@type': 'Person',
+      name: teachingRabbi.name,
+      honorificPrefix: RABBI_HONORIFIC_LABELS[teachingRabbi.honorific],
+      url: `${SITE_ORIGIN}${rabbiPath(teachingRabbi)}`,
+      ...(teachingRabbi.bio ? { description: teachingRabbi.bio } : {}),
+      ...(teachingRabbi.photoUrl ? { image: teachingRabbi.photoUrl } : {}),
+    },
+    // Every lesson is free and open, which schema.org says as a zero-priced
+    // offer. A cancelled occurrence carries none at all: `availability` has
+    // no value that means "cancelled", and the in-stock one would contradict
+    // the `eventStatus` directly above.
+    ...(occurrence.status === 'cancelled'
+      ? {}
+      : {
+          offers: {
+            '@type': 'Offer',
+            price: 0,
+            priceCurrency: 'ILS',
+            availability: 'https://schema.org/InStock',
+            url: `${SITE_ORIGIN}${lessonPath(occurrence)}`,
+          },
+        }),
+  };
+};
 
 // contact.tsx's and lessons.tsx's own document titles and descriptions.
 // Every public route needs its own, because root.tsx's defaults describe the
@@ -209,3 +221,23 @@ export const CONTACT_PAGE_DESCRIPTION =
 export const lessonsPageTitle = (): string => `${LESSONS_TITLE} | ${SITE_NAME}`;
 export const LESSONS_PAGE_DESCRIPTION =
   'כל שיעורי התורה בלוח, לפי יום ולפי מקום. אפשר לסנן לפי עיר, לפי תאריך ולפי מה שמחפשים.';
+
+// places.tsx's own document title and description, not in-page copy:
+// PlacesPage/consts.ts owns what a visitor reads on the page itself.
+export const placesPageTitle = (): string => `כל המקומות | שיעורי תורה לפי מקום | ${SITE_NAME}`;
+
+export const placesPageDescription = (directory: PlaceListResponse): string =>
+  `כל המקומות שיש בהם שיעורי תורה, ${directory.items.length} מקומות, ב${SITE_NAME}.`;
+
+// places.tsx's own structured data, mirroring citiesItemListJsonLd: every
+// active place in the directory, each with its canonical URL (`placePath`).
+export const placesItemListJsonLd = (directory: PlaceListResponse): JsonLdObject => ({
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  itemListElement: directory.items.map((place, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    url: `${SITE_ORIGIN}${placePath(place)}`,
+    name: place.name,
+  })),
+});

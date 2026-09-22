@@ -1,30 +1,29 @@
 import { useState } from 'react';
 import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query';
-import type { CityDirectoryResponse } from '@torabarabim/common';
+import type { PlaceListResponse } from '@torabarabim/common';
 import type { HeadersFunction, MetaFunction } from 'react-router';
 
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
-import { CitiesPage } from '~/CitiesPage/CitiesPage';
-import { CITIES_QUERY_KEYS, LOAD_ERROR_BODY, LOAD_ERROR_HEADING, RETRY_LABEL } from '~/CitiesPage/consts';
 import { StateCard } from '~/components/StateCard/StateCard';
+import { LOAD_ERROR_BODY, LOAD_ERROR_HEADING, PLACES_QUERY_KEYS, RETRY_LABEL } from '~/PlacesPage/consts';
+import { PlacesPage } from '~/PlacesPage/PlacesPage';
 
 import { SITE_ORIGIN } from '../../consts';
 import * as consts from './consts';
-import { loadCityDirectory } from './cities.server';
 import { DEFAULT_OG_IMAGE_META, SITE_WIDE_META_BASE } from './meta';
+import { loadPlaceDirectory } from './places.server';
 
-// The area index: a crawler landing here has to see every city and area
-// name in the HTML, not only after the client-side query in
-// CitiesPage/useCityDirectory.ts fires.
-export const loader = async (): Promise<CityDirectoryResponse> => loadCityDirectory();
+// The place directory: a crawler landing here has to see every registered
+// venue in the HTML, not only after a client-side query fires.
+export const loader = async (): Promise<PlaceListResponse> => loadPlaceDirectory();
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   if (!data) return [];
 
-  const url = `${SITE_ORIGIN}/cities`;
-  const title = consts.citiesPageTitle();
-  const description = consts.citiesPageDescription(data);
+  const url = `${SITE_ORIGIN}/places`;
+  const title = consts.placesPageTitle();
+  const description = consts.placesPageDescription(data);
 
   return [
     { title },
@@ -36,25 +35,25 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     { property: 'og:url', content: url },
     ...SITE_WIDE_META_BASE,
     ...DEFAULT_OG_IMAGE_META,
-    { 'script:ld+json': consts.citiesItemListJsonLd(data) },
+    { 'script:ld+json': consts.placesItemListJsonLd(data) },
   ];
 };
 
 export const headers: HeadersFunction = ({ errorHeaders }) => errorHeaders ?? consts.PUBLIC_CACHE_HEADERS;
 
-export default function CitiesRoute({ loaderData }: { loaderData: CityDirectoryResponse }) {
-  // Seeds the same key `useCityDirectory` reads (CitiesPage/useCityDirectory.ts),
+export default function PlacesRoute({ loaderData }: { loaderData: PlaceListResponse }) {
+  // Seeds the same key `usePlaceDirectory` reads (PlacesPage/usePlaceDirectory.ts),
   // so the board's first paint already has the loader's data and never
-  // re-fetches on hydration. Mirrors home.tsx and rabbis.$rabbiId/route.tsx.
+  // re-fetches on hydration. Mirrors cities.tsx and rabbis.tsx.
   const [queryClient] = useState(() => {
     const client = new QueryClient();
-    client.setQueryData(CITIES_QUERY_KEYS.directory(), loaderData);
+    client.setQueryData(PLACES_QUERY_KEYS.directory(), loaderData.items);
     return client;
   });
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <CitiesPage />
+      <PlacesPage />
     </HydrationBoundary>
   );
 }
@@ -62,7 +61,7 @@ export default function CitiesRoute({ loaderData }: { loaderData: CityDirectoryR
 // Without a route-level boundary here, a loader failure bubbles past this
 // route straight to root.tsx's, which has no `headers` export, and a 500
 // would go out with no Cache-Control at all instead of the `no-store` its
-// thrown Response set. Mirrors home.tsx's ErrorBoundary.
+// thrown Response set. Mirrors cities.tsx's ErrorBoundary.
 export function ErrorBoundary() {
   return (
     <main>
@@ -75,7 +74,7 @@ export function ErrorBoundary() {
           actionLabel: RETRY_LABEL,
           actionStyle: 'primary',
           onAction: () => {
-            trackEvent(MIXPANEL_EVENTS.retryClick, { surface: 'citiesRoute' });
+            trackEvent(MIXPANEL_EVENTS.retryClick, { surface: 'placesRoute' });
             window.location.reload();
           },
         }}

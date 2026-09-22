@@ -24,8 +24,13 @@ export const RequireRabbiSession = styled(({ className }: RequireRabbiSessionPro
   }
 
   if (!session.data) {
+    // `from` travels as a query param, not router state: `/login` is a
+    // top-level route someone can land on directly (a stale bookmark, a
+    // fresh tab), where no navigation history exists to carry state.
     const from = `${location.pathname}${location.search}`;
-    return <Navigate to={RABBI_ROUTES.login} replace state={{ from }} />;
+    const target = new URL(RABBI_ROUTES.login, window.location.origin);
+    target.searchParams.set('from', from);
+    return <Navigate to={`${target.pathname}${target.search}`} replace />;
   }
 
   return <Outlet />;

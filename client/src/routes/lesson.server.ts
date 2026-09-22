@@ -8,6 +8,7 @@ import { AREA_PREVIEW_LIMIT } from '../../../server/src/service/lesson/consts';
 import { LessonNotFoundError, LessonOccurrenceNotFoundError } from '../../../server/src/service/lesson/errors';
 import * as lessonService from '../../../server/src/service/lesson/lesson';
 import { lessonOccurrenceParamsSchema } from '../../../server/src/service/lesson/models';
+import * as placeService from '../../../server/src/service/place/place';
 import { AREA_NAMES_HE, toAreaSlug } from '../../../server/src/service/shared/consts';
 import { UNCACHEABLE_ERROR_HEADERS } from './consts';
 
@@ -35,6 +36,29 @@ export const loadLessonOccurrence = async (rawLessonId: string, rawDate: string)
     }
     console.error('Failed to load lesson occurrence', { lessonId: rawLessonId, date: rawDate, error });
     throw new Response(null, { status: 500, headers: UNCACHEABLE_ERROR_HEADERS });
+  }
+};
+
+// The wire `LessonVenue`'s place arm carries no photo (see `AddressPlaceRow`,
+// server/src/service/shared/address.ts): a venue is resolved for every
+// occurrence a search returns, and adding an image there would grow every
+// list response for a field only this page's own event JSON-LD needs.
+// Resolved here instead, once, only for the one occurrence this page shows.
+// Fails open: a photo lookup failing is never a reason to fail the whole
+// lesson page, so this returns `undefined` on any error rather than
+// rejecting, the same as `loadAreaLessonsPreview` below.
+export const loadVenuePhoto = async (occurrence: LessonOccurrence): Promise<string | undefined> => {
+  if (occurrence.venue.kind !== 'place') return undefined;
+  try {
+    const place = await placeService.getById(occurrence.venue.placeId);
+    return place.photoUrl;
+  } catch (error) {
+    console.error('Failed to load venue photo', {
+      lessonId: occurrence.lessonId,
+      placeId: occurrence.venue.placeId,
+      error,
+    });
+    return undefined;
   }
 };
 
