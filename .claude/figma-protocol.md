@@ -32,8 +32,10 @@ it either; it is what provides the skills the section below requires.
 - **Route A: the `Skill` tool. The names are namespaced: `figma:figma-use` and
   `figma:figma-create-new-file`.** A bare `figma-use` is not in the listing. This is
   the route to take.
-- Route B: if `Skill` is absent or disabled, load them through `read_skill_uri` from
-  the Figma server. `skill://index.json` returns the full skill index.
+- Route B: if `Skill` is absent or disabled, load them through `get_figma_skill` from
+  the Figma server. `skill://index.json` returns the full skill index. The tool was
+  called `read_skill_uri` until the server renamed it; a definition still naming the
+  old one leaves the agent with no reachable route and it will correctly stop.
 - **Always pass `skillNames` on the `use_figma` call**, whichever route you took.
   Unprefixed after Route A (`"figma-use,figma-create-new-file"`), prefixed with
   `resource:` after Route B.
@@ -50,6 +52,9 @@ it either; it is what provides the skills the section below requires.
 - **planKey:** `team::1600490864286182601`
 - **projectId:** `639157253`
   ([open the project](https://www.figma.com/files/team/1600490864286182601/project/639157253))
+- **The existing design file:** `z4fVzRjRFwYpLae22BmNKy`. Every Figma tool needs a
+  `fileKey` and nothing lists a project's files, so without this an agent cannot reach
+  the work at all and has to ask for a link before it can start.
 
 Pass both, so the file lands in the ToraBarabim project rather than the plan's loose
 drafts folder. `whoami` may list other plans on the same grant; they belong to other
