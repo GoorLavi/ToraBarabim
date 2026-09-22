@@ -7,7 +7,7 @@ import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { navigationClickProps } from '~/analytics/helpers';
 import { trackEvent } from '~/analytics/mixpanel';
 import { todayInIsrael } from '~/HomePage/helpers';
-import { AUDIENCE_LABELS } from '~/consts';
+import { AUDIENCE_LABELS, SUBSTITUTE_PREFIX_BY_HONORIFIC } from '~/consts';
 import { rabbiDisplayName, rabbiPath } from '~/helpers';
 import * as pageConsts from '~/LessonPage/consts';
 import { teachingRabbiOf } from '~/LessonPage/helpers';
@@ -118,11 +118,11 @@ export const LessonTicket = styled(({ className, occurrence }: LessonTicketProps
         </div>
 
         <div className={classNames('body', { noPoster: isNoPoster })}>
-          <div className="place">
+          <div className="address">
             <p className="venue" dir="auto">
               {occurrence.place.name}
             </p>
-            <p className="address" dir="auto">
+            <p className="street" dir="auto">
               {addressLine(occurrence.place.street, occurrence.place.floor)}
             </p>
             <p className="city" dir="auto">
@@ -180,7 +180,7 @@ export const LessonTicket = styled(({ className, occurrence }: LessonTicketProps
 
               {isSubstitute && (
                 <span className="substituteTag">
-                  <span className="prefix">{pageConsts.SUBSTITUTE_PREFIX_LABEL}</span>
+                  <span className="prefix">{SUBSTITUTE_PREFIX_BY_HONORIFIC[occurrence.rabbi.honorific]}</span>
                   <Link
                     className="originalRabbiLink"
                     to={rabbiPath(occurrence.rabbi)}

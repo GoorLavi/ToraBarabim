@@ -11,7 +11,7 @@ export const initialFormState = (): LessonFormState => ({
   startTime: '',
   durationMinutes: consts.DEFAULT_DURATION_MINUTES,
   city: undefined,
-  placeName: '',
+  addressName: '',
   street: '',
   floor: '',
   audience: undefined,
@@ -25,7 +25,7 @@ export const lessonToFormState = (lesson: RabbiLessonResponse): LessonFormState 
   startTime: lesson.startTime,
   durationMinutes: String(lesson.durationMinutes),
   city: { id: String(lesson.place.cityCode), name: lesson.place.cityName },
-  placeName: lesson.place.name,
+  addressName: lesson.place.name,
   street: lesson.place.street,
   floor: lesson.place.floor ?? '',
   audience: lesson.audience,
@@ -40,7 +40,7 @@ export const validateLessonForm = (form: LessonFormState): LessonFormErrors => {
   const errors: LessonFormErrors = {};
 
   if (!form.city) errors.city = consts.REQUIRED_CITY_ERROR;
-  if (!form.placeName.trim()) errors.placeName = consts.REQUIRED_PLACE_NAME_ERROR;
+  if (!form.addressName.trim()) errors.addressName = consts.REQUIRED_ADDRESS_NAME_ERROR;
   if (!form.street.trim()) errors.street = consts.REQUIRED_STREET_ERROR;
   if (!form.audience) errors.audience = consts.REQUIRED_AUDIENCE_ERROR;
   if (!form.startTime) errors.startTime = consts.REQUIRED_START_TIME_ERROR;
@@ -77,7 +77,7 @@ export const buildLessonPayload = (form: LessonFormState): RabbiCreateLessonRequ
   return {
     title: form.title.trim() || undefined,
     place: {
-      name: form.placeName.trim(),
+      name: form.addressName.trim(),
       street: form.street.trim(),
       floor: form.floor.trim() || undefined,
       cityCode: Number(form.city.id),

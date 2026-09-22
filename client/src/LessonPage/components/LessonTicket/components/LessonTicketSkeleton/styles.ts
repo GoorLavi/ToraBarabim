@@ -78,23 +78,23 @@ export const LessonTicketSkeleton = css(
          the start: a staircase of shrinking widths reads as decoration,
          where a full line reads as a paragraph waiting to appear (design
          review, "the body skeleton's three bars step in from the start"). */
-      > .place > .venue {
+      > .address > .venue {
         inline-size: 100%;
         block-size: 18px;
         background: ${theme.colors.surfaceOnPrimary};
       }
 
-      > .place > .address {
+      > .address > .street {
         inline-size: 100%;
         block-size: 15px;
       }
 
-      > .place > .city {
+      > .address > .city {
         inline-size: 220px;
         block-size: 15px;
       }
 
-      > .place > .tag {
+      > .address > .tag {
         inline-size: 72px;
         block-size: 18px;
       }

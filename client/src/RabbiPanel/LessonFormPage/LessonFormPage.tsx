@@ -84,7 +84,7 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
   const saveErrorCode = saveLesson.error instanceof RabbiApiError ? saveLesson.error.code : undefined;
   const generalSaveError = saveLesson.isError && saveErrorCode !== 'unknown_city' ? rabbiErrorMessage(saveLesson.error) : undefined;
   const cityError = fieldErrors.city ?? (saveErrorCode === 'unknown_city' ? consts.UNKNOWN_CITY_ERROR : undefined);
-  const placeNameError = fieldErrors.placeName;
+  const addressNameError = fieldErrors.addressName;
 
   const failingSections = consts.SECTION_DEFS.filter((section) => section.fields.some((field) => fieldErrors[field]));
 
@@ -187,11 +187,11 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
               <span className="label">{consts.PLACE_NAME_LABEL}</span>
               <input
                 type="text"
-                dir={directionForValue(form.placeName)}
-                value={form.placeName}
-                onChange={(event) => setForm((prev) => ({ ...prev, placeName: event.target.value }))}
+                dir={directionForValue(form.addressName)}
+                value={form.addressName}
+                onChange={(event) => setForm((prev) => ({ ...prev, addressName: event.target.value }))}
               />
-              {placeNameError && <span className="error">{placeNameError}</span>}
+              {addressNameError && <span className="error">{addressNameError}</span>}
             </label>
 
             <label className="field">

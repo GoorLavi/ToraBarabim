@@ -6,7 +6,7 @@ export const TODAY_LABEL = 'היום';
 export const TOMORROW_LABEL = 'מחר';
 
 export const CANCEL_OCCURRENCE_LABEL = 'ביטול המועד';
-export const MOVE_OCCURRENCE_LABEL = 'שינוי שעה או מקום';
+export const MOVE_OCCURRENCE_LABEL = 'שינוי שעה או כתובת';
 export const RESTORE_OCCURRENCE_LABEL = 'החזרת המועד';
 export const CANCELLED_TAG_LABEL = 'המועד בוטל';
 export const movedFromLabel = (time: string): string => `הוזז מ-${time}`;
@@ -14,7 +14,7 @@ export const movedFromLabel = (time: string): string => `הוזז מ-${time}`;
 // combination), never one tag per changed field, and it never names the
 // old venue: a venue name is not a fixed width like a time is, and
 // naming it wraps the tag to two or three lines (design doc, section 3).
-export const PLACE_CHANGED_TAG_LABEL = 'המקום שונה';
+export const PLACE_CHANGED_TAG_LABEL = 'הכתובת שונתה';
 
 export const LOADING_MESSAGE = 'טוען...';
 
@@ -24,7 +24,7 @@ export const EMPTY_FIRST_HINT =
 export const EMPTY_FIRST_CTA = 'הוספת השיעור הראשון';
 
 export const EMPTY_WINDOW_HEADLINE = 'אין מועדים בשבועיים הקרובים';
-export const EMPTY_WINDOW_HINT = 'השיעורים שלך נשארו במקומם, הם פשוט לא מתקיימים בשבועיים האלה.';
+export const EMPTY_WINDOW_HINT = 'השיעורים שלך לא השתנו, הם פשוט לא מתקיימים בשבועיים האלה.';
 export const EMPTY_WINDOW_CTA = 'לשיעורים שלי';
 
 export const ERROR_HEADLINE = 'לא הצלחנו לטעון את המועדים';
@@ -39,7 +39,7 @@ export const CANCEL_CONFIRM_BACK_LABEL = 'חזרה';
 
 export const MOVE_SHEET_HEADING = 'שינוי המועד הזה';
 export const MOVE_START_TIME_LABEL = 'שעת התחלה חדשה';
-export const MOVE_PLACE_TOGGLE = 'השיעור יתקיים במקום אחר';
+export const MOVE_PLACE_TOGGLE = 'השיעור יתקיים בכתובת אחרת';
 export const MOVE_SCOPE_NOTE = 'השינוי חל על התאריך הזה בלבד.';
 export const MOVE_SAVE_LABEL = 'שמירת השינוי';
 export const MOVE_SAVING_LABEL = 'שומר...';
@@ -50,13 +50,13 @@ export const MOVE_BACK_LABEL = 'חזרה';
 
 export const MOVE_CITY_LABEL = 'עיר';
 export const MOVE_CITY_PLACEHOLDER = 'בחירת עיר';
-export const MOVE_PLACE_NAME_LABEL = 'שם המקום';
+export const MOVE_PLACE_NAME_LABEL = 'שם בית הכנסת או המוסד';
 export const MOVE_STREET_LABEL = 'רחוב ומספר';
 
 export const REQUIRED_START_TIME_ERROR = 'יש למלא שעת התחלה';
 export const REQUIRED_CITY_ERROR = 'יש לבחור עיר';
-export const REQUIRED_PLACE_NAME_ERROR = 'יש למלא שם מקום';
-export const REQUIRED_STREET_ERROR = 'יש למלא כתובת';
+export const REQUIRED_PLACE_NAME_ERROR = 'יש למלא שם בית כנסת או מוסד';
+export const REQUIRED_STREET_ERROR = 'יש למלא רחוב ומספר';
 
 // Duplicated from `LessonsListPage/consts.ts` rather than imported: the two
 // screens are siblings, each owning its own copy (client/CLAUDE.md), and

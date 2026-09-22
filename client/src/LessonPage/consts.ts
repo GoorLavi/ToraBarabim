@@ -28,11 +28,6 @@ export const TEACHING_RABBI_ROLE_LABEL: Record<RabbiHonorific, string> = {
   rabbanit: 'תעביר את השיעור',
 };
 
-// The muted prefix in the substitute line ("במקום הרב X"). The rest of the
-// line is now its own link (LessonTicket.tsx), so the two are separate text
-// nodes rather than one composed string.
-export const SUBSTITUTE_PREFIX_LABEL = 'במקום';
-
 export const otherLessonsInCityLabel = (city: string): string => `לשיעורים אחרים ב${city}`;
 export const NO_REASON_GIVEN_LABEL = 'לא נמסרה סיבה';
 export const CANCELLED_HEADING_LABEL = 'השיעור מבוטל בתאריך הזה';

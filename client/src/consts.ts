@@ -16,6 +16,15 @@ export const RABBI_HONORIFIC_LABELS: Record<RabbiHonorific, string> = {
   rabbanit: 'הרבנית',
 };
 
+// The possessive prefix before the rabbi being substituted for, honorific-aware
+// so it never reads as "at the place called <name>": `הרב` and `הרבנית` both
+// start with the definite article, and the plain `במקום` that used to precede
+// them was ambiguous between "instead of" and "at the venue of".
+export const SUBSTITUTE_PREFIX_BY_HONORIFIC: Record<RabbiHonorific, string> = {
+  rav: 'במקומו של',
+  rabbanit: 'במקומה של',
+};
+
 export const lessonCountLabel = (count: number): string => (count === 1 ? 'שיעור אחד' : `${count} שיעורים`);
 export const cityCountLabel = (count: number): string => (count === 1 ? 'עיר אחת' : `${count} ערים`);
 

@@ -22,12 +22,12 @@ export interface LessonFormState {
   startTime: string;
   durationMinutes: string;
   city: SelectedCity | undefined;
-  placeName: string;
+  addressName: string;
   street: string;
   floor: string;
   audience: LessonAudience | undefined;
 }
 
-export type LessonFormField = 'rabbi' | 'recurrence' | 'startTime' | 'durationMinutes' | 'city' | 'placeName' | 'street' | 'audience';
+export type LessonFormField = 'rabbi' | 'recurrence' | 'startTime' | 'durationMinutes' | 'city' | 'addressName' | 'street' | 'audience';
 
 export type LessonFormErrors = Partial<Record<LessonFormField, string>>;

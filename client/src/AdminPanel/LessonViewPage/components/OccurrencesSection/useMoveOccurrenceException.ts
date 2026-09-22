@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { UseMutationResult } from '@tanstack/react-query';
-import type { LessonExceptionResponse, LessonPlace } from '@torabarabim/common';
+import type { LessonAddress, LessonExceptionResponse } from '@torabarabim/common';
 
 import { AdminApiError } from '~/AdminPanel/api';
 import { ADMIN_QUERY_KEYS } from '~/AdminPanel/consts';
@@ -12,7 +12,7 @@ export interface MoveOccurrenceExceptionInput {
   date: string;
   existingExceptionId: number | undefined;
   startTime: string;
-  place: LessonPlace | undefined;
+  place: LessonAddress | undefined;
 }
 
 export const useMoveOccurrenceException = (): UseMutationResult<LessonExceptionResponse, AdminApiError, MoveOccurrenceExceptionInput> => {

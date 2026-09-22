@@ -44,7 +44,7 @@ export const WHERE_SECTION_HEADING = 'איפה מתקיים השיעור';
 export const CITY_LABEL = 'עיר';
 export const CITY_HELPER = 'בוחרים מהרשימה. העיר קובעת גם את האזור.';
 export const CITY_PLACEHOLDER = 'בחירת עיר';
-export const PLACE_NAME_LABEL = 'שם המקום';
+export const PLACE_NAME_LABEL = 'שם בית הכנסת או המוסד';
 export const STREET_LABEL = 'רחוב ומספר';
 export const STREET_HELPER = 'הכתובת המלאה תוצג בעמוד השיעור עצמו בלבד.';
 // Optional: a floor or arrival note, for a lesson held in a building where
@@ -61,8 +61,8 @@ export const SAVING_LABEL = 'שומרים...';
 
 export const REQUIRED_RABBI_ERROR = 'יש לבחור רב';
 export const REQUIRED_CITY_ERROR = 'יש לבחור עיר';
-export const REQUIRED_PLACE_NAME_ERROR = 'יש למלא שם מקום';
-export const REQUIRED_STREET_ERROR = 'יש למלא כתובת';
+export const REQUIRED_ADDRESS_NAME_ERROR = 'יש למלא שם בית כנסת או מוסד';
+export const REQUIRED_STREET_ERROR = 'יש למלא רחוב ומספר';
 export const REQUIRED_AUDIENCE_ERROR = 'יש לבחור קהל יעד';
 export const REQUIRED_START_TIME_ERROR = 'יש למלא שעת התחלה';
 export const REQUIRED_DURATION_ERROR = 'יש למלא משך שיעור תקין (בדקות)';
@@ -76,7 +76,7 @@ export const REQUIRED_DATE_ERROR = 'יש לבחור תאריך';
 export const SECTION_DEFS: { fields: LessonFormField[]; heading: string }[] = [
   { fields: ['rabbi'], heading: RABBI_SECTION_HEADING },
   { fields: ['recurrence', 'startTime', 'durationMinutes'], heading: WHEN_SECTION_HEADING },
-  { fields: ['city', 'placeName', 'street'], heading: WHERE_SECTION_HEADING },
+  { fields: ['city', 'addressName', 'street'], heading: WHERE_SECTION_HEADING },
   { fields: ['audience'], heading: AUDIENCE_SECTION_HEADING },
 ];
 

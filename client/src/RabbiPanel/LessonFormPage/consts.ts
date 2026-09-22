@@ -18,12 +18,12 @@ export const WHERE_SECTION_HEADING = 'איפה מתקיים השיעור';
 export const CITY_LABEL = 'עיר';
 export const CITY_HELPER = 'בחר עיר מהרשימה.';
 export const CITY_PLACEHOLDER = 'בחירת עיר';
-export const PLACE_NAME_LABEL = 'שם המקום';
+export const PLACE_NAME_LABEL = 'שם בית הכנסת או המוסד';
 export const STREET_LABEL = 'רחוב ומספר';
 export const STREET_HELPER = 'הכתובת המלאה מוצגת בעמוד השיעור בלבד.';
 // Optional: a floor or arrival note, matching the field on the admin
 // lesson form; not named in the design doc's string list for this screen
-// but the underlying `LessonPlace.floor` field is the same one, so this
+// but the underlying `LessonAddress.floor` field is the same one, so this
 // carries the identical helper text and stays optional.
 export const FLOOR_LABEL = 'קומה / הערת הגעה';
 
@@ -37,8 +37,8 @@ export const DELETE_LABEL = 'מחיקת השיעור';
 
 export const ERROR_SUMMARY_HEADING = 'יש להשלים כמה שדות לפני השמירה:';
 export const REQUIRED_CITY_ERROR = 'יש לבחור עיר';
-export const REQUIRED_PLACE_NAME_ERROR = 'יש למלא שם מקום';
-export const REQUIRED_STREET_ERROR = 'יש למלא כתובת';
+export const REQUIRED_ADDRESS_NAME_ERROR = 'יש למלא שם בית כנסת או מוסד';
+export const REQUIRED_STREET_ERROR = 'יש למלא רחוב ומספר';
 export const REQUIRED_AUDIENCE_ERROR = 'יש לבחור קהל יעד';
 export const REQUIRED_START_TIME_ERROR = 'יש למלא שעת התחלה';
 export const REQUIRED_DURATION_ERROR = 'יש למלא משך שיעור תקין (בדקות)';
@@ -58,6 +58,6 @@ export const WEEKDAY_LABELS_FULL = ['יום ראשון', 'יום שני', 'יו�
 // form's `SECTION_DEFS` minus the rabbi section this form has none of.
 export const SECTION_DEFS: { fields: LessonFormField[]; heading: string }[] = [
   { fields: ['recurrence', 'startTime', 'durationMinutes'], heading: WHEN_SECTION_HEADING },
-  { fields: ['city', 'placeName', 'street'], heading: WHERE_SECTION_HEADING },
+  { fields: ['city', 'addressName', 'street'], heading: WHERE_SECTION_HEADING },
   { fields: ['audience'], heading: AUDIENCE_SECTION_HEADING },
 ];

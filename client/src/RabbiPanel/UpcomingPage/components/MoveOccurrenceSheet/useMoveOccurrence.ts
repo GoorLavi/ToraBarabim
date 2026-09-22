@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { UseMutationResult } from '@tanstack/react-query';
-import type { LessonPlace, RabbiLessonExceptionResponse } from '@torabarabim/common';
+import type { LessonAddress, RabbiLessonExceptionResponse } from '@torabarabim/common';
 
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
@@ -12,7 +12,7 @@ export interface MoveOccurrenceInput {
   lessonId: string;
   date: string;
   startTime: string;
-  place: LessonPlace | undefined;
+  place: LessonAddress | undefined;
 }
 
 export const useMoveOccurrence = (): UseMutationResult<RabbiLessonExceptionResponse, RabbiApiError, MoveOccurrenceInput> => {

@@ -17,7 +17,7 @@ export const initialFormState = (preselectedRabbi: Rabbi | undefined): LessonFor
   startTime: '',
   durationMinutes: consts.DEFAULT_DURATION_MINUTES,
   city: undefined,
-  placeName: '',
+  addressName: '',
   street: '',
   floor: '',
   audience: undefined,
@@ -32,7 +32,7 @@ export const lessonToFormState = (lesson: Lesson, rabbi: Rabbi | undefined, city
   startTime: lesson.startTime,
   durationMinutes: String(lesson.durationMinutes),
   city,
-  placeName: lesson.place.name,
+  addressName: lesson.place.name,
   street: lesson.place.street,
   floor: lesson.place.floor ?? '',
   audience: lesson.audience,
@@ -46,7 +46,7 @@ export const validateLessonForm = (form: LessonFormState): LessonFormErrors => {
 
   if (!form.rabbi) errors.rabbi = consts.REQUIRED_RABBI_ERROR;
   if (!form.city) errors.city = consts.REQUIRED_CITY_ERROR;
-  if (!form.placeName.trim()) errors.placeName = consts.REQUIRED_PLACE_NAME_ERROR;
+  if (!form.addressName.trim()) errors.addressName = consts.REQUIRED_ADDRESS_NAME_ERROR;
   if (!form.street.trim()) errors.street = consts.REQUIRED_STREET_ERROR;
   if (!form.audience) errors.audience = consts.REQUIRED_AUDIENCE_ERROR;
   if (!form.startTime) errors.startTime = consts.REQUIRED_START_TIME_ERROR;
@@ -94,7 +94,7 @@ export const isLessonFormDirty = (current: LessonFormState, baseline: LessonForm
   if (current.startTime !== baseline.startTime) return true;
   if (current.durationMinutes !== baseline.durationMinutes) return true;
   if (current.city?.id !== baseline.city?.id) return true;
-  if (current.placeName.trim() !== baseline.placeName.trim()) return true;
+  if (current.addressName.trim() !== baseline.addressName.trim()) return true;
   if (current.street.trim() !== baseline.street.trim()) return true;
   if (current.floor.trim() !== baseline.floor.trim()) return true;
   if (current.audience !== baseline.audience) return true;
@@ -113,7 +113,7 @@ export const buildLessonPayload = (form: LessonFormState): CreateLessonRequest =
     title: form.title.trim() || undefined,
     rabbiId: form.rabbi.id,
     place: {
-      name: form.placeName.trim(),
+      name: form.addressName.trim(),
       street: form.street.trim(),
       floor: form.floor.trim() || undefined,
       cityCode: Number(form.city.id),

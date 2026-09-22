@@ -7,7 +7,7 @@ import { lessonClickProps } from '~/analytics/helpers';
 import { trackEvent } from '~/analytics/mixpanel';
 import { useActiveFilters } from '~/analytics/useActiveFilters';
 import { todayInIsrael } from '~/HomePage/helpers';
-import { AUDIENCE_LABELS } from '~/consts';
+import { AUDIENCE_LABELS, SUBSTITUTE_PREFIX_BY_HONORIFIC } from '~/consts';
 import { lessonPath, rabbiDisplayName } from '~/helpers';
 
 import * as consts from './consts';
@@ -76,7 +76,7 @@ export const LessonCard = styled(({ className, lesson, surface, clickContext }: 
 
         {lesson.substituteRabbi && (
           <p className="substituteNote" dir="auto">
-            {consts.SUBSTITUTE_LABEL} {rabbiDisplayName(lesson.rabbi)}
+            {consts.SUBSTITUTE_LABEL} {SUBSTITUTE_PREFIX_BY_HONORIFIC[lesson.rabbi.honorific]} {rabbiDisplayName(lesson.rabbi)}
           </p>
         )}
       </div>

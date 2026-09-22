@@ -41,7 +41,7 @@ export const OccurrenceRow = css(
       }
     }
 
-    > .place {
+    > .address {
       overflow-wrap: break-word;
       color: ${theme.colors.textSecondary};
       font-size: ${theme.typography.secondary.phone.fontSize};

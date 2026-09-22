@@ -1,7 +1,9 @@
 import type { LessonTopic } from '@torabarabim/common';
 
 export const CANCELLED_LABEL = 'מבוטל השבוע';
-export const SUBSTITUTE_LABEL = 'הפעם במקום';
+// The prefix before the substituted rabbi's name; the honorific-aware part
+// that follows comes from `SUBSTITUTE_PREFIX_BY_HONORIFIC` (~/consts.ts).
+export const SUBSTITUTE_LABEL = 'הפעם';
 
 // Non-breaking spaces on both sides of the dot, so the meta line's
 // description never wraps with the dot left dangling alone at a line's end

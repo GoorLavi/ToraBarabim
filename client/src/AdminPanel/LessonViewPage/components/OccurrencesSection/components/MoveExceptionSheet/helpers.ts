@@ -1,4 +1,4 @@
-import type { LessonPlace } from '@torabarabim/common';
+import type { LessonAddress } from '@torabarabim/common';
 
 import * as parentConsts from '~/AdminPanel/LessonViewPage/components/OccurrencesSection/consts';
 import type { OccurrenceRowData } from '~/AdminPanel/LessonViewPage/components/OccurrencesSection/models';
@@ -36,7 +36,7 @@ export const validateMoveForm = (form: MoveFormState): MoveFormErrors => {
 // Undefined means "no override": the occurrence falls back to the lesson's
 // own place. Assumes the form already passed validation, so `form.city` is
 // known present whenever the toggle is on.
-export const buildMovePlace = (form: MoveFormState): LessonPlace | undefined => {
+export const buildMovePlace = (form: MoveFormState): LessonAddress | undefined => {
   if (!form.placeOverrideEnabled || !form.city) return undefined;
   return { name: form.placeName.trim(), street: form.street.trim(), cityCode: Number(form.city.id) };
 };

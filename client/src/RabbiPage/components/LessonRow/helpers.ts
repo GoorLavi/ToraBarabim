@@ -13,7 +13,7 @@ export const rowTitle = (lesson: LessonOccurrence): string | undefined =>
   lesson.title ?? (lesson.topic ? LESSON_TOPIC_LABELS[lesson.topic] : undefined);
 
 // `audience · venue, city` (design spec, "Line 3 copy"). Venue and city are
-// both required on `Place`, so only the leading audience segment can ever
+// both required on `ResolvedAddress`, so only the leading audience segment can ever
 // be the sole content.
 export const rowVenueLine = (lesson: LessonOccurrence): string =>
   `${AUDIENCE_LABELS[lesson.audience]} · ${lesson.place.name}, ${lesson.place.city}`;
