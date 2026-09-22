@@ -75,3 +75,12 @@ export const placeholderPhoto = (width: number, height: number): string => {
     )
   );
 };
+
+// The server derives a rabbi's and a place's slug from its display name the
+// same way (`server/src/service/shared/slug.ts`), so both fixtures need it
+// and neither owns it. Close enough for the plain, unvocalised Hebrew names
+// these fixtures use: any run of characters that is not a letter or a digit
+// becomes one hyphen, trimmed at the edges. The client never imports the
+// real function, so this can still drift from what the server computes;
+// nothing checks that it has not.
+export const slugFromName = (name: string): string => name.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '');

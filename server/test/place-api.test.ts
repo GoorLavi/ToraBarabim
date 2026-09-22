@@ -209,6 +209,24 @@ describe('place API: write path', () => {
     assert.equal(res.json().error, 'account_deactivated');
   });
 
+  // The gap the two tests above miss: they cover login and a deactivated
+  // *account* killing an existing session, never an active account holding
+  // a session while its *place* is deactivated afterward. Asserting the
+  // success first is what proves this would have failed before the guard's
+  // own place check existed.
+  test('an active place account holding a session loses it once its place is deactivated', async () => {
+    const { placeId, email, password } = await createPlaceAccount();
+    const cookie = await loginAsPlace(email, password);
+
+    const before = await app.inject({ method: 'GET', url: '/v1/place/profile', headers: { cookie } });
+    assert.equal(before.statusCode, 200);
+
+    await db.update(places).set({ isActive: false }).where(eq(places.id, placeId));
+
+    const after = await app.inject({ method: 'GET', url: '/v1/place/profile', headers: { cookie } });
+    assert.equal(after.statusCode, 401);
+  });
+
   test('a create payload carrying a venue field is rejected by the schema', async () => {
     const rabbiId = await createRabbi();
     const { email, password } = await createPlaceAccount();

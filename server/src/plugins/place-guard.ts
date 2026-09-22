@@ -3,6 +3,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import * as authService from '../service/admin-auth/auth';
 import { PLACE_SESSION_COOKIE_NAME } from '../service/admin-auth/consts';
 import { SessionInvalidError } from '../service/admin-auth/errors';
+import * as placeService from '../service/place/place';
 
 const UNAUTHENTICATED_MESSAGE = 'יש להתחבר כדי לבצע פעולה זו';
 
@@ -25,6 +26,17 @@ export const requirePlaceAuth = async (request: FastifyRequest, reply: FastifyRe
   try {
     const user = await authService.resolveSession(unsignedToken.value);
     if (user.role !== 'place' || !user.placeId) {
+      reply.status(401).send({ error: 'unauthenticated', message: UNAUTHENTICATED_MESSAGE });
+      return;
+    }
+    // `resolveSession` only checks the account row (`admin_users.is_active`),
+    // shared by all three guards, so it cannot also check the place without
+    // costing every admin and rabbi request a join they do not need. Checked
+    // here instead, on this role alone: per 0034, deactivating a place is
+    // the whole delete mechanism, so an owner whose place was deactivated
+    // after they logged in must lose the session, not keep managing lessons
+    // for a place the directory and its own page already treat as gone.
+    if (!(await placeService.isActive(user.placeId))) {
       reply.status(401).send({ error: 'unauthenticated', message: UNAUTHENTICATED_MESSAGE });
       return;
     }

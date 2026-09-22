@@ -89,6 +89,14 @@ export const list = async (): Promise<PlaceListResult> => {
   return { items };
 };
 
+// A single-column lookup, deliberately not `getById`: the place guard
+// needs only the flag, not the joined record or the lesson count, and a
+// missing row is simply inactive rather than a `PlaceNotFoundError`.
+export const isActive = async (id: string): Promise<boolean> => {
+  const rows = await db.select({ isActive: places.isActive }).from(places).where(eq(places.id, id)).limit(1);
+  return rows[0]?.isActive ?? false;
+};
+
 // 404 on inactive, not 410: deactivation is reversible, so a deactivated
 // place answers exactly the same 404 as one that never existed.
 export const getById = async (id: string): Promise<PlaceRecord> => {
