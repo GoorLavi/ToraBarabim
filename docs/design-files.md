@@ -51,7 +51,7 @@ Every design belongs to one of four, split by who opens it and when.
 | Page | Holds |
 |---|---|
 | `01 לוגו וסמל` | The mark, the lockup, and the checks at header and icon sizes |
-| `02 תמונות שיתוף` | The share images, square and wide, in both grounds |
+| `02 תמונות שיתוף` | The share images, square and wide, each on a dark and a light background |
 | `03 טוקנים` | The token board. Behind the code; see Known gaps |
 
 ## Components are in the site file, not the components file
