@@ -18,3 +18,9 @@ export interface AdminUserFilters {
   page?: number;
   pageSize?: number;
 }
+
+// Server-side filters, sent as query params on GET /v1/admin/dedications.
+export interface AdminDedicationFilters {
+  page?: number;
+  pageSize?: number;
+}

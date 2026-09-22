@@ -5,6 +5,9 @@ import { AdminsListPage } from './AdminsListPage/AdminsListPage';
 import { AdminShell } from './components/AdminShell/AdminShell';
 import { RequireAdminSession } from './components/RequireAdminSession/RequireAdminSession';
 import { RequireSuperAdmin } from './components/RequireSuperAdmin/RequireSuperAdmin';
+import { DedicationFormPage } from './DedicationFormPage/DedicationFormPage';
+import { DedicationsListPage } from './DedicationsListPage/DedicationsListPage';
+import { DedicationViewPage } from './DedicationViewPage/DedicationViewPage';
 import { LessonFormPage } from './LessonFormPage/LessonFormPage';
 import { LessonsListPage } from './LessonsListPage/LessonsListPage';
 import { LessonViewPage } from '~/AdminPanel/LessonViewPage/LessonViewPage';
@@ -31,6 +34,10 @@ export const AdminPanel = () => (
         <Route path="rabbis/new" element={<RabbiFormPage />} />
         <Route path="rabbis/:id" element={<RabbiViewPage />} />
         <Route path="rabbis/:id/edit" element={<RabbiFormPage />} />
+        <Route path="dedications" element={<DedicationsListPage />} />
+        <Route path="dedications/new" element={<DedicationFormPage />} />
+        <Route path="dedications/:id" element={<DedicationViewPage />} />
+        <Route path="dedications/:id/edit" element={<DedicationFormPage />} />
         <Route element={<RequireSuperAdmin />}>
           <Route path="admins" element={<AdminsListPage />} />
           <Route path="admins/new" element={<AdminFormPage />} />
