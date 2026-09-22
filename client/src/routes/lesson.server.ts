@@ -50,8 +50,8 @@ const areaPreviewScopeFor = (occurrence: LessonOccurrence): AudienceScope =>
 export const resolveAreaPreviewMeta = (
   occurrence: LessonOccurrence,
 ): { areaName: string; areaSlug: string; limit: number } => ({
-  areaName: AREA_NAMES_HE[occurrence.place.area],
-  areaSlug: toAreaSlug(occurrence.place.area),
+  areaName: AREA_NAMES_HE[occurrence.venue.area],
+  areaSlug: toAreaSlug(occurrence.venue.area),
   limit: AREA_PREVIEW_LIMIT,
 });
 
@@ -61,12 +61,12 @@ export const resolveAreaPreviewMeta = (
 // instead of rejecting; the `try`/`catch` inside this `async` function is
 // what guarantees the returned promise itself never rejects. The area's name
 // and slug are resolved synchronously in the route loader from
-// `occurrence.place.area`, so this only ever carries the query result.
+// `occurrence.venue.area`, so this only ever carries the query result.
 export const loadAreaLessonsPreview = async (occurrence: LessonOccurrence): Promise<AreaPreviewLessons> => {
   try {
     const items = await lessonService.searchAreaPreview(
       {
-        area: occurrence.place.area,
+        area: occurrence.venue.area,
         excludeLessonId: occurrence.lessonId,
         scope: areaPreviewScopeFor(occurrence),
       },
@@ -77,7 +77,7 @@ export const loadAreaLessonsPreview = async (occurrence: LessonOccurrence): Prom
   } catch (error) {
     console.error('Failed to load area lessons preview', {
       lessonId: occurrence.lessonId,
-      area: occurrence.place.area,
+      area: occurrence.venue.area,
       error,
     });
     return { kind: 'unavailable' };

@@ -21,7 +21,7 @@ import { loadAreaLessonsPreview, loadLessonOccurrence, resolveAreaPreviewMeta } 
 interface LessonRouteData {
   occurrence: LessonOccurrence;
   // `areaName`, `areaSlug`, and `limit` are resolved synchronously from
-  // `occurrence.place.area` and the server's own constant, so the heading and
+  // `occurrence.venue.area` and the server's own constant, so the heading and
   // the skeleton can paint before any query resolves. Only `lessons` is a
   // promise, never awaited here: the ticket is a 404 or a 500 without
   // `occurrence`, but the area preview's lessons are a below-the-fold nicety

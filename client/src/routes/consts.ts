@@ -115,9 +115,9 @@ export const lessonPageDescription = (occurrence: LessonOccurrence, teachingRabb
   const subject = lessonSubjectLabel(occurrence);
   const teacherName = rabbiDisplayName(teachingRabbi);
   if (occurrence.status === 'cancelled') {
-    return `השיעור "${subject}" עם ${teacherName} בוטל בתאריך זה. אפשר לחפש שיעורים אחרים ב${occurrence.place.city} ב${SITE_NAME}.`;
+    return `השיעור "${subject}" עם ${teacherName} בוטל בתאריך זה. אפשר לחפש שיעורים אחרים ב${occurrence.venue.city} ב${SITE_NAME}.`;
   }
-  return `${subject} עם ${teacherName} ב${occurrence.place.city}, ${occurrence.place.name}. פרטים מלאים ב${SITE_NAME}.`;
+  return `${subject} עם ${teacherName} ב${occurrence.venue.city}, ${occurrence.venue.name}. פרטים מלאים ב${SITE_NAME}.`;
 };
 
 const JERUSALEM_OFFSET_FORMATTER = new Intl.DateTimeFormat('en-US', {
@@ -158,18 +158,18 @@ export const lessonEventJsonLd = (occurrence: LessonOccurrence, teachingRabbi: R
     occurrence.status === 'cancelled' ? 'https://schema.org/EventCancelled' : 'https://schema.org/EventScheduled',
   location: {
     '@type': 'Place',
-    name: occurrence.place.name,
+    name: occurrence.venue.name,
     address: {
       '@type': 'PostalAddress',
-      streetAddress: occurrence.place.street,
-      addressLocality: occurrence.place.city,
+      streetAddress: occurrence.venue.street,
+      addressLocality: occurrence.venue.city,
       addressCountry: 'IL',
     },
   },
   // The venue hosts the lesson, so it is the organizer; the site only lists it.
   organizer: {
     '@type': 'Organization',
-    name: occurrence.place.name,
+    name: occurrence.venue.name,
   },
   performer: {
     '@type': 'Person',
