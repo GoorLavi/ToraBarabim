@@ -9,6 +9,10 @@ export const BACK_TO_LIST_LABEL = '→ חזרה לרשימת המקומות';
 // `RabbiFormPage/consts.ts`'s own `backToRabbiLabel`.
 export const BACK_TO_PLACE_LABEL = '→ חזרה לעמוד המקום';
 export const NEW_PLACE_HEADING = 'מקום חדש';
+// Shown only while an existing place is still loading, before `pageHeading`
+// has a name to show: that helper falls back to `NEW_PLACE_HEADING`, which
+// would misname an edit as a new place during the loading skeleton.
+export const EDIT_PLACE_LOADING_HEADING = 'עריכת מקום';
 export const REQUIRED_FIELDS_NOTE = 'שם, עיר ורחוב הם שדות חובה. תמונה וקומה אפשר להוסיף גם אחר כך.';
 
 export const NAME_LABEL = 'שם בית הכנסת או המוסד';

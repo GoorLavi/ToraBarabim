@@ -74,9 +74,28 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
   if (id && existing.status === 'pending') {
     return (
       <div className={className}>
-        <p className="state" aria-live="polite">
-          {consts.LOADING_MESSAGE}
-        </p>
+        <Link className="breadcrumb" to={PLACE_ROUTES.lessons}>
+          {consts.BACK_TO_LIST_LABEL}
+        </Link>
+
+        <div className="form">
+          <h1 className="heading">{pageHeading(true)}</h1>
+
+          <div className="skeleton" aria-live="polite" aria-label={consts.LOADING_MESSAGE}>
+            <div className="skeletonSection">
+              <div className="skeletonLine short" />
+              <div className="skeletonLine tall" />
+            </div>
+            <div className="skeletonSection">
+              <div className="skeletonLine short" />
+              <div className="skeletonLine tall" />
+            </div>
+            <div className="skeletonSection">
+              <div className="skeletonLine short" />
+              <div className="skeletonLine tall" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

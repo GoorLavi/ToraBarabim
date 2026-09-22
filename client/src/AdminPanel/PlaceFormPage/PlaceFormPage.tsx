@@ -52,9 +52,35 @@ export const PlaceFormPage = styled(({ className }: PlaceFormPageProps) => {
   if (id && existingPlace.isPending) {
     return (
       <div className={className}>
-        <p className="state" aria-live="polite">
-          {consts.LOADING_MESSAGE}
-        </p>
+        <div className="content">
+          <Link className="breadcrumb" to={ADMIN_ROUTES.placeView(id)}>
+            {consts.BACK_TO_PLACE_LABEL}
+          </Link>
+
+          <div className="form">
+            <h1 className="heading">{consts.EDIT_PLACE_LOADING_HEADING}</h1>
+
+            <div className="skeleton" aria-live="polite" aria-label={consts.LOADING_MESSAGE}>
+              <div className="skeletonField">
+                <div className="skeletonLine" />
+                <div className="skeletonInput" />
+              </div>
+              <div className="skeletonField">
+                <div className="skeletonLine" />
+                <div className="skeletonInput" />
+              </div>
+              <div className="skeletonField">
+                <div className="skeletonLine" />
+                <div className="skeletonInput" />
+              </div>
+              <div className="skeletonField">
+                <div className="skeletonLine" />
+                <div className="skeletonInput" />
+              </div>
+              <div className="skeletonFrame" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

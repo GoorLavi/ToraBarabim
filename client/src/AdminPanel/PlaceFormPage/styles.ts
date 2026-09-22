@@ -88,6 +88,38 @@ export const PlaceFormPage = css(
         }
       }
 
+      > .skeleton {
+        display: flex;
+        flex-direction: column;
+        gap: ${theme.spacing.lg};
+
+        > .skeletonField {
+          display: flex;
+          flex-direction: column;
+          gap: ${theme.spacing.xs};
+
+          > .skeletonLine {
+            block-size: 20px;
+            max-inline-size: 160px;
+            border-radius: ${theme.radii.sm};
+            background: ${theme.colors.border};
+          }
+
+          > .skeletonInput {
+            block-size: 48px;
+            border-radius: ${theme.radii.md};
+            background: ${theme.colors.border};
+          }
+        }
+
+        > .skeletonFrame {
+          inline-size: 100%;
+          aspect-ratio: 16 / 9;
+          border-radius: ${theme.radii.md};
+          background: ${theme.colors.border};
+        }
+      }
+
       > .subtext {
         color: ${theme.colors.textSecondary};
         font-size: ${theme.typography.secondary.phone.fontSize};

@@ -29,7 +29,7 @@ export const REQUIRED_DURATION_ERROR = 'יש למלא משך שיעור תקין
 export const REQUIRED_WEEKDAY_ERROR = 'יש לבחור לפחות יום אחד בשבוע';
 export const REQUIRED_DATE_ERROR = 'יש לבחור תאריך';
 
-export const LOADING_MESSAGE = 'טוען...'; // out of scope: kept exactly as the rabbi panel's, per the build brief.
+export const LOADING_MESSAGE = 'טוען...';
 export const LOAD_ERROR_MESSAGE = 'לא הצלחנו לטעון את השיעור';
 export const RETRY_LABEL = 'ניסיון נוסף';
 

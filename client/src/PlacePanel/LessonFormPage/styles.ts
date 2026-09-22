@@ -9,7 +9,11 @@ export const LessonFormPage = css(
   display: flex;
   flex-direction: column;
   gap: ${theme.spacing.lg};
-  max-inline-size: 720px;
+  max-inline-size: 640px;
+  /* Centred inside the panel's own wider band, matching ProfilePage and
+     the admin place form (design gate finding F9's fix, carried to this
+     screen at round 4). */
+  margin-inline: auto;
 
   > .state {
     display: flex;
@@ -43,6 +47,17 @@ export const LessonFormPage = css(
     min-block-size: 48px;
     color: ${theme.colors.primary};
     font-weight: ${theme.typography.fontWeight.semiBold};
+    text-decoration: none;
+
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    &:focus-visible {
+      text-decoration: underline;
+    }
   }
 
   > .form {
@@ -53,8 +68,43 @@ export const LessonFormPage = css(
     > .heading {
       color: ${theme.colors.text};
       font-weight: ${theme.typography.pageHeading.fontWeight};
-      font-size: ${theme.typography.sectionHeading.phone.fontSize};
-      line-height: ${theme.typography.sectionHeading.phone.lineHeight};
+      font-size: ${theme.typography.pageHeading.phone.fontSize};
+      line-height: ${theme.typography.pageHeading.phone.lineHeight};
+
+      @media (min-width: ${theme.breakpoints.md}) {
+        font-size: ${theme.typography.pageHeading.desktop.fontSize};
+        line-height: ${theme.typography.pageHeading.desktop.lineHeight};
+      }
+    }
+
+    > .skeleton {
+      display: flex;
+      flex-direction: column;
+      gap: ${theme.spacing.lg};
+
+      > .skeletonSection {
+        display: flex;
+        flex-direction: column;
+        gap: ${theme.spacing.sm};
+        padding: ${theme.spacing.lg};
+        border: 1px solid ${theme.colors.border};
+        border-radius: ${theme.radii.lg};
+        background: ${theme.colors.surface};
+
+        > .skeletonLine {
+          block-size: 20px;
+          border-radius: ${theme.radii.sm};
+          background: ${theme.colors.border};
+
+          &.short {
+            max-inline-size: 160px;
+          }
+
+          &.tall {
+            block-size: 48px;
+          }
+        }
+      }
     }
 
     > .subtext {
@@ -84,9 +134,14 @@ export const LessonFormPage = css(
 
       > .sectionHeading {
         color: ${theme.colors.text};
-        font-weight: ${theme.typography.fontWeight.bold};
-        font-size: ${theme.typography.body.phone.fontSize};
-        line-height: ${theme.typography.body.phone.lineHeight};
+        font-weight: ${theme.typography.sectionHeading.fontWeight};
+        font-size: ${theme.typography.sectionHeading.phone.fontSize};
+        line-height: ${theme.typography.sectionHeading.phone.lineHeight};
+
+        @media (min-width: ${theme.breakpoints.md}) {
+          font-size: ${theme.typography.sectionHeading.desktop.fontSize};
+          line-height: ${theme.typography.sectionHeading.desktop.lineHeight};
+        }
       }
 
       > .field {
@@ -201,6 +256,17 @@ export const LessonFormPage = css(
         font-weight: ${theme.typography.fontWeight.semiBold};
         font-size: ${theme.typography.body.phone.fontSize};
         line-height: ${theme.typography.body.phone.lineHeight};
+        text-decoration: none;
+
+        @media (hover: hover) and (pointer: fine) {
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+
+        &:focus-visible {
+          text-decoration: underline;
+        }
       }
     }
   }
