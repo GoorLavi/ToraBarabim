@@ -4,6 +4,14 @@
 // constant.
 export const PLACE_LESSON_PAGE_SIZE = 100;
 
+// Hand-mirrored from server/src/api/place/profile/index.ts's `invalid_photo`
+// response: shown as-is rather than the generic 400 copy below, since it
+// already names the width, height and ratio the photo failed. The place's
+// own client-side check (`ProfilePage/helpers.ts`, `validatePlacePhotoFile`)
+// catches most of these before upload, but a server rejection still needs
+// its own explanation rather than the generic one.
+export const INVALID_PHOTO_MESSAGE = 'התמונה לא מתאימה. צריך תמונה לרוחב, לפחות 1200 על 675 פיקסלים, והרוחב גדול פי 1.5 עד 2 מהגובה.';
+
 // Mirrors RabbiPanel/consts.ts's own copy verbatim: the same generic,
 // account-neutral messages apply to a place account.
 export const GENERIC_ERROR_MESSAGE = 'אירעה שגיאה, יש לנסות שוב מאוחר יותר';

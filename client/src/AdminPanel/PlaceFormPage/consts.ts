@@ -4,12 +4,15 @@
 // own voice in the meantime, not treated as final.
 
 export const BACK_TO_LIST_LABEL = '→ חזרה לרשימת המקומות';
-export const backToPlaceLabel = (placeName: string): string => `→ חזרה לעמוד ${placeName}`;
+// Edit mode's breadcrumb: the place already exists, so "back" returns to
+// its own view page rather than the list. No parameter, matching
+// `RabbiFormPage/consts.ts`'s own `backToRabbiLabel`.
+export const BACK_TO_PLACE_LABEL = '→ חזרה לעמוד המקום';
 export const NEW_PLACE_HEADING = 'מקום חדש';
 export const REQUIRED_FIELDS_NOTE = 'שם, עיר ורחוב הם שדות חובה. תמונה וקומה אפשר להוסיף גם אחר כך.';
 
 export const NAME_LABEL = 'שם בית הכנסת או המוסד';
-export const NAME_HELPER = 'השם שמוצג לכל שיעור המתקיים במקום הזה.';
+export const NAME_HELPER = 'השם שמופיע בכל שיעור שמתקיים במקום הזה.';
 
 export const CITY_LABEL = 'עיר';
 export const CITY_HELPER = 'בוחרים מהרשימה. העיר קובעת גם את האזור.';
@@ -21,9 +24,9 @@ export const FLOOR_LABEL = 'קומה או הוראות הגעה';
 export const PHOTO_LABEL = 'תמונת המקום';
 
 export const STATUS_LABEL = 'סטטוס המקום';
-export const STATUS_HELPER = 'מקום מושבת נשמר במערכת אך אינו ניתן לבחירה בשיעור חדש. השיעורים שכבר משויכים אליו שומרים את כתובתו.';
+export const STATUS_HELPER = 'מקום לא פעיל נשאר במערכת, אבל אי אפשר לבחור בו בשיעור חדש. שיעורים שכבר משויכים אליו ממשיכים להציג את הכתובת שלו.';
 export const STATUS_ACTIVE_LABEL = 'פעיל';
-export const STATUS_INACTIVE_LABEL = 'מושבת';
+export const STATUS_INACTIVE_LABEL = 'לא פעיל';
 
 export const CANCEL_LABEL = 'ביטול';
 export const SAVE_LABEL = 'שמירת המקום';

@@ -65,7 +65,7 @@ export const validatePlacePhotoFile = async (file: File): Promise<string | undef
   const { width, height } = await readImageDimensions(file);
   const ratio = width / height;
   if (width < consts.MIN_WIDTH_PX || height < consts.MIN_HEIGHT_PX || ratio < consts.RATIO_MIN || ratio > consts.RATIO_MAX) {
-    return consts.PHOTO_TOO_SMALL_ERROR;
+    return consts.PHOTO_INVALID_ERROR;
   }
 
   return undefined;

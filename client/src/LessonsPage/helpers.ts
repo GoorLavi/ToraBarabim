@@ -1,4 +1,4 @@
-import type { Area, LessonOccurrence } from '@torabarabim/common';
+import type { AppliedLessonFilters, Area, LessonOccurrence } from '@torabarabim/common';
 
 import { LESSON_WINDOW_DAYS, LESSON_WINDOW_PAGE_SIZE } from '~/HomePage/consts';
 import { addDays, compactDayLabel, resolveTargetDate, todayInIsrael } from '~/HomePage/helpers';
@@ -88,29 +88,31 @@ export const dateWord = (targetDate: string): string => {
 // "Rule [D]").
 //
 // `rabbiId` and `placeId` name a specific record with no client-known
-// display name, so each reads it off `firstItem`, the already-fetched first
-// result (no second request); with no result yet (still loading, errored,
-// or genuinely empty) that segment is simply left out rather than guessed.
-// `area` is the one pass-through filter whose value is already a known code
-// synchronously (the URL param itself), so it resolves through
-// `LESSONS_PAGE_AREA_NAMES` instead and never depends on `firstItem`.
+// display name, so each reads it off the search response's own
+// `appliedFilters` (common/src/lesson-occurrence.ts): the server already
+// resolved the id to filter on it, so the name is there even when `items`
+// comes back empty, unlike reading it off a first result, which works only
+// when there is one. `area` is the one pass-through filter whose value is
+// already a known code synchronously (the URL param itself), so it resolves
+// through `LESSONS_PAGE_AREA_NAMES` instead and never depends on the
+// response at all.
 export const buildLessonsTitle = (
   city: SelectedCity | undefined,
   option: DateFilterOption,
   customDate: string | undefined,
   query: string,
   passThrough: PassThroughFilters,
-  firstItem: LessonOccurrence | undefined,
+  appliedFilters: AppliedLessonFilters,
 ): string => {
   const hasNamed = hasNamedPassThroughFilter(passThrough);
   if (!city && option === 'all' && !query && !hasNamed) return TITLE_UNFILTERED;
 
   let title = 'שיעורים';
-  if (passThrough.rabbiId && firstItem) title += ` של ${rabbiDisplayName(firstItem.rabbi)}`;
+  if (appliedFilters.rabbi) title += ` של ${rabbiDisplayName(appliedFilters.rabbi)}`;
   // `של`, never a prefixed `ב`: a place name is free text, so `בישיבת…`
   // reads as a grammar error and `במשפחת כהן` as "inside the Cohen family".
   // A free-standing `של` attaches to nothing and survives every name shape.
-  if (passThrough.placeId && firstItem && firstItem.venue.kind === 'place') title += ` של ${firstItem.venue.name}`;
+  if (appliedFilters.place) title += ` של ${appliedFilters.place.name}`;
   if (passThrough.area && isArea(passThrough.area)) title += ` באזור ${LESSONS_PAGE_AREA_NAMES[passThrough.area]}`;
   if (city) title += ` ב${city.name}`;
   if (option !== 'all') title += ` ${dateWord(resolveTargetDate(option, customDate))}`;
@@ -132,6 +134,33 @@ export const noLessonsNoFallbackBody = (cityName: string | undefined): string =>
 export const noFilteredLessonsHeadline = (cityName: string | undefined, query: string): string => {
   const queryPart = query ? ` לפי החיפוש ״${query}״` : '';
   return `לא נמצאו שיעורים${where(cityName)}${queryPart}`;
+};
+
+// The dedicated empty-state heading for a link in from a rabbi, area or
+// place page (a named pass-through filter) whose fetch came back with zero
+// results. The rabbi and area cases are word-for-word what RabbiPage's and
+// AreaPage's own empty headings say (RabbiPage/consts.ts, noLessonsHeading;
+// AreaPage/consts.ts, noLessonsHeading). `rabbi` and `place` come from the
+// search response's own `appliedFilters`, which the server sets whenever the
+// id it was sent resolved to a real record, whether or not any lesson
+// matched it, so a real rabbi or place with no lessons still gets named
+// here; only an id that named nothing real falls through to the unnamed
+// heading, the same as `area` does when its code fails to resolve. Still
+// appends the city and query suffixes: a named filter combined with a city
+// or a search term is still a real constraint the heading must not omit.
+export const passThroughEmptyHeadline = (
+  passThrough: PassThroughFilters,
+  appliedFilters: AppliedLessonFilters,
+  cityName: string | undefined,
+  query: string,
+): string => {
+  let headline = 'לא נמצאו שיעורים';
+  if (appliedFilters.rabbi) headline = `אין כרגע שיעורים של ${rabbiDisplayName(appliedFilters.rabbi)}`;
+  else if (appliedFilters.place) headline = `אין כרגע שיעורים של ${appliedFilters.place.name}`;
+  else if (passThrough.area && isArea(passThrough.area)) headline = `אין כרגע שיעורים באזור ${LESSONS_PAGE_AREA_NAMES[passThrough.area]}`;
+
+  const queryPart = query ? ` לפי החיפוש ״${query}״` : '';
+  return `${headline}${where(cityName)}${queryPart}`;
 };
 
 // Status-aware, never the raw message (client/CLAUDE.md, "Map an API error

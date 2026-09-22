@@ -46,7 +46,7 @@ export const CONTACT_US_LABEL = 'כתבו לנו';
 export const NO_LESSONS_META_LABEL = 'אין כרגע שיעורים';
 
 export const LOAD_MORE_ERROR_LABEL = 'לא הצלחנו לטעון עוד שיעורים, נסו שוב';
-export const loadMoreLabel = (placeName: string): string => `עוד שיעורים ב${placeName}`;
+export const LOAD_MORE_LABEL = 'עוד שיעורים במקום הזה';
 
 export const otherCityLessonsHeading = (cityName: string): string => `שיעורים אחרים ב${cityName}`;
 
@@ -54,6 +54,6 @@ export const otherCityLessonsHeading = (cityName: string): string => `שיעור
 // "widened", correcting to the "also empty" copy once resolved (mirrors
 // CityPage/consts.ts's widenedToAreaBody/areaAlsoEmptyBody).
 export const widenedToCityBody = (cityName: string): string =>
-  `הרחבנו לשיעורים אחרים ב${cityName}, כדי שלא תישארו בלי כלום. אם אתם מכירים שיעור במקום הזה, כתבו לנו ונוסיף אותו.`;
+  `הרחבנו לכל ${cityName}, כדי שלא תישארו בלי כלום. אם אתם מכירים שיעור במקום הזה, כתבו לנו ונוסיף אותו.`;
 export const cityAlsoEmptyBody = (cityName: string): string =>
   `גם ב${cityName} אין כרגע שיעורים נוספים. אם אתם מכירים שיעור, כתבו לנו ונוסיף אותו.`;

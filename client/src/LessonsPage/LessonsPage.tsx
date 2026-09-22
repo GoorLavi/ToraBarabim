@@ -28,6 +28,7 @@ import {
   noLessonsHeadline,
   noLessonsNoFallbackBody,
   noLessonsWidenedHint,
+  passThroughEmptyHeadline,
   resolveLessonsRange,
   selectDaySections,
 } from './helpers';
@@ -62,6 +63,7 @@ interface RenderContentParams {
   query: string;
   hasAnyFilter: boolean;
   hasNamedFilter: boolean;
+  namedFilterEmptyHeadline: string;
   onClearFilters: () => void;
   gridSurface: 'searchResults' | 'lessonsGrid';
 }
@@ -77,6 +79,7 @@ const renderContent = ({
   query,
   hasAnyFilter,
   hasNamedFilter,
+  namedFilterEmptyHeadline,
   onClearFilters,
   gridSurface,
 }: RenderContentParams): ReactNode => {
@@ -126,7 +129,7 @@ const renderContent = ({
           <StateCard
             variant="empty"
             headingLevel="h2"
-            heading={hasNamedFilter ? consts.PASS_THROUGH_EMPTY_HEADLINE_PLACEHOLDER : noFilteredLessonsHeadline(cityName, query)}
+            heading={hasNamedFilter ? namedFilterEmptyHeadline : noFilteredLessonsHeadline(cityName, query)}
             action={{ actionLabel: consts.CLEAR_FILTERS_LABEL, actionStyle: 'quiet', onAction: onClearFilters }}
           />
         </>
@@ -216,7 +219,8 @@ export const LessonsPage = styled(({ className }: LessonsPageProps) => {
   const listQuery = useLessonsList(filters, range.hasDateFilter);
   const hasAnyFilter = Boolean(city || query || hasPassThroughFilter(passThrough));
   const flatItems = listQuery.data?.pages.flatMap((page) => page.items) ?? [];
-  const title = buildLessonsTitle(city, option, customDate, query, passThrough, flatItems[0]);
+  const appliedFilters = listQuery.data?.pages[0]?.appliedFilters ?? {};
+  const title = buildLessonsTitle(city, option, customDate, query, passThrough, appliedFilters);
   const gridSurface: 'searchResults' | 'lessonsGrid' = hasAnyFilter ? 'searchResults' : 'lessonsGrid';
   useResultsShownTracking(
     { resultSetKey: consts.LESSONS_QUERY_KEYS.list(filters), dataUpdatedAt: listQuery.dataUpdatedAt, isPending: listQuery.isPending, isError: listQuery.isError },
@@ -256,6 +260,7 @@ export const LessonsPage = styled(({ className }: LessonsPageProps) => {
         query,
         hasAnyFilter,
         hasNamedFilter: hasNamedPassThroughFilter(passThrough),
+        namedFilterEmptyHeadline: passThroughEmptyHeadline(passThrough, appliedFilters, city?.name, query),
         onClearFilters: clearFilters,
         gridSurface,
       })}

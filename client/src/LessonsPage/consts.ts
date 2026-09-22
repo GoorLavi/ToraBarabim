@@ -74,12 +74,3 @@ export const CLEAR_FILTERS_LABEL = 'ניקוי הסינון';
 export const SITE_EMPTY_HEADLINE = 'אין כרגע שיעורים באתר';
 export const SITE_EMPTY_BODY = 'מגידי השיעור מוסיפים ומעדכנים שיעורים באתר באופן שוטף.';
 
-// PLACEHOLDER, pending the designer and the Hebrew editor: the empty-state
-// heading shown when the page is filtered by `rabbiId`, `area` or `placeId`
-// (a link in from a rabbi, area or place page) and the fetch comes back
-// with zero results. None of the three has a display name to read off the
-// first result the way the page's own title does, since there is no first
-// result, so `noFilteredLessonsHeadline`'s "no results for X" shape does
-// not apply either. Resolves once the approved Hebrew for this case lands;
-// swap this constant's value only, the render site is already wired.
-export const PASS_THROUGH_EMPTY_HEADLINE_PLACEHOLDER = 'לא נמצאו שיעורים לפי הסינון הזה [טקסט סופי בהמתנה לאישור]';

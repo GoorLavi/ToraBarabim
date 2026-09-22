@@ -72,8 +72,11 @@ export const RETRY_LABEL = 'ניסיון נוסף';
 export const DELETE_LABEL = 'מחיקת הרב';
 export const DELETE_CONFIRM_HEADING = 'למחוק את הרב?';
 export const DELETE_CONFIRM_IRREVERSIBLE_NOTE = 'הפעולה בלתי הפיכה.';
-export const deleteConfirmImpactLabel = (lessonCount: number, exceptionCount: number): string =>
-  `מחיקת הרב תמחק גם ${lessonCount} שיעורים ו-${exceptionCount} חריגים המשויכים אליו.`;
+export const deleteConfirmImpactLabel = (lessonCount: number, exceptionCount: number): string => {
+  const lessonsPart = lessonCount === 1 ? 'שיעור אחד' : `${lessonCount} שיעורים`;
+  const exceptionsPart = exceptionCount === 1 ? 'חריג אחד' : `${exceptionCount} חריגים`;
+  return `מחיקת הרב תמחק גם ${lessonsPart} ו-${exceptionsPart} המשויכים אליו.`;
+};
 export const DELETE_CONFIRM_CANCEL_LABEL = 'ביטול';
 export const DELETE_CONFIRM_CONFIRM_LABEL = 'כן, למחוק';
 export const DELETE_PREVIEW_LOADING_MESSAGE = 'בודקים מה יימחק...';

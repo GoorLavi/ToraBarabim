@@ -21,11 +21,12 @@ export const EMPTY_CTA = 'הוספת השיעור הראשון';
 export const ERROR_MESSAGE = 'לא הצלחנו לטעון את השיעורים שלך';
 export const RETRY_LABEL = 'ניסיון נוסף';
 
-// PLACEHOLDER: `RabbiPanel/LessonsListPage/consts.ts`'s `countLabel` reads
-// "...מופיעים באתר על שמך", which names a rabbi's own name; a place's
-// lessons sit at the place, not "under its name" the same way, so this is
-// not a verbatim reuse. Listed in the build report.
-export const countLabel = (n: number): string => `[יש להשלים: ${n} שיעורים באתר במקום הזה]`;
+// `RabbiPanel/LessonsListPage/consts.ts`'s `countLabel` reads "...מופיעים
+// באתר על שמך", which names a rabbi's own name; a place's lessons sit at
+// the place, not "under its name" the same way, so this is not a verbatim
+// reuse. Not called for zero lessons: `LessonsListPage.tsx` renders
+// `EMPTY_HEADLINE` instead, which already says there is nothing here.
+export const countLabel = (n: number): string => (n === 1 ? 'שיעור אחד מופיע באתר במקום שלך.' : `${n} שיעורים מופיעים באתר במקום שלך.`);
 
 // `Record`, not an array, so indexing by `Weekday` needs no bounds check:
 // every `Weekday` (0-6) has an entry by construction. Mirrors

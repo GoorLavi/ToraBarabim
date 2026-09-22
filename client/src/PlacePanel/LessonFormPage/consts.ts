@@ -35,23 +35,23 @@ export const RETRY_LABEL = 'ניסיון נוסף';
 
 export const DEFAULT_DURATION_MINUTES = '60';
 
-// PLACEHOLDER: no counterpart. `RabbiPanel/LessonFormPage/consts.ts`'s
-// `ownershipNote` names the fixed rabbi ("רשום על שמך... תחת <name>"); here
-// the place is fixed and the rabbi is chosen, the opposite shape, so it is
-// not a verbatim reuse. Listed in the build report.
+// No counterpart. `RabbiPanel/LessonFormPage/consts.ts`'s `ownershipNote`
+// names the fixed rabbi ("רשום על שמך... תחת <name>"); here the place is
+// fixed and the rabbi is chosen, the opposite shape, so it is not a
+// verbatim reuse. `של`, never a prefixed `ב`: a place name is free text, so
+// `ב<name>` can read as a grammar or a meaning error depending on the name.
 export const ownershipNote = (placeName: string): string =>
-  `[יש להשלים: השיעור יופיע באתר תחת "${placeName}". כל השדות חובה, חוץ משם השיעור, הנושא וההערות.]`;
+  `השיעור יופיע באתר במקום שלך, "${placeName}". כל השדות חובה, חוץ משם השיעור, הנושא וההערות.`;
 
-// PLACEHOLDER: this section, and the rabbi picker inside it, has no
-// counterpart in `RabbiPanel` (its lesson form has no rabbi picker at all).
-// Listed in the build report.
-export const WHO_SECTION_HEADING = '[יש להשלים: מי מעביר את השיעור]';
-export const REQUIRED_RABBI_ERROR = '[יש להשלים: יש לבחור רב או רבנית]';
+// This section, and the rabbi picker inside it, has no counterpart in
+// `RabbiPanel` (its lesson form has no rabbi picker at all).
+export const WHO_SECTION_HEADING = 'מי מעביר את השיעור';
+export const REQUIRED_RABBI_ERROR = 'יש לבחור רב או רבנית';
 
-// PLACEHOLDER: `topic` has no UI anywhere else in the codebase yet (not even
-// on the admin lesson form) to reuse from. Listed in the build report.
-export const TOPIC_SECTION_HEADING = '[יש להשלים: נושא השיעור]';
-export const TOPIC_UNSET_OPTION_LABEL = '[יש להשלים: לא צוין]';
+// `topic` has no UI anywhere else in the codebase yet (not even on the
+// admin lesson form) to reuse from.
+export const TOPIC_SECTION_HEADING = 'נושא השיעור';
+export const TOPIC_UNSET_OPTION_LABEL = 'בלי נושא';
 // `LESSON_TOPIC_LABELS` itself is a real, already-shipped reuse (from
 // `HomePage/components/LessonCard/consts.ts`, this builder's own prefix),
 // not a placeholder: it is the exact set of Hebrew topic names the public
@@ -60,10 +60,9 @@ export const TOPIC_OPTIONS: { value: LessonTopic; label: string }[] = (
   Object.entries(LESSON_TOPIC_LABELS) as [LessonTopic, string][]
 ).map(([value, label]) => ({ value, label }));
 
-// PLACEHOLDER: `notes` has no UI anywhere else in the codebase yet to reuse
-// from. Listed in the build report.
-export const NOTES_SECTION_HEADING = '[יש להשלים: הערות]';
-export const NOTES_HELPER = '[יש להשלים: לא חובה. הערה פנימית, לא מוצגת באתר.]';
+// `notes` has no UI anywhere else in the codebase yet to reuse from.
+export const NOTES_SECTION_HEADING = 'הערות';
+export const NOTES_HELPER = 'לא חובה. ההערה נשמרת במערכת ולא מוצגת באתר.';
 
 // Groups the form's fields by their visible section, mirroring the rabbi
 // form's `SECTION_DEFS` with `rabbi` in place of the address fields it has

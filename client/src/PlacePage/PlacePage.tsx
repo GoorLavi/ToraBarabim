@@ -126,7 +126,7 @@ export const PlacePage = styled(({ className }: PlacePageProps) => {
                 <QuietButton
                   className="loadMore"
                   {...{
-                    label: lessonsQuery.isFetchNextPageError ? consts.LOAD_MORE_ERROR_LABEL : consts.loadMoreLabel(place.name),
+                    label: lessonsQuery.isFetchNextPageError ? consts.LOAD_MORE_ERROR_LABEL : consts.LOAD_MORE_LABEL,
                     onClick: () => lessonsQuery.fetchNextPage(),
                     disabled: lessonsQuery.isFetchingNextPage,
                   }}

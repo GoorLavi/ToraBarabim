@@ -25,7 +25,7 @@ export const RabbiSelect = styled(({ className, rabbi, onSelectRabbi, errorMessa
     <div className={classNames(className, { open: isOpen, invalid: Boolean(errorMessage) })} onBlur={close}>
       <button type="button" className="control" aria-haspopup="listbox" aria-expanded={isOpen} onClick={() => setIsOpen((open) => !open)}>
         <span className="label" dir="auto">
-          {rabbi ? rabbiDisplayName(rabbi) : consts.RABBI_SEARCH_PLACEHOLDER}
+          {rabbi ? rabbiDisplayName(rabbi) : consts.RABBI_SELECT_PLACEHOLDER}
         </span>
       </button>
 

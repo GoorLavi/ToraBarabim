@@ -50,7 +50,8 @@ export const citiesPageTitle = (): string => `כל הערים | שיעורי ת�
 
 export const citiesPageDescription = (directory: CityDirectoryResponse): string => {
   const cityCount = directory.areas.reduce((total, group) => total + group.cities.length, 0);
-  return `כל הערים והאזורים שיש בהם שיעורי תורה, ${cityCount} ערים בפריסה ארצית, ב${SITE_NAME}.`;
+  const count = cityCount === 1 ? 'עיר אחת' : `${cityCount} ערים`;
+  return `כל הערים והאזורים שיש בהם שיעורי תורה, ${count} בפריסה ארצית, ב${SITE_NAME}.`;
 };
 
 // cities.tsx's own structured data: every city shown in the initial HTML,
@@ -73,8 +74,10 @@ export const citiesItemListJsonLd = (directory: CityDirectoryResponse): JsonLdOb
 // RabbisPage/consts.ts owns what a visitor reads on the page itself.
 export const rabbisPageTitle = (): string => `כל הרבנים | שיעורי תורה לפי רב | ${SITE_NAME}`;
 
-export const rabbisPageDescription = (directory: RabbiDirectoryResponse): string =>
-  `כל הרבנים שמלמדים שיעורי תורה, ${directory.total} רבנים, ב${SITE_NAME}.`;
+export const rabbisPageDescription = (directory: RabbiDirectoryResponse): string => {
+  const count = directory.total === 1 ? 'רב אחד' : `${directory.total} רבנים`;
+  return `כל הרבנים שמלמדים שיעורי תורה, ${count}, ב${SITE_NAME}.`;
+};
 
 // women.rabbaniyot.tsx's own document title and description, not in-page
 // copy: RabbisPage/consts.ts owns what a visitor reads on the page itself
@@ -226,8 +229,10 @@ export const LESSONS_PAGE_DESCRIPTION =
 // PlacesPage/consts.ts owns what a visitor reads on the page itself.
 export const placesPageTitle = (): string => `כל המקומות | שיעורי תורה לפי מקום | ${SITE_NAME}`;
 
-export const placesPageDescription = (directory: PlaceListResponse): string =>
-  `כל המקומות שיש בהם שיעורי תורה, ${directory.items.length} מקומות, ב${SITE_NAME}.`;
+export const placesPageDescription = (directory: PlaceListResponse): string => {
+  const count = directory.items.length === 1 ? 'מקום אחד' : `${directory.items.length} מקומות`;
+  return `כל המקומות שיש בהם שיעורי תורה, ${count}, ב${SITE_NAME}.`;
+};
 
 // places.tsx's own structured data, mirroring citiesItemListJsonLd: every
 // active place in the directory, each with its canonical URL (`placePath`).

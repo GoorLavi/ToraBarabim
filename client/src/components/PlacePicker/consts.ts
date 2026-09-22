@@ -1,12 +1,7 @@
-// Everything below marked "PLACEHOLDER" is this builder's own copy, written
-// to match the surrounding panel's voice, not text approved by the
-// designer's brief. Flagged in the slice's report for the editor's pass;
-// do not treat it as final.
-
 export const HELPER_LINE = 'בוחרים מקום מהרשימה. אם המקום לא ברשימה, ממלאים את הכתובת.';
 
-// PLACEHOLDER: mirrors RabbiPicker's own placeholder pair
-// (RABBI_SEARCH_PLACEHOLDER / RABBI_SEARCH_LABEL).
+// Mirrors RabbiPicker's own placeholder pair (RABBI_SEARCH_PLACEHOLDER /
+// RABBI_SEARCH_LABEL).
 export const PICKER_PLACEHOLDER = 'בחירת מקום מהרשימה';
 export const PICKER_SEARCH_LABEL = 'חיפוש מקום';
 

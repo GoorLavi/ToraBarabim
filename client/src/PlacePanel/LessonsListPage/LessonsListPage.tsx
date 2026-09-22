@@ -17,7 +17,7 @@ export const LessonsListPage = styled(({ className }: LessonsListPageProps) => {
   return (
     <div className={className}>
       <h1 className="heading">{consts.HEADING}</h1>
-      {state.status === 'success' && <p className="subtext">{consts.countLabel(state.lessons.length)}</p>}
+      {state.status === 'success' && state.lessons.length > 0 && <p className="subtext">{consts.countLabel(state.lessons.length)}</p>}
 
       <Link className="add" to={PLACE_ROUTES.lessonNew}>
         {consts.ADD_LESSON_LABEL}

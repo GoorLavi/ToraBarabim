@@ -18,12 +18,10 @@ export const INVALID_CREDENTIALS_ERROR = 'אימייל, שם משתמש או ס�
 // message (server/src/api/panel/auth/index.ts).
 export const DEACTIVATED_ERROR = 'החשבון אינו פעיל. אפשר לפנות למי שהקים אותו כדי להפעיל אותו מחדש.';
 
-// TODO: resolves once the editor supplies copy for a login failure that is
-// neither invalid credentials, a deactivated account, nor the rate limit
-// (a server error, or the request never reaching the server at all).
-// Placeholder only, not approved Hebrew: see the builder's report for this
-// slice.
-export const GENERIC_ERROR_PLACEHOLDER = '[טרם אושר ניסוח: שגיאה כללית בהתחברות]';
+// Covers a login failure that is neither invalid credentials, a deactivated
+// account, nor the rate limit: a server error, or the request never
+// reaching the server at all.
+export const GENERIC_LOGIN_ERROR = 'ההתחברות לא הצליחה. אפשר לנסות שוב בעוד רגע.';
 
 export const FORGOT_PASSWORD_NOTE =
   'שכחת סיסמה? החשבון נפתח עבורך על ידי מי שהקים אותו, ואיפוס הסיסמה נעשה דרכו.';

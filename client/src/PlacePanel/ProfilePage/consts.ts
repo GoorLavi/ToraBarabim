@@ -30,23 +30,12 @@ export const UNKNOWN_CITY_ERROR = 'העיר שנבחרה אינה קיימת י�
 // on this place's own profile instead of on a lesson pointing at it.
 export const NAME_LABEL = 'שם בית הכנסת או המוסד';
 
-// No counterpart anywhere in the codebase: needs the editor's pass.
-// PLACEHOLDER, listed in the build report.
-export const SUBTEXT = '[יש להשלים: כך המקום מופיע באתר, בכרטיס ובעמוד שלו.]';
-// PLACEHOLDER: the full-address helper under "street" here is about this
-// place's own public page, not "the lesson page" the rabbi form's identical
-// field points at (`RabbiPanel/LessonFormPage/consts.ts`'s `STREET_HELPER`),
-// so it is not a verbatim reuse. Listed in the build report.
-export const STREET_HELPER = '[יש להשלים: הכתובת המלאה מוצגת בעמוד המקום.]';
-
-// `PhotoPicker`'s own '16:9' help list (`components/PhotoPicker/consts.ts`,
-// `PHOTO_HELP_SIZE['16:9']`) already states the real requirement, in
-// already-approved copy, before the file dialog opens (build brief). This
-// screen only needs its own copy for the one thing that component cannot
-// say: the client-side dimension/ratio check below has no exported error
-// string to reuse, since `PhotoPicker` itself does no pixel measuring.
-// PLACEHOLDER, listed in the build report.
-export const PHOTO_TOO_SMALL_ERROR = '[יש להשלים: הודעת שגיאה לתמונה קטנה מדי או ביחס לא מתאים]';
+export const SUBTEXT = 'כך המקום מופיע באתר, בעמוד שלו ובכל שיעור שמתקיים בו.';
+// The full-address helper under "street" here is about this place's own
+// public page, not "the lesson page" the rabbi form's identical field points
+// at (`RabbiPanel/LessonFormPage/consts.ts`'s `STREET_HELPER`), so it is not
+// a verbatim reuse.
+export const STREET_HELPER = 'הכתובת המלאה מוצגת בעמוד המקום ובעמודי השיעורים שמתקיימים בו.';
 
 // Hand-mirrored from `server/src/service/place/consts.ts`'s
 // `PLACE_PHOTO_MIN_WIDTH` / `PLACE_PHOTO_MIN_HEIGHT` /
@@ -58,3 +47,13 @@ export const RATIO_MIN = 1.5;
 export const RATIO_MAX = 2.0;
 export const MIN_WIDTH_PX = 1200;
 export const MIN_HEIGHT_PX = 675;
+
+// `PhotoPicker`'s own '16:9' help list (`components/PhotoPicker/consts.ts`,
+// `PHOTO_HELP_SIZE['16:9']`) already states the real requirement, in
+// already-approved copy, before the file dialog opens (build brief). This
+// screen only needs its own copy for the one thing that component cannot
+// say: the client-side dimension/ratio check below has no exported error
+// string to reuse, since `PhotoPicker` itself does no pixel measuring.
+// Named for what it covers, not just the too-small case: the same check
+// (and the same message) also rejects a photo outside the 1.5-2.0 ratio.
+export const PHOTO_INVALID_ERROR = `התמונה לא מתאימה. צריך תמונה לרוחב, לפחות ${MIN_WIDTH_PX} על ${MIN_HEIGHT_PX} פיקסלים, והרוחב גדול פי ${RATIO_MIN} עד ${RATIO_MAX} מהגובה. אפשר לבחור תמונה אחרת.`;

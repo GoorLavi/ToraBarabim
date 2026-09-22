@@ -6,11 +6,13 @@ export const SEARCH_PARAM = 'q';
 
 export const HEADING = 'מקומות';
 export const ADD_PLACE_LABEL = 'הוספת מקום';
-export const SORT_LABEL = 'מיון: עודכן לאחרונה';
+export const SORT_LABEL = 'מיון: לפי עדכון אחרון';
 export const SEARCH_PLACEHOLDER = 'חיפוש מקום לפי שם';
 export const SEARCH_LABEL = 'חיפוש מקומות';
 
-export const totalCountLabel = (total: number): string => `${total} מקומות במערכת`;
+// Mirrors `PlacesPage/consts.ts`'s own `placeCountLabel`: a singular form,
+// not `1 מקומות`.
+export const totalCountLabel = (total: number): string => (total === 1 ? 'מקום אחד במערכת' : `${total} מקומות במערכת`);
 
 export const INACTIVE_TAG = 'לא פעיל';
 

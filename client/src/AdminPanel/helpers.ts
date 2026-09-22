@@ -44,6 +44,8 @@ export const adminErrorMessage = (error: unknown, overrides: Partial<Record<stri
   const byCode = error.code ? overrides[error.code] : undefined;
   if (byCode !== undefined) return byCode;
 
+  if (error.code === 'invalid_photo') return consts.INVALID_PHOTO_MESSAGE;
+
   const byStatus = overrides[error.status];
   if (byStatus !== undefined) return byStatus;
 

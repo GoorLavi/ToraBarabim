@@ -24,9 +24,13 @@ export const PHOTO_HELP_TYPE = 'JPG או PNG, עד 5MB';
 // changes: '3:4' is every rabbi's portrait, '16:9' is a place's own photo,
 // which has both a different floor and a validated ratio band rather than a
 // single exact ratio.
+// The '16:9' entry states the rejection up front, before the file dialog
+// opens: unlike '3:4', a place's photo is validated and rejected outright
+// rather than cropped to fit, so the person needs to know that before
+// picking a file, not after.
 export const PHOTO_HELP_SIZE: Record<PhotoPickerAspectRatio, string> = {
   '3:4': 'לפחות 900 על 1200 פיקסלים',
-  '16:9': `לפחות ${PLACE_PHOTO_MIN_WIDTH} על ${PLACE_PHOTO_MIN_HEIGHT} פיקסלים, ביחס רוחב-גובה בין ${PLACE_PHOTO_MIN_ASPECT_RATIO} ל-${PLACE_PHOTO_MAX_ASPECT_RATIO}`,
+  '16:9': `תמונה לרוחב, לפחות ${PLACE_PHOTO_MIN_WIDTH} על ${PLACE_PHOTO_MIN_HEIGHT} פיקסלים, והרוחב גדול פי ${PLACE_PHOTO_MIN_ASPECT_RATIO} עד ${PLACE_PHOTO_MAX_ASPECT_RATIO} מהגובה. תמונה שצולמה לאורך לא תתאים, ותמונה שלא עומדת בדרישות נדחית ולא נחתכת אוטומטית.`,
 };
 
 // The card is where the crop happens, not the reason for it, so it leads the

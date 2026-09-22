@@ -36,11 +36,11 @@ export const loader = async ({ params }: LoaderFunctionArgs): Promise<PlaceRoute
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   if (!data) return [];
-  const { place, occurrences } = data;
+  const { place } = data;
 
   const url = `${SITE_ORIGIN}${placePath(place)}`;
   const title = consts.pageTitle(place.name, place.city);
-  const description = consts.pageDescription(place, occurrences);
+  const description = consts.pageDescription(place);
 
   return [
     { title },

@@ -27,7 +27,8 @@ export const RABBI_NOT_LISTED_NOTE = 'הרב לא ברשימה? אפשר להו�
 // The brief asks for the rabbi's "active-lesson count", but the `Lesson`
 // type has no active/paused concept at all today (see the report for this
 // slice), so this counts every lesson of theirs in the system.
-export const rabbiLessonCountLabel = (count: number): string => (count === 0 ? 'אין לרב הזה שיעורים נוספים' : `${count} שיעורים במערכת`);
+export const rabbiLessonCountLabel = (count: number): string =>
+  count === 0 ? 'אין לרב הזה שיעורים נוספים' : count === 1 ? 'שיעור אחד במערכת' : `${count} שיעורים במערכת`;
 
 export const DETAILS_SECTION_HEADING = 'פרטי השיעור';
 export const TITLE_LABEL = 'שם השיעור';

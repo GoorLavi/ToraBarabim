@@ -109,7 +109,7 @@ export const PlaceFormPage = styled(({ className }: PlaceFormPageProps) => {
   return (
     <div className={className}>
       <Link className="breadcrumb" to={cancelHref}>
-        {id ? consts.backToPlaceLabel(form.name || consts.NEW_PLACE_HEADING) : consts.BACK_TO_LIST_LABEL}
+        {id ? consts.BACK_TO_PLACE_LABEL : consts.BACK_TO_LIST_LABEL}
       </Link>
 
       <form
