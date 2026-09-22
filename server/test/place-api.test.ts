@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { after, afterEach, before, describe, test } from 'node:test';
 
-import type { PlaceLessonResponse } from '@torabarabim/common';
+import type { PlaceLessonResponse, PlaceSessionUser, RabbiDirectoryResponse } from '@torabarabim/common';
 import { eq } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { nanoid } from 'nanoid';
@@ -63,6 +63,16 @@ describe('place API: write path', () => {
   const createRabbi = async (honorific: 'rav' | 'rabbanit' = 'rav'): Promise<string> => {
     const id = `test-rabbi-${uniqueSuffix()}`;
     await db.insert(rabbis).values({ id, name: `רב בדיקה ${uniqueSuffix()}`, honorific });
+    cleanupRabbiIds.add(id);
+    return id;
+  };
+
+  // Like `createRabbi`, but with a caller-chosen name: the two search tests
+  // below need names they can search for, and one of them needs many
+  // deterministically ordered rows.
+  const createNamedRabbi = async (name: string, honorific: 'rav' | 'rabbanit' = 'rav'): Promise<string> => {
+    const id = `test-rabbi-${uniqueSuffix()}`;
+    await db.insert(rabbis).values({ id, name, honorific });
     cleanupRabbiIds.add(id);
     return id;
   };
@@ -215,6 +225,91 @@ describe('place API: write path', () => {
     });
     assert.equal(res.statusCode, 400);
     assert.equal(res.json().error, 'invalid_request');
+  });
+
+  // The gap this closes: the logout button used to clear only the client's
+  // cache, never the session itself, so a request that worked before it
+  // still worked after. `POST /v1/place/logout` must delete the session,
+  // not just the cookie, so the same cookie is refused afterward.
+  test('logging out invalidates the session: a request that succeeded before it gets 401 after', async () => {
+    const { placeId, email, password } = await createPlaceAccount();
+    const cookie = await loginAsPlace(email, password);
+
+    const meBefore = await app.inject({ method: 'GET', url: '/v1/place/me', headers: { cookie } });
+    assert.equal(meBefore.statusCode, 200);
+    assert.equal((meBefore.json() as PlaceSessionUser).placeId, placeId);
+
+    const profileBefore = await app.inject({ method: 'GET', url: '/v1/place/profile', headers: { cookie } });
+    assert.equal(profileBefore.statusCode, 200);
+
+    const logoutRes = await app.inject({ method: 'POST', url: '/v1/place/logout', headers: { cookie } });
+    assert.equal(logoutRes.statusCode, 204);
+
+    const meAfter = await app.inject({ method: 'GET', url: '/v1/place/me', headers: { cookie } });
+    assert.equal(meAfter.statusCode, 401);
+
+    const profileAfter = await app.inject({ method: 'GET', url: '/v1/place/profile', headers: { cookie } });
+    assert.equal(profileAfter.statusCode, 401);
+  });
+
+  // `POST /v1/place/logout` with no cookie at all must still be a clean
+  // 204, the same as the rabbi pair: a device that is already logged out
+  // must never fail the button that is trying to log it out.
+  test('logging out with no session cookie is still a clean 204', async () => {
+    const res = await app.inject({ method: 'POST', url: '/v1/place/logout' });
+    assert.equal(res.statusCode, 204);
+  });
+
+  // The gap this closes: `GET /v1/rabbis` took no `q`, so the picker
+  // fetched the largest allowed page per scope and filtered in the
+  // browser, and a rabbi past the fiftieth row in a scope was unreachable.
+  test('a rabbi past the old fifty-row page is reachable through q', async () => {
+    // 51, not 50: if this block happens to sort before everything else
+    // seeded at the same tier, its own 50th row would still land exactly
+    // on a pageSize=50 page's last slot. A 51-row block guarantees its own
+    // last row sits at index >= 50 no matter where the block starts.
+    const BATCH_SIZE = 51;
+    const runSuffix = uniqueSuffix();
+    const names = Array.from({ length: BATCH_SIZE }, (_, index) => `רב-חיפוש-${runSuffix}-${String(index).padStart(3, '0')}`);
+    const ids = await Promise.all(names.map((name) => createNamedRabbi(name)));
+    const lastId = ids[BATCH_SIZE - 1];
+    const lastName = names[BATCH_SIZE - 1];
+    if (!lastId || !lastName) throw new Error('expected the batch to be non-empty');
+
+    // Every row in the block shares the same prominence ('local', the
+    // column default) and has no lesson, so within that tier they sort by
+    // Hebrew collation on the zero-padded name alone: the last row in this
+    // block can never land inside the first 50 rows of the whole list,
+    // whatever else is seeded around it.
+    const defaultPage = await app.inject({ method: 'GET', url: '/v1/rabbis?pageSize=50' });
+    assert.equal(defaultPage.statusCode, 200);
+    const defaultBody = defaultPage.json() as RabbiDirectoryResponse;
+    assert.ok(!defaultBody.items.some((item) => item.id === lastId), 'the last row of a 50-row block must not fit in a single pageSize=50 page');
+
+    const searchRes = await app.inject({ method: 'GET', url: `/v1/rabbis?q=${encodeURIComponent(lastName)}` });
+    assert.equal(searchRes.statusCode, 200);
+    const searchBody = searchRes.json() as RabbiDirectoryResponse;
+    assert.equal(searchBody.total, 1);
+    assert.ok(searchBody.items.some((item) => item.id === lastId), 'q must reach a rabbi past the fiftieth row');
+  });
+
+  // 0026: a rabbanit's audience is women-only, but a place still has to be
+  // able to find her to name her on a lesson. Search must not widen
+  // `scope=general` to include her, and must not hide her from
+  // `scope=women` either.
+  test('a rabbanit is reachable by search under scope=women, and stays excluded from scope=general even when her name matches', async () => {
+    const rabbanitName = `הרבנית-בדיקה-${uniqueSuffix()}`;
+    const rabbanitId = await createNamedRabbi(rabbanitName, 'rabbanit');
+
+    const generalRes = await app.inject({ method: 'GET', url: `/v1/rabbis?q=${encodeURIComponent(rabbanitName)}` });
+    assert.equal(generalRes.statusCode, 200);
+    assert.ok(!(generalRes.json() as RabbiDirectoryResponse).items.some((item) => item.id === rabbanitId));
+
+    const womenRes = await app.inject({ method: 'GET', url: `/v1/rabbis?scope=women&q=${encodeURIComponent(rabbanitName)}` });
+    assert.equal(womenRes.statusCode, 200);
+    const womenBody = womenRes.json() as RabbiDirectoryResponse;
+    assert.equal(womenBody.total, 1);
+    assert.ok(womenBody.items.some((item) => item.id === rabbanitId));
   });
 });
 

@@ -137,11 +137,13 @@ export const buildAdminTestApp = async (): Promise<FastifyInstance> => {
 };
 
 // A fourth app, for `place-api.test.ts` only: cookies, the shared panel
-// login door, and the place portal's own routes. Every fixture (the place,
-// its account) is built through the admin-place service directly, not
-// through the admin routes, so this app carries none of the admin route
-// group: what is under test here is the place guard and the place portal
-// write path, not the admin surface that provisions it.
+// login door, the place portal's own routes, and the public rabbi
+// directory (`GET /v1/rabbis`, the rabbi picker's server-side search).
+// Every fixture (the place, its account) is built through the admin-place
+// service directly, not through the admin routes, so this app carries none
+// of the admin route group: what is under test here is the place guard,
+// the place portal write path, and the directory search a place's rabbi
+// picker depends on, not the admin surface that provisions it.
 export const buildPlaceTestApp = async (): Promise<FastifyInstance> => {
   const config = loadConfig(process.env);
 
@@ -150,6 +152,7 @@ export const buildPlaceTestApp = async (): Promise<FastifyInstance> => {
   registerEmptyBodySupport(app);
   await registerPanelAuthRoutes(app);
   await registerPlacePortalRoutes(app);
+  await registerRabbiDirectoryRoutes(app);
   registerErrorHandler(app);
   return app;
 };

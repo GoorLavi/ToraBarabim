@@ -75,9 +75,19 @@ const loadRabbiIdsWithLessons = async (): Promise<Set<string>> => {
   return new Set(rows.map((row) => row.rabbiId));
 };
 
+// Matches `toSlug(name)` against `toSlug(query)` as a substring, the
+// project's one normalizer, rather than a second notion of "close enough"
+// like a raw SQL `ILIKE`. A query that normalizes to nothing (for example,
+// only punctuation) is treated as no filter rather than as a filter nothing
+// can pass.
+const matchesQuery = (name: string, query: string): boolean => {
+  const normalizedQuery = toSlug(query);
+  return normalizedQuery === '' || toSlug(name).includes(normalizedQuery);
+};
+
 export const list = async (query: RabbiListQuery): Promise<RabbiListResult> => {
   const [rows, rabbiIdsWithLessons] = await Promise.all([db.select().from(rabbis), loadRabbiIdsWithLessons()]);
-  const scoped = rows.filter((row) => isRabbiInDirectoryScope(query.scope, row.honorific));
+  const scoped = rows.filter((row) => isRabbiInDirectoryScope(query.scope, row.honorific) && (!query.q || matchesQuery(row.name, query.q)));
   const sorted = [...scoped].sort((a, b) =>
     compareRabbiOrder(
       { id: a.id, name: a.name, prominence: a.prominence, hasLessons: rabbiIdsWithLessons.has(a.id) },
