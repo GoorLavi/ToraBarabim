@@ -479,6 +479,97 @@ describe('public API', () => {
     });
   });
 
+  // `Place.lessonCount` and the directory's own ordering (server/src/service/
+  // place/place.ts): both are new business rules with nothing else in the
+  // suite guarding them.
+  describe('GET /v1/places', () => {
+    const cleanupLessonIds = new Set<string>();
+    const cleanupPlaceIds = new Set<string>();
+
+    afterEach(async () => {
+      for (const id of cleanupLessonIds) await db.delete(lessonExceptions).where(eq(lessonExceptions.lessonId, id));
+      for (const id of cleanupLessonIds) await db.delete(lessons).where(eq(lessons.id, id));
+      cleanupLessonIds.clear();
+      for (const id of cleanupPlaceIds) await db.delete(places).where(eq(places.id, id));
+      cleanupPlaceIds.clear();
+    });
+
+    const cityCodeByName = async (name: string): Promise<number> => {
+      const rows = await db.select({ code: cities.code }).from(cities).where(eq(cities.nameHe, name)).limit(1);
+      const row = rows[0];
+      if (!row) throw new Error(`expected the seeded city '${name}' to exist`);
+      return row.code;
+    };
+
+    const createPlace = async (cityCode: number, overrides: Partial<typeof places.$inferInsert> = {}): Promise<string> => {
+      const id = `test-place-${nanoid(8)}`;
+      await db.insert(places).values({ id, slug: id, name: `מקום בדיקה ${nanoid(8)}`, street: 'רחוב הבדיקה 1', cityCode, ...overrides });
+      cleanupPlaceIds.add(id);
+      return id;
+    };
+
+    // Every day of the week, so the occurrence is always in range no matter
+    // what day the suite runs on; mirrors `createDailyLesson` above. `rav`
+    // gets a men's lesson and `rabbanit` a women's one, matching what 0026
+    // actually allows each of them to teach.
+    const createLesson = async (rabbiId: string, placeId: string, cityCode: number): Promise<string> => {
+      const id = `test-lesson-${nanoid(8)}`;
+      await db.insert(lessons).values({
+        id,
+        rabbiId,
+        placeId,
+        cityCode,
+        audience: rabbiId === SEEDED_RABBANIT_ID ? 'women' : 'men',
+        recurrenceKind: 'weekly',
+        recurrenceWeekdays: [0, 1, 2, 3, 4, 5, 6],
+        startTime: '19:00',
+        durationMinutes: 30,
+      });
+      cleanupLessonIds.add(id);
+      return id;
+    };
+
+    // This is the rule that keeps the directory's number and the place
+    // page's own occurrence list (built with `scope: 'general'`) agreeing:
+    // if this ever counted every lesson at the venue, the directory would
+    // say 2 while the place's own page kept showing 1.
+    test("a rabbanit's lesson at a place does not inflate that place's lessonCount", async () => {
+      const cityCode = await cityCodeByName(SEEDED_CITY_NAME);
+      const placeId = await createPlace(cityCode);
+      await createLesson(SEEDED_RABBI_ID, placeId, cityCode);
+      await createLesson(SEEDED_RABBANIT_ID, placeId, cityCode);
+
+      const res = await app.inject({ method: 'GET', url: '/v1/places' });
+      assert.equal(res.statusCode, 200);
+      const place = (res.json() as PlaceListResponse).items.find((item) => item.id === placeId);
+      assert.ok(place, 'expected the seeded place to appear');
+      assert.equal(place.lessonCount, 1, "expected only the rav's lesson to count, not the rabbanit's");
+    });
+
+    // Ordering rule: has-lessons first, then city (Hebrew collation), then
+    // name, then id. `SEEDED_CITY_NAME` ('ירושלים') sorts before
+    // `SEEDED_RABBANIT_CITY_NAME` ('רעננה') in Hebrew collation, so a naive
+    // city-then-lesson ordering would put the lesson-less Jerusalem place
+    // first; the has-lessons tier must win regardless.
+    test('a place with a lesson sorts before one with none, even when the empty place sits in an earlier-sorting city', async () => {
+      const emptyPlaceCityCode = await cityCodeByName(SEEDED_CITY_NAME);
+      const lessonPlaceCityCode = await cityCodeByName(SEEDED_RABBANIT_CITY_NAME);
+
+      const emptyPlaceId = await createPlace(emptyPlaceCityCode, { name: 'א מקום ללא שיעורים' });
+      const lessonPlaceId = await createPlace(lessonPlaceCityCode, { name: 'ת מקום עם שיעור' });
+      await createLesson(SEEDED_RABBI_ID, lessonPlaceId, lessonPlaceCityCode);
+
+      const res = await app.inject({ method: 'GET', url: '/v1/places' });
+      assert.equal(res.statusCode, 200);
+      const items = (res.json() as PlaceListResponse).items;
+
+      const emptyIndex = items.findIndex((item) => item.id === emptyPlaceId);
+      const lessonIndex = items.findIndex((item) => item.id === lessonPlaceId);
+      assert.ok(emptyIndex !== -1 && lessonIndex !== -1, 'expected both seeded places to appear');
+      assert.ok(lessonIndex < emptyIndex, 'a place with a lesson must sort before one with none, regardless of city');
+    });
+  });
+
   describe('GET /v1/lessons/:lessonId/occurrences/:date', () => {
     test('resolves a real occurrence', async () => {
       // lesson-1 recurs Sunday through Thursday; the next Sunday is always
