@@ -261,6 +261,7 @@ describe('admin API: dedications', () => {
   test('an unauthenticated request is a 401 on every endpoint, the preview included', async () => {
     const responses = await Promise.all([
       app.inject({ method: 'GET', url: '/v1/admin/dedications' }),
+      app.inject({ method: 'GET', url: '/v1/admin/dedications/does-not-exist' }),
       app.inject({ method: 'POST', url: '/v1/admin/dedications', payload: validCreateBody('memorial') }),
       app.inject({ method: 'POST', url: '/v1/admin/dedications/preview', payload: { type: 'memorial' } }),
       app.inject({ method: 'PATCH', url: '/v1/admin/dedications/does-not-exist', payload: validCreateBody('memorial') }),
@@ -278,6 +279,50 @@ describe('admin API: dedications', () => {
       assert.ok(record.display.formulaLine.length > 0);
     });
   }
+
+  describe('GET /v1/admin/dedications/:id', () => {
+    // The view and edit screens are opened cold at their own URL (a deep
+    // link, a refresh, a bookmark), with no list response in hand, so this
+    // route has to work on its own.
+    test('a created record is readable by id, with its display intact', async () => {
+      const cookie = await loginAsNewAdmin();
+      const record = await createDedication(cookie, 'memorial', { honorific: 'zl', parentName: 'אברהם' });
+
+      const res = await app.inject({ method: 'GET', url: `/v1/admin/dedications/${record.id}`, headers: { cookie } });
+      assert.equal(res.statusCode, 200);
+      const fetched = res.json() as AdminDedication;
+      assert.equal(fetched.id, record.id);
+      assert.deepEqual(fetched.display, record.display);
+    });
+
+    test('an unknown id is a 404', async () => {
+      const cookie = await loginAsNewAdmin();
+      const res = await app.inject({ method: 'GET', url: '/v1/admin/dedications/does-not-exist', headers: { cookie } });
+      assert.equal(res.statusCode, 404);
+    });
+
+    // Takedown removes a dedication from the public page, never from the
+    // admin's own view of it: the same guarantee the list test above holds,
+    // now for a direct-by-id read.
+    test('a taken-down record is still readable by id', async () => {
+      const cookie = await loginAsNewAdmin();
+      const record = await createDedication(cookie, 'healing');
+      const reason = 'בקשת המשפחה';
+      const takedownRes = await app.inject({
+        method: 'POST',
+        url: `/v1/admin/dedications/${record.id}/takedown`,
+        headers: { cookie },
+        payload: { reason },
+      });
+      assert.equal(takedownRes.statusCode, 200);
+
+      const res = await app.inject({ method: 'GET', url: `/v1/admin/dedications/${record.id}`, headers: { cookie } });
+      assert.equal(res.statusCode, 200);
+      const fetched = res.json() as AdminDedication;
+      assert.equal(fetched.state, 'takenDown');
+      assert.equal(fetched.takenDownReason, reason);
+    });
+  });
 
   test('a honorific outside the closed list is a 400', async () => {
     const cookie = await loginAsNewAdmin();

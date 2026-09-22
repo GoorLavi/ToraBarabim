@@ -50,6 +50,17 @@ const writeValues = (input: CreateDedicationInput | UpdateDedicationInput) => ({
   endsOn: input.endsOn,
 });
 
+// A taken-down record is still readable here, exactly as it is through
+// `list`: takedown removes a dedication from the public page
+// (`listActive`, `service/dedication/dedication.ts`), never from the
+// admin's own view of it.
+export const getById = async (id: string): Promise<DedicationRecord> => {
+  const rows = await db.select().from(dedications).where(eq(dedications.id, id)).limit(1);
+  const row = rows[0];
+  if (!row) throw new DedicationNotFoundError(id);
+  return toRecord(row);
+};
+
 export const list = async (query: DedicationListQuery): Promise<DedicationListResult> => {
   const [rows, totalRows] = await Promise.all([
     db

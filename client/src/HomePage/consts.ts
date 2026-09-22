@@ -32,3 +32,12 @@ export const RAIL_CONTEXT_LINE = 'שיעורים בכל הארץ בשבועיי�
 // states elsewhere; the human chose the shipped code over the doc, and the
 // doc is being corrected separately.
 export const POSTER_ASPECT_RATIO = 3 / 4;
+
+// The end-of-row fade width below `md`, where there is no arrow to also
+// signal more content. Lifted here from LessonRail/consts.ts (its original
+// home) because the dedication band reads it too, and it does not step
+// down from `md` there the way the rail's does: the rail steps because its
+// arrows take over from `md` up, and the band has no arrows and will not
+// get them (design-system.md, dedication geometry). Both read this one
+// value rather than each keeping its own copy.
+export const EDGE_FADE_WIDTH_PHONE = '56px';

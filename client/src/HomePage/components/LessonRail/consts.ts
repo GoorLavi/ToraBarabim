@@ -13,14 +13,6 @@ export const RAIL_COLUMNS_XL = 4;
 // A flick moves roughly one screenful of cards at a time.
 export const SCROLL_STEP_RATIO = 0.9;
 
-// The end-of-row fade (design spec): wider below `md`, where there is no
-// arrow to also signal more content, than from `md` up, where the arrow
-// already carries some of that weight. Not on the 4px spacing scale (a
-// design measurement, not a token); the wide value coincides with
-// `theme.spacing.xxl` exactly, so styles.ts reads that instead of
-// duplicating it here.
-export const EDGE_FADE_WIDTH_PHONE = '56px';
-
 // `Rail Scroll` settle-debounce (useRailScrollTracking.ts): an arrow click's
 // smooth scroll and a touch swipe both fire many native `scroll` events per
 // gesture, so this window is how long the row waits after the last one

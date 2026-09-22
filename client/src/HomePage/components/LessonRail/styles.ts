@@ -1,8 +1,8 @@
 import { css } from 'styled-components';
 
-import { POSTER_ASPECT_RATIO } from '~/HomePage/consts';
+import { EDGE_FADE_WIDTH_PHONE, POSTER_ASPECT_RATIO } from '~/HomePage/consts';
 
-import { EDGE_FADE_WIDTH_PHONE, RAIL_COLUMNS_MD, RAIL_COLUMNS_PHONE, RAIL_COLUMNS_XL } from './consts';
+import { RAIL_COLUMNS_MD, RAIL_COLUMNS_PHONE, RAIL_COLUMNS_XL } from './consts';
 import { railCardWidth, railEdgeOffset } from './helpers';
 
 export const LessonRail = css(

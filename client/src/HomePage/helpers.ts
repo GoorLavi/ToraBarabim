@@ -1,4 +1,4 @@
-import type { AudienceFilter, HomeResponse, LessonOccurrence } from '@torabarabim/common';
+import type { AudienceFilter, DedicationGroup, HomeResponse, LessonOccurrence } from '@torabarabim/common';
 
 import type { DateFilterOption, SelectedCity } from '~/hooks/models';
 
@@ -122,3 +122,23 @@ export const flattenHomeRows = (data: HomeResponse | undefined): LessonOccurrenc
 // (`?q=`) adding a third line here only repeated both (design review: "name
 // search repeats the same count and query three times").
 export const contextLine = (mode: HomeMode): string | undefined => (mode === 'rail' ? RAIL_CONTEXT_LINE : undefined);
+
+// Weighted per dedication, never per type: drawing the type uniformly would
+// make a group of one appear as often as a group of twenty, so the one
+// dedication in it would be seen twenty times more often than each of the
+// twenty (design-system.md, dedication "The draw"). Draws one dedication
+// uniformly at random across every group, then returns that dedication's
+// whole type group. `random` is a parameter, never a bare `Math.random()`
+// call, so this stays callable from a test with a seeded generator.
+// `undefined` on an empty pool, which both band placements render as
+// nothing at all, never an empty band.
+export const drawDedicationGroup = (groups: DedicationGroup[], random: () => number): DedicationGroup | undefined => {
+  const drawableItems = groups.flatMap((group) => group.items.map(() => group));
+  if (drawableItems.length === 0) return undefined;
+
+  // Clamped defensively: `random` is a caller-supplied function, not the
+  // engine's own `Math.random()`, which the language spec guarantees never
+  // reaches 1.
+  const index = Math.min(Math.floor(random() * drawableItems.length), drawableItems.length - 1);
+  return drawableItems[index];
+};

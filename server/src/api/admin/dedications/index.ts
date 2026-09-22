@@ -41,6 +41,22 @@ export const registerAdminDedicationRoutes = async (app: FastifyInstance): Promi
     }
   });
 
+  // The view and edit screens are opened cold at their own URL (a deep
+  // link, a refresh, a bookmark), with no list response in hand to read the
+  // record out of, so this exists alongside `list` even though nothing else
+  // in this file reaches for a single dedication by id. A taken-down record
+  // is still readable here, exactly as it is through `list`: takedown
+  // removes a dedication from the public page, never from the admin's view.
+  app.get('/v1/admin/dedications/:id', { preHandler: requireAdminAuth }, async (request, reply) => {
+    try {
+      const { id } = dedicationIdParamSchema.parse(request.params);
+      const record = await adminDedicationService.getById(id);
+      return reply.send(toAdminDedication(record, new Date()));
+    } catch (error) {
+      return handleError(reply, error, 'GET /v1/admin/dedications/:id');
+    }
+  });
+
   app.post('/v1/admin/dedications', { preHandler: requireAdminAuth }, async (request, reply) => {
     try {
       const body = createDedicationRequestSchema.parse(request.body);
