@@ -16,7 +16,7 @@ const baseLesson: LessonOccurrence = {
   topic: 'parasha',
   audience: 'mixed',
   rabbi: rabbiFixture({ id: 'rabbi-1', name: 'יעקב מזרחי', title: 'דיין' }),
-  place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'נתניה', citySlug: 'נתניה', area: 'sharon' },
+  venue: { kind: 'address', name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'נתניה', citySlug: 'נתניה', area: 'sharon' },
 };
 
 // Enough cards that the row overflows at any realistic Storybook canvas
@@ -72,7 +72,7 @@ export const PartiallyScrolled: Story = {
     const restingScrollLeft = scroller.scrollLeft;
     const isRtl = getComputedStyle(scroller).direction === 'rtl';
     const maxScroll = scroller.scrollWidth - scroller.clientWidth;
-    scroller.scrollTo({ left: (isRtl ? -1 : 1) * maxScroll * 0.4, behavior: 'instant' });
+    scroller.scrollTo({ left: (isRtl ? -1 : 1) * maxScroll * 0.4, behavior: 'auto' });
 
     await waitFor(() => {
       expect(scroller.scrollLeft).not.toEqual(restingScrollLeft);

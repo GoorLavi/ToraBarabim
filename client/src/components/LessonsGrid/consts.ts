@@ -1,8 +1,6 @@
-// The card's fixed ceiling from md (768) up: mirrored from
-// HomePage/components/LessonRail/consts.ts's RAIL_CARD_WIDTH_DESKTOP, since
-// the rail and the grid share one card size across the whole site
-// (design-system.md, "The card is one size across the whole site"). Kept as
-// its own constant rather than imported, so this shared, feature-agnostic
-// component does not reach up into a specific page's component tree for a
-// value; move both to one theme token if a third caller ever needs it.
+// The grid's own fixed ceiling from md (768) up. The rail moved to its own
+// four-tier width ladder (LessonRail/consts.ts) and deliberately never
+// reaches this value (design-system.md, "308 stays the ceiling and the rail
+// never reaches it"), so the two are no longer mirrored; syncing the grid's
+// own breakpoints to the rail's tiers is an open follow-up, not done here.
 export const GRID_CARD_WIDTH_DESKTOP = '308px';
