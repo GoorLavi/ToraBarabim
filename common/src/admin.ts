@@ -4,7 +4,7 @@ import type { LessonException } from './lesson-exception';
 import type { Lesson } from './lesson';
 import type { LessonOccurrence } from './lesson-occurrence';
 import type { Rabbi, RabbiHonorific } from './rabbi';
-import type { LessonVenue, ResolvedLessonAddress } from './venue';
+import type { LessonVenuePanel, ResolvedLessonAddress } from './venue';
 
 // Never carries passwordHash: that stays server-side.
 export interface AdminUser {
@@ -49,7 +49,7 @@ export type UpdateLessonRequest = CreateLessonRequest;
 // just to show a lesson's venue. `provenance` is read-only: it is never
 // sent on a create or update, only read back, so the admin form can show a
 // notice for an imported lesson.
-export type LessonResponse = Omit<Lesson, 'venue'> & { venue: LessonVenue; provenance: LessonProvenance };
+export type LessonResponse = Omit<Lesson, 'venue'> & { venue: LessonVenuePanel; provenance: LessonProvenance };
 
 // Plain `Omit` does not distribute over a union: it computes `keyof` of
 // the whole union, which is the *intersection* of the branches' keys, and

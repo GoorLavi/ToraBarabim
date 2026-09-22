@@ -1,4 +1,4 @@
-import type { Area, LessonVenue } from '@torabarabim/common';
+import type { Area, LessonVenue, LessonVenuePanel } from '@torabarabim/common';
 
 import { toSlug } from './slug';
 
@@ -61,4 +61,32 @@ export const toVenue = (
   return place.isActive
     ? { kind: 'place', placeId: place.id, slug: place.slug, name: place.name, street: place.street, floor: place.floor ?? undefined, ...resolvedCity }
     : { kind: 'address', name: place.name, street: place.street, floor: place.floor ?? undefined, ...resolvedCity };
+};
+
+// A panel's (admin or rabbi) version of `toVenue`: the same place
+// resolution, including the deactivated-place fallback, but the address
+// arm keeps `cityCode` alongside the resolved `cityName` instead of
+// `citySlug`/`area`, so a panel that loads a lesson to edit it can
+// resubmit the address without reconstructing the code from the name.
+export const toVenuePanel = (
+  ref: VenueRef,
+  cityByCode: Map<number, AddressCityRow>,
+  placeById: Map<string, AddressPlaceRow>,
+): LessonVenuePanel => {
+  const city = cityByCode.get(ref.cityCode);
+  if (!city) {
+    throw new Error(`data inconsistency: a venue references unknown city code ${ref.cityCode}`);
+  }
+
+  if (ref.kind === 'address') {
+    return { kind: 'address', name: ref.name, street: ref.street, floor: ref.floor, cityCode: ref.cityCode, cityName: city.nameHe };
+  }
+
+  const place = placeById.get(ref.placeId);
+  if (!place) {
+    throw new Error(`data inconsistency: a venue references unknown place '${ref.placeId}'`);
+  }
+  return place.isActive
+    ? { kind: 'place', placeId: place.id, slug: place.slug, name: place.name, street: place.street, floor: place.floor ?? undefined, city: city.nameHe, citySlug: toSlug(city.nameHe), area: city.area }
+    : { kind: 'address', name: place.name, street: place.street, floor: place.floor ?? undefined, cityCode: ref.cityCode, cityName: city.nameHe };
 };

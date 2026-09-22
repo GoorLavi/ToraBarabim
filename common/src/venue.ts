@@ -16,6 +16,18 @@ export type LessonVenue =
   | ({ kind: 'place'; placeId: string; slug: string } & ResolvedAddress)
   | ({ kind: 'address' } & ResolvedAddress);
 
+// A panel's (admin or rabbi) read view of a venue: the place arm is
+// unchanged (its `placeId` already lets the form re-select the place), but
+// the address arm carries `cityCode` (via `ResolvedLessonAddress`) instead
+// of a resolved `city`/`citySlug`/`area` triple, so a loaded lesson's
+// address round-trips straight into `LessonVenueInput` without the client
+// reconstructing a code from the name. `LessonVenue` stays as it is for
+// every public reader, which only ever prints an address and never
+// resubmits one.
+export type LessonVenuePanel =
+  | ({ kind: 'place'; placeId: string; slug: string } & ResolvedAddress)
+  | ({ kind: 'address' } & ResolvedLessonAddress);
+
 // A lesson's free-text address: nobody needs to "recognise" a synagogue for
 // this arm, and it stays available even once a place is registered, since a
 // lesson names one or the other, never both. `cityCode` stays structured,

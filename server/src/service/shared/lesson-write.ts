@@ -1,10 +1,10 @@
-import type { LessonAudience, LessonProvenance, LessonTopic, LessonVenue, Recurrence, Weekday } from '@torabarabim/common';
+import type { LessonAudience, LessonProvenance, LessonTopic, LessonVenuePanel, Recurrence, Weekday } from '@torabarabim/common';
 import { and, eq } from 'drizzle-orm';
 
 import { db, type Tx } from '../../db/client';
 import { cities, lessons, places } from '../../db/schema';
 import type { AddressCityRow, AddressPlaceRow } from './address';
-import { toVenue } from './address';
+import { toVenuePanel } from './address';
 import type { LessonVenueInputSchema } from './models';
 import { assertAudienceAllowedForHonorific, assertAudienceAllowedForRabbi, getRabbiHonorific } from './rabbanit-guard';
 
@@ -56,7 +56,7 @@ export interface LessonWriteRecord {
   id: string;
   title?: string;
   rabbiId: string;
-  venue: LessonVenue;
+  venue: LessonVenuePanel;
   topic?: LessonTopic;
   audience: LessonAudience;
   recurrence: Recurrence;
@@ -66,7 +66,7 @@ export interface LessonWriteRecord {
   provenance: LessonProvenance;
 }
 
-const toVenueFromJoinedRow = (row: JoinedLessonRow): LessonVenue => {
+const toVenueFromJoinedRow = (row: JoinedLessonRow): LessonVenuePanel => {
   const cityByCode = new Map<number, AddressCityRow>([[row.cityCode, { code: row.cityCode, nameHe: row.cityName, area: row.cityArea }]]);
   const placeById = new Map<string, AddressPlaceRow>(
     row.placeId !== null
@@ -77,7 +77,7 @@ const toVenueFromJoinedRow = (row: JoinedLessonRow): LessonVenue => {
     row.placeId !== null
       ? ({ kind: 'place', placeId: row.placeId, cityCode: row.cityCode } as const)
       : ({ kind: 'address', name: row.addressName as string, street: row.addressStreet as string, floor: row.addressFloor ?? undefined, cityCode: row.cityCode } as const);
-  return toVenue(ref, cityByCode, placeById);
+  return toVenuePanel(ref, cityByCode, placeById);
 };
 
 export const toLessonWriteRecord = (row: JoinedLessonRow): LessonWriteRecord => ({

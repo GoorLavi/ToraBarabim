@@ -1,4 +1,4 @@
-import type { LessonAudience, LessonProvenance, LessonTopic, LessonVenue } from '@torabarabim/common';
+import type { LessonAudience, LessonProvenance, LessonTopic, LessonVenuePanel } from '@torabarabim/common';
 import { z } from 'zod';
 
 import { LESSON_AUDIENCES, LESSON_TOPICS } from '../../db/schema/enums';
@@ -40,7 +40,7 @@ export interface RabbiLessonRecord {
   id: string;
   title?: string;
   rabbiId: string;
-  venue: LessonVenue;
+  venue: LessonVenuePanel;
   topic?: LessonTopic;
   audience: LessonAudience;
   recurrence: CreateRabbiLessonInput['recurrence'];
