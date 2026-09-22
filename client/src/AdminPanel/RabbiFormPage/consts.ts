@@ -65,11 +65,6 @@ export const DISCARD_CHANGES_CONFIRM_LABEL = 'כן, לצאת בלי לשמור';
 export const DISCARD_CHANGES_BACK_LABEL = 'חזרה לעריכה';
 
 export const REQUIRED_NAME_ERROR = 'יש למלא שם רב';
-// Kept identical to `~/components/PhotoPicker/consts.ts`'s own pair: the same
-// rejection reaches the person from either this form's validation or the
-// picker's, and it must not read two ways depending on which caught it first.
-export const UNSUPPORTED_TYPE_CLIENT_ERROR = 'אפשר להעלות קובץ JPG או PNG בלבד';
-export const TOO_LARGE_CLIENT_ERROR = 'התמונה גדולה מ-5MB';
 
 export const LOADING_MESSAGE = 'טוענים...';
 export const RETRY_LABEL = 'ניסיון נוסף';
@@ -82,5 +77,3 @@ export const deleteConfirmImpactLabel = (lessonCount: number, exceptionCount: nu
 export const DELETE_CONFIRM_CANCEL_LABEL = 'ביטול';
 export const DELETE_CONFIRM_CONFIRM_LABEL = 'כן, למחוק';
 export const DELETE_PREVIEW_LOADING_MESSAGE = 'בודקים מה יימחק...';
-
-export const CLIENT_MAX_PHOTO_BYTES = 5 * 1024 * 1024;

@@ -18,11 +18,25 @@ export const PhotoPicker = css(
     gap: ${theme.spacing.lg};
   }
 
+  /* The single rule the ratio lives in. '16:9' (a place's own photo) is
+     sized so the frame carries roughly the same visual weight as the '3:4'
+     portrait: matching area rather than either dimension alone, since a
+     16:9 frame at the portrait's own height would run far wider than a
+     phone screen, and at its width would read as a thumbnail beside it.
+     160x213 (3:4) is ~34,100px²; 240x135 (16:9) is 32,400px², within 5%. */
+  &.ratio3x4 > .frame {
+    inline-size: 160px;
+    aspect-ratio: 3 / 4;
+  }
+
+  &.ratio16x9 > .frame {
+    inline-size: 240px;
+    aspect-ratio: 16 / 9;
+  }
+
   > .frame {
     position: relative;
     flex-shrink: 0;
-    inline-size: 160px;
-    aspect-ratio: 3 / 4;
     border-radius: ${theme.radii.md};
     overflow: hidden;
     background: ${theme.colors.primarySoft};

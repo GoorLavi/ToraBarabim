@@ -6,15 +6,18 @@ import * as consts from './consts';
 import type { PhotoPickerProps } from './models';
 import * as styles from './styles';
 
-// A file picker with a fixed 3:4 preview frame that never disappears and
-// never changes height (rabbi-panel-copy.md, section 6), plus the real
-// upload states a caller can opt into via `uploadStatus`: uploading (the
-// new file's preview, dimmed, with a progress bar) and failed (the
-// previous photo back at full opacity, with retry and choose-other
-// actions). No in-browser crop tool in this slice: the requirement copy
-// below is shown as static help, not enforced pixel-for-pixel.
+// A file picker with a fixed preview frame that never disappears and never
+// changes height (rabbi-panel-copy.md, section 6), plus the real upload
+// states a caller can opt into via `uploadStatus`: uploading (the new
+// file's preview, dimmed, with a progress bar) and failed (the previous
+// photo back at full opacity, with retry and choose-other actions). No
+// in-browser crop tool in this slice: the requirement copy below is shown
+// as static help, not enforced pixel-for-pixel. `aspectRatio` ('3:4', every
+// rabbi's portrait, the default; '16:9', a place's own photo) is the one
+// thing that changes the frame's proportions, its width, and this help
+// copy; see `styles.ts` and `consts.ts` for the single place each lives.
 export const PhotoPicker = styled(
-  ({ className, previewUrl, hasExistingPhoto, onSelectFile, errorMessage, uploadStatus, onRetryUpload }: PhotoPickerProps) => {
+  ({ className, previewUrl, hasExistingPhoto, onSelectFile, errorMessage, uploadStatus, onRetryUpload, aspectRatio = '3:4' }: PhotoPickerProps) => {
     const hasPhoto = Boolean(previewUrl || hasExistingPhoto);
     const isUploading = uploadStatus === 'uploading';
     const hasFailed = uploadStatus === 'failed';
@@ -26,7 +29,7 @@ export const PhotoPicker = styled(
     };
 
     return (
-      <div className={classNames(className, { invalid: Boolean(errorMessage), missing: !hasPhoto })}>
+      <div className={classNames(className, `ratio${aspectRatio.replace(':', 'x')}`, { invalid: Boolean(errorMessage), missing: !hasPhoto })}>
         <div className="frame">
           {previewUrl ? (
             <img className={classNames('preview', { dimmed: isUploading })} src={previewUrl} alt="" />
@@ -70,8 +73,8 @@ export const PhotoPicker = styled(
 
               <ul className="help">
                 <li className="helpItem">{consts.PHOTO_HELP_TYPE}</li>
-                <li className="helpItem">{consts.PHOTO_HELP_SIZE}</li>
-                <li className="helpItem">{consts.PHOTO_HELP_CROP}</li>
+                <li className="helpItem">{consts.PHOTO_HELP_SIZE[aspectRatio]}</li>
+                {consts.PHOTO_HELP_CROP[aspectRatio] && <li className="helpItem">{consts.PHOTO_HELP_CROP[aspectRatio]}</li>}
               </ul>
             </>
           )}

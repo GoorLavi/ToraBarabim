@@ -10,6 +10,30 @@ import * as consts from './consts';
 // result before submitting.
 export const suggestUsername = (name: string): string => name.toLowerCase().replace(/\s+/g, '');
 
+// An update omits a key to mean "leave as is" and sends `null` to mean
+// "clear" (`common/src/admin.ts`), which an empty string alone cannot tell
+// apart, so this also needs the value as it was loaded from the server. A
+// field that was always blank and still is has nothing to clear, so it
+// stays omitted rather than sending a needless `null`. Shared by every
+// panel form with an optional, clearable text field (a rabbi's title and
+// bio, a place's floor).
+export const nullableTextField = (currentValue: string, existingValue: string | undefined): string | null | undefined => {
+  const trimmed = currentValue.trim();
+  if (trimmed) return trimmed;
+  return existingValue === undefined ? undefined : null;
+};
+
+const ACCEPTED_PHOTO_TYPES = ['image/jpeg', 'image/png'];
+
+// A basic type/size check before upload, not a substitute for the server's
+// own validation: no in-browser crop tool in this slice, so nothing
+// enforces a photo's actual dimensions or ratio here.
+export const validatePhotoFile = (file: File): string | undefined => {
+  if (!ACCEPTED_PHOTO_TYPES.includes(file.type)) return consts.UNSUPPORTED_TYPE_CLIENT_ERROR;
+  if (file.size > consts.CLIENT_MAX_PHOTO_BYTES) return consts.TOO_LARGE_CLIENT_ERROR;
+  return undefined;
+};
+
 // Status-aware, with per-call overrides keyed by the server's `error` code
 // first and its HTTP status second, so a caller can surface e.g.
 // 'unknown_rabbi' against a specific field while everything else falls

@@ -4,7 +4,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { AudiencePicker } from '~/components/AudiencePicker/AudiencePicker';
-import { CitySelect } from '~/components/CitySelect/CitySelect';
+import * as placePickerConsts from '~/components/PlacePicker/consts';
+import { PlacePicker } from '~/components/PlacePicker/PlacePicker';
 import { ReadOnlyField } from '~/components/ReadOnlyField/ReadOnlyField';
 import { RecurrenceFields } from '~/components/RecurrenceFields/RecurrenceFields';
 import { AUDIENCE_LABELS } from '~/consts';
@@ -17,7 +18,7 @@ import { useRabbiProfile } from '~/RabbiPanel/useRabbiProfile';
 import { DeleteLessonSheet } from './components/DeleteLessonSheet/DeleteLessonSheet';
 import { LessonPreviewCard } from './components/LessonPreviewCard/LessonPreviewCard';
 import * as consts from './consts';
-import { initialFormState, lessonToFormState, pageHeading, previewWeekdayLabel, validateLessonForm } from './helpers';
+import { initialFormState, lessonToFormState, pageHeading, previewCityName, previewWeekdayLabel, validateLessonForm } from './helpers';
 import type { LessonFormErrors, LessonFormPageProps, LessonFormState } from './models';
 import * as styles from './styles';
 import { useExistingLesson } from './useExistingLesson';
@@ -83,7 +84,7 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
 
   const saveErrorCode = saveLesson.error instanceof RabbiApiError ? saveLesson.error.code : undefined;
   const generalSaveError = saveLesson.isError && saveErrorCode !== 'unknown_city' ? rabbiErrorMessage(saveLesson.error) : undefined;
-  const cityError = fieldErrors.city ?? (saveErrorCode === 'unknown_city' ? consts.UNKNOWN_CITY_ERROR : undefined);
+  const cityError = fieldErrors.city ?? (saveErrorCode === 'unknown_city' ? placePickerConsts.UNKNOWN_CITY_ERROR : undefined);
   const addressNameError = fieldErrors.addressName;
 
   const failingSections = consts.SECTION_DEFS.filter((section) => section.fields.some((field) => fieldErrors[field]));
@@ -171,50 +172,15 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
 
           <section className="section" ref={whereSectionRef}>
             <h2 className="sectionHeading">{consts.WHERE_SECTION_HEADING}</h2>
-            <div className="field">
-              <span className="label">{consts.CITY_LABEL}</span>
-              <CitySelect
-                city={form.city}
-                onSelectCity={(city) => setForm((prev) => ({ ...prev, city }))}
-                placeholderLabel={consts.CITY_PLACEHOLDER}
-                fullWidth
-              />
-              <span className="helper">{consts.CITY_HELPER}</span>
-              {cityError && <span className="error">{cityError}</span>}
-            </div>
-
-            <label className="field">
-              <span className="label">{consts.PLACE_NAME_LABEL}</span>
-              <input
-                type="text"
-                dir={directionForValue(form.addressName)}
-                value={form.addressName}
-                onChange={(event) => setForm((prev) => ({ ...prev, addressName: event.target.value }))}
-              />
-              {addressNameError && <span className="error">{addressNameError}</span>}
-            </label>
-
-            <label className="field">
-              <span className="label">{consts.STREET_LABEL}</span>
-              <input
-                type="text"
-                dir={directionForValue(form.street)}
-                value={form.street}
-                onChange={(event) => setForm((prev) => ({ ...prev, street: event.target.value }))}
-              />
-              <span className="helper">{consts.STREET_HELPER}</span>
-              {fieldErrors.street && <span className="error">{fieldErrors.street}</span>}
-            </label>
-
-            <label className="field">
-              <span className="label">{consts.FLOOR_LABEL}</span>
-              <input
-                type="text"
-                dir={directionForValue(form.floor)}
-                value={form.floor}
-                onChange={(event) => setForm((prev) => ({ ...prev, floor: event.target.value }))}
-              />
-            </label>
+            <PlacePicker
+              venue={form.venue}
+              onChangeVenue={(venue) => setForm((prev) => ({ ...prev, venue }))}
+              city={form.city}
+              onSelectCity={(city) => setForm((prev) => ({ ...prev, city }))}
+              cityError={cityError}
+              nameError={addressNameError}
+              streetError={fieldErrors.street}
+            />
           </section>
 
           <section className="section" ref={audienceSectionRef}>
@@ -267,7 +233,7 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
             rabbiPhotoUrl={profile.data?.photoUrl}
             title={form.title}
             audience={effectiveForm.audience}
-            cityName={form.city?.name}
+            cityName={previewCityName(form)}
             weekdayLabel={previewWeekdayLabel(form)}
             startTime={form.startTime}
           />

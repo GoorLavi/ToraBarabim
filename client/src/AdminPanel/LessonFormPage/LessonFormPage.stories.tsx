@@ -41,7 +41,10 @@ const rabbisListForSearchAndJoin: RabbiResponse[] = [
 
 // Only the requests the edit-mode form actually fires on mount are
 // answered: the existing lesson, the rabbi it unlocks, the rabbi search
-// above, and its lesson-count summary for the already-picked rabbi.
+// above, its lesson-count summary for the already-picked rabbi, and
+// `PlacePicker`'s own two calls (the whole place list, fired unconditionally
+// on mount, and the duplicate hint, fired once this lesson's already-loaded
+// address name and street settle).
 installMockFetch((url) => {
   if (url.pathname === `/v1/admin/lessons/${lesson.id}`) return jsonResponse(200, lesson);
   if (url.pathname === `/v1/admin/rabbis/${rabbi.id}`) return jsonResponse(200, rabbi);
@@ -51,6 +54,8 @@ installMockFetch((url) => {
   if (url.pathname === '/v1/admin/lessons' && url.searchParams.get('rabbiId') === rabbi.id) {
     return jsonResponse(200, { items: [lesson], page: 1, pageSize: 1, total: 4 });
   }
+  if (url.pathname === '/v1/places') return jsonResponse(200, { items: [] });
+  if (url.pathname === '/v1/places/similar') return jsonResponse(200, { items: [] });
   return null;
 });
 

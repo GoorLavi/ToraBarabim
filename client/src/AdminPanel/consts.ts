@@ -1,6 +1,6 @@
 import type { RabbiProminence, Weekday } from '@torabarabim/common';
 
-import type { AdminLessonFilters, AdminRabbiFilters, AdminUserFilters } from './models';
+import type { AdminLessonFilters, AdminPlaceFilters, AdminRabbiFilters, AdminUserFilters } from './models';
 
 // Mirrors `server/src/service/admin-shared/consts.ts`'s `MAX_ADMIN_PAGE_SIZE`.
 // Used as the page size for "fetch the whole list once and join in memory"
@@ -14,6 +14,18 @@ export const MAX_ADMIN_PAGE_SIZE = 50;
 export const MIN_PASSWORD_LENGTH = 6;
 export const PASSWORD_TOO_SHORT_ERROR = `הסיסמה חייבת להכיל לפחות ${MIN_PASSWORD_LENGTH} תווים`;
 export const PASSWORD_MISMATCH_ERROR = 'הסיסמאות אינן תואמות';
+
+// Shared by every panel form with a photo upload (the rabbi's poster, a
+// place's own photo): the client-side type/size check is identical no
+// matter which entity the photo belongs to, so the threshold and its two
+// messages live here once `PlaceFormPage` became a second caller.
+// Kept identical to `~/components/PhotoPicker/consts.ts`'s own pair: the
+// same rejection reaches the person from either this form's validation or
+// the picker's, and it must not read two ways depending on which caught it
+// first.
+export const CLIENT_MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+export const UNSUPPORTED_TYPE_CLIENT_ERROR = 'אפשר להעלות קובץ JPG או PNG בלבד';
+export const TOO_LARGE_CLIENT_ERROR = 'התמונה גדולה מ-5MB';
 
 export const GENERIC_ERROR_MESSAGE = 'אירעה שגיאה, נסה שוב מאוחר יותר';
 export const NETWORK_ERROR_MESSAGE = 'לא ניתן להתחבר לשרת. בדוק את החיבור ונסה שוב';
@@ -91,6 +103,9 @@ export const ADMIN_QUERY_KEYS = {
   lessonOccurrences: (lessonId: string) => ['admin', 'lessons', lessonId, 'occurrences'] as const,
   lessonExceptions: (lessonId: string) => ['admin', 'lessons', lessonId, 'exceptions'] as const,
   adminUsers: (filters: AdminUserFilters) => ['admin', 'admin-users', 'search', filters] as const,
+  places: (filters: AdminPlaceFilters) => ['admin', 'places', 'search', filters] as const,
+  place: (id: string) => ['admin', 'places', id] as const,
+  placeAccount: (id: string) => ['admin', 'places', id, 'account'] as const,
 };
 
 export const ADMIN_ROUTES = {
@@ -103,6 +118,10 @@ export const ADMIN_ROUTES = {
   rabbiNew: '/admin/rabbis/new',
   rabbiView: (id: string) => `/admin/rabbis/${id}`,
   rabbiEdit: (id: string) => `/admin/rabbis/${id}/edit`,
+  places: '/admin/places',
+  placeNew: '/admin/places/new',
+  placeView: (id: string) => `/admin/places/${id}`,
+  placeEdit: (id: string) => `/admin/places/${id}/edit`,
   admins: '/admin/admins',
   adminNew: '/admin/admins/new',
 };

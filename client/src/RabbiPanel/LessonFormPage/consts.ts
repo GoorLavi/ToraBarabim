@@ -14,18 +14,10 @@ export const WEEKDAYS_LABEL = 'כל שבוע, בימים';
 export const START_TIME_LABEL = 'שעת התחלה';
 export const DURATION_LABEL = 'כמה זמן השיעור נמשך (בדקות)';
 
+// The WHERE section's own field labels, helpers and validation copy moved
+// to `~/components/PlacePicker/consts.ts`, the shared component that now
+// renders that section's whole body in both lesson forms.
 export const WHERE_SECTION_HEADING = 'איפה מתקיים השיעור';
-export const CITY_LABEL = 'עיר';
-export const CITY_HELPER = 'בחר עיר מהרשימה.';
-export const CITY_PLACEHOLDER = 'בחירת עיר';
-export const PLACE_NAME_LABEL = 'שם בית הכנסת או המוסד';
-export const STREET_LABEL = 'רחוב ומספר';
-export const STREET_HELPER = 'הכתובת המלאה מוצגת בעמוד השיעור בלבד.';
-// Optional: a floor or arrival note, matching the field on the admin
-// lesson form; not named in the design doc's string list for this screen
-// but the underlying `LessonAddress.floor` field is the same one, so this
-// carries the identical helper text and stays optional.
-export const FLOOR_LABEL = 'קומה / הערת הגעה';
 
 export const AUDIENCE_SECTION_HEADING = 'למי השיעור מיועד';
 
@@ -36,15 +28,11 @@ export const CANCEL_LABEL = 'ביטול';
 export const DELETE_LABEL = 'מחיקת השיעור';
 
 export const ERROR_SUMMARY_HEADING = 'יש להשלים כמה שדות לפני השמירה:';
-export const REQUIRED_CITY_ERROR = 'יש לבחור עיר';
-export const REQUIRED_ADDRESS_NAME_ERROR = 'יש למלא את שם בית הכנסת או המוסד';
-export const REQUIRED_STREET_ERROR = 'יש למלא רחוב ומספר';
 export const REQUIRED_AUDIENCE_ERROR = 'יש לבחור קהל יעד';
 export const REQUIRED_START_TIME_ERROR = 'יש למלא שעת התחלה';
 export const REQUIRED_DURATION_ERROR = 'יש למלא משך שיעור תקין (בדקות)';
 export const REQUIRED_WEEKDAY_ERROR = 'יש לבחור לפחות יום אחד בשבוע';
 export const REQUIRED_DATE_ERROR = 'יש לבחור תאריך';
-export const UNKNOWN_CITY_ERROR = 'העיר שנבחרה אינה קיימת יותר. יש לבחור עיר אחרת';
 
 export const LOADING_MESSAGE = 'טוען...';
 export const LOAD_ERROR_MESSAGE = 'לא הצלחנו לטעון את השיעור';

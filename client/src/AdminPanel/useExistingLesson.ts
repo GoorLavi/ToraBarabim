@@ -57,12 +57,10 @@ export const useExistingLesson = (id: string | undefined): ExistingLessonState =
   if (isPending || !lessonQuery.data) return { status: 'pending' };
 
   // `LessonResponse.venue` is `LessonVenuePanel`: only the address arm
-  // carries a numeric `cityCode`, the id `CitySelect` needs. The place arm
-  // has nothing valid to prefill it with (its `placeId` is for a picker
-  // that does not exist yet, Wave 5/6). City starts unset for a
-  // place-backed lesson, and `validateLessonForm` requires the admin to
-  // reselect it rather than let a form built for a free-text address
-  // quietly resubmit one that happens to share the place's current city.
+  // carries a numeric `cityCode`, the id `CitySelect` needs. City stays
+  // unset for a place-backed lesson on purpose: `PlacePicker` reads a
+  // chosen place's city straight off `venue.place`, never through
+  // `CitySelect`, so there is nothing here for this field to prefill.
   const city: SelectedCity | undefined =
     lessonQuery.data.venue.kind === 'address' ? { id: String(lessonQuery.data.venue.cityCode), name: lessonQuery.data.venue.cityName } : undefined;
 

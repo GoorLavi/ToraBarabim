@@ -19,6 +19,7 @@ const place = (overrides: Partial<Place>): Place => ({
   city: 'נתניה',
   citySlug: 'נתניה',
   area: 'sharon',
+  lessonCount: 3,
   ...overrides,
 });
 
