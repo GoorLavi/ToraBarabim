@@ -1,7 +1,7 @@
-import type { CityWithLessonCount, HomeRowId, LessonAudience, LessonTopic, Place, Rabbi } from '@torabarabim/common';
+import type { CityWithLessonCount, HomeRowId, LessonAudience, LessonTopic, Rabbi, ResolvedAddress } from '@torabarabim/common';
 
 import type { rabbis } from '../../db/schema';
-import type { PlaceCityRow } from '../shared/place';
+import type { AddressCityRow } from '../shared/address';
 
 // Kept distinct from the wire `LessonOccurrence`: it carries the sort-only
 // `rabbiProminenceRank` and `shuffleKey`, and the raw `cityCode` the
@@ -18,7 +18,7 @@ export interface ResolvedHomeOccurrence {
   recurrenceKind: 'weekly' | 'once';
   rabbi: Rabbi;
   cityCode: number;
-  place: Place;
+  place: ResolvedAddress;
   substituteRabbi?: Rabbi;
   note?: string;
   rabbiProminenceRank: number;
@@ -60,7 +60,7 @@ export type RabbiRow = typeof rabbis.$inferSelect;
 export interface LoadedWindow {
   from: string;
   resolved: ResolvedHomeOccurrence[];
-  cityByCode: Map<number, PlaceCityRow>;
+  cityByCode: Map<number, AddressCityRow>;
   rabbiRows: RabbiRow[];
   // Every rabbi id with at least one lesson row, regardless of the window:
   // the same "has a lesson" the rabbi directory means when it decides

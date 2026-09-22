@@ -1,5 +1,5 @@
 import type { LessonAudience, LessonTopic } from './lesson';
-import type { Place } from './place';
+import type { ResolvedAddress } from './address';
 import type { Rabbi } from './rabbi';
 
 // What the search API actually returns: a Lesson's recurrence rule expanded
@@ -15,7 +15,7 @@ export interface LessonOccurrence {
   topic?: LessonTopic;
   audience: LessonAudience;
   rabbi: Rabbi;
-  place: Place;
+  place: ResolvedAddress;
   substituteRabbi?: Rabbi;
   cancellationReason?: string;
   note?: string;

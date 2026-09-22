@@ -1,7 +1,7 @@
 import type { LessonProvenance } from './agent-import';
 import type { RabbiProminence } from './home';
 import type { LessonException } from './lesson-exception';
-import type { Lesson, ResolvedLessonPlace } from './lesson';
+import type { Lesson, ResolvedLessonAddress } from './lesson';
 import type { LessonOccurrence } from './lesson-occurrence';
 import type { Rabbi, RabbiHonorific } from './rabbi';
 
@@ -46,7 +46,7 @@ export type UpdateLessonRequest = CreateLessonRequest;
 // look up city reference data of its own just to show a lesson's city.
 // `provenance` is read-only: it is never sent on a create or update, only
 // read back, so the admin form can show a notice for an imported lesson.
-export type LessonResponse = Omit<Lesson, 'place'> & { place: ResolvedLessonPlace; provenance: LessonProvenance };
+export type LessonResponse = Omit<Lesson, 'place'> & { place: ResolvedLessonAddress; provenance: LessonProvenance };
 
 // Plain `Omit` does not distribute over a union: it computes `keyof` of
 // the whole union, which is the *intersection* of the branches' keys, and
@@ -66,7 +66,7 @@ export type UpdateLessonExceptionRequest = CreateLessonExceptionRequest;
 // single exception with for PATCH/DELETE.
 type ResolvedLessonException =
   | Extract<LessonException, { kind: 'cancelled' }>
-  | (Omit<Extract<LessonException, { kind: 'modified' }>, 'place'> & { place?: ResolvedLessonPlace });
+  | (Omit<Extract<LessonException, { kind: 'modified' }>, 'place'> & { place?: ResolvedLessonAddress });
 export type LessonExceptionResponse = ResolvedLessonException & { id: number };
 
 // What deleting a rabbi would destroy: shown to the admin before they

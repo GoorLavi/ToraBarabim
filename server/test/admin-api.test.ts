@@ -86,8 +86,8 @@ describe('admin API: lesson occurrences', () => {
     await db.insert(lessons).values({
       id: lessonId,
       rabbiId,
-      placeName: 'בית כנסת הבדיקה',
-      placeStreet: 'רחוב הבדיקה 1',
+      addressName: 'בית כנסת הבדיקה',
+      addressStreet: 'רחוב הבדיקה 1',
       cityCode,
       audience: 'men',
       recurrenceKind: 'weekly',
@@ -163,8 +163,8 @@ describe('admin API: lesson occurrences', () => {
       date: modifiedDate,
       kind: 'modified',
       startTime: overriddenStartTime,
-      placeName: overriddenPlaceName,
-      placeStreet: 'רחוב חלופי 2',
+      addressName: overriddenPlaceName,
+      addressStreet: 'רחוב חלופי 2',
       cityCode,
     });
 

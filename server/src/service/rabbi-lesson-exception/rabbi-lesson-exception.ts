@@ -29,9 +29,9 @@ const exceptionSelection = {
   kind: lessonExceptions.kind,
   reason: lessonExceptions.reason,
   startTime: lessonExceptions.startTime,
-  placeName: lessonExceptions.placeName,
-  placeStreet: lessonExceptions.placeStreet,
-  placeFloor: lessonExceptions.placeFloor,
+  addressName: lessonExceptions.addressName,
+  addressStreet: lessonExceptions.addressStreet,
+  addressFloor: lessonExceptions.addressFloor,
   cityCode: lessonExceptions.cityCode,
   cityName: cities.nameHe,
   substituteRabbiId: lessonExceptions.substituteRabbiId,
@@ -53,8 +53,8 @@ const toRecord = (row: JoinedExceptionRow): LessonExceptionRecord =>
         kind: 'modified',
         startTime: row.startTime ?? undefined,
         place:
-          row.placeName !== null && row.placeStreet !== null && row.cityCode !== null && row.cityName !== null
-            ? { name: row.placeName, street: row.placeStreet, floor: row.placeFloor ?? undefined, cityCode: row.cityCode, cityName: row.cityName }
+          row.addressName !== null && row.addressStreet !== null && row.cityCode !== null && row.cityName !== null
+            ? { name: row.addressName, street: row.addressStreet, floor: row.addressFloor ?? undefined, cityCode: row.cityCode, cityName: row.cityName }
             : undefined,
         substituteRabbiId: row.substituteRabbiId ?? undefined,
         note: row.note ?? undefined,
@@ -123,9 +123,9 @@ const insertValues = (lessonId: string, input: LessonExceptionInput) => ({
   kind: input.kind,
   reason: input.kind === 'cancelled' ? (input.reason ?? null) : null,
   startTime: input.kind === 'modified' ? (input.startTime ?? null) : null,
-  placeName: input.kind === 'modified' ? (input.place?.name ?? null) : null,
-  placeStreet: input.kind === 'modified' ? (input.place?.street ?? null) : null,
-  placeFloor: input.kind === 'modified' ? (input.place?.floor ?? null) : null,
+  addressName: input.kind === 'modified' ? (input.place?.name ?? null) : null,
+  addressStreet: input.kind === 'modified' ? (input.place?.street ?? null) : null,
+  addressFloor: input.kind === 'modified' ? (input.place?.floor ?? null) : null,
   cityCode: input.kind === 'modified' ? (input.place?.cityCode ?? null) : null,
   substituteRabbiId: input.kind === 'modified' ? (input.substituteRabbiId ?? null) : null,
   note: input.kind === 'modified' ? (input.note ?? null) : null,

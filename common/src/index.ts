@@ -7,7 +7,7 @@ export * from './city-directory';
 export * from './home';
 export * from './rabbi';
 export * from './rabbi-directory';
-export * from './place';
+export * from './address';
 export * from './lesson';
 export * from './lesson-exception';
 export * from './lesson-import-file';

@@ -13,13 +13,15 @@ export const lessons = pgTable(
     rabbiId: text('rabbi_id')
       .notNull()
       .references(() => rabbis.id),
-    // The venue is free text on the lesson, not a registered entity: a
-    // rabbi must never be blocked from adding a lesson because its venue
+    // The address is free text on the lesson, not a registered entity: a
+    // rabbi must never be blocked from adding a lesson because its address
     // is not recognised. `cityCode` stays structured, since the home page
     // and the city/area filters depend on it.
-    placeName: text('place_name').notNull(),
-    placeStreet: text('place_street').notNull(),
-    placeFloor: text('place_floor'),
+    // The property is `address*`; the column stays `place_*` because
+    // renaming a column is a migration, and this rename has none.
+    addressName: text('place_name').notNull(),
+    addressStreet: text('place_street').notNull(),
+    addressFloor: text('place_floor'),
     cityCode: integer('city_code')
       .notNull()
       .references(() => cities.code),
@@ -36,8 +38,8 @@ export const lessons = pgTable(
     // `importSources` are only ever set on an 'imported' or
     // 'imported_edited' row; see `lessons_provenance_shape` below.
     provenance: lessonProvenanceEnum('provenance').notNull().default('manual'),
-    // `${rabbiId}|w${weekday}|${placeKey}` for a weekly row or
-    // `${rabbiId}|d${isoDate}|${placeKey}` for a one-off, computed by the
+    // `${rabbiId}|w${weekday}|${addressKey}` for a weekly row or
+    // `${rabbiId}|d${isoDate}|${addressKey}` for a one-off, computed by the
     // import planner. Identifies "the same lesson" across weekly import
     // runs so a run can update in place instead of creating a duplicate.
     importKey: text('import_key'),

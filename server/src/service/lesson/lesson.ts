@@ -85,7 +85,7 @@ export const search = async (rawQuery: LessonSearchQuery, now: Date): Promise<Le
     ? lessonRows.filter(
         (row) =>
           (matchingRabbiIds?.has(row.rabbiId) ?? false) ||
-          includesQuery(row.placeName, q) ||
+          includesQuery(row.addressName, q) ||
           (matchingCityCodes?.includes(row.cityCode) ?? false),
       )
     : lessonRows;

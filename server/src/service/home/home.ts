@@ -9,7 +9,7 @@ import { addDays, compareIsoDates, todayInIsrael } from '../lesson/israel-time';
 import { isLessonInScope, isRabbiInDirectoryScope } from '../shared/audience-scope';
 import { AREA_NAMES_HE } from '../shared/consts';
 import { toCitySummary } from '../shared/city-summary';
-import { toPlace, type PlaceCityRow } from '../shared/place';
+import { toAddress, type AddressCityRow } from '../shared/address';
 import { compareRabbiOrder, PROMINENCE_RANK } from '../shared/rabbi-order';
 import { toRabbiSummary as toRabbi } from '../shared/rabbi-summary';
 import {
@@ -55,9 +55,9 @@ const toLessonDomain = (row: LessonRow): Lesson => ({
   title: row.title ?? undefined,
   rabbiId: row.rabbiId,
   place: {
-    name: row.placeName,
-    street: row.placeStreet,
-    floor: row.placeFloor ?? undefined,
+    name: row.addressName,
+    street: row.addressStreet,
+    floor: row.addressFloor ?? undefined,
     cityCode: row.cityCode,
   },
   topic: row.topic ?? undefined,
@@ -80,8 +80,8 @@ const toExceptionDomain = (row: ExceptionRow): LessonException =>
         date: row.date,
         startTime: row.startTime ?? undefined,
         place:
-          row.placeName !== null && row.placeStreet !== null && row.cityCode !== null
-            ? { name: row.placeName, street: row.placeStreet, floor: row.placeFloor ?? undefined, cityCode: row.cityCode }
+          row.addressName !== null && row.addressStreet !== null && row.cityCode !== null
+            ? { name: row.addressName, street: row.addressStreet, floor: row.addressFloor ?? undefined, cityCode: row.cityCode }
             : undefined,
         substituteRabbiId: row.substituteRabbiId ?? undefined,
         note: row.note ?? undefined,
@@ -90,7 +90,7 @@ const toExceptionDomain = (row: ExceptionRow): LessonException =>
 const resolveRecord = (
   occurrence: ResolvedOccurrence,
   rabbiRowById: Map<string, RabbiRow>,
-  cityByCode: Map<number, PlaceCityRow>,
+  cityByCode: Map<number, AddressCityRow>,
 ): ResolvedHomeOccurrence => {
   const rabbiRow = rabbiRowById.get(occurrence.lesson.rabbiId);
   if (!rabbiRow) {
@@ -118,7 +118,7 @@ const resolveRecord = (
     // must stay tappable through `/v1/lessons?city=`, which filters on the
     // lesson's own `cityCode`, not a one-off exception's.
     cityCode: occurrence.lesson.place.cityCode,
-    place: toPlace(occurrence.place, cityByCode),
+    place: toAddress(occurrence.place, cityByCode),
     substituteRabbi: substituteRabbiRow ? toRabbi(substituteRabbiRow) : undefined,
     note: occurrence.note,
     rabbiProminenceRank: PROMINENCE_RANK[activeProminence],
@@ -197,7 +197,7 @@ const collator = new Intl.Collator('he');
 // הקרובים" copy: occurrences in the 14-day window, not distinct lessons. A
 // lesson recurring three times in the window counts three times here, and
 // `resolved` (from `loadWindow`) already excludes cancelled occurrences.
-const buildWomensSet = (resolved: ResolvedHomeOccurrence[], cityByCode: Map<number, PlaceCityRow>): WomensSet => {
+const buildWomensSet = (resolved: ResolvedHomeOccurrence[], cityByCode: Map<number, AddressCityRow>): WomensSet => {
   const inScope = resolved.filter((occurrence) =>
     isLessonInScope('women', { audience: occurrence.audience, teacherHonorific: occurrence.rabbi.honorific }),
   );

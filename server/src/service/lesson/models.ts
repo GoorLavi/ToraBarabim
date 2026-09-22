@@ -1,4 +1,4 @@
-import type { LessonAudience, LessonTopic, Place, Rabbi } from '@torabarabim/common';
+import type { LessonAudience, LessonTopic, Rabbi, ResolvedAddress } from '@torabarabim/common';
 import { z } from 'zod';
 
 import { AREAS, LESSON_TOPICS } from '../../db/schema/enums';
@@ -56,7 +56,7 @@ export interface ResolvedLessonOccurrence {
   topic?: LessonTopic;
   audience: LessonAudience;
   rabbi: Rabbi;
-  place: Place;
+  place: ResolvedAddress;
   substituteRabbi?: Rabbi;
   cancellationReason?: string;
   note?: string;

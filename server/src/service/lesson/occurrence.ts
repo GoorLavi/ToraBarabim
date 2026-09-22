@@ -1,7 +1,7 @@
-import type { Lesson, LessonException, LessonPlace, Rabbi, Weekday } from '@torabarabim/common';
+import type { Lesson, LessonAddress, LessonException, Rabbi, Weekday } from '@torabarabim/common';
 
 import type { lessonExceptions, lessons } from '../../db/schema';
-import { toPlace, type PlaceCityRow } from '../shared/place';
+import { toAddress, type AddressCityRow } from '../shared/address';
 import { addDays, compareIsoDates, weekdayOf } from './israel-time';
 import type { ResolvedLessonOccurrence } from './models';
 
@@ -37,7 +37,7 @@ export interface ResolvedOccurrence {
   lesson: Lesson;
   date: string;
   startTime: string;
-  place: LessonPlace;
+  place: LessonAddress;
   status: 'scheduled' | 'cancelled';
   substituteRabbiId?: string;
   cancellationReason?: string;
@@ -85,9 +85,9 @@ export const toLessonDomain = (row: LessonRow): Lesson => ({
   title: row.title ?? undefined,
   rabbiId: row.rabbiId,
   place: {
-    name: row.placeName,
-    street: row.placeStreet,
-    floor: row.placeFloor ?? undefined,
+    name: row.addressName,
+    street: row.addressStreet,
+    floor: row.addressFloor ?? undefined,
     cityCode: row.cityCode,
   },
   topic: row.topic ?? undefined,
@@ -112,8 +112,8 @@ export const toExceptionDomain = (row: ExceptionRow): LessonException =>
         date: row.date,
         startTime: row.startTime ?? undefined,
         place:
-          row.placeName !== null && row.placeStreet !== null && row.cityCode !== null
-            ? { name: row.placeName, street: row.placeStreet, floor: row.placeFloor ?? undefined, cityCode: row.cityCode }
+          row.addressName !== null && row.addressStreet !== null && row.cityCode !== null
+            ? { name: row.addressName, street: row.addressStreet, floor: row.addressFloor ?? undefined, cityCode: row.cityCode }
             : undefined,
         substituteRabbiId: row.substituteRabbiId ?? undefined,
         note: row.note ?? undefined,
@@ -147,7 +147,7 @@ export const compareOccurrences = (a: ResolvedOccurrence, b: ResolvedOccurrence)
 export const resolveRecord = (
   occurrence: ResolvedOccurrence,
   rabbiById: Map<string, Rabbi>,
-  cityByCode: Map<number, PlaceCityRow>,
+  cityByCode: Map<number, AddressCityRow>,
 ): ResolvedLessonOccurrence => {
   const rabbi = rabbiById.get(occurrence.lesson.rabbiId);
   if (!rabbi) {
@@ -164,7 +164,7 @@ export const resolveRecord = (
     topic: occurrence.lesson.topic,
     audience: occurrence.lesson.audience,
     rabbi,
-    place: toPlace(occurrence.place, cityByCode),
+    place: toAddress(occurrence.place, cityByCode),
     substituteRabbi: occurrence.substituteRabbiId
       ? rabbiById.get(occurrence.substituteRabbiId)
       : undefined,

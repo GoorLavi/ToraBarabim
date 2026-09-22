@@ -1,4 +1,4 @@
-import type { LessonPlace } from './lesson';
+import type { LessonAddress } from './lesson';
 
 // A single-date override of a Lesson's recurrence rule. Never mutates the
 // rule itself, so cancelling one week never affects any other week.
@@ -9,7 +9,7 @@ export type LessonException =
       lessonId: string;
       date: string;
       startTime?: string;
-      place?: LessonPlace;
+      place?: LessonAddress;
       substituteRabbiId?: string;
       note?: string;
     };
