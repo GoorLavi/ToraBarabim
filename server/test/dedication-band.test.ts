@@ -13,21 +13,31 @@ import { drawDedication, drawDedicationGroup } from '../../client/src/HomePage/d
 // under test already carries its own parameter types), the RNG passed in
 // as a parameter rather than a bare `Math.random()` call, and every
 // constant read from its own colocated consts.ts, the one exception being
-// the unit pitch noted below.
+// `stepByUnitPitch`'s pitch below.
 //
-// `DEDICATION_UNIT_WIDTH_PX`, `DEDICATION_UNIT_GAP_PX` and `VARIANT_TOKENS`
-// live in consts.ts files that import the theme
-// (client/src/theme/themes.ts) through the `~` alias, which only Vite
-// resolves; a plain `tsx` run here cannot load them (confirmed empirically:
-// the import throws `MODULE_NOT_FOUND` and takes the whole test file down
-// with it, so nothing in this file imports them). The unit pitch
-// (280 + 64 = 344) is hardcoded below with this comment as its source,
-// since `stepByUnitPitch` itself is a generic function that takes the
-// pitch as a parameter and does not need the constant to be exercised. The
-// `VARIANT_TOKENS` key-set assertion the plan named could not be written
-// for the same reason; the build report names the two fixes this needs and
-// asks for a decision rather than picking one quietly.
-const DEDICATION_UNIT_PITCH_PX = 344;
+// No assertion here compares `VARIANT_TOKENS.onPrimary`'s keys against
+// `VARIANT_TOKENS.onPage`'s: `DedicationVariantTokens` (client/src/
+// components/DedicationUnit/models.ts) has six fields, all required, none
+// optional, and `VARIANT_TOKENS` is typed `Record<DedicationVariant,
+// DedicationVariantTokens>`. A missing key in either entry is a compile
+// error; an extra key is rejected by the object literal's excess-property
+// check, which the C2 build verified by hand with a stray `paddingBlock`
+// and `TS2353`. The two entries have identical key sets by construction,
+// enforced on every build, including CI, and a runtime check here could
+// only ever agree with it. If `DedicationVariantTokens` ever grows an
+// optional field, that guarantee weakens and this assertion is worth
+// adding back.
+//
+// `stepByUnitPitch`'s pitch below is an arbitrary test input, not a mirror
+// of the real unit pitch (`DEDICATION_UNIT_WIDTH_PX` + `DEDICATION_UNIT_
+// GAP_PX`, 280 + 64 in client/src/components/DedicationUnit/consts.ts and
+// client/src/HomePage/components/DedicationBand/consts.ts): both live in
+// files that reach the theme through the `~` alias, which only Vite
+// resolves, so neither is reachable from here. `stepByUnitPitch` itself is
+// a generic function that only needs a pitch, not that specific one, to
+// prove its arithmetic, so this test makes no claim about what the real
+// pitch is.
+const TEST_UNIT_PITCH_PX = 100;
 
 describe('isTrackOverflowing (the width test)', () => {
   test('a track narrower than its container does not crawl', () => {
@@ -69,11 +79,11 @@ describe('wrapTrackPosition (the loop seam)', () => {
 
 describe('stepByUnitPitch (arrow key stepping)', () => {
   test('a forward step moves exactly one unit pitch', () => {
-    assert.equal(stepByUnitPitch(100, 1, DEDICATION_UNIT_PITCH_PX), 100 + DEDICATION_UNIT_PITCH_PX);
+    assert.equal(stepByUnitPitch(250, 1, TEST_UNIT_PITCH_PX), 250 + TEST_UNIT_PITCH_PX);
   });
 
   test('a backward step moves exactly one unit pitch, never a pixel amount', () => {
-    assert.equal(stepByUnitPitch(100, -1, DEDICATION_UNIT_PITCH_PX), 100 - DEDICATION_UNIT_PITCH_PX);
+    assert.equal(stepByUnitPitch(250, -1, TEST_UNIT_PITCH_PX), 250 - TEST_UNIT_PITCH_PX);
   });
 });
 
