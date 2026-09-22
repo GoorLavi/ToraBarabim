@@ -65,6 +65,13 @@ export const PlacePicker = css(
       line-height: ${theme.typography.body.phone.lineHeight};
     }
 
+    /* An errored field marks its own control, not only the message below it
+       (design gate finding F7): a 1px danger border is an outline, not the
+       fill the token contract bars. */
+    &.hasError > input {
+      border-color: ${theme.colors.danger};
+    }
+
     > .helper {
       color: ${theme.colors.textSecondary};
       font-size: ${theme.typography.secondary.phone.fontSize};

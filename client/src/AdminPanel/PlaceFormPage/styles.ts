@@ -163,7 +163,10 @@ export const PlaceFormPage = css(
       > .cancel {
         display: flex;
         align-items: center;
+        justify-content: center;
+        min-inline-size: 48px;
         min-block-size: 48px;
+        padding-inline: ${theme.spacing.sm};
         color: ${theme.colors.textSecondary};
         font-weight: ${theme.typography.fontWeight.semiBold};
         text-decoration: none;

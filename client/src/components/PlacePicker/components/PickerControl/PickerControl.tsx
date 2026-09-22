@@ -33,14 +33,9 @@ export const PickerControl = styled(({ className, place, onSelectPlace, onClearP
       <div className={classNames('field', { open: isOpen })} onBlur={close}>
         <button type="button" className="control" aria-haspopup="listbox" aria-expanded={isOpen} onClick={() => setIsOpen((open) => !open)}>
           {place ? (
-            <span className="chosen">
-              <span className="name" dir="auto">
-                {place.name}
-                {!place.isActive && <span className="inactiveTag">{parentConsts.INACTIVE_PLACE_TAG}</span>}
-              </span>
-              <span className="address" dir="auto">
-                {placeAddressLine(place.street, place.city)}
-              </span>
+            <span className="name" dir="auto">
+              {place.name}
+              {!place.isActive && <span className="inactiveTag">{parentConsts.INACTIVE_PLACE_TAG}</span>}
             </span>
           ) : (
             <span className="label">{parentConsts.PICKER_PLACEHOLDER}</span>

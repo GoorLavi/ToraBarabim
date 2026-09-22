@@ -31,16 +31,6 @@ export const PlaceCard = css(
       font-size: ${theme.typography.cardTitle.phone.fontSize};
       line-height: ${theme.typography.cardTitle.phone.lineHeight};
       overflow-wrap: break-word;
-
-      > .inactiveTag {
-        padding-inline: ${theme.spacing.sm};
-        border-radius: ${theme.radii.pill};
-        background: ${theme.colors.primarySoft};
-        color: ${theme.colors.textSecondary};
-        font-weight: ${theme.typography.fontWeight.semiBold};
-        font-size: ${theme.typography.tagAndCaption.phone.fontSize};
-        line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
-      }
     }
 
     > .address {

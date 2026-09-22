@@ -61,21 +61,31 @@ export const PhotoPicker = styled(
             </div>
           )}
 
-          {!isUploading && !hasFailed && (
+          {!hasFailed && (
             <>
-              <label className={classNames('chooseFile', { primary: !hasPhoto })}>
+              {/* Stays on screen and disabled while uploading, rather than
+                  vanishing and shifting the layout underneath it (design
+                  gate, PhotoPicker nits). Choosing a different file while
+                  one is already uploading still has no cancel affordance
+                  of its own: a real "cancel this upload" needs an abort
+                  wired through the mutation, in both this panel's and the
+                  rabbi panel's own copy of usePhotoUpload, which is out of
+                  this slice; flagged in the report. */}
+              <label className={classNames('chooseFile', { primary: !hasPhoto, disabled: isUploading })}>
                 <span>{hasPhoto ? consts.PHOTO_REPLACE_LABEL : consts.PHOTO_CHOOSE_LABEL}</span>
-                <input type="file" accept="image/jpeg,image/png" onChange={handleChange} />
+                <input type="file" accept="image/jpeg,image/png" onChange={handleChange} disabled={isUploading} />
               </label>
 
-              {errorMessage && <p className="error">{errorMessage}</p>}
-              {!hasPhoto && <p className="missingNote">{consts.PHOTO_MISSING_NOTE}</p>}
+              {!isUploading && errorMessage && <p className="error">{errorMessage}</p>}
+              {!isUploading && !hasPhoto && <p className="missingNote">{consts.PHOTO_MISSING_NOTE}</p>}
 
-              <ul className="help">
-                <li className="helpItem">{consts.PHOTO_HELP_TYPE}</li>
-                <li className="helpItem">{consts.PHOTO_HELP_SIZE[aspectRatio]}</li>
-                {consts.PHOTO_HELP_CROP[aspectRatio] && <li className="helpItem">{consts.PHOTO_HELP_CROP[aspectRatio]}</li>}
-              </ul>
+              {!isUploading && (
+                <ul className="help">
+                  <li className="helpItem">{consts.PHOTO_HELP_TYPE}</li>
+                  <li className="helpItem">{consts.PHOTO_HELP_SIZE[aspectRatio]}</li>
+                  {consts.PHOTO_HELP_CROP[aspectRatio] && <li className="helpItem">{consts.PHOTO_HELP_CROP[aspectRatio]}</li>}
+                </ul>
+              )}
             </>
           )}
         </div>

@@ -29,36 +29,37 @@ export const PickerControl = css(
       line-height: ${theme.typography.body.phone.lineHeight};
       text-align: start;
 
-      > .chosen {
+      /* The full "street, city" line that used to sit under this no longer
+         renders here: the locked ReadOnlyField block right below already
+         itemises the same address once the place is chosen, so keeping it
+         here too doubled it, ~costly height on the panel's most-used form
+         (design gate finding, PlacePicker nits). \`flex-wrap: wrap\` lets a
+         short inactive-place pill drop to its own line rather than eating
+         into the width the name itself needs to wrap
+         (mirrors AdminPanel/PlacesListPage/components/PlaceCard/styles.ts's
+         own \`.name\`). */
+      > .name {
         display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        min-inline-size: 0;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: ${theme.spacing.xs};
+        overflow-wrap: break-word;
+        color: ${theme.colors.text};
+        font-weight: ${theme.typography.fontWeight.semiBold};
 
-        > .name {
-          display: flex;
-          align-items: center;
-          gap: ${theme.spacing.xs};
-          overflow-wrap: break-word;
+        /* \`accentSoft\`, not \`primarySoft\`: the locked fields right below
+           this control use \`primarySoft\`'s quiet neutral now
+           (ReadOnlyField/styles.ts's own \`.quiet\`), and a state this
+           consequential (a saved lesson still pointing at a now-inactive
+           place) must not share a tint with something inert. */
+        > .inactiveTag {
+          padding-inline: ${theme.spacing.sm};
+          border-radius: ${theme.radii.pill};
+          background: ${theme.colors.accentSoft};
           color: ${theme.colors.text};
           font-weight: ${theme.typography.fontWeight.semiBold};
-
-          > .inactiveTag {
-            padding-inline: ${theme.spacing.sm};
-            border-radius: ${theme.radii.pill};
-            background: ${theme.colors.primarySoft};
-            color: ${theme.colors.textSecondary};
-            font-weight: ${theme.typography.fontWeight.semiBold};
-            font-size: ${theme.typography.tagAndCaption.phone.fontSize};
-            line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
-          }
-        }
-
-        > .address {
-          overflow-wrap: break-word;
-          color: ${theme.colors.textSecondary};
-          font-size: ${theme.typography.secondary.phone.fontSize};
-          line-height: ${theme.typography.secondary.phone.lineHeight};
+          font-size: ${theme.typography.tagAndCaption.phone.fontSize};
+          line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
         }
       }
     }

@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { googleMapsHref, wazeHref } from '~/helpers';
 
 import * as consts from './consts';
-import { placeMetaLabel } from './helpers';
+import { placeMetaLabel, unbreakableStreet } from './helpers';
 import type { PlaceHeroProps } from './models';
 import * as styles from './styles';
 
@@ -33,7 +33,7 @@ export const PlaceHero = styled(({ className, place, lessonCount }: PlaceHeroPro
 
         <div className="address">
           <p className="line" dir="auto">
-            {place.street}
+            {unbreakableStreet(place.street)}
           </p>
           {place.floor && (
             <p className="line" dir="auto">
@@ -49,6 +49,10 @@ export const PlaceHero = styled(({ className, place, lessonCount }: PlaceHeroPro
 
         {showNavRow && wazeUrl && googleMapsUrl && (
           <div className="navRow">
+            <p className="navHeading" dir="auto">
+              {consts.NAV_ROW_HEADING_LABEL}
+            </p>
+
             <a className="navButton waze" href={wazeUrl} target="_blank" rel="noopener noreferrer" aria-label={consts.WAZE_ARIA_LABEL}>
               <svg className="icon waze" viewBox={consts.WAZE_ICON_VIEW_BOX} aria-hidden="true">
                 {consts.WAZE_ICON_PATHS.map(renderIconPath)}

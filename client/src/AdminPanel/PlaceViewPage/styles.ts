@@ -172,14 +172,6 @@ export const PlaceViewPage = css(
               line-height: ${theme.typography.pageHeading.desktop.lineHeight};
             }
           }
-
-          > .title {
-            overflow-wrap: break-word;
-            color: ${theme.colors.textSecondary};
-            font-weight: ${theme.typography.fontWeight.regular};
-            font-size: ${theme.typography.body.phone.fontSize};
-            line-height: ${theme.typography.body.phone.lineHeight};
-          }
         }
       }
 

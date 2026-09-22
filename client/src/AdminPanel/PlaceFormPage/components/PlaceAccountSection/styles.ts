@@ -146,12 +146,16 @@ export const PlaceAccountSection = css(
       }
     }
 
+    /* Outlined, not filled: the page's real submit is the save button on
+       PlaceFormPage itself, ~40px below this section. Two filled primaries
+       that close would leave the form's actual submit unidentifiable
+       (design gate finding F9). */
     > .submit {
       min-block-size: 48px;
       padding-inline: ${theme.spacing.lg};
+      border: 1px solid ${theme.colors.primary};
       border-radius: ${theme.radii.pill};
-      background: ${theme.colors.primary};
-      color: ${theme.colors.textOnPrimary};
+      color: ${theme.colors.primary};
       font-weight: ${theme.typography.fontWeight.semiBold};
 
       &:disabled {

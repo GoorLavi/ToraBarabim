@@ -14,8 +14,6 @@ export const SEARCH_LABEL = 'חיפוש מקומות';
 // not `1 מקומות`.
 export const totalCountLabel = (total: number): string => (total === 1 ? 'מקום אחד במערכת' : `${total} מקומות במערכת`);
 
-export const INACTIVE_TAG = 'לא פעיל';
-
 export const LOADING_MESSAGE = 'טוענים מקומות...';
 export const RETRY_LABEL = 'ניסיון נוסף';
 

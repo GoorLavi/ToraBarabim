@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { InactiveTag } from '~/AdminPanel/components/InactiveTag/InactiveTag';
 import { RecordField } from '~/AdminPanel/components/RecordField/RecordField';
 import { ADMIN_ROUTES, skeletonFieldKeys } from '~/AdminPanel/consts';
 import { adminErrorMessage } from '~/AdminPanel/helpers';
@@ -83,9 +84,13 @@ export const PlaceViewPage = styled(({ className }: PlaceViewPageProps) => {
               <h1 className="heading" dir="auto">
                 {place.name}
               </h1>
-              <p className="title" dir="auto">
-                {place.isActive ? consts.STATUS_ACTIVE_VALUE : consts.STATUS_INACTIVE_VALUE}
-              </p>
+              {/* The detail view must not be quieter than the list about a
+                  state with downstream consequences (design gate finding
+                  F12): the same pill `PlaceCard` marks an inactive place
+                  with, not the plain grey text this line used to render
+                  regardless of status. Nothing renders for an active place,
+                  mirroring `PlaceCard`'s own quiet-by-default state. */}
+              {!place.isActive && <InactiveTag />}
             </div>
           </div>
 

@@ -4,6 +4,18 @@
 export const PHOTO_WIDTH_DESKTOP = '320px';
 export const PHOTO_HEIGHT_DESKTOP = '180px';
 
+// The cap the nav buttons stop growing at from `lg` up, so they hug their
+// own labels instead of stretching across the whole text column (design
+// gate finding F3, measured at 1280 against the photo's own 320px).
+export const NAV_BUTTON_MAX_WIDTH_DESKTOP = '200px';
+
+// The group label the identical Waze/Google Maps pair carries on
+// LessonTicket (LessonPage/components/LessonTicket/consts.ts's own
+// NAV_ROW_HEADING_LABEL, "ניווט לשיעור"). That copy names a lesson, which
+// this card is not, so it is not reused verbatim; this is a placeholder
+// structural slot for the editor's own wording (design gate finding F4).
+export const NAV_ROW_HEADING_LABEL = '[יש להשלים: כותרת קבוצת כפתורי הניווט]';
+
 // Waze's and Google Maps' brand marks, labels and hover tints, duplicated
 // from LessonPage/components/LessonTicket/consts.ts rather than lifted: the
 // brief that shipped this component scoped the lift to `addressLine`,

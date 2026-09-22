@@ -72,15 +72,13 @@ export const LessonsListPage = css(
       background: ${theme.colors.primary};
       color: ${theme.colors.textOnPrimary};
       font-weight: ${theme.typography.fontWeight.semiBold};
-
-      &.ghost {
-        background: none;
-        border: 1px solid ${theme.colors.border};
-        color: ${theme.colors.primary};
-      }
     }
   }
 
+  /* Shaped like a loaded LessonListItem card (title, when, tags), rather
+     than a blank rectangle, so a still block reads as "a lesson is coming"
+     instead of three cards that failed to render (design gate finding F6;
+     mirrors AdminPanel/PlacesListPage/styles.ts's own skeleton bars). */
   > .skeleton {
     margin-block-start: ${theme.spacing.xl};
     display: flex;
@@ -88,10 +86,41 @@ export const LessonsListPage = css(
     gap: ${theme.spacing.md};
 
     > .skeletonCard {
-      block-size: 128px;
+      display: flex;
+      flex-direction: column;
+      gap: ${theme.spacing.xs};
+      padding: ${theme.spacing.lg};
+      border: 1px solid ${theme.colors.border};
       border-radius: ${theme.radii.lg};
       background: ${theme.colors.surface};
-      border: 1px solid ${theme.colors.border};
+      box-shadow: ${theme.shadows.card};
+
+      > .bar {
+        border-radius: ${theme.radii.sm};
+        background: ${theme.colors.primarySoft};
+
+        &.title {
+          inline-size: 55%;
+          block-size: 22px;
+        }
+
+        &.when {
+          margin-block-start: 2px;
+          inline-size: 40%;
+          block-size: 16px;
+        }
+      }
+
+      > .tags {
+        margin-block-start: ${theme.spacing.sm};
+        display: flex;
+        gap: ${theme.spacing.xs};
+
+        > .bar.tag {
+          inline-size: 72px;
+          block-size: 20px;
+        }
+      }
     }
   }
 

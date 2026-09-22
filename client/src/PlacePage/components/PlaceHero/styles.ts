@@ -1,6 +1,6 @@
 import { css } from 'styled-components';
 
-import { GOOGLE_MAPS_BUTTON_HOVER_COLOR, PHOTO_HEIGHT_DESKTOP, PHOTO_WIDTH_DESKTOP, WAZE_BUTTON_HOVER_COLOR } from './consts';
+import { GOOGLE_MAPS_BUTTON_HOVER_COLOR, NAV_BUTTON_MAX_WIDTH_DESKTOP, PHOTO_HEIGHT_DESKTOP, PHOTO_WIDTH_DESKTOP, WAZE_BUTTON_HOVER_COLOR } from './consts';
 
 // The plum head card, radius `lg` (design spec, "Head card"): built
 // no-photo-first. With no photo `.photo` never renders (PlaceHero.tsx), so
@@ -75,17 +75,19 @@ export const PlaceHero = css(
 
     /* One line per address part, never concatenated (design spec,
        design-system.md "A number at a line break flips"): each line stays
-       on its own row and truncates rather than wraps, the same mitigation
-       LessonTicket's own \`.street\` line uses, so a long street name can
-       never wrap mid-line and flip its house number either. */
+       on its own row and wraps freely rather than truncating, so a long
+       street or city is never cut off, the single load-bearing fact on this
+       page for someone standing outside it. The street line's own house
+       number is glued to the word before it with a non-breaking space
+       (PlaceHero/helpers.ts, unbreakableStreet) so a wrap never leaves it
+       alone at a line break; the city is never clamped
+       (design gate finding F1). */
     > .address > .line {
       inline-size: 100%;
       color: ${theme.colors.textOnPrimaryMuted};
       font-size: ${theme.typography.body.phone.fontSize};
       line-height: ${theme.typography.body.phone.lineHeight};
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      overflow-wrap: break-word;
     }
 
     > .meta {
@@ -102,9 +104,21 @@ export const PlaceHero = css(
       gap: ${theme.spacing.sm};
     }
 
+    > .navRow > .navHeading {
+      inline-size: 100%;
+      margin-block-end: ${theme.spacing.xs};
+      color: ${theme.colors.textOnPrimaryMuted};
+      font-weight: ${theme.typography.tagAndCaption.fontWeight};
+      font-size: ${theme.typography.tagAndCaption.phone.fontSize};
+      line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
+    }
+
     > .navRow > .navButton {
       /* 160, not 140: the Google Maps label's own min-content width is
-         ~152-160px (mirrors LessonTicket/styles.ts's own navButton). */
+         ~152-160px (mirrors LessonTicket/styles.ts's own navButton). Capped
+         at NAV_BUTTON_MAX_WIDTH_DESKTOP from \`lg\` up so the pair hugs its
+         own labels instead of stretching across the whole text column
+         (design gate finding F3). */
       flex: 1 1 160px;
       min-block-size: 48px;
       display: flex;
@@ -121,6 +135,11 @@ export const PlaceHero = css(
       line-height: ${theme.typography.body.phone.lineHeight};
       text-decoration: none;
       white-space: nowrap;
+
+      @media (min-width: ${theme.breakpoints.lg}) {
+        flex-grow: 0;
+        max-inline-size: ${NAV_BUTTON_MAX_WIDTH_DESKTOP};
+      }
 
       > .icon {
         flex: 0 0 auto;

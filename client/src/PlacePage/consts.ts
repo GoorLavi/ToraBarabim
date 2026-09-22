@@ -1,3 +1,5 @@
+import type { Area } from '@torabarabim/common';
+
 import { LESSON_LIST_PAGE_SIZE } from '~/consts';
 
 export const BACK_TO_ALL_PLACES_LABEL = 'חזרה לכל המקומות';
@@ -9,6 +11,10 @@ export const PLACE_PAGE_QUERY_KEYS = {
   // city" fallback, keyed on the city's own slug (design spec, "the empty
   // state widens to the city").
   widenedCityLessons: (citySlug: string) => ['place', 'widened-city-lessons', citySlug] as const,
+  // The second widening step, only fired once the city one comes back empty
+  // too (design gate finding F2): keyed on the area rather than the city,
+  // mirroring CityPage/consts.ts's own areaLessons key.
+  widenedAreaLessons: (area: Area | undefined) => ['place', 'widened-area-lessons', area ?? ''] as const,
 };
 
 // A 404 never becomes a 200 by retrying (mirrors RabbiPage/consts.ts,
@@ -25,6 +31,10 @@ export const PLACE_LESSONS_PAGE_SIZE = LESSON_LIST_PAGE_SIZE;
 // NATIONWIDE_LESSONS_PAGE_SIZE).
 export const WIDENED_CITY_LESSONS_PAGE_SIZE = 4;
 
+// The second widening step's own page size, same reasoning as the city
+// one above (design gate finding F2).
+export const WIDENED_AREA_LESSONS_PAGE_SIZE = 4;
+
 export const ERROR_HEADING = 'לא הצלחנו לטעון את עמוד המקום';
 export const ERROR_BODY = 'משהו השתבש בדרך אלינו. אפשר לנסות שוב.';
 export const RETRY_LABEL = 'נסו שוב';
@@ -40,20 +50,19 @@ export const LESSONS_ERROR_BODY = 'משהו השתבש בדרך אלינו. אפ
 export const EMPTY_HEADING = 'אין כרגע שיעורים במקום הזה';
 export const CONTACT_US_LABEL = 'כתבו לנו';
 
-// The head card's own meta line, shown once the lesson count is known
-// (PlaceHero/helpers.ts, placeMetaLabel): mirrors RabbiPage/consts.ts's
-// NO_LESSONS_META_LABEL, worded for a place rather than "the board".
-export const NO_LESSONS_META_LABEL = 'אין כרגע שיעורים';
-
 export const LOAD_MORE_ERROR_LABEL = 'לא הצלחנו לטעון עוד שיעורים, נסו שוב';
 export const LOAD_MORE_LABEL = 'עוד שיעורים במקום הזה';
 
 export const otherCityLessonsHeading = (cityName: string): string => `שיעורים אחרים ב${cityName}`;
+export const otherAreaLessonsHeading = (areaName: string): string => `שיעורים באזור ${areaName}`;
 
 // While the widened fetch is still pending its body optimistically reads as
 // "widened", correcting to the "also empty" copy once resolved (mirrors
 // CityPage/consts.ts's widenedToAreaBody/areaAlsoEmptyBody).
 export const widenedToCityBody = (cityName: string): string =>
   `הרחבנו לכל ${cityName}, כדי שלא תישארו בלי כלום. אם אתם מכירים שיעור במקום הזה, כתבו לנו ונוסיף אותו.`;
+// The double-empty case (design gate finding F2): the city has nothing
+// either, so the body now points at the area cascade below it instead of
+// dead-ending on `כתבו לנו` alone.
 export const cityAlsoEmptyBody = (cityName: string): string =>
-  `גם ב${cityName} אין כרגע שיעורים נוספים. אם אתם מכירים שיעור, כתבו לנו ונוסיף אותו.`;
+  `גם ב${cityName} אין כרגע שיעורים נוספים. הרחבנו גם לאזור, כדי שלא תישארו בלי כלום.`;

@@ -1,4 +1,4 @@
-import type { CityDetailResponse, LessonSearchResponse, PlaceDetailResponse } from '@torabarabim/common';
+import type { Area, CityDetailResponse, LessonSearchResponse, PlaceDetailResponse } from '@torabarabim/common';
 
 // Carries the HTTP status so a caller can map it to Hebrew copy without
 // parsing `message` (mirrors CityPage/api.ts's CityPageApiError). Status 0
@@ -36,16 +36,17 @@ export const fetchPlaceDetail = (placeId: string, signal?: AbortSignal): Promise
 
 // GET /v1/lessons
 // 200 with LessonSearchResponse, including an empty result set: a real
-// place or city with no lessons is a 200, never a 404.
+// place, city or area with no lessons is a 200, never a 404.
 // 400 for an invalid query.
 // 5xx for a server or upstream failure.
 export const fetchLessons = (
-  params: { placeId?: string; city?: string; page?: number; pageSize?: number },
+  params: { placeId?: string; city?: string; area?: Area; page?: number; pageSize?: number },
   signal?: AbortSignal,
 ): Promise<LessonSearchResponse> => {
   const url = new URL('/v1/lessons', window.location.origin);
   if (params.placeId) url.searchParams.set('placeId', params.placeId);
   if (params.city) url.searchParams.set('city', params.city);
+  if (params.area) url.searchParams.set('area', params.area);
   if (params.page) url.searchParams.set('page', String(params.page));
   if (params.pageSize) url.searchParams.set('pageSize', String(params.pageSize));
   return fetchJson(url, signal);

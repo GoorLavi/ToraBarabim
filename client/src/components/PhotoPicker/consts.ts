@@ -34,11 +34,17 @@ export const PHOTO_HELP_SIZE: Record<PhotoPickerAspectRatio, string> = {
 };
 
 // The card is where the crop happens, not the reason for it, so it leads the
-// sentence and the recommendation follows. '16:9' has no entry: a place's
-// photo is validated and rejected, never cropped, so there is no post-crop
-// framing note to show for it.
+// sentence and the recommendation follows. '16:9' also gets an entry now:
+// validation only rejects a ratio outside 1.5-2.0 (server/src/service/place/
+// consts.ts), while the hero always displays at exactly 1.778 with
+// `object-fit: cover`, so a photo that passes validation can still be
+// cropped at the sides on display, and nobody was told (design gate: "a
+// photo that passes validation is still cropped at the sides"). The exact
+// wording is a placeholder for the editor's own copy, the same as the
+// structural crop note above.
 export const PHOTO_HELP_CROP: Partial<Record<PhotoPickerAspectRatio, string>> = {
   '3:4': 'בכרטיס באתר התמונה נחתכת ליחס 3:4, לכן כדאי שהפנים יהיו במרכז ולא בקצה.',
+  '16:9': '[יש להשלים: הערה שהתמונה מוצגת ברוחב מלא ביחס 16:9 ועשויה להיחתך מהצדדים, לכן כדאי שהמרכיבים החשובים יהיו במרכז]',
 };
 
 // The real upload states (rabbi-panel-copy.md, section 6): shown only when

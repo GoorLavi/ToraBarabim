@@ -59,21 +59,17 @@ export const ProfilePage = css(
     flex-direction: column;
     gap: ${theme.spacing.md};
 
-    @media (min-width: ${theme.breakpoints.md}) {
-      flex-direction: row;
-    }
-
     > .skeletonFrame {
-      flex-shrink: 0;
-      /* Matches PhotoPicker's own '16:9' frame size (components/PhotoPicker/styles.ts). */
-      inline-size: 240px;
+      /* Matches PhotoPicker's own '16:9' frame, which takes the field's
+         full width as a rule rather than a fixed number
+         (components/PhotoPicker/styles.ts). */
+      inline-size: 100%;
       aspect-ratio: 16 / 9;
       border-radius: ${theme.radii.md};
       background: ${theme.colors.border};
     }
 
     > .skeletonLines {
-      flex: 1;
       display: flex;
       flex-direction: column;
       gap: ${theme.spacing.md};

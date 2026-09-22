@@ -77,6 +77,7 @@ installMockFetch((url) => {
   if (pathname === '/v1/lessons') {
     const placeId = url.searchParams.get('placeId');
     const city = url.searchParams.get('city');
+    const area = url.searchParams.get('area');
 
     if (placeId === 'story-lessons-loading') return NEVER_RESOLVES;
 
@@ -105,12 +106,24 @@ installMockFetch((url) => {
         total: 1,
       });
     }
+    // The city is empty too (city '46'), so the page widens a second time,
+    // to the area, and finds a real lesson there (design gate finding F2).
     if (city === '46') return jsonResponse(200, { items: [], page: 1, pageSize: 4, total: 0 });
+    if (area === 'north') {
+      return jsonResponse(200, {
+        items: [lesson({ lessonId: 'a1', rabbi: rabbiFixture({ id: 'r10', name: 'יוסף חדד' }) })],
+        page: 1,
+        pageSize: 4,
+        total: 1,
+      });
+    }
     return jsonResponse(200, { items: [], page: 1, pageSize: 50, total: 0 });
   }
 
   if (pathname === '/v1/cities/נתניה') return jsonResponse(200, cityDetail({}));
-  if (pathname === '/v1/cities/עיר-ריקה') return jsonResponse(200, cityDetail({ id: '46', name: 'עיר-ריקה', slug: 'עיר-ריקה' }));
+  if (pathname === '/v1/cities/עיר-ריקה') {
+    return jsonResponse(200, cityDetail({ id: '46', name: 'עיר-ריקה', slug: 'עיר-ריקה', area: 'north', areaName: 'הצפון', areaSlug: 'הצפון' }));
+  }
 
   return null;
 });
@@ -135,6 +148,9 @@ export const Populated: Story = { decorators: [withRoute('story-populated')] };
 export const NoPhoto: Story = { decorators: [withRoute('story-nophoto')] };
 export const WithFloor: Story = { decorators: [withRoute('story-withfloor')] };
 export const EmptyWidenedToCity: Story = { decorators: [withRoute('story-empty-widened')] };
+// The city is empty too, so the page widens a second time, to the area, and
+// finds a real lesson there instead of dead-ending on `כתבו לנו` alone
+// (design gate finding F2).
 export const EmptyCityAlsoEmpty: Story = { decorators: [withRoute('story-empty-also')] };
 export const VeryLongName: Story = { decorators: [withRoute('story-longname')] };
 export const NotFound: Story = { decorators: [withRoute('story-notfound')] };

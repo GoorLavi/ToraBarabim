@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import classNames from 'classnames';
 import styled from 'styled-components';
 
 import { CitySelect } from '~/components/CitySelect/CitySelect';
@@ -40,19 +41,26 @@ export const PlacePicker = styled(({ className, venue, onChangeVenue, city, onSe
 
       <PickerControl place={venue.kind === 'place' ? venue.place : undefined} onSelectPlace={selectPlace} onClearPlace={clearPlace} />
 
-      <div className="orDivider" aria-hidden="true">
-        <span className="line" />
-        <span className="label">{consts.OR_LABEL}</span>
-        <span className="line" />
-      </div>
+      {/* Once a place is chosen there is no live fork any more: the address
+          fields below are that same place's own, locked, not a real
+          alternative "או" would promise (design gate finding, PlacePicker
+          nits: "'או' still between them implying the other arm is
+          available"). */}
+      {venue.kind === 'address' && (
+        <div className="orDivider" aria-hidden="true">
+          <span className="line" />
+          <span className="label">{consts.OR_LABEL}</span>
+          <span className="line" />
+        </div>
+      )}
 
       {venue.kind === 'place' ? (
         <>
           <p className="reason">{consts.LOCKED_REASON}</p>
-          <ReadOnlyField label={consts.CITY_LABEL} value={venue.place.city} />
-          <ReadOnlyField label={consts.PLACE_NAME_LABEL} value={venue.place.name} />
-          <ReadOnlyField label={consts.STREET_LABEL} value={venue.place.street} />
-          {venue.place.floor && <ReadOnlyField label={consts.FLOOR_LABEL} value={venue.place.floor} />}
+          <ReadOnlyField quiet label={consts.CITY_LABEL} value={venue.place.city} />
+          <ReadOnlyField quiet label={consts.PLACE_NAME_LABEL} value={venue.place.name} />
+          <ReadOnlyField quiet label={consts.STREET_LABEL} value={venue.place.street} />
+          {venue.place.floor && <ReadOnlyField quiet label={consts.FLOOR_LABEL} value={venue.place.floor} />}
         </>
       ) : (
         <>
@@ -63,7 +71,7 @@ export const PlacePicker = styled(({ className, venue, onChangeVenue, city, onSe
             {cityError && <span className="error">{cityError}</span>}
           </div>
 
-          <label className="field">
+          <label className={classNames('field', { hasError: Boolean(nameError) })}>
             <span className="label">{consts.PLACE_NAME_LABEL}</span>
             <input
               type="text"
@@ -78,7 +86,7 @@ export const PlacePicker = styled(({ className, venue, onChangeVenue, city, onSe
           </label>
           {hintMatch && lastEditedField === 'name' && <DuplicateHint place={hintMatch} onConfirm={confirmHint} onDismiss={hint.dismiss} />}
 
-          <label className="field">
+          <label className={classNames('field', { hasError: Boolean(streetError) })}>
             <span className="label">{consts.STREET_LABEL}</span>
             <input
               type="text"

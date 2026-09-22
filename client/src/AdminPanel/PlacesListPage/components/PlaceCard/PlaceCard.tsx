@@ -2,10 +2,10 @@ import classNames from 'classnames';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { InactiveTag } from '~/AdminPanel/components/InactiveTag/InactiveTag';
 import { ADMIN_ROUTES, DETAILS_LABEL } from '~/AdminPanel/consts';
 import { placeAddressLine } from '~/components/PlacePicker/helpers';
 
-import * as parentConsts from '../../consts';
 import type { PlaceCardProps } from './models';
 import * as styles from './styles';
 
@@ -14,7 +14,7 @@ export const PlaceCard = styled(({ className, place }: PlaceCardProps) => (
     <div className="body">
       <h3 className="name" dir="auto">
         {place.name}
-        {!place.isActive && <span className="inactiveTag">{parentConsts.INACTIVE_TAG}</span>}
+        {!place.isActive && <InactiveTag />}
       </h3>
       <p className="address" dir="auto">
         {placeAddressLine(place.street, place.cityName)}

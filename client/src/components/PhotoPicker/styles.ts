@@ -7,30 +7,44 @@ export const PhotoPicker = css(
   align-items: flex-start;
   gap: ${theme.spacing.sm};
 
-  /* Poster and its help text stack on a phone and sit side by side from
-     md up (rabbi-panel-copy.md, section 6). This reads the viewport
-     rather than the container, matching every other breakpoint in this
-     component tree; the design doc's own container-width caveat is
-     explicitly not enforced here for the same reason it names. */
-  @media (min-width: ${theme.breakpoints.md}) {
-    flex-direction: row;
-    align-items: flex-start;
-    gap: ${theme.spacing.lg};
+  /* The 3:4 poster and its help text stack on a phone and sit side by side
+     from md up (rabbi-panel-copy.md, section 6): scoped to \`.ratio3x4\`
+     only, since the frame stays a small, fixed 160x213 box that has room
+     beside its own text there. This reads the viewport rather than the
+     container, matching every other breakpoint in this component tree; the
+     design doc's own container-width caveat is explicitly not enforced
+     here for the same reason it names. */
+  &.ratio3x4 {
+    @media (min-width: ${theme.breakpoints.md}) {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: ${theme.spacing.lg};
+    }
   }
 
-  /* The single rule the ratio lives in. '16:9' (a place's own photo) is
-     sized so the frame carries roughly the same visual weight as the '3:4'
-     portrait: matching area rather than either dimension alone, since a
-     16:9 frame at the portrait's own height would run far wider than a
-     phone screen, and at its width would read as a thumbnail beside it.
-     160x213 (3:4) is ~34,100px²; 240x135 (16:9) is 32,400px², within 5%. */
   &.ratio3x4 > .frame {
     inline-size: 160px;
     aspect-ratio: 3 / 4;
   }
 
+  /* Takes the form's own field width, as a rule rather than a number, so
+     it is always exactly as wide as the text inputs beside it and never
+     drifts from them (design gate: the earlier fixed 240px was only 70%
+     of the shipped hero photo's own 343px width, and visibly sat as a
+     shrunken indent in a column of full-width fields). Stays stacked with
+     its own help text at every width, unlike '3:4' above: a field-width
+     frame never has room beside anything. The component's own root also
+     takes its parent's full width here: a percentage width on \`.frame\`
+     alone would resolve against an auto-sized parent wherever the caller's
+     field does not already stretch its children (AdminPanel/PlaceFormPage's
+     own \`.field\`, unlike PlacePanel/ProfilePage's), which computes to 0
+     rather than the field's real width. */
+  &.ratio16x9 {
+    inline-size: 100%;
+  }
+
   &.ratio16x9 > .frame {
-    inline-size: 240px;
+    inline-size: 100%;
     aspect-ratio: 16 / 9;
   }
 
@@ -150,6 +164,11 @@ export const PhotoPicker = css(
         border-color: ${theme.colors.primary};
         background: ${theme.colors.primary};
         color: ${theme.colors.textOnPrimary};
+      }
+
+      &.disabled {
+        opacity: 0.6;
+        pointer-events: none;
       }
 
       > input {
