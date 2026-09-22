@@ -1,8 +1,6 @@
 import { css } from 'styled-components';
 
-// Off the 4px spacing scale, mirroring RabbiListRow/consts.ts's own
-// ROW_PADDING_BLOCK (frame measurement).
-const ROW_PADDING_BLOCK = '14px';
+import { ROW_PADDING_BLOCK } from './consts';
 
 // A rounded rectangle at `radii.sm`, 64 by 36, not a pill avatar: a round
 // crop of a building is a smudge (build brief). With no photo the box stays
@@ -63,14 +61,23 @@ export const PlaceListRow = css(
       overflow-wrap: break-word;
     }
 
-    /* Truncated to one line rather than wrapped (build brief). */
+    /* The city gets its own line rather than trailing the street on one
+       clamped line: a long street name otherwise clamps the city away
+       entirely, and the city is the one thing that tells a reader where a
+       place is (design-system.md, "Place: the city is the unit", design
+       gate finding F6). Only the street line clamps; the city never does. */
     > .meta {
+      display: flex;
+      flex-direction: column;
       color: ${theme.colors.textSecondary};
       font-size: ${theme.typography.secondary.phone.fontSize};
       line-height: ${theme.typography.secondary.phone.lineHeight};
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+
+      > .street {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
     }
   }
 

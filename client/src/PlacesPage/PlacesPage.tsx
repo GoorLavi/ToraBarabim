@@ -51,7 +51,12 @@ export const PlacesPage = styled(({ className }: PlacesPageProps) => {
         )}
       </div>
 
-      {!query.isPending && !query.isError && !isBoardEmpty && (
+      {/* Rendered through the pending state too, not only once data lands: a
+          skeleton that omits the search block understates how tall the
+          loaded page actually is (design gate finding F5), and the field
+          itself is harmless to show early since it filters an empty list
+          until the directory arrives. */}
+      {!query.isError && !isBoardEmpty && (
         <div className="searchField">
           <label className="searchLabel" htmlFor={consts.SEARCH_FIELD_ID}>
             {consts.SEARCH_FIELD_LABEL}

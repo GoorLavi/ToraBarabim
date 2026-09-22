@@ -119,7 +119,18 @@ export const PlaceViewPage = css(
 
     /* No order property anywhere in this header: the edit button is a
        sibling of the poster+identity group in both the DOM and the CSS, so
-       visual order always matches DOM order at every width. */
+       visual order always matches DOM order at every width.
+
+       Neither the title row nor the header grows the row past its content at
+       the md breakpoint and up: an earlier version gave the title row a flex
+       grow of 1 and gave the header a space-between justify-content, which
+       stretched the identity block to the full remaining band width and then
+       pinned the button to the far end of it, 634px from the name it edits
+       at 1280 (design gate finding F4). The title row keeps its default
+       shrink-to-content flex value, so it only takes the width its content
+       needs and only shrinks, through the identity block's own flex grow of
+       1 and zeroed minimum inline size, once a long place name and the
+       button together no longer fit the band. */
     > .header {
       display: flex;
       flex-direction: column;
@@ -128,7 +139,6 @@ export const PlaceViewPage = css(
       @media (min-width: ${theme.breakpoints.md}) {
         flex-direction: row;
         align-items: flex-start;
-        justify-content: space-between;
         gap: ${theme.spacing.lg};
       }
 
@@ -137,10 +147,6 @@ export const PlaceViewPage = css(
         align-items: flex-start;
         gap: ${theme.spacing.md};
         min-inline-size: 0;
-
-        @media (min-width: ${theme.breakpoints.md}) {
-          flex: 1;
-        }
 
         > .poster {
           flex: 0 0 auto;

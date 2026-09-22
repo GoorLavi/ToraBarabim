@@ -11,12 +11,17 @@ const PLACE_PHOTO_MIN_ASPECT_RATIO = 1.5;
 const PLACE_PHOTO_MAX_ASPECT_RATIO = 2.0;
 
 // The 16:9 frame otherwise takes the field's full width with no ceiling
-// (styles.ts), which is right on a phone but renders at 776 wide (437 tall)
-// in the 1280 profile form, pushing every field below it off the first
-// screen (design gate finding B2). Larger than the 320 the photo actually
-// ships at in the hero, so it still reads as a real preview; small enough
-// that the form's fields stay above the fold at 1280.
-export const PHOTO_PICKER_16X9_FRAME_MAX_WIDTH = 480;
+// (styles.ts). Hand-mirrored from PlacePage/components/PlaceHero/consts.ts's
+// own PHOTO_WIDTH_DESKTOP (no shared import path: a shared component must
+// not reach into a page's internals for one number): the photo ships in the
+// place hero at exactly that width, so a wider preview here shows a
+// composition the visitor never sees, and the crop tuned against a bigger
+// frame is not the crop that ships. A preview is only a preview at the size
+// the thing actually ships at (design gate finding F7, which also measured
+// and rejected the fold as the reason: at 1280x900 the profile form's save
+// button sits 164px past the fold either way, and this value recovers only
+// 90px of that).
+export const PHOTO_PICKER_16X9_FRAME_MAX_WIDTH = 320;
 
 // The 3:4 frame's own fixed width (styles.ts), named here so the uploading
 // column below it can match it exactly rather than carrying a second, silent

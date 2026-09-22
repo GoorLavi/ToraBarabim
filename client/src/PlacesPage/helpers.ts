@@ -1,7 +1,5 @@
 import type { Place } from '@torabarabim/common';
 
-import { addressLine } from '~/helpers';
-
 const collator = new Intl.Collator('he');
 
 // Ordering per the build brief: city by Hebrew collation, then name, then
@@ -24,10 +22,3 @@ export const filterPlacesByName = (places: Place[], query: string): Place[] => {
   if (!needle) return places;
   return places.filter((place) => place.name.toLowerCase().includes(needle));
 };
-
-// "רחוב ומספר, עיר" (design spec, "Line 2"): street (with its floor, via
-// the shared `addressLine`, never re-concatenated here) then the city. The
-// brief's own template line also appends "· N שיעורים", omitted here for
-// the same reason `sortPlaces` above cannot rank by lesson count: the data
-// does not exist on `Place` yet.
-export const placeRowMetaLine = (place: Place): string => `${addressLine(place.street, place.floor)}, ${place.city}`;

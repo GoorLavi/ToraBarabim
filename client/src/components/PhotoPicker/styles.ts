@@ -218,7 +218,7 @@ export const PhotoPicker = css(
     > .help {
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: ${theme.spacing.sm};
 
       > .helpItem {
         color: ${theme.colors.textSecondary};

@@ -111,10 +111,20 @@ export const PlacesPage = css(
     }
   }
 
+  /* Mirrors .list's own layout (column at phone width, two-column grid from
+     md up) rather than a fixed column with a wider gap, so the loading state
+     prefigures the shape and spacing the real rows land into instead of
+     resizing under them (design gate finding F5). */
   > .skeletonList {
     display: flex;
     flex-direction: column;
-    gap: ${theme.spacing.xl};
+    gap: ${theme.spacing.sm};
+
+    @media (min-width: ${theme.breakpoints.md}) {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: ${theme.spacing.lg};
+    }
   }
 `,
 );
