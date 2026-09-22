@@ -1,12 +1,23 @@
-import type { LessonOccurrence } from '@torabarabim/common';
+import type { Area, LessonOccurrence } from '@torabarabim/common';
 
 import { LESSON_WINDOW_DAYS, LESSON_WINDOW_PAGE_SIZE } from '~/HomePage/consts';
 import { addDays, compactDayLabel, resolveTargetDate, todayInIsrael } from '~/HomePage/helpers';
+import { rabbiDisplayName } from '~/helpers';
 import type { DateFilterOption, SelectedCity } from '~/hooks/models';
 
-import { COMPLETE_LIST_RANGE_DAYS, INVALID_REQUEST_HINT, NETWORK_ERROR_HINT, PAGE_SIZE, SERVER_ERROR_HINT, TITLE_UNFILTERED } from './consts';
+import {
+  COMPLETE_LIST_RANGE_DAYS,
+  INVALID_REQUEST_HINT,
+  LESSONS_PAGE_AREA_NAMES,
+  NETWORK_ERROR_HINT,
+  PAGE_SIZE,
+  SERVER_ERROR_HINT,
+  TITLE_UNFILTERED,
+} from './consts';
 import type { LessonsApiError } from './api';
 import type { PassThroughFilters } from './models';
+
+const isArea = (value: string): value is Area => value in LESSONS_PAGE_AREA_NAMES;
 
 export interface ResolvedRange {
   from: string;
@@ -33,7 +44,14 @@ export const resolveLessonsRange = (option: DateFilterOption, customDate: string
 };
 
 export const hasPassThroughFilter = (passThrough: PassThroughFilters): boolean =>
-  Boolean(passThrough.rabbiId || passThrough.area || passThrough.topic || passThrough.audience);
+  Boolean(passThrough.rabbiId || passThrough.area || passThrough.topic || passThrough.audience || passThrough.placeId);
+
+// `rabbiId`, `area` and `placeId` are the three pass-through filters the
+// title names (below); `topic` and `audience` stay silently unnamed, as
+// before. Used to pick the dedicated empty-state heading these three need
+// when the fetch comes back with nothing to read a display name off of.
+export const hasNamedPassThroughFilter = (passThrough: PassThroughFilters): boolean =>
+  Boolean(passThrough.rabbiId || passThrough.area || passThrough.placeId);
 
 // The ratified empty state (design-system.md, "Every data screen has three
 // states"): when the target day has nothing, this widens forward to the
@@ -63,19 +81,37 @@ export const dateWord = (targetDate: string): string => {
   return `ב־${label}`;
 };
 
-// The one place the page's h1 is built: שיעורים, plus ב<city> when a city
-// is set, plus the date word when a date is set, plus the search term when
-// one is set. With nothing set at all it is the fixed TITLE_UNFILTERED
-// (05-lessons.md: "Rule [D]").
+// The one place the page's h1 is built: שיעורים, plus של/ב.../באזור... for
+// whichever pass-through filter is active, plus ב<city> when a city is set,
+// plus the date word when a date is set, plus the search term when one is
+// set. With nothing set at all it is the fixed TITLE_UNFILTERED (05-lessons.md:
+// "Rule [D]").
+//
+// `rabbiId` and `placeId` name a specific record with no client-known
+// display name, so each reads it off `firstItem`, the already-fetched first
+// result (no second request); with no result yet (still loading, errored,
+// or genuinely empty) that segment is simply left out rather than guessed.
+// `area` is the one pass-through filter whose value is already a known code
+// synchronously (the URL param itself), so it resolves through
+// `LESSONS_PAGE_AREA_NAMES` instead and never depends on `firstItem`.
 export const buildLessonsTitle = (
   city: SelectedCity | undefined,
   option: DateFilterOption,
   customDate: string | undefined,
   query: string,
+  passThrough: PassThroughFilters,
+  firstItem: LessonOccurrence | undefined,
 ): string => {
-  if (!city && option === 'all' && !query) return TITLE_UNFILTERED;
+  const hasNamed = hasNamedPassThroughFilter(passThrough);
+  if (!city && option === 'all' && !query && !hasNamed) return TITLE_UNFILTERED;
 
   let title = 'שיעורים';
+  if (passThrough.rabbiId && firstItem) title += ` של ${rabbiDisplayName(firstItem.rabbi)}`;
+  // `של`, never a prefixed `ב`: a place name is free text, so `בישיבת…`
+  // reads as a grammar error and `במשפחת כהן` as "inside the Cohen family".
+  // A free-standing `של` attaches to nothing and survives every name shape.
+  if (passThrough.placeId && firstItem && firstItem.venue.kind === 'place') title += ` של ${firstItem.venue.name}`;
+  if (passThrough.area && isArea(passThrough.area)) title += ` באזור ${LESSONS_PAGE_AREA_NAMES[passThrough.area]}`;
   if (city) title += ` ב${city.name}`;
   if (option !== 'all') title += ` ${dateWord(resolveTargetDate(option, customDate))}`;
   if (query) title += ` לפי החיפוש ״${query}״`;

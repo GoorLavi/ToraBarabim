@@ -17,6 +17,8 @@ import {
   SUBSTITUTE_LINK_BLOCK_PADDING,
   TEXT_COLUMN_INLINE_PADDING_DESKTOP,
   TICKET_FINE_GAP,
+  VENUE_LINK_BLOCK_PADDING_DESKTOP,
+  VENUE_LINK_BLOCK_PADDING_PHONE,
   WAZE_BUTTON_HOVER_COLOR,
 } from './consts';
 
@@ -346,6 +348,43 @@ export const TicketShell = css(
           font-size: ${theme.typography.ticketVenue.desktop.fontSize};
           line-height: ${theme.typography.ticketVenue.desktop.lineHeight};
           margin-block-end: ${theme.spacing.xs};
+        }
+
+        /* Only a place venue links out (LessonTicket.tsx,
+           \`venue.kind === 'place'\`); an address-only venue stays plain text
+           with no affordance to click. The anchor, not the \`p\`, carries the
+           padding/negative-margin pair that reaches the 48px tap target,
+           mirroring \`.teacherRow > .teacher > .name > .nameLink\`. */
+        > .venueLink {
+          display: inline-flex;
+          padding-block: ${VENUE_LINK_BLOCK_PADDING_PHONE};
+          margin-block: calc(-1 * ${VENUE_LINK_BLOCK_PADDING_PHONE});
+          color: inherit;
+          text-decoration: underline;
+          text-underline-offset: 3px;
+
+          @media (min-width: ${theme.breakpoints.lg}) {
+            padding-block: ${VENUE_LINK_BLOCK_PADDING_DESKTOP};
+            margin-block: calc(-1 * ${VENUE_LINK_BLOCK_PADDING_DESKTOP});
+          }
+
+          @media (hover: hover) and (pointer: fine) {
+            &:hover {
+              background: ${theme.colors.surfaceOnPrimary};
+              border-radius: ${theme.radii.sm};
+            }
+          }
+
+          &:active {
+            background: ${theme.colors.surfaceOnPrimary};
+            border-radius: ${theme.radii.sm};
+          }
+
+          &:focus-visible {
+            outline: 2px solid ${theme.colors.textOnPrimary};
+            outline-offset: 2px;
+            border-radius: ${theme.radii.sm};
+          }
         }
       }
 

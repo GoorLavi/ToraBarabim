@@ -1,4 +1,4 @@
-import type { LessonOccurrence, RabbiHonorific, ResolvedAddress } from '@torabarabim/common';
+import type { LessonOccurrence, RabbiHonorific } from '@torabarabim/common';
 
 import { LESSON_TOPIC_LABELS } from '~/HomePage/components/LessonCard/consts';
 import { TEACHING_RABBI_ROLE_LABEL } from '~/LessonPage/consts';
@@ -37,9 +37,6 @@ export const computeDurationMinutes = (startTime: string, endTime: string): numb
 // digit flips once it meets the surrounding Hebrew text (design spec).
 export const durationLabel = (minutes: number): string => `משך ${minutes} דקות`;
 
-// No comma when there is no floor (design spec).
-export const addressLine = (street: string, floor: string | undefined): string => (floor ? `${street}, ${floor}` : street);
-
 // "עד 22:00": the occurrence's own end time, shown next to the start time
 // rather than left to the duration line to imply it.
 export const endTimeLabel = (endTime: string): string => `עד ${endTime}`;
@@ -57,25 +54,3 @@ export const kickerLabel = (occurrence: LessonOccurrence): string | undefined =>
 // with `kickerLabel`.
 export const roleLabel = (teachingRabbiHonorific: RabbiHonorific): string =>
   TEACHING_RABBI_ROLE_LABEL[teachingRabbiHonorific];
-
-// Street and city only, never `floor`: a floor is an arrival note ("קומה
-// 2"), not part of a geocodable address, and passing it to Waze/Google Maps
-// would make the query fail to resolve. Both fields are trimmed here, the
-// one place the query string is actually built, so stray whitespace never
-// reaches the URL.
-const navigationQuery = (place: Pick<ResolvedAddress, 'street' | 'city'>): string => `${place.street.trim()}, ${place.city.trim()}`;
-
-// `undefined` unless both street and city are present, so the caller hides
-// the whole nav row rather than link out to a bare street or a bare city
-// (fail closed: a navigation link that only narrows down part of the
-// address is worse than none, per the design direction in this component's
-// brief).
-export const wazeHref = (place: Pick<ResolvedAddress, 'street' | 'city'>): string | undefined =>
-  place.street.trim() && place.city.trim()
-    ? `https://waze.com/ul?q=${encodeURIComponent(navigationQuery(place))}&navigate=yes`
-    : undefined;
-
-export const googleMapsHref = (place: Pick<ResolvedAddress, 'street' | 'city'>): string | undefined =>
-  place.street.trim() && place.city.trim()
-    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(navigationQuery(place))}`
-    : undefined;

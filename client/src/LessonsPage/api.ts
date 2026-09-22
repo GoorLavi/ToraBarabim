@@ -29,6 +29,7 @@ export const fetchLessons = async (filters: LessonsFilters, page: number): Promi
   if (filters.area) url.searchParams.set('area', filters.area);
   if (filters.topic) url.searchParams.set('topic', filters.topic);
   if (filters.audience) url.searchParams.set('audience', filters.audience);
+  if (filters.placeId) url.searchParams.set('placeId', filters.placeId);
 
   let response: Response;
   try {

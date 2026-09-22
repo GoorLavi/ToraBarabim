@@ -8,24 +8,12 @@ import { navigationClickProps } from '~/analytics/helpers';
 import { trackEvent } from '~/analytics/mixpanel';
 import { todayInIsrael } from '~/HomePage/helpers';
 import { AUDIENCE_LABELS, SUBSTITUTE_PREFIX_BY_HONORIFIC } from '~/consts';
-import { rabbiDisplayName, rabbiPath } from '~/helpers';
+import { addressLine, googleMapsHref, placePath, rabbiDisplayName, rabbiPath, wazeHref } from '~/helpers';
 import * as pageConsts from '~/LessonPage/consts';
 import { teachingRabbiOf } from '~/LessonPage/helpers';
 
 import * as consts from './consts';
-import {
-  addressLine,
-  computeDurationMinutes,
-  dayNumberLabel,
-  durationLabel,
-  endTimeLabel,
-  googleMapsHref,
-  kickerLabel,
-  monthLabel,
-  roleLabel,
-  wazeHref,
-  weekdayLabel,
-} from './helpers';
+import { computeDurationMinutes, dayNumberLabel, durationLabel, endTimeLabel, kickerLabel, monthLabel, roleLabel, weekdayLabel } from './helpers';
 import type { LessonTicketProps } from './models';
 import * as styles from './styles';
 
@@ -120,7 +108,13 @@ export const LessonTicket = styled(({ className, occurrence }: LessonTicketProps
         <div className={classNames('body', { noPoster: isNoPoster })}>
           <div className="address">
             <p className="venue" dir="auto">
-              {occurrence.venue.name}
+              {occurrence.venue.kind === 'place' ? (
+                <Link className="venueLink" to={placePath({ id: occurrence.venue.placeId, slug: occurrence.venue.slug })}>
+                  {occurrence.venue.name}
+                </Link>
+              ) : (
+                occurrence.venue.name
+              )}
             </p>
             <p className="street" dir="auto">
               {addressLine(occurrence.venue.street, occurrence.venue.floor)}

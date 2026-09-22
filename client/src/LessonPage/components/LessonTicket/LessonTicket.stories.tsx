@@ -83,6 +83,27 @@ export const NoPhoto: Story = {
   },
 };
 
+// A registered place links its name to the place page; a free-text address
+// (every other story here) stays plain text (LessonTicket.tsx, `venue.kind
+// === 'place'`).
+export const RegisteredPlace: Story = {
+  args: {
+    occurrence: {
+      ...baseOccurrence,
+      venue: {
+        kind: 'place',
+        placeId: 'place-1',
+        slug: 'בית-הכנסת-המרכזי',
+        name: 'בית הכנסת המרכזי',
+        street: 'רחוב ויצמן 45',
+        city: 'נתניה',
+        citySlug: 'נתניה',
+        area: 'sharon',
+      },
+    },
+  },
+};
+
 export const LongNames: Story = {
   args: {
     occurrence: {

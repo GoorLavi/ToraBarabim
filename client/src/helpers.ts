@@ -1,4 +1,4 @@
-import type { AreaSummary, City, LessonOccurrence, LessonVenue, LessonVenuePanel, Rabbi } from '@torabarabim/common';
+import type { AreaSummary, City, LessonOccurrence, LessonVenue, LessonVenuePanel, Place, Rabbi, ResolvedAddress } from '@torabarabim/common';
 
 import { RABBI_HONORIFIC_LABELS } from './consts';
 import type { DayGroup } from './models';
@@ -34,6 +34,11 @@ export const cityPath = (city: Pick<City, 'slug'>): string => `/cities/${encodeU
 
 // The one place an area's public path is built, mirroring cityPath.
 export const areaPath = (area: Pick<AreaSummary, 'slug'>): string => `/areas/${encodeURIComponent(area.slug)}`;
+
+// The one place a place's public path is built, mirroring rabbiPath: both
+// segments percent-encoded, `Place.slug` never empty so there is no bare-id
+// fallback to fall back to.
+export const placePath = (place: Pick<Place, 'id' | 'slug'>): string => `/places/${encodeURIComponent(place.id)}/${encodeURIComponent(place.slug)}`;
 
 // The one place a lesson occurrence's public path is built, from the lesson
 // id React Router matches on and the ISO date of the specific occurrence.
@@ -123,3 +128,29 @@ export const dayGroupHeading = (isoDate: string): string => {
   if (date.getUTCDay() === SATURDAY) return `שבת, ${dayMonthFormatter.format(date)}`;
   return `${longWeekdayFormatter.format(date)}, ${dayMonthFormatter.format(date)}`;
 };
+
+// Lifted from LessonPage/components/LessonTicket/helpers.ts once the place
+// page became a second caller: this is the nearest folder both can see.
+// No comma when there is no floor (design spec).
+export const addressLine = (street: string, floor: string | undefined): string => (floor ? `${street}, ${floor}` : street);
+
+// Street and city only, never `floor`: a floor is an arrival note ("קומה
+// 2"), not part of a geocodable address, and passing it to Waze/Google Maps
+// would make the query fail to resolve. Both fields are trimmed here, the
+// one place the query string is actually built, so stray whitespace never
+// reaches the URL.
+const navigationQuery = (place: Pick<ResolvedAddress, 'street' | 'city'>): string => `${place.street.trim()}, ${place.city.trim()}`;
+
+// `undefined` unless both street and city are present, so the caller hides
+// the whole nav row rather than link out to a bare street or a bare city
+// (fail closed: a navigation link that only narrows down part of the
+// address is worse than none).
+export const wazeHref = (place: Pick<ResolvedAddress, 'street' | 'city'>): string | undefined =>
+  place.street.trim() && place.city.trim()
+    ? `https://waze.com/ul?q=${encodeURIComponent(navigationQuery(place))}&navigate=yes`
+    : undefined;
+
+export const googleMapsHref = (place: Pick<ResolvedAddress, 'street' | 'city'>): string | undefined =>
+  place.street.trim() && place.city.trim()
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(navigationQuery(place))}`
+    : undefined;
