@@ -166,9 +166,7 @@ export const lessonEventJsonLd = (occurrence: LessonOccurrence, teachingRabbi: R
       addressCountry: 'IL',
     },
   },
-  // The venue hosts the lesson, so it is the organizer; the site only lists
-  // it. There is no page to link to: a place is text on a lesson, not an
-  // entity with a URL of its own (common/src/place.ts).
+  // The venue hosts the lesson, so it is the organizer; the site only lists it.
   organizer: {
     '@type': 'Organization',
     name: occurrence.place.name,
