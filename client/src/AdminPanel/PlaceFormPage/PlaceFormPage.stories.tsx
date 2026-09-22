@@ -2,6 +2,7 @@ import type { AdminPlaceResponse, PlaceAccountResponse } from '@torabarabim/comm
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Route, Routes } from 'react-router-dom';
 
+import { panelShellDecorator } from '~/storyDecorators';
 import { installMockFetch, jsonResponse, NEVER_RESOLVES } from '~/storyMocks';
 
 import { PlaceFormPage } from './PlaceFormPage';
@@ -39,6 +40,11 @@ const withRoute = (pathname: string, routePath: string) => (Story: React.Compone
 const meta: Meta<typeof PlaceFormPage> = {
   title: 'AdminPanel/PlaceFormPage',
   component: PlaceFormPage,
+  // Renders inside AdminShell's own gutter in the app; no story mounts the
+  // shell, so `panelShellDecorator` stands in for it once `fullscreen`
+  // cancels Storybook's own frame padding (design gate finding).
+  parameters: { layout: 'fullscreen' },
+  decorators: [panelShellDecorator],
 };
 
 export default meta;

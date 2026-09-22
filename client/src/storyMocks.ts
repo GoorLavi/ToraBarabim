@@ -30,3 +30,12 @@ export const jsonResponse = (status: number, body: unknown): Response =>
 // A fetch that never settles, for a story that shows a screen's loading
 // state.
 export const NEVER_RESOLVES = new Promise<Response>(() => {});
+
+// A stand-in photo for any story whose screen shows one. Inline rather than
+// a remote host: an external image URL does not resolve in the design
+// gate's environment, so a with-photo story rendered as its own missing
+// state and went unjudged (design gate finding, on two story files that
+// each pointed at picsum.photos).
+export const placeholderPhoto = (width: number, height: number): string =>
+  'data:image/svg+xml;utf8,' +
+  encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="${width}" height="${height}" fill="lightgray"/></svg>`);

@@ -2,6 +2,7 @@ import type { PlaceLessonListResponse, PlaceLessonResponse, RabbiDirectoryRespon
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { rabbiFixture } from '~/rabbiFixture';
+import { panelShellDecorator } from '~/storyDecorators';
 import { installMockFetch, jsonResponse, NEVER_RESOLVES } from '~/storyMocks';
 
 import { LessonsListPage } from './LessonsListPage';
@@ -81,6 +82,11 @@ const withScenario = (value: Scenario) => () => {
 const meta: Meta<typeof LessonsListPage> = {
   title: 'PlacePanel/LessonsListPage',
   component: LessonsListPage,
+  // Renders inside PlaceShell's own gutter in the app; no story mounts the
+  // shell, so `panelShellDecorator` stands in for it once `fullscreen`
+  // cancels Storybook's own frame padding (design gate finding).
+  parameters: { layout: 'fullscreen' },
+  decorators: [panelShellDecorator],
 };
 
 export default meta;

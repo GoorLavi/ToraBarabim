@@ -3,13 +3,11 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Route, Routes } from 'react-router-dom';
 
 import { rabbiFixture } from '~/rabbiFixture';
-import { installMockFetch, jsonResponse, NEVER_RESOLVES } from '~/storyMocks';
+import { installMockFetch, jsonResponse, NEVER_RESOLVES, placeholderPhoto } from '~/storyMocks';
 
 import { PlacePage } from './PlacePage';
 
-const PLACEHOLDER_PHOTO =
-  'data:image/svg+xml;utf8,' +
-  encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180"><rect width="320" height="180" fill="lightgray"/></svg>');
+const PLACEHOLDER_PHOTO = placeholderPhoto(320, 180);
 
 const place = (overrides: Partial<Place>): Place => ({
   id: 'story-place',
@@ -139,6 +137,11 @@ const withRoute = (placeId: string) => (Story: React.ComponentType) => (
 const meta: Meta<typeof PlacePage> = {
   title: 'PlacePage/PlacePage',
   component: PlacePage,
+  // The page owns its own gutter (styles.ts), so this only cancels
+  // Storybook's own 16px frame padding, which otherwise doubled up with it
+  // (design gate finding: every page shot was 343px of content in a 375px
+  // frame).
+  parameters: { layout: 'fullscreen' },
 };
 
 export default meta;

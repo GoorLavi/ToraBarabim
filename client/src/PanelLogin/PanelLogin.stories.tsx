@@ -15,6 +15,10 @@ import { PanelLogin } from './PanelLogin';
 const meta: Meta<typeof PanelLogin> = {
   title: 'PanelLogin/PanelLogin',
   component: PanelLogin,
+  // The page owns its own full-viewport layout (styles.ts), outside either
+  // panel shell (App.tsx mounts it at the shared `/login`); this only
+  // cancels Storybook's own 16px frame padding (design gate finding).
+  parameters: { layout: 'fullscreen' },
   beforeEach: () =>
     installMockFetch((url) => {
       if (url.pathname === '/v1/panel/login') return jsonResponse(401, { error: 'invalid_credentials', message: 'invalid' });

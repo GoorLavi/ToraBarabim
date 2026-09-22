@@ -43,6 +43,9 @@ const places: Place[] = [
 const meta: Meta<typeof PlacesPage> = {
   title: 'PlacesPage/PlacesPage',
   component: PlacesPage,
+  // The page owns its own gutter (styles.ts); this only cancels Storybook's
+  // own 16px frame padding (design gate finding).
+  parameters: { layout: 'fullscreen' },
   beforeEach: () =>
     installMockFetch((url) => {
       if (url.pathname === '/v1/places') return jsonResponse(200, { items: places });

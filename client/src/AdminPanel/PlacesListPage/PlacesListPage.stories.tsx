@@ -2,6 +2,7 @@ import type { AdminPlaceResponse } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Route, Routes } from 'react-router-dom';
 
+import { panelShellDecorator } from '~/storyDecorators';
 import { installMockFetch, jsonResponse, NEVER_RESOLVES } from '~/storyMocks';
 
 import { PlacesListPage } from './PlacesListPage';
@@ -59,6 +60,11 @@ const withSearch = (search: string, scenario: UnfilteredScenario = 'populated') 
 const meta: Meta<typeof PlacesListPage> = {
   title: 'AdminPanel/PlacesListPage',
   component: PlacesListPage,
+  // Renders inside AdminShell's own gutter in the app; no story mounts the
+  // shell, so `panelShellDecorator` stands in for it once `fullscreen`
+  // cancels Storybook's own frame padding (design gate finding).
+  parameters: { layout: 'fullscreen' },
+  decorators: [panelShellDecorator],
 };
 
 export default meta;

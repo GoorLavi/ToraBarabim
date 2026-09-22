@@ -1,9 +1,12 @@
 import type { PlaceProfileResponse } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import { installMockFetch, jsonResponse, NEVER_RESOLVES } from '~/storyMocks';
+import { panelShellDecorator } from '~/storyDecorators';
+import { installMockFetch, jsonResponse, NEVER_RESOLVES, placeholderPhoto } from '~/storyMocks';
 
 import { ProfilePage } from './ProfilePage';
+
+const PLACEHOLDER_PHOTO = placeholderPhoto(1200, 675);
 
 const baseProfile: PlaceProfileResponse = {
   id: 'place-1',
@@ -14,7 +17,7 @@ const baseProfile: PlaceProfileResponse = {
   cityCode: 4000,
   cityName: 'נתניה',
   area: 'sharon',
-  photoUrl: 'https://picsum.photos/seed/place-profile/1200/675',
+  photoUrl: PLACEHOLDER_PHOTO,
 };
 
 const noPhotoProfile: PlaceProfileResponse = { ...baseProfile, photoUrl: undefined };
@@ -37,6 +40,11 @@ const withScenario = (value: Scenario) => () => {
 const meta: Meta<typeof ProfilePage> = {
   title: 'PlacePanel/ProfilePage',
   component: ProfilePage,
+  // Renders inside PlaceShell's own gutter in the app; no story mounts the
+  // shell, so `panelShellDecorator` stands in for it once `fullscreen`
+  // cancels Storybook's own frame padding (design gate finding).
+  parameters: { layout: 'fullscreen' },
+  decorators: [panelShellDecorator],
 };
 
 export default meta;

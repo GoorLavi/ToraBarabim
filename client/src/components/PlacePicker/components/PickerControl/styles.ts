@@ -32,12 +32,11 @@ export const PickerControl = css(
       /* The full "street, city" line that used to sit under this no longer
          renders here: the locked ReadOnlyField block right below already
          itemises the same address once the place is chosen, so keeping it
-         here too doubled it, ~costly height on the panel's most-used form
-         (design gate finding, PlacePicker nits). \`flex-wrap: wrap\` lets a
-         short inactive-place pill drop to its own line rather than eating
-         into the width the name itself needs to wrap
-         (mirrors AdminPanel/PlacesListPage/components/PlaceCard/styles.ts's
-         own \`.name\`). */
+         here too doubled it, at real cost in height on the panel's most-used
+         form (design gate finding, PlacePicker nits). Wrapping lets a short
+         inactive-place pill drop to its own line rather than eating into the
+         width the name itself needs to wrap, mirroring the name rule in
+         AdminPanel/PlacesListPage/components/PlaceCard/styles.ts. */
       > .name {
         display: flex;
         flex-wrap: wrap;

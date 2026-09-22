@@ -3,7 +3,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Route, Routes } from 'react-router-dom';
 
 import { rabbiFixture } from '~/rabbiFixture';
-import { installMockFetch, jsonResponse, NEVER_RESOLVES } from '~/storyMocks';
+import { panelShellDecorator } from '~/storyDecorators';
+import { installMockFetch, jsonResponse, NEVER_RESOLVES, placeholderPhoto } from '~/storyMocks';
 
 import { LessonFormPage } from './LessonFormPage';
 
@@ -15,7 +16,7 @@ const profile: PlaceProfileResponse = {
   cityCode: 4000,
   cityName: 'נתניה',
   area: 'sharon',
-  photoUrl: 'https://picsum.photos/seed/place-form/1200/675',
+  photoUrl: placeholderPhoto(1200, 675),
 };
 
 const rabbi = rabbiFixture({ id: 'rabbi-1', name: 'יעקב מזרחי', title: 'ראש ישיבה' });
@@ -89,6 +90,12 @@ const withRoute = (pathname: string, scenario: ExistingLessonScenario = 'none') 
 const meta: Meta<typeof LessonFormPage> = {
   title: 'PlacePanel/LessonFormPage',
   component: LessonFormPage,
+  // This page renders inside PlaceShell's own gutter in the app; no story
+  // mounts the shell, so `panelShellDecorator` stands in for it once
+  // `fullscreen` cancels Storybook's own frame padding (design gate
+  // finding).
+  parameters: { layout: 'fullscreen' },
+  decorators: [panelShellDecorator],
 };
 
 export default meta;
