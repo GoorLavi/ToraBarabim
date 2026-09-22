@@ -108,118 +108,123 @@ export const PlaceFormPage = styled(({ className }: PlaceFormPageProps) => {
 
   return (
     <div className={className}>
-      <Link className="breadcrumb" to={cancelHref}>
-        {id ? consts.BACK_TO_PLACE_LABEL : consts.BACK_TO_LIST_LABEL}
-      </Link>
+      {/* Breadcrumb and form share one 640px column with one edge, rather
+          than the breadcrumb sitting at the full page edge above a narrower,
+          centred form (design gate finding F9). */}
+      <div className="content">
+        <Link className="breadcrumb" to={cancelHref}>
+          {id ? consts.BACK_TO_PLACE_LABEL : consts.BACK_TO_LIST_LABEL}
+        </Link>
 
-      <form
-        className="form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          void submit();
-        }}
-        noValidate
-      >
-        <h1 className="heading" dir="auto">
-          {pageHeading(form)}
-        </h1>
-        <p className="subtext">{consts.REQUIRED_FIELDS_NOTE}</p>
+        <form
+          className="form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void submit();
+          }}
+          noValidate
+        >
+          <h1 className="heading" dir="auto">
+            {pageHeading(form)}
+          </h1>
+          <p className="subtext">{consts.REQUIRED_FIELDS_NOTE}</p>
 
-        {generalSaveError && (
-          <p className="error" role="alert">
-            {generalSaveError}
-          </p>
-        )}
+          {generalSaveError && (
+            <p className="error" role="alert">
+              {generalSaveError}
+            </p>
+          )}
 
-        <label className="field">
-          <span className="label">{consts.NAME_LABEL}</span>
-          <input
-            type="text"
-            dir={directionForValue(form.name)}
-            value={form.name}
-            onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
-          />
-          <span className="helper">{consts.NAME_HELPER}</span>
-          {fieldErrors.name && <span className="error">{fieldErrors.name}</span>}
-        </label>
+          <label className="field">
+            <span className="label">{consts.NAME_LABEL}</span>
+            <input
+              type="text"
+              dir={directionForValue(form.name)}
+              value={form.name}
+              onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
+            />
+            <span className="helper">{consts.NAME_HELPER}</span>
+            {fieldErrors.name && <span className="error">{fieldErrors.name}</span>}
+          </label>
 
-        <div className="field">
-          <span className="label">{consts.CITY_LABEL}</span>
-          <CitySelect city={form.city} onSelectCity={(city) => setForm((prev) => ({ ...prev, city }))} placeholderLabel={consts.CITY_PLACEHOLDER} fullWidth />
-          <span className="helper">{consts.CITY_HELPER}</span>
-          {cityError && <span className="error">{cityError}</span>}
-        </div>
-
-        <label className="field">
-          <span className="label">{consts.STREET_LABEL}</span>
-          <input
-            type="text"
-            dir={directionForValue(form.street)}
-            value={form.street}
-            onChange={(event) => setForm((prev) => ({ ...prev, street: event.target.value }))}
-          />
-          {fieldErrors.street && <span className="error">{fieldErrors.street}</span>}
-        </label>
-
-        <label className="field">
-          <span className="label">{consts.FLOOR_LABEL}</span>
-          <input
-            type="text"
-            dir={directionForValue(form.floor)}
-            value={form.floor}
-            onChange={(event) => setForm((prev) => ({ ...prev, floor: event.target.value }))}
-          />
-        </label>
-
-        <div className="field">
-          <span className="label">{consts.PHOTO_LABEL}</span>
-          <PhotoPicker
-            aspectRatio="16:9"
-            previewUrl={previewPhotoUrl}
-            hasExistingPhoto={Boolean(form.existingPhotoUrl)}
-            onSelectFile={handleSelectFile}
-            errorMessage={fieldErrors.photo ?? (savePlace.stepError?.step === 'photo' ? adminErrorMessage(savePlace.stepError.error) : undefined)}
-          />
-        </div>
-
-        {id && (
           <div className="field">
-            <span className="label">{consts.STATUS_LABEL}</span>
-            <div className="statusPicker" role="radiogroup" aria-label={consts.STATUS_LABEL}>
-              <button
-                type="button"
-                className={classNames('pill', { selected: form.isActive })}
-                role="radio"
-                aria-checked={form.isActive}
-                onClick={() => setForm((prev) => ({ ...prev, isActive: true }))}
-              >
-                {consts.STATUS_ACTIVE_LABEL}
-              </button>
-              <button
-                type="button"
-                className={classNames('pill', { selected: !form.isActive })}
-                role="radio"
-                aria-checked={!form.isActive}
-                onClick={() => setForm((prev) => ({ ...prev, isActive: false }))}
-              >
-                {consts.STATUS_INACTIVE_LABEL}
-              </button>
-            </div>
-            <span className="helper">{consts.STATUS_HELPER}</span>
+            <span className="label">{consts.CITY_LABEL}</span>
+            <CitySelect city={form.city} onSelectCity={(city) => setForm((prev) => ({ ...prev, city }))} placeholderLabel={consts.CITY_PLACEHOLDER} fullWidth />
+            <span className="helper">{consts.CITY_HELPER}</span>
+            {cityError && <span className="error">{cityError}</span>}
           </div>
-        )}
 
-        <PlaceAccountSection placeId={id} placeName={form.name} />
+          <label className="field">
+            <span className="label">{consts.STREET_LABEL}</span>
+            <input
+              type="text"
+              dir={directionForValue(form.street)}
+              value={form.street}
+              onChange={(event) => setForm((prev) => ({ ...prev, street: event.target.value }))}
+            />
+            {fieldErrors.street && <span className="error">{fieldErrors.street}</span>}
+          </label>
 
-        <div className="footer">
-          <Link className="cancel" to={cancelHref}>
-            {consts.CANCEL_LABEL}
-          </Link>
-          <button type="submit" className="save" disabled={savePlace.isSaving}>
-            {savePlace.isSaving ? consts.SAVING_LABEL : consts.SAVE_LABEL}
-          </button>
-        </div>
-      </form>
+          <label className="field">
+            <span className="label">{consts.FLOOR_LABEL}</span>
+            <input
+              type="text"
+              dir={directionForValue(form.floor)}
+              value={form.floor}
+              onChange={(event) => setForm((prev) => ({ ...prev, floor: event.target.value }))}
+            />
+          </label>
+
+          <div className="field">
+            <span className="label">{consts.PHOTO_LABEL}</span>
+            <PhotoPicker
+              aspectRatio="16:9"
+              previewUrl={previewPhotoUrl}
+              hasExistingPhoto={Boolean(form.existingPhotoUrl)}
+              onSelectFile={handleSelectFile}
+              errorMessage={fieldErrors.photo ?? (savePlace.stepError?.step === 'photo' ? adminErrorMessage(savePlace.stepError.error) : undefined)}
+            />
+          </div>
+
+          {id && (
+            <div className="field">
+              <span className="label">{consts.STATUS_LABEL}</span>
+              <div className="statusPicker" role="radiogroup" aria-label={consts.STATUS_LABEL}>
+                <button
+                  type="button"
+                  className={classNames('pill', { selected: form.isActive })}
+                  role="radio"
+                  aria-checked={form.isActive}
+                  onClick={() => setForm((prev) => ({ ...prev, isActive: true }))}
+                >
+                  {consts.STATUS_ACTIVE_LABEL}
+                </button>
+                <button
+                  type="button"
+                  className={classNames('pill', { selected: !form.isActive })}
+                  role="radio"
+                  aria-checked={!form.isActive}
+                  onClick={() => setForm((prev) => ({ ...prev, isActive: false }))}
+                >
+                  {consts.STATUS_INACTIVE_LABEL}
+                </button>
+              </div>
+              <span className="helper">{consts.STATUS_HELPER}</span>
+            </div>
+          )}
+
+          <PlaceAccountSection placeId={id} placeName={form.name} />
+
+          <div className="footer">
+            <Link className="cancel" to={cancelHref}>
+              {consts.CANCEL_LABEL}
+            </Link>
+            <button type="submit" className="save" disabled={savePlace.isSaving}>
+              {savePlace.isSaving ? consts.SAVING_LABEL : consts.SAVE_LABEL}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 })`

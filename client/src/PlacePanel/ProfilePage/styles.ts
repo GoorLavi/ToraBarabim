@@ -10,6 +10,12 @@ export const ProfilePage = css(
   display: flex;
   flex-direction: column;
   max-inline-size: 640px;
+  /* Centred inside the panel's own wider band rather than pinned to the
+     inline start, matching the fix on AdminPanel/PlaceFormPage (design gate
+     finding F9). Nothing else on this page sits outside this column, so
+     centring the root is enough: unlike PlaceFormPage there is no separate
+     breadcrumb drawing a second edge above it. */
+  margin-inline: auto;
 
   > .heading {
     color: ${theme.colors.text};
