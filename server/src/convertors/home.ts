@@ -32,9 +32,9 @@ const toDedicationGroup = (group: DedicationGroupResult): DedicationGroup => ({
   items: group.items.map(toDedication),
 });
 
-export const toHomeResponse = (result: HomeResult, dedicationGroups: DedicationGroupResult[]): HomeResponse => ({
+export const toHomeResponse = (result: HomeResult): HomeResponse => ({
   rows: result.rows.map(toHomeRow),
   womensAreaLessonCount: result.womensAreaLessonCount,
   rabbis: result.rabbis.map(toRabbiSummary),
-  dedications: dedicationGroups.map(toDedicationGroup),
+  dedications: result.dedicationGroups.map(toDedicationGroup),
 });

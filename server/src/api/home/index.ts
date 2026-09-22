@@ -16,7 +16,7 @@ export const registerHomeRoutes = async (app: FastifyInstance): Promise<void> =>
   app.get('/v1/home', async (_request, reply) => {
     try {
       const result = await homeService.getHome(new Date());
-      return reply.send(toHomeResponse(result, result.dedicationGroups));
+      return reply.send(toHomeResponse(result));
     } catch (error) {
       return handleError(reply, error);
     }

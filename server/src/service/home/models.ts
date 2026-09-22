@@ -42,10 +42,9 @@ export interface HomeResult {
   // convertor is what turns them into wire `Rabbi`s.
   rabbis: RabbiRow[];
   // The active dedication groups, drawn from `dedicationService.listActive`
-  // in the same `Promise.all` as `loadWindow`. `toHomeResponse` also takes
-  // these as an explicit second argument, rather than reading them off this
-  // result internally, so it stays callable with a group list that was
-  // never nested inside a full `HomeResult`.
+  // in the same `Promise.all` as `loadWindow`. `toHomeResponse` reads these
+  // off this result directly, so the response can never disagree with the
+  // `HomeResult` it was built from.
   dedicationGroups: DedicationGroupResult[];
 }
 

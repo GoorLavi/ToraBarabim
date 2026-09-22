@@ -467,7 +467,7 @@ describe('public API', () => {
       const farPast = new Date('1990-01-01T00:00:00Z');
       const result = await homeService.getHome(farPast);
       assert.deepEqual(result.dedicationGroups, []);
-      assert.deepEqual(toHomeResponse(result, result.dedicationGroups).dedications, []);
+      assert.deepEqual(toHomeResponse(result).dedications, []);
     });
   });
 
