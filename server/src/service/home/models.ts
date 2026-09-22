@@ -1,6 +1,7 @@
 import type { CityWithLessonCount, HomeRowId, LessonAudience, LessonTopic, Place, Rabbi } from '@torabarabim/common';
 
 import type { rabbis } from '../../db/schema';
+import type { DedicationGroupResult } from '../dedication/models';
 import type { PlaceCityRow } from '../shared/place';
 
 // Kept distinct from the wire `LessonOccurrence`: it carries the sort-only
@@ -40,6 +41,12 @@ export interface HomeResult {
   // The "לפי רב" avatar row's rabbis, sorted and capped, as raw rows: the
   // convertor is what turns them into wire `Rabbi`s.
   rabbis: RabbiRow[];
+  // The active dedication groups, drawn from `dedicationService.listActive`
+  // in the same `Promise.all` as `loadWindow`. `toHomeResponse` also takes
+  // these as an explicit second argument, rather than reading them off this
+  // result internally, so it stays callable with a group list that was
+  // never nested inside a full `HomeResult`.
+  dedicationGroups: DedicationGroupResult[];
 }
 
 // `GET /v1/women`'s summary, built from the same women's-set step `getHome`

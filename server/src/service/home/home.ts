@@ -4,6 +4,7 @@ import { and, gte, inArray, lte } from 'drizzle-orm';
 import { AREAS } from '../../db/schema/enums';
 import { db } from '../../db/client';
 import { cities, lessonExceptions, lessons, rabbis } from '../../db/schema';
+import * as dedicationService from '../dedication/dedication';
 import { applyException, expandLesson, type ResolvedOccurrence } from '../lesson/occurrence';
 import { addDays, compareIsoDates, todayInIsrael } from '../lesson/israel-time';
 import { isLessonInScope, isRabbiInDirectoryScope } from '../shared/audience-scope';
@@ -268,7 +269,12 @@ const loadWindow = async (now: Date): Promise<LoadedWindow> => {
 };
 
 export const getHome = async (now: Date): Promise<HomeResult> => {
-  const { from: today, resolved: allResolved, cityByCode, rabbiRows, rabbiIdsWithLessons } = await loadWindow(now);
+  // Independent of each other, so they run together rather than adding a
+  // second sequential round trip to the response.
+  const [{ from: today, resolved: allResolved, cityByCode, rabbiRows, rabbiIdsWithLessons }, dedicationGroups] = await Promise.all([
+    loadWindow(now),
+    dedicationService.listActive(now),
+  ]);
 
   // The "לפי רב" avatar row: every rabbi in the general directory scope
   // (0026: a rabbanit stays off this general surface, exactly as she does
@@ -339,7 +345,7 @@ export const getHome = async (now: Date): Promise<HomeResult> => {
     }
   }
 
-  return { rows, womensAreaLessonCount, rabbis: homeRabbis };
+  return { rows, womensAreaLessonCount, rabbis: homeRabbis, dedicationGroups };
 };
 
 export const getWomenArea = async (now: Date): Promise<WomenAreaResult> => {

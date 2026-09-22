@@ -1,4 +1,5 @@
 import type { LessonProvenance } from './agent-import';
+import type { DedicationHonorific, DedicationType, HonoredGender } from './dedication';
 import type { RabbiProminence } from './home';
 import type { LessonException } from './lesson-exception';
 import type { Lesson, ResolvedLessonPlace } from './lesson';
@@ -161,3 +162,39 @@ export type CreateAdminUserRequest = {
 export type UpdateAdminUserRequest = {
   isActive: boolean;
 };
+
+// `upcoming`: today is before `startsOn`. `live`: today is inside
+// `[startsOn, endsOn]`, `endsOn` inclusive, and the record has not been
+// taken down. `ended`: today is after `endsOn` and it was never taken
+// down. `takenDown` overrides every other state whatever the window says,
+// since it was pulled by an admin action, not by the calendar.
+export type AdminDedicationState = 'upcoming' | 'live' | 'ended' | 'takenDown';
+
+// An administrator's full view of one dedication record, including its
+// clean stored name fields. Never sent to the public home response, which
+// only ever carries the composed `Dedication` (`dedication.ts`) inside a
+// `DedicationGroup`.
+export interface AdminDedication {
+  id: string;
+  type: DedicationType;
+  honoredName: string;
+  honorific?: DedicationHonorific;
+  honoredGender: HonoredGender;
+  parentName?: string;
+  donorFamilyName?: string;
+  closingLineEnabled: boolean;
+  startsOn: string;
+  endsOn: string;
+  takenDownReason?: string;
+  state: AdminDedicationState;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// The admin create/edit form's live preview: the same fields the composer
+// (`server/src/service/dedication/text.ts`) needs, sent unsaved so the
+// admin sees exactly what a visitor will see while still typing.
+export type DedicationPreviewRequest = Pick<
+  AdminDedication,
+  'type' | 'honoredName' | 'honorific' | 'honoredGender' | 'parentName' | 'donorFamilyName' | 'closingLineEnabled'
+>;

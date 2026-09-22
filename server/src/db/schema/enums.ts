@@ -1,4 +1,16 @@
-import type { AgentImportLinkDecision, AgentImportRuleKind, Area, LessonAudience, LessonProvenance, LessonTopic, RabbiHonorific, RabbiProminence } from '@torabarabim/common';
+import type {
+  AgentImportLinkDecision,
+  AgentImportRuleKind,
+  Area,
+  DedicationHonorific,
+  DedicationType,
+  HonoredGender,
+  LessonAudience,
+  LessonProvenance,
+  LessonTopic,
+  RabbiHonorific,
+  RabbiProminence,
+} from '@torabarabim/common';
 import { pgEnum } from 'drizzle-orm/pg-core';
 
 // Source of truth for the wire union types, mirrored here because a
@@ -52,6 +64,12 @@ export const RABBI_PROMINENCES = ['local', 'known', 'sought'] as const satisfies
 
 export const RABBI_HONORIFICS = ['rav', 'rabbanit'] as const satisfies readonly RabbiHonorific[];
 
+export const DEDICATION_TYPES = ['memorial', 'healing', 'success'] as const satisfies readonly DedicationType[];
+
+export const DEDICATION_HONORIFICS = ['zl', 'ah', 'hyd'] as const satisfies readonly DedicationHonorific[];
+
+export const HONORED_GENDERS = ['male', 'female'] as const satisfies readonly HonoredGender[];
+
 // Not mirrored from `common`: an account's role is a server-side auth
 // concept, never a field the client reads or sends.
 export const ADMIN_ROLES = ['admin', 'rabbi'] as const;
@@ -78,6 +96,27 @@ const rabbiHonorificExhaustivenessCheck: Record<RabbiHonorific, true> = {
 };
 void rabbiHonorificExhaustivenessCheck;
 
+// Same mechanism again, for the three dedication enums.
+const dedicationTypeExhaustivenessCheck: Record<DedicationType, true> = {
+  memorial: true,
+  healing: true,
+  success: true,
+};
+void dedicationTypeExhaustivenessCheck;
+
+const dedicationHonorificExhaustivenessCheck: Record<DedicationHonorific, true> = {
+  zl: true,
+  ah: true,
+  hyd: true,
+};
+void dedicationHonorificExhaustivenessCheck;
+
+const honoredGenderExhaustivenessCheck: Record<HonoredGender, true> = {
+  male: true,
+  female: true,
+};
+void honoredGenderExhaustivenessCheck;
+
 export const areaEnum = pgEnum('area', AREAS);
 export const lessonTopicEnum = pgEnum('lesson_topic', LESSON_TOPICS);
 export const lessonAudienceEnum = pgEnum('lesson_audience', LESSON_AUDIENCES);
@@ -85,6 +124,9 @@ export const recurrenceKindEnum = pgEnum('recurrence_kind', RECURRENCE_KINDS);
 export const exceptionKindEnum = pgEnum('exception_kind', EXCEPTION_KINDS);
 export const rabbiProminenceEnum = pgEnum('rabbi_prominence', RABBI_PROMINENCES);
 export const rabbiHonorificEnum = pgEnum('rabbi_honorific', RABBI_HONORIFICS);
+export const dedicationTypeEnum = pgEnum('dedication_type', DEDICATION_TYPES);
+export const dedicationHonorificEnum = pgEnum('dedication_honorific', DEDICATION_HONORIFICS);
+export const honoredGenderEnum = pgEnum('honored_gender', HONORED_GENDERS);
 export const adminRoleEnum = pgEnum('admin_role', ADMIN_ROLES);
 export const lessonProvenanceEnum = pgEnum('lesson_provenance', LESSON_PROVENANCES);
 export const lessonImportLinkDecisionEnum = pgEnum('lesson_import_link_decision', LESSON_IMPORT_LINK_DECISIONS);

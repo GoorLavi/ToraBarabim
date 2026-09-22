@@ -1,6 +1,7 @@
 import { todayInIsrael } from '../service/lesson/israel-time';
 import { db } from './client';
 import { seedCities } from './seed/cities';
+import { seedDedications } from './seed/dedications';
 import { seedLessons, SEED_RABBI_IDS } from './seed/lessons';
 import { uploadSeedPortraits } from './seed/rabbi-photos';
 
@@ -25,6 +26,7 @@ const run = async (): Promise<void> => {
   await db.transaction(async (tx) => {
     const cityCodeByName = await seedCities(tx);
     await seedLessons(tx, cityCodeByName, todayIso, photoUrlByRabbiId);
+    await seedDedications(tx, todayIso);
   });
 };
 
