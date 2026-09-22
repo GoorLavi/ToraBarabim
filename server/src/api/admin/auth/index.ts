@@ -6,11 +6,15 @@ import { loadConfig } from '../../../config';
 import { requireAdminAuth } from '../../../plugins/admin-guard';
 import * as authService from '../../../service/admin-auth/auth';
 import { LOGIN_RATE_LIMIT_MAX, LOGIN_RATE_LIMIT_WINDOW_MS, SESSION_COOKIE_NAME } from '../../../service/admin-auth/consts';
-import { InvalidCredentialsError } from '../../../service/admin-auth/errors';
+import { AccountDeactivatedError, InvalidCredentialsError } from '../../../service/admin-auth/errors';
 import { loginRequestSchema } from '../../../service/admin-auth/models';
 
 const GENERIC_ERROR_MESSAGE = 'אירעה שגיאה בשרת, נסו שוב מאוחר יותר';
 const INVALID_CREDENTIALS_MESSAGE = 'אימייל או סיסמה שגויים';
+// Approved by the editor to appear on the admin door too: `login` is one
+// service for all three panel doors, admin included, and this message is
+// deliberately not special-cased away from any of them.
+const ACCOUNT_DEACTIVATED_MESSAGE = 'החשבון אינו פעיל. אפשר לפנות למי שהקים אותו כדי להפעיל אותו מחדש.';
 
 const toAdminUser = (user: { id: string; email: string; name: string; isSuper: boolean }): AdminUser => ({
   id: user.id,
@@ -30,6 +34,10 @@ const handleError = (reply: FastifyReply, error: unknown, routeLabel: string): F
 
   if (error instanceof InvalidCredentialsError) {
     return reply.status(401).send({ error: 'invalid_credentials', message: INVALID_CREDENTIALS_MESSAGE });
+  }
+
+  if (error instanceof AccountDeactivatedError) {
+    return reply.status(403).send({ error: 'account_deactivated', message: ACCOUNT_DEACTIVATED_MESSAGE });
   }
 
   reply.request.log.error({ err: error }, `unhandled error in ${routeLabel}`);

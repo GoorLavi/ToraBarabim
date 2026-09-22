@@ -13,5 +13,7 @@ export * from './lesson';
 export * from './lesson-exception';
 export * from './lesson-import-file';
 export * from './lesson-occurrence';
+export * from './panel-auth';
+export * from './place-portal';
 export * from './rabbi-portal';
 export * from './women-area';

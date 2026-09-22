@@ -10,6 +10,7 @@ import { registerCityRoutes } from '../src/api/cities';
 import { registerHealthRoutes } from '../src/api/health';
 import { registerHomeRoutes } from '../src/api/home';
 import { registerLessonRoutes } from '../src/api/lessons';
+import { registerPanelAuthRoutes } from '../src/api/panel/auth';
 import { registerPlaceRoutes } from '../src/api/places';
 import { registerRabbiRoutes } from '../src/api/rabbi';
 import { registerRabbiAuthRoutes } from '../src/api/rabbi/auth';
@@ -110,6 +111,7 @@ export const buildAgentImportTestApp = async (agentKey: string | undefined): Pro
   registerEmptyBodySupport(app);
   await registerAdminAuthRoutes(app);
   await registerAdminRoutes(app);
+  await registerPanelAuthRoutes(app);
   await registerRabbiAuthRoutes(app);
   await registerRabbiRoutes(app);
   if (agentKey) await registerAgentRoutes(app, agentKey);

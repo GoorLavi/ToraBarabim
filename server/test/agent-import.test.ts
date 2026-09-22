@@ -145,17 +145,18 @@ describe('agent import', () => {
     return `${cookie.name}=${cookie.value}`;
   };
 
-  // Same idea as `loginAsNewAdmin`, through `POST /v1/rabbi/login`. The
+  // Same idea as `loginAsNewAdmin`, through the shared panel door
+  // (`POST /v1/panel/login`, Wave 4: `POST /v1/rabbi/login` is gone). The
   // rabbi account cascade-deletes with the rabbi row (see
   // `admin_users_rabbi_id_unique`'s FK), so it needs no cleanup of its own.
   const loginAsRabbi = async (rabbiId: string): Promise<string> => {
     const email = `test-rabbi-account-${uniqueSuffix()}@example.com`;
     const created = await adminRabbiAccountService.create(rabbiId, { email, username: `rabbi-${uniqueSuffix()}` });
 
-    const res = await app.inject({ method: 'POST', url: '/v1/rabbi/login', payload: { identifier: email, password: created.temporaryPassword } });
+    const res = await app.inject({ method: 'POST', url: '/v1/panel/login', payload: { identifier: email, password: created.temporaryPassword } });
     assert.equal(res.statusCode, 200);
     const cookie = res.cookies.find((c) => c.name === RABBI_SESSION_COOKIE_NAME);
-    if (!cookie) throw new Error('expected the rabbi login route to set a session cookie');
+    if (!cookie) throw new Error('expected the panel login route to set the rabbi session cookie');
     return `${cookie.name}=${cookie.value}`;
   };
 

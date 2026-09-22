@@ -10,6 +10,7 @@ import { registerCityRoutes } from './api/cities';
 import { registerHealthRoutes } from './api/health';
 import { registerHomeRoutes } from './api/home';
 import { registerLessonRoutes } from './api/lessons';
+import { registerPanelAuthRoutes } from './api/panel/auth';
 import { registerPlaceRoutes } from './api/places';
 import { registerRabbiRoutes } from './api/rabbi';
 import { registerRabbiAuthRoutes } from './api/rabbi/auth';
@@ -59,6 +60,7 @@ const start = async (): Promise<void> => {
   await registerWomenAreaRoutes(app);
   await registerAdminAuthRoutes(app);
   await registerAdminRoutes(app);
+  await registerPanelAuthRoutes(app);
   await registerRabbiAuthRoutes(app);
   await registerRabbiRoutes(app);
   // Fail closed: with no `IMPORT_AGENT_KEY` configured, the whole agent
