@@ -16,6 +16,11 @@ import { installApiMocks } from './apiMocks';
 // leaves the page, and a review often happens in a background tab. Without
 // this, a retrying error-state story can sit in `loading` forever, with no
 // failed request to explain it, the moment the tab is not the frontmost one.
+// The event listener is replaced with a no-op first: `setFocused` alone
+// already outlasts `visibilitychange` in this version (the listener notifies
+// with the current state rather than overwriting it), but overriding the
+// listener too means pinning it stays correct even if that internal changes.
+focusManager.setEventListener(() => () => {});
 focusManager.setFocused(true);
 
 // A client per story, keyed by story id: a shared one lets a query cached by

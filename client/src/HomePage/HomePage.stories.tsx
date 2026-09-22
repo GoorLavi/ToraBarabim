@@ -6,9 +6,16 @@ import { rabbiFixture } from '~/rabbiFixture';
 import { errorResolver, http, jsonResolver, loadingResolver } from '../../.storybook/apiMocks';
 import { HomePage } from './HomePage';
 
-const RABBI_1 = rabbiFixture({ id: 'r1', name: 'אליהו בן דוד', title: 'ראש ישיבה', photoUrl: 'https://example.invalid/r1.jpg' });
+// A minimal, valid SVG portrait so the photo story never touches the network.
+const PLACEHOLDER_PHOTO =
+  'data:image/svg+xml;utf8,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="320"><rect width="240" height="320" fill="lightgray"/></svg>',
+  );
+
+const RABBI_1 = rabbiFixture({ id: 'r1', name: 'אליהו בן דוד', title: 'ראש ישיבה', photoUrl: PLACEHOLDER_PHOTO });
 const RABBI_2 = rabbiFixture({ id: 'r2', name: 'שמואל וקנין' });
-const RABBI_3 = rabbiFixture({ id: 'r3', name: 'נתן צבי אשכנזי הכהן', photoUrl: 'https://example.invalid/r3.jpg' });
+const RABBI_3 = rabbiFixture({ id: 'r3', name: 'נתן צבי אשכנזי הכהן', photoUrl: PLACEHOLDER_PHOTO });
 
 const lesson = (overrides: Partial<LessonOccurrence>): LessonOccurrence => ({
   lessonId: 'lesson-1',
