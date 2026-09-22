@@ -344,8 +344,8 @@ describe('place photo validation', () => {
     return bytes;
   };
 
-  test('1200x600 is rejected on the height floor although its ratio (2.0) is inside the band', () => {
-    const bytes = buildPngBytes(1200, 600);
+  test('800x400 is rejected on the height floor although its ratio (2.0) is inside the band', () => {
+    const bytes = buildPngBytes(800, 400);
     assert.throws(() => validatePlacePhoto(bytes), PlacePhotoTooSmallError);
   });
 
@@ -370,7 +370,18 @@ describe('place photo validation', () => {
   });
 
   test('a valid 16:9 photo at exactly the floor passes validation', () => {
-    const bytes = buildPngBytes(1200, 675);
+    const bytes = buildPngBytes(800, 450);
+    const result = validatePlacePhoto(bytes);
+    assert.equal(result.contentType, 'image/png');
+    assert.equal(result.extension, 'png');
+  });
+
+  // The defect this change fixes: a real synagogue-facade photo, cropped to
+  // 16:9 by the panel's crop step, close to the owner's actual 881x804
+  // photo after cropping. It used to fail the old 1200x675 floor outright,
+  // no crop could have saved it, and now clears the 800x450 floor.
+  test('an 881x495 photo, a 16:9 crop of the owner\'s real photo, now passes validation', () => {
+    const bytes = buildPngBytes(881, 495);
     const result = validatePlacePhoto(bytes);
     assert.equal(result.contentType, 'image/png');
     assert.equal(result.extension, 'png');

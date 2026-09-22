@@ -48,7 +48,7 @@ export class MalformedPlacePhotoHeaderError extends Error {
 // Fires when the photo's real width or height is below its own floor.
 export class PlacePhotoTooSmallError extends Error {
   constructor(public readonly width: number, public readonly height: number) {
-    super(`Expected at least 1200x675, got ${width}x${height}`);
+    super(`Expected at least 800x450, got ${width}x${height}`);
     this.name = 'PlacePhotoTooSmallError';
   }
 }

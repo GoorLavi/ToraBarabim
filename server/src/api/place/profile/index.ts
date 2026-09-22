@@ -7,6 +7,7 @@ import { requirePlaceAuth } from '../../../plugins/place-guard';
 import { PlaceNotFoundError, UnknownCityError } from '../../../service/place-portal/errors';
 import { updatePlaceProfileSchema } from '../../../service/place-portal/models';
 import * as placeProfileService from '../../../service/place-portal/profile';
+import { INVALID_PHOTO_MESSAGE } from '../../../service/place/consts';
 import {
   MalformedPlacePhotoHeaderError,
   PlacePhotoAspectRatioError,
@@ -54,7 +55,7 @@ const handleError = (reply: FastifyReply, error: unknown, routeLabel: string): F
   }
 
   if (error instanceof MalformedPlacePhotoHeaderError || error instanceof PlacePhotoTooSmallError || error instanceof PlacePhotoAspectRatioError) {
-    return reply.status(400).send({ error: 'invalid_photo', message: 'התמונה לא מתאימה. צריך תמונה לרוחב, לפחות 1200 על 675 פיקסלים, והרוחב גדול פי 1.5 עד 2 מהגובה.' });
+    return reply.status(400).send({ error: 'invalid_photo', message: INVALID_PHOTO_MESSAGE });
   }
 
   if (isMultipartFileTooLargeError(error)) {

@@ -73,7 +73,7 @@ export interface ValidatedPlacePhoto {
 // Rejects rather than crops: the owner's call, to avoid an image-decoding
 // dependency (no library, no native module, no Dockerfile change) entirely.
 //
-// The floors and the band are independent checks on purpose: a 1200x600
+// The floors and the band are independent checks on purpose: an 800x400
 // photo has a ratio of exactly 2.0 (inside the band) and is rejected on the
 // height floor alone. A single `min(width, height)` bound would pass it.
 //
