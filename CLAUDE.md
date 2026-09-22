@@ -414,6 +414,8 @@ Figma is where new design happens; code is the source of truth for what ships.
 - **The project:** `1600490864286182601` / project `639157253`
   ([open](https://www.figma.com/files/team/1600490864286182601/project/639157253)).
   The plan key for creating files is `team::1600490864286182601`.
+- **Which file holds which screen is in [docs/design-files.md](docs/design-files.md).**
+  Read it before opening Figma, rather than guessing from a file's name.
 - **Code is canonical for design tokens.** Shipped values live in code and are mirrored
   in `.claude/design-system.md`. Figma mirrors code, not the other way around.
 - **Figma is upstream for new design.** A redesign starts in Figma, gets approved, is
