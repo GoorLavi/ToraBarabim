@@ -1,3 +1,5 @@
+import { PLACE_PHOTO_MIN_HEIGHT, PLACE_PHOTO_MIN_WIDTH } from '~/components/PhotoPicker/consts';
+
 // Verbatim from `RabbiPanel/ProfilePage/consts.ts`: none of these name a
 // rabbi or an honorific, so the same string reads correctly for a place
 // account.
@@ -37,22 +39,15 @@ export const SUBTEXT = 'כך המקום מופיע באתר, בעמוד שלו �
 // a verbatim reuse.
 export const STREET_HELPER = 'הכתובת המלאה מוצגת בעמוד המקום ובעמודי השיעורים שמתקיימים בו.';
 
-// Hand-mirrored from `server/src/service/place/consts.ts`'s
-// `PLACE_PHOTO_MIN_WIDTH` / `PLACE_PHOTO_MIN_HEIGHT` /
-// `PLACE_PHOTO_MIN_ASPECT_RATIO` / `PLACE_PHOTO_MAX_ASPECT_RATIO`, the same
-// floor `components/PhotoPicker/consts.ts` mirrors for its own crop step: no
-// shared import path to the server's own values, so this is a second,
-// independent copy naming its source, for the client-side check below. By
-// the time that check runs, the file has already passed through
-// `PhotoPicker`'s own '16:9' crop step, which always produces an exact 16:9
-// crop at or above its floor, so this is now a defensive backstop rather
-// than the first line of defence it was before that step existed; it still
-// has to name the same floor the crop step enforces, or a stale number here
-// would reject a crop the person was never told to avoid.
-export const RATIO_MIN = 1.5;
-export const RATIO_MAX = 2.0;
-export const MIN_WIDTH_PX = 800;
-export const MIN_HEIGHT_PX = 450;
+// Read from `PhotoPicker`, never copied: by the time this screen's own check
+// runs, the file has already been through that component's '16:9' crop step,
+// so the two must agree on the floor by construction. A third copy of the
+// number (the server holds the first, `PhotoPicker` the hand-mirrored second)
+// would only have to be found and changed by whoever moves the floor next,
+// and a stale one here would reject a crop the person was never told to
+// avoid. This check is a backstop now, not the first line of defence.
+export const MIN_WIDTH_PX = PLACE_PHOTO_MIN_WIDTH;
+export const MIN_HEIGHT_PX = PLACE_PHOTO_MIN_HEIGHT;
 
 // `PhotoPicker`'s own '16:9' help list (`components/PhotoPicker/consts.ts`,
 // `PHOTO_HELP_SIZE['16:9']`) already states the real requirement, in
@@ -60,7 +55,9 @@ export const MIN_HEIGHT_PX = 450;
 // screen only needs its own copy for the one thing that component cannot
 // say: the client-side dimension/ratio check below has no exported error
 // string to reuse.
-// Named for what it covers, not just the too-small case: the same check
-// (and the same message) also rejects a photo outside the 1.5-2.0 ratio,
-// which the crop step's own output should never actually trigger.
-export const PHOTO_INVALID_ERROR = `התמונה לא מתאימה. צריך תמונה לרוחב, לפחות ${MIN_WIDTH_PX} על ${MIN_HEIGHT_PX} פיקסלים, והרוחב גדול פי ${RATIO_MIN} עד ${RATIO_MAX} מהגובה. אפשר לבחור תמונה אחרת.`;
+// The crop step is what produces this file, so it is always exactly 16:9 and
+// the only thing left for this check to catch is a source too small to have
+// yielded a crop at all. The message says that and nothing else: the ratio
+// clause it used to carry told the person to go and satisfy by hand the one
+// thing the crop step now does for them.
+export const PHOTO_INVALID_ERROR = `התמונה קטנה מדי. צריך לפחות ${MIN_WIDTH_PX} על ${MIN_HEIGHT_PX} פיקסלים. אפשר לבחור תמונה אחרת.`;

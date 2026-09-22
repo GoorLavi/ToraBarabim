@@ -53,18 +53,18 @@ const readImageDimensions = (file: File): Promise<{ width: number; height: numbe
     image.src = objectUrl;
   });
 
-// Beyond type and size, a place's photo also has to clear the width, height
-// and ratio floor the server enforces (build brief: at least 1200 by 675,
-// ratio between 1.5 and 2.0), so this reads the file's real pixel
-// dimensions before ever uploading it. Async, unlike the rabbi panel's
-// synchronous counterpart, for exactly that reason.
+// Beyond type and size, a place's photo has to clear the floor the server
+// enforces, so this reads the file's real pixel dimensions before ever
+// uploading it. Async, unlike the rabbi panel's synchronous counterpart, for
+// exactly that reason. It no longer checks the ratio: `PhotoPicker`'s crop
+// step is what produces this file and it is always exactly 16:9, so a ratio
+// test here could only ever fail on a file the person had no way to send.
 export const validatePlacePhotoFile = async (file: File): Promise<string | undefined> => {
   if (!ACCEPTED_PHOTO_TYPES.includes(file.type)) return photoPickerConsts.UNSUPPORTED_TYPE_ERROR;
   if (file.size > MAX_PHOTO_BYTES) return photoPickerConsts.TOO_LARGE_ERROR;
 
   const { width, height } = await readImageDimensions(file);
-  const ratio = width / height;
-  if (width < consts.MIN_WIDTH_PX || height < consts.MIN_HEIGHT_PX || ratio < consts.RATIO_MIN || ratio > consts.RATIO_MAX) {
+  if (width < consts.MIN_WIDTH_PX || height < consts.MIN_HEIGHT_PX) {
     return consts.PHOTO_INVALID_ERROR;
   }
 

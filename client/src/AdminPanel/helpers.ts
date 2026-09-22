@@ -26,8 +26,11 @@ export const nullableTextField = (currentValue: string, existingValue: string | 
 const ACCEPTED_PHOTO_TYPES = ['image/jpeg', 'image/png'];
 
 // A basic type/size check before upload, not a substitute for the server's
-// own validation: no in-browser crop tool in this slice, so nothing
-// enforces a photo's actual dimensions or ratio here.
+// own validation: nothing enforces a photo's actual dimensions here. That is
+// right for the only caller left, the rabbi's 3:4 portrait, which the server
+// does not size-check either and which the card crops on display. A place's
+// photo goes through `PhotoPicker`'s crop step instead, which measures the
+// source before it opens.
 export const validatePhotoFile = (file: File): string | undefined => {
   if (!ACCEPTED_PHOTO_TYPES.includes(file.type)) return consts.UNSUPPORTED_TYPE_CLIENT_ERROR;
   if (file.size > consts.CLIENT_MAX_PHOTO_BYTES) return consts.TOO_LARGE_CLIENT_ERROR;
