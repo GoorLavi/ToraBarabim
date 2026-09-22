@@ -57,7 +57,7 @@ const handleError = (reply: FastifyReply, error: unknown, routeLabel: string): F
   }
 
   if (error instanceof MalformedPlacePhotoHeaderError || error instanceof PlacePhotoTooSmallError || error instanceof PlacePhotoAspectRatioError) {
-    return reply.status(400).send({ error: 'invalid_photo', message: 'התמונה שנשלחה אינה תקינה, יש לוודא רזולוציה של לפחות 1200x675' });
+    return reply.status(400).send({ error: 'invalid_photo', message: 'התמונה לא מתאימה. צריך תמונה לרוחב, לפחות 1200 על 675 פיקסלים, והרוחב גדול פי 1.5 עד 2 מהגובה.' });
   }
 
   if (isMultipartFileTooLargeError(error)) {
