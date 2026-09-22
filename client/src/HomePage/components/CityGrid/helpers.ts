@@ -7,9 +7,9 @@ export const uniqueCityNames = (items: LessonOccurrence[]): string[] => {
   const seen = new Set<string>();
   const names: string[] = [];
   for (const item of items) {
-    if (!seen.has(item.place.city)) {
-      seen.add(item.place.city);
-      names.push(item.place.city);
+    if (!seen.has(item.venue.city)) {
+      seen.add(item.venue.city);
+      names.push(item.venue.city);
     }
   }
   return names;

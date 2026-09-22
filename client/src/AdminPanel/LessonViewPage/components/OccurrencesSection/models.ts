@@ -24,7 +24,7 @@ export interface OccurrenceRowData {
   movedFromTime: string | undefined;
   // True when this date's place differs from the lesson's own base place
   // in any of name, street, or city: one flag for the whole place, never
-  // one per field, matching the design's single "המקום שונה" tag.
+  // one per field, matching the design's single "הכתובת שונתה" tag.
   placeChanged: boolean;
 }
 

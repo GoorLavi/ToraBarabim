@@ -7,7 +7,6 @@ import { isRouteErrorResponse, useRouteError } from 'react-router';
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
 import { NotFoundScreen } from '~/components/NotFoundScreen/NotFoundScreen';
-import { SITE_WIDE_META } from '~/consts';
 import { lessonPath } from '~/helpers';
 import * as lessonPageConsts from '~/LessonPage/consts';
 import { teachingRabbiOf } from '~/LessonPage/helpers';
@@ -16,18 +15,22 @@ import type { AreaPreview } from '~/LessonPage/models';
 
 import { SITE_ORIGIN } from '../../consts';
 import * as consts from './consts';
-import { loadAreaLessonsPreview, loadLessonOccurrence, resolveAreaPreviewMeta } from './lesson.server';
+import { loadAreaLessonsPreview, loadLessonOccurrence, loadVenuePhoto, resolveAreaPreviewMeta } from './lesson.server';
+import { DEFAULT_OG_IMAGE_META, SITE_WIDE_META_BASE } from './meta';
 
 interface LessonRouteData {
   occurrence: LessonOccurrence;
   // `areaName`, `areaSlug`, and `limit` are resolved synchronously from
-  // `occurrence.place.area` and the server's own constant, so the heading and
+  // `occurrence.venue.area` and the server's own constant, so the heading and
   // the skeleton can paint before any query resolves. Only `lessons` is a
   // promise, never awaited here: the ticket is a 404 or a 500 without
   // `occurrence`, but the area preview's lessons are a below-the-fold nicety
   // that must never hold up the shell. The route component resolves it
   // inside a `Suspense` boundary.
   areaPreview: AreaPreview;
+  // Read by `meta` only, for the event JSON-LD's `location.image`; never by
+  // the component itself, so it is not seeded into the hydrated query below.
+  venuePhotoUrl: string | undefined;
 }
 
 export const loader = async ({ params }: LoaderFunctionArgs): Promise<LessonRouteData> => {
@@ -37,17 +40,18 @@ export const loader = async ({ params }: LoaderFunctionArgs): Promise<LessonRout
   }
 
   const occurrence = await loadLessonOccurrence(lessonId, date);
+  const venuePhotoUrl = await loadVenuePhoto(occurrence);
   const areaPreview: AreaPreview = {
     ...resolveAreaPreviewMeta(occurrence),
     lessons: loadAreaLessonsPreview(occurrence),
   };
 
-  return { occurrence, areaPreview };
+  return { occurrence, areaPreview, venuePhotoUrl };
 };
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   if (!data) return [];
-  const { occurrence } = data;
+  const { occurrence, venuePhotoUrl } = data;
 
   const teachingRabbi = teachingRabbiOf(occurrence);
   const url = `${SITE_ORIGIN}${lessonPath(occurrence)}`;
@@ -62,8 +66,9 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     { property: 'og:title', content: title },
     { property: 'og:description', content: description },
     { property: 'og:url', content: url },
-    ...SITE_WIDE_META,
-    { 'script:ld+json': consts.lessonEventJsonLd(occurrence, teachingRabbi) },
+    ...SITE_WIDE_META_BASE,
+    ...DEFAULT_OG_IMAGE_META,
+    { 'script:ld+json': consts.lessonEventJsonLd(occurrence, teachingRabbi, venuePhotoUrl) },
   ];
 };
 

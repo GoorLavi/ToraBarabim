@@ -28,7 +28,7 @@ const lesson = (overrides: Partial<LessonResponse>): LessonResponse => ({
   id: 'l1',
   title: 'עיונים בפרשת השבוע',
   rabbiId: 'rabbi-1',
-  place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', cityCode: 4000, cityName: 'חיפה' },
+  venue: { kind: 'address', name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', cityCode: 4000, cityName: 'חיפה' },
   topic: 'parasha',
   audience: 'mixed',
   recurrence: { kind: 'weekly', weekdays: [2] },
@@ -48,7 +48,7 @@ const populatedLessons: LessonResponse[] = [
     audience: 'men',
     recurrence: { kind: 'weekly', weekdays: [0, 1, 2, 3, 4] },
     startTime: '06:00',
-    place: { name: 'בית מדרש הרב קוק', street: 'הרצל 8', cityCode: 5000, cityName: 'ירושלים' },
+    venue: { kind: 'address', name: 'בית מדרש הרב קוק', street: 'הרצל 8', cityCode: 5000, cityName: 'ירושלים' },
   }),
   lesson({
     id: 'l3',
@@ -58,7 +58,7 @@ const populatedLessons: LessonResponse[] = [
     audience: 'women',
     recurrence: { kind: 'once', date: '2026-10-15' },
     startTime: '19:30',
-    place: { name: 'אולם קהילתי', street: 'רחוב בן גוריון 3', cityCode: 5000, cityName: 'ירושלים' },
+    venue: { kind: 'address', name: 'אולם קהילתי', street: 'רחוב בן גוריון 3', cityCode: 5000, cityName: 'ירושלים' },
   }),
 ];
 

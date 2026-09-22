@@ -9,7 +9,7 @@ import { asWeekday } from '~/AdminPanel/helpers';
 // not the "כל ..." phrasing `AdminPanel/helpers.ts`'s `recurrenceWhenLabel`
 // builds for the fields grid: the preview medallion has its own line for
 // the time, so it only needs the day.
-export const weekdayLabelForPreview = (lesson: Lesson): string => {
+export const weekdayLabelForPreview = (lesson: Pick<Lesson, 'recurrence'>): string => {
   if (lesson.recurrence.kind === 'weekly') {
     return lesson.recurrence.weekdays.map((weekday) => WEEKDAY_LABELS[weekday]).join(' / ');
   }

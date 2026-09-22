@@ -7,11 +7,11 @@ import { isRouteErrorResponse, useRouteError } from 'react-router';
 import * as areaPageConsts from '~/AreaPage/consts';
 import { AreaPage } from '~/AreaPage/AreaPage';
 import { StateCard } from '~/components/StateCard/StateCard';
-import { SITE_WIDE_META } from '~/consts';
 import { areaPath } from '~/helpers';
 
 import { SITE_ORIGIN } from '../../../consts';
 import { PUBLIC_CACHE_HEADERS, UNCACHEABLE_ERROR_HEADERS } from '../consts';
+import { DEFAULT_OG_IMAGE_META, SITE_WIDE_META_BASE } from '../meta';
 import * as consts from './consts';
 import { loadAreaDetail } from './area-detail.server';
 
@@ -43,7 +43,8 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     { property: 'og:title', content: title },
     { property: 'og:description', content: description },
     { property: 'og:url', content: url },
-    ...SITE_WIDE_META,
+    ...SITE_WIDE_META_BASE,
+    ...DEFAULT_OG_IMAGE_META,
     { 'script:ld+json': consts.citiesItemListJsonLd(data) },
   ];
 };

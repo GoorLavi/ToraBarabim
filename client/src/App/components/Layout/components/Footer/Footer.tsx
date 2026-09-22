@@ -17,6 +17,7 @@ export const Footer = styled(({ className }: FooterProps) => (
         <TextLink to="/contact">{consts.CONTACT_LABEL}</TextLink>
         <TextLink to="/cities">{consts.CITIES_LABEL}</TextLink>
         <TextLink to="/rabbis">{consts.RABBIS_LABEL}</TextLink>
+        <TextLink to="/places">{consts.PLACES_LABEL}</TextLink>
         <TextLink to="/lessons">{consts.LESSONS_LABEL}</TextLink>
         <TextLink to={WOMEN_PAGE_PATH}>{consts.WOMEN_LABEL}</TextLink>
       </nav>

@@ -4,7 +4,7 @@ import { ZodError } from 'zod';
 
 import { toRabbiLessonListResponse, toRabbiLessonResponse } from '../../../convertors/rabbi-lesson';
 import { requireRabbiAuth } from '../../../plugins/rabbi-guard';
-import { LessonNotFoundError, UnknownCityError } from '../../../service/rabbi-lesson/errors';
+import { LessonNotFoundError, ReferencedPlaceNotFoundError, UnknownCityError } from '../../../service/rabbi-lesson/errors';
 import { createRabbiLessonSchema, lessonIdParamSchema, rabbiLessonListQuerySchema, updateRabbiLessonSchema } from '../../../service/rabbi-lesson/models';
 import * as rabbiLessonService from '../../../service/rabbi-lesson/rabbi-lesson';
 import { RabbanitAudienceMustBeWomenError } from '../../../service/shared/errors';
@@ -26,6 +26,10 @@ const handleError = (reply: FastifyReply, error: unknown, routeLabel: string): F
 
   if (error instanceof UnknownCityError) {
     return reply.status(400).send({ error: 'unknown_city', message: `העיר שנבחרה אינה קיימת: '${error.cityCode}'` });
+  }
+
+  if (error instanceof ReferencedPlaceNotFoundError) {
+    return reply.status(400).send({ error: 'unknown_place', message: `המקום שנבחר אינו קיים או אינו פעיל: '${error.placeId}'` });
   }
 
   if (error instanceof RabbanitAudienceMustBeWomenError) {

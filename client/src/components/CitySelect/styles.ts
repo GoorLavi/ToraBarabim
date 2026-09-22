@@ -26,6 +26,7 @@ export const CitySelect = css(
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      text-align: start;
     }
 
     > .chevron {
@@ -42,6 +43,13 @@ export const CitySelect = css(
       flex: 1;
       min-inline-size: 0;
     }
+  }
+
+  /* The same 1px danger outline PlacePicker draws on its own name and
+     street inputs when they are in error (design gate finding B3): opt-in
+     and off by default, so no existing caller's control changes. */
+  &.invalid > .control {
+    border-color: ${theme.colors.danger};
   }
 
   > .clear {

@@ -8,6 +8,7 @@ import type {
   AgentImportRabbiSearchResult,
   LessonAudience,
   LessonTopic,
+  Weekday,
 } from '@torabarabim/common';
 import { and, eq, ilike, inArray, sql } from 'drizzle-orm';
 import type { FastifyBaseLogger } from 'fastify';
@@ -15,7 +16,8 @@ import { nanoid } from 'nanoid';
 import postgres from 'postgres';
 
 import { db } from '../../db/client';
-import { cities, lessonExceptions, lessonImportDismissedKeys, lessonImportRabbiLinks, lessonImportRules, lessonImportRuns, lessons, rabbis } from '../../db/schema';
+import { cities, lessonExceptions, lessonImportDismissedKeys, lessonImportRabbiLinks, lessonImportRules, lessonImportRuns, lessons, places, rabbis } from '../../db/schema';
+import { lessonVenueColumns } from '../shared/lesson-write';
 import { rabbiNameSchema } from '../shared/name';
 import { toRabbiSummary } from '../shared/rabbi-summary';
 import { cleanCityText, nameKeyOf } from './clean';
@@ -91,14 +93,23 @@ const loadCityLookup = async (executor: DbExecutor): Promise<Map<string, number>
   return new Map(rows.map((row) => [row.nameHe, row.code] as const));
 };
 
+// A place-backed lesson carries no address text of its own
+// (`lessons_venue_shape`), but the planner still needs one name/street pair
+// per lesson to match and protect against: its own text on the address arm,
+// or its place's current name and street on the place arm. Left-joining
+// `places` here, once, is what lets `loadExistingLessons` resolve that
+// without a query per row.
 const loadExistingLessons = async (executor: DbExecutor): Promise<ExistingLessonSnapshot[]> => {
   const rows = await executor
     .select({
       id: lessons.id,
       rabbiId: lessons.rabbiId,
       title: lessons.title,
-      placeName: lessons.placeName,
-      placeStreet: lessons.placeStreet,
+      placeId: lessons.placeId,
+      addressName: lessons.addressName,
+      addressStreet: lessons.addressStreet,
+      placeName: places.name,
+      placeStreet: places.street,
       cityCode: lessons.cityCode,
       topic: lessons.topic,
       audience: lessons.audience,
@@ -112,8 +123,30 @@ const loadExistingLessons = async (executor: DbExecutor): Promise<ExistingLesson
       durationMinutes: lessons.durationMinutes,
       notes: lessons.notes,
     })
-    .from(lessons);
-  return rows as ExistingLessonSnapshot[];
+    .from(lessons)
+    .leftJoin(places, eq(lessons.placeId, places.id));
+
+  return rows.map((row) => {
+    // Mirrors `lessons_venue_shape`: exactly one arm is populated. A row
+    // that reaches neither branch is a row the CHECK says cannot exist.
+    const address =
+      row.placeId !== null && row.placeName !== null && row.placeStreet !== null
+        ? { addressName: row.placeName, addressStreet: row.placeStreet }
+        : row.addressName !== null && row.addressStreet !== null
+          ? { addressName: row.addressName, addressStreet: row.addressStreet }
+          : undefined;
+    if (!address) throw new Error(`data inconsistency: lesson '${row.id}' has neither a place nor an address`);
+    const { placeId: _placeId, placeName: _placeName, placeStreet: _placeStreet, ...rest } = row;
+    return {
+      ...rest,
+      ...address,
+      // Drizzle's `integer(...).array()` types this column `number[]`; only
+      // a `Weekday` (0-6) is ever written to it, the same narrowing
+      // `occurrence.ts`'s `toLessonDomain` already relies on for the same
+      // column.
+      recurrenceWeekdays: rest.recurrenceWeekdays as Weekday[] | null,
+    };
+  });
 };
 
 const loadCitiesByRabbi = async (executor: DbExecutor, rabbiIds?: string[]): Promise<Map<string, string[]>> => {
@@ -327,7 +360,11 @@ export const decide = async (request: AgentImportDecisionRequest): Promise<Agent
   }
 };
 
-const writeValuesFor = (write: ResolvedWrite) => {
+// Always the address arm: the import never produces a place reference,
+// since nothing in the collected data names a registered place. Still
+// routed through `lessonVenueColumns`, the one producer of these columns,
+// rather than setting them by hand here.
+const writeValuesFor = async (write: ResolvedWrite) => {
   // `NormalizedRow.audience` is optional pre-resolution (an unstated row
   // audience is resolved only once the rabbi's honorific is known, in
   // `planCore`); every `ResolvedWrite` is built after that resolution, so
@@ -336,10 +373,7 @@ const writeValuesFor = (write: ResolvedWrite) => {
   return {
     title: write.row.title ?? null,
     rabbiId: write.rabbiId,
-    placeName: write.row.place,
-    placeStreet: write.row.street,
-    placeFloor: null,
-    cityCode: write.row.cityCode,
+    ...(await lessonVenueColumns({ kind: 'address', name: write.row.place, street: write.row.street, cityCode: write.row.cityCode })),
     topic: write.row.topic ?? null,
     audience: write.row.audience,
     recurrenceKind: write.row.recurrence.kind,
@@ -390,13 +424,14 @@ export const apply = async (request: ApplyRequestInput, log: FastifyBaseLogger):
     const newRows = planResult.resolvedWrites.filter((write) => !write.existingLessonId);
     const updatedRows = planResult.resolvedWrites.filter((write) => write.existingLessonId);
     if (newRows.length) {
-      await tx.insert(lessons).values(newRows.map((write) => ({ id: nanoid(), ...writeValuesFor(write) })));
+      const newValues = await Promise.all(newRows.map(async (write) => ({ id: nanoid(), ...(await writeValuesFor(write)) })));
+      await tx.insert(lessons).values(newValues);
     }
     let actuallyUpdatedCount = 0;
     for (const write of updatedRows) {
       const updated = await tx
         .update(lessons)
-        .set(writeValuesFor(write))
+        .set(await writeValuesFor(write))
         .where(and(eq(lessons.id, write.existingLessonId as string), eq(lessons.provenance, 'imported')))
         .returning({ id: lessons.id });
       if (updated[0]) actuallyUpdatedCount += 1;

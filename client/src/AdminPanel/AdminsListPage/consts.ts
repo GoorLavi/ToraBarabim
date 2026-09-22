@@ -1,7 +1,7 @@
 export const HEADING = 'מנהלים';
 export const ADD_ADMIN_LABEL = 'הוספת מנהל';
 
-export const totalCountLabel = (total: number): string => `${total} מנהלים במערכת`;
+export const totalCountLabel = (total: number): string => (total === 1 ? 'מנהל אחד במערכת' : `${total} מנהלים במערכת`);
 
 export const LOADING_MESSAGE = 'טוענים מנהלים...';
 export const RETRY_LABEL = 'ניסיון נוסף';

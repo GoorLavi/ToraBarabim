@@ -1,6 +1,7 @@
 import type { LessonResponse } from '@torabarabim/common';
 
 import { recurrenceWhenLabel } from '~/AdminPanel/helpers';
+import { venuePanelCityName } from '~/helpers';
 
 // One `Secondary` line for an inline lesson row: weekday (or date), start
 // time and city joined with ` · `, e.g. "כל יום שלישי · 20:30 · בני ברק".
@@ -10,4 +11,4 @@ import { recurrenceWhenLabel } from '~/AdminPanel/helpers';
 // between them (design-system.md, "a number at a line break flips").
 // Single caller, stays local (root CLAUDE.md, Scope and Boundaries).
 export const lessonRowMetaLabel = (lesson: LessonResponse): string =>
-  `${recurrenceWhenLabel(lesson)} · ${lesson.startTime} · ${lesson.place.cityName}`;
+  `${recurrenceWhenLabel(lesson)} · ${lesson.startTime} · ${venuePanelCityName(lesson.venue)}`;

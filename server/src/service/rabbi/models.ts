@@ -5,11 +5,15 @@ import { AUDIENCE_SCOPES, DEFAULT_PAGE, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from 
 
 // `general` lists ravs only, `women` lists rabbaniyot only. Zod's default
 // makes the parsed type required, so every call site names its scope
-// rather than one accidentally reading everyone.
+// rather than one accidentally reading everyone. `q`, when present, narrows
+// within that scope by name, mirroring the admin picker's own `q` (see
+// `service/admin-rabbi/models.ts`): a rabbanit stays reachable via
+// `scope=women`, never by widening `general` to include her.
 export const rabbiListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(DEFAULT_PAGE),
   pageSize: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),
   scope: z.enum(AUDIENCE_SCOPES).default('general'),
+  q: z.string().trim().min(1).optional(),
 });
 export type RabbiListQuery = z.infer<typeof rabbiListQuerySchema>;
 

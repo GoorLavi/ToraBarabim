@@ -18,6 +18,7 @@ import {
   rabbiListQuerySchema,
   updateRabbiSchema,
 } from '../../../service/admin-rabbi/models';
+import { photoTooLargeMessage } from '../../../service/shared/consts';
 
 const GENERIC_ERROR_MESSAGE = 'אירעה שגיאה בשרת, נסו שוב מאוחר יותר';
 const RABBI_NOT_FOUND_MESSAGE = 'הרב המבוקש לא נמצא';
@@ -36,11 +37,6 @@ const hasCode = (error: unknown, code: string): boolean =>
   typeof error === 'object' && error !== null && 'code' in error && error.code === code;
 const isMultipartFileTooLargeError = (error: unknown): boolean => hasCode(error, MULTIPART_FILE_TOO_LARGE_CODE);
 const isInvalidMultipartContentTypeError = (error: unknown): boolean => hasCode(error, MULTIPART_INVALID_CONTENT_TYPE_CODE);
-
-const fileTooLargeMessage = (maxBytes: number): string => {
-  const megabytes = Math.max(1, Math.round(maxBytes / (1024 * 1024)));
-  return `התמונה חורגת מהגודל המרבי המותר של ${megabytes} מגה-בייט`;
-};
 
 const handleError = (reply: FastifyReply, error: unknown, routeLabel: string): FastifyReply => {
   if (error instanceof ZodError) {
@@ -65,11 +61,11 @@ const handleError = (reply: FastifyReply, error: unknown, routeLabel: string): F
   }
 
   if (error instanceof PhotoTooLargeError) {
-    return reply.status(413).send({ error: 'file_too_large', message: fileTooLargeMessage(error.maxBytes) });
+    return reply.status(413).send({ error: 'file_too_large', message: photoTooLargeMessage(error.maxBytes) });
   }
 
   if (isMultipartFileTooLargeError(error)) {
-    return reply.status(413).send({ error: 'file_too_large', message: fileTooLargeMessage(loadConfig(process.env).maxUploadBytes) });
+    return reply.status(413).send({ error: 'file_too_large', message: photoTooLargeMessage(loadConfig(process.env).maxUploadBytes) });
   }
 
   if (isInvalidMultipartContentTypeError(error)) {

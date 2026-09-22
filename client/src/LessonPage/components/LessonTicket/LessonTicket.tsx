@@ -7,25 +7,13 @@ import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { navigationClickProps } from '~/analytics/helpers';
 import { trackEvent } from '~/analytics/mixpanel';
 import { todayInIsrael } from '~/HomePage/helpers';
-import { AUDIENCE_LABELS } from '~/consts';
-import { rabbiDisplayName, rabbiPath } from '~/helpers';
+import { AUDIENCE_LABELS, SUBSTITUTE_PREFIX_BY_HONORIFIC } from '~/consts';
+import { addressLine, googleMapsHref, placePath, rabbiDisplayName, rabbiPath, wazeHref } from '~/helpers';
 import * as pageConsts from '~/LessonPage/consts';
 import { teachingRabbiOf } from '~/LessonPage/helpers';
 
 import * as consts from './consts';
-import {
-  addressLine,
-  computeDurationMinutes,
-  dayNumberLabel,
-  durationLabel,
-  endTimeLabel,
-  googleMapsHref,
-  kickerLabel,
-  monthLabel,
-  roleLabel,
-  wazeHref,
-  weekdayLabel,
-} from './helpers';
+import { computeDurationMinutes, dayNumberLabel, durationLabel, endTimeLabel, kickerLabel, monthLabel, roleLabel, weekdayLabel } from './helpers';
 import type { LessonTicketProps } from './models';
 import * as styles from './styles';
 
@@ -55,8 +43,8 @@ export const LessonTicket = styled(({ className, occurrence }: LessonTicketProps
   const isNoPoster = !teachingRabbi.photoUrl;
   const kicker = kickerLabel(occurrence);
   const duration = computeDurationMinutes(occurrence.startTime, occurrence.endTime);
-  const wazeUrl = wazeHref(occurrence.place);
-  const googleMapsUrl = googleMapsHref(occurrence.place);
+  const wazeUrl = wazeHref(occurrence.venue);
+  const googleMapsUrl = googleMapsHref(occurrence.venue);
   const showNavRow = !isCancelled && Boolean(wazeUrl) && Boolean(googleMapsUrl);
   const rabbiName = rabbiDisplayName(teachingRabbi);
 
@@ -118,15 +106,21 @@ export const LessonTicket = styled(({ className, occurrence }: LessonTicketProps
         </div>
 
         <div className={classNames('body', { noPoster: isNoPoster })}>
-          <div className="place">
+          <div className="address">
             <p className="venue" dir="auto">
-              {occurrence.place.name}
+              {occurrence.venue.kind === 'place' ? (
+                <Link className="venueLink" to={placePath({ id: occurrence.venue.placeId, slug: occurrence.venue.slug })}>
+                  {occurrence.venue.name}
+                </Link>
+              ) : (
+                occurrence.venue.name
+              )}
             </p>
-            <p className="address" dir="auto">
-              {addressLine(occurrence.place.street, occurrence.place.floor)}
+            <p className="street" dir="auto">
+              {addressLine(occurrence.venue.street, occurrence.venue.floor)}
             </p>
             <p className="city" dir="auto">
-              {occurrence.place.city}
+              {occurrence.venue.city}
             </p>
 
             <span className="audienceTag" dir="auto">
@@ -180,7 +174,7 @@ export const LessonTicket = styled(({ className, occurrence }: LessonTicketProps
 
               {isSubstitute && (
                 <span className="substituteTag">
-                  <span className="prefix">{pageConsts.SUBSTITUTE_PREFIX_LABEL}</span>
+                  <span className="prefix">{SUBSTITUTE_PREFIX_BY_HONORIFIC[occurrence.rabbi.honorific]}</span>
                   <Link
                     className="originalRabbiLink"
                     to={rabbiPath(occurrence.rabbi)}

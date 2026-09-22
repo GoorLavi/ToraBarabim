@@ -19,6 +19,10 @@ export interface PassThroughFilters {
   area?: string;
   topic?: string;
   audience?: AudienceFilter;
+  // Reached by a link from a place's own page (PlacePage.tsx); no control on
+  // this page draws it, matching `rabbiId` and `area` above (design ruling:
+  // pass-through only).
+  placeId?: string;
 }
 
 export interface LessonsFilters extends PassThroughFilters {

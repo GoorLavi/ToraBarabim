@@ -37,9 +37,9 @@ export const LessonTicketSkeleton = styled(({ className }: LessonTicketSkeletonP
       </div>
 
       <div className="body">
-        <div className="place">
+        <div className="address">
           <span className="bar venue" />
-          <span className="bar address" />
+          <span className="bar street" />
           <span className="bar city" />
           <span className="bar tag" />
         </div>

@@ -23,6 +23,7 @@
     "styled-components": "^6.5.2"
   },
   "devDependencies": {
+    "@fontsource/assistant": "^5.3.0",
     "@react-router/dev": "^7.18.2",
     "@storybook/react-vite": "^10.5.8",
     "@types/node": "^22.20.2",

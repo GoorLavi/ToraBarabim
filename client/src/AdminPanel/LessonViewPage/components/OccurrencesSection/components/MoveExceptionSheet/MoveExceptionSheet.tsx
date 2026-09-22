@@ -23,7 +23,7 @@ export const MoveExceptionSheet = styled(({ className, lessonId, row, onDismiss 
     if (Object.keys(errors).length > 0) return;
 
     move.mutate(
-      { lessonId, date: row.date, existingExceptionId: row.exceptionId, startTime: form.startTime, place: buildMovePlace(form) },
+      { lessonId, date: row.date, existingExceptionId: row.exceptionId, startTime: form.startTime, address: buildMovePlace(form) },
       { onSuccess: onDismiss },
     );
   };

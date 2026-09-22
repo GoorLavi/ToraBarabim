@@ -1,9 +1,30 @@
-import type { Lesson, LessonException, LessonPlace, Rabbi, Weekday } from '@torabarabim/common';
+import type { LessonAudience, LessonException, LessonTopic, Rabbi, Recurrence, Weekday } from '@torabarabim/common';
 
 import type { lessonExceptions, lessons } from '../../db/schema';
-import { toPlace, type PlaceCityRow } from '../shared/place';
+import { toVenue, type AddressCityRow, type AddressPlaceRow, type VenueRef } from '../shared/address';
 import { addDays, compareIsoDates, weekdayOf } from './israel-time';
 import type { ResolvedLessonOccurrence } from './models';
+
+// The domain shape a `lessons` row expands into. Distinct from the wire
+// `Lesson` (`@torabarabim/common`): that one carries `venue` as an
+// unresolved *input* (`LessonVenueInput`, what a create/update names), while
+// this one always knows `cityCode` regardless of which arm is set (the
+// chokepoint's denormalized column), and a place arm here carries only the
+// id, never a resolved name or street: those come from `places` only at
+// render time (`toVenue`), so a renamed or deactivated place is never
+// stale in an already-expanded occurrence.
+export interface Lesson {
+  id: string;
+  title?: string;
+  rabbiId: string;
+  venue: VenueRef;
+  topic?: LessonTopic;
+  audience: LessonAudience;
+  recurrence: Recurrence;
+  startTime: string;
+  durationMinutes: number;
+  notes?: string;
+}
 
 export interface RawOccurrence {
   lesson: Lesson;
@@ -37,7 +58,7 @@ export interface ResolvedOccurrence {
   lesson: Lesson;
   date: string;
   startTime: string;
-  place: LessonPlace;
+  venue: VenueRef;
   status: 'scheduled' | 'cancelled';
   substituteRabbiId?: string;
   cancellationReason?: string;
@@ -45,7 +66,10 @@ export interface ResolvedOccurrence {
 }
 
 // The recurrence rule itself is never touched, so this only ever affects
-// the one date named by `exception`.
+// the one date named by `exception`. An exception's own override is always
+// a free address, never a place: overriding one date is a correction for
+// that date, not a reason to register a venue, so it replaces the lesson's
+// venue outright rather than merging into it.
 export const applyException = (
   occurrence: RawOccurrence,
   exception: LessonException | undefined,
@@ -54,7 +78,7 @@ export const applyException = (
     lesson: occurrence.lesson,
     date: occurrence.date,
     startTime: occurrence.lesson.startTime,
-    place: occurrence.lesson.place,
+    venue: occurrence.lesson.venue,
     status: 'scheduled',
   };
 
@@ -67,7 +91,9 @@ export const applyException = (
   return {
     ...base,
     startTime: exception.startTime ?? base.startTime,
-    place: exception.place ?? base.place,
+    venue: exception.address
+      ? { kind: 'address', name: exception.address.name, street: exception.address.street, floor: exception.address.floor, cityCode: exception.address.cityCode }
+      : base.venue,
     substituteRabbiId: exception.substituteRabbiId,
     note: exception.note,
   };
@@ -84,12 +110,12 @@ export const toLessonDomain = (row: LessonRow): Lesson => ({
   id: row.id,
   title: row.title ?? undefined,
   rabbiId: row.rabbiId,
-  place: {
-    name: row.placeName,
-    street: row.placeStreet,
-    floor: row.placeFloor ?? undefined,
-    cityCode: row.cityCode,
-  },
+  // The `lessons_venue_shape` check constraint guarantees exactly one arm
+  // is set; TS cannot see a DB constraint.
+  venue:
+    row.placeId !== null
+      ? { kind: 'place', placeId: row.placeId, cityCode: row.cityCode }
+      : { kind: 'address', name: row.addressName as string, street: row.addressStreet as string, floor: row.addressFloor ?? undefined, cityCode: row.cityCode },
   topic: row.topic ?? undefined,
   audience: row.audience,
   // The `lessons_recurrence_shape` check constraint guarantees weekdays is
@@ -111,9 +137,9 @@ export const toExceptionDomain = (row: ExceptionRow): LessonException =>
         lessonId: row.lessonId,
         date: row.date,
         startTime: row.startTime ?? undefined,
-        place:
-          row.placeName !== null && row.placeStreet !== null && row.cityCode !== null
-            ? { name: row.placeName, street: row.placeStreet, floor: row.placeFloor ?? undefined, cityCode: row.cityCode }
+        address:
+          row.addressName !== null && row.addressStreet !== null && row.cityCode !== null
+            ? { name: row.addressName, street: row.addressStreet, floor: row.addressFloor ?? undefined, cityCode: row.cityCode }
             : undefined,
         substituteRabbiId: row.substituteRabbiId ?? undefined,
         note: row.note ?? undefined,
@@ -147,7 +173,8 @@ export const compareOccurrences = (a: ResolvedOccurrence, b: ResolvedOccurrence)
 export const resolveRecord = (
   occurrence: ResolvedOccurrence,
   rabbiById: Map<string, Rabbi>,
-  cityByCode: Map<number, PlaceCityRow>,
+  cityByCode: Map<number, AddressCityRow>,
+  placeById: Map<string, AddressPlaceRow>,
 ): ResolvedLessonOccurrence => {
   const rabbi = rabbiById.get(occurrence.lesson.rabbiId);
   if (!rabbi) {
@@ -164,7 +191,7 @@ export const resolveRecord = (
     topic: occurrence.lesson.topic,
     audience: occurrence.lesson.audience,
     rabbi,
-    place: toPlace(occurrence.place, cityByCode),
+    venue: toVenue(occurrence.venue, cityByCode, placeById),
     substituteRabbi: occurrence.substituteRabbiId
       ? rabbiById.get(occurrence.substituteRabbiId)
       : undefined,
