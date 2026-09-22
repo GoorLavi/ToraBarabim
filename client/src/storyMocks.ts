@@ -50,9 +50,18 @@ export const NEVER_RESOLVES = new Promise<Response>(() => {});
 // The marker is a quiet neutral, not `color.danger` or anything close to it:
 // an earlier, more saturated red read as an error badge sitting on top of
 // every poster this fixture feeds (design gate round 6).
+//
+// The horizon only carries vertical position: under a horizontal drag it is
+// identical at every offset, so a crop step story that pans sideways showed
+// nothing moving inside the window unless the corner marker itself happened
+// to be under it (design gate round 7). The centre stripe below is the
+// vertical feature that makes horizontal movement visible; it stays the same
+// quiet neutral tone as the marker for the same reason.
 export const placeholderPhoto = (width: number, height: number): string => {
   const horizonY = Math.round(height * 0.6);
   const markerRadius = Math.max(10, Math.round(Math.min(width, height) * 0.08));
+  const stripeWidth = Math.max(6, Math.round(width * 0.04));
+  const stripeX = Math.round(width / 2 - stripeWidth / 2);
 
   return (
     'data:image/svg+xml;utf8,' +
@@ -60,6 +69,7 @@ export const placeholderPhoto = (width: number, height: number): string => {
       `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">` +
         `<rect width="${width}" height="${horizonY}" fill="#cfd8dc"/>` +
         `<rect y="${horizonY}" width="${width}" height="${height - horizonY}" fill="#8d99a3"/>` +
+        `<rect x="${stripeX}" y="0" width="${stripeWidth}" height="${height}" fill="#5a6670"/>` +
         `<circle cx="${markerRadius + 10}" cy="${markerRadius + 10}" r="${markerRadius}" fill="#5a6670"/>` +
         `</svg>`,
     )
