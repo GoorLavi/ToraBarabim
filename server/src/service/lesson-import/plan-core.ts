@@ -11,7 +11,7 @@ import type {
   Weekday,
 } from '@torabarabim/common';
 
-import { honorificFromRawName, nameKeyOf, onceImportKey, placeKeyOf, resolveWeekday, weeklyImportKey } from './clean';
+import { addressKeyOf, honorificFromRawName, nameKeyOf, onceImportKey, resolveWeekday, weeklyImportKey } from './clean';
 import { DELETION_STOP_THRESHOLD, SHARP_DROP_RATIO } from './consts';
 import type {
   ExistingLessonSnapshot,
@@ -40,22 +40,22 @@ const rowRecurrenceInfo = (row: LessonImportRowInput): { weekday?: Weekday; date
 // the row carries no day information to key on at all.
 const protectionKeysForRow = (row: LessonImportRowInput): string[] => {
   const { weekday, date } = rowRecurrenceInfo(row);
-  const place = placeKeyOf(row.place);
+  const address = addressKeyOf(row.place);
   const keys: string[] = [];
   for (const source of row.sources) {
-    if (date) keys.push(`${source}|d${date}|${place}`);
-    if (weekday !== undefined) keys.push(`${source}|w${weekday}|${place}`);
+    if (date) keys.push(`${source}|d${date}|${address}`);
+    if (weekday !== undefined) keys.push(`${source}|w${weekday}|${address}`);
   }
   return keys;
 };
 
 const protectionKeysForLesson = (lesson: ExistingLessonSnapshot): string[] => {
-  const place = placeKeyOf(lesson.placeName);
+  const address = addressKeyOf(lesson.addressName);
   const sources = lesson.importSources ?? [];
   const keys: string[] = [];
   for (const source of sources) {
-    if (lesson.recurrenceKind === 'once' && lesson.recurrenceDate) keys.push(`${source}|d${lesson.recurrenceDate}|${place}`);
-    for (const weekday of lesson.recurrenceWeekdays ?? []) keys.push(`${source}|w${weekday}|${place}`);
+    if (lesson.recurrenceKind === 'once' && lesson.recurrenceDate) keys.push(`${source}|d${lesson.recurrenceDate}|${address}`);
+    for (const weekday of lesson.recurrenceWeekdays ?? []) keys.push(`${source}|w${weekday}|${address}`);
   }
   return keys;
 };
@@ -76,7 +76,7 @@ const summaryFromLesson = (lesson: ExistingLessonSnapshot, rabbi: RabbiInfo): Ag
   lessonId: lesson.id,
   rabbiName: rabbi.name,
   rabbiHonorific: rabbi.honorific,
-  place: lesson.placeName,
+  place: lesson.addressName,
   weekday: lesson.recurrenceKind === 'weekly' ? lesson.recurrenceWeekdays?.[0] : undefined,
   date: lesson.recurrenceKind === 'once' ? (lesson.recurrenceDate ?? undefined) : undefined,
   startTime: lesson.startTime,
@@ -100,8 +100,8 @@ const sameSources = (a: string[], b: string[]): boolean => {
 // read as one.
 const rowMatchesLesson = (row: NormalizedRow, lesson: ExistingLessonSnapshot): boolean =>
   (row.title ?? null) === lesson.title &&
-  row.place === lesson.placeName &&
-  row.street === lesson.placeStreet &&
+  row.place === lesson.addressName &&
+  row.street === lesson.addressStreet &&
   row.cityCode === lesson.cityCode &&
   (row.topic ?? null) === lesson.topic &&
   row.audience === lesson.audience &&
@@ -192,8 +192,8 @@ export const planCore = (input: PlanCoreInput): PlanCoreResult => {
       lesson.provenance !== 'manual' && lesson.importKey
         ? [lesson.importKey]
         : lesson.recurrenceKind === 'once' && lesson.recurrenceDate
-          ? [onceImportKey(lesson.rabbiId, lesson.recurrenceDate, lesson.placeName)]
-          : (lesson.recurrenceWeekdays ?? []).map((weekday) => weeklyImportKey(lesson.rabbiId, weekday, lesson.placeName));
+          ? [onceImportKey(lesson.rabbiId, lesson.recurrenceDate, lesson.addressName)]
+          : (lesson.recurrenceWeekdays ?? []).map((weekday) => weeklyImportKey(lesson.rabbiId, weekday, lesson.addressName));
     for (const key of keys) {
       const existing = keyToLessons.get(key) ?? [];
       existing.push(lesson);
@@ -331,7 +331,7 @@ export const planCore = (input: PlanCoreInput): PlanCoreResult => {
         source: winner.row.sources.join('+'),
         rabbiName: winner.row.rabbiName,
         reason: 'matches_existing_lesson',
-        description: `source place '${winner.row.place}' vs existing lesson place '${protectedMatch.placeName}'`,
+        description: `source place '${winner.row.place}' vs existing lesson place '${protectedMatch.addressName}'`,
       });
       continue;
     }

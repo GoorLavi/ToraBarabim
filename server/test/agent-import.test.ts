@@ -7,11 +7,11 @@ import type { FastifyInstance } from 'fastify';
 import { nanoid } from 'nanoid';
 
 import { db } from '../src/db/client';
-import { adminUsers, cities, lessonExceptions, lessonImportDismissedKeys, lessonImportRabbiLinks, lessonImportRules, lessonImportRuns, lessons, rabbis } from '../src/db/schema';
+import { adminUsers, cities, lessonExceptions, lessonImportDismissedKeys, lessonImportRabbiLinks, lessonImportRules, lessonImportRuns, lessons, places, rabbis } from '../src/db/schema';
 import { SESSION_COOKIE_NAME, RABBI_SESSION_COOKIE_NAME } from '../src/service/admin-auth/consts';
 import * as adminRabbiAccountService from '../src/service/admin-rabbi-account/admin-rabbi-account';
 import * as adminUserService from '../src/service/admin-user/admin-user';
-import { cleanCityText, nameKeyOf, placeKeyOf, resolveBuiltInCityAlias, resolveWeekday, resolveWeekdayNote } from '../src/service/lesson-import/clean';
+import { addressKeyOf, cleanCityText, nameKeyOf, resolveBuiltInCityAlias, resolveWeekday, resolveWeekdayNote } from '../src/service/lesson-import/clean';
 import { BUILT_IN_AUDIENCE_ALIASES, IMPORT_ADVISORY_LOCK_KEY } from '../src/service/lesson-import/consts';
 import { sha256Of } from '../src/service/lesson-import/digest';
 import { lessonImportFileSchema } from '../src/service/lesson-import/models';
@@ -83,6 +83,7 @@ describe('agent import', () => {
   let app: FastifyInstance;
   const cleanupRabbiIds = new Set<string>();
   const cleanupLessonIds = new Set<string>();
+  const cleanupPlaceIds = new Set<string>();
   const cleanupNameKeys = new Set<string>();
   const cleanupRuleMatchTexts = new Set<string>();
   const cleanupImportKeys = new Set<string>();
@@ -103,6 +104,10 @@ describe('agent import', () => {
   afterEach(async () => {
     for (const id of cleanupLessonIds) await db.delete(lessons).where(eq(lessons.id, id));
     cleanupLessonIds.clear();
+    // Deleted after lessons: a place-backed lesson's `place_id` FK would
+    // block deleting its place first.
+    for (const id of cleanupPlaceIds) await db.delete(places).where(eq(places.id, id));
+    cleanupPlaceIds.clear();
     for (const id of cleanupRabbiIds) await db.delete(rabbis).where(eq(rabbis.id, id));
     cleanupRabbiIds.clear();
     for (const id of cleanupAdminUserIds) await db.delete(adminUsers).where(eq(adminUsers.id, id));
@@ -145,17 +150,18 @@ describe('agent import', () => {
     return `${cookie.name}=${cookie.value}`;
   };
 
-  // Same idea as `loginAsNewAdmin`, through `POST /v1/rabbi/login`. The
+  // Same idea as `loginAsNewAdmin`, through the shared panel door
+  // (`POST /v1/panel/login`, Wave 4: `POST /v1/rabbi/login` is gone). The
   // rabbi account cascade-deletes with the rabbi row (see
   // `admin_users_rabbi_id_unique`'s FK), so it needs no cleanup of its own.
   const loginAsRabbi = async (rabbiId: string): Promise<string> => {
     const email = `test-rabbi-account-${uniqueSuffix()}@example.com`;
     const created = await adminRabbiAccountService.create(rabbiId, { email, username: `rabbi-${uniqueSuffix()}` });
 
-    const res = await app.inject({ method: 'POST', url: '/v1/rabbi/login', payload: { identifier: email, password: created.temporaryPassword } });
+    const res = await app.inject({ method: 'POST', url: '/v1/panel/login', payload: { identifier: email, password: created.temporaryPassword } });
     assert.equal(res.statusCode, 200);
     const cookie = res.cookies.find((c) => c.name === RABBI_SESSION_COOKIE_NAME);
-    if (!cookie) throw new Error('expected the rabbi login route to set a session cookie');
+    if (!cookie) throw new Error('expected the panel login route to set the rabbi session cookie');
     return `${cookie.name}=${cookie.value}`;
   };
 
@@ -181,12 +187,12 @@ describe('agent import', () => {
     source: string;
   }): Promise<{ id: string; importKey: string }> => {
     const id = `test-lesson-${uniqueSuffix()}`;
-    const importKey = `${options.rabbiId}|w${options.weekday}|${placeKeyOf(options.place)}`;
+    const importKey = `${options.rabbiId}|w${options.weekday}|${addressKeyOf(options.place)}`;
     await db.insert(lessons).values({
       id,
       rabbiId: options.rabbiId,
-      placeName: options.place,
-      placeStreet: 'רחוב קיים 1',
+      addressName: options.place,
+      addressStreet: 'רחוב קיים 1',
       cityCode: await jerusalemCode(),
       audience: 'men',
       recurrenceKind: 'weekly',
@@ -272,6 +278,43 @@ describe('agent import', () => {
         await appWithoutAgentRoutes.close();
       }
     });
+  });
+
+  // A place-backed lesson stores no address text of its own
+  // (`lessons.place_name`/`place_street` are nullable precisely for this
+  // arm); `plan` must still resolve one, from the place it references,
+  // rather than crash trying to slug a NULL. Placed first among the plan
+  // tests so a regression here fails loudly on its own, not as the
+  // twentieth confusing TypeError further down the file.
+  test('plan returns 200 against a database that has a place-backed lesson', async () => {
+    const cityCode = await jerusalemCode();
+    const placeId = `test-place-${uniqueSuffix()}`;
+    await db.insert(places).values({
+      id: placeId,
+      slug: `test-place-${uniqueSuffix()}`,
+      name: `היכל הבדיקה ${uniqueSuffix()}`,
+      street: 'רחוב ההיכל 1',
+      cityCode,
+    });
+    cleanupPlaceIds.add(placeId);
+
+    const lessonId = `test-lesson-${uniqueSuffix()}`;
+    await db.insert(lessons).values({
+      id: lessonId,
+      rabbiId: SEEDED_RABBI_ID,
+      placeId,
+      cityCode,
+      audience: 'men',
+      recurrenceKind: 'weekly',
+      recurrenceWeekdays: [2],
+      startTime: '20:00',
+      durationMinutes: 60,
+      provenance: 'manual',
+    });
+    cleanupLessonIds.add(lessonId);
+
+    const res = await postPlan(buildFile([baseRow({ sources: [`place-backed-${uniqueSuffix()}.example.com`] })]));
+    assert.equal(res.statusCode, 200);
   });
 
   test('an invalid rows file gives 400 naming the row and field, and plans nothing', async () => {
@@ -369,7 +412,7 @@ describe('agent import', () => {
       headers: { cookie },
       payload: {
         rabbiId,
-        place: { name: `מקום אחרי עריכה ${uniqueSuffix()}`, street: 'רחוב אחרי עריכה 1', cityCode: await jerusalemCode() },
+        venue: { kind: 'address', name: `מקום אחרי עריכה ${uniqueSuffix()}`, street: 'רחוב אחרי עריכה 1', cityCode: await jerusalemCode() },
         audience: 'men',
         recurrence: { kind: 'weekly', weekdays: [0] },
         startTime: '20:00',
@@ -874,8 +917,8 @@ describe('agent import', () => {
     await db.insert(lessons).values({
       id: manualLessonId,
       rabbiId: SEEDED_RABBI_ID,
-      placeName: manualPlace,
-      placeStreet: 'רחוב קיים 5',
+      addressName: manualPlace,
+      addressStreet: 'רחוב קיים 5',
       cityCode: await jerusalemCode(),
       audience: 'men',
       recurrenceKind: 'weekly',
@@ -1001,7 +1044,7 @@ describe('agent import', () => {
     // The stop only withholds this source's deletions; the rest of the run
     // (the survivor row itself, a genuine addition) still applies.
     assert.equal(applyNoAck.counts.added, 1);
-    const survivorLessons = await db.select({ id: lessons.id }).from(lessons).where(eq(lessons.placeName, survivorPlace));
+    const survivorLessons = await db.select({ id: lessons.id }).from(lessons).where(eq(lessons.addressName, survivorPlace));
     for (const r of survivorLessons) cleanupLessonIds.add(r.id);
 
     const rePlan = (await postPlan(file)).json() as AgentImportPlanResponse;
@@ -1027,12 +1070,12 @@ describe('agent import', () => {
     const sourceY = `multi-source-y-${uniqueSuffix()}.example.com`;
 
     const mergedPlace = `מקום ממוזג-מקורות ${uniqueSuffix()}`;
-    const mergedImportKey = `${rabbiId}|w0|${placeKeyOf(mergedPlace)}`;
+    const mergedImportKey = `${rabbiId}|w0|${addressKeyOf(mergedPlace)}`;
     await db.insert(lessons).values({
       id: `test-lesson-${uniqueSuffix()}`,
       rabbiId,
-      placeName: mergedPlace,
-      placeStreet: 'רחוב קיים 1',
+      addressName: mergedPlace,
+      addressStreet: 'רחוב קיים 1',
       cityCode: await jerusalemCode(),
       audience: 'men',
       recurrenceKind: 'weekly',
@@ -1226,7 +1269,7 @@ describe('agent import', () => {
     const deleteRes = await app.inject({ method: 'DELETE', url: `/v1/admin/lessons/${lessonId}`, headers: { cookie } });
     assert.equal(deleteRes.statusCode, 204);
 
-    const importKey = `${rabbiId}|w0|${placeKeyOf(place)}`;
+    const importKey = `${rabbiId}|w0|${addressKeyOf(place)}`;
     cleanupImportKeys.add(importKey);
     const dismissed = await db.select().from(lessonImportDismissedKeys).where(eq(lessonImportDismissedKeys.importKey, importKey));
     assert.equal(dismissed.length, 1);
@@ -1256,7 +1299,7 @@ describe('agent import', () => {
     const deleteRes = await app.inject({ method: 'DELETE', url: `/v1/rabbi/lessons/${lessonId}`, headers: { cookie } });
     assert.equal(deleteRes.statusCode, 204);
 
-    const importKey = `${rabbiId}|w0|${placeKeyOf(place)}`;
+    const importKey = `${rabbiId}|w0|${addressKeyOf(place)}`;
     cleanupImportKeys.add(importKey);
     const dismissed = await db.select().from(lessonImportDismissedKeys).where(eq(lessonImportDismissedKeys.importKey, importKey));
     assert.equal(dismissed.length, 1);
@@ -1284,6 +1327,8 @@ describe('agent import', () => {
     assert.ok(lesson);
     cleanupLessonIds.add(lesson.id);
     assert.equal(lesson.provenance, 'imported');
+    // The import always writes the address arm; TS cannot see that.
+    assert.ok(lesson.addressName);
 
     // The guard's wiring is where it fails: a real admin session, PATCHing
     // the real route, not a direct service call.
@@ -1294,7 +1339,7 @@ describe('agent import', () => {
       headers: { cookie },
       payload: {
         rabbiId,
-        place: { name: lesson.placeName, street: 'רחוב חדש 9', cityCode: lesson.cityCode },
+        venue: { kind: 'address', name: lesson.addressName, street: 'רחוב חדש 9', cityCode: lesson.cityCode },
         audience: 'men',
         recurrence: { kind: 'weekly', weekdays: [0] },
         startTime: '21:00',
@@ -1330,6 +1375,8 @@ describe('agent import', () => {
     assert.ok(lesson);
     cleanupLessonIds.add(lesson.id);
     assert.equal(lesson.provenance, 'imported');
+    // The import always writes the address arm; TS cannot see that.
+    assert.ok(lesson.addressName);
 
     // Same guard, from the rabbi's own panel: a real rabbi session, PATCHing
     // his own lesson through the real route.
@@ -1339,7 +1386,7 @@ describe('agent import', () => {
       url: `/v1/rabbi/lessons/${lesson.id}`,
       headers: { cookie },
       payload: {
-        place: { name: lesson.placeName, street: 'רחוב חדש עצמי 3', cityCode: lesson.cityCode },
+        venue: { kind: 'address', name: lesson.addressName, street: 'רחוב חדש עצמי 3', cityCode: lesson.cityCode },
         audience: 'men',
         recurrence: { kind: 'weekly', weekdays: [0] },
         startTime: '21:30',
@@ -1463,12 +1510,12 @@ describe('agent import', () => {
   });
 
   describe('pure helpers', () => {
-    // A real pair, not `placeKeyOf(x) === toSlug(x)` (circular: placeKeyOf
+    // A real pair, not `addressKeyOf(x) === toSlug(x)` (circular: addressKeyOf
     // is toSlug, so that only proves a function equals itself). Two
     // differently-spaced, differently-punctuated spellings of the same
     // venue must key the same lesson.
-    test('placeKeyOf keys two differently-written spellings of the same venue the same way', () => {
-      assert.equal(placeKeyOf('בית   הכנסת  "מוסאיוף" '), placeKeyOf('בית הכנסת מוסאיוף'));
+    test('addressKeyOf keys two differently-written spellings of the same venue the same way', () => {
+      assert.equal(addressKeyOf('בית   הכנסת  "מוסאיוף" '), addressKeyOf('בית הכנסת מוסאיוף'));
     });
 
     test('resolveWeekday maps the procedure\'s vocabulary onto Weekday', () => {

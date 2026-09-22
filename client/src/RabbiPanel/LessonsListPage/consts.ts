@@ -1,7 +1,7 @@
 import type { Weekday } from '@torabarabim/common';
 
 export const HEADING = 'השיעורים שלי';
-export const countLabel = (n: number): string => `${n} שיעורים מופיעים באתר על שמך.`;
+export const countLabel = (n: number): string => (n === 1 ? 'שיעור אחד מופיע באתר על שמך.' : `${n} שיעורים מופיעים באתר על שמך.`);
 export const ADD_LESSON_LABEL = 'הוספת שיעור';
 export const EDIT_LESSON_LABEL = 'עריכת השיעור';
 

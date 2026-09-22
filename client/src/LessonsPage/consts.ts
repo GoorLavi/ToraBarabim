@@ -1,3 +1,5 @@
+import type { Area } from '@torabarabim/common';
+
 import type { LessonsFilters } from './models';
 
 // The date, city, search and audience filters read `~/hooks/consts.ts`
@@ -8,6 +10,33 @@ import type { LessonsFilters } from './models';
 export const RABBI_ID_PARAM = 'rabbiId';
 export const AREA_PARAM = 'area';
 export const TOPIC_PARAM = 'topic';
+
+// Reached by a link from a place's own page (PlacePage.tsx); page-local like
+// the three above it.
+export const PLACE_ID_PARAM = 'placeId';
+
+// Hand-mirrored from the server's own `AREA_NAMES_HE`
+// (server/src/service/shared/consts.ts), since there is no shared import
+// path from a browser-executed module to server source (unlike
+// routes/lesson.server.ts, which runs server-only and imports the original
+// directly). Every other place on this site that needs an area's Hebrew
+// name resolves it from a server response instead of holding a copy of this
+// map (WomenPage/useCityAreaLookup.ts, common/src/city.ts); this is the one
+// exception, made so `buildLessonsTitle` can name the `area` pass-through
+// filter in its title without a second network round trip, matching how it
+// already reads `rabbiId`'s and `placeId`'s names off the first fetched
+// result. Flagged for review: this is a second copy of a map the rest of
+// the codebase deliberately avoids duplicating.
+export const LESSONS_PAGE_AREA_NAMES: Record<Area, string> = {
+  north: 'הצפון',
+  haifa: 'חיפה והקריות',
+  sharon: 'השרון',
+  center: 'המרכז',
+  telAviv: 'תל אביב',
+  jerusalem: 'ירושלים',
+  shfela: 'השפלה',
+  south: 'הדרום',
+};
 
 // The complete list's horizon: a hand-mirrored constant, since the client
 // has no shared import path to the server's own limit
@@ -44,3 +73,4 @@ export const CLEAR_FILTERS_LABEL = 'ניקוי הסינון';
 
 export const SITE_EMPTY_HEADLINE = 'אין כרגע שיעורים באתר';
 export const SITE_EMPTY_BODY = 'מגידי השיעור מוסיפים ומעדכנים שיעורים באתר באופן שוטף.';
+

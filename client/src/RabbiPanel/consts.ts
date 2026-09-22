@@ -25,7 +25,9 @@ export const RABBI_QUERY_KEYS = {
 };
 
 export const RABBI_ROUTES = {
-  login: '/rabbi/login',
+  // The shared login door (`PanelLogin`), not a route this panel owns.
+  // `/rabbi/login` still exists as a redirect to here, for a stale bookmark.
+  login: '/login',
   upcoming: '/rabbi/upcoming',
   lessons: '/rabbi/lessons',
   lessonNew: '/rabbi/lessons/new',

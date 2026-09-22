@@ -11,7 +11,7 @@ export const toLessonExceptionResponse = (record: LessonExceptionRecord): Lesson
         date: record.date,
         kind: 'modified',
         startTime: record.startTime,
-        place: record.place,
+        address: record.address,
         substituteRabbiId: record.substituteRabbiId,
         note: record.note,
       };

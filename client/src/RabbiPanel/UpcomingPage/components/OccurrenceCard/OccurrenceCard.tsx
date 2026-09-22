@@ -22,7 +22,7 @@ export const OccurrenceCard = styled(({ className, occurrence, onCancelClick, on
             {title}
           </h3>
           <p className="where" dir="auto">
-            {occurrence.place.name}, {occurrence.place.city}
+            {occurrence.venue.name}, {occurrence.venue.city}
           </p>
 
           {isCancelled && (

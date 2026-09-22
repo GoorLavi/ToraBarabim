@@ -27,7 +27,8 @@ export const RABBI_NOT_LISTED_NOTE = 'הרב לא ברשימה? אפשר להו�
 // The brief asks for the rabbi's "active-lesson count", but the `Lesson`
 // type has no active/paused concept at all today (see the report for this
 // slice), so this counts every lesson of theirs in the system.
-export const rabbiLessonCountLabel = (count: number): string => (count === 0 ? 'אין לרב הזה שיעורים נוספים' : `${count} שיעורים במערכת`);
+export const rabbiLessonCountLabel = (count: number): string =>
+  count === 0 ? 'אין לרב הזה שיעורים נוספים' : count === 1 ? 'שיעור אחד במערכת' : `${count} שיעורים במערכת`;
 
 export const DETAILS_SECTION_HEADING = 'פרטי השיעור';
 export const TITLE_LABEL = 'שם השיעור';
@@ -40,16 +41,10 @@ export const TITLE_HELPER_NO_RABBI = 'אם לא ימולא, יוצג במקומ�
 
 export const WHEN_SECTION_HEADING = 'מתי מתקיים השיעור';
 
+// The WHERE section's own field labels, helpers and validation copy moved
+// to `~/components/PlacePicker/consts.ts`, the shared component that now
+// renders that section's whole body in both lesson forms.
 export const WHERE_SECTION_HEADING = 'איפה מתקיים השיעור';
-export const CITY_LABEL = 'עיר';
-export const CITY_HELPER = 'בוחרים מהרשימה. העיר קובעת גם את האזור.';
-export const CITY_PLACEHOLDER = 'בחירת עיר';
-export const PLACE_NAME_LABEL = 'שם המקום';
-export const STREET_LABEL = 'רחוב ומספר';
-export const STREET_HELPER = 'הכתובת המלאה תוצג בעמוד השיעור עצמו בלבד.';
-// Optional: a floor or arrival note, for a lesson held in a building where
-// finding the right door or floor is not obvious from the street address alone.
-export const FLOOR_LABEL = 'קומה או הוראות הגעה';
 
 export const AUDIENCE_SECTION_HEADING = 'למי מיועד';
 export const AUDIENCE_HELPER = 'יש לבחור אחת מהאפשרויות.';
@@ -60,9 +55,6 @@ export const SAVE_LABEL = 'שמירת השיעור';
 export const SAVING_LABEL = 'שומרים...';
 
 export const REQUIRED_RABBI_ERROR = 'יש לבחור רב';
-export const REQUIRED_CITY_ERROR = 'יש לבחור עיר';
-export const REQUIRED_PLACE_NAME_ERROR = 'יש למלא שם מקום';
-export const REQUIRED_STREET_ERROR = 'יש למלא כתובת';
 export const REQUIRED_AUDIENCE_ERROR = 'יש לבחור קהל יעד';
 export const REQUIRED_START_TIME_ERROR = 'יש למלא שעת התחלה';
 export const REQUIRED_DURATION_ERROR = 'יש למלא משך שיעור תקין (בדקות)';
@@ -76,7 +68,7 @@ export const REQUIRED_DATE_ERROR = 'יש לבחור תאריך';
 export const SECTION_DEFS: { fields: LessonFormField[]; heading: string }[] = [
   { fields: ['rabbi'], heading: RABBI_SECTION_HEADING },
   { fields: ['recurrence', 'startTime', 'durationMinutes'], heading: WHEN_SECTION_HEADING },
-  { fields: ['city', 'placeName', 'street'], heading: WHERE_SECTION_HEADING },
+  { fields: ['city', 'addressName', 'street'], heading: WHERE_SECTION_HEADING },
   { fields: ['audience'], heading: AUDIENCE_SECTION_HEADING },
 ];
 
@@ -87,7 +79,6 @@ export const RETRY_LABEL = 'ניסיון נוסף';
 export const LOADING_MESSAGE = 'טוענים...';
 
 export const UNKNOWN_RABBI_ERROR = 'הרב שנבחר אינו קיים יותר. בחר רב אחר';
-export const UNKNOWN_CITY_ERROR = 'העיר שנבחרה אינה קיימת יותר. בחר עיר אחרת';
 
 export const DEFAULT_DURATION_MINUTES = '60';
 

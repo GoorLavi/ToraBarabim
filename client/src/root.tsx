@@ -6,7 +6,7 @@ import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router';
 import styled, { ThemeProvider } from 'styled-components';
 
 import { Analytics } from '~/analytics/Analytics';
-import { SITE_WIDE_META } from '~/consts';
+import { DEFAULT_OG_IMAGE_META, SITE_WIDE_META_BASE } from '~/routes/meta';
 import { GlobalStyle } from '~/styles/GlobalStyle';
 import { ARGAMAN_VE_ZAHAV_THEME } from '~/theme/themes';
 
@@ -30,7 +30,8 @@ export const meta: MetaFunction = () => [
   { property: 'og:title', content: DEFAULT_TITLE },
   { property: 'og:description', content: DEFAULT_DESCRIPTION },
   { property: 'og:url', content: `${SITE_ORIGIN}/` },
-  ...SITE_WIDE_META,
+  ...SITE_WIDE_META_BASE,
+  ...DEFAULT_OG_IMAGE_META,
 ];
 
 const WEBSITE_JSON_LD = JSON.stringify({

@@ -4,12 +4,12 @@ import type { RabbiDirectoryResponse } from '@torabarabim/common';
 import type { HeadersFunction, MetaFunction } from 'react-router';
 
 import { StateCard } from '~/components/StateCard/StateCard';
-import { SITE_WIDE_META } from '~/consts';
 import { DIRECTORY_COPY, LOAD_ERROR_BODY, RABBIS_QUERY_KEYS, RETRY_LABEL } from '~/RabbisPage/consts';
 import { RabbisPage } from '~/RabbisPage/RabbisPage';
 
 import { SITE_ORIGIN } from '../../consts';
 import * as consts from './consts';
+import { DEFAULT_OG_IMAGE_META, SITE_WIDE_META_BASE } from './meta';
 import { loadRabbiDirectory } from './rabbis.server';
 
 // Mirrors rabbis.tsx: no query string read, so a crawler landing here always
@@ -31,7 +31,8 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     { property: 'og:title', content: title },
     { property: 'og:description', content: description },
     { property: 'og:url', content: url },
-    ...SITE_WIDE_META,
+    ...SITE_WIDE_META_BASE,
+    ...DEFAULT_OG_IMAGE_META,
     { 'script:ld+json': consts.rabbisItemListJsonLd(data) },
   ];
 };

@@ -22,7 +22,7 @@ const baseOccurrence: LessonOccurrence = {
   topic: 'parasha',
   audience: 'mixed',
   rabbi: rabbiFixture({ id: 'rabbi-1', name: 'יעקב מזרחי', title: 'דיין', photoUrl: PLACEHOLDER_PHOTO }),
-  place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'נתניה', citySlug: 'נתניה', area: 'sharon' },
+  venue: { kind: 'address', name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'נתניה', citySlug: 'נתניה', area: 'sharon' },
 };
 
 const meta: Meta<typeof LessonTicket> = {
@@ -47,7 +47,7 @@ export const RequiredOnly: Story = {
       status: 'scheduled',
       audience: 'men',
       rabbi: rabbiFixture({ id: 'rabbi-4', name: 'שלמה אביטן' }),
-      place: { name: 'בית מדרש אור החיים', street: 'רחוב טרומפלדור 5', city: 'באר שבע', citySlug: 'באר-שבע', area: 'south' },
+      venue: { kind: 'address', name: 'בית מדרש אור החיים', street: 'רחוב טרומפלדור 5', city: 'באר שבע', citySlug: 'באר-שבע', area: 'south' },
     },
   },
 };
@@ -79,7 +79,31 @@ export const SubstituteRabbi: Story = {
 
 export const NoPhoto: Story = {
   args: {
-    occurrence: { ...baseOccurrence, rabbi: rabbiFixture({ id: 'rabbi-2', name: 'שלמה אביטן' }) },
+    // Pinned rather than left to default, now that rabbiFixture fills in a
+    // placeholder photo when the key is absent (design gate finding F10):
+    // this story exists specifically to show the missing-poster fallback.
+    occurrence: { ...baseOccurrence, rabbi: rabbiFixture({ id: 'rabbi-2', name: 'שלמה אביטן', photoUrl: undefined }) },
+  },
+};
+
+// A registered place links its name to the place page; a free-text address
+// (every other story here) stays plain text (LessonTicket.tsx, `venue.kind
+// === 'place'`).
+export const RegisteredPlace: Story = {
+  args: {
+    occurrence: {
+      ...baseOccurrence,
+      venue: {
+        kind: 'place',
+        placeId: 'place-1',
+        slug: 'בית-הכנסת-המרכזי',
+        name: 'בית הכנסת המרכזי',
+        street: 'רחוב ויצמן 45',
+        city: 'נתניה',
+        citySlug: 'נתניה',
+        area: 'sharon',
+      },
+    },
   },
 };
 
@@ -93,7 +117,8 @@ export const LongNames: Story = {
         title: 'ראש ישיבה וחבר בית הדין הגדול',
         photoUrl: PLACEHOLDER_PHOTO,
       }),
-      place: {
+      venue: {
+        kind: 'address',
         name: 'בית הכנסת הגדול "היכל התורה והתפילה"',
         street: 'רחוב הרב קוק הראשי 128',
         city: 'קריית מלאכי והמושבים הסמוכים לה בעוטף עזה',

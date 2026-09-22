@@ -9,6 +9,8 @@ const robotsTxt = `User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /rabbi/
+Disallow: /place/
+Disallow: /login
 
 Sitemap: ${SITE_ORIGIN}/sitemap.xml
 `;

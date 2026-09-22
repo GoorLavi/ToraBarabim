@@ -8,7 +8,7 @@ import { ADMIN_ROUTES, skeletonFieldKeys } from '~/AdminPanel/consts';
 import { adminErrorMessage, lessonPrimaryLabel, recurrenceWhenLabel } from '~/AdminPanel/helpers';
 import { useExistingLesson } from '~/AdminPanel/useExistingLesson';
 import { AUDIENCE_LABELS, RABBI_HONORIFIC_LABELS } from '~/consts';
-import { rabbiDisplayName } from '~/helpers';
+import { rabbiDisplayName, venuePanelCityName } from '~/helpers';
 
 import { OccurrencesSection } from './components/OccurrencesSection/OccurrencesSection';
 import * as consts from './consts';
@@ -125,10 +125,10 @@ export const LessonViewPage = styled(({ className }: LessonViewPageProps) => {
             <RecordField label={consts.START_TIME_LABEL} value={lesson.startTime} />
             <RecordField label={consts.DURATION_LABEL} value={consts.durationValue(lesson.durationMinutes)} />
 
-            <RecordField label={consts.CITY_LABEL} value={lesson.place.cityName} />
-            <RecordField label={consts.PLACE_NAME_LABEL} value={lesson.place.name} />
-            <RecordField className="wide" label={consts.STREET_LABEL} value={lesson.place.street} />
-            {lesson.place.floor && <RecordField label={consts.FLOOR_LABEL} value={lesson.place.floor} />}
+            <RecordField label={consts.CITY_LABEL} value={venuePanelCityName(lesson.venue)} />
+            <RecordField label={consts.PLACE_NAME_LABEL} value={lesson.venue.name} />
+            <RecordField className="wide" label={consts.STREET_LABEL} value={lesson.venue.street} />
+            {lesson.venue.floor && <RecordField label={consts.FLOOR_LABEL} value={lesson.venue.floor} />}
 
             <RecordField label={consts.AUDIENCE_LABEL} value={AUDIENCE_LABELS[lesson.audience]} />
           </div>
@@ -142,7 +142,7 @@ export const LessonViewPage = styled(({ className }: LessonViewPageProps) => {
               rabbi,
               title: lesson.title ?? '',
               audience: lesson.audience,
-              cityName: lesson.place.cityName,
+              cityName: venuePanelCityName(lesson.venue),
               weekdayLabel: weekdayLabelForPreview(lesson),
               startTime: lesson.startTime,
             }}

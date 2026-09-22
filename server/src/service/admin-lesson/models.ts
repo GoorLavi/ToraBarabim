@@ -1,11 +1,10 @@
-import type { Weekday } from '@torabarabim/common';
+import type { LessonProvenance, LessonVenuePanel } from '@torabarabim/common';
 import { z } from 'zod';
-
-import type { LessonProvenance } from '@torabarabim/common';
 
 import { LESSON_AUDIENCES, LESSON_TOPICS } from '../../db/schema/enums';
 import { DEFAULT_ADMIN_PAGE, DEFAULT_ADMIN_PAGE_SIZE, MAX_ADMIN_PAGE_SIZE } from '../admin-shared/consts';
 import type { ResolvedLessonOccurrence } from '../lesson/models';
+import { lessonVenueInputSchema, recurrenceSchema } from '../shared/models';
 import { timeOfDaySchema } from '../shared/time';
 
 export const lessonIdParamSchema = z.object({
@@ -27,39 +26,12 @@ export const lessonListQuerySchema = z.object({
 });
 export type LessonListQuery = z.infer<typeof lessonListQuerySchema>;
 
-export { timeOfDaySchema };
-
-// The venue is free text, except `cityCode`, which must resolve to a row in
-// `cities` (checked in the service, not here: a static schema cannot query
-// the database).
-export const lessonPlaceSchema = z.object({
-  name: z.string().trim().min(1),
-  street: z.string().trim().min(1),
-  floor: z.string().trim().min(1).optional(),
-  cityCode: z.number().int().positive(),
-});
-export type LessonPlaceInput = z.infer<typeof lessonPlaceSchema>;
-
-// The read-side shape: `LessonPlaceInput` plus the city name resolved from
-// `cityCode`, so the admin client never has to look up a city by code.
-export interface LessonPlaceRecord extends LessonPlaceInput {
-  cityName: string;
-}
-
-const weekdaySchema = z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6)]) satisfies z.ZodType<Weekday>;
-
-// Mirrors the `lessons_recurrence_shape` CHECK constraint exactly: 'weekly'
-// carries weekdays and no date, 'once' carries a date and no weekdays, so
-// the two can never disagree.
-export const recurrenceSchema = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('weekly'), weekdays: z.array(weekdaySchema).min(1) }),
-  z.object({ kind: z.literal('once'), date: z.iso.date() }),
-]);
+export { recurrenceSchema, timeOfDaySchema };
 
 export const createLessonSchema = z.object({
   title: z.string().trim().min(1).optional(),
   rabbiId: z.string().trim().min(1),
-  place: lessonPlaceSchema,
+  venue: lessonVenueInputSchema,
   topic: z.enum(LESSON_TOPICS).optional(),
   audience: z.enum(LESSON_AUDIENCES),
   recurrence: recurrenceSchema,
@@ -79,7 +51,7 @@ export interface LessonRecord {
   id: string;
   title?: string;
   rabbiId: string;
-  place: LessonPlaceRecord;
+  venue: LessonVenuePanel;
   topic?: (typeof LESSON_TOPICS)[number];
   audience: (typeof LESSON_AUDIENCES)[number];
   recurrence: CreateLessonInput['recurrence'];

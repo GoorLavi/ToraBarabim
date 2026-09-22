@@ -36,3 +36,15 @@ export const AREA_NAMES_HE: Record<Area, string> = {
 // links to an area: the area service itself and the city detail page, which
 // links back to the area it belongs to.
 export const toAreaSlug = (area: Area): string => toSlug(AREA_NAMES_HE[area]);
+
+// The one wording of the photo-too-large rejection, shared by every photo
+// upload route (a place's own, a place's admin route, a rabbi's own, and a
+// rabbi's admin route): both a place and a rabbi photo are covered here, the
+// nearest module both domains already import from. Kept identical in shape
+// to the client's own copy (`components/PhotoPicker/consts.ts`'s
+// `TOO_LARGE_ERROR`), with the limit interpolated since a route's own
+// configured ceiling is not fixed the way the client's display copy is.
+export const photoTooLargeMessage = (maxBytes: number): string => {
+  const megabytes = Math.max(1, Math.round(maxBytes / (1024 * 1024)));
+  return `התמונה גדולה מ-${megabytes}MB`;
+};

@@ -1,4 +1,5 @@
 import type {
+  PanelLoginResponse,
   RabbiCreateLessonExceptionRequest,
   RabbiCreateLessonRequest,
   RabbiLessonExceptionListResponse,
@@ -67,13 +68,7 @@ const request = async <T>(url: string, init?: RequestInit): Promise<T> => {
 
 const url = (path: string): URL => new URL(path, window.location.origin);
 
-// POST /v1/rabbi/login
-// 200 with RabbiSessionUser on success, sets the session cookie. `identifier`
-// is either the account's email or its username.
-// 401 on bad credentials. 429 when rate limited.
-export const login = (body: { identifier: string; password: string }): Promise<RabbiSessionUser> =>
-  request(url('/v1/rabbi/login').toString(), { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(body) });
-
+// POST /v1/panel/login
 // POST /v1/rabbi/logout
 // 204 always, clears the session cookie.
 export const logout = (): Promise<void> => request(url('/v1/rabbi/logout').toString(), { method: 'POST' });

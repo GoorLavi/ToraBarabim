@@ -26,14 +26,14 @@ export const honorificFromRawName = (rabbiName: string): RabbiHonorific | undefi
   return undefined;
 };
 
-// A lesson's place key: the venue name only (never the street), normalised
+// A lesson's address key: the venue name only (never the street), normalised
 // through the same `toSlug` every other display name goes through. Two
 // spellings of the same shul name ("בית הכנסת מוסאיוף" vs "מוסאיוף ") key
 // the same lesson.
-export const placeKeyOf = (place: string): string => toSlug(place);
+export const addressKeyOf = (address: string): string => toSlug(address);
 
-export const weeklyImportKey = (rabbiId: string, weekday: Weekday, place: string): string => `${rabbiId}|w${weekday}|${placeKeyOf(place)}`;
-export const onceImportKey = (rabbiId: string, isoDate: string, place: string): string => `${rabbiId}|d${isoDate}|${placeKeyOf(place)}`;
+export const weeklyImportKey = (rabbiId: string, weekday: Weekday, address: string): string => `${rabbiId}|w${weekday}|${addressKeyOf(address)}`;
+export const onceImportKey = (rabbiId: string, isoDate: string, address: string): string => `${rabbiId}|d${isoDate}|${addressKeyOf(address)}`;
 
 export const cleanWeekdayText = (text: string): string => text.trim();
 

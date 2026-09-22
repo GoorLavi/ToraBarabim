@@ -11,12 +11,22 @@ export const loginRequestSchema = z.object({
 
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 
+// The shared panel door (`POST /v1/panel/login`) additionally accepts the
+// client's stored redirect target. Its shape is not validated further
+// here: `resolveLandingPath` decides whether it is safe to honour.
+export const panelLoginRequestSchema = loginRequestSchema.extend({
+  from: z.string().optional(),
+});
+
+export type PanelLoginRequest = z.infer<typeof panelLoginRequestSchema>;
+
 export interface AuthenticatedAdminUser {
   id: string;
   email: string;
   name: string;
   role: AdminRole;
   rabbiId?: string;
+  placeId?: string;
   isActive: boolean;
   isSuper: boolean;
   passwordHash: string;

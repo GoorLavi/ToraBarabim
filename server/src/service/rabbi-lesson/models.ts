@@ -1,8 +1,9 @@
-import type { LessonAudience, LessonProvenance, LessonTopic } from '@torabarabim/common';
+import type { LessonAudience, LessonProvenance, LessonTopic, LessonVenuePanel } from '@torabarabim/common';
 import { z } from 'zod';
 
-import { lessonPlaceSchema, recurrenceSchema, timeOfDaySchema, type LessonPlaceRecord } from '../admin-lesson/models';
 import { LESSON_AUDIENCES, LESSON_TOPICS } from '../../db/schema/enums';
+import { lessonVenueInputSchema, recurrenceSchema } from '../shared/models';
+import { timeOfDaySchema } from '../shared/time';
 import { DEFAULT_RABBI_PAGE, DEFAULT_RABBI_PAGE_SIZE, MAX_RABBI_PAGE_SIZE } from './consts';
 
 export const lessonIdParamSchema = z.object({
@@ -19,7 +20,7 @@ export type RabbiLessonListQuery = z.infer<typeof rabbiLessonListQuerySchema>;
 // owner is always the id on his session, never a value he sends.
 export const createRabbiLessonSchema = z.object({
   title: z.string().trim().min(1).optional(),
-  place: lessonPlaceSchema,
+  venue: lessonVenueInputSchema,
   topic: z.enum(LESSON_TOPICS).optional(),
   audience: z.enum(LESSON_AUDIENCES),
   recurrence: recurrenceSchema,
@@ -39,7 +40,7 @@ export interface RabbiLessonRecord {
   id: string;
   title?: string;
   rabbiId: string;
-  place: LessonPlaceRecord;
+  venue: LessonVenuePanel;
   topic?: LessonTopic;
   audience: LessonAudience;
   recurrence: CreateRabbiLessonInput['recurrence'];

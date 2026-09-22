@@ -25,11 +25,11 @@ export const RabbisPage = styled(({ className, directory }: RabbisPageProps) => 
   const filteredRabbis = filterRabbisByName(rabbis, trimmedSearch);
   const hasNoResults = query.isSuccess && !isBoardEmpty && trimmedSearch !== '' && filteredRabbis.length === 0;
   const isSearchActive = trimmedSearch !== '' && !hasNoResults;
-  const subline = hasNoResults
-    ? consts.NO_RESULTS_SUBLINE
-    : isSearchActive
-      ? rabbiMatchCountLabel(filteredRabbis)
-      : rabbiCountLabel(rabbis.length, directory);
+  // Nothing at all when the search matched nothing: this slot is a counter,
+  // and a counter at zero says less than the card below it, which names the
+  // term and offers a way out. Fixed here as well as on PlacesPage, which
+  // inherited the duplicate from this screen (Hebrew editor's pass).
+  const subline = hasNoResults ? undefined : isSearchActive ? rabbiMatchCountLabel(filteredRabbis) : rabbiCountLabel(rabbis.length, directory);
 
   return (
     <main className={className}>
@@ -42,9 +42,7 @@ export const RabbisPage = styled(({ className, directory }: RabbisPageProps) => 
         ) : (
           <>
             <h1 className="heading">{copy.pageTitle}</h1>
-            {!query.isError && !isBoardEmpty && (
-              <p className="sub">{subline}</p>
-            )}
+            {!query.isError && !isBoardEmpty && subline && <p className="sub">{subline}</p>}
           </>
         )}
       </div>

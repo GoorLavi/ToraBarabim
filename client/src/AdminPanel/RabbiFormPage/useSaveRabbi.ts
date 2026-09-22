@@ -3,8 +3,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { RabbiResponse } from '@torabarabim/common';
 
 import { AdminApiError, createAdminRabbi, updateAdminRabbi, uploadAdminRabbiPhoto } from '~/AdminPanel/api';
+import { nullableTextField } from '~/AdminPanel/helpers';
 
-import { nullableTextField } from './helpers';
 import type { RabbiFormState, SaveRabbiStep } from './models';
 
 export interface SaveRabbiStepError {

@@ -36,7 +36,8 @@ export type LessonSurface =
   | 'cityPage'
   | 'areaPage'
   | 'womensArea'
-  | 'lessonPage';
+  | 'lessonPage'
+  | 'placePage';
 
 // The four screens that fire `Results Shown` (RabbisPage, CitiesPage and
 // RabbiPage's lessons section do not, by design). Distinct from
@@ -53,6 +54,7 @@ export type RetrySurface =
   | 'homeRoute'
   | 'citiesRoute'
   | 'rabbisRoute'
+  | 'placesRoute'
   | 'lessonRoute'
   | 'citiesPage'
   | 'lessonsPage'
@@ -67,7 +69,10 @@ export type RetrySurface =
   | 'homeFiltered'
   | 'homeRails'
   | 'cityPickerSearch'
-  | 'cityPickerSuggestions';
+  | 'cityPickerSuggestions'
+  | 'placePageDetail'
+  | 'placePageLessons'
+  | 'placesPage';
 
 export type FilterDateSource = 'chip' | 'calendar';
 export type FilterCitySource = 'headerPicker' | 'homeCityGrid';
