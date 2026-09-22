@@ -30,21 +30,22 @@ export const PHOTO_HELP_TYPE = 'JPG או PNG, עד 5MB';
 // picking a file, not after.
 export const PHOTO_HELP_SIZE: Record<PhotoPickerAspectRatio, string> = {
   '3:4': 'לפחות 900 על 1200 פיקסלים',
-  '16:9': `תמונה לרוחב, לפחות ${PLACE_PHOTO_MIN_WIDTH} על ${PLACE_PHOTO_MIN_HEIGHT} פיקסלים, והרוחב גדול פי ${PLACE_PHOTO_MIN_ASPECT_RATIO} עד ${PLACE_PHOTO_MAX_ASPECT_RATIO} מהגובה. תמונה שצולמה לאורך לא תתאים, ותמונה שלא עומדת בדרישות נדחית ולא נחתכת אוטומטית.`,
+  '16:9': `תמונה לרוחב, לפחות ${PLACE_PHOTO_MIN_WIDTH} על ${PLACE_PHOTO_MIN_HEIGHT} פיקסלים, והרוחב גדול פי ${PLACE_PHOTO_MIN_ASPECT_RATIO} עד ${PLACE_PHOTO_MAX_ASPECT_RATIO} מהגובה. תמונה שצולמה לאורך לא תתאים, ותמונה שלא עומדת בדרישות נדחית בהעלאה ולא נחתכת אוטומטית.`,
 };
 
 // The card is where the crop happens, not the reason for it, so it leads the
-// sentence and the recommendation follows. '16:9' also gets an entry now:
-// validation only rejects a ratio outside 1.5-2.0 (server/src/service/place/
-// consts.ts), while the hero always displays at exactly 1.778 with
-// `object-fit: cover`, so a photo that passes validation can still be
-// cropped at the sides on display, and nobody was told (design gate: "a
-// photo that passes validation is still cropped at the sides"). The exact
-// wording is a placeholder for the editor's own copy, the same as the
-// structural crop note above.
+// sentence and the recommendation follows. The two lines describe different
+// stages of the same photo and would read as a contradiction without saying
+// so: the size line above refuses a photo at upload, this one warns that an
+// accepted photo is still cropped on display. Validation only rejects a
+// ratio outside 1.5-2.0 (server/src/service/place/consts.ts) while the hero
+// always displays at exactly 1.778 with `object-fit: cover`, so a photo that
+// passes can still lose its sides. '16:9' carries no ratio number on purpose:
+// the size line already expresses the same idea as a multiple, and a second
+// notation for one concept is a number the reader cannot act on.
 export const PHOTO_HELP_CROP: Partial<Record<PhotoPickerAspectRatio, string>> = {
   '3:4': 'בכרטיס באתר התמונה נחתכת ליחס 3:4, לכן כדאי שהפנים יהיו במרכז ולא בקצה.',
-  '16:9': '[יש להשלים: הערה שהתמונה מוצגת ברוחב מלא ביחס 16:9 ועשויה להיחתך מהצדדים, לכן כדאי שהמרכיבים החשובים יהיו במרכז]',
+  '16:9': 'בכרטיס באתר הצדדים של התמונה עלולים להיחתך, לכן כדאי שמה שחשוב יהיה במרכז ולא בקצה.',
 };
 
 // The real upload states (rabbi-panel-copy.md, section 6): shown only when

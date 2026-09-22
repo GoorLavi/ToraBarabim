@@ -14,7 +14,7 @@ export const NAV_BUTTON_MAX_WIDTH_DESKTOP = '200px';
 // NAV_ROW_HEADING_LABEL, "ניווט לשיעור"). That copy names a lesson, which
 // this card is not, so it is not reused verbatim; this is a placeholder
 // structural slot for the editor's own wording (design gate finding F4).
-export const NAV_ROW_HEADING_LABEL = '[יש להשלים: כותרת קבוצת כפתורי הניווט]';
+export const NAV_ROW_HEADING_LABEL = 'ניווט למקום';
 
 // Waze's and Google Maps' brand marks, labels and hover tints, duplicated
 // from LessonPage/components/LessonTicket/consts.ts rather than lifted: the
