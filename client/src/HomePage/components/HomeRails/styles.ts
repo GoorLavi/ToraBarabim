@@ -6,10 +6,6 @@ export const HomeRails = css(
   flex-direction: column;
   gap: ${theme.spacing.xl};
 
-  @media (min-width: ${theme.breakpoints.md}) {
-    gap: ${theme.spacing.xxl};
-  }
-
   > .srOnly {
     position: absolute;
     inline-size: 1px;

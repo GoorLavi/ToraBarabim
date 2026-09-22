@@ -24,7 +24,7 @@ export const HomePage = css(
   padding-block-start: ${theme.spacing.xxl};
 
   @media (min-width: ${theme.breakpoints.md}) {
-    padding-block-start: ${theme.spacing.section};
+    padding-block-start: ${theme.spacing.xxxl};
   }
 
   > .band {
