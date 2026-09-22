@@ -34,7 +34,10 @@ export const WithPhoto: Story = {
 
 export const NoPhoto: Story = {
   args: {
-    row: { rabbi: rabbiFixture({ id: 'r2', name: 'משה לוי' }), lessonCount: 2 },
+    // Pinned rather than left to default, now that rabbiFixture fills in a
+    // placeholder photo when the key is absent (design gate finding F10):
+    // this story exists specifically to show the missing-poster fallback.
+    row: { rabbi: rabbiFixture({ id: 'r2', name: 'משה לוי', photoUrl: undefined }), lessonCount: 2 },
   },
 };
 

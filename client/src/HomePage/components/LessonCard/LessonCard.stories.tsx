@@ -47,7 +47,10 @@ export const Normal: Story = {
 
 export const NoPhoto: Story = {
   args: {
-    lesson: { ...baseLesson, rabbi: rabbiFixture({ id: 'rabbi-2', name: 'שלמה אביטן' }) },
+    // Pinned rather than left to default, now that rabbiFixture fills in a
+    // placeholder photo when the key is absent (design gate finding F10):
+    // this story exists specifically to show the missing-poster fallback.
+    lesson: { ...baseLesson, rabbi: rabbiFixture({ id: 'rabbi-2', name: 'שלמה אביטן', photoUrl: undefined }) },
   },
 };
 

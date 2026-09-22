@@ -41,7 +41,7 @@ export const DEFAULT_DURATION_MINUTES = '60';
 // verbatim reuse. `של`, never a prefixed `ב`: a place name is free text, so
 // `ב<name>` can read as a grammar or a meaning error depending on the name.
 export const ownershipNote = (placeName: string): string =>
-  `השיעור יופיע באתר במקום שלך, "${placeName}". כל השדות חובה, חוץ משם השיעור, הנושא וההערות.`;
+  `השיעור יופיע באתר במקום שלך, ״${placeName}״. כל השדות חובה, חוץ משם השיעור, הנושא וההערות.`;
 
 // This section, and the rabbi picker inside it, has no counterpart in
 // `RabbiPanel` (its lesson form has no rabbi picker at all).

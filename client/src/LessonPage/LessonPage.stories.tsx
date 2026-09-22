@@ -41,7 +41,11 @@ const lesson = (overrides: Partial<LessonOccurrence>): LessonOccurrence => ({
   title: 'עיונים בפרשת השבוע',
   topic: 'parasha',
   audience: 'mixed',
-  rabbi: rabbiFixture({ id: 'rabbi-1', name: 'יעקב מזרחי' }),
+  // The deliberate photoless case (LessonTicket's "closed slot"): every
+  // other rabbi fixture below carries a photo now that rabbiFixture defaults
+  // one in, and the stories below explain why this one stays pinned (design
+  // gate finding F10).
+  rabbi: rabbiFixture({ id: 'rabbi-1', name: 'יעקב מזרחי', photoUrl: undefined }),
   venue: { kind: 'address', name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'נתניה', citySlug: 'נתניה', area: 'sharon' },
   ...overrides,
 });
