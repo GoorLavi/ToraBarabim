@@ -9,15 +9,32 @@ export const NEXT_LABEL = 'לשיעורים הבאים';
 // see RAIL_CARD_WIDTH_DESKTOP below.
 export const RAIL_COLUMNS_PHONE = 2;
 
-// The card's fixed width from `md` (768) up. This is the ratified ceiling
-// the site's widest desktop case (>= 1328) already uses for the grid's own
-// column: the card never grows past it. From `md` up there is no column-
-// count breakpoint ladder to maintain, because the row is a horizontally
-// scrolling flex container: however many 308px cards fit the viewport is
-// how many show, and a partial card at the edge (peek) falls out of that
-// arithmetic on its own, since a real viewport is essentially never an
-// exact multiple of card-plus-gap.
+// The card's ceiling from `md` (768) up: the ratified widest size the site's
+// widest desktop case (>= 1328) already used for the grid's own column, and
+// the `var()` fallback useRailCardWidth.ts's measurement renders before its
+// first resize observation lands (SSR, first paint), so there is no flash of
+// an unsized card. There is still no column-count breakpoint ladder to
+// maintain: however many cards fit the viewport, at whatever width between
+// RAIL_CARD_WIDTH_MIN and this, is how many show.
 export const RAIL_CARD_WIDTH_DESKTOP = '308px';
+
+// The card's floor from `md` up, so it can flex narrower than the 308
+// ceiling instead of jumping straight to it: comfortably clear of the 243px
+// a five-column grid would have produced (rejected as a "thumbnail",
+// design-system.md, breakpoints section), and close to where a 3-card row
+// already lands unaided around 850-950px viewports. Read by
+// useRailCardWidth.ts, not by a CSS `minmax()` track: a grid's own minmax
+// growth cannot use this range correctly against an unbounded, scrollable
+// item list (verified against a real rail's item range in a real browser,
+// 2026-09-22 refinement), because its free-space step runs against every
+// implicit track the row has, not just the ones in view, and pins every
+// card to this floor regardless of viewport once a row has more items than
+// fit even at the floor.
+export const RAIL_CARD_WIDTH_MIN = '260px';
+
+// Set on the scroller's own scrolling container by useRailCardWidth.ts, read
+// by styles.ts's `flex-basis` from `md` up.
+export const RAIL_CARD_WIDTH_PROPERTY = '--rail-card-width';
 
 // A flick moves roughly one screenful of cards at a time.
 export const SCROLL_STEP_RATIO = 0.9;

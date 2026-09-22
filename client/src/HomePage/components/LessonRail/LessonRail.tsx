@@ -8,6 +8,7 @@ import * as consts from './consts';
 import { railSlots, scrollRailBy } from './helpers';
 import type { LessonRailProps } from './models';
 import * as styles from './styles';
+import { useRailCardWidth } from './useRailCardWidth';
 import { useRailScrollTracking } from './useRailScrollTracking';
 import { useScrollEdges } from './useScrollEdges';
 
@@ -15,6 +16,7 @@ export const LessonRail = styled(({ className, title, items, womensAreaTileIndex
   const scrollerRef = useRef<HTMLDivElement>(null);
   const { atStart, atEnd } = useScrollEdges(scrollerRef);
   useRailScrollTracking(scrollerRef, title);
+  useRailCardWidth(scrollerRef);
   const slots = railSlots(items, womensAreaTileIndex);
 
   const scroll = (direction: 'prev' | 'next'): void => {

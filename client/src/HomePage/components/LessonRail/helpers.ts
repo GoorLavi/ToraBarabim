@@ -43,6 +43,17 @@ export const railEdgeOffset = (theme: Theme, zone: RailEdgeZone): string => {
 export const railCardWidth = (theme: Theme, columns: number, edgeOffset: string): string =>
   `calc((100vw - 2 * ${edgeOffset} - ${columns - 1} * ${theme.spacing.lg}) / ${columns})`;
 
+// What `repeat(auto-fill, minmax(min, max))` computes for a bounded,
+// wrapping grid: as many columns as fit at `min`, grown evenly up to `max`
+// with whatever space that leaves over. Used by useRailCardWidth.ts against
+// the scroller's own measured width, not by a CSS grid track (consts.ts,
+// RAIL_CARD_WIDTH_MIN, says why the CSS-only version does not work for an
+// unbounded, scrollable row).
+export const idealRailCardWidth = (containerWidth: number, min: number, max: number, gap: number): number => {
+  const columns = Math.max(1, Math.floor((containerWidth + gap) / (min + gap)));
+  return Math.min(max, (containerWidth - (columns - 1) * gap) / columns);
+};
+
 // `scrollLeft`'s sign in a `direction: rtl` container is not consistent
 // enough to assign directly: deriving the sign from the computed direction
 // and handing the whole thing to `scrollBy` sidesteps the arithmetic.
