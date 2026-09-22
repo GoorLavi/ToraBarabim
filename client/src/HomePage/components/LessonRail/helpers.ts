@@ -49,9 +49,29 @@ export const railCardWidth = (theme: Theme, columns: number, edgeOffset: string)
 // the scroller's own measured width, not by a CSS grid track (consts.ts,
 // RAIL_CARD_WIDTH_MIN, says why the CSS-only version does not work for an
 // unbounded, scrollable row).
+//
+// A bare greedy auto-fill (always take the most columns that fit at `min`)
+// produces a sharp "plateau then cliff": the card sits flat at the `max`
+// ceiling across a wide range of container widths, then one extra pixel
+// adds a column and every card drops straight to the `min` floor, an 18%
+// jump in one resize step (owner, 2026-09-22: found this jarring at the
+// container width a common laptop window happens to land on). At the exact
+// moment a new column first fits, its width lands at (or barely above) the
+// `min` floor by construction; every other column count in between sits
+// comfortably higher, well clear of it (e.g. 279px and 282px at widths
+// already approved the same day). So the fix only steps back one column
+// when the greedy choice's width falls near the floor specifically (within
+// a fifth of the min/max range above it), not merely below the range's
+// midpoint: a midpoint cut also caught those already-approved widths and
+// silently reverted them to fewer, larger cards, which this avoids.
 export const idealRailCardWidth = (containerWidth: number, min: number, max: number, gap: number): number => {
-  const columns = Math.max(1, Math.floor((containerWidth + gap) / (min + gap)));
-  return Math.min(max, (containerWidth - (columns - 1) * gap) / columns);
+  const widthFor = (columns: number): number => (containerWidth - (columns - 1) * gap) / columns;
+
+  const maxColumns = Math.max(1, Math.floor((containerWidth + gap) / (min + gap)));
+  const nearFloorThreshold = min + (max - min) * 0.2;
+  const columns = maxColumns > 1 && widthFor(maxColumns) < nearFloorThreshold ? maxColumns - 1 : maxColumns;
+
+  return Math.min(max, widthFor(columns));
 };
 
 // `scrollLeft`'s sign in a `direction: rtl` container is not consistent
