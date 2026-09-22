@@ -10,9 +10,9 @@ export interface LessonsGridProps {
   // `clickSurface` names this list for the Lesson Click event.
   surface: LessonCardSurface;
   clickSurface: Exclude<LessonSurface, 'homeRail'>;
-  // Caps the column count from `xl` up, so a grid inside a narrower reading
-  // column (the lesson page's area preview) never follows the sitewide step
-  // to four columns. Omitted, every existing caller keeps today's four
-  // (styles.ts).
+  // Caps the column count from `md` up, so a grid inside a narrower reading
+  // column (the lesson page's area preview) never grows past the width that
+  // column has room for. Omitted, the grid's own auto-fill decides the
+  // count from the available width alone (styles.ts).
   maxColumns?: number;
 }

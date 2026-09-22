@@ -118,6 +118,16 @@ export interface ThemeLayout {
   // The site's one content band (design-system.md, "Breakpoints and content
   // width"): every page reads this rather than keeping its own copy.
   contentMaxWidth: string;
+  // 1200: the grid's own fourth-column breakpoint (design-system.md,
+  // "Breakpoints and content width") and the rail's own `wide` tier
+  // (design-system.md, "Horizontal rails"). A property of the column count
+  // this card ladder produces, not of a device class, so it lives here
+  // rather than being inserted into the sm/md/lg/xl scale.
+  fourColumnWidth: string;
+  // 1600: the rail's own `xwide` tier (design-system.md, "Horizontal
+  // rails"), a layout width of the same kind as fourColumnWidth and not on
+  // the sm/md/lg/xl scale for the same reason.
+  xwideRailWidth: string;
 }
 
 export interface ThemeZIndex {
