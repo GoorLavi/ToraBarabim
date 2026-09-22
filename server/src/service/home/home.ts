@@ -1,15 +1,15 @@
-import type { Area, Lesson, LessonException, Weekday } from '@torabarabim/common';
+import type { Area, Rabbi } from '@torabarabim/common';
 import { and, gte, inArray, lte } from 'drizzle-orm';
 
 import { AREAS } from '../../db/schema/enums';
 import { db } from '../../db/client';
-import { cities, lessonExceptions, lessons, rabbis } from '../../db/schema';
-import { applyException, expandLesson, type ResolvedOccurrence } from '../lesson/occurrence';
+import { cities, lessonExceptions, lessons, places, rabbis } from '../../db/schema';
+import { applyException, expandLesson, resolveRecord, toExceptionDomain, toLessonDomain, type ResolvedOccurrence } from '../lesson/occurrence';
 import { addDays, compareIsoDates, todayInIsrael } from '../lesson/israel-time';
 import { isLessonInScope, isRabbiInDirectoryScope } from '../shared/audience-scope';
 import { AREA_NAMES_HE } from '../shared/consts';
 import { toCitySummary } from '../shared/city-summary';
-import { toAddress, type AddressCityRow } from '../shared/address';
+import type { AddressCityRow, AddressPlaceRow } from '../shared/address';
 import { compareRabbiOrder, PROMINENCE_RANK } from '../shared/rabbi-order';
 import { toRabbiSummary as toRabbi } from '../shared/rabbi-summary';
 import {
@@ -46,51 +46,20 @@ const hashLessonId = (id: string): number => {
   return hash;
 };
 
-type LessonRow = typeof lessons.$inferSelect;
-type ExceptionRow = typeof lessonExceptions.$inferSelect;
 type RabbiRow = typeof rabbis.$inferSelect;
 
-const toLessonDomain = (row: LessonRow): Lesson => ({
-  id: row.id,
-  title: row.title ?? undefined,
-  rabbiId: row.rabbiId,
-  place: {
-    name: row.addressName,
-    street: row.addressStreet,
-    floor: row.addressFloor ?? undefined,
-    cityCode: row.cityCode,
-  },
-  topic: row.topic ?? undefined,
-  audience: row.audience,
-  recurrence:
-    row.recurrenceKind === 'weekly'
-      ? { kind: 'weekly', weekdays: row.recurrenceWeekdays as Weekday[] }
-      : { kind: 'once', date: row.recurrenceDate as string },
-  startTime: row.startTime,
-  durationMinutes: row.durationMinutes,
-  notes: row.notes ?? undefined,
-});
-
-const toExceptionDomain = (row: ExceptionRow): LessonException =>
-  row.kind === 'cancelled'
-    ? { kind: 'cancelled', lessonId: row.lessonId, date: row.date, reason: row.reason ?? undefined }
-    : {
-        kind: 'modified',
-        lessonId: row.lessonId,
-        date: row.date,
-        startTime: row.startTime ?? undefined,
-        place:
-          row.addressName !== null && row.addressStreet !== null && row.cityCode !== null
-            ? { name: row.addressName, street: row.addressStreet, floor: row.addressFloor ?? undefined, cityCode: row.cityCode }
-            : undefined,
-        substituteRabbiId: row.substituteRabbiId ?? undefined,
-        note: row.note ?? undefined,
-      };
-
-const resolveRecord = (
+// Wraps the shared `resolveRecord` (`service/lesson/occurrence.ts`): every
+// field the wire `LessonOccurrence` carries, plus the sort-only fields a
+// home row needs. Reusing it, rather than a second hand-rolled resolver, is
+// exactly what the house rule on the recurrence expansion asks for: this
+// module used to carry its own copy of `toLessonDomain`/`toExceptionDomain`/
+// `resolveRecord`, which would otherwise silently drift from the search's.
+const resolveHomeRecord = (
   occurrence: ResolvedOccurrence,
   rabbiRowById: Map<string, RabbiRow>,
+  rabbiById: Map<string, Rabbi>,
   cityByCode: Map<number, AddressCityRow>,
+  placeById: Map<string, AddressPlaceRow>,
 ): ResolvedHomeOccurrence => {
   const rabbiRow = rabbiRowById.get(occurrence.lesson.rabbiId);
   if (!rabbiRow) {
@@ -103,24 +72,16 @@ const resolveRecord = (
   // sort-only concern; scope (below) always reads the lesson's own rabbi.
   const activeProminence = substituteRabbiRow?.prominence ?? rabbiRow.prominence;
 
+  const resolved = resolveRecord(occurrence, rabbiById, cityByCode, placeById);
+
   return {
-    lessonId: occurrence.lesson.id,
-    date: occurrence.date,
-    startTime: occurrence.startTime,
-    endTime: addMinutes(occurrence.startTime, occurrence.lesson.durationMinutes),
-    title: occurrence.lesson.title,
-    topic: occurrence.lesson.topic,
-    audience: occurrence.lesson.audience,
+    ...resolved,
     recurrenceKind: occurrence.lesson.recurrence.kind,
-    rabbi: toRabbi(rabbiRow),
-    // The lesson's own city, not `occurrence.place`'s (an exception may
+    // The lesson's own city, not `occurrence.venue`'s (an exception may
     // move a single date to a different venue): the women's-area city list
     // must stay tappable through `/v1/lessons?city=`, which filters on the
     // lesson's own `cityCode`, not a one-off exception's.
-    cityCode: occurrence.lesson.place.cityCode,
-    place: toAddress(occurrence.place, cityByCode),
-    substituteRabbi: substituteRabbiRow ? toRabbi(substituteRabbiRow) : undefined,
-    note: occurrence.note,
+    cityCode: occurrence.lesson.venue.cityCode,
     rabbiProminenceRank: PROMINENCE_RANK[activeProminence],
     shuffleKey: hashLessonId(occurrence.lesson.id),
   };
@@ -176,7 +137,7 @@ const buildRowExcluding = (
 const chooseArea = (occurrences: ResolvedHomeOccurrence[]): Area | undefined => {
   const countByArea = new Map<Area, number>();
   for (const occurrence of occurrences) {
-    countByArea.set(occurrence.place.area, (countByArea.get(occurrence.place.area) ?? 0) + 1);
+    countByArea.set(occurrence.venue.area, (countByArea.get(occurrence.venue.area) ?? 0) + 1);
   }
 
   let chosen: Area | undefined;
@@ -233,14 +194,17 @@ const loadWindow = async (now: Date): Promise<LoadedWindow> => {
   // is `HOME_WINDOW_DAYS - 1` days after today for a window that counts today.
   const to = addDays(from, HOME_WINDOW_DAYS - 1);
 
-  const [rabbiRows, cityRows, lessonRows] = await Promise.all([
+  const [rabbiRows, cityRows, placeRows, lessonRows] = await Promise.all([
     db.select().from(rabbis),
     db.select({ code: cities.code, nameHe: cities.nameHe, area: cities.area }).from(cities),
+    db.select().from(places),
     db.select().from(lessons),
   ]);
 
   const rabbiRowById = new Map(rabbiRows.map((row) => [row.id, row] as const));
+  const rabbiById = new Map(rabbiRows.map((row) => [row.id, toRabbi(row)] as const));
   const cityByCode = new Map(cityRows.map((row) => [row.code, row] as const));
+  const placeById = new Map(placeRows.map((row) => [row.id, row] as const));
   const rabbiIdsWithLessons = new Set(lessonRows.map((row) => row.rabbiId));
 
   const lessonDomainById = new Map(lessonRows.map((row) => [row.id, toLessonDomain(row)] as const));
@@ -262,7 +226,7 @@ const loadWindow = async (now: Date): Promise<LoadedWindow> => {
     .flatMap((lesson) => expandLesson(lesson, from, to))
     .map((raw) => applyException(raw, exceptionByKey.get(`${raw.lesson.id}:${raw.date}`)))
     .filter((occurrence) => occurrence.status === 'scheduled')
-    .map((occurrence) => resolveRecord(occurrence, rabbiRowById, cityByCode));
+    .map((occurrence) => resolveHomeRecord(occurrence, rabbiRowById, rabbiById, cityByCode, placeById));
 
   return { from, resolved, cityByCode, rabbiRows, rabbiIdsWithLessons };
 };
@@ -301,7 +265,7 @@ export const getHome = async (now: Date): Promise<HomeResult> => {
           usedLessonIds,
           'area',
           `שיעורים באזור ${AREA_NAMES_HE[area]}`,
-          resolved.filter((o) => o.place.area === area),
+          resolved.filter((o) => o.venue.area === area),
         )
       : undefined,
     buildRowExcluding(usedLessonIds, 'today', 'שיעורים היום', resolved.filter((o) => o.date === today)),

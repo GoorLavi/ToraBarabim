@@ -1,9 +1,10 @@
 import type { LessonProvenance } from './agent-import';
 import type { RabbiProminence } from './home';
 import type { LessonException } from './lesson-exception';
-import type { Lesson, ResolvedLessonAddress } from './lesson';
+import type { Lesson } from './lesson';
 import type { LessonOccurrence } from './lesson-occurrence';
 import type { Rabbi, RabbiHonorific } from './rabbi';
+import type { LessonVenue, ResolvedLessonAddress } from './venue';
 
 // Never carries passwordHash: that stays server-side.
 export interface AdminUser {
@@ -41,12 +42,14 @@ export type CreateLessonRequest = Omit<Lesson, 'id'>;
 // 'once' date field, a state the Lesson type is built to reject. Updates
 // are a full replacement instead of a merge to keep that guarantee.
 export type UpdateLessonRequest = CreateLessonRequest;
-// A write sends `place.cityCode` only; a read gets `place.cityName` back
-// too, resolved server-side, so the admin client never has to hold or
-// look up city reference data of its own just to show a lesson's city.
-// `provenance` is read-only: it is never sent on a create or update, only
-// read back, so the admin form can show a notice for an imported lesson.
-export type LessonResponse = Omit<Lesson, 'place'> & { place: ResolvedLessonAddress; provenance: LessonProvenance };
+// A write sends `venue` as either `{ kind: 'place', placeId }` or a free
+// address; a read gets the full `LessonVenue` back, resolved server-side
+// (city, citySlug, area, and for a place, its current name and street), so
+// the admin client never has to hold or look up reference data of its own
+// just to show a lesson's venue. `provenance` is read-only: it is never
+// sent on a create or update, only read back, so the admin form can show a
+// notice for an imported lesson.
+export type LessonResponse = Omit<Lesson, 'venue'> & { venue: LessonVenue; provenance: LessonProvenance };
 
 // Plain `Omit` does not distribute over a union: it computes `keyof` of
 // the whole union, which is the *intersection* of the branches' keys, and
@@ -60,13 +63,13 @@ type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K>
 
 export type CreateLessonExceptionRequest = DistributiveOmit<LessonException, 'lessonId'>;
 export type UpdateLessonExceptionRequest = CreateLessonExceptionRequest;
-// Mirrors `LessonResponse`: a 'modified' exception's `place` override, if
+// Mirrors `LessonResponse`: a 'modified' exception's `address` override, if
 // present, comes back with its city name resolved too. Carries `id` (absent
 // from `LessonException`) so the admin client has something to address a
 // single exception with for PATCH/DELETE.
 type ResolvedLessonException =
   | Extract<LessonException, { kind: 'cancelled' }>
-  | (Omit<Extract<LessonException, { kind: 'modified' }>, 'place'> & { place?: ResolvedLessonAddress });
+  | (Omit<Extract<LessonException, { kind: 'modified' }>, 'address'> & { address?: ResolvedLessonAddress });
 export type LessonExceptionResponse = ResolvedLessonException & { id: number };
 
 // What deleting a rabbi would destroy: shown to the admin before they

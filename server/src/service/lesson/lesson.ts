@@ -2,7 +2,7 @@ import type { Area, AudienceScope } from '@torabarabim/common';
 import { and, eq, gte, inArray, lte } from 'drizzle-orm';
 
 import { db } from '../../db/client';
-import { cities, lessonExceptions, lessons, rabbis } from '../../db/schema';
+import { cities, lessonExceptions, lessons, places, rabbis } from '../../db/schema';
 import { isLessonInScope, matchesAudienceFilter } from '../shared/audience-scope';
 import { toRabbiSummary as toRabbi } from '../shared/rabbi-summary';
 import { DEFAULT_PAGE } from '../shared/consts';
@@ -41,16 +41,21 @@ const resolveRange = (query: LessonSearchQuery, now: Date): ResolvedLessonSearch
 export const search = async (rawQuery: LessonSearchQuery, now: Date): Promise<LessonSearchResult> => {
   const query = resolveRange(rawQuery, now);
 
-  // Rabbis and cities are small reference tables, loaded whole so that
-  // resolving a substitute rabbi or an exception's overridden venue never
-  // needs a second round trip per occurrence.
-  const [rabbiRows, cityRows] = await Promise.all([
+  // Rabbis, cities and places are reference tables, loaded whole so that
+  // resolving a substitute rabbi or an occurrence's venue never needs a
+  // second round trip per occurrence. `places` here is unfiltered by
+  // `is_active`: a lesson referencing a deactivated place must still
+  // resolve (to its last-known address, via `toVenue`'s own fallback), not
+  // throw a data-inconsistency error.
+  const [rabbiRows, cityRows, placeRows] = await Promise.all([
     db.select().from(rabbis),
     db.select({ code: cities.code, nameHe: cities.nameHe, area: cities.area }).from(cities),
+    db.select().from(places),
   ]);
 
   const rabbiById = new Map(rabbiRows.map((row) => [row.id, toRabbi(row)] as const));
   const cityByCode = new Map(cityRows.map((row) => [row.code, row] as const));
+  const placeById = new Map(placeRows.map((row) => [row.id, row] as const));
 
   const eligibleCityCodes =
     query.area !== undefined ? cityRows.filter((row) => row.area === query.area).map((row) => row.code) : undefined;
@@ -59,10 +64,12 @@ export const search = async (rawQuery: LessonSearchQuery, now: Date): Promise<Le
     return { items: [], page: query.page, pageSize: query.pageSize, total: 0 };
   }
 
-  // `q` searches the rabbi's name, the lesson's own venue name, and the
-  // city's Hebrew name, OR'd together, then combined with every other
-  // filter as AND. Rabbis and cities are already loaded whole above, so
-  // matching a rabbi or a city happens against those in-memory rows.
+  // `q` searches the rabbi's name, the lesson's own free-text venue name
+  // (a place-backed lesson has no address text of its own to match: see
+  // the follow-up noted in the wave's report), and the city's Hebrew name,
+  // OR'd together, then combined with every other filter as AND. Rabbis and
+  // cities are already loaded whole above, so matching a rabbi or a city
+  // happens against those in-memory rows.
   const q = query.q || undefined;
   const matchingRabbiIds = q ? new Set(rabbiRows.filter((row) => includesQuery(row.name, q)).map((row) => row.id)) : undefined;
   const matchingCityCodes = q ? cityRows.filter((row) => includesQuery(row.nameHe, q)).map((row) => row.code) : undefined;
@@ -85,7 +92,7 @@ export const search = async (rawQuery: LessonSearchQuery, now: Date): Promise<Le
     ? lessonRows.filter(
         (row) =>
           (matchingRabbiIds?.has(row.rabbiId) ?? false) ||
-          includesQuery(row.addressName, q) ||
+          (row.addressName !== null && includesQuery(row.addressName, q)) ||
           (matchingCityCodes?.includes(row.cityCode) ?? false),
       )
     : lessonRows;
@@ -130,16 +137,30 @@ export const search = async (rawQuery: LessonSearchQuery, now: Date): Promise<Le
     exceptionRows.map((row) => [`${row.lessonId}:${row.date}`, toExceptionDomain(row)] as const),
   );
 
-  const occurrences = [...lessonDomainById.values()]
+  let occurrences = [...lessonDomainById.values()]
     .flatMap((lesson) => expandLesson(lesson, query.from, query.to))
-    .map((raw) => applyException(raw, exceptionByKey.get(`${raw.lesson.id}:${raw.date}`)))
-    .sort(compareOccurrences);
+    .map((raw) => applyException(raw, exceptionByKey.get(`${raw.lesson.id}:${raw.date}`)));
+
+  // `placeId` and `status` both narrow the *resolved* occurrence (after an
+  // exception may have moved it away from, or onto, a place, or changed its
+  // status), so both sit here: after `applyException`, before `total` is
+  // computed, exactly where scope and the audience filter already sit above.
+  // Neither special-cases the other, or `search` itself: a caller may set
+  // either, both, or neither.
+  if (query.placeId !== undefined) {
+    occurrences = occurrences.filter((occurrence) => occurrence.venue.kind === 'place' && occurrence.venue.placeId === query.placeId);
+  }
+  if (query.status !== undefined) {
+    occurrences = occurrences.filter((occurrence) => occurrence.status === query.status);
+  }
+
+  occurrences = occurrences.sort(compareOccurrences);
 
   const total = occurrences.length;
   const start = (query.page - 1) * query.pageSize;
   const items = occurrences
     .slice(start, start + query.pageSize)
-    .map((occurrence) => resolveRecord(occurrence, rabbiById, cityByCode));
+    .map((occurrence) => resolveRecord(occurrence, rabbiById, cityByCode, placeById));
 
   return { items, page: query.page, pageSize: query.pageSize, total };
 };
@@ -193,16 +214,18 @@ export const getOccurrence = async (lessonId: string, date: string): Promise<Res
     (id): id is string => id !== undefined,
   );
 
-  const [rabbiRows, cityRows] = await Promise.all([
+  const [rabbiRows, cityRows, placeRows] = await Promise.all([
     db.select().from(rabbis).where(inArray(rabbis.id, rabbiIds)),
     db
       .select({ code: cities.code, nameHe: cities.nameHe, area: cities.area })
       .from(cities)
-      .where(eq(cities.code, occurrence.place.cityCode)),
+      .where(eq(cities.code, occurrence.venue.cityCode)),
+    occurrence.venue.kind === 'place' ? db.select().from(places).where(eq(places.id, occurrence.venue.placeId)) : Promise.resolve([]),
   ]);
 
   const rabbiById = new Map(rabbiRows.map((row) => [row.id, toRabbi(row)] as const));
   const cityByCode = new Map(cityRows.map((row) => [row.code, row] as const));
+  const placeById = new Map(placeRows.map((row) => [row.id, row] as const));
 
-  return resolveRecord(occurrence, rabbiById, cityByCode);
+  return resolveRecord(occurrence, rabbiById, cityByCode, placeById);
 };

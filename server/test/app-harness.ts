@@ -10,6 +10,7 @@ import { registerCityRoutes } from '../src/api/cities';
 import { registerHealthRoutes } from '../src/api/health';
 import { registerHomeRoutes } from '../src/api/home';
 import { registerLessonRoutes } from '../src/api/lessons';
+import { registerPlaceRoutes } from '../src/api/places';
 import { registerRabbiRoutes } from '../src/api/rabbi';
 import { registerRabbiAuthRoutes } from '../src/api/rabbi/auth';
 import { registerRabbiDirectoryRoutes } from '../src/api/rabbis';
@@ -82,6 +83,7 @@ export const buildApp = async (): Promise<FastifyInstance> => {
   await registerLessonRoutes(app);
   await registerHomeRoutes(app);
   await registerCityRoutes(app);
+  await registerPlaceRoutes(app);
   await registerRabbiDirectoryRoutes(app);
   await registerWomenAreaRoutes(app);
   await registerSsr(app);

@@ -1,10 +1,12 @@
-import type { Lesson, LessonAudience, LessonException, LessonTopic, Rabbi, RabbiProminence, Recurrence } from '@torabarabim/common';
+import type { Lesson, LessonAddress, LessonAudience, LessonException, LessonTopic, LessonVenueInput, Rabbi, RabbiProminence, Recurrence } from '@torabarabim/common';
 import { inArray, sql } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
 
 import { addDays, nextDateOnWeekday } from '../../service/lesson/israel-time';
+import { lessonVenueColumns } from '../../service/shared/lesson-write';
 import type { Tx } from '../client';
 import { lessonExceptions, lessons, rabbis } from '../schema';
+import { seedPlaces } from './places';
 
 const rabbiInsertSchema = createInsertSchema(rabbis);
 const lessonInsertSchema = createInsertSchema(lessons);
@@ -30,18 +32,19 @@ const RABBIS: RabbiSeed[] = [
   { id: 'rabbi-11', name: 'שמעון אזולאי', honorific: 'rav', prominence: 'known' },
 ];
 
-// A venue is free text on a lesson, not a registered entity; this table is
-// only a seed-time convenience so several lessons can share one venue's
-// text without retyping it, keyed by a name resolved to a `cities.code` at
-// seed time via `cityCodeByName`.
-interface VenueSeed {
+// A lesson's own free-text address, for a lesson that carries one instead
+// of pointing at a registered place (`seed/places.ts`, PLACES below). This
+// table is only a seed-time convenience so several lessons can share one
+// address's text without retyping it, keyed by a name resolved to a
+// `cities.code` at seed time via `cityCodeByName`.
+interface AddressSeed {
   name: string;
   street: string;
   floor?: string;
   cityName: string;
 }
 
-type VenueKey =
+type AddressKey =
   | 'place-1'
   | 'place-2'
   | 'place-3'
@@ -55,7 +58,7 @@ type VenueKey =
   | 'place-11'
   | 'place-12';
 
-const VENUES: Record<VenueKey, VenueSeed> = {
+const ADDRESSES: Record<AddressKey, AddressSeed> = {
   'place-1': { name: 'בית הכנסת "אוהל יעקב"', street: 'רחוב הרב קוק 12', cityName: 'צפת' },
   'place-2': { name: 'ישיבת "נר דוד"', street: 'שדרות הנשיא 8', cityName: 'חיפה' },
   'place-3': { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', cityName: 'נתניה' },
@@ -73,69 +76,79 @@ const VENUES: Record<VenueKey, VenueSeed> = {
   'place-12': { name: 'בית מדרש "שערי אורה"', street: 'רחוב הפרחים 6', cityName: 'חיפה' },
 };
 
-interface LessonSeed {
+// Exactly one of `addressKey`/`placeId` is set per seed, mirroring the
+// `lessons_venue_shape` CHECK constraint the resolved row must satisfy.
+type LessonSeed = {
   id: string;
   title?: string;
   rabbiId: string;
-  venueKey: VenueKey;
   topic?: LessonTopic;
   audience: LessonAudience;
   recurrence: Recurrence;
   startTime: string;
   durationMinutes: number;
   notes?: string;
-}
+} & ({ addressKey: AddressKey; placeId?: undefined } | { placeId: string; addressKey?: undefined });
 
 const LESSONS: LessonSeed[] = [
-  { id: 'lesson-1', title: 'דף יומי', rabbiId: 'rabbi-1', venueKey: 'place-1', topic: 'gemara', audience: 'men', recurrence: { kind: 'weekly', weekdays: [0, 1, 2, 3, 4] }, startTime: '06:00', durationMinutes: 45 },
-  { id: 'lesson-2', title: 'הלכה יומית לחיי המעשה', rabbiId: 'rabbi-2', venueKey: 'place-2', topic: 'halacha', audience: 'men', recurrence: { kind: 'weekly', weekdays: [0, 2, 4] }, startTime: '20:30', durationMinutes: 40 },
-  { id: 'lesson-3', title: 'עיונים בפרשת השבוע', rabbiId: 'rabbi-3', venueKey: 'place-3', topic: 'parasha', audience: 'mixed', recurrence: { kind: 'weekly', weekdays: [4] }, startTime: '21:00', durationMinutes: 60, notes: 'השיעור פתוח לכל המשפחה, אין צורך בהרשמה מראש.' },
-  { id: 'lesson-4', title: 'שיעור מוסר לפני התפילה', rabbiId: 'rabbi-6', venueKey: 'place-4', topic: 'mussar', audience: 'men', recurrence: { kind: 'weekly', weekdays: [1, 3] }, startTime: '05:45', durationMinutes: 30 },
-  { id: 'lesson-6', title: 'עולם התנ"ך', rabbiId: 'rabbi-9', venueKey: 'place-9', topic: 'tanach', audience: 'women', recurrence: { kind: 'weekly', weekdays: [1] }, startTime: '10:00', durationMinutes: 60 },
-  { id: 'lesson-7', title: 'שאלות של אמונה', rabbiId: 'rabbi-11', venueKey: 'place-6', topic: 'machshava', audience: 'mixed', recurrence: { kind: 'weekly', weekdays: [5] }, startTime: '18:00', durationMinutes: 45 },
-  { id: 'lesson-8', title: 'סוגיות בגמרא למתחילים', rabbiId: 'rabbi-4', venueKey: 'place-4', topic: 'gemara', audience: 'men', recurrence: { kind: 'weekly', weekdays: [0, 3] }, startTime: '20:00', durationMinutes: 45 },
-  { id: 'lesson-9', title: 'הלכות שבת מעשיות', rabbiId: 'rabbi-5', venueKey: 'place-5', topic: 'halacha', audience: 'mixed', recurrence: { kind: 'weekly', weekdays: [4] }, startTime: '17:30', durationMinutes: 40 },
-  { id: 'lesson-10', title: 'טעמו וראו', rabbiId: 'rabbi-7', venueKey: 'place-7', topic: 'parasha', audience: 'men', recurrence: { kind: 'weekly', weekdays: [5] }, startTime: '07:30', durationMinutes: 30 },
-  { id: 'lesson-11', title: 'שיעור מוסר לנשים', rabbiId: 'rabbi-9', venueKey: 'place-9', topic: 'mussar', audience: 'women', recurrence: { kind: 'weekly', weekdays: [3] }, startTime: '20:30', durationMinutes: 45 },
-  { id: 'lesson-12', title: 'תניא לעומק', rabbiId: 'rabbi-8', venueKey: 'place-2', topic: 'chassidut', audience: 'men', recurrence: { kind: 'weekly', weekdays: [1, 4] }, startTime: '21:15', durationMinutes: 40 },
-  { id: 'lesson-13', title: 'נביאים ראשונים', rabbiId: 'rabbi-10', venueKey: 'place-10', topic: 'tanach', audience: 'mixed', recurrence: { kind: 'weekly', weekdays: [2] }, startTime: '19:30', durationMinutes: 50 },
-  { id: 'lesson-14', title: 'מבוא למחשבת ישראל', rabbiId: 'rabbi-3', venueKey: 'place-6', topic: 'machshava', audience: 'men', recurrence: { kind: 'weekly', weekdays: [0] }, startTime: '21:00', durationMinutes: 60 },
-  { id: 'lesson-15', title: 'שיעור כללי בעיון', rabbiId: 'rabbi-1', venueKey: 'place-1', topic: 'gemara', audience: 'men', recurrence: { kind: 'weekly', weekdays: [5] }, startTime: '11:00', durationMinutes: 60 },
-  { id: 'lesson-16', title: 'הלכות ברכות', rabbiId: 'rabbi-2', venueKey: 'place-3', topic: 'halacha', audience: 'men', recurrence: { kind: 'weekly', weekdays: [1] }, startTime: '20:00', durationMinutes: 30 },
-  { id: 'lesson-17', title: 'אור לעמי', rabbiId: 'rabbi-6', venueKey: 'place-11', topic: 'mussar', audience: 'mixed', recurrence: { kind: 'weekly', weekdays: [2, 4] }, startTime: '20:45', durationMinutes: 45 },
-  { id: 'lesson-18', title: 'אישים בתנ"ך', rabbiId: 'rabbi-9', venueKey: 'place-9', topic: 'tanach', audience: 'women', recurrence: { kind: 'weekly', weekdays: [0] }, startTime: '09:30', durationMinutes: 45 },
-  { id: 'lesson-19', title: 'פרשת השבוע לילדים ולהורים', rabbiId: 'rabbi-5', venueKey: 'place-5', topic: 'parasha', audience: 'mixed', recurrence: { kind: 'weekly', weekdays: [5] }, startTime: '16:00', durationMinutes: 30 },
+  { id: 'lesson-1', title: 'דף יומי', rabbiId: 'rabbi-1', addressKey: 'place-1', topic: 'gemara', audience: 'men', recurrence: { kind: 'weekly', weekdays: [0, 1, 2, 3, 4] }, startTime: '06:00', durationMinutes: 45 },
+  { id: 'lesson-2', title: 'הלכה יומית לחיי המעשה', rabbiId: 'rabbi-2', addressKey: 'place-2', topic: 'halacha', audience: 'men', recurrence: { kind: 'weekly', weekdays: [0, 2, 4] }, startTime: '20:30', durationMinutes: 40 },
+  { id: 'lesson-3', title: 'עיונים בפרשת השבוע', rabbiId: 'rabbi-3', addressKey: 'place-3', topic: 'parasha', audience: 'mixed', recurrence: { kind: 'weekly', weekdays: [4] }, startTime: '21:00', durationMinutes: 60, notes: 'השיעור פתוח לכל המשפחה, אין צורך בהרשמה מראש.' },
+  { id: 'lesson-4', title: 'שיעור מוסר לפני התפילה', rabbiId: 'rabbi-6', addressKey: 'place-4', topic: 'mussar', audience: 'men', recurrence: { kind: 'weekly', weekdays: [1, 3] }, startTime: '05:45', durationMinutes: 30 },
+  { id: 'lesson-6', title: 'עולם התנ"ך', rabbiId: 'rabbi-9', addressKey: 'place-9', topic: 'tanach', audience: 'women', recurrence: { kind: 'weekly', weekdays: [1] }, startTime: '10:00', durationMinutes: 60 },
+  { id: 'lesson-7', title: 'שאלות של אמונה', rabbiId: 'rabbi-11', addressKey: 'place-6', topic: 'machshava', audience: 'mixed', recurrence: { kind: 'weekly', weekdays: [5] }, startTime: '18:00', durationMinutes: 45 },
+  { id: 'lesson-8', title: 'סוגיות בגמרא למתחילים', rabbiId: 'rabbi-4', addressKey: 'place-4', topic: 'gemara', audience: 'men', recurrence: { kind: 'weekly', weekdays: [0, 3] }, startTime: '20:00', durationMinutes: 45 },
+  { id: 'lesson-9', title: 'הלכות שבת מעשיות', rabbiId: 'rabbi-5', addressKey: 'place-5', topic: 'halacha', audience: 'mixed', recurrence: { kind: 'weekly', weekdays: [4] }, startTime: '17:30', durationMinutes: 40 },
+  { id: 'lesson-10', title: 'טעמו וראו', rabbiId: 'rabbi-7', addressKey: 'place-7', topic: 'parasha', audience: 'men', recurrence: { kind: 'weekly', weekdays: [5] }, startTime: '07:30', durationMinutes: 30 },
+  { id: 'lesson-11', title: 'שיעור מוסר לנשים', rabbiId: 'rabbi-9', addressKey: 'place-9', topic: 'mussar', audience: 'women', recurrence: { kind: 'weekly', weekdays: [3] }, startTime: '20:30', durationMinutes: 45 },
+  { id: 'lesson-12', title: 'תניא לעומק', rabbiId: 'rabbi-8', addressKey: 'place-2', topic: 'chassidut', audience: 'men', recurrence: { kind: 'weekly', weekdays: [1, 4] }, startTime: '21:15', durationMinutes: 40 },
+  { id: 'lesson-13', title: 'נביאים ראשונים', rabbiId: 'rabbi-10', addressKey: 'place-10', topic: 'tanach', audience: 'mixed', recurrence: { kind: 'weekly', weekdays: [2] }, startTime: '19:30', durationMinutes: 50 },
+  { id: 'lesson-14', title: 'מבוא למחשבת ישראל', rabbiId: 'rabbi-3', addressKey: 'place-6', topic: 'machshava', audience: 'men', recurrence: { kind: 'weekly', weekdays: [0] }, startTime: '21:00', durationMinutes: 60 },
+  { id: 'lesson-15', title: 'שיעור כללי בעיון', rabbiId: 'rabbi-1', addressKey: 'place-1', topic: 'gemara', audience: 'men', recurrence: { kind: 'weekly', weekdays: [5] }, startTime: '11:00', durationMinutes: 60 },
+  { id: 'lesson-16', title: 'הלכות ברכות', rabbiId: 'rabbi-2', addressKey: 'place-3', topic: 'halacha', audience: 'men', recurrence: { kind: 'weekly', weekdays: [1] }, startTime: '20:00', durationMinutes: 30 },
+  { id: 'lesson-17', title: 'אור לעמי', rabbiId: 'rabbi-6', addressKey: 'place-11', topic: 'mussar', audience: 'mixed', recurrence: { kind: 'weekly', weekdays: [2, 4] }, startTime: '20:45', durationMinutes: 45 },
+  { id: 'lesson-18', title: 'אישים בתנ"ך', rabbiId: 'rabbi-9', addressKey: 'place-9', topic: 'tanach', audience: 'women', recurrence: { kind: 'weekly', weekdays: [0] }, startTime: '09:30', durationMinutes: 45 },
+  { id: 'lesson-19', title: 'פרשת השבוע לילדים ולהורים', rabbiId: 'rabbi-5', addressKey: 'place-5', topic: 'parasha', audience: 'mixed', recurrence: { kind: 'weekly', weekdays: [5] }, startTime: '16:00', durationMinutes: 30 },
   // Minimal on purpose: no notes, and its rabbi and venue have no optional
   // fields, so the client's layout is tested against thin data too.
-  { id: 'lesson-21', title: 'שיעור פתוח', rabbiId: 'rabbi-4', venueKey: 'place-8', topic: 'other', audience: 'mixed', recurrence: { kind: 'weekly', weekdays: [3] }, startTime: '19:00', durationMinutes: 45 },
-  { id: 'lesson-22', title: 'שולחן ערוך יומי', rabbiId: 'rabbi-3', venueKey: 'place-10', topic: 'halacha', audience: 'men', recurrence: { kind: 'weekly', weekdays: [0, 1, 2, 3, 4] }, startTime: '13:00', durationMinutes: 20 },
-  { id: 'lesson-23', title: 'ערב עיון בפרשת השבוע', rabbiId: 'rabbi-11', venueKey: 'place-6', topic: 'parasha', audience: 'men', recurrence: { kind: 'weekly', weekdays: [4] }, startTime: '22:00', durationMinutes: 60 },
+  { id: 'lesson-21', title: 'שיעור פתוח', rabbiId: 'rabbi-4', addressKey: 'place-8', topic: 'other', audience: 'mixed', recurrence: { kind: 'weekly', weekdays: [3] }, startTime: '19:00', durationMinutes: 45 },
+  { id: 'lesson-22', title: 'שולחן ערוך יומי', rabbiId: 'rabbi-3', addressKey: 'place-10', topic: 'halacha', audience: 'men', recurrence: { kind: 'weekly', weekdays: [0, 1, 2, 3, 4] }, startTime: '13:00', durationMinutes: 20 },
+  { id: 'lesson-23', title: 'ערב עיון בפרשת השבוע', rabbiId: 'rabbi-11', addressKey: 'place-6', topic: 'parasha', audience: 'men', recurrence: { kind: 'weekly', weekdays: [4] }, startTime: '22:00', durationMinutes: 60 },
   // A rav teaching a women-only lesson (0026 permits this; only a
   // rabbanit-taught lesson is restricted to women). Exercises the women's
   // area and the audience scope: it stays on the general surfaces with a
   // נשים chip, and it counts in the women's set alongside rabbi-9's.
-  { id: 'lesson-27', title: 'שיעור לנשים בפרשת השבוע', rabbiId: 'rabbi-5', venueKey: 'place-12', topic: 'parasha', audience: 'women', recurrence: { kind: 'weekly', weekdays: [2] }, startTime: '20:00', durationMinutes: 45 },
+  { id: 'lesson-27', title: 'שיעור לנשים בפרשת השבוע', rabbiId: 'rabbi-5', addressKey: 'place-12', topic: 'parasha', audience: 'women', recurrence: { kind: 'weekly', weekdays: [2] }, startTime: '20:00', durationMinutes: 45 },
+  // Place-backed, unlike every lesson above: these point at a registered
+  // `PLACES` row (`seed/places.ts`) by id instead of carrying their own
+  // address text, exercising `venue.kind === 'place'` on a real seeded
+  // database.
+  { id: 'lesson-28', title: 'שיעור בישיבה', rabbiId: 'rabbi-8', placeId: 'seed-place-1', topic: 'chassidut', audience: 'men', recurrence: { kind: 'weekly', weekdays: [0, 2] }, startTime: '21:30', durationMinutes: 40 },
+  { id: 'lesson-29', title: 'שיעור בהיכל שלמה', rabbiId: 'rabbi-5', placeId: 'seed-place-2', topic: 'halacha', audience: 'mixed', recurrence: { kind: 'weekly', weekdays: [3] }, startTime: '18:30', durationMinutes: 45 },
 ];
 
 const buildOnceLessons = (todayIso: string): LessonSeed[] => [
-  { id: 'lesson-24', title: 'מעמד הכנה לראש חודש', rabbiId: 'rabbi-8', venueKey: 'place-2', topic: 'other', audience: 'mixed', recurrence: { kind: 'once', date: addDays(todayIso, 5) }, startTime: '20:00', durationMinutes: 90, notes: 'מעמד מיוחד לכבוד ראש חודש, בהשתתפות אורחים.' },
-  { id: 'lesson-25', title: 'יום עיון בהלכות המועדים', rabbiId: 'rabbi-6', venueKey: 'place-4', topic: 'halacha', audience: 'men', recurrence: { kind: 'once', date: addDays(todayIso, 19) }, startTime: '17:00', durationMinutes: 120 },
+  { id: 'lesson-24', title: 'מעמד הכנה לראש חודש', rabbiId: 'rabbi-8', addressKey: 'place-2', topic: 'other', audience: 'mixed', recurrence: { kind: 'once', date: addDays(todayIso, 5) }, startTime: '20:00', durationMinutes: 90, notes: 'מעמד מיוחד לכבוד ראש חודש, בהשתתפות אורחים.' },
+  { id: 'lesson-25', title: 'יום עיון בהלכות המועדים', rabbiId: 'rabbi-6', addressKey: 'place-4', topic: 'halacha', audience: 'men', recurrence: { kind: 'once', date: addDays(todayIso, 19) }, startTime: '17:00', durationMinutes: 120 },
 ];
 
-const resolveVenue = (venueKey: VenueKey, cityCodeByName: Map<string, number>): Lesson['place'] => {
-  const venue = VENUES[venueKey];
-  const cityCode = cityCodeByName.get(venue.cityName);
+const resolveAddress = (addressKey: AddressKey, cityCodeByName: Map<string, number>): LessonAddress => {
+  const address = ADDRESSES[addressKey];
+  const cityCode = cityCodeByName.get(address.cityName);
   if (cityCode === undefined) {
-    throw new Error(`expected city '${venue.cityName}' to exist for venue '${venueKey}', but it was not found`);
+    throw new Error(`expected city '${address.cityName}' to exist for address '${addressKey}', but it was not found`);
   }
-  return { name: venue.name, street: venue.street, floor: venue.floor, cityCode };
+  return { name: address.name, street: address.street, floor: address.floor, cityCode };
 };
+
+const resolveVenue = (seed: LessonSeed, cityCodeByName: Map<string, number>): LessonVenueInput =>
+  seed.placeId !== undefined ? { kind: 'place', placeId: seed.placeId } : { kind: 'address', ...resolveAddress(seed.addressKey, cityCodeByName) };
 
 const resolveLesson = (seed: LessonSeed, cityCodeByName: Map<string, number>): Lesson => ({
   id: seed.id,
   title: seed.title,
   rabbiId: seed.rabbiId,
-  place: resolveVenue(seed.venueKey, cityCodeByName),
+  venue: resolveVenue(seed, cityCodeByName),
   topic: seed.topic,
   audience: seed.audience,
   recurrence: seed.recurrence,
@@ -174,21 +187,26 @@ const buildExceptions = (todayIso: string, cityCodeByName: Map<string, number>):
       kind: 'modified',
       lessonId: 'lesson-9',
       date: nextDateOnWeekday(todayIso, 4),
-      place: resolveVenue('place-11', cityCodeByName),
+      address: resolveAddress('place-11', cityCodeByName),
       note: 'השיעור עובר הפעם לאולם "גני התורה" עקב עבודות בבית הכנסת',
     },
   ];
 };
 
-const toLessonInsert = (lesson: Lesson): typeof lessons.$inferInsert =>
+// Built through the same chokepoint an admin or a rabbi writer uses
+// (`lessonVenueColumns`), never by hand: a place-backed seed lesson gets
+// its `city_code` resolved from the place's own row exactly as a real write
+// would, so `invariants.test.ts`'s T13 net covers the seed too.
+// `executor: tx` (not the default, plain `db`): the seed inserts a place
+// and a lesson referencing it in the same transaction, so resolving the
+// place's `city_code` must see that same transaction's own uncommitted
+// insert, which a query through `db` on a different connection never would.
+const toLessonInsert = async (lesson: Lesson, tx: Tx): Promise<typeof lessons.$inferInsert> =>
   lessonInsertSchema.parse({
     id: lesson.id,
     title: lesson.title,
     rabbiId: lesson.rabbiId,
-    addressName: lesson.place.name,
-    addressStreet: lesson.place.street,
-    addressFloor: lesson.place.floor ?? null,
-    cityCode: lesson.place.cityCode,
+    ...(await lessonVenueColumns(lesson.venue, { executor: tx })),
     topic: lesson.topic,
     audience: lesson.audience,
     recurrenceKind: lesson.recurrence.kind,
@@ -199,6 +217,10 @@ const toLessonInsert = (lesson: Lesson): typeof lessons.$inferInsert =>
     notes: lesson.notes ?? null,
   });
 
+// An exception's own override is always a free address, never a place
+// (see `LessonException`), so it is mapped by hand here rather than
+// through `lessonVenueColumns`, matching `admin-lesson-exception.ts` and
+// `rabbi-lesson-exception.ts`'s own writers.
 const toExceptionInsert = (exception: LessonException): typeof lessonExceptions.$inferInsert =>
   exceptionInsertSchema.parse(
     exception.kind === 'cancelled'
@@ -208,10 +230,10 @@ const toExceptionInsert = (exception: LessonException): typeof lessonExceptions.
           date: exception.date,
           kind: 'modified',
           startTime: exception.startTime ?? null,
-          addressName: exception.place?.name ?? null,
-          addressStreet: exception.place?.street ?? null,
-          addressFloor: exception.place?.floor ?? null,
-          cityCode: exception.place?.cityCode ?? null,
+          addressName: exception.address?.name ?? null,
+          addressStreet: exception.address?.street ?? null,
+          addressFloor: exception.address?.floor ?? null,
+          cityCode: exception.address?.cityCode ?? null,
           substituteRabbiId: exception.substituteRabbiId ?? null,
           note: exception.note ?? null,
         },
@@ -242,16 +264,22 @@ export const seedLessons = async (
       },
     });
 
+  // Places before lessons: two of the seeded lessons reference one by id,
+  // built through the same chokepoint (`lessonVenueColumns`, below) that
+  // resolves it.
+  await seedPlaces(tx, cityCodeByName);
+
   const resolvedLessons = [...LESSONS, ...buildOnceLessons(todayIso)].map((seed) => resolveLesson(seed, cityCodeByName));
 
   await tx
     .insert(lessons)
-    .values(resolvedLessons.map(toLessonInsert))
+    .values(await Promise.all(resolvedLessons.map((lesson) => toLessonInsert(lesson, tx))))
     .onConflictDoUpdate({
       target: lessons.id,
       set: {
         title: sql`excluded.title`,
         rabbiId: sql`excluded.rabbi_id`,
+        placeId: sql`excluded.place_id`,
         addressName: sql`excluded.place_name`,
         addressStreet: sql`excluded.place_street`,
         addressFloor: sql`excluded.place_floor`,

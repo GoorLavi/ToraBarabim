@@ -16,6 +16,7 @@ import postgres from 'postgres';
 
 import { db } from '../../db/client';
 import { cities, lessonExceptions, lessonImportDismissedKeys, lessonImportRabbiLinks, lessonImportRules, lessonImportRuns, lessons, rabbis } from '../../db/schema';
+import { lessonVenueColumns } from '../shared/lesson-write';
 import { rabbiNameSchema } from '../shared/name';
 import { toRabbiSummary } from '../shared/rabbi-summary';
 import { cleanCityText, nameKeyOf } from './clean';
@@ -327,7 +328,11 @@ export const decide = async (request: AgentImportDecisionRequest): Promise<Agent
   }
 };
 
-const writeValuesFor = (write: ResolvedWrite) => {
+// Always the address arm: the import never produces a place reference,
+// since nothing in the collected data names a registered place. Still
+// routed through `lessonVenueColumns`, the one producer of these columns,
+// rather than setting them by hand here.
+const writeValuesFor = async (write: ResolvedWrite) => {
   // `NormalizedRow.audience` is optional pre-resolution (an unstated row
   // audience is resolved only once the rabbi's honorific is known, in
   // `planCore`); every `ResolvedWrite` is built after that resolution, so
@@ -336,10 +341,7 @@ const writeValuesFor = (write: ResolvedWrite) => {
   return {
     title: write.row.title ?? null,
     rabbiId: write.rabbiId,
-    addressName: write.row.place,
-    addressStreet: write.row.street,
-    addressFloor: null,
-    cityCode: write.row.cityCode,
+    ...(await lessonVenueColumns({ kind: 'address', name: write.row.place, street: write.row.street, cityCode: write.row.cityCode })),
     topic: write.row.topic ?? null,
     audience: write.row.audience,
     recurrenceKind: write.row.recurrence.kind,
@@ -390,13 +392,14 @@ export const apply = async (request: ApplyRequestInput, log: FastifyBaseLogger):
     const newRows = planResult.resolvedWrites.filter((write) => !write.existingLessonId);
     const updatedRows = planResult.resolvedWrites.filter((write) => write.existingLessonId);
     if (newRows.length) {
-      await tx.insert(lessons).values(newRows.map((write) => ({ id: nanoid(), ...writeValuesFor(write) })));
+      const newValues = await Promise.all(newRows.map(async (write) => ({ id: nanoid(), ...(await writeValuesFor(write)) })));
+      await tx.insert(lessons).values(newValues);
     }
     let actuallyUpdatedCount = 0;
     for (const write of updatedRows) {
       const updated = await tx
         .update(lessons)
-        .set(writeValuesFor(write))
+        .set(await writeValuesFor(write))
         .where(and(eq(lessons.id, write.existingLessonId as string), eq(lessons.provenance, 'imported')))
         .returning({ id: lessons.id });
       if (updated[0]) actuallyUpdatedCount += 1;

@@ -7,7 +7,7 @@ import type { FastifyInstance } from 'fastify';
 import { nanoid } from 'nanoid';
 
 import { db } from '../src/db/client';
-import { adminUsers, cities, lessonExceptions, lessons, rabbis } from '../src/db/schema';
+import { adminUsers, cities, lessonExceptions, lessons, places, rabbis } from '../src/db/schema';
 import { addDays, todayInIsrael } from '../src/service/lesson/israel-time';
 import { addMinutes } from '../src/service/lesson/occurrence';
 import { SESSION_COOKIE_NAME } from '../src/service/admin-auth/consts';
@@ -23,6 +23,7 @@ describe('admin API: lesson occurrences', () => {
   const cleanupLessonIds = new Set<string>();
   const cleanupRabbiIds = new Set<string>();
   const cleanupAdminUserIds = new Set<string>();
+  const cleanupPlaceIds = new Set<string>();
 
   before(async () => {
     await assertDatabaseReachable();
@@ -37,6 +38,8 @@ describe('admin API: lesson occurrences', () => {
     cleanupRabbiIds.clear();
     for (const id of cleanupAdminUserIds) await db.delete(adminUsers).where(eq(adminUsers.id, id));
     cleanupAdminUserIds.clear();
+    for (const id of cleanupPlaceIds) await db.delete(places).where(eq(places.id, id));
+    cleanupPlaceIds.clear();
   });
 
   after(async () => {
@@ -97,6 +100,33 @@ describe('admin API: lesson occurrences', () => {
     });
     cleanupLessonIds.add(lessonId);
     return { lessonId, rabbiId, cityCode, startTime, durationMinutes };
+  };
+
+  const createPlace = async (cityCode: number, overrides: Partial<typeof places.$inferInsert> = {}): Promise<string> => {
+    const id = `test-place-${uniqueSuffix()}`;
+    await db.insert(places).values({ id, slug: id, name: `מקום בדיקה ${uniqueSuffix()}`, street: 'רחוב הבדיקה 1', cityCode, ...overrides });
+    cleanupPlaceIds.add(id);
+    return id;
+  };
+
+  // Same shape as `seedDailyLesson`, but pointing at a registered place
+  // instead of carrying its own address text.
+  const seedDailyPlaceBackedLesson = async (placeId: string, cityCode: number): Promise<{ lessonId: string; rabbiId: string }> => {
+    const rabbiId = await createRabbi();
+    const lessonId = `test-lesson-${uniqueSuffix()}`;
+    await db.insert(lessons).values({
+      id: lessonId,
+      rabbiId,
+      placeId,
+      cityCode,
+      audience: 'men',
+      recurrenceKind: 'weekly',
+      recurrenceWeekdays: [0, 1, 2, 3, 4, 5, 6],
+      startTime: '19:00',
+      durationMinutes: 60,
+    });
+    cleanupLessonIds.add(lessonId);
+    return { lessonId, rabbiId };
   };
 
   test('an unauthenticated request is a 401, not an empty list', async () => {
@@ -186,6 +216,33 @@ describe('admin API: lesson occurrences', () => {
     assert.ok(modified, 'expected an occurrence on the modified date');
     assert.equal(modified?.status, 'scheduled');
     assert.equal(modified?.startTime, overriddenStartTime);
-    assert.equal(modified?.place.name, overriddenPlaceName);
+    assert.equal(modified?.venue.name, overriddenPlaceName);
+  });
+
+  // Test 3 (admin half): the admin's own occurrence read resolves a
+  // place-backed lesson to the place's own name and street too, and a
+  // rename changes what it reports, exactly as the public search does.
+  test("a place-backed lesson's occurrences resolve venue.kind 'place', and a rename changes what they report", async () => {
+    const cookie = await loginAsNewAdmin();
+    const cityCode = await jerusalemCode();
+    const placeId = await createPlace(cityCode, { name: 'בית מדרש מקורי', street: 'רחוב מקורי 1' });
+    const { lessonId } = await seedDailyPlaceBackedLesson(placeId, cityCode);
+
+    const res = await app.inject({ method: 'GET', url: `/v1/admin/lessons/${lessonId}/occurrences`, headers: { cookie } });
+    assert.equal(res.statusCode, 200);
+    const body = res.json() as AdminOccurrenceListResponse;
+    const [item] = body.items;
+    assert.ok(item);
+    assert.ok(item.venue.kind === 'place', `expected venue.kind 'place', got '${item.venue.kind}'`);
+    assert.equal(item.venue.placeId, placeId);
+    assert.equal(item.venue.name, 'בית מדרש מקורי');
+    assert.equal(item.venue.street, 'רחוב מקורי 1');
+
+    await db.update(places).set({ name: 'בית מדרש חדש', street: 'רחוב חדש 2' }).where(eq(places.id, placeId));
+
+    const afterRename = await app.inject({ method: 'GET', url: `/v1/admin/lessons/${lessonId}/occurrences`, headers: { cookie } });
+    const renamedBody = afterRename.json() as AdminOccurrenceListResponse;
+    assert.equal(renamedBody.items[0]?.venue.name, 'בית מדרש חדש');
+    assert.equal(renamedBody.items[0]?.venue.street, 'רחוב חדש 2');
   });
 });

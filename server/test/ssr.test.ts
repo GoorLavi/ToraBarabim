@@ -355,7 +355,7 @@ describe('SSR rendering seam', () => {
       const occurrence = occurrenceRes.json() as LessonOccurrence;
 
       const rabbiHref = `/rabbis/${encodeURIComponent(occurrence.rabbi.id)}/${encodeURIComponent(occurrence.rabbi.slug)}`;
-      const areaHref = `/areas/${encodeURIComponent(toAreaSlug(occurrence.place.area))}`;
+      const areaHref = `/areas/${encodeURIComponent(toAreaSlug(occurrence.venue.area))}`;
 
       // The area link in the rendered document only exists because the area
       // preview resolves to a non-empty list: it renders one `AreaLink` per
@@ -367,13 +367,13 @@ describe('SSR rendering seam', () => {
       const from = todayInIsrael(new Date());
       const areaLessonsRes = await app.inject({
         method: 'GET',
-        url: `/v1/lessons?area=${occurrence.place.area}&from=${from}&to=${addDays(from, 13)}&pageSize=50`,
+        url: `/v1/lessons?area=${occurrence.venue.area}&from=${from}&to=${addDays(from, 13)}&pageSize=50`,
       });
       assert.equal(areaLessonsRes.statusCode, 200);
       const areaLessons = areaLessonsRes.json() as LessonSearchResponse;
       assert.ok(
         areaLessons.items.some((item) => item.lessonId !== SEEDED_LESSON_ID),
-        `expected another lesson in area "${occurrence.place.area}" besides ${SEEDED_LESSON_ID} for the area preview to be non-empty`,
+        `expected another lesson in area "${occurrence.venue.area}" besides ${SEEDED_LESSON_ID} for the area preview to be non-empty`,
       );
 
       const page = await app.inject({ method: 'GET', url: `/lesson/${SEEDED_LESSON_ID}/${date}` });

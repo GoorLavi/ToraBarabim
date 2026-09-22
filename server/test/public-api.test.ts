@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { after, before, describe, test } from 'node:test';
+import { after, afterEach, before, describe, test } from 'node:test';
 
 import type {
   CitySearchResult,
@@ -7,13 +7,20 @@ import type {
   HomeResponse,
   LessonOccurrence,
   LessonSearchResponse,
+  Place,
+  PlaceListResponse,
+  PlaceSimilarResponse,
   RabbiDirectoryEntry,
   RabbiDirectoryResponse,
   RabbiProminence,
   WomenAreaResponse,
 } from '@torabarabim/common';
+import { eq } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
+import { nanoid } from 'nanoid';
 
+import { db } from '../src/db/client';
+import { cities, lessonExceptions, lessons, places } from '../src/db/schema';
 import { HOME_RABBI_ROW_CAP } from '../src/service/home/consts';
 import { selectAreaPreview } from '../src/service/lesson/area-preview';
 import { addDays, nextDateOnWeekday, todayInIsrael } from '../src/service/lesson/israel-time';
@@ -117,13 +124,13 @@ describe('public API', () => {
       assert.ok(occurrence.status === 'scheduled' || occurrence.status === 'cancelled');
       assert.equal(typeof occurrence.rabbi.id, 'string');
       assert.equal(typeof occurrence.rabbi.name, 'string');
-      assert.equal(typeof occurrence.place.name, 'string');
-      assert.equal(typeof occurrence.place.city, 'string');
+      assert.equal(typeof occurrence.venue.name, 'string');
+      assert.equal(typeof occurrence.venue.city, 'string');
       // The lesson page's "other lessons in this city" link is built from
       // this slug, so it reaches the city page directly instead of falling
       // back to a text search the way it did before the field existed.
-      assert.equal(occurrence.place.citySlug, toSlug(occurrence.place.city));
-      assert.equal(typeof occurrence.place.area, 'string');
+      assert.equal(occurrence.venue.citySlug, toSlug(occurrence.venue.city));
+      assert.equal(typeof occurrence.venue.area, 'string');
     });
 
     test('a filter matching nothing is a normal 200 with an empty list, never a 404', async () => {
@@ -249,6 +256,164 @@ describe('public API', () => {
         });
         assert.equal(withoutScope.statusCode, 200);
         assert.deepEqual((withoutScope.json() as LessonSearchResponse).items, []);
+      });
+    });
+
+    // Places arrive as a real entity (0016 reversed): a lesson may point at
+    // one instead of carrying its own address text, and the public search
+    // must resolve both arms to the exact same wire shape.
+    describe('a place-backed venue', () => {
+      const cleanupLessonIds = new Set<string>();
+      const cleanupPlaceIds = new Set<string>();
+
+      afterEach(async () => {
+        for (const id of cleanupLessonIds) await db.delete(lessonExceptions).where(eq(lessonExceptions.lessonId, id));
+        for (const id of cleanupLessonIds) await db.delete(lessons).where(eq(lessons.id, id));
+        cleanupLessonIds.clear();
+        for (const id of cleanupPlaceIds) await db.delete(places).where(eq(places.id, id));
+        cleanupPlaceIds.clear();
+      });
+
+      const jerusalemCode = async (): Promise<number> => {
+        const rows = await db.select({ code: cities.code }).from(cities).where(eq(cities.nameHe, SEEDED_CITY_NAME)).limit(1);
+        const row = rows[0];
+        if (!row) throw new Error('expected the seeded city to exist');
+        return row.code;
+      };
+
+      const createPlace = async (cityCode: number, overrides: Partial<typeof places.$inferInsert> = {}): Promise<string> => {
+        const id = `test-place-${nanoid(8)}`;
+        await db.insert(places).values({ id, slug: id, name: `מקום בדיקה ${nanoid(8)}`, street: 'רחוב הבדיקה 1', cityCode, ...overrides });
+        cleanupPlaceIds.add(id);
+        return id;
+      };
+
+      // Every day of the week, so the occurrence is always in range no
+      // matter what day the suite runs on.
+      const createDailyLesson = async (placeId: string, cityCode: number): Promise<string> => {
+        const id = `test-lesson-${nanoid(8)}`;
+        await db.insert(lessons).values({
+          id,
+          rabbiId: SEEDED_RABBI_ID,
+          placeId,
+          cityCode,
+          audience: 'men',
+          recurrenceKind: 'weekly',
+          recurrenceWeekdays: [0, 1, 2, 3, 4, 5, 6],
+          startTime: '19:00',
+          durationMinutes: 30,
+        });
+        cleanupLessonIds.add(id);
+        return id;
+      };
+
+      const findItem = (body: LessonSearchResponse, lessonId: string) => body.items.find((item) => item.lessonId === lessonId);
+
+      // Test 3: a place-backed lesson resolves to the place's own name and
+      // street, and renaming the place changes what the occurrence reports.
+      test("resolves venue.kind 'place' with the place row's name and street, and follows a rename", async () => {
+        const cityCode = await jerusalemCode();
+        const placeId = await createPlace(cityCode, { name: 'בית מדרש מקורי', street: 'רחוב מקורי 1' });
+        const lessonId = await createDailyLesson(placeId, cityCode);
+
+        const res = await app.inject({ method: 'GET', url: `/v1/lessons?rabbiId=${SEEDED_RABBI_ID}&${searchWindowQuery()}` });
+        assert.equal(res.statusCode, 200);
+        const item = findItem(res.json() as LessonSearchResponse, lessonId);
+        assert.ok(item, 'expected the place-backed lesson to appear in the search');
+        assert.ok(item.venue.kind === 'place', `expected venue.kind 'place', got '${item.venue.kind}'`);
+        assert.equal(item.venue.placeId, placeId);
+        assert.equal(item.venue.name, 'בית מדרש מקורי');
+        assert.equal(item.venue.street, 'רחוב מקורי 1');
+
+        await db.update(places).set({ name: 'בית מדרש חדש', street: 'רחוב חדש 2' }).where(eq(places.id, placeId));
+
+        const afterRename = await app.inject({ method: 'GET', url: `/v1/lessons?rabbiId=${SEEDED_RABBI_ID}&${searchWindowQuery()}` });
+        const renamedItem = findItem(afterRename.json() as LessonSearchResponse, lessonId);
+        assert.ok(renamedItem);
+        assert.equal(renamedItem.venue.name, 'בית מדרש חדש');
+        assert.equal(renamedItem.venue.street, 'רחוב חדש 2');
+      });
+
+      // Test 4: every lesson in production today is address-only; a
+      // place-arm join written as an inner join would drop all of them.
+      test('an address-only lesson still appears unfiltered with venue.kind "address" and no place id', async () => {
+        const res = await app.inject({ method: 'GET', url: `/v1/lessons?${searchWindowQuery()}` });
+        assert.equal(res.statusCode, 200);
+        const body = res.json() as LessonSearchResponse;
+        const item = body.items.find((candidate) => candidate.lessonId === SUNDAY_TO_THURSDAY_LESSON_ID);
+        assert.ok(item, 'expected the seeded address-only lesson to appear');
+        assert.equal(item.venue.kind, 'address');
+        assert.ok(!('placeId' in item.venue));
+      });
+
+      // Test 5: `placeId` narrows *after* an exception, so a cancelled
+      // occurrence and one moved to a free address both drop out under
+      // `?placeId=&status=scheduled`, while the unfiltered search still
+      // reports the moved one at its new address.
+      test('placeId narrows the resolved venue, after exceptions, and status narrows independently', async () => {
+        const cityCode = await jerusalemCode();
+        const placeId = await createPlace(cityCode);
+        const lessonId = await createDailyLesson(placeId, cityCode);
+
+        const from = todayInIsrael(new Date());
+        const cancelledDate = addDays(from, 1);
+        const movedDate = addDays(from, 2);
+
+        await db.insert(lessonExceptions).values({ lessonId, date: cancelledDate, kind: 'cancelled', reason: 'בדיקה' });
+        await db.insert(lessonExceptions).values({
+          lessonId,
+          date: movedDate,
+          kind: 'modified',
+          addressName: 'כתובת חלופית לבדיקה',
+          addressStreet: 'רחוב חלופי 3',
+          cityCode,
+        });
+
+        const filteredRes = await app.inject({
+          method: 'GET',
+          url: `/v1/lessons?placeId=${placeId}&status=scheduled&${searchWindowQuery()}`,
+        });
+        assert.equal(filteredRes.statusCode, 200);
+        const filteredBody = filteredRes.json() as LessonSearchResponse;
+        assert.ok(!filteredBody.items.some((item) => item.date === cancelledDate && item.lessonId === lessonId));
+        assert.ok(!filteredBody.items.some((item) => item.date === movedDate && item.lessonId === lessonId));
+
+        const unfilteredRes = await app.inject({ method: 'GET', url: `/v1/lessons?rabbiId=${SEEDED_RABBI_ID}&${searchWindowQuery()}` });
+        const unfilteredBody = unfilteredRes.json() as LessonSearchResponse;
+        const movedItem = unfilteredBody.items.find((item) => item.date === movedDate && item.lessonId === lessonId);
+        assert.ok(movedItem, 'expected the unfiltered search to still report the moved occurrence');
+        assert.equal(movedItem.venue.kind, 'address');
+        assert.equal(movedItem.venue.name, 'כתובת חלופית לבדיקה');
+      });
+
+      // Test 6: deactivating a place removes it from every public place
+      // surface, and a lesson still pointing at it degrades to an address,
+      // never a dead link.
+      test('a deactivated place disappears from every place surface, and its lessons resolve to an address with no id', async () => {
+        const cityCode = await jerusalemCode();
+        const placeId = await createPlace(cityCode, { name: 'מקום שיבוטל', street: 'רחוב הביטול 1' });
+        const lessonId = await createDailyLesson(placeId, cityCode);
+
+        await db.update(places).set({ isActive: false }).where(eq(places.id, placeId));
+
+        const listRes = await app.inject({ method: 'GET', url: '/v1/places' });
+        assert.equal(listRes.statusCode, 200);
+        assert.ok(!(listRes.json() as PlaceListResponse).items.some((place: Place) => place.id === placeId));
+
+        const detailRes = await app.inject({ method: 'GET', url: `/v1/places/${placeId}` });
+        assert.equal(detailRes.statusCode, 404);
+
+        const similarRes = await app.inject({ method: 'GET', url: `/v1/places/similar?cityCode=${cityCode}&name=${encodeURIComponent('מקום שיבוטל')}` });
+        assert.equal(similarRes.statusCode, 200);
+        assert.ok(!(similarRes.json() as PlaceSimilarResponse).items.some((place: Place) => place.id === placeId));
+
+        const searchRes = await app.inject({ method: 'GET', url: `/v1/lessons?rabbiId=${SEEDED_RABBI_ID}&${searchWindowQuery()}` });
+        const item = findItem(searchRes.json() as LessonSearchResponse, lessonId);
+        assert.ok(item, 'expected the lesson to still appear, now as an address');
+        assert.equal(item.venue.kind, 'address');
+        assert.ok(!('placeId' in item.venue));
+        assert.equal(item.venue.name, 'מקום שיבוטל');
+        assert.equal(item.venue.street, 'רחוב הביטול 1');
       });
     });
   });
@@ -689,7 +854,7 @@ describe('public API', () => {
       status: 'scheduled',
       audience: 'men',
       rabbi: { id: `rabbi-of-${lessonId}`, name: 'שם הרב', honorific: 'rav', slug: `slug-${lessonId}` },
-      place: { name: 'בית מדרש', street: 'רחוב הרצל', city: 'עיר', citySlug: 'ir', area: 'center' },
+      venue: { kind: 'address', name: 'בית מדרש', street: 'רחוב הרצל', city: 'עיר', citySlug: 'ir', area: 'center' },
     });
 
     test('excludes every occurrence of the excluded lesson', () => {

@@ -2,7 +2,7 @@ import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
 import { db } from '../../db/client';
-import { cities, lessonExceptions, lessons, rabbis } from '../../db/schema';
+import { cities, lessonExceptions, lessons, places, rabbis } from '../../db/schema';
 import { UPCOMING_OCCURRENCE_WINDOW_DAYS } from '../lesson/consts';
 import { addDays, todayInIsrael } from '../lesson/israel-time';
 import { applyException, compareOccurrences, expandLesson, resolveRecord, toExceptionDomain, toLessonDomain } from '../lesson/occurrence';
@@ -10,7 +10,7 @@ import { dismissImportKey } from '../shared/dismiss-import';
 import { provenanceAfterHandEdit } from '../shared/hand-edit';
 import { baseLessonQuery, lessonColumnsFrom, toLessonWriteRecord, verifyReferences } from '../shared/lesson-write';
 import { toRabbiSummary as toRabbi } from '../shared/rabbi-summary';
-import { LessonNotFoundError, ReferencedRabbiNotFoundError, UnknownCityError } from './errors';
+import { LessonNotFoundError, ReferencedPlaceNotFoundError, ReferencedRabbiNotFoundError, UnknownCityError } from './errors';
 import type { AdminOccurrenceListResult, CreateLessonInput, LessonListQuery, LessonListResult, LessonRecord, UpdateLessonInput } from './models';
 
 export const list = async (query: LessonListQuery): Promise<LessonListResult> => {
@@ -35,10 +35,12 @@ export const getById = async (id: string): Promise<LessonRecord> => {
   return toLessonWriteRecord(row);
 };
 
+const onPlaceNotFound = (placeId: string): Error => new ReferencedPlaceNotFoundError(placeId);
+
 export const create = async (input: CreateLessonInput): Promise<LessonRecord> => {
   await verifyReferences({
     rabbiId: input.rabbiId,
-    cityCode: input.place.cityCode,
+    cityCode: input.venue.kind === 'address' ? input.venue.cityCode : undefined,
     audience: input.audience,
     onUnknownCity: (cityCode) => new UnknownCityError(cityCode),
     onReferencedRabbiNotFound: (rabbiId) => new ReferencedRabbiNotFoundError(rabbiId),
@@ -46,7 +48,7 @@ export const create = async (input: CreateLessonInput): Promise<LessonRecord> =>
 
   const [row] = await db
     .insert(lessons)
-    .values({ id: nanoid(), rabbiId: input.rabbiId, ...lessonColumnsFrom(input) })
+    .values({ id: nanoid(), rabbiId: input.rabbiId, ...(await lessonColumnsFrom(input, { onPlaceNotFound })) })
     .returning({ id: lessons.id });
   if (!row) throw new Error('insert into lessons returned no row');
   return getById(row.id);
@@ -55,7 +57,7 @@ export const create = async (input: CreateLessonInput): Promise<LessonRecord> =>
 export const update = async (id: string, input: UpdateLessonInput): Promise<LessonRecord> => {
   await verifyReferences({
     rabbiId: input.rabbiId,
-    cityCode: input.place.cityCode,
+    cityCode: input.venue.kind === 'address' ? input.venue.cityCode : undefined,
     audience: input.audience,
     onUnknownCity: (cityCode) => new UnknownCityError(cityCode),
     onReferencedRabbiNotFound: (rabbiId) => new ReferencedRabbiNotFoundError(rabbiId),
@@ -68,7 +70,7 @@ export const update = async (id: string, input: UpdateLessonInput): Promise<Less
   const [row] = await db
     .update(lessons)
     .set({
-      ...lessonColumnsFrom(input),
+      ...(await lessonColumnsFrom(input, { onPlaceNotFound })),
       rabbiId: input.rabbiId,
       provenance: provenanceAfterHandEdit(existing.provenance),
       updatedAt: new Date(),
@@ -107,9 +109,10 @@ export const listOccurrencesForLesson = async (lessonId: string, now: Date): Pro
   const from = todayInIsrael(now);
   const to = addDays(from, UPCOMING_OCCURRENCE_WINDOW_DAYS - 1);
 
-  const [rabbiRows, cityRows, exceptionRows] = await Promise.all([
+  const [rabbiRows, cityRows, placeRows, exceptionRows] = await Promise.all([
     db.select().from(rabbis),
     db.select({ code: cities.code, nameHe: cities.nameHe, area: cities.area }).from(cities),
+    db.select().from(places),
     db
       .select()
       .from(lessonExceptions)
@@ -118,11 +121,12 @@ export const listOccurrencesForLesson = async (lessonId: string, now: Date): Pro
 
   const rabbiById = new Map(rabbiRows.map((row) => [row.id, toRabbi(row)] as const));
   const cityByCode = new Map(cityRows.map((row) => [row.code, row] as const));
+  const placeById = new Map(placeRows.map((row) => [row.id, row] as const));
   const exceptionByKey = new Map(exceptionRows.map((row) => [`${row.lessonId}:${row.date}`, toExceptionDomain(row)] as const));
 
   const occurrences = expandLesson(toLessonDomain(lessonRow), from, to)
     .map((raw) => applyException(raw, exceptionByKey.get(`${raw.lesson.id}:${raw.date}`)))
     .sort(compareOccurrences);
 
-  return { items: occurrences.map((occurrence) => resolveRecord(occurrence, rabbiById, cityByCode)) };
+  return { items: occurrences.map((occurrence) => resolveRecord(occurrence, rabbiById, cityByCode, placeById)) };
 };

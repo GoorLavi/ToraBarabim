@@ -3,7 +3,7 @@ import { and, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
 import { db } from '../../db/client';
-import { cities, lessonExceptions, lessons, rabbis } from '../../db/schema';
+import { cities, lessonExceptions, lessons, places, rabbis } from '../../db/schema';
 import { UPCOMING_OCCURRENCE_WINDOW_DAYS } from '../lesson/consts';
 import { addDays, todayInIsrael } from '../lesson/israel-time';
 import { applyException, compareOccurrences, expandLesson, resolveRecord, toExceptionDomain, toLessonDomain } from '../lesson/occurrence';
@@ -11,7 +11,7 @@ import { dismissImportKey } from '../shared/dismiss-import';
 import { provenanceAfterHandEdit } from '../shared/hand-edit';
 import { baseLessonQuery, lessonColumnsFrom, toLessonWriteRecord, verifyReferences } from '../shared/lesson-write';
 import { toRabbiSummary as toRabbi } from '../shared/rabbi-summary';
-import { LessonNotFoundError, UnknownCityError } from './errors';
+import { LessonNotFoundError, ReferencedPlaceNotFoundError, UnknownCityError } from './errors';
 import type { CreateRabbiLessonInput, RabbiLessonListQuery, RabbiLessonListResult, RabbiLessonRecord, UpdateRabbiLessonInput } from './models';
 
 export const list = async (rabbiId: string, query: RabbiLessonListQuery): Promise<RabbiLessonListResult> => {
@@ -36,17 +36,19 @@ export const getOwnById = async (rabbiId: string, id: string): Promise<RabbiLess
   return toLessonWriteRecord(row);
 };
 
+const onPlaceNotFound = (placeId: string): Error => new ReferencedPlaceNotFoundError(placeId);
+
 export const create = async (rabbiId: string, input: CreateRabbiLessonInput): Promise<RabbiLessonRecord> => {
   await verifyReferences({
     rabbiId,
-    cityCode: input.place.cityCode,
+    cityCode: input.venue.kind === 'address' ? input.venue.cityCode : undefined,
     audience: input.audience,
     onUnknownCity: (cityCode) => new UnknownCityError(cityCode),
   });
 
   const [row] = await db
     .insert(lessons)
-    .values({ id: nanoid(), rabbiId, ...lessonColumnsFrom(input) })
+    .values({ id: nanoid(), rabbiId, ...(await lessonColumnsFrom(input, { onPlaceNotFound })) })
     .returning({ id: lessons.id });
   if (!row) throw new Error('insert into lessons returned no row');
   return getOwnById(rabbiId, row.id);
@@ -55,7 +57,7 @@ export const create = async (rabbiId: string, input: CreateRabbiLessonInput): Pr
 export const update = async (rabbiId: string, id: string, input: UpdateRabbiLessonInput): Promise<RabbiLessonRecord> => {
   await verifyReferences({
     rabbiId,
-    cityCode: input.place.cityCode,
+    cityCode: input.venue.kind === 'address' ? input.venue.cityCode : undefined,
     audience: input.audience,
     onUnknownCity: (cityCode) => new UnknownCityError(cityCode),
   });
@@ -71,7 +73,7 @@ export const update = async (rabbiId: string, id: string, input: UpdateRabbiLess
   const [row] = await db
     .update(lessons)
     .set({
-      ...lessonColumnsFrom(input),
+      ...(await lessonColumnsFrom(input, { onPlaceNotFound })),
       provenance: provenanceAfterHandEdit(existing.provenance),
       updatedAt: new Date(),
     })
@@ -111,14 +113,16 @@ export const listUpcomingOccurrences = async (rabbiId: string, now: Date): Promi
   // that counts today, matching `home.ts`'s `HOME_WINDOW_DAYS` convention.
   const to = addDays(from, UPCOMING_OCCURRENCE_WINDOW_DAYS - 1);
 
-  const [rabbiRows, cityRows, lessonRows] = await Promise.all([
+  const [rabbiRows, cityRows, placeRows, lessonRows] = await Promise.all([
     db.select().from(rabbis),
     db.select({ code: cities.code, nameHe: cities.nameHe, area: cities.area }).from(cities),
+    db.select().from(places),
     db.select().from(lessons).where(eq(lessons.rabbiId, rabbiId)),
   ]);
 
   const rabbiById = new Map(rabbiRows.map((row) => [row.id, toRabbi(row)] as const));
   const cityByCode = new Map(cityRows.map((row) => [row.code, row] as const));
+  const placeById = new Map(placeRows.map((row) => [row.id, row] as const));
   if (!rabbiById.has(rabbiId)) throw new Error(`data inconsistency: authenticated rabbi '${rabbiId}' has no rabbi row`);
 
   const lessonIds = lessonRows.map((row) => row.id);
@@ -136,5 +140,5 @@ export const listUpcomingOccurrences = async (rabbiId: string, now: Date): Promi
     .map((raw) => applyException(raw, exceptionByKey.get(`${raw.lesson.id}:${raw.date}`)))
     .sort(compareOccurrences);
 
-  return occurrences.map((occurrence) => resolveRecord(occurrence, rabbiById, cityByCode));
+  return occurrences.map((occurrence) => resolveRecord(occurrence, rabbiById, cityByCode, placeById));
 };

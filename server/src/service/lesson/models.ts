@@ -1,4 +1,4 @@
-import type { LessonAudience, LessonTopic, Rabbi, ResolvedAddress } from '@torabarabim/common';
+import type { LessonAudience, LessonTopic, LessonVenue, Rabbi } from '@torabarabim/common';
 import { z } from 'zod';
 
 import { AREAS, LESSON_TOPICS } from '../../db/schema/enums';
@@ -15,14 +15,24 @@ import { MAX_SEARCH_QUERY_LENGTH } from './consts';
 // public filter (a rabbanit's lessons reach a general search through the
 // name exception, not through requesting `women` directly), so requesting
 // it is a 400, not an empty result.
+// `placeId` means "occurrences whose resolved venue is this place": a
+// separate, orthogonal narrowing from every other filter, applied after
+// `applyException` (an exception can move an occurrence away from its
+// lesson's own place, or move one back onto it) and before scope/audience,
+// exactly where every other post-expansion filter sits.
+// `status=scheduled` is likewise orthogonal: any caller may combine it with
+// any other filter, including `placeId`, without either one special-casing
+// the other.
 export const lessonSearchQuerySchema = z.object({
   from: z.iso.date().optional(),
   to: z.iso.date().optional(),
   city: z.coerce.number().int().positive().optional(),
   area: z.enum(AREAS).optional(),
   rabbiId: z.string().trim().min(1).optional(),
+  placeId: z.string().trim().min(1).optional(),
   topic: z.enum(LESSON_TOPICS).optional(),
   audience: z.enum(AUDIENCE_FILTERS).optional(),
+  status: z.enum(['scheduled', 'cancelled']).optional(),
   scope: z.enum(AUDIENCE_SCOPES).default('general'),
   q: z.string().trim().max(MAX_SEARCH_QUERY_LENGTH).optional(),
   page: z.coerce.number().int().min(1).default(DEFAULT_PAGE),
@@ -56,7 +66,7 @@ export interface ResolvedLessonOccurrence {
   topic?: LessonTopic;
   audience: LessonAudience;
   rabbi: Rabbi;
-  place: ResolvedAddress;
+  venue: LessonVenue;
   substituteRabbi?: Rabbi;
   cancellationReason?: string;
   note?: string;

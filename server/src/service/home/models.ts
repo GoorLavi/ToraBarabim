@@ -1,4 +1,4 @@
-import type { CityWithLessonCount, HomeRowId, LessonAudience, LessonTopic, Rabbi, ResolvedAddress } from '@torabarabim/common';
+import type { CityWithLessonCount, HomeRowId, LessonAudience, LessonTopic, LessonVenue, Rabbi } from '@torabarabim/common';
 
 import type { rabbis } from '../../db/schema';
 import type { AddressCityRow } from '../shared/address';
@@ -18,7 +18,7 @@ export interface ResolvedHomeOccurrence {
   recurrenceKind: 'weekly' | 'once';
   rabbi: Rabbi;
   cityCode: number;
-  place: ResolvedAddress;
+  venue: LessonVenue;
   substituteRabbi?: Rabbi;
   note?: string;
   rabbiProminenceRank: number;

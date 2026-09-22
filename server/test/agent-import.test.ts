@@ -1284,6 +1284,8 @@ describe('agent import', () => {
     assert.ok(lesson);
     cleanupLessonIds.add(lesson.id);
     assert.equal(lesson.provenance, 'imported');
+    // The import always writes the address arm; TS cannot see that.
+    assert.ok(lesson.addressName);
 
     // The guard's wiring is where it fails: a real admin session, PATCHing
     // the real route, not a direct service call.
@@ -1294,7 +1296,7 @@ describe('agent import', () => {
       headers: { cookie },
       payload: {
         rabbiId,
-        place: { name: lesson.addressName, street: 'רחוב חדש 9', cityCode: lesson.cityCode },
+        venue: { kind: 'address', name: lesson.addressName, street: 'רחוב חדש 9', cityCode: lesson.cityCode },
         audience: 'men',
         recurrence: { kind: 'weekly', weekdays: [0] },
         startTime: '21:00',
@@ -1330,6 +1332,8 @@ describe('agent import', () => {
     assert.ok(lesson);
     cleanupLessonIds.add(lesson.id);
     assert.equal(lesson.provenance, 'imported');
+    // The import always writes the address arm; TS cannot see that.
+    assert.ok(lesson.addressName);
 
     // Same guard, from the rabbi's own panel: a real rabbi session, PATCHing
     // his own lesson through the real route.
@@ -1339,7 +1343,7 @@ describe('agent import', () => {
       url: `/v1/rabbi/lessons/${lesson.id}`,
       headers: { cookie },
       payload: {
-        place: { name: lesson.addressName, street: 'רחוב חדש עצמי 3', cityCode: lesson.cityCode },
+        venue: { kind: 'address', name: lesson.addressName, street: 'רחוב חדש עצמי 3', cityCode: lesson.cityCode },
         audience: 'men',
         recurrence: { kind: 'weekly', weekdays: [0] },
         startTime: '21:30',

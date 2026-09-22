@@ -10,6 +10,7 @@ import { registerCityRoutes } from './api/cities';
 import { registerHealthRoutes } from './api/health';
 import { registerHomeRoutes } from './api/home';
 import { registerLessonRoutes } from './api/lessons';
+import { registerPlaceRoutes } from './api/places';
 import { registerRabbiRoutes } from './api/rabbi';
 import { registerRabbiAuthRoutes } from './api/rabbi/auth';
 import { registerRabbiDirectoryRoutes } from './api/rabbis';
@@ -53,6 +54,7 @@ const start = async (): Promise<void> => {
   await registerHomeRoutes(app);
   await registerCityRoutes(app);
   await registerAreaRoutes(app);
+  await registerPlaceRoutes(app);
   await registerRabbiDirectoryRoutes(app);
   await registerWomenAreaRoutes(app);
   await registerAdminAuthRoutes(app);

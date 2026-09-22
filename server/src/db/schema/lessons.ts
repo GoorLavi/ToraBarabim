@@ -3,6 +3,7 @@ import { check, date, integer, pgTable, text, timestamp, uniqueIndex } from 'dri
 
 import { cities } from './cities';
 import { lessonAudienceEnum, lessonProvenanceEnum, lessonTopicEnum, recurrenceKindEnum } from './enums';
+import { places } from './places';
 import { rabbis } from './rabbis';
 
 export const lessons = pgTable(
@@ -13,15 +14,23 @@ export const lessons = pgTable(
     rabbiId: text('rabbi_id')
       .notNull()
       .references(() => rabbis.id),
-    // The address is free text on the lesson, not a registered entity: a
-    // rabbi must never be blocked from adding a lesson because its address
-    // is not recognised. `cityCode` stays structured, since the home page
-    // and the city/area filters depend on it.
-    // The property is `address*`; the column stays `place_*` because
-    // renaming a column is a migration, and this rename has none.
-    addressName: text('place_name').notNull(),
-    addressStreet: text('place_street').notNull(),
+    // A lesson's venue is either a registered place, or its own free text:
+    // never both, never neither. Enforced by `lessons_venue_shape` below.
+    // `addressName`/`addressStreet`/`addressFloor` were `NOT NULL` before a
+    // place could be referenced; every existing row is address-only, so
+    // relaxing them here validates clean. The properties are `address*`;
+    // the free-text columns stay `place_*` because renaming a column is a
+    // migration, and this rename has none.
+    placeId: text('place_id').references(() => places.id),
+    addressName: text('place_name'),
+    addressStreet: text('place_street'),
     addressFloor: text('place_floor'),
+    // Denormalized here even for a place-backed lesson (0016's reversal
+    // keeps it, deliberately): it is the only SQL narrowing on the public
+    // search's hot path, and a join would make every one of that search's
+    // city/area filters non-sargable. `service/shared/lesson-write.ts`'s
+    // `lessonVenueColumns` is the one function that may set it; see the
+    // comment there for what it costs.
     cityCode: integer('city_code')
       .notNull()
       .references(() => cities.code),
@@ -55,6 +64,11 @@ export const lessons = pgTable(
       'lessons_recurrence_shape',
       sql`(${table.recurrenceKind} = 'weekly' AND ${table.recurrenceWeekdays} IS NOT NULL AND ${table.recurrenceDate} IS NULL)
        OR (${table.recurrenceKind} = 'once' AND ${table.recurrenceDate} IS NOT NULL AND ${table.recurrenceWeekdays} IS NULL)`,
+    ),
+    check(
+      'lessons_venue_shape',
+      sql`(${table.placeId} IS NOT NULL AND ${table.addressName} IS NULL AND ${table.addressStreet} IS NULL AND ${table.addressFloor} IS NULL)
+       OR (${table.placeId} IS NULL AND ${table.addressName} IS NOT NULL AND ${table.addressStreet} IS NOT NULL)`,
     ),
     check(
       'lessons_provenance_shape',

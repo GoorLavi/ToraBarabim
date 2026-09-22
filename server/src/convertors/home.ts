@@ -13,7 +13,7 @@ const toLessonOccurrence = (record: ResolvedHomeOccurrence): LessonOccurrence =>
   topic: record.topic,
   audience: record.audience,
   rabbi: record.rabbi,
-  place: record.place,
+  venue: record.venue,
   substituteRabbi: record.substituteRabbi,
   note: record.note,
 });

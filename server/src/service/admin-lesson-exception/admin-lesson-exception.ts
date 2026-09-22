@@ -59,7 +59,7 @@ const toRecord = (row: JoinedExceptionRow): LessonExceptionRecord =>
         date: row.date,
         kind: 'modified',
         startTime: row.startTime ?? undefined,
-        place:
+        address:
           row.addressName !== null && row.addressStreet !== null && row.cityCode !== null && row.cityName !== null
             ? { name: row.addressName, street: row.addressStreet, floor: row.addressFloor ?? undefined, cityCode: row.cityCode, cityName: row.cityName }
             : undefined,
@@ -99,13 +99,13 @@ const verifyModifiedReferences = async (input: LessonExceptionInput): Promise<vo
     input.substituteRabbiId
       ? db.select({ id: rabbis.id }).from(rabbis).where(eq(rabbis.id, input.substituteRabbiId)).limit(1)
       : Promise.resolve(undefined),
-    input.place
-      ? db.select({ code: cities.code }).from(cities).where(eq(cities.code, input.place.cityCode)).limit(1)
+    input.address
+      ? db.select({ code: cities.code }).from(cities).where(eq(cities.code, input.address.cityCode)).limit(1)
       : Promise.resolve(undefined),
   ]);
 
   if (input.substituteRabbiId && !rabbiRows?.[0]) throw new ReferencedRabbiNotFoundError(input.substituteRabbiId);
-  if (input.place && !cityRows?.[0]) throw new UnknownCityError(input.place.cityCode);
+  if (input.address && !cityRows?.[0]) throw new UnknownCityError(input.address.cityCode);
 };
 
 export const listForLesson = async (lessonId: string): Promise<LessonExceptionRecord[]> => {
@@ -125,10 +125,10 @@ const insertValues = (lessonId: string, input: LessonExceptionInput) => ({
   kind: input.kind,
   reason: input.kind === 'cancelled' ? (input.reason ?? null) : null,
   startTime: input.kind === 'modified' ? (input.startTime ?? null) : null,
-  addressName: input.kind === 'modified' ? (input.place?.name ?? null) : null,
-  addressStreet: input.kind === 'modified' ? (input.place?.street ?? null) : null,
-  addressFloor: input.kind === 'modified' ? (input.place?.floor ?? null) : null,
-  cityCode: input.kind === 'modified' ? (input.place?.cityCode ?? null) : null,
+  addressName: input.kind === 'modified' ? (input.address?.name ?? null) : null,
+  addressStreet: input.kind === 'modified' ? (input.address?.street ?? null) : null,
+  addressFloor: input.kind === 'modified' ? (input.address?.floor ?? null) : null,
+  cityCode: input.kind === 'modified' ? (input.address?.cityCode ?? null) : null,
   substituteRabbiId: input.kind === 'modified' ? (input.substituteRabbiId ?? null) : null,
   note: input.kind === 'modified' ? (input.note ?? null) : null,
 });
