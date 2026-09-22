@@ -36,6 +36,28 @@ export const NEVER_RESOLVES = new Promise<Response>(() => {});
 // gate's environment, so a with-photo story rendered as its own missing
 // state and went unjudged (design gate finding, on two story files that
 // each pointed at picsum.photos).
-export const placeholderPhoto = (width: number, height: number): string =>
-  'data:image/svg+xml;utf8,' +
-  encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="${width}" height="${height}" fill="lightgray"/></svg>`);
+//
+// Carries a horizon (a two-tone split, roughly where a facade photo's roofline
+// sits) and a marked corner (a small circle), so a story can be judged on
+// orientation and position rather than rendering as a flat rectangle no
+// matter which part of it is on screen. A flat grey fill here previously made
+// every PhotoCropStep story pixel-identical regardless of source shape or pan
+// position, so the design gate had to inject its own content-bearing image to
+// review framing at all (design gate finding, "two smaller things"). Still
+// generic enough to read as a plain placeholder everywhere else this is used
+// (a rabbi portrait, a place hero), not a real picture.
+export const placeholderPhoto = (width: number, height: number): string => {
+  const horizonY = Math.round(height * 0.6);
+  const markerRadius = Math.max(10, Math.round(Math.min(width, height) * 0.08));
+
+  return (
+    'data:image/svg+xml;utf8,' +
+    encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">` +
+        `<rect width="${width}" height="${horizonY}" fill="#cfd8dc"/>` +
+        `<rect y="${horizonY}" width="${width}" height="${height - horizonY}" fill="#8d99a3"/>` +
+        `<circle cx="${markerRadius + 10}" cy="${markerRadius + 10}" r="${markerRadius}" fill="#c0392b"/>` +
+        `</svg>`,
+    )
+  );
+};

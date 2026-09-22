@@ -6,6 +6,7 @@ import styled from 'styled-components';
 import * as helpers from '../../helpers';
 import type { CropRect, CropTransform, ImageDimensions } from '../../models';
 import * as consts from './consts';
+import * as stepHelpers from './helpers';
 import type { Point, PhotoCropStepProps } from './models';
 import * as styles from './styles';
 
@@ -38,46 +39,73 @@ const cropToFile = (image: HTMLImageElement, rect: CropRect): Promise<File> => {
 // viewport. Never part of the server output, since it only ever mounts
 // after a person has picked a file.
 export const PhotoCropStep = styled(({ className, file, imageUrl, sourceDimensions, onConfirm, onCancel }: PhotoCropStepProps) => {
-  const viewportRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const windowRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const pointersRef = useRef<Map<number, Point>>(new Map());
   const pinchStartRef = useRef<{ distance: number; transform: CropTransform } | undefined>(undefined);
 
-  const [viewportWidth, setViewportWidth] = useState<number | undefined>(undefined);
+  const [stageSize, setStageSize] = useState<ImageDimensions | undefined>(undefined);
   const [transform, setTransform] = useState<CropTransform | undefined>(undefined);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Locks the page behind the overlay for as long as it is mounted, so a
+  // touch or wheel gesture that misses the stage cannot scroll the page
+  // underneath it (design gate finding F5). Restored on every exit path:
+  // confirm and cancel both unmount this component, which runs this cleanup.
   useEffect(() => {
-    const element = viewportRef.current;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
+
+  useEffect(() => {
+    const element = stageRef.current;
     if (!element) return;
     const observer = new ResizeObserver((entries) => {
-      const width = entries[0]?.contentRect.width;
-      if (width) setViewportWidth(width);
+      const contentRect = entries[0]?.contentRect;
+      if (contentRect && contentRect.width && contentRect.height) setStageSize({ width: contentRect.width, height: contentRect.height });
     });
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
 
-  // The viewport frame is always drawn at 16:9 (styles.ts), so its height
-  // follows its own measured width rather than needing a second measurement.
-  const viewport: ImageDimensions | undefined = useMemo(
-    () => (viewportWidth ? { width: viewportWidth, height: viewportWidth / helpers.CROP_ASPECT_RATIO } : undefined),
-    [viewportWidth],
-  );
+  // The crop window: the largest 16:9 box the stage's own measured content
+  // area has room for (helpers.ts), capped at its historical desktop width.
+  // Every helper below still calls this "viewport", matching the parameter
+  // name in ../../helpers.ts, even though the DOM element it now sizes is
+  // `.window` rather than the stage itself: the photo is no longer clipped
+  // to it (styles.ts).
+  const viewport: ImageDimensions | undefined = useMemo(() => (stageSize ? stepHelpers.windowSizeForStage(stageSize) : undefined), [stageSize]);
+
+  const hasNoFramingRoom = useMemo(() => (viewport ? stepHelpers.hasNoFramingRoom(sourceDimensions, viewport) : false), [sourceDimensions, viewport]);
 
   useEffect(() => {
     if (!viewport) return;
     setTransform((previous) => (previous ? helpers.clampTransform(previous, sourceDimensions, viewport) : helpers.initialTransform(sourceDimensions, viewport)));
   }, [viewport, sourceDimensions]);
 
+  // Both the drag/pinch handlers below and the wheel handler here read pointer
+  // and cursor positions in window-local coordinates (the coordinate space
+  // every helpers.ts function expects), regardless of which element actually
+  // received the event: the stage is the drag target (design gate F3/F4,
+  // "the drag target becomes the whole photo rather than the window alone"),
+  // but the window is what the math is anchored to.
+  const pointFromClient = (clientX: number, clientY: number): Point => {
+    const rect = windowRef.current?.getBoundingClientRect();
+    if (!rect) return { x: 0, y: 0 };
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  };
+
   useEffect(() => {
-    const element = viewportRef.current;
+    const element = stageRef.current;
     if (!element || !viewport) return;
 
     const handleWheel = (event: WheelEvent): void => {
       event.preventDefault();
-      const rect = element.getBoundingClientRect();
-      const point = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+      const point = pointFromClient(event.clientX, event.clientY);
       const direction = event.deltaY > 0 ? -1 : 1;
       setTransform((previous) => previous && helpers.zoomAroundPoint(previous, point, previous.zoom + direction * consts.WHEEL_ZOOM_STEP, sourceDimensions, viewport));
     };
@@ -90,23 +118,20 @@ export const PhotoCropStep = styled(({ className, file, imageUrl, sourceDimensio
     return () => element.removeEventListener('wheel', handleWheel);
   }, [viewport, sourceDimensions]);
 
-  const viewportPoint = (event: ReactPointerEvent<HTMLDivElement>): Point => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    return { x: event.clientX - rect.left, y: event.clientY - rect.top };
-  };
-
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>): void => {
+    if (!windowRef.current) return;
+
     try {
       event.currentTarget.setPointerCapture(event.pointerId);
     } catch {
       // A pointer id the browser does not recognise as an active, capturable
       // pointer (true of a synthetic pointer, such as the one a story uses
       // to frame a mid-drag state) simply is not captured: the gesture below
-      // still works for as long as the pointer stays over the viewport, it
+      // still works for as long as the pointer stays over the stage, it
       // only loses tracking past its edge.
     }
 
-    const point = viewportPoint(event);
+    const point = pointFromClient(event.clientX, event.clientY);
     pointersRef.current.set(event.pointerId, point);
 
     const [first, second] = Array.from(pointersRef.current.values());
@@ -119,7 +144,7 @@ export const PhotoCropStep = styled(({ className, file, imageUrl, sourceDimensio
     const previous = pointersRef.current.get(event.pointerId);
     if (!previous || !transform || !viewport) return;
 
-    const point = viewportPoint(event);
+    const point = pointFromClient(event.clientX, event.clientY);
     pointersRef.current.set(event.pointerId, point);
 
     const [first, second] = Array.from(pointersRef.current.values());
@@ -178,26 +203,24 @@ export const PhotoCropStep = styled(({ className, file, imageUrl, sourceDimensio
     // so an ancestor's `dir` is not guaranteed to reach it.
     <div className={className} dir="rtl" role="dialog" aria-modal="true" aria-label={consts.CROP_STEP_TITLE}>
       <div className="header">
-        <button type="button" className="cancel" onClick={onCancel}>
-          {consts.CROP_CANCEL_LABEL}
-        </button>
         <span className="title">{consts.CROP_STEP_TITLE}</span>
-        <button type="button" className="confirm" onClick={() => void handleConfirm()} disabled={!transform || isProcessing}>
-          {isProcessing ? consts.CROP_PROCESSING_LABEL : consts.CROP_CONFIRM_LABEL}
-        </button>
       </div>
 
-      <div className="stage">
-        <div
-          className="viewport"
-          ref={viewportRef}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerEnd}
-          onPointerCancel={handlePointerEnd}
-          onPointerLeave={handlePointerEnd}
-        >
-          {transform && viewport && (
+      <div
+        className="stage"
+        ref={stageRef}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerEnd}
+        onPointerCancel={handlePointerEnd}
+        onPointerLeave={handlePointerEnd}
+      >
+        {transform && viewport && (
+          <div
+            className="window"
+            ref={windowRef}
+            style={{ '--crop-window-width': `${viewport.width}px`, '--crop-window-height': `${viewport.height}px` } as CSSProperties}
+          >
             <img
               ref={imgRef}
               className="image"
@@ -217,11 +240,22 @@ export const PhotoCropStep = styled(({ className, file, imageUrl, sourceDimensio
                 } as CSSProperties
               }
             />
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
-      <p className="hint">{consts.CROP_STEP_HINT}</p>
+      <div className="footer">
+        <p className="hint">{hasNoFramingRoom ? consts.CROP_STEP_HINT_NO_FRAMING_ROOM : consts.CROP_STEP_HINT}</p>
+
+        <div className="actions">
+          <button type="button" className="cancel" onClick={onCancel}>
+            {consts.CROP_CANCEL_LABEL}
+          </button>
+          <button type="button" className="confirm" onClick={() => void handleConfirm()} disabled={!transform || isProcessing}>
+            {isProcessing ? consts.CROP_PROCESSING_LABEL : consts.CROP_CONFIRM_LABEL}
+          </button>
+        </div>
+      </div>
     </div>,
     document.body,
   );

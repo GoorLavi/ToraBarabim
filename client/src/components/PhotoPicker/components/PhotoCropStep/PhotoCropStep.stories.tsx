@@ -35,36 +35,43 @@ export const NearSquarePhoto: Story = {
 };
 
 // Taller than it is wide, the orientation the old validation refused
-// outright: still usable, since the crop only needs an 800-wide slice.
+// outright: still usable, since the crop only needs an 800-wide slice. The
+// story the design gate used to find F3/F4 (two thirds of the photo off
+// frame with no trace on screen): the stage should now show the rest of the
+// photo, dimmed by the scrim, above and below the frame.
 export const TallPhoto: Story = {
   args: { file: tallFile, imageUrl: placeholderPhoto(900, 1600), sourceDimensions: { width: 900, height: 1600 } },
 };
 
 // Exactly 800 by 450, exactly 16:9: the largest crop this photo can give is
-// the whole photo, so the frame fills the viewport with no room to zoom or
-// pan at all.
+// the whole photo, so the frame fills the window with no room to zoom or pan
+// at all. Design gate finding F6: drag and pinch both do nothing here, so
+// this is the one story that renders `CROP_STEP_HINT_NO_FRAMING_ROOM`
+// instead of the usual hint.
 export const PhotoAtExactFloor: Story = {
   args: { file: atFloorFile, imageUrl: placeholderPhoto(800, 450), sourceDimensions: { width: 800, height: 450 } },
 };
 
 // A one-finger drag partway through, before it lifts: the frame off-center
-// from the default, centered opening position.
+// from the default, centered opening position. Dispatched on `.stage`, the
+// drag target since the design gate's F3/F4 fix (the small `.window` frame
+// is no longer the only place a drag is recognised).
 export const MidDragFraming: Story = {
   args: { file: wideFile, imageUrl: placeholderPhoto(2400, 1000), sourceDimensions: { width: 2400, height: 1000 } },
   play: async ({ canvasElement }) => {
-    const viewport = canvasElement.querySelector<HTMLElement>('.viewport');
-    if (!viewport) return;
+    const stage = canvasElement.querySelector<HTMLElement>('.stage');
+    if (!stage) return;
 
-    // Waits for the crop step's own `ResizeObserver` to report the
-    // viewport's size before dragging it: a drag dispatched before that
-    // measurement lands has nowhere to move a still-unset transform.
+    // Waits for the crop step's own `ResizeObserver` to report the stage's
+    // size before dragging it: a drag dispatched before that measurement
+    // lands has nowhere to move a still-unset transform.
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    const rect = viewport.getBoundingClientRect();
+    const rect = stage.getBoundingClientRect();
     const startPoint = { clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2 };
     const endPoint = { clientX: startPoint.clientX - rect.width * 0.2, clientY: startPoint.clientY };
 
-    viewport.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 1, bubbles: true, ...startPoint }));
-    viewport.dispatchEvent(new PointerEvent('pointermove', { pointerId: 1, bubbles: true, ...endPoint }));
+    stage.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 1, bubbles: true, ...startPoint }));
+    stage.dispatchEvent(new PointerEvent('pointermove', { pointerId: 1, bubbles: true, ...endPoint }));
   },
 };
