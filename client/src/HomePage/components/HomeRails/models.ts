@@ -1,4 +1,4 @@
-import type { HomeResponse } from '@torabarabim/common';
+import type { DedicationGroup, HomeResponse } from '@torabarabim/common';
 
 import type { HomeApiError } from '~/HomePage/api';
 
@@ -16,4 +16,9 @@ export interface HomeRowsQueryState {
 export interface HomeRailsProps {
   className?: string;
   query: HomeRowsQueryState;
+  // The one draw HomePage made for this page load, prop-drilled by one
+  // level rather than read again here: a second draw would put two
+  // different type groups on one page (design-system.md, dedication "The
+  // draw"). `undefined` before the draw has run and when the pool is empty.
+  dedicationGroup: DedicationGroup | undefined;
 }

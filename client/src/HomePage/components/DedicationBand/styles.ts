@@ -15,9 +15,10 @@ export const DedicationBand = css(
   &.onPrimary {
     background: ${theme.colors.primaryStrong};
     /* Full bleed: cancels the page's own inline gutter, the same three
-       breakpoints \`~/styles/contentBand.ts\`'s \`contentGutterInline\`
-       applies to \`<main>\`, so this reaches the true viewport edge instead
-       of stopping at the content band like the page's other sections. */
+       breakpoints the shared contentGutterInline helper applies to the
+       page's own main element, so this reaches the true viewport edge
+       instead of stopping at the content band like the page's other
+       sections. */
     margin-inline: calc(-1 * ${theme.spacing.lg});
     inline-size: calc(100% + 2 * ${theme.spacing.lg});
     padding-block: ${theme.spacing.xxl};
@@ -41,6 +42,7 @@ export const DedicationBand = css(
 
   > .viewport {
     position: relative;
+    display: flex;
     overflow: hidden;
     overscroll-behavior-inline: contain;
     scrollbar-width: none;
@@ -65,24 +67,19 @@ export const DedicationBand = css(
     }
   }
 
+  /* The loop's second copy is marked aria-hidden, so a screen reader never
+     meets every dedication twice from this one band (design-system.md,
+     "Three traps"). Laid out as a sibling flex item of the same width
+     immediately after the real track, so the two together form one
+     continuous strip exactly two track widths long; a shrink-proof flex
+     item on both keeps that true even while the viewport itself is
+     narrower than either copy. */
   > .viewport > .track {
+    flex-shrink: 0;
     display: flex;
     align-items: flex-start;
     gap: ${consts.DEDICATION_UNIT_GAP_PX}px;
     padding-inline: ${theme.spacing.lg};
-  }
-
-  /* The loop's second copy, `aria-hidden` so a screen reader never meets
-     every dedication twice from this one band (design-system.md, "Three
-     traps"). Laid out as a sibling flex item of equal width, immediately
-     after the real track, so the two together form one continuous strip
-     exactly two track widths long. */
-  > .viewport {
-    display: flex;
-  }
-
-  > .viewport > .track.duplicate {
-    flex-shrink: 0;
   }
 
   > .fade {
@@ -95,8 +92,8 @@ export const DedicationBand = css(
 
   /* Both fades' own positions stay logical; their gradient axes cannot,
      since CSS has no logical gradient direction and the page is
-     permanently RTL (mirrors LessonRail/styles.ts's own \`.fade\`), so each
-     names a physical side opposite the other. */
+     permanently RTL (mirrors LessonRail's own fade), so each names a
+     physical side opposite the other. */
   > .fade.start {
     inset-inline-start: 0;
   }

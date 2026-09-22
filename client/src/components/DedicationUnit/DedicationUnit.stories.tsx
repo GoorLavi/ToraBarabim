@@ -83,7 +83,14 @@ export const LongestRealisticName: Story = {
 
 // The instrument for the rendered-height check: both variants at 280,
 // side by side, each on its own field. 314.2 unwrapped, 374.2 wrapped
-// (design-system.md, dedication geometry).
+// (design-system.md, dedication geometry). `DEDICATION_TEXT_MEMORIAL_WRAPPING`
+// carries a donor credit line, visible on both sides here: 20/28 in
+// dedicationMuted on the page field, unchanged gold on the plum field
+// (only the size drops there, since both colour tokens already resolve to
+// the same value). This is also the instrument that shows each Ornament
+// instance's own gradient definition holding correctly against the other
+// variant sitting right beside it on the same page: a shared gradient
+// definition would paint both from whichever variant's context it sat in.
 export const TwoVariantComparison: Story = {
   render: () => (
     <div style={{ display: 'flex', gap: '32px', alignItems: 'flex-start' }}>

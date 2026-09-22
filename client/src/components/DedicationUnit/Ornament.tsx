@@ -12,6 +12,16 @@ import * as styles from './styles';
 // properties. Purely decorative, so `aria-hidden` and `focusable="false"`
 // keep it out of the tab order in a band that is itself focusable for its
 // pause-on-focus behaviour.
+//
+// `useId()` gives every rendered instance its own gradient id, so its own
+// `<defs>` sits inside its own `<svg>`, inside its own ancestor's variant
+// class. This is what makes it safe for `onPrimary` and `onPage` instances
+// to sit on the same page at once (the foot band and the between-rails
+// band always do): a custom property resolves where the `<stop>` reading it
+// is defined, never where the gradient happens to be used, so a single
+// shared `<defs>` referenced by both would paint both from whichever
+// variant's context it sat in. There is one definition per instance instead,
+// never one shared definition.
 export const Ornament = styled(({ className, mirrored }: OrnamentProps) => {
   const gradientId = `dedication-ornament-gradient-${useId()}`;
 
@@ -26,18 +36,18 @@ export const Ornament = styled(({ className, mirrored }: OrnamentProps) => {
       focusable="false"
     >
       <defs>
-        <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="0">
+        {/* objectBoundingBox, not the Figma export's own user-space span
+            (y 0.557617 to 52.5228): that span is this one path's bounding
+            box at this one viewBox, and would silently go stale the moment
+            either changes. The relative form is identical today and stays
+            correct regardless. */}
+        <linearGradient id={gradientId} gradientUnits="objectBoundingBox" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" className="stop0" />
           <stop offset="0.4" className="stop40" />
           <stop offset="1" className="stop100" />
         </linearGradient>
       </defs>
-      {consts.ORNAMENT_LEAF_PATHS.map((path) => (
-        <path key={path} d={path} fill={`url(#${gradientId})`} />
-      ))}
-      {consts.ORNAMENT_VINE_PATHS.map((path) => (
-        <path key={path} d={path} stroke={`url(#${gradientId})`} strokeWidth={2} strokeLinecap="round" />
-      ))}
+      <path d={consts.ORNAMENT_PATH} fill={`url(#${gradientId})`} fillRule="nonzero" />
     </svg>
   );
 })`

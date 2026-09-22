@@ -118,13 +118,27 @@ export const DedicationUnit = css(
       letter-spacing: ${theme.typography.dedicationClosing.letterSpacing};
     }
 
-    /* Takes the parent role rather than a role of its own
-       (design-system.md, "The composed string"). */
+    /* A donor credit at the same weight as the honoree's own name would
+       invert what this surface is for: the dedication is about the person,
+       not the payer. It takes the closing role, not the parent role, so it
+       reads unmistakably as a footnote rather than competing with the
+       52px name; and the same muted colour the closing line steps back to,
+       since it is an attribution attached to the dedication, not a fifth
+       line of it. On the plum field both colour tokens already resolve to
+       the same gold, so this is a size-only change there. */
     > .donorCredit {
-      font-family: ${theme.typography.dedicationParent.fontFamily};
-      font-size: ${theme.typography.dedicationParent.fontSize};
-      line-height: ${theme.typography.dedicationParent.lineHeight};
-      font-weight: ${theme.typography.dedicationParent.fontWeight};
+      color: var(--dedication-closing-text);
+      font-family: ${theme.typography.dedicationClosing.fontFamily};
+      font-size: ${theme.typography.dedicationClosing.fontSize};
+      line-height: ${theme.typography.dedicationClosing.lineHeight};
+      font-weight: ${theme.typography.dedicationClosing.fontWeight};
+      letter-spacing: ${theme.typography.dedicationClosing.letterSpacing};
+      /* 12 above it, not the 4 between every other line: it is an
+         attribution attached to the dedication, not a sixth line of it, so
+         it needs to read as attached but separate. The flex column's own
+         4px gap already applies before this; the extra margin brings the
+         total to 12. */
+      margin-block-start: ${theme.spacing.sm};
     }
   }
 `,

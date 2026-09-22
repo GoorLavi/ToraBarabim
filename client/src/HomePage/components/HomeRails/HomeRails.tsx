@@ -5,14 +5,16 @@ import styled from 'styled-components';
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
 
+import { DedicationBand } from '../DedicationBand/DedicationBand';
 import { LessonRail } from '../LessonRail/LessonRail';
 import { WomensAreaBand } from '../WomensAreaBand/WomensAreaBand';
 import { RailSkeleton } from './components/RailSkeleton/RailSkeleton';
 import * as consts from './consts';
+import { dedicationBandSlot, shouldShowBetweenRailsDedication } from './helpers';
 import type { HomeRailsProps } from './models';
 import * as styles from './styles';
 
-export const HomeRails = styled(({ className, query }: HomeRailsProps) => {
+export const HomeRails = styled(({ className, query, dedicationGroup }: HomeRailsProps) => {
   if (query.isError) {
     return (
       <div className={classNames(className, 'error')} role="alert">
@@ -64,11 +66,26 @@ export const HomeRails = styled(({ className, query }: HomeRailsProps) => {
     />
   ));
 
-  if (womensAreaLessonCount > 0) {
+  const railCount = rails.length;
+  const showWomensAreaBand = womensAreaLessonCount > 0;
+  const showBetweenRailsDedication = shouldShowBetweenRailsDedication(
+    railCount,
+    dedicationGroup !== undefined && dedicationGroup.items.length > 0,
+  );
+
+  if (showWomensAreaBand) {
     rails.splice(
-      Math.min(consts.WOMENS_AREA_BAND_SLOT, rails.length),
+      Math.min(consts.WOMENS_AREA_BAND_SLOT, railCount),
       0,
       <WomensAreaBand key="womens-area-band" {...{ lessonCount: womensAreaLessonCount }} />,
+    );
+  }
+
+  if (showBetweenRailsDedication) {
+    rails.splice(
+      dedicationBandSlot(railCount, showWomensAreaBand),
+      0,
+      <DedicationBand key="dedication-band" {...{ group: dedicationGroup, variant: 'onPage' as const }} />,
     );
   }
 
