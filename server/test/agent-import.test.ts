@@ -412,7 +412,7 @@ describe('agent import', () => {
       headers: { cookie },
       payload: {
         rabbiId,
-        place: { name: `מקום אחרי עריכה ${uniqueSuffix()}`, street: 'רחוב אחרי עריכה 1', cityCode: await jerusalemCode() },
+        venue: { kind: 'address', name: `מקום אחרי עריכה ${uniqueSuffix()}`, street: 'רחוב אחרי עריכה 1', cityCode: await jerusalemCode() },
         audience: 'men',
         recurrence: { kind: 'weekly', weekdays: [0] },
         startTime: '20:00',
