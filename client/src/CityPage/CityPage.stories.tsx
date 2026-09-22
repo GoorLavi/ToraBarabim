@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Route, Routes } from 'react-router-dom';
 
 import { rabbiFixture } from '~/rabbiFixture';
-import { installMockFetch, jsonResponse, NEVER_RESOLVES } from '~/storyMocks';
+import { installMockFetch, jsonResponse, NEVER_RESOLVES, placeholderPhoto } from '~/storyMocks';
 
 import { CityPage } from './CityPage';
 
@@ -15,12 +15,12 @@ const cityDetail = (overrides: Partial<CityDetailResponse>): CityDetailResponse 
   areaName: 'חיפה והקריות',
   areaSlug: 'חיפה-והקריות',
   rabbis: [
-    rabbiFixture({ id: 'r1', name: 'אברהם כהן', title: 'ראש ישיבה', photoUrl: 'https://example.invalid/r1.jpg' }),
+    rabbiFixture({ id: 'r1', name: 'אברהם כהן', title: 'ראש ישיבה', photoUrl: placeholderPhoto(900, 1200) }),
     // Pinned rather than left to default: this rail deliberately mixes a
     // photoless rabbi in among two with a photo, and rabbiFixture now
     // defaults one in unless the key is stated (design gate finding F10).
     rabbiFixture({ id: 'r2', name: 'משה לוי', photoUrl: undefined }),
-    rabbiFixture({ id: 'r3', name: 'נתן צבי אשכנזי הכהן', photoUrl: 'https://example.invalid/r3.jpg' }),
+    rabbiFixture({ id: 'r3', name: 'נתן צבי אשכנזי הכהן', photoUrl: placeholderPhoto(900, 1200) }),
   ],
   ...overrides,
 });

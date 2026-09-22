@@ -3,8 +3,8 @@ import type { FocusEvent } from 'react';
 import classNames from 'classnames';
 import styled from 'styled-components';
 
-import { directionForValue } from '~/helpers';
 import { InactiveTag } from '~/components/InactiveTag/InactiveTag';
+import { directionForValue } from '~/helpers';
 
 import { placeAddressLine, toPickedPlace } from '../../helpers';
 import * as parentConsts from '../../consts';
