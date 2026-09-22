@@ -58,6 +58,14 @@ it either; it is what provides the skills the section below requires.
 - **The existing design file:** `z4fVzRjRFwYpLae22BmNKy`. Every Figma tool needs a
   `fileKey` and nothing lists a project's files, so without this an agent cannot reach
   the work at all and has to ask for a link before it can start.
+- **The places and shared-login file:** `SpDc5AuWDJgSWzqlAdHpL0`, "תורה ברבים - מקומות
+  וכניסה משותפת". Written beside the file above rather than inside it, at the owner's
+  instruction, for the change that made a place an entity.
+
+**Write down the key of every file you create, here, in the same change that creates
+it.** This second one was not recorded when it was made, and by the time the owner asked
+to merge it back the session no longer had the key: nothing lists a project's files, so
+the work was unreachable until he found the link himself.
 
 Pass both, so the file lands in the ToraBarabim project rather than the plan's loose
 drafts folder. `whoami` may list other plans on the same grant; they belong to other
