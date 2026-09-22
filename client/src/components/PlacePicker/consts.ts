@@ -8,9 +8,9 @@ export const PICKER_SEARCH_LABEL = 'חיפוש מקום';
 export const OR_LABEL = 'או';
 
 export const CANCEL_PLACE_LABEL = 'ביטול הבחירה והקלדת כתובת';
-export const CANCEL_PLACE_ARIA_LABEL = 'ביטול בחירת המקום והקלדת הכתובת בשדות שמתחת';
+export const CANCEL_PLACE_ARIA_LABEL = 'ביטול בחירת המקום והקלדת הכתובת בשדות שלמטה';
 
-export const LOCKED_REASON = 'הכתובת נלקחת מהמקום שנבחר ואי אפשר לערוך אותה כאן.';
+export const LOCKED_REASON = 'הכתובת מגיעה מהמקום שנבחר, ואי אפשר לערוך אותה כאן.';
 
 // Relocated as-is from the two lesson forms' own `consts.ts` (not new
 // copy): the WHERE section's field labels now render inside this shared
@@ -20,13 +20,13 @@ export const CITY_HELPER = 'בוחרים מהרשימה. העיר קובעת ג�
 export const CITY_PLACEHOLDER = 'בחירת עיר';
 export const PLACE_NAME_LABEL = 'שם בית הכנסת או המוסד';
 export const STREET_LABEL = 'רחוב ומספר';
-export const STREET_HELPER = 'הכתובת המלאה תוצג בעמוד השיעור עצמו בלבד.';
+export const STREET_HELPER = 'הכתובת המלאה מוצגת רק בעמוד השיעור.';
 export const FLOOR_LABEL = 'קומה או הוראות הגעה';
 
 export const REQUIRED_CITY_ERROR = 'יש לבחור עיר';
 export const REQUIRED_ADDRESS_NAME_ERROR = 'יש למלא את שם בית הכנסת או המוסד';
 export const REQUIRED_STREET_ERROR = 'יש למלא רחוב ומספר';
-export const UNKNOWN_CITY_ERROR = 'העיר שנבחרה אינה קיימת יותר. בחר עיר אחרת';
+export const UNKNOWN_CITY_ERROR = 'העיר שנבחרה אינה קיימת יותר. יש לבחור עיר אחרת';
 
 // The duplicate hint's one sentence, split so the place name can be its own
 // text node carrying `dir='auto'` inside it.

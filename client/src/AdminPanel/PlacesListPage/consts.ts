@@ -18,7 +18,7 @@ export const LOADING_MESSAGE = 'טוענים מקומות...';
 export const RETRY_LABEL = 'ניסיון נוסף';
 
 export const NO_PLACES_HEADLINE = 'עוד אין מקומות במערכת';
-export const NO_PLACES_HINT = 'הוספת המקום הראשון תפתח כאן את רשימת המקומות.';
+export const NO_PLACES_HINT = 'המקום הראשון שיתווסף יופיע כאן.';
 export const ADD_FIRST_PLACE_LABEL = 'הוספת מקום ראשון';
 
 export const NO_MATCHING_PLACES_HEADLINE = 'לא נמצאו מקומות תואמים';

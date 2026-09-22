@@ -14,14 +14,15 @@ export const ERROR_MESSAGE = 'לא הצלחנו לטעון את הפרטים ש�
 export const RETRY_LABEL = 'ניסיון נוסף';
 export const REQUIRED_NAME_ERROR = 'יש למלא שם';
 
-// Verbatim from `RabbiPanel/LessonFormPage/consts.ts`: the exact same
-// `street`/`floor`/`cityCode` fields, asked for by the exact same labels,
-// on a form that is also "where does this belong". `UNKNOWN_CITY_ERROR`
-// covers the same `unknown_city` code `PlaceApiError` can carry here.
+// The same `street`/`floor`/`cityCode` fields the WHERE section asks for on
+// both lesson forms (now centralised in `~/components/PlacePicker/consts.ts`),
+// asked again here since this is the place's own profile, not a lesson
+// pointing at it. `UNKNOWN_CITY_ERROR` covers the same `unknown_city` code
+// `PlaceApiError` can carry here.
 export const STREET_LABEL = 'רחוב ומספר';
-export const FLOOR_LABEL = 'קומה / הערת הגעה';
+export const FLOOR_LABEL = 'קומה או הוראות הגעה';
 export const CITY_LABEL = 'עיר';
-export const CITY_HELPER = 'בחר עיר מהרשימה.';
+export const CITY_HELPER = 'בוחרים עיר מהרשימה.';
 export const CITY_PLACEHOLDER = 'בחירת עיר';
 export const REQUIRED_STREET_ERROR = 'יש למלא רחוב ומספר';
 export const REQUIRED_CITY_ERROR = 'יש לבחור עיר';
@@ -60,4 +61,4 @@ export const MIN_HEIGHT_PX = PLACE_PHOTO_MIN_HEIGHT;
 // yielded a crop at all. The message says that and nothing else: the ratio
 // clause it used to carry told the person to go and satisfy by hand the one
 // thing the crop step now does for them.
-export const PHOTO_INVALID_ERROR = `התמונה קטנה מדי. צריך לפחות ${MIN_WIDTH_PX} על ${MIN_HEIGHT_PX} פיקסלים. אפשר לבחור תמונה אחרת.`;
+export const PHOTO_INVALID_ERROR = `התמונה לא מתאימה. צריך תמונה בגודל ${MIN_WIDTH_PX} על ${MIN_HEIGHT_PX} פיקסלים לפחות. אפשר לבחור תמונה אחרת.`;

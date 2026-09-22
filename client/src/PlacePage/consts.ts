@@ -35,7 +35,7 @@ export const WIDENED_CITY_LESSONS_PAGE_SIZE = 4;
 // one above (design gate finding F2).
 export const WIDENED_AREA_LESSONS_PAGE_SIZE = 4;
 
-export const ERROR_HEADING = 'לא הצלחנו לטעון את עמוד המקום';
+export const ERROR_HEADING = 'לא הצלחנו לטעון את פרטי המקום';
 export const ERROR_BODY = 'משהו השתבש בדרך אלינו. אפשר לנסות שוב.';
 export const RETRY_LABEL = 'נסו שוב';
 
@@ -65,4 +65,4 @@ export const widenedToCityBody = (cityName: string): string =>
 // either, so the body now points at the area cascade below it instead of
 // dead-ending on `כתבו לנו` alone.
 export const cityAlsoEmptyBody = (cityName: string): string =>
-  `גם ב${cityName} אין כרגע שיעורים נוספים. הרחבנו גם לאזור, כדי שלא תישארו בלי כלום.`;
+  `גם ב${cityName} אין כרגע שיעורים נוספים, אז הרחבנו לכל האזור, כדי שלא תישארו בלי כלום.`;

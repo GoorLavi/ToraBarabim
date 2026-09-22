@@ -1,9 +1,11 @@
-// Draft copy, not finalised: wants `tora-hebrew-editor` (build brief for the
-// crop step).
-export const CROP_STEP_TITLE = 'חיתוך התמונה';
-export const CROP_STEP_HINT = 'גרירה עם אצבע להזזה, צביטה או גלגלת עכבר להתקרבות ולהתרחקות.';
-export const CROP_CONFIRM_LABEL = 'אישור החיתוך';
-export const CROP_PROCESSING_LABEL = 'מעבד...';
+// Copy approved by `tora-hebrew-editor` (build brief for the crop step),
+// except `CROP_STEP_HINT`'s second sentence: new copy naming what the frame
+// discards, not yet reviewed.
+export const CROP_STEP_TITLE = 'התאמת התמונה';
+export const CROP_STEP_HINT =
+  'גוררים את התמונה כדי להזיז אותה, וצובטים כדי להגדיל או להקטין. במחשב אפשר להגדיל ולהקטין עם גלגלת העכבר. מה שנשאר מחוץ למסגרת לא יופיע באתר.';
+export const CROP_CONFIRM_LABEL = 'אישור';
+export const CROP_PROCESSING_LABEL = 'מכינים...';
 export const CROP_CANCEL_LABEL = 'ביטול';
 
 // The crop always ships as a JPEG regardless of the source file's own type,

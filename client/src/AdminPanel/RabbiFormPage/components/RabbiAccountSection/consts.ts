@@ -1,4 +1,4 @@
-export const SECTION_HEADING = 'כניסה למערכת עבור הרב';
+export const SECTION_HEADING = 'כניסה למערכת של הרב';
 
 export const BEFORE_FIRST_SAVE_NOTE = 'אפשר ליצור לרב חשבון כניסה אחרי השמירה הראשונה שלו.';
 

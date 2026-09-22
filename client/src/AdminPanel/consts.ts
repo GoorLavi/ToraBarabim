@@ -27,12 +27,13 @@ export const CLIENT_MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 export const UNSUPPORTED_TYPE_CLIENT_ERROR = 'אפשר להעלות קובץ JPG או PNG בלבד';
 export const TOO_LARGE_CLIENT_ERROR = 'התמונה גדולה מ-5MB';
 
-// Hand-mirrored from server/src/api/admin/places/index.ts's `invalid_photo`
-// response: shown as-is rather than the generic 400 copy below, since it
-// already names the width, height and ratio the photo failed, and the
-// admin place and rabbi forms have no client-side dimension check of their
-// own to explain the rejection otherwise.
-export const INVALID_PHOTO_MESSAGE = 'התמונה לא מתאימה. צריך תמונה לרוחב, לפחות 1200 על 675 פיקסלים, והרוחב גדול פי 1.5 עד 2 מהגובה.';
+// `~/components/PhotoPicker/consts.ts` holds the one client-side copy of
+// the server's `invalid_photo` rejection (server/src/api/admin/places/index.ts):
+// shown as-is rather than the generic 400 copy below, since it already names
+// the floor the photo failed, and the admin place and rabbi forms have no
+// client-side dimension check of their own to explain the rejection
+// otherwise.
+export { INVALID_PHOTO_MESSAGE } from '~/components/PhotoPicker/consts';
 
 export const GENERIC_ERROR_MESSAGE = 'אירעה שגיאה, נסה שוב מאוחר יותר';
 export const NETWORK_ERROR_MESSAGE = 'לא ניתן להתחבר לשרת. בדוק את החיבור ונסה שוב';

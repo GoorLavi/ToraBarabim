@@ -12,7 +12,7 @@ export const NEW_HEADING = 'שיעור חדש';
 export const EDIT_HEADING = 'עריכת שיעור';
 
 export const TITLE_LABEL = 'שם השיעור';
-export const TITLE_HELPER = 'לא חובה. בלי שם, השיעור יוצג באתר לפי הנושא שנבחר.';
+export const TITLE_HELPER = 'לא חובה. בלי שם, השיעור יופיע באתר לפי הנושא שנבחר.';
 
 export const WHEN_SECTION_HEADING = 'מתי מתקיים השיעור';
 export const AUDIENCE_SECTION_HEADING = 'למי השיעור מיועד';
@@ -40,8 +40,13 @@ export const DEFAULT_DURATION_MINUTES = '60';
 // fixed and the rabbi is chosen, the opposite shape, so it is not a
 // verbatim reuse. `של`, never a prefixed `ב`: a place name is free text, so
 // `ב<name>` can read as a grammar or a meaning error depending on the name.
-export const ownershipNote = (placeName: string): string =>
-  `השיעור יופיע באתר במקום שלך, ״${placeName}״. כל השדות חובה, חוץ משם השיעור, הנושא וההערות.`;
+// Split into a prefix and a suffix, mirroring `PlacePicker/consts.ts`'s
+// `DUPLICATE_HINT_PREFIX`/`_SUFFIX`, so the place name can sit in its own
+// `dir='auto'` text node: the name is free text and can open with a Latin
+// character, which drags a quote mark inside the same string to the wrong
+// side.
+export const OWNERSHIP_NOTE_PREFIX = 'השיעור יופיע באתר במקום שלך, "';
+export const OWNERSHIP_NOTE_SUFFIX = '". כל השדות חובה, חוץ משם השיעור, הנושא וההערות.';
 
 // This section, and the rabbi picker inside it, has no counterpart in
 // `RabbiPanel` (its lesson form has no rabbi picker at all).

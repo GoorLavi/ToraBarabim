@@ -12,6 +12,14 @@ import type { PhotoPickerAspectRatio } from './models';
 export const PLACE_PHOTO_MIN_WIDTH = 800;
 export const PLACE_PHOTO_MIN_HEIGHT = 450;
 
+// The one client-side copy of the server's `invalid_photo` rejection
+// (`server/src/api/admin/places/index.ts`, `server/src/api/place/profile/index.ts`):
+// shown as-is rather than a generic 400 message, since it already names the
+// floor the photo failed. Read by `PlacePanel/consts.ts` and `AdminPanel/consts.ts`
+// rather than each holding its own copy, which is how this string went stale
+// the first time.
+export const INVALID_PHOTO_MESSAGE = `התמונה לא מתאימה. צריך תמונה לרוחב, בגודל ${PLACE_PHOTO_MIN_WIDTH} על ${PLACE_PHOTO_MIN_HEIGHT} פיקסלים לפחות.`;
+
 // The 16:9 frame otherwise takes the field's full width with no ceiling
 // (styles.ts). Hand-mirrored from PlacePage/components/PlaceHero/consts.ts's
 // own PHOTO_WIDTH_DESKTOP (no shared import path: a shared component must
@@ -45,11 +53,10 @@ export const PHOTO_HELP_TYPE = 'JPG או PNG, עד 5MB';
 // changes: '3:4' is every rabbi's portrait, cropped on display with no
 // in-browser tool; '16:9' is a place's own photo, which now gets cropped to
 // shape before it ever uploads, so its own line describes that step instead
-// of a rejection. Draft copy, not finalised: wants `tora-hebrew-editor`
-// (build brief for the crop step).
+// of a rejection. Copy approved by `tora-hebrew-editor`.
 export const PHOTO_HELP_SIZE: Record<PhotoPickerAspectRatio, string> = {
   '3:4': 'לפחות 900 על 1200 פיקסלים',
-  '16:9': `אפשר לבחור כל תמונה, ואז לסמן ממנה את התמונה לרוחב שתעלה. האזור המסומן צריך לכלול לפחות ${PLACE_PHOTO_MIN_WIDTH} על ${PLACE_PHOTO_MIN_HEIGHT} פיקסלים מהתמונה המקורית.`,
+  '16:9': `לפחות ${PLACE_PHOTO_MIN_WIDTH} על ${PLACE_PHOTO_MIN_HEIGHT} פיקסלים. אחרי הבחירה אפשר לסמן איזה חלק מהתמונה יופיע באתר.`,
 };
 
 // '3:4' only: the poster is cropped on display with no in-browser tool, so
@@ -67,8 +74,8 @@ export const PHOTO_HELP_CROP: Partial<Record<PhotoPickerAspectRatio, string>> = 
 // picked '16:9' file cannot yield a crop at the floor above: said before the
 // crop step ever opens, per the build brief, rather than after someone has
 // already spent time framing a photo that was always going to be refused.
-// Draft copy, not finalised: wants `tora-hebrew-editor`.
-export const PHOTO_TOO_SMALL_TO_CROP_ERROR = 'התמונה קטנה מדי לחיתוך לתמונה לרוחב. אפשר לבחור תמונה גדולה יותר.';
+// Copy approved by `tora-hebrew-editor`.
+export const PHOTO_TOO_SMALL_TO_CROP_ERROR = `התמונה קטנה מדי. צריך תמונה בגודל ${PLACE_PHOTO_MIN_WIDTH} על ${PLACE_PHOTO_MIN_HEIGHT} פיקסלים לפחות.`;
 
 // The real upload states (rabbi-panel-copy.md, section 6): shown only when
 // a caller passes `uploadStatus`, so the admin rabbi form (which never

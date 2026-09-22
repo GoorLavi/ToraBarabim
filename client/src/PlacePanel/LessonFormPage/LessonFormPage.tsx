@@ -149,7 +149,13 @@ export const LessonFormPage = styled(({ className }: LessonFormPageProps) => {
         noValidate
       >
         <h1 className="heading">{pageHeading(Boolean(id))}</h1>
-        {placeName && <p className="subtext" dir="auto">{consts.ownershipNote(placeName)}</p>}
+        {placeName && (
+          <p className="subtext">
+            {consts.OWNERSHIP_NOTE_PREFIX}
+            <span dir="auto">{placeName}</span>
+            {consts.OWNERSHIP_NOTE_SUFFIX}
+          </p>
+        )}
 
         {generalSaveError && (
           <p className="generalError" role="alert">
