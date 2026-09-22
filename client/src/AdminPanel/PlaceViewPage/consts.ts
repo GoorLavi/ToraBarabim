@@ -10,6 +10,5 @@ export const FLOOR_LABEL = 'קומה או הוראות הגעה';
 export const FLOOR_EMPTY_VALUE = 'לא הוזנה קומה';
 export const STATUS_LABEL = 'סטטוס';
 export const STATUS_ACTIVE_VALUE = 'פעיל';
-export const STATUS_INACTIVE_VALUE = 'לא פעיל';
 
 export const SKELETON_FIELD_COUNT = 4;

@@ -50,7 +50,6 @@ export const PhotoPicker = styled(
 
           {hasFailed && (
             <div className="failure">
-              <p className="error">{consts.PHOTO_UPLOAD_FAILED}</p>
               <button type="button" className="retry" onClick={onRetryUpload}>
                 {consts.PHOTO_RETRY_LABEL}
               </button>
@@ -58,6 +57,10 @@ export const PhotoPicker = styled(
                 <span>{consts.PHOTO_CHOOSE_OTHER}</span>
                 <input type="file" accept="image/jpeg,image/png" onChange={handleChange} />
               </label>
+              {/* Below the actions, matching where the rejected-file error
+                  sits under .chooseFile (design gate nits: the two used to
+                  disagree on which side the error sits). */}
+              <p className="error">{consts.PHOTO_UPLOAD_FAILED}</p>
             </div>
           )}
 

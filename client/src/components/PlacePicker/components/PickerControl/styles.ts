@@ -47,11 +47,15 @@ export const PickerControl = css(
         color: ${theme.colors.text};
         font-weight: ${theme.typography.fontWeight.semiBold};
 
-        /* \`accentSoft\`, not \`primarySoft\`: the locked fields right below
-           this control use \`primarySoft\`'s quiet neutral now
-           (ReadOnlyField/styles.ts's own \`.quiet\`), and a state this
-           consequential (a saved lesson still pointing at a now-inactive
-           place) must not share a tint with something inert. */
+        /* Deliberately its own tint, not AdminPanel's shared InactiveTag
+           component (design gate nits, on F12 leaving this copy behind):
+           that component marks a place inert in a list or a record, in the
+           same quiet primarySoft neutral the locked fields right below this
+           control now use for a place that is simply chosen
+           (ReadOnlyField/styles.ts's own quiet mode). Here the same word
+           marks a saved lesson still pointing at a place that has since gone
+           inactive underneath it, a live consequence rather than a resting
+           fact, and it must not share a tint with something inert. */
         > .inactiveTag {
           padding-inline: ${theme.spacing.sm};
           border-radius: ${theme.radii.pill};

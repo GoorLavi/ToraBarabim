@@ -103,7 +103,10 @@ export const PlaceViewPage = styled(({ className }: PlaceViewPageProps) => {
           <RecordField label={consts.CITY_LABEL} value={place.cityName} />
           <RecordField label={consts.STREET_LABEL} value={place.street} />
           <RecordField label={consts.FLOOR_LABEL} isEmpty={!place.floor} value={place.floor ?? consts.FLOOR_EMPTY_VALUE} />
-          <RecordField label={consts.STATUS_LABEL} value={place.isActive ? consts.STATUS_ACTIVE_VALUE : consts.STATUS_INACTIVE_VALUE} />
+          {/* Only when active: an inactive place already says so once, in
+              the header pill right above this grid (design gate finding, on
+              a four-row record saying "לא פעיל" twice). */}
+          {place.isActive && <RecordField label={consts.STATUS_LABEL} value={consts.STATUS_ACTIVE_VALUE} />}
         </div>
       </div>
     </div>

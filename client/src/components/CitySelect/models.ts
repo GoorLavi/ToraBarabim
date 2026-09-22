@@ -18,4 +18,10 @@ export interface CitySelectProps {
   // other controls. Off by default so an existing caller's layout never
   // changes underneath it.
   fullWidth?: boolean;
+  // Draws the danger ring `PlacePicker`'s own name and street fields get on
+  // their `<input>` (design gate finding B3): this control has no bare
+  // input of its own for that rule to reach, so a caller marks it directly.
+  // Off by default, the same opt-in-modifier shape as `ReadOnlyField`'s
+  // `quiet` and `InactiveTag`, so no existing caller looks different.
+  invalid?: boolean;
 }

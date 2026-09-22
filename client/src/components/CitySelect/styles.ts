@@ -44,6 +44,13 @@ export const CitySelect = css(
     }
   }
 
+  /* The same 1px danger outline PlacePicker draws on its own name and
+     street inputs when they are in error (design gate finding B3): opt-in
+     and off by default, so no existing caller's control changes. */
+  &.invalid > .control {
+    border-color: ${theme.colors.danger};
+  }
+
   > .clear {
     min-block-size: 48px;
     padding-inline: ${theme.spacing.sm};

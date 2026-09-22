@@ -10,6 +10,20 @@ const PLACE_PHOTO_MIN_HEIGHT = 675;
 const PLACE_PHOTO_MIN_ASPECT_RATIO = 1.5;
 const PLACE_PHOTO_MAX_ASPECT_RATIO = 2.0;
 
+// The 16:9 frame otherwise takes the field's full width with no ceiling
+// (styles.ts), which is right on a phone but renders at 776 wide (437 tall)
+// in the 1280 profile form, pushing every field below it off the first
+// screen (design gate finding B2). Larger than the 320 the photo actually
+// ships at in the hero, so it still reads as a real preview; small enough
+// that the form's fields stay above the fold at 1280.
+export const PHOTO_PICKER_16X9_FRAME_MAX_WIDTH = 480;
+
+// The 3:4 frame's own fixed width (styles.ts), named here so the uploading
+// column below it can match it exactly rather than carrying a second, silent
+// copy of the same number (design gate nits: the progress bar and status
+// line rendered narrower than the frame above them, a ragged edge).
+export const PHOTO_PICKER_3X4_FRAME_WIDTH = 160;
+
 // One noun for one thing across all three buttons: the field is called
 // "התמונה שלי" in the panel, so "קובץ" is kept only for the lines that are
 // actually about the file format.

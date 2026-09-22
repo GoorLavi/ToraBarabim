@@ -66,7 +66,7 @@ export const PlacePicker = styled(({ className, venue, onChangeVenue, city, onSe
         <>
           <div className="field">
             <span className="label">{consts.CITY_LABEL}</span>
-            <CitySelect city={city} onSelectCity={onSelectCity} placeholderLabel={consts.CITY_PLACEHOLDER} fullWidth />
+            <CitySelect city={city} onSelectCity={onSelectCity} placeholderLabel={consts.CITY_PLACEHOLDER} fullWidth invalid={Boolean(cityError)} />
             <span className="helper">{consts.CITY_HELPER}</span>
             {cityError && <span className="error">{cityError}</span>}
           </div>

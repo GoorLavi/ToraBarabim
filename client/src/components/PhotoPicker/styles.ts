@@ -1,5 +1,7 @@
 import { css } from 'styled-components';
 
+import * as consts from './consts';
+
 export const PhotoPicker = css(
   ({ theme }) => `
   display: flex;
@@ -23,8 +25,16 @@ export const PhotoPicker = css(
   }
 
   &.ratio3x4 > .frame {
-    inline-size: 160px;
+    inline-size: ${consts.PHOTO_PICKER_3X4_FRAME_WIDTH}px;
     aspect-ratio: 3 / 4;
+  }
+
+  /* Matches the frame above it exactly, rather than the generic 220px cap
+     below: at the frame's own 160px that column previously ran narrower
+     than the frame and left a ragged edge (design gate nits). */
+  &.ratio3x4 > .details > .progress {
+    inline-size: ${consts.PHOTO_PICKER_3X4_FRAME_WIDTH}px;
+    max-inline-size: ${consts.PHOTO_PICKER_3X4_FRAME_WIDTH}px;
   }
 
   /* Takes the form's own field width, as a rule rather than a number, so
@@ -45,6 +55,13 @@ export const PhotoPicker = css(
 
   &.ratio16x9 > .frame {
     inline-size: 100%;
+    /* Without a ceiling this takes the field's own width, which at the
+       profile form's 776px field column renders 776 by 437: more than twice
+       the 320 the photo actually ships at in the hero, and tall enough to
+       push every field below it off the first screen at 1280 (design gate
+       finding B2). Bigger than the shipped 320 so the photo still reads as a
+       real preview, small enough that the fields stay above the fold. */
+    max-inline-size: ${consts.PHOTO_PICKER_16X9_FRAME_MAX_WIDTH}px;
     aspect-ratio: 16 / 9;
   }
 
@@ -129,12 +146,18 @@ export const PhotoPicker = css(
         font-weight: ${theme.typography.fontWeight.semiBold};
       }
 
+      /* The chooseFile outline (design gate nits): the one escape hatch from
+         a failed upload is the same "pick a file" affordance as every other
+         state, so it reads as a button rather than a caption under one. */
       > .chooseOther {
         position: relative;
         display: flex;
         align-items: center;
         min-block-size: 48px;
-        color: ${theme.colors.textSecondary};
+        padding-inline: ${theme.spacing.lg};
+        border: 1px solid ${theme.colors.border};
+        border-radius: ${theme.radii.pill};
+        color: ${theme.colors.primary};
         font-weight: ${theme.typography.fontWeight.semiBold};
         cursor: pointer;
 

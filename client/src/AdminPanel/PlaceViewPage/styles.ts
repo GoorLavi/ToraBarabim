@@ -158,6 +158,12 @@ export const PlaceViewPage = css(
           min-inline-size: 0;
           display: flex;
           flex-direction: column;
+          /* Without this the flex column's default stretch makes the shared
+             InactiveTag fill the column's width, so the pill reads as a bar
+             with its label pushed to one end instead of hugging it the way
+             it does inside PlaceCard's inline heading element (design gate
+             finding B1). */
+          align-items: flex-start;
           gap: ${theme.spacing.xs};
 
           > .heading {

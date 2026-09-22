@@ -55,6 +55,7 @@ export const LessonListItem = css(
     border-radius: ${theme.radii.md};
     color: ${theme.colors.primary};
     font-weight: ${theme.typography.fontWeight.semiBold};
+    text-decoration: none;
   }
 `,
 );
