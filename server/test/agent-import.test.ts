@@ -7,7 +7,7 @@ import type { FastifyInstance } from 'fastify';
 import { nanoid } from 'nanoid';
 
 import { db } from '../src/db/client';
-import { adminUsers, cities, lessonExceptions, lessonImportDismissedKeys, lessonImportRabbiLinks, lessonImportRules, lessonImportRuns, lessons, rabbis } from '../src/db/schema';
+import { adminUsers, cities, lessonExceptions, lessonImportDismissedKeys, lessonImportRabbiLinks, lessonImportRules, lessonImportRuns, lessons, places, rabbis } from '../src/db/schema';
 import { SESSION_COOKIE_NAME, RABBI_SESSION_COOKIE_NAME } from '../src/service/admin-auth/consts';
 import * as adminRabbiAccountService from '../src/service/admin-rabbi-account/admin-rabbi-account';
 import * as adminUserService from '../src/service/admin-user/admin-user';
@@ -83,6 +83,7 @@ describe('agent import', () => {
   let app: FastifyInstance;
   const cleanupRabbiIds = new Set<string>();
   const cleanupLessonIds = new Set<string>();
+  const cleanupPlaceIds = new Set<string>();
   const cleanupNameKeys = new Set<string>();
   const cleanupRuleMatchTexts = new Set<string>();
   const cleanupImportKeys = new Set<string>();
@@ -103,6 +104,10 @@ describe('agent import', () => {
   afterEach(async () => {
     for (const id of cleanupLessonIds) await db.delete(lessons).where(eq(lessons.id, id));
     cleanupLessonIds.clear();
+    // Deleted after lessons: a place-backed lesson's `place_id` FK would
+    // block deleting its place first.
+    for (const id of cleanupPlaceIds) await db.delete(places).where(eq(places.id, id));
+    cleanupPlaceIds.clear();
     for (const id of cleanupRabbiIds) await db.delete(rabbis).where(eq(rabbis.id, id));
     cleanupRabbiIds.clear();
     for (const id of cleanupAdminUserIds) await db.delete(adminUsers).where(eq(adminUsers.id, id));
@@ -273,6 +278,43 @@ describe('agent import', () => {
         await appWithoutAgentRoutes.close();
       }
     });
+  });
+
+  // A place-backed lesson stores no address text of its own
+  // (`lessons.place_name`/`place_street` are nullable precisely for this
+  // arm); `plan` must still resolve one, from the place it references,
+  // rather than crash trying to slug a NULL. Placed first among the plan
+  // tests so a regression here fails loudly on its own, not as the
+  // twentieth confusing TypeError further down the file.
+  test('plan returns 200 against a database that has a place-backed lesson', async () => {
+    const cityCode = await jerusalemCode();
+    const placeId = `test-place-${uniqueSuffix()}`;
+    await db.insert(places).values({
+      id: placeId,
+      slug: `test-place-${uniqueSuffix()}`,
+      name: `היכל הבדיקה ${uniqueSuffix()}`,
+      street: 'רחוב ההיכל 1',
+      cityCode,
+    });
+    cleanupPlaceIds.add(placeId);
+
+    const lessonId = `test-lesson-${uniqueSuffix()}`;
+    await db.insert(lessons).values({
+      id: lessonId,
+      rabbiId: SEEDED_RABBI_ID,
+      placeId,
+      cityCode,
+      audience: 'men',
+      recurrenceKind: 'weekly',
+      recurrenceWeekdays: [2],
+      startTime: '20:00',
+      durationMinutes: 60,
+      provenance: 'manual',
+    });
+    cleanupLessonIds.add(lessonId);
+
+    const res = await postPlan(buildFile([baseRow({ sources: [`place-backed-${uniqueSuffix()}.example.com`] })]));
+    assert.equal(res.statusCode, 200);
   });
 
   test('an invalid rows file gives 400 naming the row and field, and plans nothing', async () => {

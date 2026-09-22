@@ -415,6 +415,27 @@ describe('public API', () => {
         assert.equal(item.venue.name, 'מקום שיבוטל');
         assert.equal(item.venue.street, 'רחוב הביטול 1');
       });
+
+      // Test 7: the free-text search must find a place-backed lesson by its
+      // place's own name, the same as it finds an address-only lesson by its
+      // free text (the name-search exception's venue test above). A
+      // place-backed lesson carries no address text of its own to match, so
+      // this only passes if the search resolves the place's name to search
+      // against.
+      test('q matches a place-backed lesson by its place name', async () => {
+        const cityCode = await jerusalemCode();
+        const placeName = `היכל בדיקה ${nanoid(8)}`;
+        const placeId = await createPlace(cityCode, { name: placeName });
+        const lessonId = await createDailyLesson(placeId, cityCode);
+
+        const res = await app.inject({
+          method: 'GET',
+          url: `/v1/lessons?q=${encodeURIComponent(placeName)}&${searchWindowQuery()}`,
+        });
+        assert.equal(res.statusCode, 200);
+        const item = findItem(res.json() as LessonSearchResponse, lessonId);
+        assert.ok(item, "expected q to match the lesson by its place's name");
+      });
     });
 
     // The search page's heading names what narrowed the results, read off

@@ -75,10 +75,10 @@ export const search = async (rawQuery: LessonSearchQuery, now: Date): Promise<Le
     return { items: [], page: query.page, pageSize: query.pageSize, total: 0, appliedFilters };
   }
 
-  // `q` searches the rabbi's name, the lesson's own free-text venue name
-  // (a place-backed lesson has no address text of its own to match: see
-  // the follow-up noted in the wave's report), and the city's Hebrew name,
-  // OR'd together, then combined with every other filter as AND. Rabbis and
+  // `q` searches the rabbi's name, the lesson's own venue name (its free
+  // text, or, for a place-backed lesson, its place's name, resolved from
+  // `placeById` already loaded above), and the city's Hebrew name, OR'd
+  // together, then combined with every other filter as AND. Rabbis and
   // cities are already loaded whole above, so matching a rabbi or a city
   // happens against those in-memory rows.
   const q = query.q || undefined;
@@ -100,12 +100,15 @@ export const search = async (rawQuery: LessonSearchQuery, now: Date): Promise<Le
     .where(conditions.length ? and(...conditions) : undefined);
 
   const matchingRows = q
-    ? lessonRows.filter(
-        (row) =>
+    ? lessonRows.filter((row) => {
+        const placeName = row.placeId !== null ? placeById.get(row.placeId)?.name : undefined;
+        return (
           (matchingRabbiIds?.has(row.rabbiId) ?? false) ||
           (row.addressName !== null && includesQuery(row.addressName, q)) ||
-          (matchingCityCodes?.includes(row.cityCode) ?? false),
-      )
+          (placeName !== undefined && includesQuery(placeName, q)) ||
+          (matchingCityCodes?.includes(row.cityCode) ?? false)
+        );
+      })
     : lessonRows;
 
   // Scope and the audience filter both apply here, before expansion, so
