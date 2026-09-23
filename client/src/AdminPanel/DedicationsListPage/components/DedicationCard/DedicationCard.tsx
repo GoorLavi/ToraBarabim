@@ -3,8 +3,8 @@ import styled from 'styled-components';
 
 import { ADMIN_ROUTES, DEDICATION_TYPE_LABELS, DETAILS_LABEL } from '~/AdminPanel/consts';
 import { DedicationStateBadge } from '~/AdminPanel/components/DedicationStateBadge/DedicationStateBadge';
+import { dedicationWindowLabel } from '~/AdminPanel/helpers';
 
-import { dedicationWindowLabel } from './helpers';
 import type { DedicationCardProps } from './models';
 import * as styles from './styles';
 

@@ -7,6 +7,7 @@ import {
   ADMIN_ROUTES,
   DEDICATION_HONORIFIC_LABELS,
   DEDICATION_HONORIFIC_OPTIONS,
+  DEDICATION_PARENT_NAME_LABELS,
   DEDICATION_TYPE_LABELS,
   DEDICATION_TYPE_OPTIONS,
   HONORED_GENDER_LABELS,
@@ -112,7 +113,12 @@ export const DedicationFormPage = styled(({ className }: DedicationFormPageProps
                   role="radio"
                   aria-checked={form.type === value}
                   onClick={() =>
-                    setForm((prev) => ({ ...prev, type: value, closingLineEnabled: value === 'memorial' && prev.closingLineEnabled }))
+                    setForm((prev) => ({
+                      ...prev,
+                      type: value,
+                      closingLineEnabled: value === 'memorial' && prev.closingLineEnabled,
+                      honorific: value === 'memorial' ? prev.honorific : undefined,
+                    }))
                   }
                 >
                   {DEDICATION_TYPE_LABELS[value]}
@@ -133,57 +139,39 @@ export const DedicationFormPage = styled(({ className }: DedicationFormPageProps
             {errorFor('honoredName') && <span className="error">{errorFor('honoredName')}</span>}
           </label>
 
-          <div className="field">
-            <span className="label">{consts.HONORIFIC_LABEL}</span>
-            <div className="pillPicker" role="radiogroup" aria-label={consts.HONORIFIC_LABEL}>
-              <button
-                type="button"
-                className={classNames('pill', { selected: form.honorific === undefined })}
-                role="radio"
-                aria-checked={form.honorific === undefined}
-                onClick={() => setForm((prev) => ({ ...prev, honorific: undefined }))}
-              >
-                {NO_HONORIFIC_LABEL}
-              </button>
-              {DEDICATION_HONORIFIC_OPTIONS.map((value) => (
+          {form.type === 'memorial' && (
+            <div className="field">
+              <span className="label">{consts.HONORIFIC_LABEL}</span>
+              <div className="pillPicker" role="radiogroup" aria-label={consts.HONORIFIC_LABEL}>
                 <button
-                  key={value}
                   type="button"
-                  className={classNames('pill', { selected: form.honorific === value })}
+                  className={classNames('pill', { selected: form.honorific === undefined })}
                   role="radio"
-                  aria-checked={form.honorific === value}
-                  onClick={() => setForm((prev) => ({ ...prev, honorific: value }))}
+                  aria-checked={form.honorific === undefined}
+                  onClick={() => setForm((prev) => ({ ...prev, honorific: undefined }))}
                 >
-                  {DEDICATION_HONORIFIC_LABELS[value]}
+                  {NO_HONORIFIC_LABEL}
                 </button>
-              ))}
+                {DEDICATION_HONORIFIC_OPTIONS.map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className={classNames('pill', { selected: form.honorific === value })}
+                    role="radio"
+                    aria-checked={form.honorific === value}
+                    onClick={() => setForm((prev) => ({ ...prev, honorific: value }))}
+                  >
+                    {DEDICATION_HONORIFIC_LABELS[value]}
+                  </button>
+                ))}
+              </div>
+              <span className="helper">{consts.HONORIFIC_HELPER}</span>
+              {errorFor('honorific') && <span className="error">{errorFor('honorific')}</span>}
             </div>
-            <span className="helper">{consts.HONORIFIC_HELPER}</span>
-            {errorFor('honorific') && <span className="error">{errorFor('honorific')}</span>}
-          </div>
-
-          <div className="field">
-            <span className="label">{consts.GENDER_LABEL}</span>
-            <div className="pillPicker" role="radiogroup" aria-label={consts.GENDER_LABEL}>
-              {HONORED_GENDER_OPTIONS.map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  className={classNames('pill', { selected: form.honoredGender === value })}
-                  role="radio"
-                  aria-checked={form.honoredGender === value}
-                  onClick={() => setForm((prev) => ({ ...prev, honoredGender: value }))}
-                >
-                  {HONORED_GENDER_LABELS[value]}
-                </button>
-              ))}
-            </div>
-            <span className="helper">{consts.GENDER_HELPER}</span>
-            {errorFor('honoredGender') && <span className="error">{errorFor('honoredGender')}</span>}
-          </div>
+          )}
 
           <label className="field">
-            <span className="label">{consts.PARENT_NAME_LABEL[form.type]}</span>
+            <span className="label">{DEDICATION_PARENT_NAME_LABELS[form.type]}</span>
             <input
               type="text"
               dir={directionForValue(form.parentName)}
@@ -191,8 +179,31 @@ export const DedicationFormPage = styled(({ className }: DedicationFormPageProps
               onChange={(event) => setForm((prev) => ({ ...prev, parentName: event.target.value }))}
             />
             <span className="helper">{consts.PARENT_NAME_HELPER}</span>
+            {form.type === 'success' && <span className="helper">{consts.PARENT_NAME_SUCCESS_HELPER}</span>}
             {errorFor('parentName') && <span className="error">{errorFor('parentName')}</span>}
           </label>
+
+          {Boolean(form.parentName.trim()) && (
+            <div className="field">
+              <span className="label">{consts.GENDER_LABEL}</span>
+              <div className="pillPicker" role="radiogroup" aria-label={consts.GENDER_LABEL}>
+                {HONORED_GENDER_OPTIONS.map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className={classNames('pill', { selected: form.honoredGender === value })}
+                    role="radio"
+                    aria-checked={form.honoredGender === value}
+                    onClick={() => setForm((prev) => ({ ...prev, honoredGender: value }))}
+                  >
+                    {HONORED_GENDER_LABELS[value]}
+                  </button>
+                ))}
+              </div>
+              <span className="helper">{consts.GENDER_HELPER}</span>
+              {errorFor('honoredGender') && <span className="error">{errorFor('honoredGender')}</span>}
+            </div>
+          )}
 
           <label className="field">
             <span className="label">{consts.DONOR_FAMILY_NAME_LABEL}</span>
@@ -207,16 +218,18 @@ export const DedicationFormPage = styled(({ className }: DedicationFormPageProps
           </label>
 
           {form.type === 'memorial' && (
-            <label className="toggle">
-              <input
-                type="checkbox"
-                checked={form.closingLineEnabled}
-                onChange={(event) => setForm((prev) => ({ ...prev, closingLineEnabled: event.target.checked }))}
-              />
-              <span>{consts.CLOSING_LINE_LABEL}</span>
-            </label>
+            <>
+              <label className="toggle">
+                <input
+                  type="checkbox"
+                  checked={form.closingLineEnabled}
+                  onChange={(event) => setForm((prev) => ({ ...prev, closingLineEnabled: event.target.checked }))}
+                />
+                <span>{consts.CLOSING_LINE_LABEL}</span>
+              </label>
+              <p className="helper standalone">{consts.CLOSING_LINE_HELPER}</p>
+            </>
           )}
-          <p className="helper standalone">{consts.CLOSING_LINE_HELPER}</p>
 
           <div className="dateRow">
             <label className="field">

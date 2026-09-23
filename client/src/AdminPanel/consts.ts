@@ -139,21 +139,33 @@ export const DEDICATION_HONORIFIC_OPTIONS: readonly DedicationHonorific[] = Obje
 // The honorific is optional on the record (common/src/dedication.ts): this
 // is not itself a `DedicationHonorific` value, only this picker's label for
 // choosing none.
-export const NO_HONORIFIC_LABEL = 'ללא ציון';
+export const NO_HONORIFIC_LABEL = 'ללא תוספת';
 
 // Hand-mirrored from `HonoredGender`, same reason as above.
 export const HONORED_GENDER_LABELS: Record<HonoredGender, string> = {
-  male: 'זכר',
-  female: 'נקבה',
+  male: 'בן',
+  female: 'בת',
 };
 export const HONORED_GENDER_OPTIONS: readonly HonoredGender[] = Object.keys(HONORED_GENDER_LABELS) as HonoredGender[];
 
 // Mirrors the comment on `AdminDedicationState` (`common/src/admin.ts`).
 export const DEDICATION_STATE_LABELS: Record<AdminDedicationState, string> = {
-  upcoming: 'עתידית',
-  live: 'פעילה כעת',
+  upcoming: 'טרם התחילה',
+  live: 'מוצגת באתר',
   ended: 'הסתיימה',
   takenDown: 'הוסרה',
+};
+
+// The parent-name label depends on the dedication's own type, and is the
+// only thing telling the admin which parent's name the custom asks for: a
+// memorial is named by the father, a healing prayer by the mother, and a
+// success dedication by either. Lifted here rather than colocated with the
+// form, because `DedicationViewPage` has to read the same label the field
+// was filled under.
+export const DEDICATION_PARENT_NAME_LABELS: Record<DedicationType, string> = {
+  memorial: 'שם האב',
+  healing: 'שם האם',
+  success: 'שם האב או האם',
 };
 
 export const lessonNewForRabbi = (rabbiId: string): string => `${ADMIN_ROUTES.lessonNew}?${PRESELECTED_RABBI_PARAM}=${rabbiId}`;

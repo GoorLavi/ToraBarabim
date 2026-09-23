@@ -59,7 +59,11 @@ export const dedicationFormErrorsFromDetails = (details: AdminValidationDetails 
 export const buildDedicationRequest = (form: DedicationFormState): CreateDedicationRequest => ({
   type: form.type,
   honoredName: form.honoredName.trim(),
-  honorific: form.honorific,
+  // The honorific picker is only ever shown for a memorial, since declaring
+  // one on a healing or a success dedication is declaring a living person
+  // dead. A stale value left over from switching away from that type must
+  // never reach the request, the server rejects it with a 400.
+  honorific: form.type === 'memorial' ? form.honorific : undefined,
   honoredGender: form.honoredGender,
   parentName: form.parentName.trim() || undefined,
   donorFamilyName: form.donorFamilyName.trim() || undefined,

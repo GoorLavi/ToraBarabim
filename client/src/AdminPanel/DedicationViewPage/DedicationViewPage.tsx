@@ -6,18 +6,18 @@ import { RecordField } from '~/AdminPanel/components/RecordField/RecordField';
 import {
   ADMIN_ROUTES,
   DEDICATION_HONORIFIC_LABELS,
+  DEDICATION_PARENT_NAME_LABELS,
   DEDICATION_TYPE_LABELS,
   HONORED_GENDER_LABELS,
   NO_HONORIFIC_LABEL,
   skeletonFieldKeys,
 } from '~/AdminPanel/consts';
-import { adminErrorMessage } from '~/AdminPanel/helpers';
+import { adminErrorMessage, dedicationWindowLabel } from '~/AdminPanel/helpers';
 import { useExistingDedication } from '~/AdminPanel/useExistingDedication';
 import { DedicationUnit } from '~/components/DedicationUnit/DedicationUnit';
 
 import { TakedownDedicationButton } from './components/TakedownDedicationButton/TakedownDedicationButton';
 import * as consts from './consts';
-import { dedicationWindowLabel } from './helpers';
 import type { DedicationViewPageProps } from './models';
 import * as styles from './styles';
 
@@ -98,9 +98,11 @@ export const DedicationViewPage = styled(({ className }: DedicationViewPageProps
             value={dedication.honorific ? DEDICATION_HONORIFIC_LABELS[dedication.honorific] : NO_HONORIFIC_LABEL}
             isEmpty={!dedication.honorific}
           />
-          <RecordField label={consts.GENDER_LABEL} value={HONORED_GENDER_LABELS[dedication.honoredGender]} />
+          {dedication.parentName && dedication.honoredGender && (
+            <RecordField label={consts.GENDER_LABEL} value={HONORED_GENDER_LABELS[dedication.honoredGender]} />
+          )}
           <RecordField
-            label={consts.PARENT_NAME_LABEL}
+            label={DEDICATION_PARENT_NAME_LABELS[dedication.type]}
             value={dedication.parentName ?? consts.PARENT_NAME_EMPTY_VALUE}
             isEmpty={!dedication.parentName}
           />

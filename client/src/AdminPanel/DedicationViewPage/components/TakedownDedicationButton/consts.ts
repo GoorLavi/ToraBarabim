@@ -1,9 +1,9 @@
-export const TAKEDOWN_LABEL = 'הסרת ההקדשה';
-export const TAKEDOWN_CONFIRM_HEADING = 'להסיר את ההקדשה?';
-export const TAKEDOWN_IRREVERSIBLE_NOTE = 'ההקדשה תוסר מהאתר ולא ניתן להחזיר אותה בעצמה. אפשר ליצור הקדשה חדשה במקומה.';
+export const TAKEDOWN_LABEL = 'הסרת ההקדשה מהאתר';
+export const TAKEDOWN_CONFIRM_HEADING = 'להסיר את ההקדשה מהאתר?';
+export const TAKEDOWN_IRREVERSIBLE_NOTE = 'ההקדשה תרד מהאתר ולא תוצג עוד. אי אפשר להחזיר אותה, אפשר רק ליצור הקדשה חדשה במקומה.';
 export const TAKEDOWN_REASON_LABEL = 'סיבת ההסרה';
-export const TAKEDOWN_REASON_HELPER = 'חובה למלא סיבה. הסיבה נשמרת ברשומה ואינה מוצגת באתר.';
+export const TAKEDOWN_REASON_HELPER = 'חובה למלא סיבה. היא נשמרת כאן בפאנל הניהול ואינה מוצגת באתר.';
 export const TAKEDOWN_REASON_REQUIRED_ERROR = 'יש למלא סיבת הסרה';
 export const TAKEDOWN_CANCEL_LABEL = 'ביטול';
-export const TAKEDOWN_CONFIRM_LABEL = 'כן, להסיר';
-export const TAKEDOWN_SAVING_LABEL = 'מסירים...';
+export const TAKEDOWN_CONFIRM_LABEL = 'כן, להסיר מהאתר';
+export const TAKEDOWN_SAVING_LABEL = 'מורידים מהאתר...';
