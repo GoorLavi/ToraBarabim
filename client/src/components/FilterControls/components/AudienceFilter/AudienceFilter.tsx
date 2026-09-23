@@ -1,11 +1,12 @@
 import classNames from 'classnames';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import type { CityDetailResponse } from '@torabarabim/common';
 import { useLocation, useNavigate, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { CITY_DETAIL_ROUTE_ID } from '~/hooks/consts';
 import { isWomenPagePath } from '~/hooks/helpers';
+import { useDismissPopover } from '~/hooks/useDismissPopover';
 
 import { FilterDrawer } from '../FilterDrawer/FilterDrawer';
 import { useIsWideViewport } from '../useIsWideViewport';
@@ -40,19 +41,17 @@ export const AudienceFilter = styled(({ className, filter, onSelectFilter, onCle
     pillRef.current?.focus();
   };
 
-  // Mirrors CityPicker.tsx: the desktop popover is never portalled, so a
-  // plain outside-pointer listener on the real DOM tree is enough.
-  useEffect(() => {
-    if (!isOpen || !isWide) return;
+  // Outside click and scrim tap already tell us where the user is going
+  // next; pulling focus back to the pill here would fight the click that
+  // dismissed the panel. Escape has no such destination, so `triggerRef`
+  // below still returns focus to the pill for that path.
+  const dismiss = (): void => {
+    setIsOpen(false);
+  };
 
-    const handlePointerDown = (event: PointerEvent): void => {
-      if (rootRef.current?.contains(event.target as Node)) return;
-      close();
-    };
-
-    document.addEventListener('pointerdown', handlePointerDown);
-    return () => document.removeEventListener('pointerdown', handlePointerDown);
-  }, [isOpen, isWide]);
+  // Mirrors CityPicker.tsx: the desktop popover is never portalled, so the
+  // shared outside-pointer hook attaching to the real DOM tree is enough.
+  useDismissPopover({ isOpen: isOpen && isWide, rootRef, triggerRef: pillRef, onDismiss: dismiss });
 
   const selectOption = (option: AudienceOption): void => {
     close();

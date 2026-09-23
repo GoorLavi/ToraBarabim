@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import type { FocusEvent } from 'react';
+import { useRef, useState } from 'react';
 import classNames from 'classnames';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
@@ -7,6 +6,7 @@ import styled from 'styled-components';
 import { ADMIN_ROUTES } from '~/AdminPanel/consts';
 import * as parentConsts from '~/AdminPanel/LessonFormPage/consts';
 import { directionForValue, rabbiDisplayName } from '~/helpers';
+import { useDismissPopover } from '~/hooks/useDismissPopover';
 
 import type { RabbiPickerProps } from './models';
 import * as styles from './styles';
@@ -18,14 +18,21 @@ export const RabbiPicker = styled(({ className, rabbi, onSelectRabbi, errorMessa
   const [query, setQuery] = useState('');
   const results = useRabbiSearch(query);
   const lessonCount = useRabbiLessonCount(rabbi?.id);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
-  const close = (event: FocusEvent<HTMLDivElement>): void => {
-    if (!event.currentTarget.contains(event.relatedTarget)) setIsOpen(false);
-  };
+  useDismissPopover({ isOpen, rootRef, triggerRef, onDismiss: () => setIsOpen(false) });
 
   return (
-    <div className={classNames(className, { open: isOpen, invalid: Boolean(errorMessage) })} onBlur={close}>
-      <button type="button" className="control" aria-haspopup="listbox" aria-expanded={isOpen} onClick={() => setIsOpen((open) => !open)}>
+    <div className={classNames(className, { open: isOpen, invalid: Boolean(errorMessage) })} ref={rootRef}>
+      <button
+        type="button"
+        className="control"
+        ref={triggerRef}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((open) => !open)}
+      >
         <span className="label" dir="auto">
           {rabbi ? rabbiDisplayName(rabbi) : parentConsts.RABBI_SEARCH_PLACEHOLDER}
         </span>

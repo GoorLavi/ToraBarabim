@@ -17,5 +17,5 @@
     },
     "noEmit": true
   },
-  "include": ["src", "vite.config.ts", "react-router.config.ts", ".storybook"]
+  "include": ["src", "vite.config.ts", "vitest.config.ts", "react-router.config.ts", ".storybook"]
 }

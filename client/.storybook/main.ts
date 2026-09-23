@@ -11,6 +11,7 @@ const APP_ONLY_PLUGIN_PREFIXES = ['react-router', 'prerender'];
 const config: StorybookConfig = {
   stories: ['../src/**/*.stories.@(ts|tsx)'],
   framework: '@storybook/react-vite',
+  addons: ['@storybook/addon-vitest'],
 
   // Storybook renders components in isolation and needs none of the routing
   // build. Dropping those plugins here keeps one Vite config for the app
