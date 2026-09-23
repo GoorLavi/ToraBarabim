@@ -8,6 +8,7 @@ import { expect, userEvent, waitFor } from 'storybook/test';
 import { DEDICATION_GROUP_HEALING, DEDICATION_GROUP_OVERFLOWING, DEDICATION_GROUP_SINGLE } from '~/dedicationFixture';
 import { ARGAMAN_VE_ZAHAV_THEME } from '~/theme/themes';
 
+import { RESUME_AFTER_INTERACTION_MS } from './consts';
 import { DedicationBand } from './DedicationBand';
 
 const { colors } = ARGAMAN_VE_ZAHAV_THEME;
@@ -159,7 +160,7 @@ export const VerticalSwipeScrollsThePage: Story = {
     const filler = document.createElement('div');
     filler.style.blockSize = '2000px';
     document.body.appendChild(filler);
-    window.scrollTo(0, 400);
+    window.scrollTo(0, 0);
     await new Promise((resolve) => window.setTimeout(resolve, 50));
 
     try {
@@ -191,13 +192,26 @@ export const MouseClickDoesNotFreezeTheCrawl: Story = {
 
     await waitFor(() => expect(getComputedStyle(viewport).overflowX).toEqual('auto'));
 
+    // The click itself, real or synthetic, is also a pointer down-then-up
+    // on the viewport, which starts the same `RESUME_AFTER_INTERACTION_MS`
+    // cooldown a drag does: both the buggy and the fixed code stay frozen
+    // for that stretch, so the comparison below has to sit entirely past
+    // it, or it would pass on the buggy code too, for the wrong reason.
+    // Measured with the pointer moved away afterward, same as the finding:
+    // hovering is its own, correct, separate pause (rule 2), so leaving the
+    // pointer sitting on the band would freeze it for a real reason and
+    // prove nothing about the focus bug.
     await userEvent.click(viewport);
-    await new Promise((resolve) => window.setTimeout(resolve, 200));
-    const afterClick = viewport.scrollLeft;
+    console.log('DEBUG activeElement===viewport', document.activeElement === viewport, 'focus-visible', viewport.matches(':focus-visible'));
+    await userEvent.unhover(viewport);
+    await new Promise((resolve) => window.setTimeout(resolve, RESUME_AFTER_INTERACTION_MS + 500));
+    const afterCooldown = viewport.scrollLeft;
+    console.log('DEBUG afterCooldown', afterCooldown, 'activeElement===viewport', document.activeElement === viewport);
 
-    await new Promise((resolve) => window.setTimeout(resolve, 2000));
+    await new Promise((resolve) => window.setTimeout(resolve, 1000));
     const later = viewport.scrollLeft;
+    console.log('DEBUG later', later);
 
-    expect(later).not.toEqual(afterClick);
+    expect(later).not.toEqual(afterCooldown);
   },
 };
