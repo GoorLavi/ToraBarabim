@@ -53,13 +53,6 @@ const DedicationBandDrawn = ({ className, group, variant }: DedicationBandDrawnP
           </div>
         )}
       </div>
-
-      {crawl.isOverflowing && (
-        <>
-          <div className="fade start" />
-          <div className="fade end" />
-        </>
-      )}
     </section>
   );
 };
