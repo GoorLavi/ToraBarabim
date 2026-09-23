@@ -230,22 +230,22 @@ const RESERVATION_PROOF_TEXT = {
   donorCreditLine: 'תרומת משפחת לוי',
 };
 
-// A real delay, not an immediate effect (unlike PendingThenDrawn above):
-// the pending markup has to still be on screen when the play function takes
-// its first measurement, and an effect that fires on the same tick as mount
-// leaves no such window to measure in.
-const RESERVATION_PROOF_DRAW_DELAY_MS = 50;
-
+// Released by a control the play function itself clicks, never a timer
+// (Copilot PR review, PR #73: a delay only lowers the probability of the
+// play function starting after the draw already landed, it does not remove
+// it, and the story would then fail nondeterministically on a slow run
+// with `.pending` already gone). The button is story-only scaffolding, not
+// a change to DedicationBand's own DOM: it exists so the story controls
+// both sides of the race instead of guessing at one of them with a clock.
 const PendingThenDrawnWithSentinel = ({ group }: { group: DedicationGroup }): ReactNode => {
   const [drawn, setDrawn] = useState<DedicationGroup | undefined>(undefined);
-  useEffect(() => {
-    const timer = window.setTimeout(() => setDrawn(group), RESERVATION_PROOF_DRAW_DELAY_MS);
-    return () => window.clearTimeout(timer);
-  }, [group]);
   return (
     <div>
       <DedicationBand {...{ group: drawn, hasDedications: true, variant: 'onPrimary' as const }} />
       <p className="sentinel">תוכן מתחת לרצועה</p>
+      <button type="button" className="releaseDraw" onClick={() => setDrawn(group)}>
+        שחרר ציור
+      </button>
     </div>
   );
 };
@@ -266,8 +266,12 @@ export const PendingReservationMatchesTheDraw: Story = {
     if (!pending) throw new Error('DedicationBand story: .pending band not found before the draw');
     const sentinel = canvasElement.querySelector<HTMLElement>('.sentinel');
     if (!sentinel) throw new Error('DedicationBand story: .sentinel not found');
+    const releaseDraw = canvasElement.querySelector<HTMLButtonElement>('.releaseDraw');
+    if (!releaseDraw) throw new Error('DedicationBand story: .releaseDraw control not found');
 
     const topBeforeDraw = sentinel.getBoundingClientRect().top;
+
+    await userEvent.click(releaseDraw);
 
     await waitFor(() => {
       const track = canvasElement.querySelector('.track');
