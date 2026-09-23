@@ -112,6 +112,13 @@ tonight. Every screen is designed and built narrow first, then allowed to grow.
 
 - **No abstraction before the second real caller.** Do not generalize on speculation. A
   helper with one caller is a function in that file, not a shared module.
+- **Look for the component before you write one.** Before building anything whose base
+  is generic, a popover, a picker, a sheet, a field, search for one that already exists
+  and use it. When none fits, build the new one where its second caller could reach it
+  and keep its API generic: the differences between callers are passed in, never
+  branched on by name. Copying a neighbour and editing it is what produced four
+  near-identical pickers, and the Safari dismissal bug then had four files to live in
+  instead of one.
 - **Lift to the nearest common ancestor, not to the top.** When a second place needs
   something, move it up the folder tree only as far as both consumers require, not
   straight to a shared folder.
