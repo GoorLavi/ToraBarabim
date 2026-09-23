@@ -15,6 +15,14 @@ import * as styles from './styles';
 // debounce settles, so typing never feels like it is waiting on a request.
 export const SearchField = styled(({ className, value, onChange }: SearchFieldProps) => {
   const [draft, setDraft] = useState(value);
+  // The value this field last put into circulation, trimmed the way
+  // `useSearchQuery` trims it on its way to the URL. A committed value
+  // travels out to the URL and comes back as `value`, and on a route with a
+  // loader that round trip can outlast the next few keystrokes. Comparing
+  // against it is what tells the field's own echo apart from a genuine
+  // outside change, so the sync effect below does not reset the input to a
+  // value that is already stale and delete whatever was typed meanwhile.
+  const lastCommittedRef = useRef(value);
   const activeFilters = useActiveFilters();
   // Read from a ref rather than listed as an effect dependency: `Layout`
   // builds a fresh `filters` object on every render, and including it here
@@ -26,10 +34,12 @@ export const SearchField = styled(({ className, value, onChange }: SearchFieldPr
   useEffect(() => {
     if (draft.trim() === value) return;
     const timer = window.setTimeout(() => {
-      onChange(draft);
-      // Tracked value matches what `onChange` actually commits (useSearchQuery
-      // trims before writing to the URL), not the raw keystroke buffer.
+      // What `onChange` actually commits (useSearchQuery trims before
+      // writing to the URL), not the raw keystroke buffer: both the echo
+      // guard above and the tracked query below want that value.
       const committed = draft.trim();
+      lastCommittedRef.current = committed;
+      onChange(draft);
       if (committed.length > 0) {
         const filters = activeFiltersRef.current;
         trackEvent(MIXPANEL_EVENTS.search, {
@@ -46,12 +56,18 @@ export const SearchField = styled(({ className, value, onChange }: SearchFieldPr
   }, [draft, value, onChange]);
 
   // Picks up a committed value that changed from outside typing: browser
-  // back/forward, or opening a link that already carries `q`.
+  // back/forward, or opening a link that already carries `q`. The ref is
+  // moved here too, not only on commit, so that going back and then forward
+  // again still reaches the field: the value it lands on is one this field
+  // committed earlier, and without this it would look like its own echo.
   useEffect(() => {
+    if (value === lastCommittedRef.current) return;
+    lastCommittedRef.current = value;
     setDraft(value);
   }, [value]);
 
   const clear = (): void => {
+    lastCommittedRef.current = '';
     setDraft('');
     onChange('');
   };
