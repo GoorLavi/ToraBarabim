@@ -17,7 +17,7 @@ const lessonItem = (id: string, title: string): LessonOccurrence => ({
   topic: 'other',
   audience: 'mixed',
   rabbi: rabbiFixture({ id: `rabbi-${id}`, name: 'יעקב מזרחי' }),
-  place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'נתניה', citySlug: 'נתניה', area: 'sharon' },
+  venue: { kind: 'address', name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'נתניה', citySlug: 'נתניה', area: 'sharon' },
 });
 
 const homeRow = (id: HomeRow['id'], title: string): HomeRow => ({

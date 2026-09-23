@@ -23,7 +23,7 @@ const asUniqueViolation = (error: unknown): postgres.PostgresError | undefined =
 type AccountRow = typeof adminUsers.$inferSelect;
 
 const toRecord = (row: AccountRow): RabbiAccountRecord => {
-  // Guaranteed by the `admin_users_role_rabbi_id_shape` CHECK constraint:
+  // Guaranteed by the `admin_users_role_shape` CHECK constraint:
   // a 'rabbi' row always carries a `rabbiId`. TS cannot see a DB constraint.
   if (!row.rabbiId) throw new Error(`data inconsistency: rabbi account '${row.id}' has role 'rabbi' but no rabbiId`);
   return { id: row.id, email: row.email, username: row.username ?? undefined, rabbiId: row.rabbiId, isActive: row.isActive };

@@ -6,7 +6,7 @@ import { lessonHasOwnTitle, lessonPrimaryLabel } from '~/AdminPanel/helpers';
 import { lessonDayTimeLabel } from '~/AdminPanel/LessonsListPage/helpers';
 import * as parentConsts from '~/AdminPanel/LessonsListPage/consts';
 import { AUDIENCE_LABELS } from '~/consts';
-import { rabbiDisplayName } from '~/helpers';
+import { rabbiDisplayName, venuePanelCityName } from '~/helpers';
 
 import type { LessonsTableProps } from './models';
 import * as styles from './styles';
@@ -54,7 +54,7 @@ export const LessonsTable = styled(({ className, rows }: LessonsTableProps) => (
           <span className="tag">{row.lesson.recurrence.kind === 'weekly' ? parentConsts.RECURRING_TAG_LABEL : parentConsts.ONE_TIME_TAG_LABEL}</span>
         </span>
         <span className="city" role="cell" dir="auto">
-          {row.lesson.place.cityName}
+          {venuePanelCityName(row.lesson.venue)}
         </span>
         <span className="audience" role="cell" dir="auto">
           {AUDIENCE_LABELS[row.lesson.audience]}

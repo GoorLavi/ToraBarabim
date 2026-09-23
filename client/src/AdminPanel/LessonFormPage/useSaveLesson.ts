@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { UseMutationResult } from '@tanstack/react-query';
-import type { Lesson } from '@torabarabim/common';
+import type { LessonResponse } from '@torabarabim/common';
 
 import { AdminApiError, createAdminLesson, updateAdminLesson } from '~/AdminPanel/api';
 
@@ -14,7 +14,7 @@ export interface SaveLessonInput {
 
 // A lesson now carries its own venue as plain text plus a structured city
 // code, so saving it is a single write: no place to resolve first.
-export const useSaveLesson = (): UseMutationResult<Lesson, AdminApiError, SaveLessonInput> => {
+export const useSaveLesson = (): UseMutationResult<LessonResponse, AdminApiError, SaveLessonInput> => {
   const queryClient = useQueryClient();
 
   return useMutation({

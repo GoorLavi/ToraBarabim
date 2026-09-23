@@ -98,8 +98,13 @@ installMockFetch();
 // only takes effect on an actual fetch, and a query key TanStack Query
 // already has cached from a previous story would otherwise skip the fetch
 // entirely and show that story's data instead.
+//
+// `retry: false` for the reason `.storybook/preview.tsx` already gives for
+// its own shared client: the default three retries with backoff make an
+// error-state story hang instead of showing its error. Only the isolation
+// above is story-specific, not that choice.
 const FreshQueryClientProvider = ({ children }: { children: ReactNode }): ReactNode => {
-  const [client] = useState(() => new QueryClient());
+  const [client] = useState(() => new QueryClient({ defaultOptions: { queries: { retry: false } } }));
   return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
 };
 

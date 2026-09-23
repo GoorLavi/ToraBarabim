@@ -1,6 +1,6 @@
 # 0016: A venue is a field of the lesson, not an entity
 
-- **Status:** accepted
+- **Status:** superseded by [0034](0034-a-place-is-an-entity-again-and-a-lessons-venue-is-a-place-or-an-address.md)
 - **Date:** 2026-08-23
 - **Decided by:** project owner
 

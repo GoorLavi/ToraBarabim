@@ -1,14 +1,21 @@
 import { css } from 'styled-components';
 
+import { contentBandCap } from '~/styles/contentBand';
+
 export const RabbiPage = css(
   ({ theme }) => `
-  /* The band caps at theme.layout.contentMaxWidth (1280) and centres from
-     1328px up: a 1280px band plus the 24px gutter on both sides is 1328px,
-     so that is the container's own max width, not 1280
-     (design-system.md, "Breakpoints and content width"). */
-  max-inline-size: calc(${theme.layout.contentMaxWidth} + ${theme.spacing.xl} * 2);
-  inline-size: 100%;
-  margin-inline: auto;
+  /* No content-band cap on the page itself: the nationwide fallback grid
+     shown when a rabbi has no lessons of their own (RabbiEmptyLessons,
+     wrapping components/LessonsGrid) caps its cards at their own fixed
+     ceiling instead of the page capping its width, so the column count
+     grows with the viewport rather than the margins (owner-approved
+     reversal, for lesson-grid pages, of the sitewide 1280 cap;
+     design-system.md, "Maximum content width 1280px" and the LessonsGrid
+     rollout note). The hero and bio below are not a lesson grid, and the
+     hero's name column is flexible text rather than a fixed-width card, so
+     that section keeps the sitewide cap on its own, below, or a rabbi's
+     name and bio would stretch to an unreadable line length on a wide
+     screen. */
   padding-inline: ${theme.spacing.lg};
   padding-block: ${theme.spacing.lg} ${theme.spacing.xxl};
   display: flex;
@@ -22,6 +29,7 @@ export const RabbiPage = css(
   }
 
   > .top {
+    ${contentBandCap(theme)}
     display: flex;
     flex-direction: column;
     align-items: stretch;

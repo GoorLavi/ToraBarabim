@@ -1,4 +1,4 @@
-import type { AreaSummary, City, LessonOccurrence, Rabbi } from '@torabarabim/common';
+import type { AreaSummary, City, LessonOccurrence, LessonVenue, LessonVenuePanel, Place, Rabbi, ResolvedAddress } from '@torabarabim/common';
 
 import { RABBI_HONORIFIC_LABELS } from './consts';
 import type { DayGroup } from './models';
@@ -35,6 +35,11 @@ export const cityPath = (city: Pick<City, 'slug'>): string => `/cities/${encodeU
 // The one place an area's public path is built, mirroring cityPath.
 export const areaPath = (area: Pick<AreaSummary, 'slug'>): string => `/areas/${encodeURIComponent(area.slug)}`;
 
+// The one place a place's public path is built, mirroring rabbiPath: both
+// segments percent-encoded, `Place.slug` never empty so there is no bare-id
+// fallback to fall back to.
+export const placePath = (place: Pick<Place, 'id' | 'slug'>): string => `/places/${encodeURIComponent(place.id)}/${encodeURIComponent(place.slug)}`;
+
 // The one place a lesson occurrence's public path is built, from the lesson
 // id React Router matches on and the ISO date of the specific occurrence.
 export const lessonPath = (occurrence: Pick<LessonOccurrence, 'lessonId' | 'date'>): string =>
@@ -59,6 +64,38 @@ export const groupByDay = (items: LessonOccurrence[]): DayGroup[] => {
   }
   return groups;
 };
+
+// True on any difference between a lesson's own venue and one occurrence's
+// resolved venue, in any combination the union allows (RabbiPanel's Upcoming
+// page and AdminPanel's lesson view both need this to flag a moved date).
+// The lesson side is always a panel's own read of its lesson
+// (`LessonResponse`/`RabbiLessonResponse`), so it is `LessonVenuePanel`, not
+// `LessonVenue`: its address arm carries `cityName` rather than `city`
+// (`common/src/venue.ts`), which is why the two sides are compared by
+// different field names below rather than sharing one shape.
+// An exception's override is always a free-text address, never a place
+// reference (`LessonException`), so a lesson venue of 'place' paired with an
+// occurrence venue of 'place' is always the same place, and a lesson venue of
+// 'address' paired with an occurrence venue of 'place' cannot occur.
+export const hasVenueChanged = (lessonVenue: LessonVenuePanel, occurrenceVenue: LessonVenue): boolean => {
+  if (lessonVenue.kind === 'place') return occurrenceVenue.kind === 'address';
+  // Unreachable while an exception can only override to free text; would
+  // become reachable if an exception ever gained its own place reference.
+  if (occurrenceVenue.kind === 'place') return false;
+  return (
+    lessonVenue.name !== occurrenceVenue.name ||
+    lessonVenue.street !== occurrenceVenue.street ||
+    lessonVenue.cityName !== occurrenceVenue.city
+  );
+};
+
+// A panel's read of a venue (`LessonResponse`/`RabbiLessonResponse`) puts
+// the city's display name on a different field per arm of the union
+// (`common/src/venue.ts`, `LessonVenuePanel`): `cityName` when the venue is
+// free text, `city` when it names a registered place. Every panel render
+// site that only wants the city text goes through this rather than
+// re-deriving the split.
+export const venuePanelCityName = (venue: LessonVenuePanel): string => (venue.kind === 'place' ? venue.city : venue.cityName);
 
 const ISRAEL_TIME_ZONE = 'Asia/Jerusalem';
 const SATURDAY = 6;
@@ -91,3 +128,29 @@ export const dayGroupHeading = (isoDate: string): string => {
   if (date.getUTCDay() === SATURDAY) return `שבת, ${dayMonthFormatter.format(date)}`;
   return `${longWeekdayFormatter.format(date)}, ${dayMonthFormatter.format(date)}`;
 };
+
+// Lifted from LessonPage/components/LessonTicket/helpers.ts once the place
+// page became a second caller: this is the nearest folder both can see.
+// No comma when there is no floor (design spec).
+export const addressLine = (street: string, floor: string | undefined): string => (floor ? `${street}, ${floor}` : street);
+
+// Street and city only, never `floor`: a floor is an arrival note ("קומה
+// 2"), not part of a geocodable address, and passing it to Waze/Google Maps
+// would make the query fail to resolve. Both fields are trimmed here, the
+// one place the query string is actually built, so stray whitespace never
+// reaches the URL.
+const navigationQuery = (place: Pick<ResolvedAddress, 'street' | 'city'>): string => `${place.street.trim()}, ${place.city.trim()}`;
+
+// `undefined` unless both street and city are present, so the caller hides
+// the whole nav row rather than link out to a bare street or a bare city
+// (fail closed: a navigation link that only narrows down part of the
+// address is worse than none).
+export const wazeHref = (place: Pick<ResolvedAddress, 'street' | 'city'>): string | undefined =>
+  place.street.trim() && place.city.trim()
+    ? `https://waze.com/ul?q=${encodeURIComponent(navigationQuery(place))}&navigate=yes`
+    : undefined;
+
+export const googleMapsHref = (place: Pick<ResolvedAddress, 'street' | 'city'>): string | undefined =>
+  place.street.trim() && place.city.trim()
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(navigationQuery(place))}`
+    : undefined;

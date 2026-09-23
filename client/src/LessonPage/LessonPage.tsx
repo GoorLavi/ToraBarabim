@@ -64,8 +64,8 @@ export const LessonPage = styled(({ className, areaPreview }: LessonPageProps) =
           <LessonTicket occurrence={occurrence} />
 
           {occurrence.status === 'cancelled' && (
-            <Link className="otherLessons" to={cityPath({ slug: occurrence.place.citySlug })} dir="auto">
-              {consts.otherLessonsInCityLabel(occurrence.place.city)}
+            <Link className="otherLessons" to={cityPath({ slug: occurrence.venue.citySlug })} dir="auto">
+              {consts.otherLessonsInCityLabel(occurrence.venue.city)}
               <svg className="chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
               </svg>

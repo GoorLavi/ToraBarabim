@@ -246,7 +246,7 @@ different sentences and they are not interchangeable:
 
 - **A screenshot is never proof of correctness.** Rendering the UI is design judgment.
   Say "the design is right", never "it works".
-- **A change with a design is rendered in Storybook and approved by `tora-designer`
+- **A change with a design, meaning one meant to change what a person sees, is rendered in Storybook and approved by `tora-designer`
   before it goes to the human or into a pull request.** Every screen the change
   touches, in every state it has, on mocked data. This is a gate, not a courtesy: the
   app needs a database and a root `.env` that a sandbox does not have, so Storybook is
@@ -259,6 +259,7 @@ different sentences and they are not interchangeable:
 - **A test is written against a defect or a guarantee, never against a coverage
   target.** The suite exists because this project shipped bugs a test would have
   caught; each one earned its assertion.
+- **While a change is in progress, run only the tests that exercise what you just changed; run the whole suite once, when every change is in,** before review and before the pull request.
 - **Never weaken, skip, or delete an assertion to get a green run.** A failing test is
   a finding to report, not an obstacle.
 - If you want to assert something and there is nowhere to assert it, say so in your

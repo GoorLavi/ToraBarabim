@@ -4,11 +4,7 @@ export const HomeRails = css(
   ({ theme }) => `
   display: flex;
   flex-direction: column;
-  gap: ${theme.spacing.xxl};
-
-  @media (min-width: ${theme.breakpoints.md}) {
-    gap: ${theme.spacing.xxxl};
-  }
+  gap: ${theme.spacing.lg};
 
   > .srOnly {
     position: absolute;

@@ -9,11 +9,11 @@ export const SEARCH_LABEL = 'חיפוש רבנים';
 // `GET /v1/admin/rabbis` returns no lesson count and no city (a rabbi has
 // no city of their own on the wire; see the report for this slice), so the
 // subheading only states what the list response actually carries.
-export const totalCountLabel = (total: number): string => `${total} רבנים במערכת`;
+export const totalCountLabel = (total: number): string => (total === 1 ? 'רב אחד במערכת' : `${total} רבנים במערכת`);
 
 export const NEW_LESSON_LABEL = 'שיעור חדש';
 export const NO_LESSONS_YET_LABEL = 'אין שיעורים עדיין';
-export const lessonCountLabel = (count: number): string => `${count} שיעורים`;
+export const lessonCountLabel = (count: number): string => (count === 1 ? 'שיעור אחד' : `${count} שיעורים`);
 
 export const LOADING_MESSAGE = 'טוענים רבנים...';
 export const RETRY_LABEL = 'ניסיון נוסף';

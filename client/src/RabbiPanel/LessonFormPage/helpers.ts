@@ -1,4 +1,8 @@
-import type { RabbiCreateLessonRequest, RabbiLessonResponse } from '@torabarabim/common';
+import type { LessonVenueInput, RabbiCreateLessonRequest, RabbiLessonResponse } from '@torabarabim/common';
+
+import type { SelectedCity } from '~/components/CitySelect/models';
+import * as placePickerConsts from '~/components/PlacePicker/consts';
+import type { LessonVenueFormState } from '~/components/PlacePicker/models';
 
 import * as consts from './consts';
 import type { LessonFormErrors, LessonFormState } from './models';
@@ -11,11 +15,30 @@ export const initialFormState = (): LessonFormState => ({
   startTime: '',
   durationMinutes: consts.DEFAULT_DURATION_MINUTES,
   city: undefined,
-  placeName: '',
-  street: '',
-  floor: '',
+  venue: { kind: 'address', name: '', street: '', floor: '' },
   audience: undefined,
 });
+
+// The place arm carries its own city on `venue.place`, so `city` stays
+// unset for a place-backed lesson: `PlacePicker` reads the locked city
+// straight off the place, never through `CitySelect`.
+const venueFromLesson = (lesson: RabbiLessonResponse): LessonVenueFormState =>
+  lesson.venue.kind === 'place'
+    ? {
+        kind: 'place',
+        place: {
+          id: lesson.venue.placeId,
+          slug: lesson.venue.slug,
+          name: lesson.venue.name,
+          street: lesson.venue.street,
+          floor: lesson.venue.floor,
+          city: lesson.venue.city,
+          citySlug: lesson.venue.citySlug,
+          area: lesson.venue.area,
+          isActive: true,
+        },
+      }
+    : { kind: 'address', name: lesson.venue.name, street: lesson.venue.street, floor: lesson.venue.floor ?? '' };
 
 export const lessonToFormState = (lesson: RabbiLessonResponse): LessonFormState => ({
   title: lesson.title ?? '',
@@ -24,12 +47,15 @@ export const lessonToFormState = (lesson: RabbiLessonResponse): LessonFormState 
   date: lesson.recurrence.kind === 'once' ? lesson.recurrence.date : '',
   startTime: lesson.startTime,
   durationMinutes: String(lesson.durationMinutes),
-  city: { id: String(lesson.place.cityCode), name: lesson.place.cityName },
-  placeName: lesson.place.name,
-  street: lesson.place.street,
-  floor: lesson.place.floor ?? '',
+  city: lesson.venue.kind === 'address' ? { id: String(lesson.venue.cityCode), name: lesson.venue.cityName } : undefined,
+  venue: venueFromLesson(lesson),
   audience: lesson.audience,
 });
+
+// The live preview card's city line: a chosen place carries its own city,
+// never through `form.city`, which only holds a value for the free-text arm.
+export const previewCityName = (form: LessonFormState): string | undefined =>
+  form.venue.kind === 'place' ? form.venue.place.city : form.city?.name;
 
 // A static heading per mode, not derived from the lesson's own title
 // (design doc, section 5: the mockup's edit screen reads "עריכת שיעור",
@@ -39,9 +65,14 @@ export const pageHeading = (isEditing: boolean): string => (isEditing ? consts.E
 export const validateLessonForm = (form: LessonFormState): LessonFormErrors => {
   const errors: LessonFormErrors = {};
 
-  if (!form.city) errors.city = consts.REQUIRED_CITY_ERROR;
-  if (!form.placeName.trim()) errors.placeName = consts.REQUIRED_PLACE_NAME_ERROR;
-  if (!form.street.trim()) errors.street = consts.REQUIRED_STREET_ERROR;
+  // A chosen place is always a complete, valid venue on its own; only the
+  // free-text arm needs a city and a filled-in name and street.
+  if (form.venue.kind === 'address') {
+    if (!form.city) errors.city = placePickerConsts.REQUIRED_CITY_ERROR;
+    if (!form.venue.name.trim()) errors.addressName = placePickerConsts.REQUIRED_ADDRESS_NAME_ERROR;
+    if (!form.venue.street.trim()) errors.street = placePickerConsts.REQUIRED_STREET_ERROR;
+  }
+
   if (!form.audience) errors.audience = consts.REQUIRED_AUDIENCE_ERROR;
   if (!form.startTime) errors.startTime = consts.REQUIRED_START_TIME_ERROR;
 
@@ -66,22 +97,32 @@ export const previewWeekdayLabel = (form: LessonFormState): string | undefined =
   return consts.WEEKDAY_LABELS_FULL[weekday];
 };
 
-// Assumes the form already passed validation, so `city`/`audience` are
-// known present. No `rabbiId` in the payload: the server infers the owner
-// from the session (`RabbiCreateLessonRequest = Omit<Lesson, 'id' | 'rabbiId'>`).
+// Assumes the form already passed validation, so `audience` is known
+// present, and `city` is present whenever `venue` is still the address arm.
+// No `rabbiId` in the payload: the server infers the owner from the session
+// (`RabbiCreateLessonRequest = Omit<Lesson, 'id' | 'rabbiId'>`).
 export const buildLessonPayload = (form: LessonFormState): RabbiCreateLessonRequest => {
-  if (!form.city || !form.audience) {
+  if (!form.audience) {
+    throw new Error('buildLessonPayload called before the form passed validation');
+  }
+  if (form.venue.kind === 'address' && !form.city) {
     throw new Error('buildLessonPayload called before the form passed validation');
   }
 
+  const venue: LessonVenueInput =
+    form.venue.kind === 'place'
+      ? { kind: 'place', placeId: form.venue.place.id }
+      : {
+          kind: 'address',
+          name: form.venue.name.trim(),
+          street: form.venue.street.trim(),
+          floor: form.venue.floor.trim() || undefined,
+          cityCode: Number((form.city as SelectedCity).id),
+        };
+
   return {
     title: form.title.trim() || undefined,
-    place: {
-      name: form.placeName.trim(),
-      street: form.street.trim(),
-      floor: form.floor.trim() || undefined,
-      cityCode: Number(form.city.id),
-    },
+    venue,
     audience: form.audience,
     recurrence: form.recurrenceKind === 'weekly' ? { kind: 'weekly', weekdays: form.weekdays } : { kind: 'once', date: form.date },
     startTime: form.startTime,

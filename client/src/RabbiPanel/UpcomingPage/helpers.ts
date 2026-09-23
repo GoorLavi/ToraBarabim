@@ -1,5 +1,7 @@
 import type { LessonOccurrence, RabbiLessonResponse } from '@torabarabim/common';
 
+import { hasVenueChanged } from '~/helpers';
+
 import * as consts from './consts';
 import type { DayGroup, UpcomingOccurrence } from './models';
 
@@ -62,14 +64,7 @@ const titleFallback = (lesson: RabbiLessonResponse | undefined): string => {
   return lesson.recurrence.kind === 'weekly' ? consts.RECURRING_FALLBACK_TITLE : consts.ONE_TIME_FALLBACK_TITLE;
 };
 
-// True on any difference in name, street, or city, in any combination:
-// one flag for the whole place, never one per field (design doc, section 3).
-const hasPlaceChanged = (lesson: RabbiLessonResponse | undefined, occurrencePlace: LessonOccurrence['place']): boolean => {
-  if (!lesson) return false;
-  return lesson.place.name !== occurrencePlace.name || lesson.place.street !== occurrencePlace.street || lesson.place.cityName !== occurrencePlace.city;
-};
-
-// Attaches, per occurrence, whether its time or place were moved off the
+// Attaches, per occurrence, whether its time or venue were moved off the
 // lesson's own recurring values: the wire `LessonOccurrence` carries only
 // the resolved values, never the lesson's base ones, so this is the one
 // place that comparison happens rather than every card re-deriving it.
@@ -81,7 +76,7 @@ export const withDerivedFields = (occurrences: LessonOccurrence[], lessonsById: 
     return {
       ...occurrence,
       movedFromTime: wasMoved ? baseStartTime : undefined,
-      placeChanged: occurrence.status === 'scheduled' && hasPlaceChanged(lesson, occurrence.place),
+      placeChanged: occurrence.status === 'scheduled' && lesson !== undefined && hasVenueChanged(lesson.venue, occurrence.venue),
       titleFallback: titleFallback(lesson),
     };
   });

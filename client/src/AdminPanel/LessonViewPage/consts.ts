@@ -23,7 +23,7 @@ export const DURATION_LABEL = 'משך השיעור';
 export const durationValue = (minutes: number): string => (minutes === 1 ? 'דקה אחת' : `${minutes} דקות`);
 
 export const CITY_LABEL = 'עיר';
-export const PLACE_NAME_LABEL = 'שם המקום';
+export const PLACE_NAME_LABEL = 'שם בית הכנסת או המוסד';
 export const STREET_LABEL = 'רחוב ומספר';
 export const FLOOR_LABEL = 'קומה או הוראות הגעה';
 

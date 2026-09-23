@@ -1,5 +1,5 @@
 {
-  "id": "197c8eda-6f19-4d61-b485-d73d9c99eaf2",
+  "id": "be05d659-9c35-417b-9ef1-efcaeb53d707",
   "prevId": "a84bc2d6-4948-4e87-8687-fec87ee19e38",
   "version": "7",
   "dialect": "postgresql",
@@ -134,6 +134,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "place_id": {
+          "name": "place_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "is_active": {
           "name": "is_active",
           "type": "boolean",
@@ -194,6 +200,19 @@
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
+        },
+        "admin_users_place_id_places_id_fk": {
+          "name": "admin_users_place_id_places_id_fk",
+          "tableFrom": "admin_users",
+          "tableTo": "places",
+          "columnsFrom": [
+            "place_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -212,6 +231,13 @@
             "rabbi_id"
           ]
         },
+        "admin_users_place_id_unique": {
+          "name": "admin_users_place_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "place_id"
+          ]
+        },
         "admin_users_username_unique": {
           "name": "admin_users_username_unique",
           "nullsNotDistinct": false,
@@ -222,9 +248,9 @@
       },
       "policies": {},
       "checkConstraints": {
-        "admin_users_role_rabbi_id_shape": {
-          "name": "admin_users_role_rabbi_id_shape",
-          "value": "(\"admin_users\".\"role\" = 'rabbi' AND \"admin_users\".\"rabbi_id\" IS NOT NULL) OR (\"admin_users\".\"role\" = 'admin' AND \"admin_users\".\"rabbi_id\" IS NULL)"
+        "admin_users_role_shape": {
+          "name": "admin_users_role_shape",
+          "value": "(\"admin_users\".\"role\"::text = 'rabbi' AND \"admin_users\".\"rabbi_id\" IS NOT NULL AND \"admin_users\".\"place_id\" IS NULL)\n       OR (\"admin_users\".\"role\"::text = 'place' AND \"admin_users\".\"place_id\" IS NOT NULL AND \"admin_users\".\"rabbi_id\" IS NULL)\n       OR (\"admin_users\".\"role\"::text = 'admin' AND \"admin_users\".\"rabbi_id\" IS NULL AND \"admin_users\".\"place_id\" IS NULL)"
         },
         "admin_users_super_requires_admin_role": {
           "name": "admin_users_super_requires_admin_role",
@@ -275,118 +301,6 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.dedications": {
-      "name": "dedications",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "type": {
-          "name": "type",
-          "type": "dedication_type",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "honored_name": {
-          "name": "honored_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "honorific": {
-          "name": "honorific",
-          "type": "dedication_honorific",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "honored_gender": {
-          "name": "honored_gender",
-          "type": "honored_gender",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "parent_name": {
-          "name": "parent_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "donor_family_name": {
-          "name": "donor_family_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "closing_line_enabled": {
-          "name": "closing_line_enabled",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "starts_on": {
-          "name": "starts_on",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "ends_on": {
-          "name": "ends_on",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "taken_down_at": {
-          "name": "taken_down_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "taken_down_reason": {
-          "name": "taken_down_reason",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "dedications_window": {
-          "name": "dedications_window",
-          "value": "\"dedications\".\"ends_on\" >= \"dedications\".\"starts_on\""
-        },
-        "dedications_takedown_reason": {
-          "name": "dedications_takedown_reason",
-          "value": "(\"dedications\".\"taken_down_at\" IS NULL) = (\"dedications\".\"taken_down_reason\" IS NULL)"
-        }
-      },
       "isRLSEnabled": false
     },
     "public.lesson_exceptions": {
@@ -802,17 +716,23 @@
           "primaryKey": false,
           "notNull": true
         },
+        "place_id": {
+          "name": "place_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "place_name": {
           "name": "place_name",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "place_street": {
           "name": "place_street",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "place_floor": {
           "name": "place_floor",
@@ -944,6 +864,19 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
+        "lessons_place_id_places_id_fk": {
+          "name": "lessons_place_id_places_id_fk",
+          "tableFrom": "lessons",
+          "tableTo": "places",
+          "columnsFrom": [
+            "place_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
         "lessons_city_code_cities_code_fk": {
           "name": "lessons_city_code_cities_code_fk",
           "tableFrom": "lessons",
@@ -966,11 +899,105 @@
           "name": "lessons_recurrence_shape",
           "value": "(\"lessons\".\"recurrence_kind\" = 'weekly' AND \"lessons\".\"recurrence_weekdays\" IS NOT NULL AND \"lessons\".\"recurrence_date\" IS NULL)\n       OR (\"lessons\".\"recurrence_kind\" = 'once' AND \"lessons\".\"recurrence_date\" IS NOT NULL AND \"lessons\".\"recurrence_weekdays\" IS NULL)"
         },
+        "lessons_venue_shape": {
+          "name": "lessons_venue_shape",
+          "value": "(\"lessons\".\"place_id\" IS NOT NULL AND \"lessons\".\"place_name\" IS NULL AND \"lessons\".\"place_street\" IS NULL AND \"lessons\".\"place_floor\" IS NULL)\n       OR (\"lessons\".\"place_id\" IS NULL AND \"lessons\".\"place_name\" IS NOT NULL AND \"lessons\".\"place_street\" IS NOT NULL)"
+        },
         "lessons_provenance_shape": {
           "name": "lessons_provenance_shape",
           "value": "(\"lessons\".\"provenance\" = 'manual' AND \"lessons\".\"import_key\" IS NULL AND \"lessons\".\"import_sources\" IS NULL)\n       OR (\"lessons\".\"provenance\" IN ('imported', 'imported_edited') AND \"lessons\".\"import_key\" IS NOT NULL)"
         }
       },
+      "isRLSEnabled": false
+    },
+    "public.places": {
+      "name": "places",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "street": {
+          "name": "street",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "floor": {
+          "name": "floor",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "city_code": {
+          "name": "city_code",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "photo_url": {
+          "name": "photo_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "places_city_code_cities_code_fk": {
+          "name": "places_city_code_cities_code_fk",
+          "tableFrom": "places",
+          "tableTo": "cities",
+          "columnsFrom": [
+            "city_code"
+          ],
+          "columnsTo": [
+            "code"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.rabbis": {
@@ -1053,7 +1080,8 @@
       "schema": "public",
       "values": [
         "admin",
-        "rabbi"
+        "rabbi",
+        "place"
       ]
     },
     "public.area": {
@@ -1070,38 +1098,12 @@
         "south"
       ]
     },
-    "public.dedication_honorific": {
-      "name": "dedication_honorific",
-      "schema": "public",
-      "values": [
-        "zl",
-        "ah",
-        "hyd"
-      ]
-    },
-    "public.dedication_type": {
-      "name": "dedication_type",
-      "schema": "public",
-      "values": [
-        "memorial",
-        "healing",
-        "success"
-      ]
-    },
     "public.exception_kind": {
       "name": "exception_kind",
       "schema": "public",
       "values": [
         "cancelled",
         "modified"
-      ]
-    },
-    "public.honored_gender": {
-      "name": "honored_gender",
-      "schema": "public",
-      "values": [
-        "male",
-        "female"
       ]
     },
     "public.lesson_audience": {

@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import type { FocusEvent } from 'react';
+import { useRef, useState } from 'react';
 import classNames from 'classnames';
 import styled from 'styled-components';
 
 import { directionForValue } from '~/helpers';
+import { useDismissPopover } from '~/hooks/useDismissPopover';
 
 import * as consts from './consts';
 import type { CitySelectProps } from './models';
@@ -14,18 +14,25 @@ import { useCitySearch } from './useCitySearch';
 // counterpart to the public site's `CityPicker`, kept as its own component
 // since it needs a "clear" affordance the public picker does not
 // (client/CLAUDE.md).
-export const CitySelect = styled(({ className, city, onSelectCity, placeholderLabel, allowClear, fullWidth }: CitySelectProps) => {
+export const CitySelect = styled(({ className, city, onSelectCity, placeholderLabel, allowClear, fullWidth, invalid }: CitySelectProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const results = useCitySearch(query);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
-  const close = (event: FocusEvent<HTMLDivElement>): void => {
-    if (!event.currentTarget.contains(event.relatedTarget)) setIsOpen(false);
-  };
+  useDismissPopover({ isOpen, rootRef, triggerRef, onDismiss: () => setIsOpen(false) });
 
   return (
-    <div className={classNames(className, { open: isOpen, fullWidth })} onBlur={close}>
-      <button type="button" className="control" aria-haspopup="listbox" aria-expanded={isOpen} onClick={() => setIsOpen((open) => !open)}>
+    <div className={classNames(className, { open: isOpen, fullWidth, invalid })} ref={rootRef}>
+      <button
+        type="button"
+        className="control"
+        ref={triggerRef}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((open) => !open)}
+      >
         <span className="label" dir="auto">
           {city?.name ?? placeholderLabel}
         </span>

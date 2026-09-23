@@ -71,8 +71,10 @@ export const DEDICATION_HONORIFICS = ['zl', 'ah', 'hyd'] as const satisfies read
 export const HONORED_GENDERS = ['male', 'female'] as const satisfies readonly HonoredGender[];
 
 // Not mirrored from `common`: an account's role is a server-side auth
-// concept, never a field the client reads or sends.
-export const ADMIN_ROLES = ['admin', 'rabbi'] as const;
+// concept, never a field the client reads or sends. 'place' mirrors 'rabbi':
+// an account that manages exactly one place, the same one-account-per-owner
+// shape (see `admin_users_place_id_unique`).
+export const ADMIN_ROLES = ['admin', 'rabbi', 'place'] as const;
 export type AdminRole = (typeof ADMIN_ROLES)[number];
 
 // `satisfies readonly RabbiProminence[]` above only catches a member being

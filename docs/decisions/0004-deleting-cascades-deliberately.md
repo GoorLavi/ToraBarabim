@@ -1,6 +1,6 @@
 # 0004: Deleting a rabbi or place destroys their lessons
 
-- **Status:** accepted for rabbis; the place half is void since [0016](0016-a-venue-is-a-field-of-the-lesson.md) removed places
+- **Status:** accepted for rabbis; the place half was void from [0016](0016-a-venue-is-a-field-of-the-lesson.md) removing places until [0034](0034-a-place-is-an-entity-again-and-a-lessons-venue-is-a-place-or-an-address.md) brought them back, and 0034 answers it differently: a place is deactivated, never deleted, and its lessons survive
 - **Date:** 2026-08-14
 - **Decided by:** project owner
 

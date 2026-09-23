@@ -55,6 +55,9 @@ it either; it is what provides the skills the section below requires.
 - **planKey:** `team::1600490864286182601`
 - **projectId:** `639157253`
   ([open the project](https://www.figma.com/files/team/1600490864286182601/project/639157253))
+- **The existing design file:** `z4fVzRjRFwYpLae22BmNKy`. Every Figma tool needs a
+  `fileKey` and nothing lists a project's files, so without this an agent cannot reach
+  the work at all and has to ask for a link before it can start.
 
 Pass both, so the file lands in the ToraBarabim project rather than the plan's loose
 drafts folder. `whoami` may list other plans on the same grant; they belong to other

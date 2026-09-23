@@ -4,29 +4,42 @@ import type { Theme } from '~/theme/models';
 
 import { SCROLL_STEP_RATIO } from './consts';
 
-// The inline distance from the true viewport edge to the content band's
-// own edge, at any width: below `md` this is just the band's own gutter
-// (`~/styles/contentBand.ts`, `contentGutterInline`); from `md` up it also
-// has to reproduce the band's own cap (`contentBandCap`, `max-inline-size`
-// plus a centring `margin-inline: auto`), since the rail bleeds past the
-// band entirely (`margin-inline: calc(-1 * ...)` in styles.ts) and so gets
-// none of that centring for free once the viewport is wider than the cap.
-// `contentGutterInline` itself only has to get this right for the padding
-// it actually applies, dropping to 0 past that point because the parent's
-// own auto margin already centres it there; the rail, having escaped that
-// parent, is the one place this combined value is needed as a single
-// number, which is why it lives here rather than in contentBand.ts (root
-// CLAUDE.md, "no abstraction before the second real caller").
-export const railEdgeOffset = (theme: Theme, isWide: boolean): string =>
-  isWide ? `max(${theme.spacing.xl}, calc((100vw - ${theme.layout.contentMaxWidth}) / 2))` : theme.spacing.lg;
+// Which of the rail's two horizontal bands the inline edge offset is
+// computed for: `gutter` below `md`, where it is just the page's own side
+// padding; `full` from `md` up, matching HomePage's own constant gutter
+// (styles.ts) now that the home page's band is deliberately uncapped
+// (owner, 2026-09-22: more cards on a wide screen, not bigger ones). Both
+// are flat values, not a growing one: a growing offset here would recreate
+// the same effective width cap the rail card's fixed width was meant to
+// escape, just moved into the row's own padding instead of its card.
+export type RailEdgeZone = 'gutter' | 'full';
+
+// The inline distance from the true viewport edge to the rail's own band
+// edge, at any width: below `md` this is the band's own gutter; from `md`
+// up it is HomePage's own constant gutter (styles.ts), since the rail
+// bleeds past the band entirely (`margin-inline: calc(-1 * ...)` in
+// styles.ts) and has to reproduce that gutter itself to keep its first
+// card aligned under the heading above it.
+export const railEdgeOffset = (theme: Theme, zone: RailEdgeZone): string => {
+  switch (zone) {
+    case 'gutter':
+      return theme.spacing.lg;
+    case 'full':
+      return theme.spacing.xl;
+  }
+};
 
 // The rail's card width at a given column count, computed the same way the
 // grid's own `1fr` columns resolve theirs: the viewport, minus the band's
 // edge offset on both sides, minus the gaps between columns, divided by
-// the column count. Passing `railEdgeOffset`'s own wide value in already
-// reproduces the grid's ceiling at `theme.layout.contentMaxWidth` without a
-// separate `min()`: past that width the offset grows in lockstep with the
-// viewport, so the two cancel and this settles at a constant.
+// the column count. Phone-only now: from `sm` up the card is one of a fixed
+// ladder of per-tier widths (consts.ts), not a column count against the
+// viewport, so this formula is only ever called with RAIL_COLUMNS_PHONE and
+// the `gutter` offset.
+// The `theme.spacing.lg` here is the grid's own gap, which this width is
+// derived from and which must stay 16 regardless of the row's own `gap` in
+// styles.ts (`sm` on a phone), so the difference between the two surfaces
+// as peek.
 export const railCardWidth = (theme: Theme, columns: number, edgeOffset: string): string =>
   `calc((100vw - 2 * ${edgeOffset} - ${columns - 1} * ${theme.spacing.lg}) / ${columns})`;
 
@@ -55,18 +68,27 @@ export const railSlots = (items: LessonOccurrence[], womensAreaTileIndex: number
   return slots;
 };
 
+interface RailScrollMetrics {
+  maxScroll: number;
+  distanceFromStart: number;
+}
+
+// Browser engines disagree on `scrollLeft`'s origin and sign in RTL (0..-max
+// in some, 0..+max in others): `Math.abs` against the known travel distance
+// avoids needing to know which convention applies here.
+const railScrollMetrics = (element: HTMLElement): RailScrollMetrics => ({
+  maxScroll: element.scrollWidth - element.clientWidth,
+  distanceFromStart: Math.abs(element.scrollLeft),
+});
+
 export interface RailScrollEdges {
   atStart: boolean;
   atEnd: boolean;
 }
 
 export const railScrollEdges = (element: HTMLElement): RailScrollEdges => {
-  const maxScroll = element.scrollWidth - element.clientWidth;
+  const { maxScroll, distanceFromStart } = railScrollMetrics(element);
   if (maxScroll <= 1) return { atStart: true, atEnd: true };
 
-  // Browser engines also disagree on `scrollLeft`'s origin and sign in
-  // RTL (0..-max in some, 0..+max in others): `Math.abs` against the known
-  // travel distance avoids needing to know which convention applies here.
-  const distanceFromStart = Math.abs(element.scrollLeft);
   return { atStart: distanceFromStart <= 1, atEnd: distanceFromStart >= maxScroll - 1 };
 };

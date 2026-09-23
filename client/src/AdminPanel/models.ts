@@ -24,3 +24,10 @@ export interface AdminDedicationFilters {
   page?: number;
   pageSize?: number;
 }
+
+// Server-side filters, sent as query params on GET /v1/admin/places.
+export interface AdminPlaceFilters {
+  q?: string;
+  page?: number;
+  pageSize?: number;
+}

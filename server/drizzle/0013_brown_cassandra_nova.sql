@@ -1,2 +1,0 @@
-ALTER TABLE "dedications" ALTER COLUMN "honored_gender" DROP NOT NULL;--> statement-breakpoint
-ALTER TABLE "dedications" ADD CONSTRAINT "dedications_honorific_memorial_only" CHECK ("dedications"."honorific" IS NULL OR "dedications"."type" = 'memorial');

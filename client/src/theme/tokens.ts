@@ -160,6 +160,8 @@ export const BREAKPOINTS: ThemeBreakpoints = {
 // this rather than retyping 1280.
 export const LAYOUT: ThemeLayout = {
   contentMaxWidth: '1280px',
+  fourColumnWidth: '1200px',
+  xwideRailWidth: '1600px',
 };
 
 // The stacking scale every header layer and its overlays share (design-

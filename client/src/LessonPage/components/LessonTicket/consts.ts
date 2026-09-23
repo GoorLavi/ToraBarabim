@@ -52,6 +52,13 @@ export const CARD_MIN_BLOCK_SIZE_DESKTOP = '380px';
 export const NAME_LINK_BLOCK_PADDING = '11px'; // (48 - cardTitle's 26px line height) / 2
 export const SUBSTITUTE_LINK_BLOCK_PADDING = '14px'; // (48 - tagAndCaption's 20px line height) / 2
 
+// Reaches the same 48px tap-target floor for the venue name, when it links
+// to the place page (LessonTicket.tsx, `venue.kind === 'place'`): ticketVenue
+// is 18/26 on a phone and 20/28 on desktop, so the two breakpoints need
+// their own padding rather than one shared value.
+export const VENUE_LINK_BLOCK_PADDING_PHONE = '11px'; // (48 - 26px line height) / 2
+export const VENUE_LINK_BLOCK_PADDING_DESKTOP = '10px'; // (48 - 28px line height) / 2
+
 // With no poster the main panel has only text in it, so the card caps
 // narrower on desktop rather than becoming a wide, mostly empty band
 // (design spec, "No photo").

@@ -1,14 +1,22 @@
 export const PREV_LABEL = 'לשיעורים הקודמים';
 export const NEXT_LABEL = 'לשיעורים הבאים';
 
-// The grid's own column counts (components/LessonsGrid/styles.ts:
-// `repeat(2, 1fr)` below `md`, `repeat(3, 1fr)` from `md` to `xl`,
-// `repeat(4, 1fr)` from `xl` up). The card's own width is derived from
-// these in helpers.ts (`railCardWidth`), not retyped as pixel literals, so
-// a change to the grid's own steps has to change these together with it.
+// The grid's own phone column count (components/LessonsGrid/styles.ts,
+// `repeat(2, 1fr)` below `md`). The card's own phone width is derived from
+// this in helpers.ts (`railCardWidth`), not retyped as a pixel literal, so
+// a change to the grid's phone step has to change this together with it.
+// From `sm` up the rail no longer follows the grid's column count at all;
+// see the fixed per-tier widths below.
 export const RAIL_COLUMNS_PHONE = 2;
-export const RAIL_COLUMNS_MD = 3;
-export const RAIL_COLUMNS_XL = 4;
+
+// The card's fixed width per tier, from `sm` (480) up (design-system.md,
+// "Horizontal rails"). A ladder, not a formula solved against the viewport:
+// inside a tier the card never recomputes, and only the whole-card count on
+// screen changes as the window moves.
+export const RAIL_CARD_WIDTH_SM = '216px';
+export const RAIL_CARD_WIDTH_MD = '232px';
+export const RAIL_CARD_WIDTH_WIDE = '276px';
+export const RAIL_CARD_WIDTH_XWIDE = '296px';
 
 // A flick moves roughly one screenful of cards at a time.
 export const SCROLL_STEP_RATIO = 0.9;

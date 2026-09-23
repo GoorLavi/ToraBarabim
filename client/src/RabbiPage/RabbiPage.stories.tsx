@@ -32,7 +32,7 @@ const lesson = (overrides: Partial<LessonOccurrence>): LessonOccurrence => ({
   topic: 'parasha',
   audience: 'mixed',
   rabbi: rabbiFixture({ id: 'story-rabbi', name: 'יעקב מזרחי' }),
-  place: { name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'חיפה', citySlug: 'חיפה', area: 'haifa' },
+  venue: { kind: 'address', name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'חיפה', citySlug: 'חיפה', area: 'haifa' },
   ...overrides,
 });
 
@@ -79,7 +79,8 @@ installMockFetch((url) => {
             startTime: '06:00',
             title: undefined,
             topic: 'gemara',
-            place: {
+            venue: {
+              kind: 'address',
               name: 'בית מדרש אוהל יעקב, מרכז קהילתי נאות שקד',
               street: 'הרב קוק 12',
               city: 'חיפה',

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { rabbiFixture } from '~/rabbiFixture';
+import { placeholderPhoto } from '~/storyMocks';
 
 import { RabbiCard } from './RabbiCard';
 
@@ -19,14 +20,9 @@ type Story = StoryObj<typeof RabbiCard>;
 export const WithPhoto: Story = {
   args: {
     row: {
-      rabbi: rabbiFixture({
-        id: 'r1',
-        name: 'אליהו בן דוד',
-        title: 'ראש כולל',
-        photoUrl:
-          'data:image/svg+xml;utf8,' +
-          encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="240" height="320"><rect width="240" height="320" fill="lightgray"/></svg>'),
-      }),
+      // A horizon and a corner mark, not a flat fill, so a reviewer can
+      // actually judge how the poster crops the photo (design gate round 6).
+      rabbi: rabbiFixture({ id: 'r1', name: 'אליהו בן דוד', title: 'ראש כולל', photoUrl: placeholderPhoto(240, 320) }),
       lessonCount: 4,
     },
   },
@@ -34,7 +30,10 @@ export const WithPhoto: Story = {
 
 export const NoPhoto: Story = {
   args: {
-    row: { rabbi: rabbiFixture({ id: 'r2', name: 'משה לוי' }), lessonCount: 2 },
+    // Pinned rather than left to default, now that rabbiFixture fills in a
+    // placeholder photo when the key is absent (design gate finding F10):
+    // this story exists specifically to show the missing-poster fallback.
+    row: { rabbi: rabbiFixture({ id: 'r2', name: 'משה לוי', photoUrl: undefined }), lessonCount: 2 },
   },
 };
 

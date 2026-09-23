@@ -1,6 +1,8 @@
 import type {
   AdminDedication,
   AdminOccurrenceListResponse,
+  AdminPlaceListResponse,
+  AdminPlaceResponse,
   AdminUser,
   AdminUserListItem,
   AdminUserListResponse,
@@ -8,6 +10,8 @@ import type {
   CreateDedicationRequest,
   CreateLessonExceptionRequest,
   CreateLessonRequest,
+  CreatePlaceAccountRequest,
+  CreatePlaceRequest,
   CreateRabbiAccountRequest,
   CreateRabbiRequest,
   DedicationListResponse,
@@ -18,21 +22,26 @@ import type {
   LessonExceptionResponse,
   LessonListResponse,
   LessonResponse,
+  PlaceAccountCreatedResponse,
+  PlaceAccountResponse,
   RabbiAccountCreatedResponse,
   RabbiAccountResponse,
   RabbiListResponse,
   RabbiResponse,
+  ResetPlacePasswordResponse,
   ResetRabbiPasswordResponse,
   TakedownDedicationRequest,
   UpdateAdminUserRequest,
   UpdateDedicationRequest,
   UpdateLessonExceptionRequest,
   UpdateLessonRequest,
+  UpdatePlaceAccountRequest,
+  UpdatePlaceRequest,
   UpdateRabbiAccountRequest,
   UpdateRabbiRequest,
 } from '@torabarabim/common';
 
-import type { AdminDedicationFilters, AdminLessonFilters, AdminRabbiFilters, AdminUserFilters } from './models';
+import type { AdminDedicationFilters, AdminLessonFilters, AdminPlaceFilters, AdminRabbiFilters, AdminUserFilters } from './models';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
@@ -288,6 +297,17 @@ export const setAdminUserPassword = (id: string, password: string): Promise<Admi
     body: JSON.stringify({ password }),
   });
 
+// GET /v1/admin/places
+// 200 with AdminPlaceListResponse, including an empty items array.
+// Unfiltered by `isActive`: an administrator manages the whole roster.
+export const fetchAdminPlaces = (filters: AdminPlaceFilters): Promise<AdminPlaceListResponse> => {
+  const target = url('/v1/admin/places');
+  if (filters.q) target.searchParams.set('q', filters.q);
+  target.searchParams.set('page', String(filters.page ?? 1));
+  target.searchParams.set('pageSize', String(filters.pageSize ?? 50));
+  return request(target.toString());
+};
+
 // GET /v1/admin/dedications
 // 200 with DedicationListResponse, including an empty items array.
 export const fetchAdminDedications = (filters: AdminDedicationFilters): Promise<DedicationListResponse> => {
@@ -297,6 +317,53 @@ export const fetchAdminDedications = (filters: AdminDedicationFilters): Promise<
   return request(target.toString());
 };
 
+// GET /v1/admin/places/:id
+// 200 with AdminPlaceResponse. 404 if the place does not exist.
+export const fetchAdminPlace = (id: string): Promise<AdminPlaceResponse> => request(url(`/v1/admin/places/${id}`).toString());
+
+// POST /v1/admin/places
+// 201 with AdminPlaceResponse. 400 invalid_request / unknown_city.
+export const createAdminPlace = (body: CreatePlaceRequest): Promise<AdminPlaceResponse> =>
+  request(url('/v1/admin/places').toString(), { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(body) });
+
+// PATCH /v1/admin/places/:id
+// 200 with AdminPlaceResponse. 400 invalid_request / unknown_city. 404 not_found.
+// `isActive` toggles through this same request: there is no delete route.
+export const updateAdminPlace = (id: string, body: UpdatePlaceRequest): Promise<AdminPlaceResponse> =>
+  request(url(`/v1/admin/places/${id}`).toString(), { method: 'PATCH', headers: JSON_HEADERS, body: JSON.stringify(body) });
+
+// POST /v1/admin/places/:id/photo (multipart)
+// 200 with AdminPlaceResponse. 400 no file / unsupported type / invalid_photo
+// (below the required dimensions or ratio). 413 too large. 415 wrong content type.
+export const uploadAdminPlacePhoto = (id: string, file: File): Promise<AdminPlaceResponse> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return request(url(`/v1/admin/places/${id}/photo`).toString(), { method: 'POST', body: formData });
+};
+
+// GET /v1/admin/places/:id/account
+// 200 with PlaceAccountResponse. 404 'not_found' if the place does not
+// exist, 404 'account_not_found' if the place has no account yet.
+export const fetchPlaceAccount = (placeId: string): Promise<PlaceAccountResponse> =>
+  request(url(`/v1/admin/places/${placeId}/account`).toString());
+
+// POST /v1/admin/places/:id/account
+// 201 with PlaceAccountCreatedResponse, whose `temporaryPassword` is
+// returned only this once. 404 if the place does not exist. 409
+// 'account_already_exists'. 400 on invalid input.
+export const createPlaceAccount = (placeId: string, body: CreatePlaceAccountRequest): Promise<PlaceAccountCreatedResponse> =>
+  request(url(`/v1/admin/places/${placeId}/account`).toString(), { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(body) });
+
+// PATCH /v1/admin/places/:id/account
+// 200 with PlaceAccountResponse. 404 if the place or its account does not exist.
+export const updatePlaceAccount = (placeId: string, body: UpdatePlaceAccountRequest): Promise<PlaceAccountResponse> =>
+  request(url(`/v1/admin/places/${placeId}/account`).toString(), { method: 'PATCH', headers: JSON_HEADERS, body: JSON.stringify(body) });
+
+// POST /v1/admin/places/:id/account/reset-password
+// 200 with ResetPlacePasswordResponse, whose `temporaryPassword` is
+// returned only this once. 404 if the place or its account does not exist.
+export const resetPlacePassword = (placeId: string): Promise<ResetPlacePasswordResponse> =>
+  request(url(`/v1/admin/places/${placeId}/account/reset-password`).toString(), { method: 'POST' });
 // GET /v1/admin/dedications/:id
 // 200 with AdminDedication. 404 not_found if the dedication does not exist.
 export const fetchAdminDedication = (id: string): Promise<AdminDedication> => request(url(`/v1/admin/dedications/${id}`).toString());

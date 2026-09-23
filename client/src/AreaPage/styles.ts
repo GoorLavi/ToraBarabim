@@ -1,15 +1,19 @@
 import { css } from 'styled-components';
 
+import { contentBandCap } from '~/styles/contentBand';
+
 export const AreaPage = css(
   ({ theme }) => `
-  /* The band caps at theme.layout.contentMaxWidth (1280) and centres from
-     1328px up: a 1280px band plus the 24px gutter on both sides is 1328px,
-     so that is the container's own max width, not 1280
-     (design-system.md, "Breakpoints and content width"). Verbatim from
-     CityPage/styles.ts: the same shell, a sibling page. */
-  max-inline-size: calc(${theme.layout.contentMaxWidth} + ${theme.spacing.xl} * 2);
-  inline-size: 100%;
-  margin-inline: auto;
+  /* No content-band cap on the page itself: this page's own lesson grid
+     (DayGroup, wrapping components/LessonsGrid) caps its cards at their own
+     fixed ceiling instead of the page capping its width, so the column
+     count grows with the viewport rather than the margins (owner-approved
+     reversal, for lesson-grid pages, of the sitewide 1280 cap;
+     design-system.md, "Maximum content width 1280px" and the LessonsGrid
+     rollout note). The heading is plain text and needs nothing. The cities
+     grid below is not a lesson grid and its columns are fractional
+     (1fr), so it keeps the sitewide cap on its own, below, or it would
+     stretch its cells edge to edge on a wide screen. */
   padding-inline: ${theme.spacing.lg};
   padding-block: ${theme.spacing.lg} ${theme.spacing.xxl};
   display: flex;
@@ -54,6 +58,7 @@ export const AreaPage = css(
   }
 
   > .citiesSection {
+    ${contentBandCap(theme)}
     display: flex;
     flex-direction: column;
     gap: ${theme.spacing.md};

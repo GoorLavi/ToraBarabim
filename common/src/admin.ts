@@ -1,10 +1,12 @@
 import type { LessonProvenance } from './agent-import';
 import type { DedicationHonorific, DedicationText, DedicationType, HonoredGender } from './dedication';
+import type { Area } from './area';
 import type { RabbiProminence } from './home';
 import type { LessonException } from './lesson-exception';
-import type { Lesson, ResolvedLessonPlace } from './lesson';
+import type { Lesson } from './lesson';
 import type { LessonOccurrence } from './lesson-occurrence';
 import type { Rabbi, RabbiHonorific } from './rabbi';
+import type { LessonVenuePanel, ResolvedLessonAddress } from './venue';
 
 // Never carries passwordHash: that stays server-side.
 export interface AdminUser {
@@ -42,12 +44,14 @@ export type CreateLessonRequest = Omit<Lesson, 'id'>;
 // 'once' date field, a state the Lesson type is built to reject. Updates
 // are a full replacement instead of a merge to keep that guarantee.
 export type UpdateLessonRequest = CreateLessonRequest;
-// A write sends `place.cityCode` only; a read gets `place.cityName` back
-// too, resolved server-side, so the admin client never has to hold or
-// look up city reference data of its own just to show a lesson's city.
-// `provenance` is read-only: it is never sent on a create or update, only
-// read back, so the admin form can show a notice for an imported lesson.
-export type LessonResponse = Omit<Lesson, 'place'> & { place: ResolvedLessonPlace; provenance: LessonProvenance };
+// A write sends `venue` as either `{ kind: 'place', placeId }` or a free
+// address; a read gets the full `LessonVenue` back, resolved server-side
+// (city, citySlug, area, and for a place, its current name and street), so
+// the admin client never has to hold or look up reference data of its own
+// just to show a lesson's venue. `provenance` is read-only: it is never
+// sent on a create or update, only read back, so the admin form can show a
+// notice for an imported lesson.
+export type LessonResponse = Omit<Lesson, 'venue'> & { venue: LessonVenuePanel; provenance: LessonProvenance };
 
 // Plain `Omit` does not distribute over a union: it computes `keyof` of
 // the whole union, which is the *intersection* of the branches' keys, and
@@ -61,13 +65,13 @@ type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K>
 
 export type CreateLessonExceptionRequest = DistributiveOmit<LessonException, 'lessonId'>;
 export type UpdateLessonExceptionRequest = CreateLessonExceptionRequest;
-// Mirrors `LessonResponse`: a 'modified' exception's `place` override, if
+// Mirrors `LessonResponse`: a 'modified' exception's `address` override, if
 // present, comes back with its city name resolved too. Carries `id` (absent
 // from `LessonException`) so the admin client has something to address a
 // single exception with for PATCH/DELETE.
 type ResolvedLessonException =
   | Extract<LessonException, { kind: 'cancelled' }>
-  | (Omit<Extract<LessonException, { kind: 'modified' }>, 'place'> & { place?: ResolvedLessonPlace });
+  | (Omit<Extract<LessonException, { kind: 'modified' }>, 'address'> & { address?: ResolvedLessonAddress });
 export type LessonExceptionResponse = ResolvedLessonException & { id: number };
 
 // What deleting a rabbi would destroy: shown to the admin before they
@@ -233,3 +237,70 @@ export interface DedicationListResponse {
   pageSize: number;
   total: number;
 }
+
+// An administrator's view of a registered place: everything a place's own
+// portal can edit, plus `isActive`, the entire delete mechanism (0004).
+// There is no delete request type: deactivating is the only removal a
+// place ever gets, done through `UpdatePlaceRequest` like any other field.
+export interface AdminPlaceResponse {
+  id: string;
+  slug: string;
+  name: string;
+  street: string;
+  floor?: string;
+  cityCode: number;
+  cityName: string;
+  area: Area;
+  photoUrl?: string;
+  isActive: boolean;
+}
+
+export type CreatePlaceRequest = {
+  name: string;
+  street: string;
+  floor?: string;
+  cityCode: number;
+};
+
+// A partial patch: omitting `floor` leaves it as is, `null` clears it, a
+// string sets it. `isActive` toggles through this same request, not a
+// separate route.
+export type UpdatePlaceRequest = Partial<Omit<CreatePlaceRequest, 'floor'>> & {
+  floor?: string | null;
+  isActive?: boolean;
+};
+
+export interface AdminPlaceListResponse {
+  items: AdminPlaceResponse[];
+  page: number;
+  pageSize: number;
+  total: number;
+}
+
+// An administrator's view of a place's login account. Mirrors
+// `RabbiAccountResponse` exactly, the same one-account-per-owner shape for
+// the other panel role.
+export interface PlaceAccountResponse {
+  id: string;
+  email: string;
+  username?: string;
+  placeId: string;
+  isActive: boolean;
+}
+
+export type CreatePlaceAccountRequest = {
+  email: string;
+  username: string;
+};
+
+export type PlaceAccountCreatedResponse = PlaceAccountResponse & {
+  temporaryPassword: string;
+};
+
+export interface ResetPlacePasswordResponse {
+  temporaryPassword: string;
+}
+
+export type UpdatePlaceAccountRequest = {
+  isActive: boolean;
+};

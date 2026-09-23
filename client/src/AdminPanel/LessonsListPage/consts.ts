@@ -53,7 +53,7 @@ export const rabbiChipRemoveLabel = (rabbiDisplay: string): string => `הסרת 
 // only one page of it (see `useAdminLessonsList`), so the honest subheading
 // names the loaded count too whenever the two differ, rather than
 // implying every lesson is on screen.
-export const totalCountLabel = (total: number): string => `${total} שיעורים במערכת`;
+export const totalCountLabel = (total: number): string => (total === 1 ? 'שיעור אחד במערכת' : `${total} שיעורים במערכת`);
 // The rabbi-filtered variant of `totalCountLabel`: `total` here already
 // excludes every other rabbi's lessons, so the "במערכת" (system-wide)
 // wording above would be a lie. "של", never "ל" + the display name, to

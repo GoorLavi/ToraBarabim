@@ -1,14 +1,15 @@
-import { fileURLToPath } from 'node:url';
-
 import { reactRouter } from '@react-router/dev/vite';
 import { defineConfig, type Plugin } from 'vite';
 
 import { SITE_ORIGIN } from './consts.ts';
+import { srcAlias } from './vite.alias.ts';
 
 const robotsTxt = `User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /rabbi/
+Disallow: /place/
+Disallow: /login
 
 Sitemap: ${SITE_ORIGIN}/sitemap.xml
 `;
@@ -37,9 +38,7 @@ const seoFiles = (): Plugin => ({
 export default defineConfig({
   plugins: [reactRouter(), seoFiles()],
   resolve: {
-    alias: {
-      '~': fileURLToPath(new URL('./src', import.meta.url)),
-    },
+    alias: srcAlias,
   },
   ssr: {
     // styled-components ships old-style dual entry points (`main` for CJS,

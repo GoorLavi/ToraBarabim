@@ -6,7 +6,7 @@ export const toRabbiLessonResponse = (record: RabbiLessonRecord): RabbiLessonRes
   id: record.id,
   title: record.title,
   rabbiId: record.rabbiId,
-  place: record.place,
+  venue: record.venue,
   topic: record.topic,
   audience: record.audience,
   recurrence: record.recurrence,

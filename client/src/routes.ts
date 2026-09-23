@@ -20,6 +20,11 @@ export default [
     // string, so the two can never drift apart.
     route('cities/:slug', 'routes/cities.$slug/route.tsx', { id: CITY_DETAIL_ROUTE_ID }),
     route('areas/:slug', 'routes/areas.$slug/route.tsx'),
+    route('places', 'routes/places.tsx'),
+    // The optional trailing segment mirrors rabbis/:rabbiId/:slug?: a place
+    // renames itself from its own panel, so the id is the stable key and the
+    // slug is decoration, resolved and redirected the same way.
+    route('places/:placeId/:slug?', 'routes/places.$placeId/route.tsx'),
     route('women', 'routes/women/route.tsx'),
     route('women/rabbaniyot', 'routes/women.rabbaniyot.tsx'),
     route('contact', 'routes/contact.tsx'),
@@ -27,6 +32,8 @@ export default [
   ]),
   route('admin/*', 'routes/admin.tsx'),
   route('rabbi/*', 'routes/rabbi-panel.tsx'),
+  route('place/*', 'routes/place-panel.tsx'),
+  route('login', 'routes/panel-login.tsx'),
   // Outside `layout`: it renders no UI, only an XML `Response` (see
   // routes/sitemap.ts).
   route('sitemap.xml', 'routes/sitemap.ts'),

@@ -10,6 +10,33 @@ import * as consts from './consts';
 // result before submitting.
 export const suggestUsername = (name: string): string => name.toLowerCase().replace(/\s+/g, '');
 
+// An update omits a key to mean "leave as is" and sends `null` to mean
+// "clear" (`common/src/admin.ts`), which an empty string alone cannot tell
+// apart, so this also needs the value as it was loaded from the server. A
+// field that was always blank and still is has nothing to clear, so it
+// stays omitted rather than sending a needless `null`. Shared by every
+// panel form with an optional, clearable text field (a rabbi's title and
+// bio, a place's floor).
+export const nullableTextField = (currentValue: string, existingValue: string | undefined): string | null | undefined => {
+  const trimmed = currentValue.trim();
+  if (trimmed) return trimmed;
+  return existingValue === undefined ? undefined : null;
+};
+
+const ACCEPTED_PHOTO_TYPES = ['image/jpeg', 'image/png'];
+
+// A basic type/size check before upload, not a substitute for the server's
+// own validation: nothing enforces a photo's actual dimensions here. That is
+// right for the only caller left, the rabbi's 3:4 portrait, which the server
+// does not size-check either and which the card crops on display. A place's
+// photo goes through `PhotoPicker`'s crop step instead, which measures the
+// source before it opens.
+export const validatePhotoFile = (file: File): string | undefined => {
+  if (!ACCEPTED_PHOTO_TYPES.includes(file.type)) return consts.UNSUPPORTED_TYPE_CLIENT_ERROR;
+  if (file.size > consts.CLIENT_MAX_PHOTO_BYTES) return consts.TOO_LARGE_CLIENT_ERROR;
+  return undefined;
+};
+
 // Status-aware, with per-call overrides keyed by the server's `error` code
 // first and its HTTP status second, so a caller can surface e.g.
 // 'unknown_rabbi' against a specific field while everything else falls
@@ -19,6 +46,8 @@ export const adminErrorMessage = (error: unknown, overrides: Partial<Record<stri
 
   const byCode = error.code ? overrides[error.code] : undefined;
   if (byCode !== undefined) return byCode;
+
+  if (error.code === 'invalid_photo') return consts.INVALID_PHOTO_MESSAGE;
 
   const byStatus = overrides[error.status];
   if (byStatus !== undefined) return byStatus;
@@ -105,7 +134,7 @@ export const weeklyRecurrenceLabel = (weekdays: Weekday[]): string => {
 // A lesson's rendered "when" line: weekday name(s) for a recurring lesson,
 // or the weekday plus the calendar date for a one-time one, matching the
 // brief's `כל יום שלישי` / `יום שלישי, 16.12.2025` examples.
-export const recurrenceWhenLabel = (lesson: Lesson): string => {
+export const recurrenceWhenLabel = (lesson: Pick<Lesson, 'recurrence'>): string => {
   if (lesson.recurrence.kind === 'weekly') return weeklyRecurrenceLabel(lesson.recurrence.weekdays);
   const weekday = asWeekday(new Date(`${lesson.recurrence.date}T00:00:00Z`).getUTCDay());
   return `${consts.WEEKDAY_LABELS[weekday]}, ${formatIsraeliDate(lesson.recurrence.date)}`;
@@ -116,6 +145,6 @@ export const recurrenceWhenLabel = (lesson: Lesson): string => {
 // Takes the lesson and its rabbi separately, rather than a joined row type
 // owned by one caller, since `LessonsListPage` and `RabbiViewPage` (the
 // two callers) each join a lesson to its rabbi differently.
-export const lessonPrimaryLabel = (lesson: Lesson, rabbi: Pick<Rabbi, 'name' | 'honorific'> | undefined): string =>
+export const lessonPrimaryLabel = (lesson: Pick<Lesson, 'title'>, rabbi: Pick<Rabbi, 'name' | 'honorific'> | undefined): string =>
   lesson.title ?? (rabbi ? rabbiDisplayName(rabbi) : consts.UNTITLED_RABBI_FALLBACK);
-export const lessonHasOwnTitle = (lesson: Lesson): boolean => Boolean(lesson.title);
+export const lessonHasOwnTitle = (lesson: Pick<Lesson, 'title'>): boolean => Boolean(lesson.title);

@@ -29,7 +29,10 @@ export const LessonCardSkeleton = css(
       inline-size: 40px;
       block-size: 40px;
       border-radius: ${theme.radii.sm};
-      background: ${theme.colors.surface};
+      /* A tinted bar like the text skeletons beside it, not a plain white
+         square: white on \`primarySoft\` read as a hole punched in the card
+         rather than a medallion still loading (design gate finding). */
+      background: ${theme.colors.border};
     }
   }
 

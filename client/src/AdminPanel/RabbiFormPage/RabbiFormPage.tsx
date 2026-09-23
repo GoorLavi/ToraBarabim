@@ -5,7 +5,8 @@ import classNames from 'classnames';
 import styled from 'styled-components';
 
 import { ADMIN_ROUTES, lessonNewForRabbi, PROMINENCE_LABELS } from '~/AdminPanel/consts';
-import { adminErrorMessage } from '~/AdminPanel/helpers';
+import { adminErrorMessage, validatePhotoFile } from '~/AdminPanel/helpers';
+import { usePhotoPreviewUrl } from '~/AdminPanel/usePhotoPreviewUrl';
 import { PhotoPicker } from '~/components/PhotoPicker/PhotoPicker';
 import { ReadOnlyField } from '~/components/ReadOnlyField/ReadOnlyField';
 import { RABBI_HONORIFIC_LABELS } from '~/consts';
@@ -16,11 +17,10 @@ import { DiscardChangesSheet } from './components/DiscardChangesSheet/DiscardCha
 import { RabbiAccountSection } from './components/RabbiAccountSection/RabbiAccountSection';
 import { RabbiPreviewCard } from './components/RabbiPreviewCard/RabbiPreviewCard';
 import * as consts from './consts';
-import { isRabbiFormDirty, pageHeading, validatePhotoFile, validateRabbiForm } from './helpers';
+import { isRabbiFormDirty, pageHeading, validateRabbiForm } from './helpers';
 import type { RabbiFormErrors, RabbiFormPageProps, RabbiFormState } from './models';
 import * as styles from './styles';
 import { useExistingRabbi } from './useExistingRabbi';
-import { usePhotoPreviewUrl } from './usePhotoPreviewUrl';
 import { useSaveRabbi } from './useSaveRabbi';
 
 const emptyForm: RabbiFormState = {
