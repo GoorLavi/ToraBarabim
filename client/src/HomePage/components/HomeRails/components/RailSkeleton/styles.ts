@@ -28,7 +28,7 @@ export const RailSkeleton = css(
 
   > .cards {
     display: flex;
-    gap: ${theme.spacing.lg};
+    gap: ${theme.spacing.sm};
     overflow: hidden;
     /* Mirrors LessonRail's .scrollerWrap/.scroller exactly, so a skeleton
        card lands on the same pixel its real card will occupy, and the row
