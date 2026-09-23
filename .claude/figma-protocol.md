@@ -45,16 +45,44 @@ it either; it is what provides the skills the section below requires.
   that the agent definition was edited while it was running: definitions load at
   launch, so the running agent still holds the old one. Restart, then retry.
 
+## The files, and which one holds what
+
+**Every Figma tool needs a `fileKey`, and no tool lists a project's files.** So an agent
+that cannot find a key here has two options, and both are wrong: ask the human for a
+link, or create a new file and work in that. On 2026-09-22 an agent took the second one
+and left a duplicate nobody asked for, because this section named one file and called it
+"the existing design file" when there were four. This registry is the only thing standing
+between the next agent and the same mistake, so **when you create or learn of a file, add
+it here in the same change.**
+
+| File key | Page | What is in it |
+|---|---|---|
+| `eKRaQ4mYDFIOa0IJHhFlXJ` | `88:2` "01 בית" | **Home.** 7 frames: mobile default, loading, filtered error, rails empty, filtered empty, filtered deep empty, and desktop 1440. The lesson rails live here. |
+| `c167hG3ROkH7g6oCTswgEz` | `0:1` "עמוד שיעור" | **Lesson page.** 12 frames: full info, required fields only, cancelled with and without a reason, substitute, no photo, very long names, loading, error, not found, desktop 1280, and a guidelines frame. |
+| `z4fVzRjRFwYpLae22BmNKy` | `0:1` "01 מסכי ניהול" | **Admin.** 9 frames: new lesson, login, lessons list, rabbis list, new rabbi, lessons list at mobile 375, places list, new place, lesson exceptions. |
+| `sLBptV1k2ASbu1vKP0caBz` | `14:2` "01 לוגו וסמל" | **Logo and mark.** The mark itself, the lockup with the name, the mobile header test at 375, the icon test at 64 / 32 / 16, and a Notes frame carrying the decisions. Brand only: it is not a component library. |
+
+**The shape every file follows:** one file per screen or area, one page inside it, each
+state its own frame side by side, and a guidelines or Notes frame carrying the decisions
+that the frames cannot show. A new screen gets a new file in that shape. Documentation
+about a screen goes in that screen's own file as a guidelines frame, never in a file of
+its own.
+
+**Reuse the components, never rebuild the card.** A screen assembled from hand-duplicated
+frames cannot be updated: the 2026-09-22 rail change had to touch upwards of thirty
+copies of one card. When a shape appears more than once, it is a Component and every
+other appearance is an instance (owner, 2026-09-23: "לא רוצה שכל פעם ניצור מחדש").
+
 ## Creating a new file
+
+**First check the registry above.** Creating is for a screen that genuinely has no file
+yet, never for work that belongs in a file that already exists.
 
 `create_new_file` needs a `planKey`, not a project id.
 
 - **planKey:** `team::1600490864286182601`
 - **projectId:** `639157253`
   ([open the project](https://www.figma.com/files/team/1600490864286182601/project/639157253))
-- **The existing design file:** `z4fVzRjRFwYpLae22BmNKy`. Every Figma tool needs a
-  `fileKey` and nothing lists a project's files, so without this an agent cannot reach
-  the work at all and has to ask for a link before it can start.
 
 Pass both, so the file lands in the ToraBarabim project rather than the plan's loose
 drafts folder. `whoami` may list other plans on the same grant; they belong to other
@@ -125,12 +153,12 @@ the human's to make in the Figma UI, and only they can hand you its key.
 - A failed script is atomic and changed nothing. Read the error, fix it, then retry.
   Do not retry blind.
 
-## Where you work: the project's file, never drafts
+## Where you work: the screen's own file, never drafts
 
-The work belongs in the ToraBarabim project's own file, so that what the human opens
-is the real thing rather than a copy someone has to reconcile later. Drafts were the
-old rule and produced exactly that: a file nobody could move out, because nothing at
-file level is yours to move.
+The work belongs in whichever registered file already holds that screen, so that what
+the human opens is the real thing rather than a copy someone has to reconcile later.
+Drafts were the old rule and produced exactly that: a file nobody could move out,
+because nothing at file level is yours to move.
 
 - **A small change is made in place**, beside the original, inside the file itself.
 - **A large change gets its own page**, next to the source page, and lives there for as
