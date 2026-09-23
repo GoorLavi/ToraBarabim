@@ -182,6 +182,47 @@ export const MissingGenderError: Story = {
     const endsOnInput = canvas.getByLabelText('תאריך סיום', { exact: false });
     await userEvent.type(endsOnInput, '2026-12-01');
     await userEvent.click(canvas.getByRole('button', { name: 'שמירת ההקדשה' }));
-    await canvas.findByText('יש לבחור בן או בת');
+
+    // Beside the field, not as one banner: `.formError` is the banner for a
+    // server-side rejection (ValidationError above), and this is a
+    // client-side check that has to read as attached to the field it
+    // concerns.
+    const genderError = await canvas.findByText('יש לבחור בן או בת');
+    expect(genderError.closest('.field')).not.toBeNull();
+    expect(canvasElement.querySelector('.formError')).toBeNull();
+  },
+};
+
+// A preselected gender on a memorial prints בן for a woman and looks like
+// the admin chose it: neither pill defaults to selected, checked through
+// aria-checked rather than the visual class, since that is what a screen
+// reader user actually gets told. Also checks that clearing the parent
+// name clears the choice behind it, not only hides the picker: a stale
+// gender left in memory behind a hidden field is the version of this bug
+// that would survive a fix to the visible symptom alone.
+export const GenderNeverDefaultsAndClearsWithParentName: Story = {
+  decorators: [withCreateRoute],
+  play: async ({ canvasElement }) => {
+    createScenario = 'success';
+    const canvas = within(canvasElement);
+
+    const parentNameInput = await canvas.findByLabelText('שם האב', { exact: false });
+    await userEvent.type(parentNameInput, 'אברהם');
+
+    const genderGroup = canvas.getByRole('radiogroup', { name: 'בן או בת' });
+    for (const radio of within(genderGroup).getAllByRole('radio')) {
+      expect(radio).toHaveAttribute('aria-checked', 'false');
+    }
+
+    await userEvent.click(within(genderGroup).getByRole('radio', { name: 'בן' }));
+    expect(within(genderGroup).getByRole('radio', { name: 'בן' })).toHaveAttribute('aria-checked', 'true');
+
+    await userEvent.clear(parentNameInput);
+    await userEvent.type(parentNameInput, 'דוד');
+
+    const reopenedGenderGroup = canvas.getByRole('radiogroup', { name: 'בן או בת' });
+    for (const radio of within(reopenedGenderGroup).getAllByRole('radio')) {
+      expect(radio).toHaveAttribute('aria-checked', 'false');
+    }
   },
 };
