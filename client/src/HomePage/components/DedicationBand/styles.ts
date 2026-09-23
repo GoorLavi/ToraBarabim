@@ -3,7 +3,6 @@ import { css } from 'styled-components';
 import { scaledCss } from '~/components/DedicationUnit/consts';
 
 import * as consts from './consts';
-import { dedicationBandReservedHeightPx } from './helpers';
 
 // The viewport clips at all times, in both variants and before any JS runs:
 // static is the SSR baseline, since the server cannot measure, and a long
@@ -16,9 +15,9 @@ export const DedicationBand = css(
   position: relative;
 
   /* The band's own scale driver, read by every scaled dedication value
-     (DedicationUnit/styles.ts, and the padding-block and reservation
-     below): a fixed value per breakpoint, chosen by the owner directly
-     rather than derived from the viewport (owner, on the real site: "for
+     (DedicationUnit/styles.ts, and the padding-block below): a fixed
+     value per breakpoint, chosen by the owner directly rather than
+     derived from the viewport (owner, on the real site: "for
      the scale, I prefer width"). Selected by the same md width query
      every other responsive rule in this file already branches on, never a
      continuous function of the viewport the way the superseded

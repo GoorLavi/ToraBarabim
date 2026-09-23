@@ -1,24 +1,4 @@
-import {
-  DEDICATION_CLOSING_SIZE_FLOOR_PX,
-  DEDICATION_CLOSING_SIZE_REFERENCE,
-  DEDICATION_DONOR_MARGIN_TOP_FLOOR_PX,
-  DEDICATION_DONOR_MARGIN_TOP_REFERENCE,
-  DEDICATION_FORMULA_SIZE_FLOOR_PX,
-  DEDICATION_FORMULA_SIZE_REFERENCE,
-  DEDICATION_NAME_SIZE_FLOOR_PX,
-  DEDICATION_NAME_SIZE_REFERENCE,
-  DEDICATION_ORNAMENT_TO_TEXT_GAP_FLOOR_PX,
-  DEDICATION_ORNAMENT_TO_TEXT_GAP_REFERENCE,
-  DEDICATION_ORNAMENT_WIDTH_FLOOR_PX,
-  DEDICATION_ORNAMENT_WIDTH_REFERENCE,
-  DEDICATION_PARENT_SIZE_FLOOR_PX,
-  DEDICATION_PARENT_SIZE_REFERENCE,
-  ORNAMENT_VIEWBOX_HEIGHT,
-  ORNAMENT_VIEWBOX_WIDTH,
-} from '~/components/DedicationUnit/consts';
-import { ARGAMAN_VE_ZAHAV_THEME } from '~/theme/themes';
-
-import { DEDICATION_BAND_EDGE_PADDING_PX, DEDICATION_BAND_PADDING_FLOOR_PX, DEDICATION_UNIT_GAP_PX } from './consts';
+import { DEDICATION_BAND_EDGE_PADDING_PX, DEDICATION_UNIT_GAP_PX } from './consts';
 
 // No unit-count threshold: a count is the wrong shape, since three units
 // fill a phone and do not fill 1280, and this one comparison is correct at
@@ -66,46 +46,3 @@ export const stepByUnitPitch = (position: number, direction: 1 | -1, unitPitchPx
 // available to it, not the viewport's raw box.
 export const availableTrackWidthPx = (viewportClientWidthPx: number): number =>
   viewportClientWidthPx - 2 * DEDICATION_BAND_EDGE_PADDING_PX;
-
-const clampedPx = (floorPx: number, referenceNumber: number, scale: number): number => Math.max(floorPx, referenceNumber * scale);
-
-// The exact `max(floor, reference * scale)` every scaled dedication value
-// already applies in CSS (DedicationUnit/styles.ts, DedicationUnit/consts.ts:
-// scaledCss), reproduced here in TypeScript so the `.pending` reservation
-// (DedicationBand/styles.ts) can know ahead of the real draw what the band
-// is actually guaranteed to need. `--dedication-scale-px` used to be a
-// runtime function of the viewport, which made this impossible to
-// precompute; now that it is two fixed values selected by breakpoint
-// (DedicationBand/consts.ts), the true total can be summed once, per
-// breakpoint, at module load.
-// A single `max(bandFloor, bandReference * scale)` over the band as a whole
-// cannot stand in for this: formula, name, parent, closing and donor each
-// clamp to their own floor at a different scale, so at a scale between two
-// of those thresholds the true total is a sum of independently clamped
-// pieces, never equal to treating the band as one scaled value.
-export const dedicationBandReservedHeightPx = (scale: number, paddingReferenceNumber: number): number => {
-  const { spacing, typography } = ARGAMAN_VE_ZAHAV_THEME;
-  const lineGapPx = Number.parseFloat(spacing.xs);
-
-  const ornamentWidthPx = clampedPx(DEDICATION_ORNAMENT_WIDTH_FLOOR_PX, DEDICATION_ORNAMENT_WIDTH_REFERENCE, scale);
-  const ornamentHeightPx = ornamentWidthPx * (ORNAMENT_VIEWBOX_HEIGHT / ORNAMENT_VIEWBOX_WIDTH);
-  const ornamentToTextGapPx = clampedPx(DEDICATION_ORNAMENT_TO_TEXT_GAP_FLOOR_PX, DEDICATION_ORNAMENT_TO_TEXT_GAP_REFERENCE, scale);
-
-  const formulaHeightPx = clampedPx(DEDICATION_FORMULA_SIZE_FLOOR_PX, DEDICATION_FORMULA_SIZE_REFERENCE, scale) * Number.parseFloat(typography.dedicationFormula.lineHeight);
-  const nameHeightPx = clampedPx(DEDICATION_NAME_SIZE_FLOOR_PX, DEDICATION_NAME_SIZE_REFERENCE, scale) * Number.parseFloat(typography.dedicationName.lineHeight);
-  const parentHeightPx = clampedPx(DEDICATION_PARENT_SIZE_FLOOR_PX, DEDICATION_PARENT_SIZE_REFERENCE, scale) * Number.parseFloat(typography.dedicationParent.lineHeight);
-  // The donor credit line reuses the closing role's own size (DedicationUnit/styles.ts), never a role of its own.
-  const closingHeightPx = clampedPx(DEDICATION_CLOSING_SIZE_FLOOR_PX, DEDICATION_CLOSING_SIZE_REFERENCE, scale) * Number.parseFloat(typography.dedicationClosing.lineHeight);
-  const donorMarginTopPx = clampedPx(DEDICATION_DONOR_MARGIN_TOP_FLOOR_PX, DEDICATION_DONOR_MARGIN_TOP_REFERENCE, scale);
-
-  // The worst case a group can actually draw: every optional line present
-  // (formula, name, parent, closing, donor credit), the same shape
-  // DEDICATION_BAND_ON_PRIMARY_HEIGHT_REFERENCE was itself measured against.
-  const textBlockHeightPx =
-    formulaHeightPx + lineGapPx + nameHeightPx + lineGapPx + parentHeightPx + lineGapPx + closingHeightPx + lineGapPx + donorMarginTopPx + closingHeightPx;
-
-  const unitHeightPx = 2 * ornamentHeightPx + 2 * ornamentToTextGapPx + textBlockHeightPx;
-  const paddingBlockPx = 2 * clampedPx(DEDICATION_BAND_PADDING_FLOOR_PX, paddingReferenceNumber, scale);
-
-  return unitHeightPx + paddingBlockPx;
-};
