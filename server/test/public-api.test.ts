@@ -4,6 +4,7 @@ import { after, afterEach, before, describe, test } from 'node:test';
 import type {
   CitySearchResult,
   CitySuggestionsResponse,
+  DedicationType,
   HomeResponse,
   LessonOccurrence,
   LessonSearchResponse,
@@ -19,9 +20,11 @@ import { eq } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { nanoid } from 'nanoid';
 
+import { toHomeResponse } from '../src/convertors/home';
 import { db } from '../src/db/client';
 import { cities, lessonExceptions, lessons, places } from '../src/db/schema';
 import { HOME_RABBI_ROW_CAP } from '../src/service/home/consts';
+import * as homeService from '../src/service/home/home';
 import { selectAreaPreview } from '../src/service/lesson/area-preview';
 import { addDays, nextDateOnWeekday, todayInIsrael } from '../src/service/lesson/israel-time';
 import type { ResolvedLessonOccurrence } from '../src/service/lesson/models';
@@ -50,6 +53,36 @@ const SEEDED_RABBANIT_VENUE_TEXT = 'בית יעל';
 // The rav's women-only lesson seeded for the women's area; see
 // `server/src/db/seed/lessons.ts`.
 const SEEDED_WOMEN_LESSON_ID = 'lesson-27';
+
+// See `server/src/db/seed/dedications.ts`. Every id below is keyed to that
+// file's fixed offsets from "today", so these hold whatever day the suite
+// runs on.
+const LIVE_SEED_DEDICATION_IDS = [
+  'dedication-1',
+  'dedication-2',
+  'dedication-3',
+  'dedication-4',
+  'dedication-5',
+  'dedication-6',
+  'dedication-7',
+  'dedication-8',
+  'dedication-9',
+];
+// A not-yet-started, an expired, and a taken-down dedication, in that order.
+const INACTIVE_SEED_DEDICATION_IDS = ['dedication-10', 'dedication-11', 'dedication-12'];
+// `endsOn` is today itself, exercising the inclusive boundary in `listActive`.
+const ENDS_TODAY_SEED_DEDICATION_ID = 'dedication-3';
+const SEED_DEDICATION_TYPE_BY_ID: Record<string, DedicationType> = {
+  'dedication-1': 'memorial',
+  'dedication-2': 'memorial',
+  'dedication-3': 'memorial',
+  'dedication-4': 'memorial',
+  'dedication-5': 'memorial',
+  'dedication-6': 'healing',
+  'dedication-7': 'healing',
+  'dedication-8': 'success',
+  'dedication-9': 'success',
+};
 
 // The wire `Rabbi` never carries `prominence`, so the ordering assertions
 // read the seeded tiers from here, mirrored by hand from
@@ -711,6 +744,69 @@ describe('public API', () => {
     // Without this the loop above would assert nothing at all the moment
     // the seed ids change, and pass in silence.
     assert.ok(checkedCount >= MIN_SEEDED_RABBIS_IN_ROW, `expected at least ${MIN_SEEDED_RABBIS_IN_ROW} seeded rabbis in the row, saw ${checkedCount}`);
+  });
+
+  describe('GET /v1/home dedications', () => {
+    test('`dedications` is a sibling of `rows`, and no row item ever carries a dedication', async () => {
+      const res = await app.inject({ method: 'GET', url: '/v1/home' });
+      assert.equal(res.statusCode, 200);
+
+      const body = res.json() as HomeResponse;
+      assert.ok(Array.isArray(body.dedications));
+      for (const row of body.rows) {
+        for (const item of row.items) {
+          assert.ok(!('text' in item), "expected a home row's items to be lessons only, never a dedication");
+        }
+      }
+    });
+
+    test('the live seed is served; the not-yet-started, expired and taken-down seeds are never served', async () => {
+      const res = await app.inject({ method: 'GET', url: '/v1/home' });
+      const body = res.json() as HomeResponse;
+      const servedIds = body.dedications.flatMap((group) => group.items.map((item) => item.id));
+
+      for (const id of LIVE_SEED_DEDICATION_IDS) {
+        assert.ok(servedIds.includes(id), `expected the live seed ${id} to be served`);
+      }
+      for (const id of INACTIVE_SEED_DEDICATION_IDS) {
+        assert.ok(!servedIds.includes(id), `expected the inactive seed ${id} never to be served`);
+      }
+    });
+
+    test("every group's items share that group's own type, and no type appears in two groups", async () => {
+      const res = await app.inject({ method: 'GET', url: '/v1/home' });
+      const body = res.json() as HomeResponse;
+
+      const typesSeen = new Set<string>();
+      for (const group of body.dedications) {
+        assert.ok(!typesSeen.has(group.type), `expected type ${group.type} to appear in at most one group`);
+        typesSeen.add(group.type);
+
+        for (const item of group.items) {
+          const expectedType = SEED_DEDICATION_TYPE_BY_ID[item.id];
+          if (!expectedType) continue; // not one of this suite's seeded fixtures
+          assert.equal(expectedType, group.type, `expected seeded dedication ${item.id} to appear only under its own type's group`);
+        }
+      }
+    });
+
+    test('a dedication whose endsOn is today is still served, since endsOn is inclusive', async () => {
+      const res = await app.inject({ method: 'GET', url: '/v1/home' });
+      const body = res.json() as HomeResponse;
+      const servedIds = body.dedications.flatMap((group) => group.items.map((item) => item.id));
+      assert.ok(servedIds.includes(ENDS_TODAY_SEED_DEDICATION_ID));
+    });
+
+    // The public route takes no date parameter (0012), so an empty pool is
+    // exercised through the service directly, the same way this suite
+    // reaches `selectAreaPreview` and `stripLeadingHonorific` for logic the
+    // route itself has no lever to trigger.
+    test('an empty pool is a normal 200 with an empty list, never a 404', async () => {
+      const farPast = new Date('1990-01-01T00:00:00Z');
+      const result = await homeService.getHome(farPast);
+      assert.deepEqual(result.dedicationGroups, []);
+      assert.deepEqual(toHomeResponse(result).dedications, []);
+    });
   });
 
   // Test 8: a populated summary lists both a rabbanit and a rav among the

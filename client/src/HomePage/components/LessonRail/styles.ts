@@ -1,6 +1,6 @@
 import { css } from 'styled-components';
 
-import { POSTER_ASPECT_RATIO } from '~/HomePage/consts';
+import { EDGE_FADE_WIDTH_PHONE, POSTER_ASPECT_RATIO } from '~/HomePage/consts';
 
 import { RAIL_CARD_WIDTH_MD, RAIL_CARD_WIDTH_SM, RAIL_CARD_WIDTH_WIDE, RAIL_CARD_WIDTH_XWIDE, RAIL_COLUMNS_PHONE } from './consts';
 import { railCardWidth, railEdgeOffset } from './helpers';

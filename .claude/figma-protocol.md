@@ -32,10 +32,13 @@ it either; it is what provides the skills the section below requires.
 - **Route A: the `Skill` tool. The names are namespaced: `figma:figma-use` and
   `figma:figma-create-new-file`.** A bare `figma-use` is not in the listing. This is
   the route to take.
-- Route B: if `Skill` is absent or disabled, load them through `get_figma_skill` from
-  the Figma server. `skill://index.json` returns the full skill index. The tool was
-  called `read_skill_uri` until the server renamed it; a definition still naming the
-  old one leaves the agent with no reachable route and it will correctly stop.
+- Route B: if `Skill` is absent or disabled, load them through the Figma server's own
+  skill reader. **That tool has been exposed under two names: `read_skill_uri` and
+  `get_figma_skill`.** Check for both before concluding the route is dead, and load
+  the schema with `ToolSearch` (`select:mcp__Figma__get_figma_skill`) if it is
+  deferred rather than listed. `skill://index.json` returns the full skill index.
+  One session searched only for `read_skill_uri`, found nothing, and reported that no
+  Figma skill was reachable in the session; it was, under the other name.
 - **Always pass `skillNames` on the `use_figma` call**, whichever route you took.
   Unprefixed after Route A (`"figma-use,figma-create-new-file"`), prefixed with
   `resource:` after Route B.
@@ -124,6 +127,28 @@ the human's to make in the Figma UI, and only they can hand you its key.
   or a screenshot, fix before moving on.
 - A failed script is atomic and changed nothing. Read the error, fix it, then retry.
   Do not retry blind.
+
+## The canonical file, and why you cannot discover its pages
+
+The site's design lives in file key **`eKRaQ4mYDFIOa0IJHhFlXJ`**. The home page is the
+page `01 בית`, node `88:2`; the file also holds `02 חיפוש`, `03 עיר`, `04 רב`,
+`05 כל הרבנים`, `06 שיעור`, `07 אזור הנשים`, `08 רשימת רבניות`, `09 צור קשר`,
+`10 כל הערים`, `11 שיעורים`, `99 כרטיס השיעור · כל המצבים`, and `99 Components`.
+
+The file key `sLBptV1k2ASbu1vKP0caBz` in
+[0014](../docs/decisions/0014-the-logo-is-a-fixed-mark-not-a-theme-token.md) is **not**
+this file: it is a drafts file holding logo work only, and mistaking it for the design
+is the wrong turn to avoid.
+
+**`get_metadata` with no `nodeId` on this file returns one page, `03 עיר`, out of
+thirteen.** The listing is lazy and silently partial, so an agent cannot find a page
+here by listing the file, and absence from that listing proves nothing. Three rounds
+of one change were lost to exactly this: the designer concluded from a full-repo search
+and a page listing that the canonical file did not exist.
+
+- **List pages from inside `use_figma`:** `figma.root.children.map(p => ({ id: p.id,
+  name: p.name }))`. That is reliable where `get_metadata` is not.
+- **Work from a node id the human supplies** rather than one you discovered.
 
 ## Where you work: the project's file, never drafts
 

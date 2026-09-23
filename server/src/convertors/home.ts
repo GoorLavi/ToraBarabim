@@ -1,7 +1,9 @@
-import type { HomeResponse, HomeRow, LessonOccurrence } from '@torabarabim/common';
+import type { DedicationGroup, HomeResponse, HomeRow, LessonOccurrence } from '@torabarabim/common';
 
+import type { DedicationGroupResult } from '../service/dedication/models';
 import type { HomeResult, HomeRowResult, ResolvedHomeOccurrence } from '../service/home/models';
 import { toRabbiSummary } from '../service/shared/rabbi-summary';
+import { toDedication } from './dedication';
 
 const toLessonOccurrence = (record: ResolvedHomeOccurrence): LessonOccurrence => ({
   lessonId: record.lessonId,
@@ -25,8 +27,14 @@ const toHomeRow = (row: HomeRowResult): HomeRow => ({
   womensAreaTileIndex: row.womensAreaTileIndex,
 });
 
+const toDedicationGroup = (group: DedicationGroupResult): DedicationGroup => ({
+  type: group.type,
+  items: group.items.map(toDedication),
+});
+
 export const toHomeResponse = (result: HomeResult): HomeResponse => ({
   rows: result.rows.map(toHomeRow),
   womensAreaLessonCount: result.womensAreaLessonCount,
   rabbis: result.rabbis.map(toRabbiSummary),
+  dedications: result.dedicationGroups.map(toDedicationGroup),
 });

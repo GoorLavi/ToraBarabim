@@ -1,3 +1,4 @@
+import type { DedicationGroup } from './dedication';
 import type { LessonOccurrence } from './lesson-occurrence';
 import type { Rabbi } from './rabbi';
 
@@ -31,4 +32,10 @@ export interface HomeResponse {
   // branches on it being missing. Excludes rabbaniyot, matching the rest of
   // this general-scope response.
   rabbis: Rabbi[];
+  // A sibling of `rows`, never an entry inside one: 0012 has the client
+  // render `rows` exactly as given, never filtering, sorting or
+  // special-casing an item, so a dedication (not a lesson) must not be
+  // smuggled into a row's `items`
+  // (docs/decisions/0012-the-home-page-is-composed-by-the-server.md).
+  dedications: DedicationGroup[];
 }

@@ -1,4 +1,4 @@
-import type { Lesson, Rabbi, Weekday } from '@torabarabim/common';
+import type { AdminDedication, Lesson, Rabbi, Weekday } from '@torabarabim/common';
 
 import { rabbiDisplayName } from '~/helpers';
 
@@ -63,6 +63,11 @@ export const adminErrorMessage = (error: unknown, overrides: Partial<Record<stri
 const israeliDateFormatter = new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Jerusalem' });
 
 export const formatIsraeliDate = (isoDate: string): string => israeliDateFormatter.format(new Date(`${isoDate}T00:00:00Z`));
+
+// Shared by `DedicationCard` and `DedicationViewPage`, the nearest common
+// ancestor both sit under.
+export const dedicationWindowLabel = (dedication: Pick<AdminDedication, 'startsOn' | 'endsOn'>): string =>
+  `${formatIsraeliDate(dedication.startsOn)} עד ${formatIsraeliDate(dedication.endsOn)}`;
 
 // `Date#getUTCDay` is specified to always return 0-6, so this narrowing
 // from `number` to the `Weekday` literal union is safe by construction.

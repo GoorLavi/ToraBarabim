@@ -135,9 +135,14 @@ for why this shape and not the alternatives explored alongside it.
 
 **The mark is always rendered in fixed brand colors, never the active theme's
 tokens.** Structural shapes `#6B2436`, the arched opening `#B8862B`; on a `primary`
-field, `#FFFFFF` and `#E0B45E`. It is the one deliberate exception to "tokens are
+field, `#FFFFFF` and `#E0B45E`. It is one of two deliberate exceptions to "tokens are
 named for their role, never for their color": comment the exception at the
 implementation site so it is not read as a bug and pointed back at the theme.
+
+**The second exception is the dedication ornament's gradient stops**, which are set as
+CSS custom properties per variant rather than as tokens. A gradient stop's role *is* its
+position in the ramp, so `color.ornamentStopMid` would be the color-word-in-a-token-name
+the rule exists to forbid. The values live with the ornament and are commented there.
 
 Geometry on a 100x100 grid: top beam `9,8,82,7`; main beam `3,16,94,11`; columns
 `14,30,19,50` and `67,30,19,50`; arched opening `40,38,20,42` with the top corners
@@ -189,14 +194,14 @@ Type, spacing, radii, shadows and breakpoints live alongside color in the same t
 object. All are tokens, none are raw values in a component.
 
 ### Color: the token set
-Seventeen color tokens. The theme defines all seventeen.
+Nineteen color tokens. The theme defines all nineteen.
 
 | Token | Role |
 |---|---|
 | `color.bg` | Page background |
 | `color.surface` | Cards, fields, anything sitting on the page background |
 | `color.primary` | Primary buttons, links, the header band, the date medallion |
-| `color.primaryStrong` | Hover and pressed state of anything using `primary` |
+| `color.primaryStrong` | Hover and pressed state of anything using `primary`, and the one deep field that closes the home page |
 | `color.primarySoft` | Tinted background: quiet bands, inactive chips, avatar fallbacks |
 | `color.accent` | Time and date graphics, large numerals. See the contrast rule below |
 | `color.accentSoft` | Tinted background in accent contexts |
@@ -209,6 +214,8 @@ Seventeen color tokens. The theme defines all seventeen.
 | `color.borderOnPrimary` | Hairlines and perforations on a `primary` fill. White at 30% |
 | `color.surfaceOnPrimary` | A quiet raised block on a `primary` fill, such as a tag on the lesson ticket. White at 12% |
 | `color.danger` | Error text. Text only, never a fill |
+| `color.dedication` | A dedication's text on the page field. Its `primary`-field counterpart is `accentOnDark`, so the dark variant adds no color of its own |
+| `color.dedicationMuted` | A dedication's closing line on the page field, the one line that steps back |
 | `color.scrim` | The backdrop behind a fixed sheet's panel (a bottom sheet, a drawer): `color.text` at 45% |
 
 **Contrast rule for `accent`.** The accent does not reach 4.5:1 against `surface`, so it
@@ -245,6 +252,8 @@ binding or a parochet.
 | `color.borderOnPrimary` | `rgba(255, 255, 255, 0.3)` |
 | `color.surfaceOnPrimary` | `rgba(255, 255, 255, 0.12)` |
 | `color.danger` | `#A32A22` |
+| `color.dedication` | `#B28027` |
+| `color.dedicationMuted` | `#8C6621` |
 | `color.scrim` | `rgba(32, 27, 29, 0.45)` |
 
 ### Type
@@ -272,6 +281,9 @@ Verify style names with `listAvailableFontsAsync` rather than guessing.
 | Body | 17 / 26 | 17 / 26 | 400 |
 | Secondary | 15 / 22 | 15 / 22 | 400 |
 | Tag and caption | 14 / 20 | 14 / 20 | 600 |
+
+The four dedication roles sit outside that table because they are single-value and carry a
+family and a tracking no role above has. They are listed with the second family below.
 
 Body is 17 and not 16 deliberately: the audience spans a wide age range and reads this
 outdoors.
@@ -317,6 +329,34 @@ a licence to shrink further.
 wide on a 375px phone gets the full size; the same component in a 171px grid cell keeps
 the floor. Reading the viewport instead was a real defect: it shrank the type on a card
 that had plenty of room, because a narrow screen was mistaken for a narrow card.
+
+### The second family, and the dedication roles
+**Frank Ruhl Libre**, at 700, and only for the two lines of a dedication that carry a
+person's name. It is a serif with a different history from Assistant's, and it is here so
+a name on a memorial does not read in the same voice as a lesson listing. It is used
+nowhere else on the site, and a request to reuse it is a request to change what it means.
+
+| Role | Family | Size / line height | Weight | Tracking |
+|---|---|---|---|---|
+| `dedicationFormula` | Assistant | 24 / 32 | 400 | `0.04em` |
+| `dedicationName` | Frank Ruhl Libre | 52 / 60 | 700 | 0 |
+| `dedicationParent` | Frank Ruhl Libre | 32 / 40 | 700 | 0 |
+| `dedicationClosing` | Assistant | 20 / 28 | 400 | `0.12em` |
+
+All four are centre aligned, and all four are **single-value at every width**. That is a
+deliberate departure from every responsive role above and from `tileCount`'s phone-and-
+desktop shape: the dedication unit is one width everywhere, so a type step would have
+nothing to respond to. The donor credit line takes `dedicationParent` and gets no role of
+its own.
+
+**Tracking sits on exactly two of the four, and it is authored proportionally**, which in
+CSS means `em` and never `%`. Loosening the two that carry no tracking would space out a
+person's name, so this is not an inconsistency to tidy.
+
+Because these roles are single-value and carry a family and a tracking the others do not,
+`client/src/theme/models.ts` holds **a second role shape** beside `ThemeTypeRole`. That is
+a typed change rather than a values change, and it is the reason the four are not simply
+appended to the table above.
 
 ### Spacing
 Base 4.
@@ -371,13 +411,20 @@ Four values, and no others.
 chips and avatars.
 
 ### Shadows
-Two. The shadow color is a near-black at low alpha, because a tinted shadow reads as a
+Four. The shadow color is a near-black at low alpha, because a tinted shadow reads as a
 smudge.
 
 - `shadow.card`: `0 1px 2px rgba(28,26,23,0.04), 0 1px 3px rgba(28,26,23,0.06)`
 - `shadow.raised`: `0 4px 16px rgba(28,26,23,0.10)`, for the sticky search bar and for
   anything that floats over the page and needs to read as lifted off it: a header
   popover (the date picker, the city picker) and a `ResponsiveSheet` panel.
+- `shadow.dedicationOnPrimary`: `0 2px 6px rgba(0,0,0,0.38)`, lifting a dedication's gold
+  off the plum field.
+- `shadow.dedicationOnPage`: `0 1px 2px rgba(32,27,29,0.25)`, the same job on the page
+  field, where far less is needed.
+
+Neither dedication shadow is one of the first two: those separate a surface from the page,
+these give depth to text on a field. Do not substitute one for the other.
 
 Separation is carried mainly by `color.border` and by `surface` against `bg`, not by
 shadow.
