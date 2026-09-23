@@ -31,8 +31,8 @@ export const ReadOnlyField = css(
   /* A locked value reads quieter than an editable field, not louder
      (design gate finding, PlacePicker nits): a neutral, untinted fill
      instead of \`primarySoft\`, which elsewhere on the same screen marks
-     something that does need attention (PickerControl/styles.ts's own
-     \`.inactiveTag\`). */
+     something that does need attention (components/InactiveTag/styles.ts's
+     own fill). */
   &.quiet > .value {
     background: ${theme.colors.bg};
     color: ${theme.colors.textSecondary};

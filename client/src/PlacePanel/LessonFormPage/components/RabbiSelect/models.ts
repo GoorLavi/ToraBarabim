@@ -6,3 +6,9 @@ export interface RabbiSelectProps {
   onSelectRabbi: (rabbi: Rabbi) => void;
   errorMessage: string | undefined;
 }
+
+export interface RabbiSearchResults {
+  items: Rabbi[];
+  isPending: boolean;
+  isError: boolean;
+}

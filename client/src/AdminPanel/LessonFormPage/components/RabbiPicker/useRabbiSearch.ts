@@ -1,16 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import type { Rabbi } from '@torabarabim/common';
 
 import { fetchAdminRabbis } from '~/AdminPanel/api';
 import { ADMIN_QUERY_KEYS, MAX_ADMIN_PAGE_SIZE } from '~/AdminPanel/consts';
 
-const DEBOUNCE_MS = 250;
+import type { RabbiSearchResults } from './models';
 
-export interface RabbiSearchResults {
-  items: Rabbi[];
-  isPending: boolean;
-}
+const DEBOUNCE_MS = 250;
 
 export const useRabbiSearch = (query: string): RabbiSearchResults => {
   const [debouncedQuery, setDebouncedQuery] = useState(query);
@@ -27,5 +23,5 @@ export const useRabbiSearch = (query: string): RabbiSearchResults => {
     queryFn: () => fetchAdminRabbis(filters),
   });
 
-  return { items: result.data?.items ?? [], isPending: result.isPending };
+  return { items: result.data?.items ?? [], isPending: result.isPending, isError: result.isError };
 };
