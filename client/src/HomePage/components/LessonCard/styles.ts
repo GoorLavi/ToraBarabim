@@ -48,16 +48,15 @@ export const LessonCard = css(
     /* Never distorted: the row's stretch lands in \`.body\` below, not here,
        so a real portrait never gets cropped or stretched off its ratio. */
     flex-shrink: 0;
+    /* What fills the slot while the image is still loading, and all that is
+       left if one ever fails: every card has an image now, so this is the
+       load-time surface rather than a fallback state of its own. */
     background: ${theme.colors.primarySoft};
 
     > .image {
       inline-size: 100%;
       block-size: 100%;
       object-fit: cover;
-
-      &.placeholder {
-        background: ${theme.colors.primarySoft};
-      }
     }
 
     > .cancelledLabel {
@@ -73,6 +72,11 @@ export const LessonCard = css(
       inset-inline-start: ${theme.spacing.sm};
       padding-block: ${theme.spacing.xs};
       padding-inline: ${theme.spacing.sm};
+      /* The same hairline the medallion carries. Over the oxblood fallback
+         poster, dimmed to 0.7 by the cancelled state, the label's own fill
+         is close enough to the photograph that its edge disappears and the
+         most important message on the card loses its shape. */
+      border: 1px solid ${theme.colors.accentOnDark};
       border-radius: ${theme.radii.sm};
       background: ${theme.colors.primary};
       color: ${theme.colors.textOnPrimary};
