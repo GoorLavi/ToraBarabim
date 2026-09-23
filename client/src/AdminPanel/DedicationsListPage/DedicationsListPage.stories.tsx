@@ -5,7 +5,7 @@ import { installMockFetch, jsonResponse, NEVER_RESOLVES } from '~/storyMocks';
 
 import { DedicationsListPage } from './DedicationsListPage';
 
-const NBSP = ' ';
+const NBSP = ' ';
 
 // A full `AdminDedication`, matching the shape `toAdminDedication`
 // (server/src/convertors/admin-dedication.ts) sends: `display` is the same
@@ -25,10 +25,10 @@ const adminDedication = (overrides: Partial<AdminDedication>): AdminDedication =
   state: 'live',
   display: {
     formulaLine: `לעילוי${NBSP}נשמת`,
-    nameLine: `חנה${NBSP}דבורה${NBSP}ע״ה`,
+    nameLine: `חנה דבורה${NBSP}ע״ה`,
     parentLine: `בת${NBSP}אברהם`,
     closingLine: 'תנצב״ה',
-    donorCreditLine: `תרומת${NBSP}משפחת${NBSP}לוי`,
+    donorCreditLine: `תרומת משפחת${NBSP}לוי`,
   },
   createdAt: '2026-08-20T10:00:00.000Z',
   updatedAt: '2026-08-20T10:00:00.000Z',
@@ -48,7 +48,7 @@ const populatedItems: AdminDedication[] = [
     state: 'upcoming',
     startsOn: '2026-12-01',
     endsOn: '2027-01-01',
-    display: { formulaLine: `לרפואה${NBSP}שלמה${NBSP}של`, nameLine: `משה${NBSP}כהן`, parentLine: `בן${NBSP}אברהם` },
+    display: { formulaLine: `לרפואה${NBSP}שלמה${NBSP}של${NBSP}`, nameLine: `משה כהן`, parentLine: `בן${NBSP}אברהם` },
   }),
   adminDedication({
     id: 'd-3',
@@ -61,7 +61,7 @@ const populatedItems: AdminDedication[] = [
     state: 'ended',
     startsOn: '2026-01-01',
     endsOn: '2026-06-01',
-    display: { formulaLine: 'להצלחת', nameLine: `יוסף${NBSP}לוי`, parentLine: `בן${NBSP}דוד` },
+    display: { formulaLine: 'להצלחת', nameLine: `יוסף לוי`, parentLine: `בן${NBSP}דוד` },
   }),
   adminDedication({ id: 'd-4', state: 'takenDown', takenDownReason: 'בקשת המשפחה' }),
 ];

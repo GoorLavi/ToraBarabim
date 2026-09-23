@@ -21,12 +21,20 @@ export type DedicationListQuery = z.infer<typeof dedicationListQuerySchema>;
 // therefore silently accept a bad name here instead of rejecting it. Hebrew
 // punctuation is `״` (U+05F4) and `׳` (U+05F3), never an ASCII quote.
 const ASCII_QUOTE = /["']/;
+const NON_BREAKING_SPACE = /\u00a0/;
 const dedicationNameSchema = z
   .string()
   .trim()
   .min(1)
   .refine((value) => !ASCII_QUOTE.test(value), {
     message: 'שם עברי אינו יכול להכיל גרש או גרשיים באנגלית (" או \'), יש להשתמש בסימני הפיסוק העבריים ״ ו-׳ בלבד',
+  })
+  // A stored name holds ordinary spaces only. The composer is the one place
+  // that binds a non-breaking space, between the name and its suffix, and a
+  // pasted one inside the name would survive into the rendered line and stop
+  // it wrapping at 280, which is the width every name is set to wrap at.
+  .refine((value) => !NON_BREAKING_SPACE.test(value), {
+    message: 'שם נשמר עם רווחים רגילים בלבד, והתקבל רווח קשיח. יש להקליד את השם מחדש במקום להדביק אותו',
   });
 
 const dedicationDateSchema = z.iso.date();

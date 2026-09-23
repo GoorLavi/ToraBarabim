@@ -1,11 +1,23 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 
-import type { DedicationHonorific, DedicationType, HonoredGender } from '@torabarabim/common';
+import type { DedicationGroup, DedicationHonorific, DedicationText, DedicationType, HonoredGender } from '@torabarabim/common';
 
+import * as fixtures from '../../client/src/dedicationFixture';
+import {
+  DEDICATION_FORMULA_BY_TYPE,
+  DEDICATION_HONORIFIC_SUFFIX,
+  DEDICATION_PARENT_PARTICLE,
+} from '../src/service/dedication/consts';
 import { dedicationRotationKey } from '../src/service/dedication/rotation';
 import { composeDedicationText } from '../src/service/dedication/text';
 import type { DedicationFields } from '../src/service/dedication/models';
+
+const isDedicationText = (value: unknown): value is DedicationText =>
+  typeof value === 'object' && value !== null && 'formulaLine' in value && 'nameLine' in value;
+
+const isDedicationGroup = (value: unknown): value is DedicationGroup =>
+  typeof value === 'object' && value !== null && 'type' in value && Array.isArray((value as DedicationGroup).items);
 
 // Pure logic, so this suite needs neither a database nor a built client,
 // the same shape as `rabbi-order.test.ts`. It exists because the composer
@@ -180,5 +192,71 @@ describe('dedicationRotationKey', () => {
     const first = new Date('2026-06-15T10:00:00Z');
     const second = new Date('2026-09-20T10:00:00Z');
     assert.notEqual(dedicationRotationKey('dedication-1', first), dedicationRotationKey('dedication-1', second));
+  });
+});
+
+// The Storybook fixtures are hand-written copies of what `composeDedicationText`
+// returns, and the design gate is judged against them, so a fixture that does not
+// mirror the composer shows the reviewer behaviour that cannot happen. That is not
+// hypothetical: an earlier revision bound every word of a name with a non-breaking
+// space, which made every name unbreakable, and the longest one rendered 500px wide
+// inside its 280px unit instead of wrapping. These assertions are against that
+// defect. The fixture module imports nothing but types from `common`, which is what
+// lets this suite reach across the workspace, the same way `dedication-band.test.ts`
+// reaches the band's pure helpers.
+describe('story fixtures mirror the composer', () => {
+  const HONORIFIC_SUFFIXES = Object.values(DEDICATION_HONORIFIC_SUFFIX);
+  const PARENT_PARTICLES = Object.values(DEDICATION_PARENT_PARTICLE);
+  const FORMULAS = Object.values(DEDICATION_FORMULA_BY_TYPE);
+
+  const everyText = (): DedicationText[] => [
+    ...Object.values(fixtures).filter((value): value is DedicationText => isDedicationText(value)),
+    ...Object.values(fixtures)
+      .filter((value): value is DedicationGroup => isDedicationGroup(value))
+      .flatMap((group) => group.items.map((item) => item.text)),
+  ];
+
+  test('every formula line is one the server actually composes', () => {
+    for (const text of everyText()) {
+      assert.ok(
+        FORMULAS.includes(text.formulaLine),
+        `formulaLine ${JSON.stringify(text.formulaLine)} is not one of the server's formulas`,
+      );
+    }
+  });
+
+  test('a name line binds a non-breaking space only before an honorific suffix', () => {
+    for (const text of everyText()) {
+      const [, bound, ...rest] = text.nameLine.split(NBSP);
+      if (bound === undefined) continue;
+      assert.equal(rest.length, 0, `nameLine ${JSON.stringify(text.nameLine)} binds more than the suffix`);
+      assert.ok(
+        HONORIFIC_SUFFIXES.includes(bound),
+        `nameLine ${JSON.stringify(text.nameLine)} binds ${JSON.stringify(bound)}, which is not an honorific`,
+      );
+    }
+  });
+
+  test('a parent line binds a non-breaking space only after the particle', () => {
+    for (const text of everyText()) {
+      if (!text.parentLine) continue;
+      const [particle, bound, ...rest] = text.parentLine.split(NBSP);
+      assert.ok(
+        bound !== undefined && rest.length === 0,
+        `parentLine ${JSON.stringify(text.parentLine)} does not bind exactly the particle`,
+      );
+      assert.ok(
+        particle !== undefined && PARENT_PARTICLES.includes(particle),
+        `parentLine ${JSON.stringify(text.parentLine)} starts with ${JSON.stringify(particle)}, not בן or בת`,
+      );
+    }
+  });
+
+  test('no fixture line carries an ASCII quote', () => {
+    for (const text of everyText()) {
+      for (const line of Object.values(text)) {
+        assert.ok(!/["']/.test(line), `${JSON.stringify(line)} carries an ASCII quote`);
+      }
+    }
   });
 });

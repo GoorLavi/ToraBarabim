@@ -48,14 +48,24 @@ export const HomePage = styled(({ className }: HomePageProps) => {
   // Runs once per page load, in the one nearest common ancestor of both
   // placements, and passed down to each as a prop: two instances each
   // drawing their own would put two different type groups on one page
-  // (design-system.md, dedication "The draw"). The empty dependency array
-  // is deliberate, never guarded behind a ref or a module flag: `Math.random`
-  // in the render path would make the server's pick and the client's first
-  // paint disagree, a hydration mismatch, so the draw happens only here,
-  // after mount. StrictMode's second invocation harmlessly overwrites.
+  // (design-system.md, dedication "The draw"). `Math.random` in the render
+  // path would make the server's pick and the client's first paint
+  // disagree, a hydration mismatch, so the draw happens only here, after
+  // mount.
+  //
+  // It depends on the pool rather than running on mount alone: the loader
+  // seeds the query cache on a server-rendered visit, but a client-side
+  // navigation into the home page resolves the query after the first
+  // effect, and drawing from an empty pool then would leave the page with
+  // no dedication for the whole visit. The `?? previous` keeps it to one
+  // draw per load without a ref or a module flag, so a background refetch
+  // cannot reshuffle what a reader is already looking at, and StrictMode's
+  // second invocation is harmless.
+  const dedications = homeRowsQuery.data?.dedications;
   useEffect(() => {
-    setDedicationGroup(drawDedicationGroup(homeRowsQuery.data?.dedications ?? [], Math.random));
-  }, []);
+    if (!dedications?.length) return;
+    setDedicationGroup((previous) => previous ?? drawDedicationGroup(dedications, Math.random));
+  }, [dedications]);
 
   const browseItems = mode === 'rail' ? flattenHomeRows(homeRowsQuery.data) : lessonsQuery.data?.items;
   const isBrowseLoading = mode === 'rail' ? homeRowsQuery.isPending : lessonsQuery.isPending;

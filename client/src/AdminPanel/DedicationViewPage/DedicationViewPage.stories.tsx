@@ -7,7 +7,7 @@ import { installMockFetch, jsonResponse, NEVER_RESOLVES } from '~/storyMocks';
 
 import { DedicationViewPage } from './DedicationViewPage';
 
-const NBSP = ' ';
+const NBSP = ' ';
 
 const adminDedication = (overrides: Partial<AdminDedication>): AdminDedication => ({
   id: 'story-live',
@@ -23,10 +23,10 @@ const adminDedication = (overrides: Partial<AdminDedication>): AdminDedication =
   state: 'live',
   display: {
     formulaLine: `לעילוי${NBSP}נשמת`,
-    nameLine: `חנה${NBSP}דבורה${NBSP}ע״ה`,
+    nameLine: `חנה דבורה${NBSP}ע״ה`,
     parentLine: `בת${NBSP}אברהם`,
     closingLine: 'תנצב״ה',
-    donorCreditLine: `תרומת${NBSP}משפחת${NBSP}לוי`,
+    donorCreditLine: `תרומת משפחת${NBSP}לוי`,
   },
   createdAt: '2026-08-20T10:00:00.000Z',
   updatedAt: '2026-08-20T10:00:00.000Z',

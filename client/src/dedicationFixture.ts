@@ -70,14 +70,14 @@ export const DEDICATION_TEXT_MEMORIAL_LONGEST_NAME: DedicationText = {
 // Healing carries no closing line: planned memorial-only
 // (design-system.md, "Still open, not blocking").
 export const DEDICATION_TEXT_HEALING: DedicationText = {
-  formulaLine: `לרפואה${NBSP}שלמה${NBSP}של`,
-  nameLine: `משה${NBSP}כהן`,
+  formulaLine: `לרפואה${NBSP}שלמה${NBSP}של${NBSP}`,
+  nameLine: `משה כהן`,
   parentLine: `בן${NBSP}אברהם`,
 };
 
 export const DEDICATION_TEXT_SUCCESS: DedicationText = {
   formulaLine: 'להצלחת',
-  nameLine: `יוסף${NBSP}לוי`,
+  nameLine: `יוסף לוי`,
   parentLine: `בן${NBSP}דוד`,
   donorCreditLine: `תרומת משפחת${NBSP}לוי`,
 };
@@ -99,7 +99,7 @@ export const DEDICATION_GROUP_HEALING: DedicationGroup = {
     dedicationFixture({ id: 'dedication-healing-1', text: DEDICATION_TEXT_HEALING }),
     dedicationFixture({
       id: 'dedication-healing-2',
-      text: { formulaLine: `לרפואה${NBSP}שלמה${NBSP}של`, nameLine: `רחל${NBSP}אברמוביץ`, parentLine: `בת${NBSP}שמואל` },
+      text: { formulaLine: `לרפואה${NBSP}שלמה${NBSP}של${NBSP}`, nameLine: `רחל אברמוביץ`, parentLine: `בת${NBSP}שמואל` },
     }),
   ],
 };
@@ -110,7 +110,7 @@ export const DEDICATION_GROUP_SUCCESS: DedicationGroup = {
     dedicationFixture({ id: 'dedication-success-1', text: DEDICATION_TEXT_SUCCESS }),
     dedicationFixture({
       id: 'dedication-success-2',
-      text: { formulaLine: 'להצלחת', nameLine: `נחמה${NBSP}שפירא`, parentLine: `בת${NBSP}חיים` },
+      text: { formulaLine: 'להצלחת', nameLine: `נחמה שפירא`, parentLine: `בת${NBSP}חיים` },
     }),
   ],
 };

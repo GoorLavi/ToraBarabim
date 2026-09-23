@@ -7,7 +7,7 @@ import { installMockFetch, jsonResponse } from '~/storyMocks';
 
 import { DedicationFormPage } from './DedicationFormPage';
 
-const NBSP = ' ';
+const NBSP = ' ';
 
 // `installMockFetch` answers by URL only (storyMocks.ts), so this fixed
 // response stands in for whatever the draft actually says: good enough to
@@ -15,7 +15,7 @@ const NBSP = ' ';
 // lands, which is what `PreviewPopulated` below checks.
 const PREVIEW_RESPONSE = {
   formulaLine: `לעילוי${NBSP}נשמת`,
-  nameLine: `אברהם${NBSP}כהן`,
+  nameLine: `אברהם כהן`,
   parentLine: undefined,
   closingLine: undefined,
   donorCreditLine: undefined,
@@ -35,10 +35,10 @@ const existingDedication: AdminDedication = {
   state: 'live',
   display: {
     formulaLine: `לעילוי${NBSP}נשמת`,
-    nameLine: `חנה${NBSP}דבורה${NBSP}ע״ה`,
+    nameLine: `חנה דבורה${NBSP}ע״ה`,
     parentLine: `בת${NBSP}אברהם`,
     closingLine: 'תנצב״ה',
-    donorCreditLine: `תרומת${NBSP}משפחת${NBSP}לוי`,
+    donorCreditLine: `תרומת משפחת${NBSP}לוי`,
   },
   createdAt: '2026-08-20T10:00:00.000Z',
   updatedAt: '2026-08-20T10:00:00.000Z',
