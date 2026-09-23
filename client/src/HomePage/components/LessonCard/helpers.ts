@@ -3,7 +3,7 @@ import type { LessonAudience, LessonOccurrence } from '@torabarabim/common';
 import { AUDIENCE_LABELS } from '~/consts';
 import { rabbiDisplayName } from '~/helpers';
 
-import { CANCELLED_LABEL, LESSON_TOPIC_LABELS, cardWeekday } from './consts';
+import { CANCELLED_LABEL, FALLBACK_POSTERS, LESSON_TOPIC_LABELS, cardWeekday } from './consts';
 import type { AudienceTreatment, LessonCardSurface } from './models';
 
 // Where the audience line at the head of the meta line lands, per surface
@@ -46,3 +46,17 @@ export const cardAriaLabel = (lesson: LessonOccurrence): string => {
 
   return parts.join(', ');
 };
+
+// djb2. Not cryptographic and not trying to be: it only has to spread lesson
+// ids evenly over the six posters and land the same id on the same poster
+// every time, so that a server render and the browser agree.
+const hashLessonId = (lessonId: string): number => {
+  let hash = 5381;
+  for (let i = 0; i < lessonId.length; i += 1) {
+    hash = (hash * 33) ^ lessonId.charCodeAt(i);
+  }
+  return Math.abs(hash);
+};
+
+export const fallbackPosterFor = (lessonId: string): string =>
+  FALLBACK_POSTERS[hashLessonId(lessonId) % FALLBACK_POSTERS.length]!;

@@ -1,5 +1,12 @@
 import type { LessonTopic } from '@torabarabim/common';
 
+import posterShtenderWindow from '~/assets/lessonFallbackPosters/lesson-fallback-01-shtender-window.webp';
+import posterBindingsShelf from '~/assets/lessonFallbackPosters/lesson-fallback-02-bindings-shelf.webp';
+import posterBookcaseBrass from '~/assets/lessonFallbackPosters/lesson-fallback-03-bookcase-brass.webp';
+import posterDeskQuill from '~/assets/lessonFallbackPosters/lesson-fallback-04-desk-quill.webp';
+import posterLeatherCover from '~/assets/lessonFallbackPosters/lesson-fallback-05-leather-cover.webp';
+import posterBeitMidrashShtender from '~/assets/lessonFallbackPosters/lesson-fallback-06-beit-midrash-shtender.webp';
+
 export const CANCELLED_LABEL = 'מבוטל השבוע';
 // The prefix before the substituted rabbi's name; the honorific-aware part
 // that follows comes from `SUBSTITUTE_PREFIX_BY_HONORIFIC` (~/consts.ts).
@@ -39,3 +46,12 @@ export const CANCELLED_LABEL_BOTTOM_THRESHOLD = '200px';
 const weekdayFormatter = new Intl.DateTimeFormat('he-IL', { weekday: 'short', timeZone: 'Asia/Jerusalem' });
 
 export const cardWeekday = (isoDate: string): string => weekdayFormatter.format(new Date(`${isoDate}T00:00:00Z`));
+
+export const FALLBACK_POSTERS = [
+  posterShtenderWindow,
+  posterBindingsShelf,
+  posterBookcaseBrass,
+  posterDeskQuill,
+  posterLeatherCover,
+  posterBeitMidrashShtender,
+];
