@@ -25,23 +25,23 @@ export const dedicationFixture = (dedication: Partial<Pick<Dedication, 'id'>> & 
 // fixture by accident.
 export const DEDICATION_TEXT_MEMORIAL_WRAPPING: DedicationText = {
   formulaLine: `לעילוי${NBSP}נשמת`,
-  nameLine: `חנה${NBSP}דבורה${NBSP}ע״ה`,
+  nameLine: `חנה דבורה${NBSP}ע״ה`,
   parentLine: `בת${NBSP}אברהם`,
   closingLine: 'תנצב״ה',
-  donorCreditLine: `תרומת${NBSP}משפחת${NBSP}לוי`,
+  donorCreditLine: `תרומת משפחת${NBSP}לוי`,
 };
 
 // No parent line: absent, not empty (design-system.md, States).
 export const DEDICATION_TEXT_MEMORIAL_NO_PARENT: DedicationText = {
   formulaLine: `לעילוי${NBSP}נשמת`,
-  nameLine: `רבקה${NBSP}גולדשטיין${NBSP}ע״ה`,
+  nameLine: `רבקה גולדשטיין${NBSP}ע״ה`,
   closingLine: 'תנצב״ה',
 };
 
 // No donor credit line.
 export const DEDICATION_TEXT_MEMORIAL_NO_DONOR_CREDIT: DedicationText = {
   formulaLine: `לעילוי${NBSP}נשמת`,
-  nameLine: `שלמה${NBSP}אדלר${NBSP}ז״ל`,
+  nameLine: `שלמה אדלר${NBSP}ז״ל`,
   parentLine: `בן${NBSP}יעקב`,
   closingLine: 'תנצב״ה',
 };
@@ -50,10 +50,10 @@ export const DEDICATION_TEXT_MEMORIAL_NO_DONOR_CREDIT: DedicationText = {
 // other two.
 export const DEDICATION_TEXT_MEMORIAL_HYD: DedicationText = {
   formulaLine: `לעילוי${NBSP}נשמת`,
-  nameLine: `אורי${NBSP}מזרחי${NBSP}הי״ד`,
+  nameLine: `אורי מזרחי${NBSP}הי״ד`,
   parentLine: `בן${NBSP}נעם`,
   closingLine: 'תנצב״ה',
-  donorCreditLine: `תרומת${NBSP}משפחת${NBSP}מזרחי`,
+  donorCreditLine: `תרומת משפחת${NBSP}מזרחי`,
 };
 
 // The longest realistic name this fixture set carries, for the wrapping
@@ -61,10 +61,10 @@ export const DEDICATION_TEXT_MEMORIAL_HYD: DedicationText = {
 // which wraps to more than two lines at 280.
 export const DEDICATION_TEXT_MEMORIAL_LONGEST_NAME: DedicationText = {
   formulaLine: `לעילוי${NBSP}נשמת`,
-  nameLine: `יהודה${NBSP}אריה${NBSP}לייב${NBSP}הכהן${NBSP}ז״ל`,
-  parentLine: `בן${NBSP}משה${NBSP}יצחק`,
+  nameLine: `יהודה אריה לייב הכהן${NBSP}ז״ל`,
+  parentLine: `בן${NBSP}משה יצחק`,
   closingLine: 'תנצב״ה',
-  donorCreditLine: `תרומת${NBSP}משפחת${NBSP}אשכנזי`,
+  donorCreditLine: `תרומת משפחת${NBSP}אשכנזי`,
 };
 
 // Healing carries no closing line: planned memorial-only
@@ -79,7 +79,7 @@ export const DEDICATION_TEXT_SUCCESS: DedicationText = {
   formulaLine: 'להצלחת',
   nameLine: `יוסף${NBSP}לוי`,
   parentLine: `בן${NBSP}דוד`,
-  donorCreditLine: `תרומת${NBSP}משפחת${NBSP}לוי`,
+  donorCreditLine: `תרומת משפחת${NBSP}לוי`,
 };
 
 // One group per dedication type, each with more than one item so a
@@ -132,7 +132,7 @@ export const DEDICATION_GROUP_OVERFLOWING: DedicationGroup = {
       id: `dedication-overflow-${index + 1}`,
       text: {
         formulaLine: `לעילוי${NBSP}נשמת`,
-        nameLine: `דוגמה${NBSP}${index + 1}${NBSP}ז״ל`,
+        nameLine: `דוגמה ${index + 1}${NBSP}ז״ל`,
         parentLine: `בן${NBSP}פלוני`,
         closingLine: 'תנצב״ה',
       },
