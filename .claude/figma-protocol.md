@@ -88,6 +88,12 @@ Pass both, so the file lands in the ToraBarabim project rather than the plan's l
 drafts folder. `whoami` may list other plans on the same grant; they belong to other
 projects, so never create ToraBarabim work in one of them.
 
+**The site is called `תורה ברבים`, and that spelling is not negotiable.** It is
+`SITE_NAME` in `client/consts.ts` and the wordmark in the logo file. An agent naming a
+file on 2026-09-22 wrote "טורה בראביים", which is the English `ToraBarabim`
+transliterated back into Hebrew rather than the name the site actually uses. Copy a
+Hebrew name from the code or the logo file; never sound one out from the English.
+
 **Creation is the only moment that decides where the file lives and what it is
 called, so both are settled before the call, never after.** Without a `projectId` the
 file lands in drafts, and no tool of yours can move it out or rename it; the human is
