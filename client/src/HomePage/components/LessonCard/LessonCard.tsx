@@ -11,15 +11,13 @@ import { AUDIENCE_LABELS, SUBSTITUTE_PREFIX_BY_HONORIFIC } from '~/consts';
 import { lessonPath, rabbiDisplayName } from '~/helpers';
 
 import * as consts from './consts';
-import { audienceTreatment, cardAriaLabel, descriptionLabel } from './helpers';
+import { audienceTreatment, cardAriaLabel, descriptionLabel, fallbackPosterFor } from './helpers';
 import type { LessonCardProps } from './models';
 import * as styles from './styles';
 
-// The rabbi's portrait is structural, not decorative (design-system.md, "The
-// poster image spec"): the card is built around an image being present. A
-// missing photoUrl is real data today (Rabbi.photoUrl is optional on the
-// wire), so it falls back to a single, plain, undecorated fill rather than
-// initials or a silhouette, kept in this one spot for a later single edit.
+// The poster is keyed to the lesson id rather than the rabbi id so that a
+// server render and the browser always land on the same image; a rabbi's
+// lessons therefore differ from each other, which is intended.
 export const LessonCard = styled(({ className, lesson, surface, clickContext }: LessonCardProps) => {
   const teachingRabbi = lesson.substituteRabbi ?? lesson.rabbi;
   const description = descriptionLabel(lesson);
@@ -42,11 +40,7 @@ export const LessonCard = styled(({ className, lesson, surface, clickContext }: 
       onClick={handleClick}
     >
       <div className="poster">
-        {teachingRabbi.photoUrl ? (
-          <img className="image" src={teachingRabbi.photoUrl} alt="" />
-        ) : (
-          <div className="image placeholder" aria-hidden="true" />
-        )}
+        <img className="image" src={teachingRabbi.photoUrl ?? fallbackPosterFor(lesson.lessonId)} alt="" />
         {lesson.status === 'cancelled' && (
           <span className="cancelledLabel" role="status">
             {consts.CANCELLED_LABEL}
