@@ -10,6 +10,7 @@ const DEBOUNCE_MS = 250;
 export interface RabbiSearchResults {
   items: Rabbi[];
   isPending: boolean;
+  isError: boolean;
 }
 
 export const useRabbiSearch = (query: string): RabbiSearchResults => {
@@ -27,5 +28,5 @@ export const useRabbiSearch = (query: string): RabbiSearchResults => {
     queryFn: () => fetchAdminRabbis(filters),
   });
 
-  return { items: result.data?.items ?? [], isPending: result.isPending };
+  return { items: result.data?.items ?? [], isPending: result.isPending, isError: result.isError };
 };

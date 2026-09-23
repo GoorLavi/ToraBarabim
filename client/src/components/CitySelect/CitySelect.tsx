@@ -1,95 +1,48 @@
-import { useRef, useState } from 'react';
-import classNames from 'classnames';
-import styled from 'styled-components';
+import { useState } from 'react';
+import type { City } from '@torabarabim/common';
 
-import { directionForValue } from '~/helpers';
-import { useDismissPopover } from '~/hooks/useDismissPopover';
+import { SearchSelect } from '~/components/SearchSelect/SearchSelect';
 
 import * as consts from './consts';
 import type { CitySelectProps } from './models';
-import * as styles from './styles';
 import { useCitySearch } from './useCitySearch';
 
 // A labelled, searchable city combobox for the admin and rabbi panels: the
 // counterpart to the public site's `CityPicker`, kept as its own component
 // since it needs a "clear" affordance the public picker does not
-// (client/CLAUDE.md).
-export const CitySelect = styled(({ className, city, onSelectCity, placeholderLabel, allowClear, fullWidth, invalid }: CitySelectProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+// (client/CLAUDE.md). A thin `SearchSelect` wrapper: its own search hook and
+// Hebrew copy, no styling of its own.
+export const CitySelect = ({ className, city, onSelectCity, placeholderLabel, allowClear, fullWidth, invalid }: CitySelectProps) => {
   const [query, setQuery] = useState('');
   const results = useCitySearch(query);
-  const rootRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-
-  useDismissPopover({ isOpen, rootRef, triggerRef, onDismiss: () => setIsOpen(false) });
 
   return (
-    <div className={classNames(className, { open: isOpen, fullWidth, invalid })} ref={rootRef}>
-      <button
-        type="button"
-        className="control"
-        ref={triggerRef}
-        aria-haspopup="listbox"
-        aria-expanded={isOpen}
-        onClick={() => setIsOpen((open) => !open)}
-      >
-        <span className="label" dir="auto">
-          {city?.name ?? placeholderLabel}
-        </span>
-        <svg className="chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M7 10l5 5 5-5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
-
+    <SearchSelect<City>
+      {...{ className, fullWidth, invalid }}
+      rowLayout
+      showChevron
+      truncateTrigger
+      items={results.items}
+      isPending={results.isPending}
+      isError={results.isError}
+      getItemKey={(item) => item.id}
+      isSelected={(item) => item.id === city?.id}
+      onSelect={(item) => onSelectCity({ id: item.id, name: item.name })}
+      onQueryChange={setQuery}
+      renderTrigger={() => city?.name ?? placeholderLabel}
+      renderOption={(item) => <span dir="auto">{item.name}</span>}
+      searchLabel={consts.SEARCH_LABEL}
+      searchPlaceholder={consts.SEARCH_PLACEHOLDER}
+      hint={consts.SEARCH_HINT}
+      loadingMessage={consts.LOADING_MESSAGE}
+      emptyMessage={consts.NO_RESULTS_MESSAGE}
+      errorMessage={consts.LOAD_ERROR_MESSAGE}
+    >
       {allowClear && city && (
-        <button type="button" className="clear" onClick={() => onSelectCity(undefined)}>
+        <button type="button" className="actionLink" onClick={() => onSelectCity(undefined)}>
           {consts.CLEAR_LABEL}
         </button>
       )}
-
-      {isOpen && (
-        <div className="popover">
-          <input
-            type="text"
-            className="search"
-            autoFocus
-            aria-label={consts.SEARCH_LABEL}
-            placeholder={consts.SEARCH_PLACEHOLDER}
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            dir={directionForValue(query)}
-          />
-
-          {query.trim().length === 0 && <p className="hint">{consts.SEARCH_HINT}</p>}
-          {query.trim().length > 0 && results.isPending && <p className="hint">{consts.LOADING_MESSAGE}</p>}
-          {query.trim().length > 0 && !results.isPending && !results.isError && results.items.length === 0 && (
-            <p className="hint">{consts.NO_RESULTS_MESSAGE}</p>
-          )}
-
-          {results.items.length > 0 && (
-            <ul className="results" role="listbox">
-              {results.items.map((item) => (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    role="option"
-                    aria-selected={item.id === city?.id}
-                    onClick={() => {
-                      onSelectCity({ id: item.id, name: item.name });
-                      setQuery('');
-                      setIsOpen(false);
-                    }}
-                  >
-                    <span dir="auto">{item.name}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
-    </div>
+    </SearchSelect>
   );
-})`
-  ${styles.CitySelect}
-`;
+};
