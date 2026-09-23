@@ -1,8 +1,9 @@
 import type { DedicationGroup } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { cdp } from 'vitest/browser';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { expect, waitFor } from 'storybook/test';
+import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { DEDICATION_GROUP_HEALING, DEDICATION_GROUP_OVERFLOWING, DEDICATION_GROUP_SINGLE } from '~/dedicationFixture';
 import { ARGAMAN_VE_ZAHAV_THEME } from '~/theme/themes';
@@ -118,5 +119,85 @@ export const PendingThenDrawnCrawls: Story = {
       if (!viewport) throw new Error('DedicationBand story: .viewport not found once the group lands');
       expect(getComputedStyle(viewport).overflowX).toEqual('auto');
     });
+  },
+};
+
+// One real touch gesture, through Chrome DevTools Protocol via `cdp()`,
+// stepped over several `touchmove` points the way a finger actually moves.
+// A synthetic DOM `TouchEvent` cannot stand in for this: whether a swipe
+// scrolls the page or the element it started on is decided by the
+// browser's own gesture recognition against `touch-action`, upstream of
+// any application code, so nothing short of a real touch input exercises
+// it. This is the one that was wrong in the most damaging way: `touch-action:
+// pan-x` was added believing it protected the page's own vertical scroll,
+// and was instead measured, on a real device, to trap it (an on-band swipe
+// moved the page 0px; the identical swipe just above the band moved it
+// normally). Without this assertion the next reader has only the comment
+// in styles.ts to go on.
+const dispatchVerticalTouchSwipe = async (x: number, startY: number, distancePx: number): Promise<void> => {
+  const client = cdp();
+  const steps = 8;
+  await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y: startY }] });
+  for (let step = 1; step <= steps; step++) {
+    const y = startY - (distancePx * step) / steps;
+    await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x, y }] });
+    await new Promise((resolve) => window.setTimeout(resolve, 16));
+  }
+  await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+};
+
+export const VerticalSwipeScrollsThePage: Story = {
+  args: { group: DEDICATION_GROUP_OVERFLOWING, hasDedications: true, variant: 'onPage' },
+  play: async ({ canvasElement }) => {
+    const viewport = canvasElement.querySelector<HTMLElement>('.viewport');
+    if (!viewport) throw new Error('DedicationBand story: .viewport not found');
+
+    // The story alone is exactly the band's own height: without something
+    // taller than the viewport to scroll past, no swipe, trapped or not,
+    // would move anything, and the assertion below would pass for the
+    // wrong reason.
+    const filler = document.createElement('div');
+    filler.style.blockSize = '2000px';
+    document.body.appendChild(filler);
+    window.scrollTo(0, 400);
+    await new Promise((resolve) => window.setTimeout(resolve, 50));
+
+    try {
+      const box = viewport.getBoundingClientRect();
+      const restingScrollY = window.scrollY;
+
+      await dispatchVerticalTouchSwipe(box.left + box.width / 2, box.top + box.height / 2, 200);
+      await new Promise((resolve) => window.setTimeout(resolve, 200));
+
+      expect(Math.abs(window.scrollY - restingScrollY)).toBeGreaterThan(50);
+    } finally {
+      document.body.removeChild(filler);
+      window.scrollTo(0, 0);
+    }
+  },
+};
+
+// The one that survived code review, because it is mouse-only: a mousedown
+// focuses the viewport (it is `tabIndex={0}` for arrow-key stepping), and
+// the crawl used to pause on any focus, keyboard or not, with nothing but
+// a blur to end the pause. `userEvent.click` is a real mouse interaction
+// under this runner's own browser automation, so `:focus-visible` on the
+// result matches what a real mouse click leaves it at.
+export const MouseClickDoesNotFreezeTheCrawl: Story = {
+  args: { group: DEDICATION_GROUP_OVERFLOWING, hasDedications: true, variant: 'onPage' },
+  play: async ({ canvasElement }) => {
+    const viewport = canvasElement.querySelector<HTMLElement>('.viewport');
+    if (!viewport) throw new Error('DedicationBand story: .viewport not found');
+
+    await waitFor(() => expect(getComputedStyle(viewport).overflowX).toEqual('auto'));
+
+    await userEvent.click(viewport);
+    await new Promise((resolve) => window.setTimeout(resolve, 200));
+    const afterClick = viewport.scrollLeft;
+
+    await new Promise((resolve) => window.setTimeout(resolve, 2000));
+    const later = viewport.scrollLeft;
+
+    expect(later).not.toEqual(afterClick);
   },
 };
