@@ -11,7 +11,7 @@ export interface DedicationPreviewFields {
   type: DedicationType;
   honoredName: string;
   honorific: DedicationHonorific | undefined;
-  honoredGender: HonoredGender;
+  honoredGender: HonoredGender | undefined;
   parentName: string;
   donorFamilyName: string;
   closingLineEnabled: boolean;

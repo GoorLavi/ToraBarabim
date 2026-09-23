@@ -176,7 +176,14 @@ export const DedicationFormPage = styled(({ className }: DedicationFormPageProps
               type="text"
               dir={directionForValue(form.parentName)}
               value={form.parentName}
-              onChange={(event) => setForm((prev) => ({ ...prev, parentName: event.target.value }))}
+              onChange={(event) => {
+                const parentName = event.target.value;
+                // The gender picker only ever shows once this field has
+                // content (below), so a choice made for a parent name that
+                // was since cleared must not linger unseen in the request:
+                // the same rule `type` applies to `honorific` above.
+                setForm((prev) => ({ ...prev, parentName, honoredGender: parentName.trim() ? prev.honoredGender : undefined }));
+              }}
             />
             <span className="helper">{consts.PARENT_NAME_HELPER}</span>
             {form.type === 'success' && <span className="helper">{consts.PARENT_NAME_SUCCESS_HELPER}</span>}

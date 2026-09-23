@@ -41,6 +41,7 @@ export const SAVE_LABEL = 'שמירת ההקדשה';
 export const SAVING_LABEL = 'שומרים...';
 
 export const REQUIRED_NAME_ERROR = 'יש למלא את השם שיופיע בהקדשה';
+export const REQUIRED_GENDER_ERROR = 'יש לבחור בן או בת';
 export const REQUIRED_STARTS_ON_ERROR = 'יש למלא תאריך התחלה';
 export const REQUIRED_ENDS_ON_ERROR = 'יש למלא תאריך סיום';
 export const INVALID_WINDOW_ERROR = 'תאריך הסיום לא יכול להקדים את תאריך ההתחלה';

@@ -9,7 +9,7 @@ export const emptyDedicationForm: DedicationFormState = {
   type: 'memorial',
   honoredName: '',
   honorific: undefined,
-  honoredGender: 'male',
+  honoredGender: undefined,
   parentName: '',
   donorFamilyName: '',
   closingLineEnabled: false,
@@ -21,11 +21,10 @@ export const dedicationFormFromExisting = (dedication: AdminDedication): Dedicat
   type: dedication.type,
   honoredName: dedication.honoredName,
   honorific: dedication.honorific,
-  // A stored record can carry no gender at all, when it has no parent name
-  // (helpers.ts's `emptyDedicationForm` default): the picker itself only
-  // ever renders once a parent name exists, so this default is never shown
-  // without a real choice beside it.
-  honoredGender: dedication.honoredGender ?? 'male',
+  // A stored record can carry no gender at all, when it has no parent name:
+  // that is a real, valid state, shown as unanswered rather than a guessed
+  // default.
+  honoredGender: dedication.honoredGender,
   parentName: dedication.parentName ?? '',
   donorFamilyName: dedication.donorFamilyName ?? '',
   closingLineEnabled: dedication.closingLineEnabled,
@@ -40,6 +39,7 @@ export const dedicationFormFromExisting = (dedication: AdminDedication): Dedicat
 export const validateDedicationForm = (form: DedicationFormState): DedicationFormErrors => {
   const errors: DedicationFormErrors = {};
   if (!form.honoredName.trim()) errors.honoredName = consts.REQUIRED_NAME_ERROR;
+  if (form.parentName.trim() && !form.honoredGender) errors.honoredGender = consts.REQUIRED_GENDER_ERROR;
   if (!form.startsOn) errors.startsOn = consts.REQUIRED_STARTS_ON_ERROR;
   if (!form.endsOn) errors.endsOn = consts.REQUIRED_ENDS_ON_ERROR;
   if (form.startsOn && form.endsOn && form.endsOn < form.startsOn) errors.endsOn = consts.INVALID_WINDOW_ERROR;
@@ -68,7 +68,11 @@ export const buildDedicationRequest = (form: DedicationFormState): CreateDedicat
   // dead. A stale value left over from switching away from that type must
   // never reach the request, the server rejects it with a 400.
   honorific: form.type === 'memorial' ? form.honorific : undefined,
-  honoredGender: form.honoredGender,
+  // The gender picker is only ever shown once a parent name exists (it
+  // drives the בן/בת particle on that line and nothing else), so the same
+  // rule as `honorific` above applies: a stale choice left over from
+  // clearing the parent name must never reach the request.
+  honoredGender: form.parentName.trim() ? form.honoredGender : undefined,
   parentName: form.parentName.trim() || undefined,
   donorFamilyName: form.donorFamilyName.trim() || undefined,
   // The checkbox is only ever shown for a memorial (consts.CLOSING_LINE_HELPER),

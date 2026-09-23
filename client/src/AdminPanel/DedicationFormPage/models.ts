@@ -11,7 +11,10 @@ export interface DedicationFormState {
   type: DedicationType;
   honoredName: string;
   honorific: DedicationHonorific | undefined;
-  honoredGender: HonoredGender;
+  // Undefined until the admin actually picks one: a default would print בן
+  // or בת nobody chose, exactly the guess this feature's split from
+  // `honorific` exists to prevent.
+  honoredGender: HonoredGender | undefined;
   parentName: string;
   donorFamilyName: string;
   closingLineEnabled: boolean;

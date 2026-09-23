@@ -145,3 +145,26 @@ export const ValidationError: Story = {
     await canvas.findByText('שם עברי אינו יכול להכיל גרש או גרשיים באנגלית (" או \'), יש להשתמש בסימני הפיסוק העבריים ״ ו-׳ בלבד');
   },
 };
+
+// A parent name with no gender chosen: the picker only appears once the
+// parent name has content, and starts with neither pill selected (no
+// default, per the story above and DedicationFormPage/models.ts), so this
+// is a real state the client-side check has to catch before the request
+// ever reaches the server.
+export const MissingGenderError: Story = {
+  decorators: [withCreateRoute],
+  play: async ({ canvasElement }) => {
+    createScenario = 'success';
+    const canvas = within(canvasElement);
+    const nameInput = await canvas.findByLabelText('השם שיופיע בהקדשה', { exact: false });
+    await userEvent.type(nameInput, 'משה כהן');
+    const parentNameInput = await canvas.findByLabelText('שם האב', { exact: false });
+    await userEvent.type(parentNameInput, 'אברהם');
+    const startsOnInput = canvas.getByLabelText('תאריך התחלה');
+    await userEvent.type(startsOnInput, '2026-10-01');
+    const endsOnInput = canvas.getByLabelText('תאריך סיום');
+    await userEvent.type(endsOnInput, '2026-12-01');
+    await userEvent.click(canvas.getByRole('button', { name: 'שמירת ההקדשה' }));
+    await canvas.findByText('יש לבחור בן או בת');
+  },
+};
