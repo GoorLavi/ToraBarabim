@@ -583,6 +583,53 @@ describe('admin API: dedications', () => {
 
     assert.deepEqual(previewRes.json(), record.display);
   });
+
+  test('a preview draft with only a type is a normal 200, never a 400', async () => {
+    const cookie = await loginAsNewAdmin();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/v1/admin/dedications/preview',
+      headers: { cookie },
+      payload: { type: 'memorial' },
+    });
+    assert.equal(res.statusCode, 200);
+  });
+
+  // The preview renders the composed string before anything is stored, so it
+  // must reject a honorific outside a memorial exactly as create and update
+  // do: without this the admin's live preview can print `ז״ל` next to a
+  // living person's name even though the save is (correctly) rejected.
+  test('a honorific on a non-memorial preview draft is a 400', async () => {
+    const cookie = await loginAsNewAdmin();
+    const responses = await Promise.all([
+      app.inject({
+        method: 'POST',
+        url: '/v1/admin/dedications/preview',
+        headers: { cookie },
+        payload: { type: 'healing', honoredName: 'דוד', honorific: 'zl' },
+      }),
+      app.inject({
+        method: 'POST',
+        url: '/v1/admin/dedications/preview',
+        headers: { cookie },
+        payload: { type: 'success', honoredName: 'דוד', honorific: 'zl' },
+      }),
+    ]);
+    for (const res of responses) assert.equal(res.statusCode, 400);
+  });
+
+  test('a honorific on a memorial preview draft is a 200 whose nameLine ends with the suffix', async () => {
+    const cookie = await loginAsNewAdmin();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/v1/admin/dedications/preview',
+      headers: { cookie },
+      payload: { type: 'memorial', honoredName: 'דוד', honorific: 'zl' },
+    });
+    assert.equal(res.statusCode, 200);
+    const text = res.json() as { nameLine: string };
+    assert.ok(text.nameLine.endsWith('ז״ל'), `expected the name line to end with the suffix, got "${text.nameLine}"`);
+  });
 });
 
 // The one place the shared Postgres connection (`rawClient`, backing both

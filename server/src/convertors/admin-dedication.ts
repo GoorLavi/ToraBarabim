@@ -29,8 +29,6 @@ export const toAdminDedication = (record: DedicationRecord, now: Date): AdminDed
   endsOn: record.endsOn,
   takenDownReason: record.takenDownReason,
   state: deriveState(record, todayInIsrael(now)),
-  // Reuses the one composer through the public convertor
-  // (`convertors/dedication.ts`), never a second composition path.
   display: toDedicationText(record),
   createdAt: record.createdAt,
   updatedAt: record.updatedAt,

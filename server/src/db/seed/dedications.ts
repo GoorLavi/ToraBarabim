@@ -13,7 +13,10 @@ interface DedicationSeed {
   type: DedicationType;
   honoredName: string;
   honorific?: DedicationHonorific;
-  honoredGender: HonoredGender;
+  // Absent for a whole-family dedication, which has no parentName either and
+  // therefore no gender to give (`requireGenderWhenParentNamePresent`,
+  // `service/admin-dedication/models.ts`).
+  honoredGender?: HonoredGender;
   parentName?: string;
   donorFamilyName?: string;
   closingLineEnabled: boolean;
@@ -119,11 +122,12 @@ const DEDICATIONS: DedicationSeed[] = [
     startsOffsetDays: -4,
     endsOffsetDays: 15,
   },
+  // A whole-family dedication: no gender and no parentName, which the
+  // composer handles by simply omitting the parent line.
   {
     id: 'dedication-9',
     type: 'success',
-    honoredName: 'מרים אשכנזי',
-    honoredGender: 'female',
+    honoredName: 'משפחת אשכנזי',
     closingLineEnabled: false,
     startsOffsetDays: -1,
     endsOffsetDays: 12,
@@ -169,7 +173,7 @@ const toDedicationInsert = (seed: DedicationSeed, todayIso: string): typeof dedi
     type: seed.type,
     honoredName: seed.honoredName,
     honorific: seed.honorific ?? null,
-    honoredGender: seed.honoredGender,
+    honoredGender: seed.honoredGender ?? null,
     parentName: seed.parentName ?? null,
     donorFamilyName: seed.donorFamilyName ?? null,
     closingLineEnabled: seed.closingLineEnabled,
