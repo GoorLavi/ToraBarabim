@@ -53,9 +53,6 @@ export const VIEWPORT_ARIA_LABEL = 'הקדשות, אפשר לגלול עם הח�
 // only its type, is measured against.
 export const DEDICATION_BAND_FOLD_SHARE = 0.28;
 export const DEDICATION_BAND_ON_PRIMARY_HEIGHT_REFERENCE = 418;
-// onPage carries less padding-block (16, not 32), so its own reference
-// total is correspondingly shorter.
-export const DEDICATION_BAND_ON_PAGE_HEIGHT_REFERENCE = 386;
 
 // Two floors, not one: below `md` the floor is 0.46; from `md` up it rises
 // to 0.54. A desktop reader sits roughly twice as far from the screen as a

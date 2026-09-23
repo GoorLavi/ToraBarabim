@@ -67,26 +67,11 @@ export const DedicationBand = css(
       margin-inline: calc(-1 * ${theme.spacing.xl});
       inline-size: calc(100% + 2 * ${theme.spacing.xl});
     }
-
-    /* The pool has a dedication to show but the per-load draw has not run
-       yet: reserves the block size the band is guaranteed to need at this
-       scale, so it does not go from absent to present under a reader
-       already looking at the page (design-system.md, dedication "The
-       draw", guarantee 3). Scaled the same way as the real content, off
-       the same driver, rather than a fixed figure: a fixed reservation
-       would be wrong at every scale but the one it was measured at. */
-    &.pending {
-      min-block-size: ${scaledCss(consts.DEDICATION_BAND_ON_PRIMARY_HEIGHT_REFERENCE, consts.DEDICATION_BAND_ON_PRIMARY_HEIGHT_REFERENCE * consts.DEDICATION_SCALE_FLOOR_BELOW_MD)};
-    }
   }
 
   &.onPage {
     /* No bleed: stays inside the rails column it is spliced into. */
     padding-block: ${scaledCss(consts.DEDICATION_BAND_PADDING_ON_PAGE_REFERENCE, consts.DEDICATION_BAND_PADDING_FLOOR_PX)};
-
-    &.pending {
-      min-block-size: ${scaledCss(consts.DEDICATION_BAND_ON_PAGE_HEIGHT_REFERENCE, consts.DEDICATION_BAND_ON_PAGE_HEIGHT_REFERENCE * consts.DEDICATION_SCALE_FLOOR_BELOW_MD)};
-    }
   }
 
   /* No touch-action declaration here, deliberately: pan-x was tried and
