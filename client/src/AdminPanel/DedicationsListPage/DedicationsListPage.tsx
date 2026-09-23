@@ -20,9 +20,13 @@ export const DedicationsListPage = styled(({ className }: DedicationsListPagePro
           <h1 className="title">{consts.HEADING}</h1>
           {state.status === 'success' && <p className="subheading">{consts.totalCountLabel(state.total)}</p>}
         </div>
-        <Link className="add" to={ADMIN_ROUTES.dedicationNew}>
-          {consts.ADD_DEDICATION_LABEL}
-        </Link>
+        {/* Absent, not merely hidden, once the empty state's own identical
+            primary button is on screen: two of them was one too many. */}
+        {!(state.status === 'success' && state.items.length === 0) && (
+          <Link className="add" to={ADMIN_ROUTES.dedicationNew}>
+            {consts.ADD_DEDICATION_LABEL}
+          </Link>
+        )}
       </div>
 
       {state.status === 'pending' && (

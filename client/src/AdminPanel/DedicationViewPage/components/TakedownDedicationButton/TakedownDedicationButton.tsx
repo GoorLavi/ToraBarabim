@@ -25,7 +25,7 @@ export const TakedownDedicationButton = styled(({ className, dedicationId }: Tak
     mutationFn: () => takedownAdminDedication(dedicationId, { reason: reason.trim() }),
     onSuccess: (dedication) => {
       queryClient.setQueryData(ADMIN_QUERY_KEYS.dedication(dedicationId), dedication);
-      void queryClient.invalidateQueries({ queryKey: ['admin', 'dedications'] });
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.dedicationsAll() });
       setIsDialogOpen(false);
     },
   });

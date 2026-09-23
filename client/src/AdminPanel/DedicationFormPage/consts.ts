@@ -33,8 +33,12 @@ export const DONOR_FAMILY_NAME_HELPER = 'לא חובה. אם ימולא, תתו�
 export const CLOSING_LINE_LABEL = 'הוספת תנצב״ה';
 export const CLOSING_LINE_HELPER = 'מופיע רק בהקדשות לעילוי נשמה.';
 
-export const STARTS_ON_LABEL = 'תאריך התחלה';
-export const ENDS_ON_LABEL = 'תאריך סיום';
+// The browser's own date picker renders in whatever order the visitor's
+// own locale expects (mm/dd/yyyy on an en-US browser, with nothing else on
+// screen saying so), on the two fields that decide when a paid dedication
+// appears, so the order is named in the label itself.
+export const STARTS_ON_LABEL = 'תאריך התחלה (יום/חודש/שנה)';
+export const ENDS_ON_LABEL = 'תאריך סיום (יום/חודש/שנה)';
 
 export const CANCEL_LABEL = 'ביטול';
 export const SAVE_LABEL = 'שמירת ההקדשה';

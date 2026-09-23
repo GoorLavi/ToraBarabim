@@ -22,7 +22,6 @@ export interface DedicationPreviewState {
   // sent for the current draft, so the caller shows its own quiet line
   // rather than a loading or an empty state.
   canPreview: boolean;
-  isPending: boolean;
   isError: boolean;
   text: DedicationText | undefined;
 }
@@ -67,5 +66,5 @@ export const useDedicationPreview = (fields: DedicationPreviewFields): Dedicatio
     placeholderData: keepPreviousData,
   });
 
-  return { canPreview, isPending: canPreview && result.isPending, isError: canPreview && result.isError, text: result.data };
+  return { canPreview, isError: canPreview && result.isError, text: result.data };
 };

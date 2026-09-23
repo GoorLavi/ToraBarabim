@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { AdminDedication } from '@torabarabim/common';
 
 import { AdminApiError, createAdminDedication, updateAdminDedication } from '~/AdminPanel/api';
+import { ADMIN_QUERY_KEYS } from '~/AdminPanel/consts';
 
 import { buildDedicationRequest } from './helpers';
 import type { DedicationFormState } from './models';
@@ -27,7 +28,7 @@ export const useSaveDedication = (): SaveDedicationResult => {
     try {
       const dedication = existingId ? await updateAdminDedication(existingId, body) : await createAdminDedication(body);
       setIsSaving(false);
-      void queryClient.invalidateQueries({ queryKey: ['admin', 'dedications'] });
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.dedicationsAll() });
       return dedication;
     } catch (caught) {
       setIsSaving(false);

@@ -127,7 +127,7 @@ export const DedicationFormPage = styled(({ className }: DedicationFormPageProps
             </div>
           </div>
 
-          <label className="field">
+          <label className={classNames('field', { invalid: Boolean(errorFor('honoredName')) })}>
             <span className="label">{consts.NAME_LABEL}</span>
             <input
               type="text"
@@ -170,7 +170,7 @@ export const DedicationFormPage = styled(({ className }: DedicationFormPageProps
             </div>
           )}
 
-          <label className="field">
+          <label className={classNames('field', { invalid: Boolean(errorFor('parentName')) })}>
             <span className="label">{DEDICATION_PARENT_NAME_LABELS[form.type]}</span>
             <input
               type="text"
@@ -212,7 +212,7 @@ export const DedicationFormPage = styled(({ className }: DedicationFormPageProps
             </div>
           )}
 
-          <label className="field">
+          <label className={classNames('field', { invalid: Boolean(errorFor('donorFamilyName')) })}>
             <span className="label">{consts.DONOR_FAMILY_NAME_LABEL}</span>
             <input
               type="text"
@@ -239,13 +239,13 @@ export const DedicationFormPage = styled(({ className }: DedicationFormPageProps
           )}
 
           <div className="dateRow">
-            <label className="field">
+            <label className={classNames('field', { invalid: Boolean(errorFor('startsOn')) })}>
               <span className="label">{consts.STARTS_ON_LABEL}</span>
               <input type="date" value={form.startsOn} onChange={(event) => setForm((prev) => ({ ...prev, startsOn: event.target.value }))} />
               {errorFor('startsOn') && <span className="error">{errorFor('startsOn')}</span>}
             </label>
 
-            <label className="field">
+            <label className={classNames('field', { invalid: Boolean(errorFor('endsOn')) })}>
               <span className="label">{consts.ENDS_ON_LABEL}</span>
               <input type="date" value={form.endsOn} onChange={(event) => setForm((prev) => ({ ...prev, endsOn: event.target.value }))} />
               {errorFor('endsOn') && <span className="error">{errorFor('endsOn')}</span>}

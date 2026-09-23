@@ -9,6 +9,13 @@
 import '@fontsource/assistant/400.css';
 import '@fontsource/assistant/600.css';
 import '@fontsource/assistant/700.css';
+// The second family, only ever at 700 and only for a dedication's name and
+// parent lines (root.tsx's own font link: family=Frank+Ruhl+Libre:wght@700).
+// Every dedication anyone reviewed here, including screenshots taken from
+// this preview, rendered in the platform's fallback serif until this line
+// existed: the 280px wrap depends on this face's own metrics, not a
+// generic serif's.
+import '@fontsource/frank-ruhl-libre/700.css';
 
 import type { Preview } from '@storybook/react-vite';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';

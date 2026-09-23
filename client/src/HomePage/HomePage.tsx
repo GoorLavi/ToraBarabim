@@ -62,6 +62,7 @@ export const HomePage = styled(({ className }: HomePageProps) => {
   // cannot reshuffle what a reader is already looking at, and StrictMode's
   // second invocation is harmless.
   const dedications = homeRowsQuery.data?.dedications;
+  const hasDedications = Boolean(dedications?.length);
   useEffect(() => {
     if (!dedications?.length) return;
     setDedicationGroup((previous) => previous ?? drawDedicationGroup(dedications, Math.random));
@@ -116,7 +117,7 @@ export const HomePage = styled(({ className }: HomePageProps) => {
         <ContactCta />
       </div>
 
-      <DedicationBand {...{ group: dedicationGroup, variant: 'onPrimary' as const }} />
+      <DedicationBand {...{ group: dedicationGroup, hasDedications, variant: 'onPrimary' as const }} />
     </main>
   );
 })`

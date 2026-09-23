@@ -93,29 +93,38 @@ export const TYPOGRAPHY: ThemeTypography = {
     desktop: { fontSize: '36px', lineHeight: '40px' },
     fontWeight: 700,
   },
+  // Line heights below are unitless ratios, not px values: a ratio scales
+  // for free as the band's own fold-driven scale changes font-size
+  // (DedicationBand/styles.ts, --dedication-scale-px), where a px value
+  // would need its own separate scaling. This also corrects a real error:
+  // the previous px pairing on formula and closing was reached by
+  // compressing leading below an honest constant ratio (formula was
+  // 24/32, 1.333; closing was 20/28, 1.4). Name and parent already carried
+  // an honest constant ratio (52/60 and 32/40, both preserved exactly
+  // below) and did not need correcting.
   dedicationFormula: {
     fontFamily: ASSISTANT_FONT_FAMILY,
     fontSize: '24px',
-    lineHeight: '32px',
+    lineHeight: '1.2',
     fontWeight: 400,
     letterSpacing: '0.04em',
   },
   dedicationName: {
     fontFamily: FRANK_RUHL_LIBRE_FONT_FAMILY,
     fontSize: '52px',
-    lineHeight: '60px',
+    lineHeight: '1.1538',
     fontWeight: 700,
   },
   dedicationParent: {
     fontFamily: FRANK_RUHL_LIBRE_FONT_FAMILY,
     fontSize: '32px',
-    lineHeight: '40px',
+    lineHeight: '1.25',
     fontWeight: 700,
   },
   dedicationClosing: {
     fontFamily: ASSISTANT_FONT_FAMILY,
     fontSize: '20px',
-    lineHeight: '28px',
+    lineHeight: '1.2',
     fontWeight: 400,
     letterSpacing: '0.12em',
   },

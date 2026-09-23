@@ -30,7 +30,7 @@ export const Ornament = styled(({ className, mirrored }: OrnamentProps) => {
       className={classNames(className, { mirrored })}
       width={consts.ORNAMENT_VIEWBOX_WIDTH}
       height={consts.ORNAMENT_VIEWBOX_HEIGHT}
-      viewBox={`0 0 ${consts.ORNAMENT_VIEWBOX_WIDTH} ${consts.ORNAMENT_VIEWBOX_HEIGHT}`}
+      viewBox={`0 ${consts.ORNAMENT_VIEWBOX_MIN_Y} ${consts.ORNAMENT_VIEWBOX_WIDTH} ${consts.ORNAMENT_VIEWBOX_HEIGHT}`}
       fill="none"
       aria-hidden="true"
       focusable="false"

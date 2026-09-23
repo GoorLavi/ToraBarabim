@@ -78,12 +78,32 @@ describe('wrapTrackPosition (the loop seam)', () => {
 });
 
 describe('stepByUnitPitch (arrow key stepping)', () => {
-  test('a forward step moves exactly one unit pitch', () => {
-    assert.equal(stepByUnitPitch(250, 1, TEST_UNIT_PITCH_PX), 250 + TEST_UNIT_PITCH_PX);
+  // The guarantee is where a press lands, not what it adds. Adding the
+  // pitch to wherever the crawl happened to freeze preserves that
+  // fractional offset forever, so every press keeps the reader the same
+  // distance into a name. Landing on a pitch boundary is what "never lands
+  // you mid-name" actually requires.
+  test('a forward step lands on a unit boundary, from anywhere', () => {
+    for (const from of [0, 40, 250, 260, 999]) {
+      const landed = stepByUnitPitch(from, 1, TEST_UNIT_PITCH_PX);
+      assert.equal(landed % TEST_UNIT_PITCH_PX, 0, `stepping forward from ${from} landed at ${landed}`);
+      assert.ok(landed > from, `stepping forward from ${from} did not move forward`);
+    }
   });
 
-  test('a backward step moves exactly one unit pitch, never a pixel amount', () => {
-    assert.equal(stepByUnitPitch(250, -1, TEST_UNIT_PITCH_PX), 250 - TEST_UNIT_PITCH_PX);
+  test('a backward step lands on a unit boundary, from anywhere', () => {
+    for (const from of [260, 250, 999]) {
+      const landed = stepByUnitPitch(from, -1, TEST_UNIT_PITCH_PX);
+      assert.equal(landed % TEST_UNIT_PITCH_PX, 0, `stepping back from ${from} landed at ${landed}`);
+      assert.ok(landed < from, `stepping back from ${from} did not move back`);
+    }
+  });
+
+  test('repeated steps do not drift out of alignment', () => {
+    let position = 137;
+    for (let i = 0; i < 9; i += 1) position = stepByUnitPitch(position, 1, TEST_UNIT_PITCH_PX);
+    for (let i = 0; i < 9; i += 1) position = stepByUnitPitch(position, -1, TEST_UNIT_PITCH_PX);
+    assert.equal(position % TEST_UNIT_PITCH_PX, 0, `ended mid-unit at ${position}`);
   });
 });
 

@@ -85,7 +85,10 @@ export const HomeRails = styled(({ className, query, dedicationGroup }: HomeRail
     rails.splice(
       dedicationBandSlot(railCount, showWomensAreaBand),
       0,
-      <DedicationBand key="dedication-band" {...{ group: dedicationGroup, variant: 'onPage' as const }} />,
+      // `hasDedications` is always true here: `showBetweenRailsDedication`
+      // already required a non-empty `dedicationGroup` above, so this slot
+      // is never spliced in while the draw is still pending.
+      <DedicationBand key="dedication-band" {...{ group: dedicationGroup, hasDedications: true, variant: 'onPage' as const }} />,
     );
   }
 

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent, PointerEvent, RefObject } from 'react';
 
-import { CRAWL_SPEED_PX_PER_SECOND, DEDICATION_UNIT_PITCH_PX, RESUME_AFTER_INTERACTION_MS } from './consts';
-import { isTrackOverflowing, stepByUnitPitch, wrapTrackPosition } from './helpers';
+import { CRAWL_SPEED_PX_PER_SECOND, DEDICATION_UNIT_PITCH_PX, MAX_FRAME_DELTA_SECONDS, RESUME_AFTER_INTERACTION_MS } from './consts';
+import { availableTrackWidthPx, isTrackOverflowing, loopPeriodPx, stepByUnitPitch, wrapTrackPosition } from './helpers';
 
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 
@@ -52,6 +52,20 @@ export const useDedicationCrawl = (): DedicationCrawlHandlers => {
   const resumeTimeoutRef = useRef<number | undefined>(undefined);
   const dragStartClientXRef = useRef(0);
   const dragStartScrollLeftRef = useRef(0);
+  // The frame loop's own continuous position, in the same unsigned space
+  // `wrapTrackPosition` works in. Advanced and read here only, never
+  // derived from `scrollLeft` while the loop keeps advancing frame after
+  // frame: `scrollLeft`'s setter rounds to a whole pixel, so reading the
+  // rounded value back and adding a sub-pixel-per-frame amount rounds up
+  // by a full pixel on every single frame regardless of the real elapsed
+  // time, which is what turned a 32px/s crawl into 60px/s at 60Hz and
+  // 120px/s at 120Hz (measured on a real device). Resynced from the actual
+  // `scrollLeft` only at the first frame after advancing (re)starts, which
+  // is what still lets a native touch scroll (never routed through this
+  // hook's own handlers, since the browser moves `scrollLeft` for a touch
+  // drag on its own) be the position the crawl resumes from, per rule 1.
+  const scrollPositionRef = useRef(0);
+  const wasAdvancingRef = useRef(false);
 
   // The resize measurement: watches the one real track, never the loop's
   // duplicate, so a name that reflows when Frank Ruhl Libre arrives
@@ -61,7 +75,7 @@ export const useDedicationCrawl = (): DedicationCrawlHandlers => {
     const track = trackRef.current;
     if (!viewport || !track) return;
 
-    const measure = (): void => setIsOverflowing(isTrackOverflowing(track.scrollWidth, viewport.clientWidth));
+    const measure = (): void => setIsOverflowing(isTrackOverflowing(track.scrollWidth, availableTrackWidthPx(viewport.clientWidth)));
     measure();
 
     const observer = new ResizeObserver(measure);
@@ -117,6 +131,7 @@ export const useDedicationCrawl = (): DedicationCrawlHandlers => {
     const rtlSign = rtlSignOf(viewport);
     let frameId: number;
     let lastTimestampMs: number | undefined;
+    wasAdvancingRef.current = false;
 
     const step = (timestampMs: number): void => {
       frameId = requestAnimationFrame(step);
@@ -125,7 +140,10 @@ export const useDedicationCrawl = (): DedicationCrawlHandlers => {
         lastTimestampMs = timestampMs;
         return;
       }
-      const deltaSeconds = (timestampMs - lastTimestampMs) / 1000;
+      // Capped, not the raw elapsed time: a backgrounded tab's first frame
+      // back delivers a huge real delta, and advancing by the whole paused
+      // duration would jump the crawl many loop periods forward at once.
+      const deltaSeconds = Math.min((timestampMs - lastTimestampMs) / 1000, MAX_FRAME_DELTA_SECONDS);
       lastTimestampMs = timestampMs;
 
       const shouldAdvance =
@@ -135,10 +153,18 @@ export const useDedicationCrawl = (): DedicationCrawlHandlers => {
         !isFocusedRef.current &&
         !isDraggingRef.current &&
         !isCoolingDownRef.current;
-      if (!shouldAdvance) return;
+      if (!shouldAdvance) {
+        wasAdvancingRef.current = false;
+        return;
+      }
 
-      const currentPosition = viewport.scrollLeft * rtlSign;
-      const nextPosition = wrapTrackPosition(currentPosition + CRAWL_SPEED_PX_PER_SECOND * deltaSeconds, track.scrollWidth);
+      if (!wasAdvancingRef.current) {
+        scrollPositionRef.current = viewport.scrollLeft * rtlSign;
+        wasAdvancingRef.current = true;
+      }
+
+      const nextPosition = wrapTrackPosition(scrollPositionRef.current + CRAWL_SPEED_PX_PER_SECOND * deltaSeconds, loopPeriodPx(track.scrollWidth));
+      scrollPositionRef.current = nextPosition;
       viewport.scrollLeft = nextPosition * rtlSign;
     };
 
@@ -173,7 +199,7 @@ export const useDedicationCrawl = (): DedicationCrawlHandlers => {
     const rtlSign = rtlSignOf(viewport);
     const deltaClientX = event.clientX - dragStartClientXRef.current;
     const rawPosition = (dragStartScrollLeftRef.current - deltaClientX) * rtlSign;
-    const wrapped = wrapTrackPosition(rawPosition, track.scrollWidth);
+    const wrapped = wrapTrackPosition(rawPosition, loopPeriodPx(track.scrollWidth));
     viewport.scrollLeft = wrapped * rtlSign;
   };
 
@@ -197,8 +223,15 @@ export const useDedicationCrawl = (): DedicationCrawlHandlers => {
     if (event.pointerType === 'mouse') isHoveringRef.current = false;
   };
 
+  // Gated on `:focus-visible`, not on focus alone: a mouse click focuses
+  // the viewport (it is `tabIndex={0}` for arrow-key stepping) exactly the
+  // same as Tab does, but only Tab leaves `:focus-visible` true. Without
+  // this a single click latches `isFocusedRef` and nothing but a `blur`
+  // ever clears it, since there is no hover to end it with a mouse that
+  // has moved away (measured: frozen well past the 4s cooldown, revived
+  // only by blur).
   const onFocus = (): void => {
-    isFocusedRef.current = true;
+    isFocusedRef.current = viewportRef.current?.matches(':focus-visible') ?? false;
   };
 
   const onBlur = (): void => {
@@ -219,7 +252,7 @@ export const useDedicationCrawl = (): DedicationCrawlHandlers => {
     // end (forward) and ArrowRight steps toward the start (back).
     const direction = event.key === 'ArrowLeft' ? 1 : -1;
     const currentPosition = viewport.scrollLeft * rtlSign;
-    const nextPosition = wrapTrackPosition(stepByUnitPitch(currentPosition, direction, DEDICATION_UNIT_PITCH_PX), track.scrollWidth);
+    const nextPosition = wrapTrackPosition(stepByUnitPitch(currentPosition, direction, DEDICATION_UNIT_PITCH_PX), loopPeriodPx(track.scrollWidth));
     viewport.scrollLeft = nextPosition * rtlSign;
   };
 

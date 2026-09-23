@@ -90,6 +90,16 @@ const invalidHonorificIssue = {
 // `honoredGender` is unused when there is no `parentName` to put בן/בת in
 // front of, so it is optional in that case, but required the moment a
 // `parentName` is given: a parent line must never guess the gender.
+//
+// This is the one of three rules with no mirroring table CHECK, and the
+// asymmetry is deliberate rather than an oversight. The other two guard
+// against something being printed: a window that cannot be satisfied, and a
+// suffix that would declare a living person dead. This one guards against a
+// guess the composer already refuses to make, dropping the parent line
+// outright when the gender is missing, so a row that somehow bypassed this
+// schema degrades to a dedication without its parent line rather than to a
+// wrong one. Add the CHECK if anything other than this service ever writes
+// the table.
 const requireGenderWhenParentNamePresent = (value: { parentName?: string; honoredGender?: HonoredGender | null }): boolean =>
   value.parentName === undefined || value.honoredGender != null;
 const missingGenderIssue = {
@@ -117,7 +127,24 @@ export type UpdateDedicationInput = CreateDedicationInput;
 // as is, then `.required({ type: true })` keeps the one field the composer
 // cannot run without. A draft that has only a type and a name is a normal,
 // valid preview, never a 400 and never a 500.
-export const previewDedicationSchema = createDedicationSchema.partial().required({ type: true });
+//
+// Of the three cross-field refinements on `createDedicationSchema`, only
+// `requireHonorificOnlyForMemorial` is reapplied here. The preview is the
+// one surface that renders the composed string before anything is stored,
+// so a honorific on a non-memorial draft must be rejected here exactly as
+// it is on create and update: otherwise the admin sees a living person
+// declared dead in the live preview panel, even though the save is
+// (correctly) rejected. `requireValidWindow` has nothing to render, and a
+// draft legitimately has neither date yet. `requireGenderWhenParentNamePresent`
+// is left off on purpose: a half-typed draft can carry a parent name before
+// a gender is chosen, the composer already drops the parent line rather
+// than guess (see `composeDedicationText`), and turning that normal
+// mid-typing state into a 400 would violate the "never a 400" guarantee
+// above.
+export const previewDedicationSchema = createDedicationSchema
+  .partial()
+  .required({ type: true })
+  .refine(requireHonorificOnlyForMemorial, invalidHonorificIssue);
 export type PreviewDedicationInput = z.infer<typeof previewDedicationSchema>;
 
 export const takedownDedicationSchema = z.object({
