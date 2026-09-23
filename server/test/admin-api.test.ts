@@ -18,7 +18,7 @@ const SEEDED_CITY_NAME = 'ירושלים';
 
 const uniqueSuffix = (): string => nanoid(8);
 
-describe('admin API: lesson occurrences', () => {
+describe('admin API', () => {
   let app: FastifyInstance;
   const cleanupLessonIds = new Set<string>();
   const cleanupRabbiIds = new Set<string>();
@@ -246,9 +246,6 @@ describe('admin API: lesson occurrences', () => {
     assert.equal(renamedBody.items[0]?.venue.street, 'רחוב חדש 2');
   });
 
-  // `POST /v1/admin/places` had zero test coverage: this is the owner's
-  // "how was creating a place never tested" answer, for the happy path and
-  // the unknown-city rejection.
   test('creating a place returns the row it was given, and that row is retrievable through the admin API', async () => {
     const cookie = await loginAsNewAdmin();
     const cityCode = await jerusalemCode();
