@@ -1,8 +1,7 @@
-// The width test: crawl when the track (one copy, never the loop's
-// `aria-hidden` duplicate) is wider than the container that clips it.
-// Static otherwise. There is no unit-count threshold: a count is the wrong
-// shape, since three units fill a phone and do not fill 1280, and this one
-// comparison is correct at every viewport by construction.
+// No unit-count threshold: a count is the wrong shape, since three units
+// fill a phone and do not fill 1280, and this one comparison is correct at
+// every viewport by construction. Callers pass the one real track's width,
+// never the loop's duplicate.
 export const isTrackOverflowing = (trackWidthPx: number, containerWidthPx: number): boolean => trackWidthPx > containerWidthPx;
 
 // Keeps a position within one track width of the origin, which is what

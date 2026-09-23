@@ -1,5 +1,7 @@
 import { css } from 'styled-components';
 
+import { DEDICATION_UNIT_HEIGHT_WRAPPED_PX } from '~/components/DedicationUnit/consts';
+
 import * as consts from './consts';
 
 // The viewport clips at all times, in both variants and before any JS runs:
@@ -14,11 +16,13 @@ export const DedicationBand = css(
 
   &.onPrimary {
     background: ${theme.colors.primaryStrong};
-    /* Full bleed: cancels the page's own inline gutter, the same three
-       breakpoints the shared contentGutterInline helper applies to the
-       page's own main element, so this reaches the true viewport edge
-       instead of stopping at the content band like the page's other
-       sections. */
+    /* Full bleed: cancels HomePage's own inline gutter so this reaches the
+       true viewport edge instead of stopping at the content band like the
+       page's other sections. HomePage/styles.ts deliberately keeps a
+       constant two-step gutter (lg, then xl from md) rather than the
+       shared contentGutterInline helper, because this page's band is
+       uncapped and never collapses that gutter to zero, so there is no
+       third breakpoint to mirror here either. */
     margin-inline: calc(-1 * ${theme.spacing.lg});
     inline-size: calc(100% + 2 * ${theme.spacing.lg});
     padding-block: ${theme.spacing.xxl};
@@ -29,15 +33,23 @@ export const DedicationBand = css(
       inline-size: calc(100% + 2 * ${theme.spacing.xl});
     }
 
-    @media (min-width: calc(${theme.layout.contentMaxWidth} + 2 * ${theme.spacing.xl})) {
-      margin-inline: 0;
-      inline-size: 100%;
+    /* The pool has a dedication to show but the per-load draw has not run
+       yet: reserves the block size a single unit is guaranteed to need,
+       at its tallest (its name line wrapped), so the band does not go
+       from absent to present under a reader already looking at the page
+       (design-system.md, dedication "The draw", guarantee 3). */
+    &.pending {
+      min-block-size: calc(${DEDICATION_UNIT_HEIGHT_WRAPPED_PX}px + 2 * ${theme.spacing.xxl});
     }
   }
 
   &.onPage {
     /* No bleed: stays inside the rails column it is spliced into. */
     padding-block: ${theme.spacing.lg};
+
+    &.pending {
+      min-block-size: calc(${DEDICATION_UNIT_HEIGHT_WRAPPED_PX}px + 2 * ${theme.spacing.lg});
+    }
   }
 
   > .viewport {

@@ -7,6 +7,13 @@ import type { DedicationVariant, DedicationVariantTokens } from './models';
 // this number is typed; the band that lays units out reads it too.
 export const DEDICATION_UNIT_WIDTH_PX = 280;
 
+// The tallest a single unit ever gets, when its name line wraps
+// (`styles.ts` below: 314.2 unwrapped, 374.2 wrapped). The band reads this
+// to reserve its own block size for the one unit's worth of content it is
+// guaranteed to hold before the per-load draw has picked which dedications
+// that turns out to be.
+export const DEDICATION_UNIT_HEIGHT_WRAPPED_PX = 374.2;
+
 // The site ships exactly one colour scheme (design-system.md, "The theme
 // and the token contract"), so the concrete theme is read directly rather
 // than through a styled-components render prop: `VARIANT_TOKENS` has to be

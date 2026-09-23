@@ -11,21 +11,25 @@ import {
   DEDICATION_TEXT_SUCCESS,
 } from '~/dedicationFixture';
 
+import { ARGAMAN_VE_ZAHAV_THEME } from '~/theme/themes';
+
 import { DedicationUnit } from './DedicationUnit';
 
+const { colors } = ARGAMAN_VE_ZAHAV_THEME;
+
 // The unit is fixed at 280 in every placement, so every story wraps it in a
-// field the size of its variant's actual background: `primary` for
-// `onPrimary`, `bg` for `onPage` (design-system.md, dedication colour and
-// geometry rules). This is presentation glue for Storybook only, not a
-// pattern for a real component.
+// field the size of its variant's actual background: `primaryStrong`, the
+// foot band's own field, for `onPrimary`; `bg` for `onPage` (design-system.md,
+// dedication colour and geometry rules; DedicationBand/styles.ts). This is
+// presentation glue for Storybook only, not a pattern for a real component.
 const onPrimaryField = (Story: () => ReactNode) => (
-  <div style={{ background: '#6B2436', padding: '32px', display: 'inline-block' }}>
+  <div style={{ background: colors.primaryStrong, padding: '32px', display: 'inline-block' }}>
     <Story />
   </div>
 );
 
 const onPageField = (Story: () => ReactNode) => (
-  <div style={{ background: '#F7F4F3', padding: '32px', display: 'inline-block' }}>
+  <div style={{ background: colors.bg, padding: '32px', display: 'inline-block' }}>
     <Story />
   </div>
 );
@@ -94,10 +98,10 @@ export const LongestRealisticName: Story = {
 export const TwoVariantComparison: Story = {
   render: () => (
     <div style={{ display: 'flex', gap: '32px', alignItems: 'flex-start' }}>
-      <div style={{ background: '#6B2436', padding: '32px', display: 'inline-block' }}>
+      <div style={{ background: colors.primaryStrong, padding: '32px', display: 'inline-block' }}>
         <DedicationUnit text={DEDICATION_TEXT_MEMORIAL_WRAPPING} variant="onPrimary" />
       </div>
-      <div style={{ background: '#F7F4F3', padding: '32px', display: 'inline-block' }}>
+      <div style={{ background: colors.bg, padding: '32px', display: 'inline-block' }}>
         <DedicationUnit text={DEDICATION_TEXT_MEMORIAL_WRAPPING} variant="onPage" />
       </div>
     </div>

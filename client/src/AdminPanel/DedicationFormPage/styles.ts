@@ -139,8 +139,7 @@ export const DedicationFormPage = css(
           }
         }
 
-        > input,
-        > select {
+        > input {
           inline-size: 100%;
           min-block-size: 48px;
           padding-inline: ${theme.spacing.md};

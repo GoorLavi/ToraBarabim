@@ -74,9 +74,6 @@ export const DedicationUnit = css(
     gap: ${theme.spacing.xs};
     inline-size: 100%;
 
-    /* Wrapping is the normal case at 280, never a no-wrap or an ellipsis
-       rule (design-system.md, dedication hard rule 1: a name is never
-       truncated). */
     > .formula,
     > .name,
     > .parent,

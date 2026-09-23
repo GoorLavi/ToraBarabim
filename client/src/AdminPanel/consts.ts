@@ -115,6 +115,7 @@ export const ADMIN_QUERY_KEYS = {
   place: (id: string) => ['admin', 'places', id] as const,
   placeAccount: (id: string) => ['admin', 'places', id, 'account'] as const,
   dedications: (filters: AdminDedicationFilters) => ['admin', 'dedications', 'search', filters] as const,
+  dedicationsAll: () => ['admin', 'dedications'] as const,
   dedication: (id: string) => ['admin', 'dedications', id] as const,
   // `fields` is the live draft, debounced (DedicationFormPage/useDedicationPreview.ts):
   // a distinct set of field values is its own cache entry, so a response can

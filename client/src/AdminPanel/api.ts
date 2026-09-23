@@ -308,15 +308,6 @@ export const fetchAdminPlaces = (filters: AdminPlaceFilters): Promise<AdminPlace
   return request(target.toString());
 };
 
-// GET /v1/admin/dedications
-// 200 with DedicationListResponse, including an empty items array.
-export const fetchAdminDedications = (filters: AdminDedicationFilters): Promise<DedicationListResponse> => {
-  const target = url('/v1/admin/dedications');
-  target.searchParams.set('page', String(filters.page ?? 1));
-  target.searchParams.set('pageSize', String(filters.pageSize ?? 50));
-  return request(target.toString());
-};
-
 // GET /v1/admin/places/:id
 // 200 with AdminPlaceResponse. 404 if the place does not exist.
 export const fetchAdminPlace = (id: string): Promise<AdminPlaceResponse> => request(url(`/v1/admin/places/${id}`).toString());
@@ -364,6 +355,16 @@ export const updatePlaceAccount = (placeId: string, body: UpdatePlaceAccountRequ
 // returned only this once. 404 if the place or its account does not exist.
 export const resetPlacePassword = (placeId: string): Promise<ResetPlacePasswordResponse> =>
   request(url(`/v1/admin/places/${placeId}/account/reset-password`).toString(), { method: 'POST' });
+
+// GET /v1/admin/dedications
+// 200 with DedicationListResponse, including an empty items array.
+export const fetchAdminDedications = (filters: AdminDedicationFilters): Promise<DedicationListResponse> => {
+  const target = url('/v1/admin/dedications');
+  target.searchParams.set('page', String(filters.page ?? 1));
+  target.searchParams.set('pageSize', String(filters.pageSize ?? 50));
+  return request(target.toString());
+};
+
 // GET /v1/admin/dedications/:id
 // 200 with AdminDedication. 404 not_found if the dedication does not exist.
 export const fetchAdminDedication = (id: string): Promise<AdminDedication> => request(url(`/v1/admin/dedications/${id}`).toString());
