@@ -166,6 +166,7 @@ export const SelectsAnOptionAndClosesThePopover: Story = {
     await userEvent.click(await canvas.findByText('אדום'));
     await expect(args.onSelect).toHaveBeenCalledWith(red);
     expect(canvas.queryByRole('textbox', { name: SEARCH_LABEL })).not.toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: PLACEHOLDER_LABEL })).toHaveFocus();
   },
 };
 

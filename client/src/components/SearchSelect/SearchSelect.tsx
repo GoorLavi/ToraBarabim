@@ -41,6 +41,9 @@ function SearchSelectComponent<T>({
     onSelect(item);
     onQueryChange('');
     setIsOpen(false);
+    // The option button unmounts with the popover, so without this focus
+    // falls to the body and a keyboard user loses their place in the form.
+    triggerRef.current?.focus();
   };
 
   const queryIsEmpty = query.trim().length === 0;
@@ -83,7 +86,7 @@ function SearchSelectComponent<T>({
           {!showHint && !isPending && !isError && items.length === 0 && <p className="hint">{emptyMessage}</p>}
 
           {items.length > 0 && (
-            <ul className="results" role="listbox">
+            <ul className="results" role="listbox" aria-label={searchLabel}>
               {items.map((item) => (
                 <li key={getItemKey(item)}>
                   <button type="button" role="option" aria-selected={isSelected(item)} onClick={() => selectItem(item)}>
