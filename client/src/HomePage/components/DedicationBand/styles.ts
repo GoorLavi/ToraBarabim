@@ -110,6 +110,19 @@ export const DedicationBand = css(
     overflow: hidden;
     overscroll-behavior-inline: contain;
     scrollbar-width: none;
+    /* This is a drag surface, deliberately: without this, a drag starting
+       on a name selects the text instead of moving the band, on both a
+       phone and a mouse, dragging a highlight across a dedication while
+       the band itself does not move (owner, on a real phone). The cost is
+       real and accepted, not an oversight: nobody can select or copy a
+       name off the band, but the same name is reachable in full elsewhere
+       and a drag surface that fights the reader's own drag is the worse
+       failure. Scoped to the band, never to DedicationUnit itself, which
+       also renders in the admin preview panel, not a drag surface, where
+       an admin may reasonably want to select what they typed. The prefix
+       is still required on iOS Safari, exactly where this was found. */
+    user-select: none;
+    -webkit-user-select: none;
     /* Framing at the true edges of the whole strip, real track and looped
        duplicate together, never per copy: DEDICATION_BAND_EDGE_PADDING_PX
        in consts.ts hand-mirrors this for the overflow test and the loop's
