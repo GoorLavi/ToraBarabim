@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import classNames from 'classnames';
 import styled from 'styled-components';
 
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
 import type { SelectedCity } from '~/hooks/models';
+import { useDismissPopover } from '~/hooks/useDismissPopover';
 
 import { FilterDrawer } from '../FilterDrawer/FilterDrawer';
 import { useIsWideViewport } from '../useIsWideViewport';
@@ -32,28 +33,21 @@ export const CityPicker = styled(({ className, city, onSelectCity, onClearCity }
 
   // Outside click and scrim tap already tell us where the user is going
   // next; pulling focus back to the pill here would fight the click that
-  // dismissed the panel.
+  // dismissed the panel. Escape has no such destination, so `triggerRef`
+  // below still returns focus to the pill for that path.
   const dismiss = (): void => {
     setIsOpen(false);
   };
 
   // The desktop popover is never portalled (position: absolute needs only a
   // positioned ancestor, not the viewport, so it never hits the fixed-
-  // position containing-block bug ResponsiveSheet works around), so a plain
-  // outside-pointer listener on the real DOM tree is enough; it also avoids
-  // a fixed, full-viewport catcher that would inherit that same bug were
-  // this ever rendered inside the transformed pinned header bar.
-  useEffect(() => {
-    if (!isOpen || !isWide) return;
-
-    const handlePointerDown = (event: PointerEvent): void => {
-      if (rootRef.current?.contains(event.target as Node)) return;
-      dismiss();
-    };
-
-    document.addEventListener('pointerdown', handlePointerDown);
-    return () => document.removeEventListener('pointerdown', handlePointerDown);
-  }, [isOpen, isWide]);
+  // position containing-block bug ResponsiveSheet works around), so the
+  // shared outside-pointer hook attaching to the real DOM tree is enough;
+  // it also avoids a fixed, full-viewport catcher that would inherit that
+  // same bug were this ever rendered inside the transformed pinned header
+  // bar. Gated on `isWide`: below `sm` the panel is a `FilterDrawer`, which
+  // dismisses itself through its own scrim.
+  useDismissPopover({ isOpen: isOpen && isWide, rootRef, triggerRef: pillRef, onDismiss: dismiss });
 
   const handleSelectCity = (selected: SelectedCity): void => {
     onSelectCity(selected);

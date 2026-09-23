@@ -21,6 +21,26 @@ The tree shape and the styling shape below are carried over from the Why's clien
 deliberately. They are not preferences: mixing two shapes inside one codebase is what
 they exist to prevent.
 
+## Tests
+
+`npm test -w client` from the repo root. It runs every story's `play` function as a
+test, in the real Chromium already installed at `PLAYWRIGHT_BROWSERS_PATH`. Never run
+`playwright install`.
+
+- **A story's `play` function is the test.** There is no separate test file and no
+  second rendering environment: a story that needs an assertion grows a `play`, and a
+  story without one still counts, because the runner fails on a story that cannot even
+  render. Write the interaction the way a person would perform it, through the
+  component's own DOM, the way `CityPicker.stories.tsx`'s `openPicker` helper does.
+- **A `play` runs in Storybook too**, the moment the story renders interactively, not
+  only under the runner. So a story that opens its own popover is already open when you
+  look at it, and clicking the trigger yourself closes it again. This costs a wasted
+  review pass every time someone rediscovers it.
+- **A story that mounts its own `QueryClient` sets `retry: false`,** for the reason
+  `.storybook/preview.tsx` already gives at its shared client.
+- **This suite does not run in CI**, by the owner's decision. Nothing will catch a
+  regression here except someone running it, so run it before you hand work over.
+
 ## Component Tree
 
 A component is a **folder**, named for the component, holding these files. Only create
@@ -160,6 +180,11 @@ The root rules cover class names, `>`, `&` nesting, and `classNames`. On top of 
 - The error boundary must actually wrap the routed tree, not sit as a sibling to it. A
   boundary that does not enclose the route it is meant to protect white-screens exactly
   the same as no boundary at all.
+- **A popover is dismissed by pointer, never by `onBlur` alone: use
+  `useDismissPopover`,** which explains the Safari `focusout` trap at its own
+  site. Four controls shipped that bug by hand-rolling the listener from whichever
+  neighbour their author opened first. `DateFilterChips` is the one remaining holdout,
+  pending its own change.
 
 ## Storybook
 

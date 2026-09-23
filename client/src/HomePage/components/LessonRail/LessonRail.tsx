@@ -1,4 +1,3 @@
-import classNames from 'classnames';
 import { useRef } from 'react';
 import styled from 'styled-components';
 
@@ -56,8 +55,6 @@ export const LessonRail = styled(({ className, title, items, womensAreaTileIndex
             )}
           </ul>
         </div>
-
-        <span className={classNames('fade', { visible: !atEnd })} aria-hidden="true" />
 
         <button type="button" className="arrow next" disabled={atEnd} onClick={() => scroll('next')} aria-label={consts.NEXT_LABEL}>
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">

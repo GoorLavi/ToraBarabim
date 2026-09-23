@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import type { FocusEvent } from 'react';
+import { useRef, useState } from 'react';
 import classNames from 'classnames';
 import styled from 'styled-components';
 
 import { directionForValue, rabbiDisplayName } from '~/helpers';
+import { useDismissPopover } from '~/hooks/useDismissPopover';
 
 import * as consts from './consts';
 import type { RabbiSelectProps } from './models';
@@ -16,14 +16,21 @@ export const RabbiSelect = styled(({ className, rabbi, onSelectRabbi, errorMessa
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const results = useRabbiSearch(query);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
-  const close = (event: FocusEvent<HTMLDivElement>): void => {
-    if (!event.currentTarget.contains(event.relatedTarget)) setIsOpen(false);
-  };
+  useDismissPopover({ isOpen, rootRef, triggerRef, onDismiss: () => setIsOpen(false) });
 
   return (
-    <div className={classNames(className, { open: isOpen, invalid: Boolean(errorMessage) })} onBlur={close}>
-      <button type="button" className="control" aria-haspopup="listbox" aria-expanded={isOpen} onClick={() => setIsOpen((open) => !open)}>
+    <div className={classNames(className, { open: isOpen, invalid: Boolean(errorMessage) })} ref={rootRef}>
+      <button
+        type="button"
+        className="control"
+        ref={triggerRef}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((open) => !open)}
+      >
         <span className="label" dir="auto">
           {rabbi ? rabbiDisplayName(rabbi) : consts.RABBI_SELECT_PLACEHOLDER}
         </span>

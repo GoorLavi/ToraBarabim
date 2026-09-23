@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { after, afterEach, before, describe, test } from 'node:test';
 
-import type { AdminOccurrenceListResponse } from '@torabarabim/common';
+import type { AdminOccurrenceListResponse, AdminPlaceResponse } from '@torabarabim/common';
 import { eq } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { nanoid } from 'nanoid';
@@ -244,5 +244,52 @@ describe('admin API: lesson occurrences', () => {
     const renamedBody = afterRename.json() as AdminOccurrenceListResponse;
     assert.equal(renamedBody.items[0]?.venue.name, 'בית מדרש חדש');
     assert.equal(renamedBody.items[0]?.venue.street, 'רחוב חדש 2');
+  });
+
+  // `POST /v1/admin/places` had zero test coverage: this is the owner's
+  // "how was creating a place never tested" answer, for the happy path and
+  // the unknown-city rejection.
+  test('creating a place returns the row it was given, and that row is retrievable through the admin API', async () => {
+    const cookie = await loginAsNewAdmin();
+    const cityCode = await jerusalemCode();
+    const name = `מקום בדיקה ${uniqueSuffix()}`;
+    const street = 'רחוב הבדיקה 5';
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/v1/admin/places',
+      headers: { cookie },
+      payload: { name, street, cityCode },
+    });
+    assert.equal(res.statusCode, 201);
+
+    const created = res.json() as AdminPlaceResponse;
+    cleanupPlaceIds.add(created.id);
+    assert.equal(created.name, name);
+    assert.equal(created.street, street);
+    assert.equal(created.cityCode, cityCode);
+
+    const getRes = await app.inject({ method: 'GET', url: `/v1/admin/places/${created.id}`, headers: { cookie } });
+    assert.equal(getRes.statusCode, 200);
+    const fetched = getRes.json() as AdminPlaceResponse;
+    assert.equal(fetched.name, name);
+    assert.equal(fetched.street, street);
+    assert.equal(fetched.cityCode, cityCode);
+  });
+
+  test('creating a place with a cityCode that resolves to no city is a 400 with error "unknown_city"', async () => {
+    const cookie = await loginAsNewAdmin();
+    const unknownCityCode = 999999999;
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/v1/admin/places',
+      headers: { cookie },
+      payload: { name: `מקום בדיקה ${uniqueSuffix()}`, street: 'רחוב הבדיקה 5', cityCode: unknownCityCode },
+    });
+    assert.equal(res.statusCode, 400);
+
+    const body = res.json() as { error: string };
+    assert.equal(body.error, 'unknown_city');
   });
 });
