@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { cdp } from 'vitest/browser';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { expect, userEvent, waitFor } from 'storybook/test';
+import { expect, waitFor } from 'storybook/test';
 
 import { DEDICATION_GROUP_HEALING, DEDICATION_GROUP_OVERFLOWING, DEDICATION_GROUP_SINGLE } from '~/dedicationFixture';
 import { ARGAMAN_VE_ZAHAV_THEME } from '~/theme/themes';
@@ -47,6 +47,32 @@ export const FitsNoCrawl: Story = {
 // Wider than the container: crawls.
 export const OverflowsAndCrawls: Story = {
   args: { group: DEDICATION_GROUP_OVERFLOWING, hasDedications: true, variant: 'onPage' },
+};
+
+// `CRAWL_SPEED_PX_PER_SECOND` is 32, not the 60 (one frame's `scrollLeft`
+// rounding to a whole pixel every single frame at 60Hz, regardless of the
+// real elapsed time) or 120 (the same rounding at 120Hz) a naive read of
+// `scrollLeft` back into the next frame's maths produces. A wide tolerance
+// band, not an exact figure: real frame timing jitters, but 32 and 60 are
+// far enough apart that this still catches the regression.
+export const CrawlsAtTheDesignedSpeed: Story = {
+  args: { group: DEDICATION_GROUP_OVERFLOWING, hasDedications: true, variant: 'onPage' },
+  play: async ({ canvasElement }) => {
+    const viewport = canvasElement.querySelector<HTMLElement>('.viewport');
+    if (!viewport) throw new Error('DedicationBand story: .viewport not found');
+
+    await waitFor(() => expect(getComputedStyle(viewport).overflowX).toEqual('auto'));
+
+    const start = viewport.scrollLeft;
+    const startTime = performance.now();
+    await new Promise((resolve) => window.setTimeout(resolve, 1000));
+    const end = viewport.scrollLeft;
+    const elapsedSeconds = (performance.now() - startTime) / 1000;
+
+    const speedPxPerSecond = Math.abs(end - start) / elapsedSeconds;
+    expect(speedPxPerSecond).toBeGreaterThan(15);
+    expect(speedPxPerSecond).toBeLessThan(45);
+  },
 };
 
 export const OnPrimaryOverflowing: Story = {
@@ -181,9 +207,18 @@ export const VerticalSwipeScrollsThePage: Story = {
 // The one that survived code review, because it is mouse-only: a mousedown
 // focuses the viewport (it is `tabIndex={0}` for arrow-key stepping), and
 // the crawl used to pause on any focus, keyboard or not, with nothing but
-// a blur to end the pause. `userEvent.click` is a real mouse interaction
-// under this runner's own browser automation, so `:focus-visible` on the
-// result matches what a real mouse click leaves it at.
+// a blur to end the pause. Driven through `cdp()`, not `userEvent.click`:
+// measured directly, `userEvent`'s own click, even under this runner's real
+// browser automation, leaves `:focus-visible` true, which is not what a
+// genuine mouse click leaves it at, and would make this story pass whether
+// the bug were fixed or not.
+const dispatchRealMouseClick = async (x: number, y: number): Promise<void> => {
+  const client = cdp();
+  await client.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y });
+  await client.send('Input.dispatchMouseEvent', { type: 'mousePressed', x, y, button: 'left', clickCount: 1 });
+  await client.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: 'left', clickCount: 1 });
+};
+
 export const MouseClickDoesNotFreezeTheCrawl: Story = {
   args: { group: DEDICATION_GROUP_OVERFLOWING, hasDedications: true, variant: 'onPage' },
   play: async ({ canvasElement }) => {
@@ -192,25 +227,23 @@ export const MouseClickDoesNotFreezeTheCrawl: Story = {
 
     await waitFor(() => expect(getComputedStyle(viewport).overflowX).toEqual('auto'));
 
-    // The click itself, real or synthetic, is also a pointer down-then-up
-    // on the viewport, which starts the same `RESUME_AFTER_INTERACTION_MS`
-    // cooldown a drag does: both the buggy and the fixed code stay frozen
-    // for that stretch, so the comparison below has to sit entirely past
-    // it, or it would pass on the buggy code too, for the wrong reason.
-    // Measured with the pointer moved away afterward, same as the finding:
-    // hovering is its own, correct, separate pause (rule 2), so leaving the
-    // pointer sitting on the band would freeze it for a real reason and
-    // prove nothing about the focus bug.
-    await userEvent.click(viewport);
-    console.log('DEBUG activeElement===viewport', document.activeElement === viewport, 'focus-visible', viewport.matches(':focus-visible'));
-    await userEvent.unhover(viewport);
+    const box = viewport.getBoundingClientRect();
+    // The click itself is also a pointer down-then-up on the viewport,
+    // which starts the same `RESUME_AFTER_INTERACTION_MS` cooldown a drag
+    // does: both the buggy and the fixed code stay frozen for that
+    // stretch, so the comparison below has to sit entirely past it, or it
+    // would pass on the buggy code too, for the wrong reason. Measured
+    // with the pointer moved away afterward, same as the finding: hovering
+    // is its own, correct, separate pause (rule 2), so leaving the pointer
+    // sitting on the band would freeze it for a real reason and prove
+    // nothing about the focus bug.
+    await dispatchRealMouseClick(box.left + box.width / 2, box.top + box.height / 2);
+    await cdp().send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 5, y: 5 });
     await new Promise((resolve) => window.setTimeout(resolve, RESUME_AFTER_INTERACTION_MS + 500));
     const afterCooldown = viewport.scrollLeft;
-    console.log('DEBUG afterCooldown', afterCooldown, 'activeElement===viewport', document.activeElement === viewport);
 
     await new Promise((resolve) => window.setTimeout(resolve, 1000));
     const later = viewport.scrollLeft;
-    console.log('DEBUG later', later);
 
     expect(later).not.toEqual(afterCooldown);
   },
