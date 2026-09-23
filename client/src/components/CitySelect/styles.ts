@@ -17,6 +17,16 @@ export const CitySelect = css(
     font-weight: ${theme.typography.fontWeight.semiBold};
     font-size: ${theme.typography.secondary.phone.fontSize};
     line-height: ${theme.typography.secondary.phone.lineHeight};
+
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    &:focus-visible {
+      text-decoration: underline;
+    }
   }
 `,
 );

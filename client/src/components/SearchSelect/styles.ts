@@ -8,7 +8,7 @@ export const SearchSelect = css(
     inline-size: 100%;
 
     > .control {
-      flex: 1;
+      inline-size: 100%;
       min-inline-size: 0;
     }
   }
@@ -61,7 +61,7 @@ export const SearchSelect = css(
     z-index: ${theme.zIndex.popover};
     inset-block-start: calc(100% + ${theme.spacing.xs});
     inset-inline-start: 0;
-    inline-size: min(360px, 100%);
+    inline-size: min(360px, max(100%, 90vw));
     min-inline-size: min(280px, 90vw);
     display: flex;
     flex-direction: column;
@@ -103,6 +103,7 @@ export const SearchSelect = css(
         inline-size: 100%;
         display: flex;
         flex-direction: column;
+        justify-content: center;
         align-items: flex-start;
         gap: 2px;
         min-block-size: 48px;
