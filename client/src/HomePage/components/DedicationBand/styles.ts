@@ -3,6 +3,7 @@ import { css } from 'styled-components';
 import { scaledCss } from '~/components/DedicationUnit/consts';
 
 import * as consts from './consts';
+import { dedicationBandReservedHeightPx } from './helpers';
 
 // The viewport clips at all times, in both variants and before any JS runs:
 // static is the SSR baseline, since the server cannot measure, and a long
@@ -57,11 +58,19 @@ export const DedicationBand = css(
        yet: reserves the block size the band is guaranteed to need at this
        scale, so it does not go from absent to present under a reader
        already looking at the page (design-system.md, dedication "The
-       draw", guarantee 3). Scaled the same way as the real content, off
-       the same driver, rather than a fixed figure: a fixed reservation
-       would be wrong at every scale but the one it was measured at. */
+       draw", guarantee 3). A precomputed literal, not scaledCss's own
+       max(floor, reference * scale) applied to the band as one value: at
+       these scales, formula, name and parent are already clamped to their
+       own floors while padding and the ornament are not, so treating the
+       band as a single scaled figure understated the real total by about
+       40px (helpers.ts, dedicationBandReservedHeightPx, sums each piece's
+       own clamp the way CSS actually will, per breakpoint). */
     &.pending {
-      min-block-size: ${scaledCss(consts.DEDICATION_BAND_ON_PRIMARY_HEIGHT_REFERENCE, consts.DEDICATION_BAND_ON_PRIMARY_HEIGHT_REFERENCE * consts.DEDICATION_SCALE_BELOW_MD)};
+      min-block-size: ${dedicationBandReservedHeightPx(consts.DEDICATION_SCALE_BELOW_MD, consts.DEDICATION_BAND_PADDING_ON_PRIMARY_REFERENCE)}px;
+
+      @media (min-width: ${theme.breakpoints.md}) {
+        min-block-size: ${dedicationBandReservedHeightPx(consts.DEDICATION_SCALE_FROM_MD, consts.DEDICATION_BAND_PADDING_ON_PRIMARY_REFERENCE)}px;
+      }
     }
 
     /* Mirrors SiteLogoLink/styles.ts's own outline colour for the plum
@@ -79,7 +88,11 @@ export const DedicationBand = css(
     padding-block: ${scaledCss(consts.DEDICATION_BAND_PADDING_ON_PAGE_REFERENCE, consts.DEDICATION_BAND_PADDING_FLOOR_PX)};
 
     &.pending {
-      min-block-size: ${scaledCss(consts.DEDICATION_BAND_ON_PAGE_HEIGHT_REFERENCE, consts.DEDICATION_BAND_ON_PAGE_HEIGHT_REFERENCE * consts.DEDICATION_SCALE_BELOW_MD)};
+      min-block-size: ${dedicationBandReservedHeightPx(consts.DEDICATION_SCALE_BELOW_MD, consts.DEDICATION_BAND_PADDING_ON_PAGE_REFERENCE)}px;
+
+      @media (min-width: ${theme.breakpoints.md}) {
+        min-block-size: ${dedicationBandReservedHeightPx(consts.DEDICATION_SCALE_FROM_MD, consts.DEDICATION_BAND_PADDING_ON_PAGE_REFERENCE)}px;
+      }
     }
 
     > .viewport:focus-visible {

@@ -51,7 +51,6 @@ export const VIEWPORT_ARIA_LABEL = 'הקדשות, אפשר לגלול עם הח�
 // 32) and so lands a little shorter at the same scale without needing its
 // own.
 export const DEDICATION_BAND_ON_PRIMARY_HEIGHT_REFERENCE = 418;
-export const DEDICATION_BAND_ON_PAGE_HEIGHT_REFERENCE = 386;
 
 // The owner's own target band heights, about 165 at phone and about 180 at
 // desktop, worked backward into a scale through the reference above. Both
