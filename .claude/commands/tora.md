@@ -66,6 +66,7 @@ Decide first, and name the flow in your first status line.
 
 - **Team flow**, when the idea needs product decisions before anyone can say what to build: a new or reworked screen the seeker or the rabbi sees, or a new capability whose shape is still open.
 - **Standard flow** (the Pipeline below) for everything else, including a change that touches several workspaces but whose shape is already clear. When it is genuinely unclear which, ask the human; do not default to the heavier one.
+- **Fix flow**, when you already hold the root cause and the fix before anyone else is involved: a bug whose cause you have found, or a small change with no open design question. Skip `tora-product` and `tora-architect` and write the plan yourself. Put every open question to the human in one round (scope, test approach, whether to ship the fix alone first); their answers are Gate 2. When a person is blocked by the bug, offer the fix-first split in that same round, not after they ask why it is taking so long.
 
 ## Team flow
 
@@ -86,7 +87,7 @@ The token and loop limits hold on their own: only the three leads can dispatch, 
 - Ask the user the clarifying questions that surface (AskUserQuestion). Front-load them into one round. Do not move on until the idea is clear.
 
 ### 2. Plan
-- Dispatch `tora-architect` for the plan: impact analysis, the area ownership table, dependency-ordered steps, the work-split, the scope check, validation and edge cases, and the test plan.
+- Dispatch `tora-architect` for the plan (not in the fix flow, where you write it): impact analysis, the area ownership table, dependency-ordered steps, the work-split, the scope check, validation and edge cases, and the test plan.
 - **The plan carries an area ownership table, and it is the contract the builders work from.** One row per area: the area as a path prefix, the single agent that owns it, what changes there, and what that agent must see pass before it reports back. No two rows may overlap. Anything a builder would otherwise have to go and find out belongs in its row, including the acceptance criteria the reviewer will later apply.
 - **Own areas, not file lists.** A file list cannot cover the files a builder creates while working; a prefix owns what does not exist yet.
 - **The builders read the plan before it is locked.** Send the assembled plan to each agent named in the ownership table and ask one question: can you build your rows as written, and is anything missing or wrong. This is one round, not a planning loop. A brief that is wrong costs a rebuild; this round is what catches it.
@@ -103,14 +104,15 @@ The token and loop limits hold on their own: only the three leads can dispatch, 
 - Two agents of the same kind are only ever worth dispatching for genuinely separate areas, one area each.
 - Dispatch the builders per the work-split. Land the API shape first (`tora-server`), then `tora-ssr` and `tora-client` against it, unless the plan says the shape is already settled, in which case run them in parallel.
 - Hand every dispatched agent a bounded brief: its rows from the ownership table, the exact files to read for context, and the decision records that bear on it. Tell it to read only those.
+- **A brief carries the goal and the constraints that hold for the whole change, never one that only follows from the tree's state right now** (a runner mid-repair, a file another builder is still writing). The builder cannot tell a passing constraint from a permanent one and obeys it even when it blocks the goal; name what to leave alone instead.
 - A schema change goes through the `create-migration` skill: the builder edits the schema and generates the file, then the human applies it. A hook blocks the apply step.
 
 ### 5. Verify and fix
 - **Run the thing first, then review it.** For anything a person can see or click, do the live run yourself as soon as the first draft lands and before you dispatch a single reviewer: type check, build, start the server, open the screen. Put what you saw (screenshot, console errors, what actually happened) into the reviewers' briefs. Every agent in this pipeline reads code; only you and the designer run the product.
 - Dispatch `tora-reviewer` on every code change, and `tora-designer` to render and review any visual change, mobile first. In parallel.
-- **The design gate is Storybook, and it closes before Gate 3, not at it.** Root `CLAUDE.md`, Verification: every screen the change touches, in every state, on mocked data, rendered and approved by `tora-designer` before the human sees it or a pull request opens. A `fix` verdict goes back to the builder and the loop repeats. Do not carry an unapproved design into Gate 3 and offer the human a choice about it: that is the gate failing open.
+- **The design gate is Storybook, and it closes before Gate 3, not at it.** Root `CLAUDE.md`, Verification: every screen the change is meant to make look different, in every state, on mocked data, rendered and approved by `tora-designer` before the human sees it or a pull request opens. A `fix` verdict goes back to the builder and the loop repeats. Do not carry an unapproved design into Gate 3 and offer the human a choice about it: that is the gate failing open.
 - **Every Hebrew string a user will read goes through `tora-hebrew-editor`** before the human sees it. Send the strings, not the whole diff.
-- **Match the reviewer set to the change.** A change with no runtime surface (rules, docs, prompts, config) gets neither the reviewer nor the designer, because there is nothing for them to run.
+- **Match the reviewer set to the change.** A change with no runtime surface (rules, docs, prompts, config) gets neither the reviewer nor the designer, because there is nothing for them to run. A change meant to leave every screen looking as it did (a behaviour fix, a refactor, stories for an unchanged component) skips the designer; the reviewer reads its stories.
 - **Review the tests too.** Once a builder reports, hand the test files it wrote to `tora-reviewer` with the rest. Test code follows the house rules like any other code.
 - **A "non-blocking" finding is still a finding.** Route the polish items back to the builder like the rest; do not wave them through just because they were graded low.
 - **Apply a small finding yourself; dispatch only what needs a builder's judgment.** A dispatch costs about eleven ordinary tool calls, so sending an agent back for a renamed variable or a one-line guard spends more on the hand-off than on the work. Say in your report which findings you applied directly.
@@ -119,7 +121,7 @@ The token and loop limits hold on their own: only the three leads can dispatch, 
 
 ### 6. Ship: GATE 3 (human approves)
 - Present the diff, the screenshots, what you ran yourself and what you saw, and what was built against the approved plan. Name what could not be verified locally and why.
-- The human ratifies. As the orchestrator, and only the orchestrator, you may then stage, commit, and push, **but only after an explicit go-ahead each time**. Never on your own initiative, never on a blanket pre-authorization. `/ship-pr` is the named form of that go-ahead. Before staging, run `git status` and look at what is included; check for anything that might carry a secret. Deploys, migrations, and secrets stay with the human.
+- The human ratifies. Commits and pushes to the working branch are free throughout the change (root `CLAUDE.md`, Git); what waits for the human's go-ahead here is opening the pull request, and `/ship-pr` is its named form. Before staging, run `git status` and look at what is included; check for anything that might carry a secret. Deploys, migrations, and secrets stay with the human.
 - Specialist agents never stage or commit.
 
 ### 7. Retro: route the lessons (right after Gate 3)
@@ -135,6 +137,7 @@ The token and loop limits hold on their own: only the three leads can dispatch, 
 ## Rules of the road
 - **Every round trip costs, so spend them deliberately.** Independent lookups go out in one message rather than one at a time; a file already read this session is not read again; and the branch, the working-tree state, and what you have edited are established once and carried, not re-asked.
 - **A dispatch is the most expensive thing you can do, so it has to buy something you cannot do yourself.** Every agent starts cold and pays for the whole rulebook, its own file, and its own exploration before it writes a line. Do mechanical work yourself: an edit you can already describe exactly, a rename, a wording change, or applying a finding someone else found. Dispatch for judgment you do not have, for a workspace you should not be editing directly, or for genuinely parallel work on separate areas.
+- **Wait by ending your turn.** A dispatched agent reports when it finishes, so never sleep in a loop to wait for one, and never answer a repeated hook or notification with the same paragraph.
 - **A fresh worktree is hydrated before it is used:** `bash scripts/setup-worktree.sh`. Skipping it produces failures that read as bugs in the change.
 - The guard hooks are always in force: no migration apply, no production database tunnel, no owner AWS profile. Being blocked is the expected outcome, not a fault to work around.
 - Every agent follows the rulebook (`CLAUDE.md`) and the design system (`.claude/design-system.md`).
