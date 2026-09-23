@@ -120,7 +120,7 @@ export const PreviewPopulated: Story = {
     // helper sentence after the input (mirrors `RabbiFormPage.stories.tsx`'s
     // own note on this same trap), so the label's full accessible name is
     // the field label plus that helper text, not the field label alone.
-    const nameInput = await canvas.findByLabelText('שם המוקדש', { exact: false });
+    const nameInput = await canvas.findByLabelText('השם שיופיע בהקדשה', { exact: false });
     await userEvent.type(nameInput, 'אברהם כהן');
     await canvas.findByText('אברהם כהן', {}, { timeout: 2000 });
   },
@@ -135,7 +135,7 @@ export const ValidationError: Story = {
   play: async ({ canvasElement }) => {
     createScenario = 'invalidName';
     const canvas = within(canvasElement);
-    const nameInput = await canvas.findByLabelText('שם המוקדש', { exact: false });
+    const nameInput = await canvas.findByLabelText('השם שיופיע בהקדשה', { exact: false });
     await userEvent.type(nameInput, 'דוד"');
     const startsOnInput = canvas.getByLabelText('תאריך התחלה');
     await userEvent.type(startsOnInput, '2026-10-01');

@@ -39,9 +39,26 @@ const takenDownDedication = adminDedication({
   takenDownReason: 'בקשת המשפחה',
 });
 
+// A dedication for a family rather than a person: no honorific (only ever
+// meaningful for a memorial), no parent name and therefore no gender to
+// give it. The parent-name row and the Gender row both have to render
+// correctly with nothing behind them.
+const familyDedication = adminDedication({
+  id: 'story-family',
+  type: 'success',
+  honoredName: 'משפחת לביא',
+  honorific: undefined,
+  honoredGender: undefined,
+  parentName: undefined,
+  donorFamilyName: undefined,
+  closingLineEnabled: false,
+  display: { formulaLine: 'להצלחת', nameLine: 'משפחת לביא' },
+});
+
 installMockFetch((url) => {
   if (url.pathname === '/v1/admin/dedications/story-live') return jsonResponse(200, adminDedication({}));
   if (url.pathname === '/v1/admin/dedications/story-takendown') return jsonResponse(200, takenDownDedication);
+  if (url.pathname === '/v1/admin/dedications/story-family') return jsonResponse(200, familyDedication);
   if (url.pathname === '/v1/admin/dedications/story-notfound') return jsonResponse(404, { error: 'not_found', message: 'לא נמצא' });
   if (url.pathname === '/v1/admin/dedications/story-error') return jsonResponse(500, { error: 'internal_error', message: 'שגיאה' });
   if (url.pathname === '/v1/admin/dedications/story-loading') return NEVER_RESOLVES;
@@ -68,6 +85,7 @@ type Story = StoryObj<typeof DedicationViewPage>;
 
 export const Live: Story = { decorators: [withRoute('story-live')] };
 export const TakenDown: Story = { decorators: [withRoute('story-takendown')] };
+export const SuccessForFamily: Story = { decorators: [withRoute('story-family')] };
 export const NotFound: Story = { decorators: [withRoute('story-notfound')] };
 export const ServerError: Story = { decorators: [withRoute('story-error')] };
 export const Loading: Story = { decorators: [withRoute('story-loading')] };
@@ -79,7 +97,7 @@ export const TakedownConfirmation: Story = {
   decorators: [withRoute('story-takedown-flow')],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(await canvas.findByRole('button', { name: 'הסרת ההקדשה' }));
-    await within(document.body).findByText('להסיר את ההקדשה?');
+    await userEvent.click(await canvas.findByRole('button', { name: 'הסרת ההקדשה מהאתר' }));
+    await within(document.body).findByText('להסיר את ההקדשה מהאתר?');
   },
 };

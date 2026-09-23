@@ -21,7 +21,11 @@ export const dedicationFormFromExisting = (dedication: AdminDedication): Dedicat
   type: dedication.type,
   honoredName: dedication.honoredName,
   honorific: dedication.honorific,
-  honoredGender: dedication.honoredGender,
+  // A stored record can carry no gender at all, when it has no parent name
+  // (helpers.ts's `emptyDedicationForm` default): the picker itself only
+  // ever renders once a parent name exists, so this default is never shown
+  // without a real choice beside it.
+  honoredGender: dedication.honoredGender ?? 'male',
   parentName: dedication.parentName ?? '',
   donorFamilyName: dedication.donorFamilyName ?? '',
   closingLineEnabled: dedication.closingLineEnabled,
