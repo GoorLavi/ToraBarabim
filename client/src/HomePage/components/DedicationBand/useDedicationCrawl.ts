@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent, PointerEvent, RefObject } from 'react';
 
-import { CRAWL_SPEED_PX_PER_SECOND, DEDICATION_UNIT_PITCH_PX, RESUME_AFTER_INTERACTION_MS } from './consts';
+import { CRAWL_SPEED_PX_PER_SECOND, DEDICATION_UNIT_PITCH_PX, MAX_FRAME_DELTA_SECONDS, RESUME_AFTER_INTERACTION_MS } from './consts';
 import { availableTrackWidthPx, isTrackOverflowing, loopPeriodPx, stepByUnitPitch, wrapTrackPosition } from './helpers';
 
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
@@ -140,7 +140,10 @@ export const useDedicationCrawl = (): DedicationCrawlHandlers => {
         lastTimestampMs = timestampMs;
         return;
       }
-      const deltaSeconds = (timestampMs - lastTimestampMs) / 1000;
+      // Capped, not the raw elapsed time: a backgrounded tab's first frame
+      // back delivers a huge real delta, and advancing by the whole paused
+      // duration would jump the crawl many loop periods forward at once.
+      const deltaSeconds = Math.min((timestampMs - lastTimestampMs) / 1000, MAX_FRAME_DELTA_SECONDS);
       lastTimestampMs = timestampMs;
 
       const shouldAdvance =

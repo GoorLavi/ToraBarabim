@@ -143,3 +143,44 @@ export const VariantsMatchHeightShortUnit: Story = {
   render: () => twoVariantComparison(DEDICATION_TEXT_MEMORIAL_NO_PARENT),
   play: assertVariantsRenderAtEqualHeight,
 };
+
+const rgbFromHex = (hex: string): string => {
+  const value = Number.parseInt(hex.replace('#', ''), 16);
+  const r = (value >> 16) & 255;
+  const g = (value >> 8) & 255;
+  const b = value & 255;
+  return `rgb(${r}, ${g}, ${b})`;
+};
+
+// The page-field contrast switch (DedicationUnit/styles.ts's container
+// style queries) only fires once the formula and the parent line have
+// each individually shrunk to their own 14px floor: --dedication-scale-px
+// is forced low enough here to guarantee that, standing in for the band's
+// own fold-driven value the same way a wrapping ancestor's custom property
+// always would. Measured directly against the computed colour, not
+// assumed from the CSS alone: a style query needs no container-type for a
+// style condition, unlike a size condition, but that is exactly the kind
+// of detail worth confirming rendered rather than taken on faith.
+export const PageFieldContrastSwitchesAtSmallScale: Story = {
+  render: () => (
+    <div
+      style={{ background: colors.bg, padding: '32px', display: 'inline-block', ['--dedication-scale-px' as string]: '0.3px' } as React.CSSProperties}
+    >
+      <DedicationUnit text={DEDICATION_TEXT_MEMORIAL_WRAPPING} variant="onPage" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const formula = canvasElement.querySelector<HTMLElement>('.formula');
+    const parent = canvasElement.querySelector<HTMLElement>('.parent');
+    const name = canvasElement.querySelector<HTMLElement>('.name');
+    if (!formula || !parent || !name) throw new Error('DedicationUnit story: a text line was not found');
+
+    await waitFor(() => {
+      expect(getComputedStyle(formula).color).toEqual(rgbFromHex(colors.dedicationMuted));
+      expect(getComputedStyle(parent).color).toEqual(rgbFromHex(colors.dedicationMuted));
+    });
+    // The name never switches: its own floor (24) still clears 4.5:1 in
+    // the full-contrast colour at every scale.
+    expect(getComputedStyle(name).color).toEqual(rgbFromHex(colors.dedication));
+  },
+};

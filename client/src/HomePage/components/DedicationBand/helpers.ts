@@ -20,12 +20,14 @@ export const loopPeriodPx = (trackWidthPx: number): number => trackWidthPx + DED
 // every `periodPx`, so jumping by a whole period never changes what is
 // visually on screen. Advancing past the seam and stepping back across it
 // both land on the position this returns for the unwrapped value, in both
-// directions.
+// directions. A true modulo, not a single subtract-or-add: a position more
+// than one period out of range (a resumed tab's first frame, before the
+// delta cap below existed, jumped by however long it had been backgrounded)
+// has to come back in range regardless of how many periods away it started.
 export const wrapTrackPosition = (position: number, periodPx: number): number => {
   if (periodPx <= 0) return position;
-  if (position >= periodPx) return position - periodPx;
-  if (position < 0) return position + periodPx;
-  return position;
+  const remainder = position % periodPx;
+  return remainder < 0 ? remainder + periodPx : remainder;
 };
 
 // One arrow-key step: exactly one unit pitch, never a pixel amount, so a

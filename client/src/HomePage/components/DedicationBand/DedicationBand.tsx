@@ -23,7 +23,7 @@ const DedicationBandDrawn = ({ className, group, variant }: DedicationBandDrawnP
       <div
         className="viewport"
         ref={crawl.viewportRef}
-        role="region"
+        role={crawl.isOverflowing ? 'region' : undefined}
         tabIndex={crawl.isOverflowing ? 0 : undefined}
         aria-label={crawl.isOverflowing ? consts.VIEWPORT_ARIA_LABEL : undefined}
         onPointerDown={crawl.onPointerDown}

@@ -15,6 +15,14 @@ export const DEDICATION_UNIT_PITCH_PX = DEDICATION_UNIT_WIDTH_PX + DEDICATION_UN
 // scroll container that a transform animation would fight.
 export const CRAWL_SPEED_PX_PER_SECOND = 32;
 
+// Caps the elapsed time a single frame is allowed to advance the crawl by.
+// A backgrounded tab (or any long stall) delivers its next
+// requestAnimationFrame with a huge real delta, and advancing by the whole
+// paused duration would jump the crawl many loop periods forward in one
+// frame instead of resuming smoothly from where it was. A few frames'
+// worth at 60Hz, generous enough to never clip a normal frame.
+export const MAX_FRAME_DELTA_SECONDS = 0.1;
+
 // A tunable, not a measurement: how long after the last touch interaction
 // ends before the band resumes self-advancing. Touch has no hover to key
 // off of, unlike a pointer device, which pauses and resumes immediately on

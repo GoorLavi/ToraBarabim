@@ -11,6 +11,7 @@ import { ARGAMAN_VE_ZAHAV_THEME } from '~/theme/themes';
 
 import { DEDICATION_BAND_FOLD_SHARE, DEDICATION_UNIT_GAP_PX, RESUME_AFTER_INTERACTION_MS } from './consts';
 import { DedicationBand } from './DedicationBand';
+import { wrapTrackPosition } from './helpers';
 
 const { colors } = ARGAMAN_VE_ZAHAV_THEME;
 
@@ -445,4 +446,28 @@ export const FoldHeight1080: Story = {
 export const FoldHeight1440: Story = {
   render: foldComparison,
   play: assertBandShareOfFold(2560, 1440),
+};
+
+// wrapTrackPosition has to bring a position several periods out of range
+// back in, not only one period out: a resumed tab's first frame used to
+// deliver a huge real delta (now capped, useDedicationCrawl.ts), and a
+// single subtract-or-add only corrected a position that was already
+// within two periods of the origin. Exercised directly against the pure
+// function, since this is a defect in its own arithmetic, not something a
+// DOM interaction would isolate. No render-dependent assertion, so the
+// args here are only enough to satisfy the story's own required props.
+export const WrapTrackPositionHandlesMultiplePeriods: Story = {
+  args: { group: DEDICATION_GROUP_SINGLE, hasDedications: true, variant: 'onPage' },
+  play: () => {
+    const period = 344;
+
+    expect(wrapTrackPosition(period * 3.5, period)).toEqual(period * 0.5);
+    expect(wrapTrackPosition(-period * 2.5, period)).toEqual(period * 0.5);
+
+    // The seam round-trip still holds: advancing past the seam and
+    // stepping back across it land on the same position, in both
+    // directions.
+    expect(wrapTrackPosition(period + 10, period)).toEqual(10);
+    expect(wrapTrackPosition(-10, period)).toEqual(period - 10);
+  },
 };
