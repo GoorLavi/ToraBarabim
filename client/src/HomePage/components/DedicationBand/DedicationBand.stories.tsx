@@ -395,14 +395,21 @@ const foldComparison = (): ReactElement => (
 // width: the md breakpoint depends on width, not height, and a fold this
 // short only pairs with a phone-width screen in practice, which is also
 // what puts it below md and on the lower of the two floors.
+//
+// This story renders inside its own iframe (the runner's tester harness),
+// which has its own independent viewport for 100svh: the top-level page's
+// own size, which `cdp()`'s device metrics would change, is not it.
+// `window.frameElement` (reachable same-origin) is the iframe element
+// itself, seen from inside it, so resizing that directly is what actually
+// changes what 100svh means to this story's own content.
 const assertBandShareOfFold = (widthPx: number, heightPx: number) => async ({ canvasElement }: { canvasElement: HTMLElement }): Promise<void> => {
-  const client = cdp();
-  await client.send('Emulation.setDeviceMetricsOverride', {
-    width: widthPx,
-    height: heightPx,
-    deviceScaleFactor: 1,
-    mobile: widthPx < 768,
-  });
+  const frame = window.frameElement as HTMLIFrameElement | null;
+  if (!frame) throw new Error('DedicationBand story: window.frameElement not found, expected to be running inside the test runner\'s iframe');
+
+  const originalWidth = frame.style.width;
+  const originalHeight = frame.style.height;
+  frame.style.width = `${widthPx}px`;
+  frame.style.height = `${heightPx}px`;
   try {
     await new Promise((resolve) => window.setTimeout(resolve, 100));
     const onPrimaryBand = canvasElement.querySelector<HTMLElement>('.onPrimary');
@@ -415,7 +422,8 @@ const assertBandShareOfFold = (widthPx: number, heightPx: number) => async ({ ca
     expect(bandHeight / heightPx).toBeLessThan(DEDICATION_BAND_FOLD_SHARE + 0.05);
     expect(bandHeight).toBeGreaterThan(150);
   } finally {
-    await client.send('Emulation.clearDeviceMetricsOverride');
+    frame.style.width = originalWidth;
+    frame.style.height = originalHeight;
   }
 };
 
