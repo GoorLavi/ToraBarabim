@@ -52,13 +52,20 @@ export const DedicationBand = css(
     }
   }
 
+  /* No touch-action declaration here, deliberately: pan-x was tried and
+     measured to trap a vertical swipe that starts on the band instead of
+     letting it scroll the page (measured on a real device viewport: an
+     on-band swipe moved the page 0px, the identical swipe just above it
+     moved the page normally). The overflow-x auto below already restricts
+     this element to horizontal panning by default and leaves vertical to
+     the page; pan-x overrides that default down to horizontal-only, the
+     opposite of what was wanted. */
   > .viewport {
     position: relative;
     display: flex;
     overflow: hidden;
     overscroll-behavior-inline: contain;
     scrollbar-width: none;
-    touch-action: pan-x;
 
     &::-webkit-scrollbar {
       display: none;
