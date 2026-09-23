@@ -216,6 +216,77 @@ export const PendingThenDrawnCrawls: Story = {
   },
 };
 
+// Every optional line present (formula, name, parent, closing, donor
+// credit), the shape the reservation is built for, and a name short enough
+// to never wrap: wrapping was never what the reservation guaranteed (the
+// reference it was built from, DEDICATION_BAND_ON_PRIMARY_HEIGHT_REFERENCE,
+// is itself a single-line figure), so this fixture isolates the
+// reservation's own guarantee from that separate, pre-existing gap.
+const RESERVATION_PROOF_TEXT = {
+  formulaLine: 'לעילוי נשמת',
+  nameLine: 'שרה כהן',
+  parentLine: 'בת אברהם',
+  closingLine: 'תנצב״ה',
+  donorCreditLine: 'תרומת משפחת לוי',
+};
+
+// A real delay, not an immediate effect (unlike PendingThenDrawn above):
+// the pending markup has to still be on screen when the play function takes
+// its first measurement, and an effect that fires on the same tick as mount
+// leaves no such window to measure in.
+const RESERVATION_PROOF_DRAW_DELAY_MS = 50;
+
+const PendingThenDrawnWithSentinel = ({ group }: { group: DedicationGroup }): ReactNode => {
+  const [drawn, setDrawn] = useState<DedicationGroup | undefined>(undefined);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDrawn(group), RESERVATION_PROOF_DRAW_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, [group]);
+  return (
+    <div>
+      <DedicationBand {...{ group: drawn, hasDedications: true, variant: 'onPrimary' as const }} />
+      <p className="sentinel">תוכן מתחת לרצועה</p>
+    </div>
+  );
+};
+
+// Copilot PR review, finding 1: the `.pending` reservation used to be
+// `scaledCss` applied to the band as one value, which understated the real
+// height by about 40px, because formula, name and parent were already
+// clamped to their own floors at this scale while padding and the ornament
+// were not (helpers.ts, dedicationBandReservedHeightPx). Proven the way the
+// guarantee is actually meant to be read: something below the band, whose
+// own position must not move once the real draw lands.
+export const PendingReservationMatchesTheDraw: Story = {
+  render: () => (
+    <PendingThenDrawnWithSentinel group={{ type: 'memorial', items: [{ id: 'dedication-reservation-proof', text: RESERVATION_PROOF_TEXT }] }} />
+  ),
+  play: async ({ canvasElement }) => {
+    const pending = canvasElement.querySelector<HTMLElement>('.pending');
+    if (!pending) throw new Error('DedicationBand story: .pending band not found before the draw');
+    const sentinel = canvasElement.querySelector<HTMLElement>('.sentinel');
+    if (!sentinel) throw new Error('DedicationBand story: .sentinel not found');
+
+    const topBeforeDraw = sentinel.getBoundingClientRect().top;
+
+    await waitFor(() => {
+      const track = canvasElement.querySelector('.track');
+      if (!track) throw new Error('DedicationBand story: .track not found once the group lands');
+    });
+
+    const topAfterDraw = sentinel.getBoundingClientRect().top;
+
+    // A pixel or two, not zero: font rasterisation and subpixel layout will
+    // not reproduce to the hundredth across environments, and an exact
+    // equality here would fail in CI for that reason alone (Copilot PR
+    // review, finding 2's own warning, applied to this assertion too). What
+    // this guards against is a reservation short by tens of pixels, the
+    // actual defect found, so a tolerance two orders of magnitude below
+    // that still catches it.
+    expect(Math.abs(topAfterDraw - topBeforeDraw)).toBeLessThan(2);
+  },
+};
+
 // One real touch gesture, through Chrome DevTools Protocol via `cdp()`,
 // stepped over several `touchmove` points the way a finger actually moves.
 // A synthetic DOM `TouchEvent` cannot stand in for this: whether a swipe
@@ -395,13 +466,31 @@ const widthComparison = (): ReactElement => (
 // itself, seen from inside it, so resizing that directly is what actually
 // crosses the md breakpoint this story means to test.
 //
-// The bound here is a sanity ceiling, not the owner's own target: the
-// individual floors on formula, name, parent, closing and donor already
-// sit above what either target asks for (DedicationBand/consts.ts), so the
-// real height lands close to that floor-composed minimum rather than to
-// 165 or 180. What actually renders is for a human to read off these two
-// stories, not to assert against a number nobody could reach.
-const measureBandHeightsAtWidth = (widthPx: number) => async ({ canvasElement }: { canvasElement: HTMLElement }): Promise<void> => {
+// Asserted against the heights actually measured (375: onPrimary 205.4,
+// onPage 196.1; 1280: onPrimary 209.1, onPage 197.5), not the owner's own
+// target: the individual floors on formula, name, parent, closing and
+// donor already sit above what either target asks for
+// (DedicationBand/consts.ts), so the real height lands close to that
+// floor-composed minimum rather than to 165 or 180.
+//
+// A tolerance, not an exact equality: font rasterisation and subpixel
+// layout will not reproduce to the hundredth across environments, and an
+// assertion that fails in CI for that reason teaches people to loosen
+// assertions rather than fix the real regression. Two pixels, the same
+// figure chosen for the reservation proof above, for the same reason: wide
+// enough to absorb that noise, narrow enough that nudging a floor by even a
+// couple of pixels still fails it.
+const HEIGHT_ASSERTION_TOLERANCE_PX = 2;
+
+const expectHeightNear = (actualPx: number, expectedPx: number): void => {
+  expect(Math.abs(actualPx - expectedPx)).toBeLessThan(HEIGHT_ASSERTION_TOLERANCE_PX);
+};
+
+const measureBandHeightsAtWidth = (widthPx: number, expectedOnPrimaryPx: number, expectedOnPagePx: number) => async ({
+  canvasElement,
+}: {
+  canvasElement: HTMLElement;
+}): Promise<void> => {
   const frame = window.frameElement as HTMLIFrameElement | null;
   if (!frame) throw new Error('DedicationBand story: window.frameElement not found, expected to be running inside the test runner\'s iframe');
 
@@ -417,10 +506,8 @@ const measureBandHeightsAtWidth = (widthPx: number) => async ({ canvasElement }:
     const onPrimaryHeight = onPrimaryBand.getBoundingClientRect().height;
     const onPageHeight = onPageBand.getBoundingClientRect().height;
 
-    expect(onPrimaryHeight).toBeGreaterThan(150);
-    expect(onPrimaryHeight).toBeLessThan(250);
-    expect(onPageHeight).toBeGreaterThan(150);
-    expect(onPageHeight).toBeLessThan(250);
+    expectHeightNear(onPrimaryHeight, expectedOnPrimaryPx);
+    expectHeightNear(onPageHeight, expectedOnPagePx);
   } finally {
     frame.style.width = originalWidth;
   }
@@ -428,12 +515,12 @@ const measureBandHeightsAtWidth = (widthPx: number) => async ({ canvasElement }:
 
 export const WidthPhone: Story = {
   render: widthComparison,
-  play: measureBandHeightsAtWidth(375),
+  play: measureBandHeightsAtWidth(375, 205.4, 196.1),
 };
 
 export const WidthDesktop: Story = {
   render: widthComparison,
-  play: measureBandHeightsAtWidth(1280),
+  play: measureBandHeightsAtWidth(1280, 209.1, 197.5),
 };
 
 // wrapTrackPosition has to bring a position several periods out of range
