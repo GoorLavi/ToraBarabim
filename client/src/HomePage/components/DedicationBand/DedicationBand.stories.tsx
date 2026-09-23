@@ -2,14 +2,14 @@ import type { DedicationGroup } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { cdp } from 'vitest/browser';
 import { useEffect, useState } from 'react';
-import type { ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { DEDICATION_UNIT_WIDTH_PX } from '~/components/DedicationUnit/consts';
 import { DEDICATION_GROUP_HEALING, DEDICATION_GROUP_MEMORIAL, DEDICATION_GROUP_OVERFLOWING, DEDICATION_GROUP_SINGLE } from '~/dedicationFixture';
 import { ARGAMAN_VE_ZAHAV_THEME } from '~/theme/themes';
 
-import { DEDICATION_UNIT_GAP_PX, RESUME_AFTER_INTERACTION_MS } from './consts';
+import { DEDICATION_BAND_FOLD_SHARE, DEDICATION_UNIT_GAP_PX, RESUME_AFTER_INTERACTION_MS } from './consts';
 import { DedicationBand } from './DedicationBand';
 
 const { colors } = ARGAMAN_VE_ZAHAV_THEME;
@@ -368,4 +368,73 @@ export const DragDoesNotSelectText: Story = {
     expect(selection?.toString() ?? '').toEqual('');
     expect(selection?.rangeCount ?? 0).toEqual(0);
   },
+};
+
+// The scale is a function of the real viewport height (100svh,
+// DedicationBand/styles.ts), so showing it at several fold heights needs
+// the actual browser viewport changed through CDP, not a fixed-height
+// decorator: an inner div cannot fake what 100svh means to its own
+// descendants. Cleared again after each story, since this runner shares
+// one browser page across every story in this file. Both variants, and a
+// group that carries both a wrapped name and a short unit (no parent, no
+// donor) in the same drawn group, since finding 5's baseline fix gets
+// proportionally more to prove as the scale drops.
+const foldComparison = (): ReactElement => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+    <div style={{ background: colors.primaryStrong }}>
+      <DedicationBand {...{ group: DEDICATION_GROUP_MEMORIAL, hasDedications: true, variant: 'onPrimary' as const }} />
+    </div>
+    <DedicationBand {...{ group: DEDICATION_GROUP_MEMORIAL, hasDedications: true, variant: 'onPage' as const }} />
+  </div>
+);
+
+// The share a fixed viewport actually rendered, measured directly, not the
+// table's own arithmetic: every figure in that table was worked out by
+// hand and had not been rendered before this story existed. Width paired
+// with height the way a real device would be, not held at one fixed
+// width: the md breakpoint depends on width, not height, and a fold this
+// short only pairs with a phone-width screen in practice, which is also
+// what puts it below md and on the lower of the two floors.
+const assertBandShareOfFold = (widthPx: number, heightPx: number) => async ({ canvasElement }: { canvasElement: HTMLElement }): Promise<void> => {
+  const client = cdp();
+  await client.send('Emulation.setDeviceMetricsOverride', {
+    width: widthPx,
+    height: heightPx,
+    deviceScaleFactor: 1,
+    mobile: widthPx < 768,
+  });
+  try {
+    await new Promise((resolve) => window.setTimeout(resolve, 100));
+    const onPrimaryBand = canvasElement.querySelector<HTMLElement>('.onPrimary');
+    if (!onPrimaryBand) throw new Error('DedicationBand story: .onPrimary band not found');
+    const bandHeight = onPrimaryBand.getBoundingClientRect().height;
+
+    // The band must never exceed the fold share it is built against, at
+    // any fold this project actually targets, with a small tolerance for
+    // sub-pixel rounding across the scale's several nested calc() steps.
+    expect(bandHeight / heightPx).toBeLessThan(DEDICATION_BAND_FOLD_SHARE + 0.05);
+    expect(bandHeight).toBeGreaterThan(150);
+  } finally {
+    await client.send('Emulation.clearDeviceMetricsOverride');
+  }
+};
+
+export const FoldHeight667: Story = {
+  render: foldComparison,
+  play: assertBandShareOfFold(375, 667),
+};
+
+export const FoldHeight800: Story = {
+  render: foldComparison,
+  play: assertBandShareOfFold(1280, 800),
+};
+
+export const FoldHeight1080: Story = {
+  render: foldComparison,
+  play: assertBandShareOfFold(1920, 1080),
+};
+
+export const FoldHeight1440: Story = {
+  render: foldComparison,
+  play: assertBandShareOfFold(2560, 1440),
 };
