@@ -1,5 +1,7 @@
+import type { DedicationText } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import type { ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
+import { expect, waitFor } from 'storybook/test';
 
 import {
   DEDICATION_TEXT_HEALING,
@@ -85,9 +87,38 @@ export const LongestRealisticName: Story = {
   decorators: [onPageField],
 };
 
+// Guards against a false pass: if both variants rendered at zero height
+// (the story mounted before layout, say), the equality check below would
+// pass and prove nothing.
+const assertVariantsRenderAtEqualHeight = async ({ canvasElement }: { canvasElement: HTMLElement }): Promise<void> => {
+  await waitFor(() => {
+    const onPrimary = canvasElement.querySelector<HTMLElement>('.onPrimary');
+    const onPage = canvasElement.querySelector<HTMLElement>('.onPage');
+    if (!onPrimary || !onPage) throw new Error('DedicationUnit story: a variant root was not found');
+
+    const primaryHeight = onPrimary.getBoundingClientRect().height;
+    const pageHeight = onPage.getBoundingClientRect().height;
+    expect(primaryHeight).toBeGreaterThan(50);
+    expect(pageHeight).toBeGreaterThan(50);
+    expect(primaryHeight).toEqual(pageHeight);
+  });
+};
+
+// Both variants, side by side, each on its own field: the shared render
+// both TwoVariantComparison and the height-equality stories below use.
+const twoVariantComparison = (text: DedicationText): ReactElement => (
+  <div style={{ display: 'flex', gap: '32px', alignItems: 'flex-start' }}>
+    <div style={{ background: colors.primaryStrong, padding: '32px', display: 'inline-block' }}>
+      <DedicationUnit text={text} variant="onPrimary" />
+    </div>
+    <div style={{ background: colors.bg, padding: '32px', display: 'inline-block' }}>
+      <DedicationUnit text={text} variant="onPage" />
+    </div>
+  </div>
+);
+
 // The instrument for the rendered-height check: both variants at 280,
-// side by side, each on its own field. 314.2 unwrapped, 374.2 wrapped
-// (design-system.md, dedication geometry). `DEDICATION_TEXT_MEMORIAL_WRAPPING`
+// side by side, each on its own field. `DEDICATION_TEXT_MEMORIAL_WRAPPING`
 // carries a donor credit line, visible on both sides here: 20/28 in
 // dedicationMuted on the page field, unchanged gold on the plum field
 // (only the size drops there, since both colour tokens already resolve to
@@ -96,14 +127,19 @@ export const LongestRealisticName: Story = {
 // variant sitting right beside it on the same page: a shared gradient
 // definition would paint both from whichever variant's context it sat in.
 export const TwoVariantComparison: Story = {
-  render: () => (
-    <div style={{ display: 'flex', gap: '32px', alignItems: 'flex-start' }}>
-      <div style={{ background: colors.primaryStrong, padding: '32px', display: 'inline-block' }}>
-        <DedicationUnit text={DEDICATION_TEXT_MEMORIAL_WRAPPING} variant="onPrimary" />
-      </div>
-      <div style={{ background: colors.bg, padding: '32px', display: 'inline-block' }}>
-        <DedicationUnit text={DEDICATION_TEXT_MEMORIAL_WRAPPING} variant="onPage" />
-      </div>
-    </div>
-  ),
+  render: () => twoVariantComparison(DEDICATION_TEXT_MEMORIAL_WRAPPING),
+  play: assertVariantsRenderAtEqualHeight,
+};
+
+// The designer measured the two variants identical to the tenth by hand;
+// the compiler already stops a variant changing geometry (VARIANT_TOKENS
+// is typed to colour keys only), but it cannot measure the rendered
+// result, and a rule outside the variant blocks, a different shadow
+// spread, anything that affects layout without going through the token
+// table, would drift them apart silently. Checked at a short shape too
+// (no parent, no donor), not only the full one above: the two could agree
+// on one shape and not the other.
+export const VariantsMatchHeightShortUnit: Story = {
+  render: () => twoVariantComparison(DEDICATION_TEXT_MEMORIAL_NO_PARENT),
+  play: assertVariantsRenderAtEqualHeight,
 };

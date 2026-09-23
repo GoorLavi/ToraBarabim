@@ -335,3 +335,37 @@ export const OrnamentsShareABaselineWithMixedContent: Story = {
     }
   },
 };
+
+// This is a drag surface: without user-select: none, a drag starting on a
+// name selects the text instead of moving the band (owner, on a real
+// phone). Driven through cdp(), not userEvent: whether a mouse drag starts
+// a native text selection is the browser's own gesture recognition, the
+// same class of behaviour the touch and click stories above needed a real
+// input for, not something a synthetic DOM event reliably exercises.
+export const DragDoesNotSelectText: Story = {
+  args: { group: DEDICATION_GROUP_OVERFLOWING, hasDedications: true, variant: 'onPage' },
+  play: async ({ canvasElement }) => {
+    const name = canvasElement.querySelector<HTMLElement>('.name');
+    if (!name) throw new Error('DedicationBand story: .name not found');
+
+    const box = name.getBoundingClientRect();
+    const y = box.top + box.height / 2;
+    const startX = box.left + 4;
+    const endX = box.right - 4;
+
+    const client = cdp();
+    await client.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: startX, y });
+    await client.send('Input.dispatchMouseEvent', { type: 'mousePressed', x: startX, y, button: 'left', clickCount: 1 });
+    const steps = 6;
+    for (let step = 1; step <= steps; step++) {
+      const x = startX + ((endX - startX) * step) / steps;
+      await client.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y, buttons: 1 });
+      await new Promise((resolve) => window.setTimeout(resolve, 16));
+    }
+    await client.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: endX, y, button: 'left', clickCount: 1 });
+
+    const selection = window.getSelection();
+    expect(selection?.toString() ?? '').toEqual('');
+    expect(selection?.rangeCount ?? 0).toEqual(0);
+  },
+};
