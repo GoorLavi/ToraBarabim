@@ -1,12 +1,16 @@
-import type { DedicationGroup } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { cdp } from 'vitest/browser';
-import { useEffect, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { DEDICATION_UNIT_WIDTH_PX } from '~/components/DedicationUnit/consts';
-import { DEDICATION_GROUP_HEALING, DEDICATION_GROUP_MEMORIAL, DEDICATION_GROUP_OVERFLOWING, DEDICATION_GROUP_SINGLE } from '~/dedicationFixture';
+import {
+  DEDICATION_GROUP_HEALING,
+  DEDICATION_GROUP_MEMORIAL,
+  DEDICATION_GROUP_OVERFLOWING,
+  DEDICATION_GROUP_SINGLE,
+  DEDICATION_GROUP_SUCCESS,
+} from '~/dedicationFixture';
 import { ARGAMAN_VE_ZAHAV_THEME } from '~/theme/themes';
 
 import { DEDICATION_UNIT_GAP_PX, RESUME_AFTER_INTERACTION_MS } from './consts';
@@ -43,24 +47,40 @@ const expectCenteredViewport = ({ canvasElement }: { canvasElement: HTMLElement 
 };
 
 export const OnPrimaryOneUnit: Story = {
-  args: { group: DEDICATION_GROUP_SINGLE, hasDedications: true, variant: 'onPrimary' },
+  args: { group: DEDICATION_GROUP_SINGLE, variant: 'onPrimary' },
   decorators: [onPrimaryField],
   play: expectCenteredViewport,
 };
 
 export const OnPageOneUnit: Story = {
-  args: { group: DEDICATION_GROUP_SINGLE, hasDedications: true, variant: 'onPage' },
+  args: { group: DEDICATION_GROUP_SINGLE, variant: 'onPage' },
   play: expectCenteredViewport,
+};
+
+// The three fixed placements (HomePage.tsx), one band per type: `success`
+// between the rails, `healing` between the rails block and `RabbiRow`,
+// both `onPage`, and `memorial` at the foot, `onPrimary`.
+export const SuccessBand: Story = {
+  args: { group: DEDICATION_GROUP_SUCCESS, variant: 'onPage' },
+};
+
+export const HealingBand: Story = {
+  args: { group: DEDICATION_GROUP_HEALING, variant: 'onPage' },
+};
+
+export const MemorialBand: Story = {
+  args: { group: DEDICATION_GROUP_MEMORIAL, variant: 'onPrimary' },
+  decorators: [onPrimaryField],
 };
 
 // Static, no self-advance: the group's own width fits the container.
 export const FitsNoCrawl: Story = {
-  args: { group: DEDICATION_GROUP_HEALING, hasDedications: true, variant: 'onPage' },
+  args: { group: DEDICATION_GROUP_HEALING, variant: 'onPage' },
 };
 
 // Wider than the container: crawls.
 export const OverflowsAndCrawls: Story = {
-  args: { group: DEDICATION_GROUP_OVERFLOWING, hasDedications: true, variant: 'onPage' },
+  args: { group: DEDICATION_GROUP_OVERFLOWING, variant: 'onPage' },
   play: async ({ canvasElement }) => {
     await waitFor(() => expect(canvasElement.querySelector('.track.duplicate')).not.toBeNull());
 
@@ -93,7 +113,7 @@ export const OverflowsAndCrawls: Story = {
 // band, not an exact figure: real frame timing jitters, but 32 and 60 are
 // far enough apart that this still catches the regression.
 export const CrawlsAtTheDesignedSpeed: Story = {
-  args: { group: DEDICATION_GROUP_OVERFLOWING, hasDedications: true, variant: 'onPage' },
+  args: { group: DEDICATION_GROUP_OVERFLOWING, variant: 'onPage' },
   play: async ({ canvasElement }) => {
     const viewport = canvasElement.querySelector<HTMLElement>('.viewport');
     if (!viewport) throw new Error('DedicationBand story: .viewport not found');
@@ -113,7 +133,7 @@ export const CrawlsAtTheDesignedSpeed: Story = {
 };
 
 export const OnPrimaryOverflowing: Story = {
-  args: { group: DEDICATION_GROUP_OVERFLOWING, hasDedications: true, variant: 'onPrimary' },
+  args: { group: DEDICATION_GROUP_OVERFLOWING, variant: 'onPrimary' },
   decorators: [onPrimaryField],
 };
 
@@ -124,7 +144,7 @@ export const OnPrimaryOverflowing: Story = {
 // crawl had frozen at, preserving that same off-grid offset on every press
 // instead of correcting it.
 export const ArrowKeyAlwaysLandsOnAUnitBoundary: Story = {
-  args: { group: DEDICATION_GROUP_OVERFLOWING, hasDedications: true, variant: 'onPage' },
+  args: { group: DEDICATION_GROUP_OVERFLOWING, variant: 'onPage' },
   play: async ({ canvasElement }) => {
     const viewport = canvasElement.querySelector<HTMLElement>('.viewport');
     if (!viewport) throw new Error('DedicationBand story: .viewport not found');
@@ -156,7 +176,7 @@ const originalMatchMedia = window.matchMedia;
 // lands only after `useDedicationCrawl`'s media-query effect already read
 // the real, unreduced value, and that effect never reads it again (B4).
 export const ReducedMotionStaysScrollable: Story = {
-  args: { group: DEDICATION_GROUP_OVERFLOWING, hasDedications: true, variant: 'onPage' },
+  args: { group: DEDICATION_GROUP_OVERFLOWING, variant: 'onPage' },
   beforeEach: () => {
     window.matchMedia = ((query: string) =>
       originalMatchMedia.call(window, query === REDUCED_MOTION_QUERY ? 'all' : query)) as typeof window.matchMedia;
@@ -186,34 +206,7 @@ export const ReducedMotionStaysScrollable: Story = {
 // undrawn. `dedications: []` is a normal 200, never a 404
 // (design-system.md, dedication States).
 export const NoDedicationsRendersNothing: Story = {
-  args: { group: undefined, hasDedications: false, variant: 'onPage' },
-};
-
-// The instrument for B1 and B6: mounts exactly the way `HomePage` does,
-// with a pool known (`hasDedications`) before its own draw has picked a
-// group, then supplies the group a moment later through a state update on
-// the same element, never a remount. Before the fix this left the band
-// permanently un-measured (B1: the crawl hook's mount-time effect ran
-// once, against a still-empty band, and never ran again once real markup
-// arrived), so the assertion below is the one that would have failed on
-// the original code.
-const PendingThenDrawn = ({ group }: { group: DedicationGroup }): ReactNode => {
-  const [drawn, setDrawn] = useState<DedicationGroup | undefined>(undefined);
-  useEffect(() => {
-    setDrawn(group);
-  }, [group]);
-  return <DedicationBand {...{ group: drawn, hasDedications: true, variant: 'onPage' as const }} />;
-};
-
-export const PendingThenDrawnCrawls: Story = {
-  render: () => <PendingThenDrawn group={DEDICATION_GROUP_OVERFLOWING} />,
-  play: async ({ canvasElement }) => {
-    await waitFor(() => {
-      const viewport = canvasElement.querySelector<HTMLElement>('.viewport');
-      if (!viewport) throw new Error('DedicationBand story: .viewport not found once the group lands');
-      expect(getComputedStyle(viewport).overflowX).toEqual('auto');
-    });
-  },
+  args: { group: undefined, variant: 'onPage' },
 };
 
 // Every optional line present (formula, name, parent, closing, donor
@@ -316,7 +309,7 @@ const dispatchVerticalTouchSwipe = async (x: number, startY: number, distancePx:
 };
 
 export const VerticalSwipeScrollsThePage: Story = {
-  args: { group: DEDICATION_GROUP_OVERFLOWING, hasDedications: true, variant: 'onPage' },
+  args: { group: DEDICATION_GROUP_OVERFLOWING, variant: 'onPage' },
   play: async ({ canvasElement }) => {
     const viewport = canvasElement.querySelector<HTMLElement>('.viewport');
     if (!viewport) throw new Error('DedicationBand story: .viewport not found');
@@ -362,7 +355,7 @@ const dispatchRealMouseClick = async (x: number, y: number): Promise<void> => {
 };
 
 export const MouseClickDoesNotFreezeTheCrawl: Story = {
-  args: { group: DEDICATION_GROUP_OVERFLOWING, hasDedications: true, variant: 'onPage' },
+  args: { group: DEDICATION_GROUP_OVERFLOWING, variant: 'onPage' },
   play: async ({ canvasElement }) => {
     const viewport = canvasElement.querySelector<HTMLElement>('.viewport');
     if (!viewport) throw new Error('DedicationBand story: .viewport not found');
@@ -398,7 +391,7 @@ export const MouseClickDoesNotFreezeTheCrawl: Story = {
 // spread, the shorter unit closing its ornament early into a hole in the
 // row it is meant to frame).
 export const OrnamentsShareABaselineWithMixedContent: Story = {
-  args: { group: DEDICATION_GROUP_MEMORIAL, hasDedications: true, variant: 'onPage' },
+  args: { group: DEDICATION_GROUP_MEMORIAL, variant: 'onPage' },
   play: async ({ canvasElement }) => {
     const lowerOrnaments = Array.from(canvasElement.querySelectorAll<SVGElement>('.track:not(.duplicate) > * > .mirrored'));
     expect(lowerOrnaments.length).toBeGreaterThan(1);
@@ -419,7 +412,7 @@ export const OrnamentsShareABaselineWithMixedContent: Story = {
 // same class of behaviour the touch and click stories above needed a real
 // input for, not something a synthetic DOM event reliably exercises.
 export const DragDoesNotSelectText: Story = {
-  args: { group: DEDICATION_GROUP_OVERFLOWING, hasDedications: true, variant: 'onPage' },
+  args: { group: DEDICATION_GROUP_OVERFLOWING, variant: 'onPage' },
   play: async ({ canvasElement }) => {
     const name = canvasElement.querySelector<HTMLElement>('.name');
     if (!name) throw new Error('DedicationBand story: .name not found');
@@ -457,9 +450,9 @@ export const DragDoesNotSelectText: Story = {
 const widthComparison = (): ReactElement => (
   <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
     <div style={{ background: colors.primaryStrong }}>
-      <DedicationBand {...{ group: DEDICATION_GROUP_MEMORIAL, hasDedications: true, variant: 'onPrimary' as const }} />
+      <DedicationBand {...{ group: DEDICATION_GROUP_MEMORIAL, variant: 'onPrimary' as const }} />
     </div>
-    <DedicationBand {...{ group: DEDICATION_GROUP_MEMORIAL, hasDedications: true, variant: 'onPage' as const }} />
+    <DedicationBand {...{ group: DEDICATION_GROUP_MEMORIAL, variant: 'onPage' as const }} />
   </div>
 );
 
@@ -536,7 +529,7 @@ export const WidthDesktop: Story = {
 // DOM interaction would isolate. No render-dependent assertion, so the
 // args here are only enough to satisfy the story's own required props.
 export const WrapTrackPositionHandlesMultiplePeriods: Story = {
-  args: { group: DEDICATION_GROUP_SINGLE, hasDedications: true, variant: 'onPage' },
+  args: { group: DEDICATION_GROUP_SINGLE, variant: 'onPage' },
   play: () => {
     const period = 344;
 

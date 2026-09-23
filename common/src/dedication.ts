@@ -27,9 +27,9 @@ export interface Dedication {
   text: DedicationText;
 }
 
-// One type's drawn group: both home-page placements (the foot band and the
-// between-rails band) show the same group on a given page load, never a
-// mix of types.
+// One type's active dedications. The home page has one band per type, each
+// fixed to its own, so a group is never split across placements and never
+// mixed with another type's items.
 export interface DedicationGroup {
   type: DedicationType;
   items: Dedication[];

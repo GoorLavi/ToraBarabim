@@ -16,9 +16,8 @@ export interface HomeRowsQueryState {
 export interface HomeRailsProps {
   className?: string;
   query: HomeRowsQueryState;
-  // The one draw HomePage made for this page load, prop-drilled by one
-  // level rather than read again here: a second draw would put two
-  // different type groups on one page (design-system.md, dedication "The
-  // draw"). `undefined` before the draw has run and when the pool is empty.
+  // The `success` group, fixed to this placement (HomePage.tsx), prop-
+  // drilled by one level rather than read again here. `undefined` when the
+  // pool has no `success` dedications.
   dedicationGroup: DedicationGroup | undefined;
 }

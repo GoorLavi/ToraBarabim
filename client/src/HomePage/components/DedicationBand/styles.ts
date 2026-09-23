@@ -54,25 +54,6 @@ export const DedicationBand = css(
       inline-size: calc(100% + 2 * ${theme.spacing.xl});
     }
 
-    /* The pool has a dedication to show but the per-load draw has not run
-       yet: reserves the block size the band is guaranteed to need at this
-       scale, so it does not go from absent to present under a reader
-       already looking at the page (design-system.md, dedication "The
-       draw", guarantee 3). A precomputed literal, not scaledCss's own
-       max(floor, reference * scale) applied to the band as one value: at
-       these scales, formula, name and parent are already clamped to their
-       own floors while padding and the ornament are not, so treating the
-       band as a single scaled figure understated the real total by about
-       40px (helpers.ts, dedicationBandReservedHeightPx, sums each piece's
-       own clamp the way CSS actually will, per breakpoint). */
-    &.pending {
-      min-block-size: ${dedicationBandReservedHeightPx(consts.DEDICATION_SCALE_BELOW_MD, consts.DEDICATION_BAND_PADDING_ON_PRIMARY_REFERENCE)}px;
-
-      @media (min-width: ${theme.breakpoints.md}) {
-        min-block-size: ${dedicationBandReservedHeightPx(consts.DEDICATION_SCALE_FROM_MD, consts.DEDICATION_BAND_PADDING_ON_PRIMARY_REFERENCE)}px;
-      }
-    }
-
     /* Mirrors SiteLogoLink/styles.ts's own outline colour for the plum
        field: the browser's default focus ring reads poorly against it,
        and a 435px-tall focusable element (only ever focusable while
@@ -86,14 +67,6 @@ export const DedicationBand = css(
   &.onPage {
     /* No bleed: stays inside the rails column it is spliced into. */
     padding-block: ${scaledCss(consts.DEDICATION_BAND_PADDING_ON_PAGE_REFERENCE, consts.DEDICATION_BAND_PADDING_FLOOR_PX)};
-
-    &.pending {
-      min-block-size: ${dedicationBandReservedHeightPx(consts.DEDICATION_SCALE_BELOW_MD, consts.DEDICATION_BAND_PADDING_ON_PAGE_REFERENCE)}px;
-
-      @media (min-width: ${theme.breakpoints.md}) {
-        min-block-size: ${dedicationBandReservedHeightPx(consts.DEDICATION_SCALE_FROM_MD, consts.DEDICATION_BAND_PADDING_ON_PAGE_REFERENCE)}px;
-      }
-    }
 
     > .viewport:focus-visible {
       outline: 2px solid ${theme.colors.primary};

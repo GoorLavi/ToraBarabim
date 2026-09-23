@@ -61,10 +61,9 @@ export const TwoRailsNoBetweenRailsDedication: Story = {
   },
 };
 
-// Three rails, but the draw has not resolved yet (or the pool is empty):
-// no between-rails band, same as the two-rail case, but for a different
-// reason.
-export const NoDedicationGroupDrawn: Story = {
+// Three rails, but the pool has no `success` dedications: no between-rails
+// band, same as the two-rail case, but for a different reason.
+export const NoSuccessDedications: Story = {
   args: {
     query: queryWithRows([homeRow('area', 'שיעורים באזור שלך'), homeRow('today', 'הערב'), homeRow('weekly', 'שיעור שבועי')]),
     dedicationGroup: undefined,

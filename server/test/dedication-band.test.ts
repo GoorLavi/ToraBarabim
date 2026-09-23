@@ -1,18 +1,15 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 
-import { DEDICATION_TEXT_HEALING, DEDICATION_TEXT_SUCCESS, dedicationFixture } from '../../client/src/dedicationFixture';
 import { isTrackOverflowing, stepByUnitPitch, wrapTrackPosition } from '../../client/src/HomePage/components/DedicationBand/helpers';
 import { WOMENS_AREA_BAND_SLOT } from '../../client/src/HomePage/components/HomeRails/consts';
 import { dedicationBandSlot, shouldShowBetweenRailsDedication } from '../../client/src/HomePage/components/HomeRails/helpers';
-import { drawDedication, drawDedicationGroup } from '../../client/src/HomePage/dedicationDraw';
 
 // Pure logic, so this suite needs neither a database nor a built client,
 // the same shape as rabbi-order.test.ts and dedication-text.test.ts.
 // Type-only imports from common (none needed directly here: every function
-// under test already carries its own parameter types), the RNG passed in
-// as a parameter rather than a bare `Math.random()` call, and every
-// constant read from its own colocated consts.ts, the one exception being
+// under test already carries its own parameter types), and every constant
+// read from its own colocated consts.ts, the one exception being
 // `stepByUnitPitch`'s pitch below.
 //
 // No assertion here compares `VARIANT_TOKENS.onPrimary`'s keys against
@@ -104,72 +101,6 @@ describe('stepByUnitPitch (arrow key stepping)', () => {
     for (let i = 0; i < 9; i += 1) position = stepByUnitPitch(position, 1, TEST_UNIT_PITCH_PX);
     for (let i = 0; i < 9; i += 1) position = stepByUnitPitch(position, -1, TEST_UNIT_PITCH_PX);
     assert.equal(position % TEST_UNIT_PITCH_PX, 0, `ended mid-unit at ${position}`);
-  });
-});
-
-describe('drawDedication and drawDedicationGroup (the draw)', () => {
-  // 1 item in one type, 19 in the other: drawing the type uniformly would
-  // put the lone item at 50%, exactly what this catches.
-  const soloGroup = { type: 'success' as const, items: [dedicationFixture({ id: 'solo-1', text: DEDICATION_TEXT_SUCCESS })] };
-  const crowdedGroup = {
-    type: 'healing' as const,
-    items: Array.from({ length: 19 }, (_, index) => dedicationFixture({ id: `crowd-${index + 1}`, text: DEDICATION_TEXT_HEALING })),
-  };
-  const groups = [soloGroup, crowdedGroup];
-  const allIds = groups.flatMap((group) => group.items.map((item) => item.id));
-
-  const drawnId = (random: () => number): string => {
-    const drawn = drawDedication(groups, random);
-    assert.ok(drawn, 'expected a draw from a non-empty pool');
-    return drawn.id;
-  };
-
-  test('an empty pool draws nothing', () => {
-    assert.equal(drawDedication([], Math.random), undefined);
-    assert.equal(drawDedicationGroup([], Math.random), undefined);
-  });
-
-  test('both branches draw units from exactly one group', () => {
-    for (let index = 0; index < allIds.length; index += 1) {
-      const random = (): number => index / allIds.length;
-      const drawnGroup = drawDedicationGroup(groups, random);
-      assert.ok(drawnGroup === soloGroup || drawnGroup === crowdedGroup, 'expected the exact original group object, never a mix');
-    }
-  });
-
-  test('is a permutation: an evenly spaced sweep of exactly one draw per item hits every id exactly once', () => {
-    const drawnIds = allIds.map((_, index) => drawnId(() => index / allIds.length));
-
-    assert.deepEqual([...drawnIds].sort(), [...allIds].sort());
-  });
-
-  test('no systematic exclusion: every unit appears at least once across many draws', () => {
-    const drawCount = allIds.length * 50;
-    const seenIds = new Set<string>();
-    for (let index = 0; index < drawCount; index += 1) {
-      seenIds.add(drawnId(() => index / drawCount));
-    }
-
-    assert.deepEqual([...seenIds].sort(), [...allIds].sort());
-  });
-
-  test('weighted per dedication, not per type: an evenly spaced sweep visits each dedication the same number of times', () => {
-    const repeatsPerItem = 1000;
-    const drawCount = allIds.length * repeatsPerItem;
-
-    const typeCounts: Record<'success' | 'healing' | 'memorial', number> = { success: 0, healing: 0, memorial: 0 };
-    for (let index = 0; index < drawCount; index += 1) {
-      const random = (): number => index / drawCount;
-      const drawnGroup = drawDedicationGroup(groups, random);
-      assert.ok(drawnGroup, 'expected a group from a non-empty pool');
-      typeCounts[drawnGroup.type] += 1;
-    }
-
-    // A type-uniform draw would split this 50/50. Weighted per dedication,
-    // the lone item's type gets exactly 1 of the pool's 20 dedications
-    // (5%) and the crowded type gets the other 19 (95%).
-    assert.equal(typeCounts.success, repeatsPerItem);
-    assert.equal(typeCounts.healing, repeatsPerItem * 19);
   });
 });
 
