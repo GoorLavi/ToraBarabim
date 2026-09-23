@@ -1,3 +1,4 @@
+import type { RefObject } from 'react';
 import type { InfiniteData, UseInfiniteQueryResult } from '@tanstack/react-query';
 import type { AudienceFilter, LessonSearchResponse } from '@torabarabim/common';
 
@@ -20,3 +21,10 @@ export interface AudienceFilterState {
 }
 
 export type LessonListPagesResult<TError> = UseInfiniteQueryResult<InfiniteData<LessonSearchResponse>, TError>;
+
+export interface DismissPopoverOptions {
+  isOpen: boolean;
+  rootRef: RefObject<HTMLElement | null>;
+  onDismiss: () => void;
+  triggerRef?: RefObject<HTMLElement | null>;
+}

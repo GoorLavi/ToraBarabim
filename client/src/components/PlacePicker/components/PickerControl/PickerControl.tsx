@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import type { FocusEvent } from 'react';
+import { useRef, useState } from 'react';
 import classNames from 'classnames';
 import styled from 'styled-components';
 
 import { InactiveTag } from '~/components/InactiveTag/InactiveTag';
 import { directionForValue } from '~/helpers';
+import { useDismissPopover } from '~/hooks/useDismissPopover';
 
 import { placeAddressLine, toPickedPlace } from '../../helpers';
 import * as parentConsts from '../../consts';
@@ -24,15 +24,22 @@ export const PickerControl = styled(({ className, place, onSelectPlace, onClearP
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const results = usePlaceSearch(query);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
-  const close = (event: FocusEvent<HTMLDivElement>): void => {
-    if (!event.currentTarget.contains(event.relatedTarget)) setIsOpen(false);
-  };
+  useDismissPopover({ isOpen, rootRef, triggerRef, onDismiss: () => setIsOpen(false) });
 
   return (
     <div className={classNames(className, { chosen: Boolean(place) })}>
-      <div className={classNames('field', { open: isOpen })} onBlur={close}>
-        <button type="button" className="control" aria-haspopup="listbox" aria-expanded={isOpen} onClick={() => setIsOpen((open) => !open)}>
+      <div className={classNames('field', { open: isOpen })} ref={rootRef}>
+        <button
+          type="button"
+          className="control"
+          ref={triggerRef}
+          aria-haspopup="listbox"
+          aria-expanded={isOpen}
+          onClick={() => setIsOpen((open) => !open)}
+        >
           {place ? (
             <span className="name" dir="auto">
               {place.name}
