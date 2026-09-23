@@ -1,6 +1,6 @@
 import { css } from 'styled-components';
 
-import { DEDICATION_UNIT_HEIGHT_WRAPPED_PX } from '~/components/DedicationUnit/consts';
+import { scaledCss } from '~/components/DedicationUnit/consts';
 
 import * as consts from './consts';
 
@@ -14,6 +14,41 @@ export const DedicationBand = css(
   ({ theme }) => `
   position: relative;
 
+  /* The band's own scale driver, read by every scaled dedication value
+     (DedicationUnit/styles.ts, and the padding-block and reservation
+     below): the band must never exceed
+     ${consts.DEDICATION_BAND_FOLD_SHARE * 100}% of the real viewport
+     height, so this is computed from 100svh rather than dialled by hand.
+     100svh, never 100dvh: dvh tracks the address bar's own show/hide
+     during scroll, so a dvh-driven scale would resize a person's name
+     while someone is reading it. svh stays fixed for the life of the
+     page and guarantees the ${consts.DEDICATION_BAND_FOLD_SHARE * 100}%
+     ceiling against the worst-case fold (bar shown) rather than the
+     best-case one (bar hidden).
+     A length, not a unitless ratio: deriving a unitless number from
+     100svh needs calc() type-checking support this project should not
+     depend on, while a length divided by a number is a length, which
+     every browser already supports. Every reference value this is
+     multiplied against elsewhere is written as a bare, unitless number
+     for the same reason, a length times a length is an area, not a
+     length.
+     Two floors, not one, and the boundary is deliberate: below md a
+     desktop reader has not arrived yet, so the phone floor holds; from md
+     up, a reader sits roughly twice as far from the screen (about 60cm
+     against a phone's 30cm), so the same angular size needs roughly
+     double the pixels, and without the higher floor a 1280x700 laptop, a
+     common window, would clamp at the phone floor instead.
+     Known and accepted: a landscape phone (about 390 tall) puts
+     ${consts.DEDICATION_BAND_FOLD_SHARE * 100}% at 109px, far under even
+     the lower floor's 216px, so the band lands near 55% of that fold and
+     no value of this scale can fix it without a second axis of
+     conditional geometry, which nobody has asked for. */
+  --dedication-scale-px: clamp(${consts.DEDICATION_SCALE_FLOOR_BELOW_MD}px, calc(100svh * ${consts.DEDICATION_BAND_FOLD_SHARE} / ${consts.DEDICATION_BAND_ON_PRIMARY_HEIGHT_REFERENCE}), 1px);
+
+  @media (min-width: ${theme.breakpoints.md}) {
+    --dedication-scale-px: clamp(${consts.DEDICATION_SCALE_FLOOR_FROM_MD}px, calc(100svh * ${consts.DEDICATION_BAND_FOLD_SHARE} / ${consts.DEDICATION_BAND_ON_PRIMARY_HEIGHT_REFERENCE}), 1px);
+  }
+
   &.onPrimary {
     background: ${theme.colors.primaryStrong};
     /* Full bleed: cancels HomePage's own inline gutter so this reaches the
@@ -25,7 +60,7 @@ export const DedicationBand = css(
        third breakpoint to mirror here either. */
     margin-inline: calc(-1 * ${theme.spacing.lg});
     inline-size: calc(100% + 2 * ${theme.spacing.lg});
-    padding-block: ${theme.spacing.xxl};
+    padding-block: ${scaledCss(consts.DEDICATION_BAND_PADDING_ON_PRIMARY_REFERENCE, consts.DEDICATION_BAND_PADDING_FLOOR_PX)};
     margin-block-start: ${theme.spacing.section};
 
     @media (min-width: ${theme.breakpoints.md}) {
@@ -34,21 +69,23 @@ export const DedicationBand = css(
     }
 
     /* The pool has a dedication to show but the per-load draw has not run
-       yet: reserves the block size a single unit is guaranteed to need,
-       at its tallest (its name line wrapped), so the band does not go
-       from absent to present under a reader already looking at the page
-       (design-system.md, dedication "The draw", guarantee 3). */
+       yet: reserves the block size the band is guaranteed to need at this
+       scale, so it does not go from absent to present under a reader
+       already looking at the page (design-system.md, dedication "The
+       draw", guarantee 3). Scaled the same way as the real content, off
+       the same driver, rather than a fixed figure: a fixed reservation
+       would be wrong at every scale but the one it was measured at. */
     &.pending {
-      min-block-size: calc(${DEDICATION_UNIT_HEIGHT_WRAPPED_PX}px + 2 * ${theme.spacing.xxl});
+      min-block-size: ${scaledCss(consts.DEDICATION_BAND_ON_PRIMARY_HEIGHT_REFERENCE, consts.DEDICATION_BAND_ON_PRIMARY_HEIGHT_REFERENCE * consts.DEDICATION_SCALE_FLOOR_BELOW_MD)};
     }
   }
 
   &.onPage {
     /* No bleed: stays inside the rails column it is spliced into. */
-    padding-block: ${theme.spacing.lg};
+    padding-block: ${scaledCss(consts.DEDICATION_BAND_PADDING_ON_PAGE_REFERENCE, consts.DEDICATION_BAND_PADDING_FLOOR_PX)};
 
     &.pending {
-      min-block-size: calc(${DEDICATION_UNIT_HEIGHT_WRAPPED_PX}px + 2 * ${theme.spacing.lg});
+      min-block-size: ${scaledCss(consts.DEDICATION_BAND_ON_PAGE_HEIGHT_REFERENCE, consts.DEDICATION_BAND_ON_PAGE_HEIGHT_REFERENCE * consts.DEDICATION_SCALE_FLOOR_BELOW_MD)};
     }
   }
 

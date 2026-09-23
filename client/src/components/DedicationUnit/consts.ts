@@ -50,9 +50,46 @@ export const VARIANT_TOKENS: Record<DedicationVariant, DedicationVariantTokens> 
 // The ornament's own intrinsic size, set as SVG attributes so it reserves
 // its box before the artwork paints (design-system.md: "Give it an explicit
 // viewBox so it reserves its space"). Authored at 240 by 56 (the designer's
-// export); the drawn path occupies y 0.56 to 52.52 inside it.
+// export), but the drawn path only ever occupied y 0.56 to 52.52 inside
+// that: 1.45% of every ornament's own height was empty by construction.
+// Recropped to exactly the path's own bounding box, never touching the
+// path itself, so the artwork is identical and the block-size this
+// reserves (`styles.ts`: `block-size: auto`, derived from this ratio, never
+// set directly) is finally the artwork's real height.
 export const ORNAMENT_VIEWBOX_WIDTH = 240;
-export const ORNAMENT_VIEWBOX_HEIGHT = 56;
+export const ORNAMENT_VIEWBOX_MIN_Y = 0.56;
+export const ORNAMENT_VIEWBOX_HEIGHT = 51.96;
+
+// Every scaled value below is `max(floor, calc(reference * scale))`
+// (design-system.md, dedication geometry: the band's own fold-driven
+// scale). `--dedication-scale-px` (DedicationBand/styles.ts) is a length,
+// not a unitless number, so every reference here is written as a bare,
+// unitless number rather than a themed "24px" string: a length times a
+// length is an area, not a length, so only a bare number times that scale
+// produces a length again. Each one hand-mirrors the matching
+// theme.typography or theme.spacing value in theme/tokens.ts, the
+// canonical scale-1 reference design-system.md documents; a calc() cannot
+// pull the bare number back out of that value's own "24px" string.
+export const DEDICATION_FORMULA_SIZE_REFERENCE = 24;
+export const DEDICATION_NAME_SIZE_REFERENCE = 52;
+export const DEDICATION_PARENT_SIZE_REFERENCE = 32;
+// Also the donor credit line's own reference: it reuses `dedicationClosing`
+// (styles.ts), never a role of its own.
+export const DEDICATION_CLOSING_SIZE_REFERENCE = 20;
+export const DEDICATION_ORNAMENT_TO_TEXT_GAP_REFERENCE = 16;
+export const DEDICATION_DONOR_MARGIN_TOP_REFERENCE = 8;
+export const DEDICATION_ORNAMENT_WIDTH_REFERENCE = DEDICATION_UNIT_WIDTH_PX;
+
+export const DEDICATION_FORMULA_SIZE_FLOOR_PX = 14;
+export const DEDICATION_NAME_SIZE_FLOOR_PX = 24;
+export const DEDICATION_PARENT_SIZE_FLOOR_PX = 14;
+export const DEDICATION_CLOSING_SIZE_FLOOR_PX = 14;
+export const DEDICATION_ORNAMENT_TO_TEXT_GAP_FLOOR_PX = 4;
+export const DEDICATION_DONOR_MARGIN_TOP_FLOOR_PX = 4;
+export const DEDICATION_ORNAMENT_WIDTH_FLOOR_PX = 120;
+
+export const scaledCss = (referenceNumber: number, floorPx: number): string =>
+  `max(${floorPx}px, calc(${referenceNumber} * var(--dedication-scale-px, 1px)))`;
 
 // The owner's artwork, lifted off its background and vectorised, carried
 // verbatim: one path, fill-rule nonzero, fill only, no stroke. Symmetric,
