@@ -11,6 +11,13 @@ export const SearchSelect = css(
       inline-size: 100%;
       min-inline-size: 0;
     }
+
+    /* The default below widens the popover toward the viewport, which is
+       what a content-sized trigger needs. A field-width control already
+       has an edge to line up with, and 90vw overshoots it on a phone. */
+    > .popover {
+      inline-size: min(360px, 100%);
+    }
   }
 
   > .control {
