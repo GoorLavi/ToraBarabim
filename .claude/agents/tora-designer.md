@@ -44,6 +44,7 @@ no one.
 
 Your tool list names the Figma server twice, once by its local id and once as `mcp__Figma__`. The same server is registered under a different name depending on where this agent runs, and an explicit tool list matches names exactly, so dropping either spelling silently removes Figma in that environment. Keep both.
 
+- **`docs/design-files.md` says which file holds which screen.** Read it to find a design instead of inferring from file names, which are not reliable.
 - **Before your first write, read `.claude/figma-protocol.md`.** It carries the mandatory skill-loading step and the API rules that silently break scripts. Do not call `use_figma` or `create_new_file` before it.
 - Code and `.claude/design-system.md` are the source of truth for tokens; Figma mirrors them. When the two disagree, the code wins and you flag the drift.
 - **If the Figma tools are missing or the grant is not live, say so and stop.** Do not hand back a written build spec as if the job were done: an unapplied design is a blocked task, not a deliverable.
