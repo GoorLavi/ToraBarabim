@@ -202,86 +202,12 @@ export const ReducedMotionStaysScrollable: Story = {
   },
 };
 
-// Renders nothing at all: the pool is genuinely empty, not merely
-// undrawn. `dedications: []` is a normal 200, never a 404
+// Renders nothing at all, no placeholder and no reserved height: each band
+// is fixed to one `DedicationType`, and a type with no active dedications
+// is simply absent. An empty pool is a normal 200, never a 404
 // (design-system.md, dedication States).
 export const NoDedicationsRendersNothing: Story = {
   args: { group: undefined, variant: 'onPage' },
-};
-
-// Every optional line present (formula, name, parent, closing, donor
-// credit), the shape the reservation is built for, and a name short enough
-// to never wrap: wrapping was never what the reservation guaranteed (the
-// reference it was built from, DEDICATION_BAND_ON_PRIMARY_HEIGHT_REFERENCE,
-// is itself a single-line figure), so this fixture isolates the
-// reservation's own guarantee from that separate, pre-existing gap.
-const RESERVATION_PROOF_TEXT = {
-  formulaLine: 'לעילוי נשמת',
-  nameLine: 'שרה כהן',
-  parentLine: 'בת אברהם',
-  closingLine: 'תנצב״ה',
-  donorCreditLine: 'תרומת משפחת לוי',
-};
-
-// Released by a control the play function itself clicks, never a timer
-// (Copilot PR review, PR #73: a delay only lowers the probability of the
-// play function starting after the draw already landed, it does not remove
-// it, and the story would then fail nondeterministically on a slow run
-// with `.pending` already gone). The button is story-only scaffolding, not
-// a change to DedicationBand's own DOM: it exists so the story controls
-// both sides of the race instead of guessing at one of them with a clock.
-const PendingThenDrawnWithSentinel = ({ group }: { group: DedicationGroup }): ReactNode => {
-  const [drawn, setDrawn] = useState<DedicationGroup | undefined>(undefined);
-  return (
-    <div>
-      <DedicationBand {...{ group: drawn, hasDedications: true, variant: 'onPrimary' as const }} />
-      <p className="sentinel">תוכן מתחת לרצועה</p>
-      <button type="button" className="releaseDraw" onClick={() => setDrawn(group)}>
-        שחרר ציור
-      </button>
-    </div>
-  );
-};
-
-// Copilot PR review, finding 1: the `.pending` reservation used to be
-// `scaledCss` applied to the band as one value, which understated the real
-// height by about 40px, because formula, name and parent were already
-// clamped to their own floors at this scale while padding and the ornament
-// were not (helpers.ts, dedicationBandReservedHeightPx). Proven the way the
-// guarantee is actually meant to be read: something below the band, whose
-// own position must not move once the real draw lands.
-export const PendingReservationMatchesTheDraw: Story = {
-  render: () => (
-    <PendingThenDrawnWithSentinel group={{ type: 'memorial', items: [{ id: 'dedication-reservation-proof', text: RESERVATION_PROOF_TEXT }] }} />
-  ),
-  play: async ({ canvasElement }) => {
-    const pending = canvasElement.querySelector<HTMLElement>('.pending');
-    if (!pending) throw new Error('DedicationBand story: .pending band not found before the draw');
-    const sentinel = canvasElement.querySelector<HTMLElement>('.sentinel');
-    if (!sentinel) throw new Error('DedicationBand story: .sentinel not found');
-    const releaseDraw = canvasElement.querySelector<HTMLButtonElement>('.releaseDraw');
-    if (!releaseDraw) throw new Error('DedicationBand story: .releaseDraw control not found');
-
-    const topBeforeDraw = sentinel.getBoundingClientRect().top;
-
-    await userEvent.click(releaseDraw);
-
-    await waitFor(() => {
-      const track = canvasElement.querySelector('.track');
-      if (!track) throw new Error('DedicationBand story: .track not found once the group lands');
-    });
-
-    const topAfterDraw = sentinel.getBoundingClientRect().top;
-
-    // A pixel or two, not zero: font rasterisation and subpixel layout will
-    // not reproduce to the hundredth across environments, and an exact
-    // equality here would fail in CI for that reason alone (Copilot PR
-    // review, finding 2's own warning, applied to this assertion too). What
-    // this guards against is a reservation short by tens of pixels, the
-    // actual defect found, so a tolerance two orders of magnitude below
-    // that still catches it.
-    expect(Math.abs(topAfterDraw - topBeforeDraw)).toBeLessThan(2);
-  },
 };
 
 // One real touch gesture, through Chrome DevTools Protocol via `cdp()`,
@@ -473,9 +399,8 @@ const widthComparison = (): ReactElement => (
 // A tolerance, not an exact equality: font rasterisation and subpixel
 // layout will not reproduce to the hundredth across environments, and an
 // assertion that fails in CI for that reason teaches people to loosen
-// assertions rather than fix the real regression. Two pixels, the same
-// figure chosen for the reservation proof above, for the same reason: wide
-// enough to absorb that noise, narrow enough that nudging a floor by even a
+// assertions rather than fix the real regression. Two pixels: wide enough
+// to absorb that noise, narrow enough that nudging a floor by even a
 // couple of pixels still fails it.
 const HEIGHT_ASSERTION_TOLERANCE_PX = 2;
 
