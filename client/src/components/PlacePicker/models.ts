@@ -1,6 +1,12 @@
-import type { Area } from '@torabarabim/common';
+import type { Area, Place } from '@torabarabim/common';
 
 import type { SelectedCity } from '~/components/CitySelect/models';
+
+export interface PlaceSearchResults {
+  items: Place[];
+  isPending: boolean;
+  isError: boolean;
+}
 
 // Everything this picker itself ever shows or submits about a chosen place:
 // the fields a `Place` search result carries, minus `lessonCount` (a public

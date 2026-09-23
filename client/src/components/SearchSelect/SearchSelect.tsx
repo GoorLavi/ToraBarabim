@@ -19,24 +19,19 @@ function SearchSelectComponent<T>({
   onSelect,
   renderTrigger,
   renderOption,
+  query,
   onQueryChange,
   searchLabel,
   searchPlaceholder,
   hint,
   loadingMessage,
   emptyMessage,
-  errorMessage,
-  children,
-  rowLayout,
+  loadErrorMessage,
   fullWidth,
   invalid,
   showChevron,
-  truncateTrigger,
-  emphasizeTrigger,
-  twoLineOptions,
 }: SearchSelectProps<T>): ReactNode {
   const [isOpen, setIsOpen] = useState(false);
-  const [query, setQuery] = useState('');
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
@@ -44,7 +39,6 @@ function SearchSelectComponent<T>({
 
   const selectItem = (item: T): void => {
     onSelect(item);
-    setQuery('');
     onQueryChange('');
     setIsOpen(false);
   };
@@ -53,7 +47,7 @@ function SearchSelectComponent<T>({
   const showHint = Boolean(hint) && queryIsEmpty;
 
   return (
-    <div className={classNames(className, { open: isOpen, rowLayout, fullWidth, invalid })} ref={rootRef}>
+    <div className={classNames(className, { fullWidth, invalid })} ref={rootRef}>
       <button
         type="button"
         className="control"
@@ -62,9 +56,7 @@ function SearchSelectComponent<T>({
         aria-expanded={isOpen}
         onClick={() => setIsOpen((open) => !open)}
       >
-        <span className={classNames('triggerLabel', { truncate: truncateTrigger, emphasized: emphasizeTrigger })} dir="auto">
-          {renderTrigger()}
-        </span>
+        {renderTrigger()}
         {showChevron && (
           <svg className="chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M7 10l5 5 5-5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
@@ -81,20 +73,17 @@ function SearchSelectComponent<T>({
             aria-label={searchLabel}
             placeholder={searchPlaceholder}
             value={query}
-            onChange={(event) => {
-              setQuery(event.target.value);
-              onQueryChange(event.target.value);
-            }}
+            onChange={(event) => onQueryChange(event.target.value)}
             dir={directionForValue(query)}
           />
 
           {showHint && <p className="hint">{hint}</p>}
           {!showHint && isPending && <p className="hint">{loadingMessage}</p>}
-          {!showHint && !isPending && isError && <p className="hint">{errorMessage}</p>}
+          {!showHint && !isPending && isError && <p className="hint danger">{loadErrorMessage}</p>}
           {!showHint && !isPending && !isError && items.length === 0 && <p className="hint">{emptyMessage}</p>}
 
           {items.length > 0 && (
-            <ul className={classNames('results', { twoLine: twoLineOptions })} role="listbox">
+            <ul className="results" role="listbox">
               {items.map((item) => (
                 <li key={getItemKey(item)}>
                   <button type="button" role="option" aria-selected={isSelected(item)} onClick={() => selectItem(item)}>
@@ -106,8 +95,6 @@ function SearchSelectComponent<T>({
           )}
         </div>
       )}
-
-      {children}
     </div>
   );
 }

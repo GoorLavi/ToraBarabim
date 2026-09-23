@@ -10,15 +10,17 @@ export const OR_LABEL = 'או';
 export const CANCEL_PLACE_LABEL = 'ביטול הבחירה והקלדת כתובת';
 export const CANCEL_PLACE_ARIA_LABEL = 'ביטול בחירת המקום והקלדת הכתובת בשדות שלמטה';
 
-// Mirrors `AdminPanel/PlacesListPage/consts.ts`'s own `LOADING_MESSAGE` and
-// `NO_MATCHING_PLACES_HEADLINE`, and `PlacesPage/consts.ts`'s own
-// `LOAD_ERROR_HEADING`: this control's search never had loading, empty or
-// error copy of its own before `SearchSelect` required every caller to
-// supply it, so this reuses the site's own established wording for the
-// same entity rather than inventing new copy.
+// This control's search never had loading, empty or error copy of its own
+// before `SearchSelect` required every caller to supply all three.
+// `PICKER_SEARCH_LOADING_MESSAGE` and `PICKER_SEARCH_EMPTY_MESSAGE` mirror
+// `AdminPanel/PlacesListPage/consts.ts`'s own `LOADING_MESSAGE` and
+// `NO_MATCHING_PLACES_HEADLINE`. `PICKER_SEARCH_LOAD_ERROR_MESSAGE` is the
+// owner's ratified wording, shared with the rabbi controls' own copy of the
+// same line: no retry button is needed because retyping is the retry, so
+// the line names the recovery itself.
 export const PICKER_SEARCH_LOADING_MESSAGE = 'טוענים מקומות...';
 export const PICKER_SEARCH_EMPTY_MESSAGE = 'לא נמצאו מקומות תואמים';
-export const PICKER_SEARCH_ERROR_MESSAGE = 'לא הצלחנו לטעון את רשימת המקומות';
+export const PICKER_SEARCH_LOAD_ERROR_MESSAGE = 'הטעינה נכשלה, אפשר לנסות שוב';
 
 export const LOCKED_REASON = 'הכתובת מגיעה מהמקום שנבחר, ואי אפשר לערוך אותה כאן.';
 

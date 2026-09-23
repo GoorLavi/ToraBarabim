@@ -1,16 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import type { Place } from '@torabarabim/common';
 
 import { fetchPlaces } from './api';
 import { PLACE_PICKER_QUERY_KEYS } from './consts';
+import type { PlaceSearchResults } from './models';
 
 const normalize = (value: string): string => value.trim().toLowerCase();
-
-export interface PlaceSearchResults {
-  items: Place[];
-  isPending: boolean;
-  isError: boolean;
-}
 
 // The whole active-place list is fetched once (it is small and curated,
 // per `GET /v1/places`'s own contract) and matched client-side against the

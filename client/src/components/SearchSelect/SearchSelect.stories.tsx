@@ -1,13 +1,14 @@
+import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { SearchSelect } from './SearchSelect';
+import type { SearchSelectProps } from './models';
 
-// The shared control behind CitySelect, RabbiPicker, RabbiSelect and
-// PickerControl (client/CLAUDE.md, Component Tree): exercised here with a
-// generic fixture, not a city, a rabbi or a place, so a defect found here is
-// a defect in the shared contract itself, not in one caller's data. Mirrors
-// `CitySelect.stories.tsx`'s own `openCitySelect` play shape.
+// Exercised here with a generic fixture, not a city, a rabbi or a place, so
+// a defect found here is a defect in the shared contract itself, not in one
+// caller's data. Mirrors `CitySelect.stories.tsx`'s own `openCitySelect`
+// play shape.
 interface Option {
   id: string;
   label: string;
@@ -15,11 +16,9 @@ interface Option {
 
 const LONG_LABEL = 'אפשרות עם שם ארוך במיוחד שבודק שהשורה שורדת נתונים אמיתיים ולא נשברת';
 
-const options: Option[] = [
-  { id: '1', label: 'אדום' },
-  { id: '2', label: 'כחול' },
-  { id: '3', label: LONG_LABEL },
-];
+const red: Option = { id: '1', label: 'אדום' };
+
+const options: Option[] = [red, { id: '2', label: 'כחול' }, { id: '3', label: LONG_LABEL }];
 
 const PLACEHOLDER_LABEL = 'בחירת צבע';
 const SEARCH_LABEL = 'חיפוש צבע';
@@ -27,13 +26,32 @@ const SEARCH_PLACEHOLDER = 'חיפוש צבע';
 const HINT = 'הקלד שם צבע';
 const LOADING_MESSAGE = 'טוען צבעים...';
 const EMPTY_MESSAGE = 'לא נמצאו צבעים תואמים';
-const ERROR_MESSAGE = 'לא הצלחנו לטעון את רשימת הצבעים';
+const LOAD_ERROR_MESSAGE = 'לא הצלחנו לטעון את רשימת הצבעים';
 
 const SearchSelectOfOption = SearchSelect<Option>;
+
+// `query` is a controlled prop, same as any other caller wires it: this
+// wrapper holds the real state so typing in a story's popover behaves like
+// it does in the app, while still relaying every change to the `args.
+// onQueryChange` mock a play function asserts against.
+const ControlledSearchSelect = (args: SearchSelectProps<Option>) => {
+  const [query, setQuery] = useState(args.query);
+  return (
+    <SearchSelectOfOption
+      {...args}
+      query={query}
+      onQueryChange={(value) => {
+        setQuery(value);
+        args.onQueryChange(value);
+      }}
+    />
+  );
+};
 
 const meta: Meta<typeof SearchSelectOfOption> = {
   title: 'components/SearchSelect',
   component: SearchSelectOfOption,
+  render: (args) => <ControlledSearchSelect {...args} />,
   args: {
     items: [],
     isPending: false,
@@ -41,6 +59,7 @@ const meta: Meta<typeof SearchSelectOfOption> = {
     getItemKey: (item) => item.id,
     isSelected: () => false,
     onSelect: fn(),
+    query: '',
     onQueryChange: fn(),
     renderTrigger: () => PLACEHOLDER_LABEL,
     renderOption: (item) => <span dir="auto">{item.label}</span>,
@@ -48,7 +67,7 @@ const meta: Meta<typeof SearchSelectOfOption> = {
     searchPlaceholder: SEARCH_PLACEHOLDER,
     loadingMessage: LOADING_MESSAGE,
     emptyMessage: EMPTY_MESSAGE,
-    errorMessage: ERROR_MESSAGE,
+    loadErrorMessage: LOAD_ERROR_MESSAGE,
     showChevron: true,
   },
 };
@@ -62,7 +81,18 @@ const openSelect = async (canvasElement: HTMLElement): Promise<ReturnType<typeof
   return canvas;
 };
 
-export const Closed: Story = {};
+export const Closed: Story = {
+  play: async ({ canvasElement }) => {
+    expect(canvasElement.querySelector('.chevron')).toBeInTheDocument();
+  },
+};
+
+export const NoChevron: Story = {
+  args: { showChevron: false },
+  play: async ({ canvasElement }) => {
+    expect(canvasElement.querySelector('.chevron')).not.toBeInTheDocument();
+  },
+};
 
 export const OpenWithHint: Story = {
   args: { hint: HINT },
@@ -93,6 +123,16 @@ export const WithResults: Story = {
   },
 };
 
+// The one row `isSelected` marks true: the shared row chrome's own
+// `aria-selected` state, not exercised by any other story here.
+export const WithASelectedOption: Story = {
+  args: { items: options, isSelected: (item) => item.id === red.id },
+  play: async ({ canvasElement }) => {
+    const canvas = await openSelect(canvasElement);
+    await expect(canvas.findByRole('option', { name: 'אדום', selected: true })).resolves.toBeInTheDocument();
+  },
+};
+
 export const Empty: Story = {
   play: async ({ canvasElement }) => {
     const canvas = await openSelect(canvasElement);
@@ -100,11 +140,11 @@ export const Empty: Story = {
   },
 };
 
-export const Error: Story = {
+export const LoadError: Story = {
   args: { isError: true },
   play: async ({ canvasElement }) => {
     const canvas = await openSelect(canvasElement);
-    await expect(canvas.findByText(ERROR_MESSAGE)).resolves.toBeInTheDocument();
+    await expect(canvas.findByText(LOAD_ERROR_MESSAGE)).resolves.toBeInTheDocument();
   },
 };
 
@@ -113,14 +153,18 @@ export const Invalid: Story = {
 };
 
 // The guarantee this whole change exists for (#63): clicking a result
-// actually calls `onSelect` and closes the popover.
+// actually calls `onSelect` and closes the popover. Typing first also earns
+// its own assertion: `onQueryChange` is the one prop this component adds to
+// make the query a controlled value, and it has to fire with what was
+// actually typed.
 export const SelectsAnOptionAndClosesThePopover: Story = {
   args: { items: options, onSelect: fn() },
   play: async ({ canvasElement, args }) => {
     const canvas = await openSelect(canvasElement);
     await userEvent.type(canvas.getByRole('textbox', { name: SEARCH_LABEL }), 'אד');
+    await expect(args.onQueryChange).toHaveBeenCalledWith('אד');
     await userEvent.click(await canvas.findByText('אדום'));
-    await expect(args.onSelect).toHaveBeenCalledWith(options[0]);
+    await expect(args.onSelect).toHaveBeenCalledWith(red);
     expect(canvas.queryByRole('textbox', { name: SEARCH_LABEL })).not.toBeInTheDocument();
   },
 };
