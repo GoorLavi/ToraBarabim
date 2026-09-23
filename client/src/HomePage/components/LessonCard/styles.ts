@@ -48,9 +48,8 @@ export const LessonCard = css(
     /* Never distorted: the row's stretch lands in \`.body\` below, not here,
        so a real portrait never gets cropped or stretched off its ratio. */
     flex-shrink: 0;
-    /* What fills the slot while the image is still loading, and all that is
-       left if one ever fails: every card has an image now, so this is the
-       load-time surface rather than a fallback state of its own. */
+    /* What fills the slot while the image loads. Every card has an image
+       now, so this is a load-time surface, not a fallback state of its own. */
     background: ${theme.colors.primarySoft};
 
     > .image {

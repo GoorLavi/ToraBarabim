@@ -103,8 +103,12 @@ export const AllFallbackPosters: Story = {
     const posters = within(canvasElement)
       .getAllByRole('link')
       .slice(0, POSTER_DEMO_LESSON_IDS.length)
-      .map((card) => card.querySelector('img')?.getAttribute('src'));
+      .map((card) => card.querySelector('img')?.getAttribute('src'))
+      .filter((src) => typeof src === 'string');
 
+    // Counted before the set, so a card that rendered no image fails here
+    // rather than passing as one more distinct entry.
+    await expect(posters).toHaveLength(POSTER_DEMO_LESSON_IDS.length);
     await expect(new Set(posters).size).toBe(FALLBACK_POSTERS.length);
   },
 };
