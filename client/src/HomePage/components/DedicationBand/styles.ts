@@ -63,9 +63,29 @@ export const DedicationBand = css(
   > .viewport {
     position: relative;
     display: flex;
+    /* Centres a short pool instead of leaving it flush to the inline
+       start, with a gap in the middle of the band (owner, on the real
+       site). Never scoped to a variant: both the plum foot band and the
+       page-field between-rails band centre a short pool the same way.
+       Overridden to flex-start below once overflowing, the only state a
+       centred track would ever need to scroll. */
+    justify-content: center;
     overflow: hidden;
     overscroll-behavior-inline: contain;
     scrollbar-width: none;
+    /* Framing at the true edges of the whole strip, real track and looped
+       duplicate together, never per copy: DEDICATION_BAND_EDGE_PADDING_PX
+       in consts.ts hand-mirrors this for the overflow test and the loop's
+       wrap period, both of which have to know how much of this element's
+       own width is never track content. */
+    padding-inline: ${theme.spacing.lg};
+    /* The gap between the real track and its looped duplicate, matching
+       the 64px every other pair of units gets: the track's own padding
+       used to carry this framing instead, which put two copies of it
+       (32px total) at the seam rather than the 64 every internal pair
+       gets. Harmless with a single, non-overflowing track, since a flex
+       gap only applies between children. */
+    gap: ${consts.DEDICATION_UNIT_GAP_PX}px;
 
     &::-webkit-scrollbar {
       display: none;
@@ -74,6 +94,9 @@ export const DedicationBand = css(
 
   &.overflowing > .viewport {
     overflow-x: auto;
+    /* A crawling or scrollable track starts at its own inline start, never
+       centred: a centred scroll origin has no natural resting position. */
+    justify-content: flex-start;
 
     @media (pointer: fine) {
       cursor: grab;
@@ -89,16 +112,20 @@ export const DedicationBand = css(
   /* The loop's second copy is marked aria-hidden, so a screen reader never
      meets every dedication twice from this one band (design-system.md,
      "Three traps"). Laid out as a sibling flex item of the same width
-     immediately after the real track, so the two together form one
-     continuous strip exactly two track widths long; a shrink-proof flex
-     item on both keeps that true even while the viewport itself is
-     narrower than either copy. */
+     immediately after the real track, with the viewport's own gap between
+     them (above) standing in for the framing padding that used to sit
+     here, so the two together form one continuous strip exactly the loop
+     period long; a shrink-proof flex item on both keeps that true even
+     while the viewport itself is narrower than either copy. Stretched, not
+     started at the top: every unit in the row takes the height of the
+     tallest one, so a unit with fewer lines does not close its lower
+     ornament short of its neighbours' (DedicationUnit's own lower ornament
+     absorbs the difference with an auto top margin). */
   > .viewport > .track {
     flex-shrink: 0;
     display: flex;
-    align-items: flex-start;
+    align-items: stretch;
     gap: ${consts.DEDICATION_UNIT_GAP_PX}px;
-    padding-inline: ${theme.spacing.lg};
   }
 
   > .fade {
@@ -129,6 +156,15 @@ export const DedicationBand = css(
     > .fade.end {
       background: linear-gradient(to left, ${theme.colors.primaryStrong} 0%, transparent 100%);
     }
+
+    /* Mirrors SiteLogoLink/styles.ts's own outline colour for the plum
+       field: the browser's default focus ring reads poorly against it,
+       and a 435px-tall focusable element (only ever focusable while
+       overflowing, tabIndex is conditional on it) needs a visible one. */
+    > .viewport:focus-visible {
+      outline: 2px solid ${theme.colors.textOnPrimary};
+      outline-offset: 2px;
+    }
   }
 
   &.onPage {
@@ -138,6 +174,11 @@ export const DedicationBand = css(
 
     > .fade.end {
       background: linear-gradient(to left, ${theme.colors.bg} 0%, transparent 100%);
+    }
+
+    > .viewport:focus-visible {
+      outline: 2px solid ${theme.colors.primary};
+      outline-offset: 2px;
     }
   }
 `,

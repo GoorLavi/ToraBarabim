@@ -26,8 +26,18 @@ export const Ornament = css`
     }
   }
 
+  /* Pushed to the bottom of whatever height the unit ends up at, rather
+     than sitting directly after the text block: when the band that lays
+     units out stretches every unit in a row to the tallest one's height, a
+     shorter unit (no parent line, no donor credit) would otherwise close
+     its lower ornament early, leaving its baseline 84px above its
+     neighbours' (measured in a row of three real units). An auto margin on
+     the last flex child claims exactly the leftover space the stretch
+     created, which is zero, a no-op, whenever nothing stretched this unit
+     at all (every story that renders one on its own). */
   &.mirrored {
     transform: scaleY(-1);
+    margin-block-start: auto;
   }
 `;
 

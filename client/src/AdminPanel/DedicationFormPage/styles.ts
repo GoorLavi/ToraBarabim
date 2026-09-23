@@ -101,7 +101,16 @@ export const DedicationFormPage = css(
         line-height: ${theme.typography.secondary.phone.lineHeight};
       }
 
-      > .field {
+      /* The date row's own fields are never a direct child of .form (they
+         sit inside .dateRow), so the direct-child selector below has to
+         name that second path explicitly or it silently never matches
+         them: every rule under it, height, width, the label sitting above
+         rather than beside the input, an error state border, was
+         unreachable there and both date inputs fell back to the browser's
+         own default sizing and layout (measured: 32px tall, 164px wide,
+         label rendered beside the input on the same line). */
+      > .field,
+      > .dateRow > .field {
         display: flex;
         flex-direction: column;
         gap: ${theme.spacing.xs};
@@ -149,6 +158,13 @@ export const DedicationFormPage = css(
           color: ${theme.colors.text};
           font-size: ${theme.typography.body.phone.fontSize};
           line-height: ${theme.typography.body.phone.lineHeight};
+        }
+
+        /* Mirrors AdminFormPage/styles.ts: the error text below a field
+           was the only sign it was invalid, and the input's own border
+           stayed ordinary. */
+        &.invalid > input {
+          border-color: ${theme.colors.danger};
         }
 
         > .helper {

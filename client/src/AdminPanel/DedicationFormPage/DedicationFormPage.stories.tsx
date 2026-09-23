@@ -1,7 +1,7 @@
 import type { AdminDedication } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Route, Routes } from 'react-router-dom';
-import { userEvent, within } from 'storybook/test';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { installMockFetch, jsonResponse } from '~/storyMocks';
 
@@ -101,8 +101,25 @@ type Story = StoryObj<typeof DedicationFormPage>;
 // or an empty box.
 export const New: Story = {
   decorators: [withCreateRoute],
-  play: () => {
+  play: ({ canvasElement }) => {
     createScenario = 'success';
+
+    // The date row's own `.field` elements sit inside `.dateRow`, never a
+    // direct child of `.form`, so the shared field styling, reachable only
+    // through `.form > .field`, used to miss them entirely: both date
+    // inputs fell back to the browser's own default sizing and the label
+    // rendered beside the input instead of above it (measured: 32px tall,
+    // 164px wide, label bottom inside the input's own vertical span).
+    const dateInputs = Array.from(canvasElement.querySelectorAll<HTMLInputElement>('input[type=date]'));
+    expect(dateInputs.length).toBeGreaterThan(0);
+    for (const input of dateInputs) {
+      const inputRect = input.getBoundingClientRect();
+      expect(inputRect.height).toBeGreaterThanOrEqual(48);
+
+      const label = input.closest('.field')?.querySelector<HTMLElement>('.label');
+      if (!label) throw new Error('DedicationFormPage story: date field label not found');
+      expect(label.getBoundingClientRect().bottom).toBeLessThanOrEqual(inputRect.top);
+    }
   },
 };
 
@@ -137,9 +154,9 @@ export const ValidationError: Story = {
     const canvas = within(canvasElement);
     const nameInput = await canvas.findByLabelText('השם שיופיע בהקדשה', { exact: false });
     await userEvent.type(nameInput, 'דוד"');
-    const startsOnInput = canvas.getByLabelText('תאריך התחלה');
+    const startsOnInput = canvas.getByLabelText('תאריך התחלה', { exact: false });
     await userEvent.type(startsOnInput, '2026-10-01');
-    const endsOnInput = canvas.getByLabelText('תאריך סיום');
+    const endsOnInput = canvas.getByLabelText('תאריך סיום', { exact: false });
     await userEvent.type(endsOnInput, '2026-12-01');
     await userEvent.click(canvas.getByRole('button', { name: 'שמירת ההקדשה' }));
     await canvas.findByText('שם עברי אינו יכול להכיל גרש או גרשיים באנגלית (" או \'), יש להשתמש בסימני הפיסוק העבריים ״ ו-׳ בלבד');
@@ -160,9 +177,9 @@ export const MissingGenderError: Story = {
     await userEvent.type(nameInput, 'משה כהן');
     const parentNameInput = await canvas.findByLabelText('שם האב', { exact: false });
     await userEvent.type(parentNameInput, 'אברהם');
-    const startsOnInput = canvas.getByLabelText('תאריך התחלה');
+    const startsOnInput = canvas.getByLabelText('תאריך התחלה', { exact: false });
     await userEvent.type(startsOnInput, '2026-10-01');
-    const endsOnInput = canvas.getByLabelText('תאריך סיום');
+    const endsOnInput = canvas.getByLabelText('תאריך סיום', { exact: false });
     await userEvent.type(endsOnInput, '2026-12-01');
     await userEvent.click(canvas.getByRole('button', { name: 'שמירת ההקדשה' }));
     await canvas.findByText('יש לבחור בן או בת');

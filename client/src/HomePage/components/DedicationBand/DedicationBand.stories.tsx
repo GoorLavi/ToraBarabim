@@ -3,12 +3,13 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { cdp } from 'vitest/browser';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { expect, waitFor } from 'storybook/test';
+import { expect, userEvent, waitFor } from 'storybook/test';
 
-import { DEDICATION_GROUP_HEALING, DEDICATION_GROUP_OVERFLOWING, DEDICATION_GROUP_SINGLE } from '~/dedicationFixture';
+import { DEDICATION_UNIT_WIDTH_PX } from '~/components/DedicationUnit/consts';
+import { DEDICATION_GROUP_HEALING, DEDICATION_GROUP_MEMORIAL, DEDICATION_GROUP_OVERFLOWING, DEDICATION_GROUP_SINGLE } from '~/dedicationFixture';
 import { ARGAMAN_VE_ZAHAV_THEME } from '~/theme/themes';
 
-import { RESUME_AFTER_INTERACTION_MS } from './consts';
+import { DEDICATION_UNIT_GAP_PX, RESUME_AFTER_INTERACTION_MS } from './consts';
 import { DedicationBand } from './DedicationBand';
 
 const { colors } = ARGAMAN_VE_ZAHAV_THEME;
@@ -30,13 +31,25 @@ const meta: Meta<typeof DedicationBand> = {
 export default meta;
 type Story = StoryObj<typeof DedicationBand>;
 
+// A pool this short is also the instrument for centring (owner, on the
+// real site, in both variants: "גם בלבן"): a track narrower than its
+// container centres instead of sitting flush to the inline start with a
+// gap left in the middle of the band.
+const expectCenteredViewport = ({ canvasElement }: { canvasElement: HTMLElement }): void => {
+  const viewport = canvasElement.querySelector<HTMLElement>('.viewport');
+  if (!viewport) throw new Error('DedicationBand story: .viewport not found');
+  expect(getComputedStyle(viewport).justifyContent).toEqual('center');
+};
+
 export const OnPrimaryOneUnit: Story = {
   args: { group: DEDICATION_GROUP_SINGLE, hasDedications: true, variant: 'onPrimary' },
   decorators: [onPrimaryField],
+  play: expectCenteredViewport,
 };
 
 export const OnPageOneUnit: Story = {
   args: { group: DEDICATION_GROUP_SINGLE, hasDedications: true, variant: 'onPage' },
+  play: expectCenteredViewport,
 };
 
 // Static, no self-advance: the group's own width fits the container.
@@ -47,6 +60,29 @@ export const FitsNoCrawl: Story = {
 // Wider than the container: crawls.
 export const OverflowsAndCrawls: Story = {
   args: { group: DEDICATION_GROUP_OVERFLOWING, hasDedications: true, variant: 'onPage' },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(canvasElement.querySelector('.track.duplicate')).not.toBeNull());
+
+    // Every pair of adjacent units sits exactly DEDICATION_UNIT_GAP_PX
+    // apart, including the loop's own seam between the real track's last
+    // unit and the duplicate's first: the edge framing used to live on
+    // each `.track` and doubled up there instead of matching the 64px
+    // every other pair gets (measured: eight gaps of 64 and one of 32).
+    // Sorted by physical position, not DOM order, since direction: rtl
+    // reverses which edge is which without reversing the document order.
+    const rects = Array.from(canvasElement.querySelectorAll<HTMLElement>('.track > *'))
+      .map((unit) => unit.getBoundingClientRect())
+      .sort((a, b) => a.left - b.left);
+
+    for (let index = 0; index < rects.length - 1; index++) {
+      const current = rects[index];
+      const next = rects[index + 1];
+      if (!current || !next) throw new Error('DedicationBand story: unexpected gap in the sorted rect list');
+      const gap = next.left - current.right;
+      expect(gap).toBeGreaterThan(DEDICATION_UNIT_GAP_PX - 2);
+      expect(gap).toBeLessThan(DEDICATION_UNIT_GAP_PX + 2);
+    }
+  },
 };
 
 // `CRAWL_SPEED_PX_PER_SECOND` is 32, not the 60 (one frame's `scrollLeft`
@@ -78,6 +114,36 @@ export const CrawlsAtTheDesignedSpeed: Story = {
 export const OnPrimaryOverflowing: Story = {
   args: { group: DEDICATION_GROUP_OVERFLOWING, hasDedications: true, variant: 'onPrimary' },
   decorators: [onPrimaryField],
+};
+
+// An arrow-key step always lands on a unit boundary, never mid-name (rule
+// 5), even though the crawl itself is left at an arbitrary, almost
+// certainly fractional position by the time a reader tabs in and presses a
+// key. Before the fix, stepping added the pitch to whatever position the
+// crawl had frozen at, preserving that same off-grid offset on every press
+// instead of correcting it.
+export const ArrowKeyAlwaysLandsOnAUnitBoundary: Story = {
+  args: { group: DEDICATION_GROUP_OVERFLOWING, hasDedications: true, variant: 'onPage' },
+  play: async ({ canvasElement }) => {
+    const viewport = canvasElement.querySelector<HTMLElement>('.viewport');
+    if (!viewport) throw new Error('DedicationBand story: .viewport not found');
+    await waitFor(() => expect(getComputedStyle(viewport).overflowX).toEqual('auto'));
+
+    // Let the crawl drift to an arbitrary position first, the way it
+    // would have by the time a real reader tabs in.
+    await new Promise((resolve) => window.setTimeout(resolve, 650));
+
+    viewport.focus();
+    await userEvent.keyboard('{ArrowLeft}');
+
+    const pitch = DEDICATION_UNIT_WIDTH_PX + DEDICATION_UNIT_GAP_PX;
+    const rtlSign = getComputedStyle(viewport).direction === 'rtl' ? -1 : 1;
+    const position = viewport.scrollLeft * rtlSign;
+    const offsetFromGridLine = ((position % pitch) + pitch) % pitch;
+    const distanceFromNearestGridLine = Math.min(offsetFromGridLine, pitch - offsetFromGridLine);
+
+    expect(distanceFromNearestGridLine).toBeLessThan(1);
+  },
 };
 
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
@@ -246,5 +312,26 @@ export const MouseClickDoesNotFreezeTheCrawl: Story = {
     const later = viewport.scrollLeft;
 
     expect(later).not.toEqual(afterCooldown);
+  },
+};
+
+// Mixed real data, the shape that showed this on the owner's own
+// screenshot: one unit carries a parent line and a donor credit, one
+// carries neither. Every lower ornament's own bottom edge lines up
+// regardless (measured before the fix: 1693.3, 1609.3, 1693.3, an 84px
+// spread, the shorter unit closing its ornament early into a hole in the
+// row it is meant to frame).
+export const OrnamentsShareABaselineWithMixedContent: Story = {
+  args: { group: DEDICATION_GROUP_MEMORIAL, hasDedications: true, variant: 'onPage' },
+  play: async ({ canvasElement }) => {
+    const lowerOrnaments = Array.from(canvasElement.querySelectorAll<SVGElement>('.track:not(.duplicate) > * > .mirrored'));
+    expect(lowerOrnaments.length).toBeGreaterThan(1);
+
+    const bottoms = lowerOrnaments.map((ornament) => ornament.getBoundingClientRect().bottom);
+    const [firstBottom] = bottoms;
+    if (firstBottom === undefined) throw new Error('DedicationBand story: no lower ornaments found');
+    for (const bottom of bottoms) {
+      expect(Math.abs(bottom - firstBottom)).toBeLessThan(1);
+    }
   },
 };

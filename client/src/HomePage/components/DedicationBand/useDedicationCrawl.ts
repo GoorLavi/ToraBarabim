@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent, PointerEvent, RefObject } from 'react';
 
 import { CRAWL_SPEED_PX_PER_SECOND, DEDICATION_UNIT_PITCH_PX, RESUME_AFTER_INTERACTION_MS } from './consts';
-import { isTrackOverflowing, stepByUnitPitch, wrapTrackPosition } from './helpers';
+import { availableTrackWidthPx, isTrackOverflowing, loopPeriodPx, stepByUnitPitch, wrapTrackPosition } from './helpers';
 
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 
@@ -75,7 +75,7 @@ export const useDedicationCrawl = (): DedicationCrawlHandlers => {
     const track = trackRef.current;
     if (!viewport || !track) return;
 
-    const measure = (): void => setIsOverflowing(isTrackOverflowing(track.scrollWidth, viewport.clientWidth));
+    const measure = (): void => setIsOverflowing(isTrackOverflowing(track.scrollWidth, availableTrackWidthPx(viewport.clientWidth)));
     measure();
 
     const observer = new ResizeObserver(measure);
@@ -160,7 +160,7 @@ export const useDedicationCrawl = (): DedicationCrawlHandlers => {
         wasAdvancingRef.current = true;
       }
 
-      const nextPosition = wrapTrackPosition(scrollPositionRef.current + CRAWL_SPEED_PX_PER_SECOND * deltaSeconds, track.scrollWidth);
+      const nextPosition = wrapTrackPosition(scrollPositionRef.current + CRAWL_SPEED_PX_PER_SECOND * deltaSeconds, loopPeriodPx(track.scrollWidth));
       scrollPositionRef.current = nextPosition;
       viewport.scrollLeft = nextPosition * rtlSign;
     };
@@ -196,7 +196,7 @@ export const useDedicationCrawl = (): DedicationCrawlHandlers => {
     const rtlSign = rtlSignOf(viewport);
     const deltaClientX = event.clientX - dragStartClientXRef.current;
     const rawPosition = (dragStartScrollLeftRef.current - deltaClientX) * rtlSign;
-    const wrapped = wrapTrackPosition(rawPosition, track.scrollWidth);
+    const wrapped = wrapTrackPosition(rawPosition, loopPeriodPx(track.scrollWidth));
     viewport.scrollLeft = wrapped * rtlSign;
   };
 
@@ -249,7 +249,7 @@ export const useDedicationCrawl = (): DedicationCrawlHandlers => {
     // end (forward) and ArrowRight steps toward the start (back).
     const direction = event.key === 'ArrowLeft' ? 1 : -1;
     const currentPosition = viewport.scrollLeft * rtlSign;
-    const nextPosition = wrapTrackPosition(stepByUnitPitch(currentPosition, direction, DEDICATION_UNIT_PITCH_PX), track.scrollWidth);
+    const nextPosition = wrapTrackPosition(stepByUnitPitch(currentPosition, direction, DEDICATION_UNIT_PITCH_PX), loopPeriodPx(track.scrollWidth));
     viewport.scrollLeft = nextPosition * rtlSign;
   };
 

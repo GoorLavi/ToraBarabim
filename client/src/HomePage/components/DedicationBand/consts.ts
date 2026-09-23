@@ -26,4 +26,13 @@ export const RESUME_AFTER_INTERACTION_MS = 4000;
 // arrows and will not get them.
 export const EDGE_FADE_WIDTH_PX = EDGE_FADE_WIDTH_PHONE;
 
+// Hand-mirrors `theme.spacing.lg`: `styles.ts` puts this padding on
+// `.viewport`, not on `.track`, so the loop's seam gets the same 64px
+// every other pair of units gets instead of 32 (two `.track` copies each
+// carrying their own edge padding, doubled up at the seam). `helpers.ts`
+// and the measurement effect need the same number outside CSS, to know how
+// much of `viewport.clientWidth` is never available to the track's own
+// content.
+export const DEDICATION_BAND_EDGE_PADDING_PX = 16;
+
 export const VIEWPORT_ARIA_LABEL = 'הקדשות, אפשר לגלול עם החצים';
