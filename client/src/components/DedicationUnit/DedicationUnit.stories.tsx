@@ -158,9 +158,14 @@ const rgbFromHex = (hex: string): string => {
 // is forced low enough here to guarantee that, standing in for the band's
 // own fold-driven value the same way a wrapping ancestor's custom property
 // always would. Measured directly against the computed colour, not
-// assumed from the CSS alone: a style query needs no container-type for a
-// style condition, unlike a size condition, but that is exactly the kind
-// of detail worth confirming rendered rather than taken on faith.
+// assumed from the CSS alone: a style query compares a custom property's
+// own resolved value, never its raw formula text, so without registering
+// --dedication-formula-size and --dedication-parent-size as typed lengths
+// (GlobalStyle.ts's own @property block) the query was comparing "14px"
+// against the literal string "max(14px, calc(24 * 0.3px))" and could never
+// match at any scale. This story caught exactly that before the @property
+// registration existed: both lines rendered in the full-contrast colour
+// regardless of how far the scale dropped.
 export const PageFieldContrastSwitchesAtSmallScale: Story = {
   render: () => (
     <div

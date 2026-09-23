@@ -91,7 +91,7 @@ const invalidHonorificIssue = {
 // front of, so it is optional in that case, but required the moment a
 // `parentName` is given: a parent line must never guess the gender.
 //
-// This is the one of the three rules with no mirroring table CHECK, and the
+// This is the one of three rules with no mirroring table CHECK, and the
 // asymmetry is deliberate rather than an oversight. The other two guard
 // against something being printed: a window that cannot be satisfied, and a
 // suffix that would declare a living person dead. This one guards against a

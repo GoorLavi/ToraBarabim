@@ -105,7 +105,14 @@ export const DedicationUnit = css(
        every line regardless of size, already. Tested for exact equality
        with the floor length, not a numeric threshold: the broadly
        supported form of a container style query is equality, and a
-       numeric range comparison has materially narrower engine support. */
+       numeric range comparison has materially narrower engine support.
+       This equality can only ever match a custom property's own resolved
+       value, never the raw max()/calc() formula text it is set to below,
+       which is why --dedication-formula-size and --dedication-parent-size
+       are registered as typed lengths in GlobalStyle.ts's own @property
+       block: without that registration this comparison never matches at
+       any scale (client/src/components/DedicationUnit/DedicationUnit.stories.tsx,
+       PageFieldContrastSwitchesAtSmallScale, caught exactly that). */
     @container dedication-unit style(--dedication-formula-size: ${consts.DEDICATION_FORMULA_SIZE_FLOOR_PX}px) {
       > .text > .formula {
         color: var(--dedication-closing-text);
