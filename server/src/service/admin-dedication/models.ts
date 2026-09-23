@@ -40,7 +40,10 @@ const honorificSchema = z.enum(DEDICATION_HONORIFICS).nullable().optional();
 // `honoredGender` drives בן versus בת on the parent line and nothing else.
 // It is never derived from `honorific`, and `honorific` is never derived
 // from it: a female record carrying `zl` composes ז״ל exactly as written.
-const honoredGenderSchema = z.enum(HONORED_GENDERS);
+// Nullable and optional, like `honorific`: a family dedication has no
+// `parentName` and therefore no gender to give (`requireGenderWhenParentNamePresent`
+// below is what actually makes it required whenever a `parentName` is set).
+const honoredGenderSchema = z.enum(HONORED_GENDERS).nullable().optional();
 
 // The plain shape, deliberately without the window refinement below: this
 // is the schema `previewDedicationSchema` derives `.partial()` from, and
@@ -64,14 +67,42 @@ export const createDedicationSchema = z.object({
 const requireValidWindow = (value: { startsOn: string; endsOn: string }): boolean => value.endsOn >= value.startsOn;
 const invalidWindowIssue = { message: 'תאריך הסיום חייב לחול באותו יום כמו תאריך ההתחלה או אחריו', path: ['endsOn'] };
 
-export const createDedicationRequestSchema = createDedicationSchema.refine(requireValidWindow, invalidWindowIssue);
+// Mirrors the `dedications_honorific_memorial_only` CHECK constraint in
+// Postgres: a honorific (ז״ל / ע״ה / הי״ד) declares the honoree dead, so it
+// is rejected outright, never silently dropped, on a healing or a success
+// dedication, where it would print a prayer for a living person's recovery
+// alongside a claim that he already died.
+const requireHonorificOnlyForMemorial = (value: { type: DedicationType; honorific?: DedicationHonorific | null }): boolean =>
+  value.honorific == null || value.type === 'memorial';
+const invalidHonorificIssue = {
+  message: 'תואר (ז״ל / ע״ה / הי״ד) קביל רק בסוג "לעילוי נשמת"; עבור סוג הקדשה אחר יש להשאיר את שדה התואר ריק',
+  path: ['honorific'],
+};
+
+// `honoredGender` is unused when there is no `parentName` to put בן/בת in
+// front of, so it is optional in that case, but required the moment a
+// `parentName` is given: a parent line must never guess the gender.
+const requireGenderWhenParentNamePresent = (value: { parentName?: string; honoredGender?: HonoredGender | null }): boolean =>
+  value.parentName === undefined || value.honoredGender != null;
+const missingGenderIssue = {
+  message: 'כאשר מולא שם ההורה (parentName) יש לבחור גם מגדר (honoredGender); ללא שם הורה ניתן להשאיר את שדה המגדר ריק',
+  path: ['honoredGender'],
+};
+
+export const createDedicationRequestSchema = createDedicationSchema
+  .refine(requireValidWindow, invalidWindowIssue)
+  .refine(requireHonorificOnlyForMemorial, invalidHonorificIssue)
+  .refine(requireGenderWhenParentNamePresent, missingGenderIssue);
 export type CreateDedicationInput = z.infer<typeof createDedicationSchema>;
 
 // A full replacement, not a merge, matching `updateLessonSchema`: the
 // honorific/gender independence rule and the suffix/type rule are exactly
 // the kind of thing a partial merge could violate by leaving a stale field
 // behind while another one changes.
-export const updateDedicationRequestSchema = createDedicationSchema.refine(requireValidWindow, invalidWindowIssue);
+export const updateDedicationRequestSchema = createDedicationSchema
+  .refine(requireValidWindow, invalidWindowIssue)
+  .refine(requireHonorificOnlyForMemorial, invalidHonorificIssue)
+  .refine(requireGenderWhenParentNamePresent, missingGenderIssue);
 export type UpdateDedicationInput = CreateDedicationInput;
 
 // Derived, never written twice: `.partial()` reuses every field rule above
@@ -95,7 +126,7 @@ export interface DedicationRecord {
   type: DedicationType;
   honoredName: string;
   honorific?: DedicationHonorific;
-  honoredGender: HonoredGender;
+  honoredGender?: HonoredGender;
   parentName?: string;
   donorFamilyName?: string;
   closingLineEnabled: boolean;

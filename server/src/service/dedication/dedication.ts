@@ -14,7 +14,7 @@ const toResolvedDedication = (row: DedicationRow): ResolvedDedication => ({
   type: row.type,
   honoredName: row.honoredName,
   honorific: row.honorific ?? undefined,
-  honoredGender: row.honoredGender,
+  honoredGender: row.honoredGender ?? undefined,
   parentName: row.parentName ?? undefined,
   donorFamilyName: row.donorFamilyName ?? undefined,
   closingLineEnabled: row.closingLineEnabled,

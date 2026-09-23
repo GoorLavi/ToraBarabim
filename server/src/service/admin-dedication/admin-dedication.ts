@@ -24,7 +24,7 @@ const toRecord = (row: DedicationRow): DedicationRecord => ({
   type: row.type,
   honoredName: row.honoredName,
   honorific: row.honorific ?? undefined,
-  honoredGender: row.honoredGender,
+  honoredGender: row.honoredGender ?? undefined,
   parentName: row.parentName ?? undefined,
   donorFamilyName: row.donorFamilyName ?? undefined,
   closingLineEnabled: row.closingLineEnabled,
@@ -42,7 +42,7 @@ const writeValues = (input: CreateDedicationInput | UpdateDedicationInput) => ({
   type: input.type,
   honoredName: input.honoredName,
   honorific: input.honorific ?? null,
-  honoredGender: input.honoredGender,
+  honoredGender: input.honoredGender ?? null,
   parentName: input.parentName ?? null,
   donorFamilyName: input.donorFamilyName ?? null,
   closingLineEnabled: input.closingLineEnabled,
@@ -112,15 +112,15 @@ export const takedown = async (id: string, input: TakedownDedicationInput): Prom
 // A preview draft is never invalid for being incomplete: only `type` is
 // required by `previewDedicationSchema`, so every other field is filled in
 // with a placeholder that the composer can safely ignore. `honoredGender`
-// is never guessed when it is genuinely absent: `parentName` is dropped
-// alongside it, rather than composing a parent line with a gender the
-// admin has not chosen yet, which would silently pick בן or בת for them.
+// is passed through exactly as typed, never guessed: `composeDedicationText`
+// itself drops the parent line when a `parentName` is present without a
+// gender, rather than silently picking בן or בת for the admin.
 const draftFields = (input: PreviewDedicationInput): DedicationFields => ({
   type: input.type,
   honoredName: input.honoredName ?? '',
   honorific: input.honorific ?? undefined,
-  honoredGender: input.honoredGender ?? 'male',
-  parentName: input.honoredGender ? input.parentName : undefined,
+  honoredGender: input.honoredGender ?? undefined,
+  parentName: input.parentName,
   donorFamilyName: input.donorFamilyName,
   closingLineEnabled: input.closingLineEnabled ?? false,
 });

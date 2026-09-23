@@ -8,7 +8,10 @@ export interface DedicationFields {
   type: DedicationType;
   honoredName: string;
   honorific?: DedicationHonorific;
-  honoredGender: HonoredGender;
+  // Required only when `parentName` is set (`requireGenderWhenParentNamePresent`,
+  // `service/admin-dedication/models.ts`): a family dedication has no parent
+  // line and therefore no gender to give.
+  honoredGender?: HonoredGender;
   parentName?: string;
   donorFamilyName?: string;
   closingLineEnabled: boolean;

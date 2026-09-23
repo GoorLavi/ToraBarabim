@@ -181,7 +181,10 @@ export interface AdminDedication {
   type: DedicationType;
   honoredName: string;
   honorific?: DedicationHonorific;
-  honoredGender: HonoredGender;
+  // Required only when `parentName` is set: it drives the בן/בת particle on
+  // the parent line and nothing else, so a family dedication with no
+  // `parentName` (e.g. "להצלחת משפחת לביא") has no gender to give.
+  honoredGender?: HonoredGender;
   parentName?: string;
   donorFamilyName?: string;
   closingLineEnabled: boolean;

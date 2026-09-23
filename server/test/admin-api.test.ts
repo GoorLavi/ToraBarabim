@@ -335,6 +335,52 @@ describe('admin API: dedications', () => {
     assert.equal(res.statusCode, 400);
   });
 
+  test('a honorific on a healing dedication is a 400, never silently dropped', async () => {
+    const cookie = await loginAsNewAdmin();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/v1/admin/dedications',
+      headers: { cookie },
+      payload: validCreateBody('healing', { honorific: 'zl' }),
+    });
+    assert.equal(res.statusCode, 400);
+  });
+
+  test('a honorific on a success dedication is a 400, never silently dropped', async () => {
+    const cookie = await loginAsNewAdmin();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/v1/admin/dedications',
+      headers: { cookie },
+      payload: validCreateBody('success', { honorific: 'ah' }),
+    });
+    assert.equal(res.statusCode, 400);
+  });
+
+  test('a honorific on a memorial dedication succeeds', async () => {
+    const cookie = await loginAsNewAdmin();
+    const record = await createDedication(cookie, 'memorial', { honorific: 'zl' });
+    assert.equal(record.honorific, 'zl');
+  });
+
+  test('a dedication with a name and no gender and no parent name succeeds, for a whole-family dedication', async () => {
+    const cookie = await loginAsNewAdmin();
+    const record = await createDedication(cookie, 'success', { honoredGender: undefined, honoredName: 'משפחת לביא' });
+    assert.equal(record.honoredGender, undefined);
+    assert.equal(record.display.parentLine, undefined);
+  });
+
+  test('a parent name without a gender is a 400', async () => {
+    const cookie = await loginAsNewAdmin();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/v1/admin/dedications',
+      headers: { cookie },
+      payload: validCreateBody('success', { honoredGender: undefined, parentName: 'שלמה' }),
+    });
+    assert.equal(res.statusCode, 400);
+  });
+
   test('endsOn before startsOn is a 400', async () => {
     const cookie = await loginAsNewAdmin();
     const startsOn = todayInIsrael(new Date());

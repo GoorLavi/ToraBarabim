@@ -20,7 +20,12 @@ export const composeDedicationText = (fields: DedicationFields): DedicationText 
     ? `${fields.honoredName}${NBSP}${DEDICATION_HONORIFIC_SUFFIX[fields.honorific]}`
     : fields.honoredName;
 
-  const parentLine = fields.parentName
+  // `honoredGender` is required whenever `parentName` is set on a stored
+  // record (enforced by `requireGenderWhenParentNamePresent`), but a
+  // preview draft is filled in field by field and can carry one without the
+  // other while the admin is still typing: composing must drop the parent
+  // line rather than guess בן or בת for it.
+  const parentLine = fields.parentName && fields.honoredGender
     ? `${DEDICATION_PARENT_PARTICLE[fields.honoredGender]}${NBSP}${fields.parentName}`
     : undefined;
 

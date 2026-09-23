@@ -153,6 +153,11 @@ describe('composeDedicationText', () => {
     assert.ok(!('parentLine' in text) || text.parentLine === undefined);
   });
 
+  test('the parent line is dropped, not guessed, when honoredGender is absent', () => {
+    const text = composeDedicationText(fields({ type: 'success', honoredGender: undefined, parentName: 'שלמה' }));
+    assert.equal(text.parentLine, undefined);
+  });
+
   test('the closing suffix binds to the name line: a bare-parent record never closes with it', () => {
     const text = composeDedicationText(
       fields({ type: 'memorial', honoredName: 'משה', honorific: 'zl', parentName: 'אברהם', closingLineEnabled: false }),
