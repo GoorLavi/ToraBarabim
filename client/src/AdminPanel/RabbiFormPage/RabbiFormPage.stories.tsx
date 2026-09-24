@@ -4,15 +4,10 @@ import { Route, Routes } from 'react-router-dom';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { rabbiFixture } from '~/rabbiFixture';
-import { installMockFetch, jsonResponse } from '~/storyMocks';
 
+import { http, jsonResolver } from '../../../.storybook/apiMocks';
 import { RabbiFormPage } from './RabbiFormPage';
 
-// A distinct id from `LessonFormPage.stories.tsx`'s own edited rabbi:
-// `.storybook/preview.tsx` shares one `QueryClient` across every story, and
-// both files fetch a single rabbi by id under the identical
-// `['admin', 'rabbis', id]` key, so sharing an id would let one file's
-// cached rabbi bleed into the other's story.
 const rabbi: RabbiResponse = {
   ...rabbiFixture({ id: 'story-editable-rabbi', name: 'יעקב מזרחי', title: 'ראש ישיבה', bio: 'ראש ישיבת "אור התורה" ומגידי השיעור הוותיקים בעיר.' }),
   prominence: 'known',
@@ -24,11 +19,10 @@ const account: RabbiAccountResponse = { id: 'account-1', email: 'yaakov.mizrahi@
 // answered: the existing rabbi and its login account.
 // `RabbiAccountSection`'s create-account path (a 404 'account_not_found')
 // is not exercised here, since this rabbi already has an active account.
-installMockFetch((url) => {
-  if (url.pathname === `/v1/admin/rabbis/${rabbi.id}`) return jsonResponse(200, rabbi);
-  if (url.pathname === `/v1/admin/rabbis/${rabbi.id}/account`) return jsonResponse(200, account);
-  return null;
-});
+const editModeHandlers = {
+  rabbi: http.get('/v1/admin/rabbis/:id', jsonResolver(rabbi)),
+  account: http.get('/v1/admin/rabbis/:id/account', jsonResolver(account)),
+};
 
 const withEditRoute = (Story: React.ComponentType): React.ReactElement => (
   <Routes location={{ pathname: `/admin/rabbis/${rabbi.id}/edit`, search: '', hash: '', state: null, key: 'story' }}>
@@ -40,6 +34,7 @@ const meta: Meta<typeof RabbiFormPage> = {
   title: 'AdminPanel/RabbiFormPage',
   component: RabbiFormPage,
   decorators: [withEditRoute],
+  parameters: { apiMocks: { handlers: editModeHandlers } },
 };
 
 export default meta;

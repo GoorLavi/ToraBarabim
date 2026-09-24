@@ -185,3 +185,24 @@ The root rules cover class names, `>`, `&` nesting, and `classNames`. On top of 
   site. Four controls shipped that bug by hand-rolling the listener from whichever
   neighbour their author opened first. `DateFilterChips` is the one remaining holdout,
   pending its own change.
+
+## Storybook
+
+The mock layer is hand-written, not msw
+([0035](../docs/decisions/0035-storybook-mocks-fetch-with-an-in-house-layer-not-msw.md)).
+Storybook has no API behind it, so a story declares the network it needs under
+`parameters.apiMocks.handlers`, keyed by name (`{ area: http.get('/v1/areas/:slug', ...) }`).
+A meta declares the defaults and a story overrides only the keys it changes. Everything
+comes from `.storybook/apiMocks.ts`, the one shared layer: the `http` route builders,
+the resolver helpers (`jsonResolver`, `errorResolver`, `loadingResolver`, `respondWithJson`,
+`queryOf`), and the per-story `fetch` interceptor that `.storybook/preview.tsx` installs
+and restores. `:slug` params arrive decoded there, so a story never decodes one by hand,
+and a request no route claims goes to the real `fetch`. Fixtures stay in the story file
+that uses them.
+
+`.storybook/preview.tsx` also gives every story its own `QueryClient` with `retry: false`,
+`networkMode: 'always'`, and `refetchOnWindowFocus: false`, and pins React Query's
+`focusManager` to always-focused: a story's `fetch` never touches the real network, so it
+must never pause a retry for the tab's visibility or the browser's online state, both of
+which a review running in a background tab can otherwise report as false. It also
+configures two viewports, mobile (the initial one) and desktop.

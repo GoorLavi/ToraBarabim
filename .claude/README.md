@@ -194,5 +194,5 @@ not because they are bad ideas:
 - The reviewer reads code; nobody runs the suite for it in a sandbox without a
   database. "The suite passes" is claimed only by whoever ran it, per **Verification**
   in the root rulebook.
-- The designer renders the public pages and the panels through `launch.json`; there is
-  no Storybook sweep or browser harness. Rendering errors are found by looking.
+- The admin and rabbi panels have no Storybook stories yet, only `launch.json` with a
+  real login; a Storybook sweep for them is a later slice.

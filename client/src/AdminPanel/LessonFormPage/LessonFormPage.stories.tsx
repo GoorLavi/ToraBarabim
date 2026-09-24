@@ -4,8 +4,8 @@ import { Route, Routes } from 'react-router-dom';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { rabbiFixture } from '~/rabbiFixture';
-import { installMockFetch, jsonResponse } from '~/storyMocks';
 
+import { http, jsonResolver } from '../../../.storybook/apiMocks';
 import { LessonFormPage } from './LessonFormPage';
 
 const rabbi: RabbiResponse = { ...rabbiFixture({ id: 'story-edit-rabbi', name: 'יעקב מזרחי', title: 'ראש ישיבה' }), prominence: 'known' };
@@ -23,16 +23,9 @@ const lesson: LessonResponse = {
   provenance: 'manual',
 };
 
-// `RabbiPicker`'s eager, query-less rabbi search (fired on mount regardless
-// of whether its popover is open) hits the exact same unfiltered
-// `/v1/admin/rabbis?page=1&pageSize=50` request as `LessonsListPage`'s own
-// rabbi-join fetch (`LessonsListPage.stories.tsx`), with nothing in the
-// request to tell the two apart. `.storybook/preview.tsx` chains every
-// story file's mock onto one `window.fetch`, and whichever file's mock last
-// loaded answers both, so this list also carries `LessonsListPage.
-// stories.tsx`'s three rabbis: if that file's join ever runs against this
-// mock instead of its own, its lesson rows can still resolve a rabbi.
-const rabbisListForSearchAndJoin: RabbiResponse[] = [
+// The picker's eager, query-less rabbi search fires on mount regardless of
+// whether its popover is open.
+const rabbisForPicker: RabbiResponse[] = [
   rabbi,
   { ...rabbiFixture({ id: 'rabbi-1', name: 'אברהם כהן' }), prominence: 'known' },
   { ...rabbiFixture({ id: 'rabbi-2', name: 'משה לוי' }), prominence: 'local' },
@@ -45,19 +38,14 @@ const rabbisListForSearchAndJoin: RabbiResponse[] = [
 // `PlacePicker`'s own two calls (the whole place list, fired unconditionally
 // on mount, and the duplicate hint, fired once this lesson's already-loaded
 // address name and street settle).
-installMockFetch((url) => {
-  if (url.pathname === `/v1/admin/lessons/${lesson.id}`) return jsonResponse(200, lesson);
-  if (url.pathname === `/v1/admin/rabbis/${rabbi.id}`) return jsonResponse(200, rabbi);
-  if (url.pathname === '/v1/admin/rabbis') {
-    return jsonResponse(200, { items: rabbisListForSearchAndJoin, page: 1, pageSize: 50, total: rabbisListForSearchAndJoin.length });
-  }
-  if (url.pathname === '/v1/admin/lessons' && url.searchParams.get('rabbiId') === rabbi.id) {
-    return jsonResponse(200, { items: [lesson], page: 1, pageSize: 1, total: 4 });
-  }
-  if (url.pathname === '/v1/places') return jsonResponse(200, { items: [] });
-  if (url.pathname === '/v1/places/similar') return jsonResponse(200, { items: [] });
-  return null;
-});
+const editModeHandlers = {
+  lesson: http.get('/v1/admin/lessons/:id', jsonResolver(lesson)),
+  rabbi: http.get('/v1/admin/rabbis/:id', jsonResolver(rabbi)),
+  rabbis: http.get('/v1/admin/rabbis', jsonResolver({ items: rabbisForPicker, page: 1, pageSize: 50, total: rabbisForPicker.length })),
+  rabbiLessonCount: http.get('/v1/admin/lessons', jsonResolver({ items: [lesson], page: 1, pageSize: 1, total: 4 })),
+  places: http.get('/v1/places', jsonResolver({ items: [] })),
+  similarPlaces: http.get('/v1/places/similar', jsonResolver({ items: [] })),
+};
 
 const withEditRoute = (Story: React.ComponentType): React.ReactElement => (
   <Routes location={{ pathname: `/admin/lessons/${lesson.id}/edit`, search: '', hash: '', state: null, key: 'story' }}>
@@ -69,6 +57,7 @@ const meta: Meta<typeof LessonFormPage> = {
   title: 'AdminPanel/LessonFormPage',
   component: LessonFormPage,
   decorators: [withEditRoute],
+  parameters: { apiMocks: { handlers: editModeHandlers } },
 };
 
 export default meta;
