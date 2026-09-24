@@ -21,6 +21,7 @@ const toLessonOccurrence = (record: ResolvedHomeOccurrence): LessonOccurrence =>
 });
 
 const toHomeRow = (row: HomeRowResult): HomeRow => ({
+  kind: 'lessons',
   id: row.id,
   title: row.title,
   items: row.items.map(toLessonOccurrence),

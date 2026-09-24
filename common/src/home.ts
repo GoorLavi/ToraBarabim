@@ -1,3 +1,4 @@
+import type { CourseSummary } from './course';
 import type { DedicationGroup } from './dedication';
 import type { LessonOccurrence } from './lesson-occurrence';
 import type { Rabbi } from './rabbi';
@@ -7,18 +8,27 @@ import type { Rabbi } from './rabbi';
 // on `Rabbi` or on any occurrence the client receives.
 export type RabbiProminence = 'local' | 'known' | 'sought';
 
-export type HomeRowId = 'area' | 'today' | 'bothAudiences' | 'weekly';
+export type HomeLessonRowId = 'area' | 'today' | 'bothAudiences' | 'weekly';
 
-export interface HomeRow {
-  id: HomeRowId;
-  title: string;
-  items: LessonOccurrence[];
-  // The 0-based index within `items` where the women's-area tile renders;
-  // present only on the one row that carries it (0012: the client renders
-  // `items` exactly as given and never reorders them, so it splices the
-  // tile in at this index rather than choosing where it goes).
-  womensAreaTileIndex?: number;
-}
+// A union on `kind`, exactly 0012's shape: the client renders `rows` in the
+// order given and decides nothing about placement. The one `kind: 'courses'`
+// row (at most one) is where the server chose to put it, never a row the
+// client assembles or reorders.
+export type HomeRow =
+  | {
+      kind: 'lessons';
+      id: HomeLessonRowId;
+      title: string;
+      items: LessonOccurrence[];
+      // The 0-based index within `items` where the women's-area tile
+      // renders; present only on the one row that carries it (0012: the
+      // client renders `items` exactly as given and never reorders them, so
+      // it splices the tile in at this index rather than choosing where it
+      // goes). Never set on a `kind: 'courses'` row: the tile only ever
+      // lands inside a lesson row.
+      womensAreaTileIndex?: number;
+    }
+  | { kind: 'courses'; id: 'courses'; title: string; items: CourseSummary[] };
 
 export interface HomeResponse {
   rows: HomeRow[];

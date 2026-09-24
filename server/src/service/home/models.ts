@@ -1,4 +1,4 @@
-import type { CityWithLessonCount, HomeRowId, LessonAudience, LessonTopic, LessonVenue, Rabbi } from '@torabarabim/common';
+import type { CityWithLessonCount, HomeLessonRowId, LessonAudience, LessonTopic, LessonVenue, Rabbi } from '@torabarabim/common';
 
 import type { rabbis } from '../../db/schema';
 import type { AddressCityRow } from '../shared/address';
@@ -27,7 +27,7 @@ export interface ResolvedHomeOccurrence {
 }
 
 export interface HomeRowResult {
-  id: HomeRowId;
+  id: HomeLessonRowId;
   title: string;
   items: ResolvedHomeOccurrence[];
   // The 0-based index in `items` where the women's-area tile renders; see

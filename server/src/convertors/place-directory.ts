@@ -17,6 +17,9 @@ export const toPlace = (record: PlaceRecord): Place => ({
 
 export const toPlaceListResponse = (result: PlaceListResult): PlaceListResponse => ({ items: result.items.map(toPlace) });
 
-export const toPlaceDetailResponse = (record: PlaceRecord): PlaceDetailResponse => toPlace(record);
+// `courses` is wired to the place's real general-scope courses once
+// `service/course/` lands in this slice's next milestone; the courses table
+// does not exist yet.
+export const toPlaceDetailResponse = (record: PlaceRecord): PlaceDetailResponse => ({ ...toPlace(record), courses: [] });
 
 export const toPlaceSimilarResponse = (records: PlaceRecord[]): PlaceSimilarResponse => ({ items: records.map(toPlace) });

@@ -692,8 +692,14 @@ describe('public API', () => {
     const body = homeRes.json() as HomeResponse;
     assert.ok(Array.isArray(body.rows));
 
+    // No course row exists yet in this milestone (the courses table has no
+    // writer), so every row is still `kind: 'lessons'`; narrowing here is
+    // what the wire's new row union now requires of every reader.
+    const lessonRows = body.rows.filter((row) => row.kind === 'lessons');
+    assert.equal(lessonRows.length, body.rows.length, 'expected no course row yet in this milestone');
+
     const rowsWithTile: number[] = [];
-    body.rows.forEach((row, rowIndex) => {
+    lessonRows.forEach((row, rowIndex) => {
       assert.equal(typeof row.id, 'string');
       assert.equal(typeof row.title, 'string');
       assert.ok(Array.isArray(row.items));
@@ -720,7 +726,7 @@ describe('public API', () => {
     } else {
       // The candidate row is the second row (index 1); if it has fewer
       // than four lessons, the tile moves to the next row that does.
-      const expectedRowIndex = body.rows.findIndex((row, index) => index >= 1 && row.items.length >= 4);
+      const expectedRowIndex = lessonRows.findIndex((row, index) => index >= 1 && row.items.length >= 4);
       if (expectedRowIndex === -1) {
         assert.equal(rowsWithTile.length, 0, 'no row has enough lessons to carry the tile');
       } else {

@@ -1,4 +1,5 @@
 import type { City } from './city';
+import type { CourseSummary } from './course';
 import type { Rabbi } from './rabbi';
 
 // A rabbi as shown wherever the public directory needs the base `Rabbi`
@@ -21,6 +22,8 @@ export interface RabbiDirectoryResponse {
   total: number;
 }
 
-// A single rabbi's public page. Same shape as a directory entry: see
-// `RabbiDirectoryEntry`.
-export type RabbiDetailResponse = RabbiDirectoryEntry;
+// A single rabbi's public page. Same shape as a directory entry, plus his
+// own courses: a directory listing never carries them, since that read
+// stays cheap for every rabbi at once, but a single rabbi's page always
+// loads them.
+export type RabbiDetailResponse = RabbiDirectoryEntry & { courses: CourseSummary[] };

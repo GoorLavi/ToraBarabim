@@ -24,4 +24,7 @@ export const toRabbiDirectoryResponse = (result: RabbiListResult): RabbiDirector
   total: result.total,
 });
 
-export const toRabbiDetailResponse = (result: RabbiDirectoryEntryRecord): RabbiDetailResponse => toDirectoryEntry(result);
+// `courses` is wired to the rabbi's real general-scope courses once
+// `service/course/` lands in this slice's next milestone; the courses table
+// does not exist yet.
+export const toRabbiDetailResponse = (result: RabbiDirectoryEntryRecord): RabbiDetailResponse => ({ ...toDirectoryEntry(result), courses: [] });

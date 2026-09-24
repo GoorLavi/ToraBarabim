@@ -23,4 +23,7 @@ export const toRabbiListResponse = (result: RabbiListResult): RabbiListResponse 
 export const toDeleteRabbiPreviewResponse = (result: DeleteRabbiPreviewResult): DeleteImpactPreview => ({
   lessonCount: result.lessonCount,
   exceptionCount: result.exceptionCount,
+  // Wired to a real count once `admin-course`'s cascade lands in this
+  // slice's next milestone; the courses table does not exist yet.
+  courseCount: 0,
 });
