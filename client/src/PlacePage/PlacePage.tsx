@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
 import { BackLink } from '~/components/BackLink/BackLink';
+import { CourseRail } from '~/components/CourseRail/CourseRail';
 import { DayGroup } from '~/components/DayGroup/DayGroup';
 import { DayGroupSkeleton } from '~/components/DayGroupSkeleton/DayGroupSkeleton';
 import { QuietButton } from '~/components/QuietButton/QuietButton';
@@ -84,6 +85,8 @@ export const PlacePage = styled(({ className }: PlacePageProps) => {
       {place && (
         <>
           <PlaceHero {...{ place, lessonCount }} />
+
+          {place.courses.length > 0 && <CourseRail title={consts.COURSES_HEADING} items={place.courses} surface="placePage" />}
 
           {lessonsQuery.isPending && <DayGroupSkeleton />}
 

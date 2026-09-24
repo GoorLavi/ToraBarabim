@@ -1,10 +1,13 @@
 import * as areaService from '../../../server/src/service/area/area';
 import * as cityService from '../../../server/src/service/city/city';
+// `listForSitemap` is still landing on the server side (build tracker #2,
+// in progress): written against the plan's shape rather than worked around.
+import * as courseService from '../../../server/src/service/course/course';
 import * as lessonService from '../../../server/src/service/lesson/lesson';
 import * as placeService from '../../../server/src/service/place/place';
 import * as rabbiService from '../../../server/src/service/rabbi/rabbi';
 import { SITE_ORIGIN } from '../../consts';
-import { areaPath, cityPath, placePath, rabbiPath } from '../helpers';
+import { areaPath, cityPath, coursePath, placePath, rabbiPath } from '../helpers';
 import { SITEMAP_CACHE_HEADERS, UNCACHEABLE_ERROR_HEADERS } from './consts';
 
 // The `.server` suffix is React Router's build-time boundary: see
@@ -41,7 +44,7 @@ const ALL_OCCURRENCES_PAGE_SIZE = 100_000;
 
 const buildSitemapXml = async (): Promise<string> => {
   const now = new Date();
-  const [generalRabbis, womenRabbis, cityDirectory, areaDirectory, placeDirectory, generalOccurrences, womenOccurrences] =
+  const [generalRabbis, womenRabbis, cityDirectory, areaDirectory, placeDirectory, generalOccurrences, womenOccurrences, sitemapCourses] =
     await Promise.all([
       rabbiService.list({ scope: 'general', page: 1, pageSize: ALL_RABBIS_PAGE_SIZE }),
       rabbiService.list({ scope: 'women', page: 1, pageSize: ALL_RABBIS_PAGE_SIZE }),
@@ -50,11 +53,18 @@ const buildSitemapXml = async (): Promise<string> => {
       placeService.list(),
       lessonService.search({ scope: 'general', status: 'scheduled', page: 1, pageSize: ALL_OCCURRENCES_PAGE_SIZE }, now),
       lessonService.search({ scope: 'women', status: 'scheduled', page: 1, pageSize: ALL_OCCURRENCES_PAGE_SIZE }, now),
+      // Excludes a closed course from the day it closes: stricter than every
+      // other surface's own seven-day grace (plan 3.1, tora-ssr's consult
+      // answer), because a page whose call to action already left the wire
+      // is not worth a crawler's attention, even while it is still listed
+      // elsewhere.
+      courseService.listForSitemap(now),
     ]);
 
   const rabbiUrls = [...generalRabbis.items, ...womenRabbis.items].map(rabbiPath);
   const cityUrls = cityDirectory.areas.flatMap((group) => group.cities.map(cityPath));
   const areaUrls = areaDirectory.areas.map(areaPath);
+  const courseUrls = sitemapCourses.map(coursePath);
 
   // `placeService.list` already excludes an inactive place, so this only has
   // to decide the other axis: an active place with nothing scheduled in the
@@ -75,7 +85,7 @@ const buildSitemapXml = async (): Promise<string> => {
   // sitemap that ever repeated a URL is precisely the defect this route
   // exists to prevent, so the dedup travels with the build rather than
   // trusting three services to stay that way forever.
-  const urls = [...new Set([...STATIC_PATHS, ...rabbiUrls, ...cityUrls, ...areaUrls, ...placeUrls])];
+  const urls = [...new Set([...STATIC_PATHS, ...rabbiUrls, ...cityUrls, ...areaUrls, ...placeUrls, ...courseUrls])];
 
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(urlEntry).join('\n')}\n</urlset>\n`;
 };

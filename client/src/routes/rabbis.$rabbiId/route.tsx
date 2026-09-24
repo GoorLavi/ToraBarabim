@@ -26,7 +26,7 @@ export const loader = async ({ params }: LoaderFunctionArgs): Promise<RabbiDetai
     throw new Response('רב לא נמצא', { status: 404, headers: UNCACHEABLE_ERROR_HEADERS });
   }
 
-  const data = await loadRabbiDetail(rabbiId);
+  const data = await loadRabbiDetail(rabbiId, new Date());
 
   // Resolution is by id alone; the slug is decoration for the reader and
   // for search results. A bare-id link, a typo, or a rabbi whose name (and

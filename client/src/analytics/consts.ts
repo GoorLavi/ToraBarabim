@@ -25,6 +25,8 @@ export const MIXPANEL_EVENTS = {
   profilePhotoUploaded: 'Profile Photo Uploaded',
   dedicationWindowOpen: 'Dedication Window Open',
   dedicationContactClick: 'Dedication Contact Click',
+  courseClick: 'Course Click',
+  courseContactClick: 'Course Contact Click',
 } as const;
 
 // A `LessonCard` can sit in any of these lists; `homeRail` is the only one
@@ -40,6 +42,9 @@ export type LessonSurface =
   | 'womensArea'
   | 'lessonPage'
   | 'placePage';
+
+// A `CourseCard` can sit in any of these rails.
+export type CourseSurface = 'homeRail' | 'rabbiPage' | 'placePage' | 'womensArea';
 
 // The four screens that fire `Results Shown` (RabbisPage, CitiesPage and
 // RabbiPage's lessons section do not, by design). Distinct from
@@ -74,7 +79,8 @@ export type RetrySurface =
   | 'cityPickerSuggestions'
   | 'placePageDetail'
   | 'placePageLessons'
-  | 'placesPage';
+  | 'placesPage'
+  | 'coursePage';
 
 export type FilterDateSource = 'chip' | 'calendar';
 export type FilterCitySource = 'headerPicker' | 'homeCityGrid';

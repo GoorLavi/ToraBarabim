@@ -148,12 +148,25 @@ export const addressLine = (street: string, floor: string | undefined): string =
 const navigationQuery = (place: Pick<ResolvedAddress, 'street' | 'city'>): string => `${place.street.trim()}, ${place.city.trim()}`;
 
 // A WhatsApp deep link prefilled with a caller's own message, to a number
-// the caller passes explicitly (this site's own support line, or a course's
-// contact number). `wa.me` wants the international number with no leading
-// `+` or separators, which `SITE_CONTACT_PHONE_INTERNATIONAL` and a
-// course's own `contactPhone` are both stored as.
+// the caller passes explicitly (this site's own support line, or a
+// course's contact number, converted first through `phoneToInternational`
+// below). `wa.me` wants the international number with no leading `+` or
+// separators, which `SITE_CONTACT_PHONE_INTERNATIONAL` already is.
 export const whatsAppHref = (message: string, phoneInternational: string): string =>
   `https://wa.me/${phoneInternational}?text=${encodeURIComponent(message)}`;
+
+const ISRAEL_COUNTRY_CODE = '972';
+
+// A course's own `contactPhone` is stored (and returned on the wire) as a
+// local mobile number, `^05\d{8}$` (server's own validation): the leading
+// `0` is the trunk prefix, dropped and replaced with the country code for
+// anything that needs the international form, `wa.me` and a `tel:` link
+// alike.
+export const phoneToInternational = (localPhone: string): string => `${ISRAEL_COUNTRY_CODE}${localPhone.slice(1)}`;
+
+// "050-123-4567", the way an Israeli reader expects a mobile number, for
+// display and for a call button's accessible name.
+export const phoneDisplay = (localPhone: string): string => `${localPhone.slice(0, 3)}-${localPhone.slice(3, 6)}-${localPhone.slice(6)}`;
 
 // `undefined` unless both street and city are present, so the caller hides
 // the whole nav row rather than link out to a bare street or a bare city
@@ -168,3 +181,30 @@ export const googleMapsHref = (place: Pick<ResolvedAddress, 'street' | 'city'>):
   place.street.trim() && place.city.trim()
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(navigationQuery(place))}`
     : undefined;
+
+const COURSE_OPENING_DATE_PREFIX = 'פתיחה ב־';
+
+const courseLongDateFormatter = new Intl.DateTimeFormat('he-IL', { day: 'numeric', month: 'long', timeZone: ISRAEL_TIME_ZONE });
+const courseCompactDateFormatter = new Intl.DateTimeFormat('he-IL', { day: 'numeric', month: 'numeric', timeZone: ISRAEL_TIME_ZONE });
+
+// A course's own opening date, on a card (the long form) or in a narrow
+// rail-tier card and the panel's own row (the compact numeric form): the
+// one place both read from, so a future panel row never drifts from the
+// card's own wording.
+export const courseOpeningDateLongLabel = (isoDate: string): string =>
+  `${COURSE_OPENING_DATE_PREFIX}${courseLongDateFormatter.format(new Date(`${isoDate}T00:00:00Z`))}`;
+
+export const courseOpeningDateCompactLabel = (isoDate: string): string =>
+  `${COURSE_OPENING_DATE_PREFIX}${courseCompactDateFormatter.format(new Date(`${isoDate}T00:00:00Z`))}`;
+
+const singularOrCount = (count: number, singular: string, pluralNoun: string): string => (count === 1 ? singular : `${count} ${pluralNoun}`);
+
+// היקף's value shape (spec section 13): "10 שבועות · 10 מפגשים · 15 שעות",
+// hours dropped when not given, each count in its singular form ("שבוע
+// אחד") when it is exactly 1. Shared by the course page's facts list and a
+// future panel row, so the two can never say it two different ways.
+export const formatCourseScope = (weeks: number, sessions: number, hours: number | undefined): string => {
+  const parts = [singularOrCount(weeks, 'שבוע אחד', 'שבועות'), singularOrCount(sessions, 'מפגש אחד', 'מפגשים')];
+  if (hours !== undefined) parts.push(singularOrCount(hours, 'שעה אחת', 'שעות'));
+  return parts.join(' · ');
+};

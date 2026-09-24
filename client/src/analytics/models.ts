@@ -6,6 +6,7 @@ import type { DateFilterOption } from '~/hooks/models';
 import { MIXPANEL_EVENTS } from './consts';
 import type {
   AppSurface,
+  CourseSurface,
   FilterCitySource,
   FilterDateSource,
   LessonSurface,
@@ -165,6 +166,27 @@ export interface DedicationContactClickProps {
   bandType: DedicationType;
 }
 
+// Simpler than `LessonClickContext`: no surface carries a rail title of its
+// own, since `Course Click` (unlike `Lesson Click`) never needs to name
+// which rail a click came from.
+export interface CourseClickContext {
+  surface: CourseSurface;
+  position: number;
+}
+
+export type CourseClickProps = CourseClickContext & {
+  courseId: string;
+  courseName: string;
+};
+
+export type CourseContactChannel = 'whatsapp' | 'call';
+
+export interface CourseContactClickProps {
+  channel: CourseContactChannel;
+  courseId: string;
+  courseName: string;
+}
+
 export interface SuperProperties {
   viewport: Viewport;
   appSurface: AppSurface;
@@ -205,4 +227,6 @@ export type AnalyticsEventProps = {
   [MIXPANEL_EVENTS.profilePhotoUploaded]: UntypedPanelEventProps;
   [MIXPANEL_EVENTS.dedicationWindowOpen]: DedicationWindowOpenProps;
   [MIXPANEL_EVENTS.dedicationContactClick]: DedicationContactClickProps;
+  [MIXPANEL_EVENTS.courseClick]: CourseClickProps;
+  [MIXPANEL_EVENTS.courseContactClick]: CourseContactClickProps;
 };

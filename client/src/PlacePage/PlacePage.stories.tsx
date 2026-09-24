@@ -1,7 +1,8 @@
-import type { CityDetailResponse, LessonOccurrence, Place } from '@torabarabim/common';
+import type { CityDetailResponse, LessonOccurrence, PlaceDetailResponse } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Route, Routes } from 'react-router-dom';
 
+import { courseFixture } from '~/courseFixture';
 import { rabbiFixture } from '~/rabbiFixture';
 import { installMockFetch, jsonResponse, NEVER_RESOLVES, placeholderPhoto } from '~/storyMocks';
 
@@ -9,7 +10,7 @@ import { PlacePage } from './PlacePage';
 
 const PLACEHOLDER_PHOTO = placeholderPhoto(320, 180);
 
-const place = (overrides: Partial<Place>): Place => ({
+const place = (overrides: Partial<PlaceDetailResponse>): PlaceDetailResponse => ({
   id: 'story-place',
   slug: 'בית-הכנסת-המרכזי',
   name: 'בית הכנסת המרכזי',
@@ -18,6 +19,7 @@ const place = (overrides: Partial<Place>): Place => ({
   citySlug: 'נתניה',
   area: 'sharon',
   lessonCount: 3,
+  courses: [],
   ...overrides,
 });
 
@@ -49,7 +51,20 @@ const cityDetail = (overrides: Partial<CityDetailResponse>): CityDetailResponse 
 installMockFetch((url) => {
   const pathname = decodeURIComponent(url.pathname);
 
-  if (pathname === '/v1/places/story-populated') return jsonResponse(200, place({ id: 'story-populated', photoUrl: PLACEHOLDER_PHOTO }));
+  if (pathname === '/v1/places/story-populated')
+    return jsonResponse(
+      200,
+      place({
+        id: 'story-populated',
+        photoUrl: PLACEHOLDER_PHOTO,
+        courses: [
+          courseFixture({
+            name: 'יסודות האמונה',
+            venue: { kind: 'place', placeId: 'story-populated', slug: 'בית-הכנסת-המרכזי', name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'נתניה', citySlug: 'נתניה', area: 'sharon' },
+          }),
+        ],
+      }),
+    );
   if (pathname === '/v1/places/story-nophoto') return jsonResponse(200, place({ id: 'story-nophoto' }));
   if (pathname === '/v1/places/story-withfloor') return jsonResponse(200, place({ id: 'story-withfloor', floor: 'קומה 2, דלת שמאל' }));
   if (pathname === '/v1/places/story-empty-widened') return jsonResponse(200, place({ id: 'story-empty-widened', citySlug: 'נתניה' }));

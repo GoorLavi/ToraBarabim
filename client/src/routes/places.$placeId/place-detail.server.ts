@@ -26,10 +26,14 @@ export interface PlaceRouteData {
 // loads: a rabbanit's lesson at this place is excluded from the count and
 // the list here, the same exposure policy every other general surface on
 // the site already applies (`isLessonInScope`, decision 0026).
+// `placeService.getDetail` (distinct from `getById`, which stays for
+// `lesson.server.ts`'s own venue-photo lookup and must not carry courses)
+// does not exist yet (server build tracker #2, in progress): this call is
+// written against the planned signature rather than worked around.
 export const loadPlaceDetail = async (placeId: string, now: Date): Promise<PlaceRouteData> => {
   try {
     const [record, searchResult] = await Promise.all([
-      placeService.getById(placeId),
+      placeService.getDetail(placeId, now),
       lessonService.search({ scope: 'general', placeId, status: 'scheduled', page: 1, pageSize: PLACE_LESSONS_PAGE_SIZE }, now),
     ]);
     return { place: toPlaceDetailResponse(record), occurrences: toLessonSearchResponse(searchResult) };
