@@ -669,6 +669,40 @@ of the same lessons.
   Scrolling a rail from code must derive its direction rather than assume a sign, because
   browsers disagree about what a scroll offset means in a right to left page.
 
+### Rabbi image fallback (2026-09-23)
+A lesson can in future carry its own photo, distinct from the rabbi's (not in the wire
+types yet: a follow-up for `common`, not built today). Until then, and whenever a lesson
+has no image of its own, the card shows the rabbi's photo.
+
+**If the rabbi has no photo either, the lesson card shows one of six photographs of
+Torah study objects**, held at `client/src/assets/lessonFallbackPosters/`. They are
+scenes of books, a shtender, a study hall: warm, quiet, and carrying nothing about the
+rabbi, since nothing is known about him. The one shown is derived from the lesson id,
+so the grid varies and the same lesson is stable across renders. The rabbi id was
+considered and rejected: the owner wanted variety, and keying to the lesson gives it.
+
+- **The treatment is baked into the files and never applied in CSS.** A `filter`, tint
+  or overlay on the poster would also hit real portraits and ruin them.
+- **The poster is always quieter than the photograph beside it.** These images are
+  better lit and better produced than any portrait the site will receive, so without
+  the treatment the card we know least about would be the handsomest in the row. That
+  inversion is what the saturation and the plum wash exist to prevent, and it is the
+  test any new poster has to pass.
+- **Tiles only.** This is the rectangular lesson card and nothing else.
+
+This replaces the plain, soft placeholder fill ratified on 2026-08-14, back when a
+rabbi without a photo was assumed to be rare. The
+weekly import made it common, and one empty tile reads as calm while eight in a grid
+read as holes.
+
+**Three surfaces keep their own answer and are not covered above.** The rabbi row's
+64px circle keeps the soft fill: a scene with depth collapses into brown mush at that
+size. The lesson page and the rabbi page close the poster slot entirely and let the
+text take the full width; they have no grid to keep even, and a blank panel in the
+middle of a plum field reads worse than no panel at all (ratified 2026-09-07 and
+extended to the rabbi page when it was designed). Each of the three is a real gap, not
+an oversight, and each needs a fallback of its own.
+
 ## Open (not decided yet)
 
 - **Who maintains the list of cities.** The city an admin picks must come from a fixed
@@ -715,24 +749,8 @@ where it lives in code.
 
 ## Settled at the first home-page build (2026-08-14)
 
-Three real corrections from the human after seeing the first implementation. Each
+Real corrections from the human after seeing the first implementation. Each
 overrides an earlier guess; the guess is not restated here, only the ratified answer.
-
-### Rabbi image fallback
-A lesson can in future carry its own photo, distinct from the rabbi's (not in the wire
-types yet: a follow-up for `common`, not built today). Until then, and whenever a lesson
-has no image of its own, the card shows the rabbi's photo. **If the rabbi has no photo
-either, the card shows a plain, soft placeholder background: no icon, no initials, no
-silhouette.** This replaces an earlier, stricter design-doc entry that assumed the admin
-form would always require a photo and so no fallback should exist at all. That entry was
-wrong; a rabbi without a photo is a real state the product must render, calmly.
-
-**The lesson page is the one exception, and it goes the other way: the poster slot closes
-entirely and the text takes the full width.** The rule above holds wherever a card sits in
-a grid or a rail and needs a uniform height. The lesson page has no grid to keep even, and
-a blank 132 by 176 panel in the middle of a plum field reads worse than no panel at all.
-Ratified 2026-09-07 after the lesson page was designed. This exemption is bounded to that
-one screen; anywhere else, the soft placeholder stands.
 
 ### No default city
 A first-time visitor sees lessons across **all areas**, not one default city. There is

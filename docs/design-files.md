@@ -38,7 +38,7 @@ Every design belongs to one of four, split by who opens it and when.
 | `12 מקום` | A place's page, including both empty widenings, a detail error, a lessons error and the 404 branch |
 | `13 כל המקומות` | The places directory, including search with and without results |
 | `14 אזור` | An area's lessons |
-| `99 Components` | The 29 shared components. **Nothing instances them:** every page is built from raw nodes |
+| `99 Components` | The 29 shared components. Only `07` and `08` are built from instances of them; see the widths section below for why |
 | `99 כרטיס השיעור · כל המצבים` | Every lesson card state, side by side |
 
 ## The admin file, page by page
@@ -63,20 +63,47 @@ ships. Read it as history until someone redraws it.
 | `02 תמונות שיתוף` | The share images, square and wide, each on a dark and a light background |
 | `03 טוקנים` | The token board. Behind the code; see Known gaps |
 
-## Components are in the site file, and nothing instances them
+## Components are in the site file, not the components file
 
-**Every page in the site file is built from raw nodes, not component instances.** The
-components page is a specification to build against, not a source the screens depend
-on, so editing a component there changes nothing on any screen. Checked across the
-whole file: zero instances. Match that when you add a page, rather than introducing a
-second shape.
-
-The file name says otherwise, so this is worth stating too: the 29 components live on
+The name says otherwise, so this is worth stating: the 29 components live on
 `99 Components` **inside the site file**, because instances can only reference
 components in the same file unless that file is published as a library, and publishing
 is a manual step the owner has to repeat after every change. They move to
 `שפה ורכיבים` the day the admin or rabbi file needs them, and that day someone
 publishes it.
+
+## Two reference widths, which is why reuse keeps failing
+
+The library on `99 Components` is drawn at **375** phone and **1280** desktop. Most
+screen pages are drawn at **390** and **1440**. A part drawn for 375 does not drop into
+a 390 frame without stretching, so those pages were drawn by hand rather than built
+from instances, and an instruction to reuse a component fails there for a reason
+nothing on the page shows.
+
+| Drawn at | Pages |
+|---|---|
+| 375 / 1280, the library's own widths | `07 אזור הנשים`, `08 רשימת רבניות` |
+| 390 / 1440 | `01` to `05`, `09`, `10` (`03` adds a 768 frame, `09` a 320 one) |
+| 390 / 1280 | `06 שיעור` |
+| 390, phone only | `11` to `14` |
+
+`07` and `08` are the only pages built from library instances, and the only two drawn
+at the library's widths. `02 חיפוש` is caught between the two: two footer instances
+beside seven hand-drawn copies of the same footer.
+
+`01 בית` shows the cost most plainly. Its 42 lesson cards are instances, but of a
+second `Lesson card` set sitting loose on that page (`272:70`), built at 171 and 276
+because the library's card is 165.5 and 296. Two component sets for one card, one per
+width.
+
+**The reference pair is not decided yet.** `tora-designer` recommends 390 phone and
+1280 desktop: 390 because the design system's own card cell is measured there, 1280
+because it is the content cap. Whichever pair is chosen, the library can be fixed in
+one of two ways: rebuilt at those widths, or with its phone parts set to fill their
+frame so one variant serves both 375 and 390.
+
+The library and `01 בית` were re-read on 2026-09-24; the other pages' widths come from
+a full-file audit on 2026-09-23.
 
 ## The archive
 
@@ -99,7 +126,13 @@ new goes into them. They keep their old names, which is how you can tell.
 Current work that is not part of the map yet, so nobody mistakes it for archive or
 tidies it away:
 
-- **`הקדשות · אזור בדיקה`**, a page at the end of the site file.
+- **`01 בית · הקדשות · לאישור`** (`323:488`), beside `01 בית`: the home page with the
+  dedication bands drawn at their measured heights, four phone frames and no desktop
+  yet. It waits on the owner, and on the width decision above.
+- **`הקדשות · אזור בדיקה`** (`123:2`), a page at the end of the site file: the
+  dedication masters, the notes for directions F to N with the reasoning for each,
+  and an archive section. Those notes are the only place that reasoning is written,
+  so deleting the page deletes it.
 
 Each folds into the numbered structure when its change ships.
 
@@ -110,5 +143,11 @@ Each folds into the numbered structure when its change ships.
   pass.
 - **The colours on migrated pages are raw, not bound to variables.** One binding pass
   closes this, and closes the missing `color/scrim` with it.
+- **`01 בית`'s desktop frame ends at the rails.** It holds the header, the context line
+  and the rails, and nothing after: no contact band and no footer, though the code
+  renders both at every width. No frame on the page shows the women's-area band or a
+  dedication band either, though the code renders both.
+- **`06 שיעור` has no footer on any frame**, phone or desktop, though every page
+  renders one (from the 2026-09-23 audit).
 - **The pinned filter bar has no design.** The code renders the filter fields twice, once
   in flow and once in a bar that sticks on scroll below `lg`. Figma has one header.

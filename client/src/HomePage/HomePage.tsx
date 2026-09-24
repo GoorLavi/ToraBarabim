@@ -1,5 +1,3 @@
-import { useEffect, useState } from 'react';
-import type { DedicationGroup } from '@torabarabim/common';
 import styled from 'styled-components';
 
 import { useAudienceFilter } from '~/hooks/useAudienceFilter';
@@ -14,7 +12,6 @@ import { HomeRails } from './components/HomeRails/HomeRails';
 import { LessonsSection } from './components/LessonsSection/LessonsSection';
 import { RabbiRow } from './components/RabbiRow/RabbiRow';
 import { HOME_QUERY_KEYS, LESSON_WINDOW_DAYS, LESSON_WINDOW_PAGE_SIZE } from './consts';
-import { drawDedicationGroup } from './dedicationDraw';
 import { addDays, contextLine, flattenHomeRows, resolveHomeMode, resolveTargetDate } from './helpers';
 import type { HomePageProps, LessonFilters } from './models';
 import * as styles from './styles';
@@ -43,30 +40,14 @@ export const HomePage = styled(({ className }: HomePageProps) => {
   const homeRowsQuery = useHomeRows();
   const lessonsQuery = useLessonSearch(filters, mode === 'filtered');
 
-  const [dedicationGroup, setDedicationGroup] = useState<DedicationGroup | undefined>(undefined);
-
-  // Runs once per page load, in the one nearest common ancestor of both
-  // placements, and passed down to each as a prop: two instances each
-  // drawing their own would put two different type groups on one page
-  // (design-system.md, dedication "The draw"). `Math.random` in the render
-  // path would make the server's pick and the client's first paint
-  // disagree, a hydration mismatch, so the draw happens only here, after
-  // mount.
-  //
-  // It depends on the pool rather than running on mount alone: the loader
-  // seeds the query cache on a server-rendered visit, but a client-side
-  // navigation into the home page resolves the query after the first
-  // effect, and drawing from an empty pool then would leave the page with
-  // no dedication for the whole visit. The `?? previous` keeps it to one
-  // draw per load without a ref or a module flag, so a background refetch
-  // cannot reshuffle what a reader is already looking at, and StrictMode's
-  // second invocation is harmless.
+  // Fixed, one type per band, never drawn: `success` between the rails,
+  // `healing` between the rails block and `RabbiRow`, `memorial` at the
+  // foot. A missing or empty group renders nothing, handled inside
+  // `DedicationBand` itself.
   const dedications = homeRowsQuery.data?.dedications;
-  const hasDedications = Boolean(dedications?.length);
-  useEffect(() => {
-    if (!dedications?.length) return;
-    setDedicationGroup((previous) => previous ?? drawDedicationGroup(dedications, Math.random));
-  }, [dedications]);
+  const successGroup = dedications?.find((group) => group.type === 'success');
+  const healingGroup = dedications?.find((group) => group.type === 'healing');
+  const memorialGroup = dedications?.find((group) => group.type === 'memorial');
 
   const browseItems = mode === 'rail' ? flattenHomeRows(homeRowsQuery.data) : lessonsQuery.data?.items;
   const isBrowseLoading = mode === 'rail' ? homeRowsQuery.isPending : lessonsQuery.isPending;
@@ -96,7 +77,7 @@ export const HomePage = styled(({ className }: HomePageProps) => {
           )}
 
           {mode === 'rail' ? (
-            <HomeRails {...{ query: homeRowsQuery, dedicationGroup }} />
+            <HomeRails {...{ query: homeRowsQuery, dedicationGroup: successGroup }} />
           ) : (
             <LessonsSection
               query={lessonsQuery}
@@ -110,6 +91,8 @@ export const HomePage = styled(({ className }: HomePageProps) => {
           )}
         </div>
 
+        <DedicationBand {...{ group: healingGroup, variant: 'onPage' as const }} />
+
         <RabbiRow {...{ rabbis: homeRowsQuery.data?.rabbis, isLoading: homeRowsQuery.isPending, isError: homeRowsQuery.isError }} />
 
         <CityGrid items={browseItems} isLoading={isBrowseLoading} isError={isBrowseError} onSelectCity={selectCity} />
@@ -117,7 +100,7 @@ export const HomePage = styled(({ className }: HomePageProps) => {
         <ContactCta />
       </div>
 
-      <DedicationBand {...{ group: dedicationGroup, hasDedications, variant: 'onPrimary' as const }} />
+      <DedicationBand {...{ group: memorialGroup, variant: 'onPrimary' as const }} />
     </main>
   );
 })`

@@ -15,38 +15,23 @@ export const DedicationBand = css(
   position: relative;
 
   /* The band's own scale driver, read by every scaled dedication value
-     (DedicationUnit/styles.ts, and the padding-block and reservation
-     below): the band must never exceed
-     ${consts.DEDICATION_BAND_FOLD_SHARE * 100}% of the real viewport
-     height, so this is computed from 100svh rather than dialled by hand.
-     100svh, never 100dvh: dvh tracks the address bar's own show/hide
-     during scroll, so a dvh-driven scale would resize a person's name
-     while someone is reading it. svh stays fixed for the life of the
-     page and guarantees the ${consts.DEDICATION_BAND_FOLD_SHARE * 100}%
-     ceiling against the worst-case fold (bar shown) rather than the
-     best-case one (bar hidden).
-     A length, not a unitless ratio: deriving a unitless number from
-     100svh needs calc() type-checking support this project should not
-     depend on, while a length divided by a number is a length, which
-     every browser already supports. Every reference value this is
-     multiplied against elsewhere is written as a bare, unitless number
-     for the same reason, a length times a length is an area, not a
-     length.
-     Two floors, not one, and the boundary is deliberate: below md a
-     desktop reader has not arrived yet, so the phone floor holds; from md
-     up, a reader sits roughly twice as far from the screen (about 60cm
-     against a phone's 30cm), so the same angular size needs roughly
-     double the pixels, and without the higher floor a 1280x700 laptop, a
-     common window, would clamp at the phone floor instead.
-     Known and accepted: a landscape phone (about 390 tall) puts
-     ${consts.DEDICATION_BAND_FOLD_SHARE * 100}% at 109px, far under even
-     the lower floor's 216px, so the band lands near 55% of that fold and
-     no value of this scale can fix it without a second axis of
-     conditional geometry, which nobody has asked for. */
-  --dedication-scale-px: clamp(${consts.DEDICATION_SCALE_FLOOR_BELOW_MD}px, calc(100svh * ${consts.DEDICATION_BAND_FOLD_SHARE} / ${consts.DEDICATION_BAND_ON_PRIMARY_HEIGHT_REFERENCE}), 1px);
+     (DedicationUnit/styles.ts, and the padding-block below): a fixed
+     value per breakpoint, chosen by the owner directly rather than
+     derived from the viewport (owner, on the real site: "for
+     the scale, I prefer width"). Selected by the same md width query
+     every other responsive rule in this file already branches on, never a
+     continuous function of the viewport the way the superseded
+     100svh-driven version was.
+     A length, not a unitless ratio: every reference value this is
+     multiplied against elsewhere is written as a bare, unitless number,
+     since a length times a length is an area, not a length.
+     consts.ts explains how these two figures were worked out from the
+     owner's own target band heights, and why the real band lands closer
+     to the individual floors than to either target. */
+  --dedication-scale-px: ${consts.DEDICATION_SCALE_BELOW_MD}px;
 
   @media (min-width: ${theme.breakpoints.md}) {
-    --dedication-scale-px: clamp(${consts.DEDICATION_SCALE_FLOOR_FROM_MD}px, calc(100svh * ${consts.DEDICATION_BAND_FOLD_SHARE} / ${consts.DEDICATION_BAND_ON_PRIMARY_HEIGHT_REFERENCE}), 1px);
+    --dedication-scale-px: ${consts.DEDICATION_SCALE_FROM_MD}px;
   }
 
   &.onPrimary {
@@ -68,15 +53,13 @@ export const DedicationBand = css(
       inline-size: calc(100% + 2 * ${theme.spacing.xl});
     }
 
-    /* The pool has a dedication to show but the per-load draw has not run
-       yet: reserves the block size the band is guaranteed to need at this
-       scale, so it does not go from absent to present under a reader
-       already looking at the page (design-system.md, dedication "The
-       draw", guarantee 3). Scaled the same way as the real content, off
-       the same driver, rather than a fixed figure: a fixed reservation
-       would be wrong at every scale but the one it was measured at. */
-    &.pending {
-      min-block-size: ${scaledCss(consts.DEDICATION_BAND_ON_PRIMARY_HEIGHT_REFERENCE, consts.DEDICATION_BAND_ON_PRIMARY_HEIGHT_REFERENCE * consts.DEDICATION_SCALE_FLOOR_BELOW_MD)};
+    /* Mirrors SiteLogoLink/styles.ts's own outline colour for the plum
+       field: the browser's default focus ring reads poorly against it,
+       and a 435px-tall focusable element (only ever focusable while
+       overflowing, tabIndex is conditional on it) needs a visible one. */
+    > .viewport:focus-visible {
+      outline: 2px solid ${theme.colors.textOnPrimary};
+      outline-offset: 2px;
     }
   }
 
@@ -84,8 +67,9 @@ export const DedicationBand = css(
     /* No bleed: stays inside the rails column it is spliced into. */
     padding-block: ${scaledCss(consts.DEDICATION_BAND_PADDING_ON_PAGE_REFERENCE, consts.DEDICATION_BAND_PADDING_FLOOR_PX)};
 
-    &.pending {
-      min-block-size: ${scaledCss(consts.DEDICATION_BAND_ON_PAGE_HEIGHT_REFERENCE, consts.DEDICATION_BAND_ON_PAGE_HEIGHT_REFERENCE * consts.DEDICATION_SCALE_FLOOR_BELOW_MD)};
+    > .viewport:focus-visible {
+      outline: 2px solid ${theme.colors.primary};
+      outline-offset: 2px;
     }
   }
 
@@ -178,58 +162,5 @@ export const DedicationBand = css(
     gap: ${consts.DEDICATION_UNIT_GAP_PX}px;
   }
 
-  > .fade {
-    position: absolute;
-    z-index: 1;
-    inset-block: 0;
-    inline-size: ${consts.EDGE_FADE_WIDTH_PX};
-    pointer-events: none;
-  }
-
-  /* Both fades' own positions stay logical; their gradient axes cannot,
-     since CSS has no logical gradient direction and the page is
-     permanently RTL (mirrors LessonRail's own fade), so each names a
-     physical side opposite the other. */
-  > .fade.start {
-    inset-inline-start: 0;
-  }
-
-  > .fade.end {
-    inset-inline-end: 0;
-  }
-
-  &.onPrimary {
-    > .fade.start {
-      background: linear-gradient(to right, ${theme.colors.primaryStrong} 0%, transparent 100%);
-    }
-
-    > .fade.end {
-      background: linear-gradient(to left, ${theme.colors.primaryStrong} 0%, transparent 100%);
-    }
-
-    /* Mirrors SiteLogoLink/styles.ts's own outline colour for the plum
-       field: the browser's default focus ring reads poorly against it,
-       and a 435px-tall focusable element (only ever focusable while
-       overflowing, tabIndex is conditional on it) needs a visible one. */
-    > .viewport:focus-visible {
-      outline: 2px solid ${theme.colors.textOnPrimary};
-      outline-offset: 2px;
-    }
-  }
-
-  &.onPage {
-    > .fade.start {
-      background: linear-gradient(to right, ${theme.colors.bg} 0%, transparent 100%);
-    }
-
-    > .fade.end {
-      background: linear-gradient(to left, ${theme.colors.bg} 0%, transparent 100%);
-    }
-
-    > .viewport:focus-visible {
-      outline: 2px solid ${theme.colors.primary};
-      outline-offset: 2px;
-    }
-  }
 `,
 );

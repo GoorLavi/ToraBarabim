@@ -8,7 +8,7 @@ import type { DedicationBandDrawnProps, DedicationBandProps } from './models';
 import * as styles from './styles';
 import { useDedicationCrawl } from './useDedicationCrawl';
 
-// Mounted only once a drawn group exists, so `useDedicationCrawl`'s
+// Mounted only once a non-empty group exists, so `useDedicationCrawl`'s
 // mount-time effects (the resize measurement in particular) attach to real
 // DOM instead of the null refs a band with no markup yet would hand them.
 // Owns the `overflowing`/`dragging` classes itself, because they belong on
@@ -53,28 +53,17 @@ const DedicationBandDrawn = ({ className, group, variant }: DedicationBandDrawnP
           </div>
         )}
       </div>
-
-      {crawl.isOverflowing && (
-        <>
-          <div className="fade start" />
-          <div className="fade end" />
-        </>
-      )}
     </section>
   );
 };
 
-// The same component at both placements, never a second one: `variant`
-// names the field it sits on (design-system.md, Placement). `hasDedications`
-// and `group` are independent: false renders nothing at all (the pool
-// really is empty), true with no group yet reserves the band's own block
-// size without content (the per-load draw, in HomePage, has not run yet),
-// and a group hands off to `DedicationBandDrawn`, whose own DOM and
-// measurement effects mount together (B1/B6 fix).
-export const DedicationBand = styled(({ className, group, hasDedications, variant }: DedicationBandProps) => {
-  if (!hasDedications) return null;
-
-  if (!group || group.items.length === 0) return <section className={classNames(className, variant, 'pending')} />;
+// The same component at every placement, never a second one: `variant`
+// names the field it sits on (design-system.md, Placement). Each placement
+// is fixed to one `DedicationType`; a missing or empty group renders
+// nothing at all, and a group hands off to `DedicationBandDrawn`, whose own
+// DOM and measurement effects mount together (B1/B6 fix).
+export const DedicationBand = styled(({ className, group, variant }: DedicationBandProps) => {
+  if (!group || group.items.length === 0) return null;
 
   return <DedicationBandDrawn className={classNames(className, variant)} {...{ group, variant }} />;
 })`

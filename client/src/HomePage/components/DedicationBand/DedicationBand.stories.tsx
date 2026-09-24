@@ -1,15 +1,19 @@
-import type { DedicationGroup } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { cdp } from 'vitest/browser';
-import { useEffect, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { DEDICATION_UNIT_WIDTH_PX } from '~/components/DedicationUnit/consts';
-import { DEDICATION_GROUP_HEALING, DEDICATION_GROUP_MEMORIAL, DEDICATION_GROUP_OVERFLOWING, DEDICATION_GROUP_SINGLE } from '~/dedicationFixture';
+import {
+  DEDICATION_GROUP_HEALING,
+  DEDICATION_GROUP_MEMORIAL,
+  DEDICATION_GROUP_OVERFLOWING,
+  DEDICATION_GROUP_SINGLE,
+  DEDICATION_GROUP_SUCCESS,
+} from '~/dedicationFixture';
 import { ARGAMAN_VE_ZAHAV_THEME } from '~/theme/themes';
 
-import { DEDICATION_BAND_FOLD_SHARE, DEDICATION_UNIT_GAP_PX, RESUME_AFTER_INTERACTION_MS } from './consts';
+import { DEDICATION_UNIT_GAP_PX, RESUME_AFTER_INTERACTION_MS } from './consts';
 import { DedicationBand } from './DedicationBand';
 import { wrapTrackPosition } from './helpers';
 
@@ -43,24 +47,40 @@ const expectCenteredViewport = ({ canvasElement }: { canvasElement: HTMLElement 
 };
 
 export const OnPrimaryOneUnit: Story = {
-  args: { group: DEDICATION_GROUP_SINGLE, hasDedications: true, variant: 'onPrimary' },
+  args: { group: DEDICATION_GROUP_SINGLE, variant: 'onPrimary' },
   decorators: [onPrimaryField],
   play: expectCenteredViewport,
 };
 
 export const OnPageOneUnit: Story = {
-  args: { group: DEDICATION_GROUP_SINGLE, hasDedications: true, variant: 'onPage' },
+  args: { group: DEDICATION_GROUP_SINGLE, variant: 'onPage' },
   play: expectCenteredViewport,
+};
+
+// The three fixed placements (HomePage.tsx), one band per type: `success`
+// between the rails, `healing` between the rails block and `RabbiRow`,
+// both `onPage`, and `memorial` at the foot, `onPrimary`.
+export const SuccessBand: Story = {
+  args: { group: DEDICATION_GROUP_SUCCESS, variant: 'onPage' },
+};
+
+export const HealingBand: Story = {
+  args: { group: DEDICATION_GROUP_HEALING, variant: 'onPage' },
+};
+
+export const MemorialBand: Story = {
+  args: { group: DEDICATION_GROUP_MEMORIAL, variant: 'onPrimary' },
+  decorators: [onPrimaryField],
 };
 
 // Static, no self-advance: the group's own width fits the container.
 export const FitsNoCrawl: Story = {
-  args: { group: DEDICATION_GROUP_HEALING, hasDedications: true, variant: 'onPage' },
+  args: { group: DEDICATION_GROUP_HEALING, variant: 'onPage' },
 };
 
 // Wider than the container: crawls.
 export const OverflowsAndCrawls: Story = {
-  args: { group: DEDICATION_GROUP_OVERFLOWING, hasDedications: true, variant: 'onPage' },
+  args: { group: DEDICATION_GROUP_OVERFLOWING, variant: 'onPage' },
   play: async ({ canvasElement }) => {
     await waitFor(() => expect(canvasElement.querySelector('.track.duplicate')).not.toBeNull());
 
@@ -93,7 +113,7 @@ export const OverflowsAndCrawls: Story = {
 // band, not an exact figure: real frame timing jitters, but 32 and 60 are
 // far enough apart that this still catches the regression.
 export const CrawlsAtTheDesignedSpeed: Story = {
-  args: { group: DEDICATION_GROUP_OVERFLOWING, hasDedications: true, variant: 'onPage' },
+  args: { group: DEDICATION_GROUP_OVERFLOWING, variant: 'onPage' },
   play: async ({ canvasElement }) => {
     const viewport = canvasElement.querySelector<HTMLElement>('.viewport');
     if (!viewport) throw new Error('DedicationBand story: .viewport not found');
@@ -113,7 +133,7 @@ export const CrawlsAtTheDesignedSpeed: Story = {
 };
 
 export const OnPrimaryOverflowing: Story = {
-  args: { group: DEDICATION_GROUP_OVERFLOWING, hasDedications: true, variant: 'onPrimary' },
+  args: { group: DEDICATION_GROUP_OVERFLOWING, variant: 'onPrimary' },
   decorators: [onPrimaryField],
 };
 
@@ -124,7 +144,7 @@ export const OnPrimaryOverflowing: Story = {
 // crawl had frozen at, preserving that same off-grid offset on every press
 // instead of correcting it.
 export const ArrowKeyAlwaysLandsOnAUnitBoundary: Story = {
-  args: { group: DEDICATION_GROUP_OVERFLOWING, hasDedications: true, variant: 'onPage' },
+  args: { group: DEDICATION_GROUP_OVERFLOWING, variant: 'onPage' },
   play: async ({ canvasElement }) => {
     const viewport = canvasElement.querySelector<HTMLElement>('.viewport');
     if (!viewport) throw new Error('DedicationBand story: .viewport not found');
@@ -156,7 +176,7 @@ const originalMatchMedia = window.matchMedia;
 // lands only after `useDedicationCrawl`'s media-query effect already read
 // the real, unreduced value, and that effect never reads it again (B4).
 export const ReducedMotionStaysScrollable: Story = {
-  args: { group: DEDICATION_GROUP_OVERFLOWING, hasDedications: true, variant: 'onPage' },
+  args: { group: DEDICATION_GROUP_OVERFLOWING, variant: 'onPage' },
   beforeEach: () => {
     window.matchMedia = ((query: string) =>
       originalMatchMedia.call(window, query === REDUCED_MOTION_QUERY ? 'all' : query)) as typeof window.matchMedia;
@@ -182,38 +202,12 @@ export const ReducedMotionStaysScrollable: Story = {
   },
 };
 
-// Renders nothing at all: the pool is genuinely empty, not merely
-// undrawn. `dedications: []` is a normal 200, never a 404
+// Renders nothing at all, no placeholder and no reserved height: each band
+// is fixed to one `DedicationType`, and a type with no active dedications
+// is simply absent. An empty pool is a normal 200, never a 404
 // (design-system.md, dedication States).
 export const NoDedicationsRendersNothing: Story = {
-  args: { group: undefined, hasDedications: false, variant: 'onPage' },
-};
-
-// The instrument for B1 and B6: mounts exactly the way `HomePage` does,
-// with a pool known (`hasDedications`) before its own draw has picked a
-// group, then supplies the group a moment later through a state update on
-// the same element, never a remount. Before the fix this left the band
-// permanently un-measured (B1: the crawl hook's mount-time effect ran
-// once, against a still-empty band, and never ran again once real markup
-// arrived), so the assertion below is the one that would have failed on
-// the original code.
-const PendingThenDrawn = ({ group }: { group: DedicationGroup }): ReactNode => {
-  const [drawn, setDrawn] = useState<DedicationGroup | undefined>(undefined);
-  useEffect(() => {
-    setDrawn(group);
-  }, [group]);
-  return <DedicationBand {...{ group: drawn, hasDedications: true, variant: 'onPage' as const }} />;
-};
-
-export const PendingThenDrawnCrawls: Story = {
-  render: () => <PendingThenDrawn group={DEDICATION_GROUP_OVERFLOWING} />,
-  play: async ({ canvasElement }) => {
-    await waitFor(() => {
-      const viewport = canvasElement.querySelector<HTMLElement>('.viewport');
-      if (!viewport) throw new Error('DedicationBand story: .viewport not found once the group lands');
-      expect(getComputedStyle(viewport).overflowX).toEqual('auto');
-    });
-  },
+  args: { group: undefined, variant: 'onPage' },
 };
 
 // One real touch gesture, through Chrome DevTools Protocol via `cdp()`,
@@ -241,7 +235,7 @@ const dispatchVerticalTouchSwipe = async (x: number, startY: number, distancePx:
 };
 
 export const VerticalSwipeScrollsThePage: Story = {
-  args: { group: DEDICATION_GROUP_OVERFLOWING, hasDedications: true, variant: 'onPage' },
+  args: { group: DEDICATION_GROUP_OVERFLOWING, variant: 'onPage' },
   play: async ({ canvasElement }) => {
     const viewport = canvasElement.querySelector<HTMLElement>('.viewport');
     if (!viewport) throw new Error('DedicationBand story: .viewport not found');
@@ -287,7 +281,7 @@ const dispatchRealMouseClick = async (x: number, y: number): Promise<void> => {
 };
 
 export const MouseClickDoesNotFreezeTheCrawl: Story = {
-  args: { group: DEDICATION_GROUP_OVERFLOWING, hasDedications: true, variant: 'onPage' },
+  args: { group: DEDICATION_GROUP_OVERFLOWING, variant: 'onPage' },
   play: async ({ canvasElement }) => {
     const viewport = canvasElement.querySelector<HTMLElement>('.viewport');
     if (!viewport) throw new Error('DedicationBand story: .viewport not found');
@@ -323,7 +317,7 @@ export const MouseClickDoesNotFreezeTheCrawl: Story = {
 // spread, the shorter unit closing its ornament early into a hole in the
 // row it is meant to frame).
 export const OrnamentsShareABaselineWithMixedContent: Story = {
-  args: { group: DEDICATION_GROUP_MEMORIAL, hasDedications: true, variant: 'onPage' },
+  args: { group: DEDICATION_GROUP_MEMORIAL, variant: 'onPage' },
   play: async ({ canvasElement }) => {
     const lowerOrnaments = Array.from(canvasElement.querySelectorAll<SVGElement>('.track:not(.duplicate) > * > .mirrored'));
     expect(lowerOrnaments.length).toBeGreaterThan(1);
@@ -344,7 +338,7 @@ export const OrnamentsShareABaselineWithMixedContent: Story = {
 // same class of behaviour the touch and click stories above needed a real
 // input for, not something a synthetic DOM event reliably exercises.
 export const DragDoesNotSelectText: Story = {
-  args: { group: DEDICATION_GROUP_OVERFLOWING, hasDedications: true, variant: 'onPage' },
+  args: { group: DEDICATION_GROUP_OVERFLOWING, variant: 'onPage' },
   play: async ({ canvasElement }) => {
     const name = canvasElement.querySelector<HTMLElement>('.name');
     if (!name) throw new Error('DedicationBand story: .name not found');
@@ -371,81 +365,84 @@ export const DragDoesNotSelectText: Story = {
   },
 };
 
-// The scale is a function of the real viewport height (100svh,
-// DedicationBand/styles.ts), so showing it at several fold heights needs
-// the actual browser viewport changed through CDP, not a fixed-height
-// decorator: an inner div cannot fake what 100svh means to its own
-// descendants. Cleared again after each story, since this runner shares
-// one browser page across every story in this file. Both variants, and a
-// group that carries both a wrapped name and a short unit (no parent, no
-// donor) in the same drawn group, since finding 5's baseline fix gets
-// proportionally more to prove as the scale drops.
-const foldComparison = (): ReactElement => (
+// The scale is now a fixed value per breakpoint, selected by viewport
+// width alone (DedicationBand/styles.ts, DedicationBand/consts.ts:
+// DEDICATION_SCALE_BELOW_MD / DEDICATION_SCALE_FROM_MD), not a function of
+// viewport height the way the superseded 100svh-driven version was. Both
+// variants, and a group that carries both a wrapped name and a short unit
+// (no parent, no donor) in the same drawn group, since a name that wraps
+// and a unit missing two lines are the two shapes most likely to expose a
+// height regression the single-line fixtures above would not.
+const widthComparison = (): ReactElement => (
   <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
     <div style={{ background: colors.primaryStrong }}>
-      <DedicationBand {...{ group: DEDICATION_GROUP_MEMORIAL, hasDedications: true, variant: 'onPrimary' as const }} />
+      <DedicationBand {...{ group: DEDICATION_GROUP_MEMORIAL, variant: 'onPrimary' as const }} />
     </div>
-    <DedicationBand {...{ group: DEDICATION_GROUP_MEMORIAL, hasDedications: true, variant: 'onPage' as const }} />
+    <DedicationBand {...{ group: DEDICATION_GROUP_MEMORIAL, variant: 'onPage' as const }} />
   </div>
 );
 
-// The share a fixed viewport actually rendered, measured directly, not the
-// table's own arithmetic: every figure in that table was worked out by
-// hand and had not been rendered before this story existed. Width paired
-// with height the way a real device would be, not held at one fixed
-// width: the md breakpoint depends on width, not height, and a fold this
-// short only pairs with a phone-width screen in practice, which is also
-// what puts it below md and on the lower of the two floors.
-//
-// This story renders inside its own iframe (the runner's tester harness),
-// which has its own independent viewport for 100svh: the top-level page's
-// own size, which `cdp()`'s device metrics would change, is not it.
+// This story renders inside its own iframe (the runner's test harness),
+// which has its own independent viewport width: the top-level page's own
+// size, which `cdp()`'s device metrics would change, is not it.
 // `window.frameElement` (reachable same-origin) is the iframe element
 // itself, seen from inside it, so resizing that directly is what actually
-// changes what 100svh means to this story's own content.
-const assertBandShareOfFold = (widthPx: number, heightPx: number) => async ({ canvasElement }: { canvasElement: HTMLElement }): Promise<void> => {
+// crosses the md breakpoint this story means to test.
+//
+// Asserted against the heights actually measured (375: onPrimary 205.4,
+// onPage 196.1; 1280: onPrimary 209.1, onPage 197.5), not the owner's own
+// target: the individual floors on formula, name, parent, closing and
+// donor already sit above what either target asks for
+// (DedicationBand/consts.ts), so the real height lands close to that
+// floor-composed minimum rather than to 165 or 180.
+//
+// A tolerance, not an exact equality: font rasterisation and subpixel
+// layout will not reproduce to the hundredth across environments, and an
+// assertion that fails in CI for that reason teaches people to loosen
+// assertions rather than fix the real regression. Two pixels: wide enough
+// to absorb that noise, narrow enough that nudging a floor by even a
+// couple of pixels still fails it.
+const HEIGHT_ASSERTION_TOLERANCE_PX = 2;
+
+const expectHeightNear = (actualPx: number, expectedPx: number): void => {
+  expect(Math.abs(actualPx - expectedPx)).toBeLessThan(HEIGHT_ASSERTION_TOLERANCE_PX);
+};
+
+const measureBandHeightsAtWidth = (widthPx: number, expectedOnPrimaryPx: number, expectedOnPagePx: number) => async ({
+  canvasElement,
+}: {
+  canvasElement: HTMLElement;
+}): Promise<void> => {
   const frame = window.frameElement as HTMLIFrameElement | null;
   if (!frame) throw new Error('DedicationBand story: window.frameElement not found, expected to be running inside the test runner\'s iframe');
 
   const originalWidth = frame.style.width;
-  const originalHeight = frame.style.height;
   frame.style.width = `${widthPx}px`;
-  frame.style.height = `${heightPx}px`;
   try {
     await new Promise((resolve) => window.setTimeout(resolve, 100));
     const onPrimaryBand = canvasElement.querySelector<HTMLElement>('.onPrimary');
+    const onPageBand = canvasElement.querySelector<HTMLElement>('.onPage');
     if (!onPrimaryBand) throw new Error('DedicationBand story: .onPrimary band not found');
-    const bandHeight = onPrimaryBand.getBoundingClientRect().height;
+    if (!onPageBand) throw new Error('DedicationBand story: .onPage band not found');
 
-    // The band must never exceed the fold share it is built against, at
-    // any fold this project actually targets, with a small tolerance for
-    // sub-pixel rounding across the scale's several nested calc() steps.
-    expect(bandHeight / heightPx).toBeLessThan(DEDICATION_BAND_FOLD_SHARE + 0.05);
-    expect(bandHeight).toBeGreaterThan(150);
+    const onPrimaryHeight = onPrimaryBand.getBoundingClientRect().height;
+    const onPageHeight = onPageBand.getBoundingClientRect().height;
+
+    expectHeightNear(onPrimaryHeight, expectedOnPrimaryPx);
+    expectHeightNear(onPageHeight, expectedOnPagePx);
   } finally {
     frame.style.width = originalWidth;
-    frame.style.height = originalHeight;
   }
 };
 
-export const FoldHeight667: Story = {
-  render: foldComparison,
-  play: assertBandShareOfFold(375, 667),
+export const WidthPhone: Story = {
+  render: widthComparison,
+  play: measureBandHeightsAtWidth(375, 205.4, 196.1),
 };
 
-export const FoldHeight800: Story = {
-  render: foldComparison,
-  play: assertBandShareOfFold(1280, 800),
-};
-
-export const FoldHeight1080: Story = {
-  render: foldComparison,
-  play: assertBandShareOfFold(1920, 1080),
-};
-
-export const FoldHeight1440: Story = {
-  render: foldComparison,
-  play: assertBandShareOfFold(2560, 1440),
+export const WidthDesktop: Story = {
+  render: widthComparison,
+  play: measureBandHeightsAtWidth(1280, 209.1, 197.5),
 };
 
 // wrapTrackPosition has to bring a position several periods out of range
@@ -457,7 +454,7 @@ export const FoldHeight1440: Story = {
 // DOM interaction would isolate. No render-dependent assertion, so the
 // args here are only enough to satisfy the story's own required props.
 export const WrapTrackPositionHandlesMultiplePeriods: Story = {
-  args: { group: DEDICATION_GROUP_SINGLE, hasDedications: true, variant: 'onPage' },
+  args: { group: DEDICATION_GROUP_SINGLE, variant: 'onPage' },
   play: () => {
     const period = 344;
 
