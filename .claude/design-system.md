@@ -66,6 +66,13 @@ on the lesson page, where they have room and where someone who has already decid
 go will look for them. A full address inside a grid cell wraps to three lines and leaves
 a ragged bottom edge across the row, and it is detail nobody needs while scanning.
 
+**The card is the same card everywhere, and no page or filter gets its own variant.**
+The city repeats on every card of a city page, and on a place page the venue is already
+the heading; neither earns a swap. A card that changes its bottom line by where it is
+shown stops being one recognisable object, and the reader has to work out what that
+line means on each screen instead of learning it once. This was drawn both ways and
+decided.
+
 ### The poster image
 Every rabbi has one and it is required, so it is structural rather than decorative.
 

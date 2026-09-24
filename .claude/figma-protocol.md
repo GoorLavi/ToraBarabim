@@ -55,9 +55,23 @@ it either; it is what provides the skills the section below requires.
 - **planKey:** `team::1600490864286182601`
 - **projectId:** `639157253`
   ([open the project](https://www.figma.com/files/team/1600490864286182601/project/639157253))
-- **The existing design file:** `z4fVzRjRFwYpLae22BmNKy`. Every Figma tool needs a
-  `fileKey` and nothing lists a project's files, so without this an agent cannot reach
-  the work at all and has to ask for a link before it can start.
+- **Which file holds which screen is in [docs/design-files.md](../docs/design-files.md),
+  and it is the only list. Read it before your first call.** Every Figma tool needs a
+  `fileKey`, nothing lists a project's files, and there is more than one file, so an
+  agent that guesses cannot even tell it guessed wrong.
+- **Read the page names of the file you land in, and stop if they do not match the
+  screen you were sent to build.** This protocol used to name one key and call it "the
+  existing design file". That key is the admin panel. An agent told to add "all the
+  screens" to "the main design file" found the one key here, built thirteen public
+  screens into the admin panel, and produced a worse duplicate of screens that already
+  existed elsewhere. All three page names it saw were administration, and that was the
+  signal it walked past.
+
+**Add every file you create to `docs/design-files.md`, in the same change that creates
+it**, with one line saying what it is for. A places file was once made and not recorded,
+and by the time the owner asked to merge it back the session no longer had its key:
+nothing lists a project's files, so the work was unreachable until he found the link
+himself.
 
 Pass both, so the file lands in the ToraBarabim project rather than the plan's loose
 drafts folder. `whoami` may list other plans on the same grant; they belong to other

@@ -43,6 +43,17 @@ const SEEDED_RABBI_NAME = 'אברהם כהן';
 const SUNDAY_TO_THURSDAY_LESSON_ID = 'lesson-1';
 const SEEDED_CITY_NAME = 'ירושלים';
 const SEEDED_CITY_PREFIX = 'ירוש';
+// A real locality from the data.gov.il dataset `db:seed` fetches for real
+// (not a seed fixture like the names above), used only to assert the city
+// search matches a middle word and tolerates irregular spacing, neither of
+// which a single-word city name like `SEEDED_CITY_NAME` can exercise.
+const RASHON_LETZION_CITY_NAME = 'ראשון לציון';
+
+// The dataset stores some names with irregular internal spacing, so the
+// assertions below compare the collapsed forms: whether the row was found
+// is the question, not how the government spells its whitespace.
+const matchesIgnoringSpacing = (candidate: string, expected: string): boolean =>
+  candidate.replace(/\s+/g, ' ') === expected.replace(/\s+/g, ' ');
 const SEEDED_CITY_RABBI_ID = 'rabbi-3';
 const SEEDED_CITY_RABBI_NAME = 'יעקב מזרחי';
 const SEEDED_RABBANIT_ID = 'rabbi-9';
@@ -894,6 +905,32 @@ describe('public API', () => {
       const city = items.find((candidate) => candidate.name === SEEDED_RABBANIT_CITY_NAME);
       assert.ok(city, 'the city itself must still match the prefix, even with no general-scope lesson');
       assert.equal(city.lessonCount, 0);
+    });
+
+    // The owner's actual report: he could not find ראשון לציון in the admin
+    // place picker, because `search` used to match a prefix only. These
+    // three guard the substring, whitespace-tolerant match that replaced
+    // it, against a real multi-word locality name (not a seed fixture) so
+    // only a real government dataset, not a mock, could have caught it.
+    test('ראשון לציון is findable by its own name, typed with ordinary single spaces', async () => {
+      const res = await app.inject({ method: 'GET', url: `/v1/cities?q=${encodeURIComponent(RASHON_LETZION_CITY_NAME)}` });
+      assert.equal(res.statusCode, 200);
+      const { items } = res.json() as { items: CitySearchResult[] };
+      assert.ok(items.some((candidate) => matchesIgnoringSpacing(candidate.name, RASHON_LETZION_CITY_NAME)));
+    });
+
+    test('a middle word finds it: לציון alone matches ראשון לציון', async () => {
+      const res = await app.inject({ method: 'GET', url: `/v1/cities?q=${encodeURIComponent('לציון')}` });
+      assert.equal(res.statusCode, 200);
+      const { items } = res.json() as { items: CitySearchResult[] };
+      assert.ok(items.some((candidate) => matchesIgnoringSpacing(candidate.name, RASHON_LETZION_CITY_NAME)));
+    });
+
+    test('irregular spacing between the words in the query does not stop the match', async () => {
+      const res = await app.inject({ method: 'GET', url: `/v1/cities?q=${encodeURIComponent('ראשון   לציון')}` });
+      assert.equal(res.statusCode, 200);
+      const { items } = res.json() as { items: CitySearchResult[] };
+      assert.ok(items.some((candidate) => matchesIgnoringSpacing(candidate.name, RASHON_LETZION_CITY_NAME)));
     });
   });
 

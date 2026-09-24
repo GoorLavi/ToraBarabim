@@ -1,5 +1,5 @@
 import type { Area } from '@torabarabim/common';
-import { asc, desc, eq, like, sql } from 'drizzle-orm';
+import { asc, desc, eq, ilike, sql } from 'drizzle-orm';
 
 import { db } from '../../db/client';
 import { cities, lessons, rabbis } from '../../db/schema';
@@ -29,8 +29,26 @@ type CityRow = { code: number; nameHe: string; area: Area };
 const toResolvedCity = (row: CityRow): ResolvedCity => ({ ...row, slug: toSlug(row.nameHe) });
 
 // `%` and `_` are LIKE wildcards; escape them so a city name containing
-// either, or a user typing one, cannot change what the prefix match does.
+// either, or a user typing one, cannot change what the substring match does.
 const escapeLikePattern = (value: string): string => value.replace(/[\\%_]/g, (char) => `\\${char}`);
+
+// Collapses any run of whitespace (including the irregular internal spacing
+// some rows carry verbatim from the data.gov.il locality dataset, see
+// `db/seed/cities.ts`) to a single space, so a query typed with ordinary
+// single spaces still matches a name stored with doubled or mixed spacing.
+const normalizeWhitespace = (value: string): string => value.replace(/\s+/g, ' ');
+
+// The same normalisation applied inside Postgres to `cities.nameHe`, so the
+// substring match and the exact-match ordering below compare like with
+// like. This makes the column non-sargable (no index can serve it), which
+// is accepted here: the table is about 1,310 rows, this query only runs on
+// a keystroke-debounced search box, and correctness of the match is the
+// entire point of this list.
+// The backslash is doubled on purpose: this is a template literal, so a
+// single one is swallowed before Postgres ever sees it and the pattern
+// arrives as 's+', collapsing runs of the letter s instead of runs of
+// whitespace. On a Hebrew column that fails silently, doing nothing at all.
+const normalizedCityName = sql`regexp_replace(${cities.nameHe}, '\\s+', ' ', 'g')`;
 
 // The SQL mirror of `isLessonInScope('general', ...)`. None of this
 // module's three callers (`search`, `listDirectory`, `listSuggestions`)
@@ -68,17 +86,21 @@ const citiesWithLessonCountQuery = () =>
     .$dynamic();
 
 export const search = async (query: CitySearchQuery): Promise<CitySearchResult[]> => {
-  const q = query.q?.trim();
-  if (!q) return [];
+  const raw = query.q?.trim();
+  if (!raw) return [];
 
-  const pattern = `${escapeLikePattern(q)}%`;
+  const q = normalizeWhitespace(raw);
+  const pattern = `%${escapeLikePattern(q)}%`;
 
   const rows = await citiesWithLessonCountQuery()
-    .where(like(cities.nameHe, pattern))
+    .where(ilike(normalizedCityName, pattern))
     // Exact matches first, then largest population first (a city with no
     // population row sorts last within its tier, never first), then
-    // alphabetically as the final tiebreak.
-    .orderBy(desc(eq(cities.nameHe, q)), sql`${cities.population} DESC NULLS LAST`, asc(cities.nameHe))
+    // alphabetically as the final tiebreak. The exact-match test compares
+    // the same whitespace-normalised forms as the substring match above, or
+    // a name with irregular internal spacing could never win this tier even
+    // when typed perfectly.
+    .orderBy(desc(eq(normalizedCityName, q)), sql`${cities.population} DESC NULLS LAST`, asc(cities.nameHe))
     .limit(CITY_SEARCH_LIMIT);
 
   return rows.map((row) => ({
