@@ -15,7 +15,7 @@ export interface PressHandlers {
   onPointerDown: (event: PointerEvent<HTMLElement>) => void;
   onPointerMove: (event: PointerEvent<HTMLElement>) => void;
   onPointerUp: (event: PointerEvent<HTMLElement>) => void;
-  onPointerCancel: () => void;
+  onPointerCancel: (event: PointerEvent<HTMLElement>) => void;
   onClick: (event: MouseEvent<HTMLElement>) => void;
 }
 

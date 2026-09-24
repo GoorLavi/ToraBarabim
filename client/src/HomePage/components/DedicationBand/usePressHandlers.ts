@@ -21,6 +21,7 @@ import { isPressGesture } from './helpers';
 export const usePressHandlers = (onPress: () => void): PressHandlers => {
   const startRef = useRef<PressStartPoint | null>(null);
   const wasPressRef = useRef(false);
+  const hasLeftPressRangeRef = useRef(false);
   const [isDraggingPastThreshold, setIsDraggingPastThreshold] = useState(false);
 
   const onPointerDown = (event: PointerEvent<HTMLElement>): void => {
@@ -28,23 +29,31 @@ export const usePressHandlers = (onPress: () => void): PressHandlers => {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
     startRef.current = { x: event.clientX, y: event.clientY };
     wasPressRef.current = false;
+    hasLeftPressRangeRef.current = false;
     setIsDraggingPastThreshold(false);
   };
 
   const onPointerMove = (event: PointerEvent<HTMLElement>): void => {
+    if (!event.isPrimary) return;
     const start = startRef.current;
-    if (!start) return;
-    if (!isPressGesture(event.clientX - start.x, event.clientY - start.y)) setIsDraggingPastThreshold(true);
+    if (!start || isPressGesture(event.clientX - start.x, event.clientY - start.y)) return;
+    hasLeftPressRangeRef.current = true;
+    setIsDraggingPastThreshold(true);
   };
 
+  // A gesture that once travelled past the threshold stays a drag, even if it
+  // ends back near where it started.
   const onPointerUp = (event: PointerEvent<HTMLElement>): void => {
+    if (!event.isPrimary) return;
     const start = startRef.current;
-    wasPressRef.current = start !== null && isPressGesture(event.clientX - start.x, event.clientY - start.y);
+    wasPressRef.current =
+      start !== null && !hasLeftPressRangeRef.current && isPressGesture(event.clientX - start.x, event.clientY - start.y);
     startRef.current = null;
     setIsDraggingPastThreshold(false);
   };
 
-  const onPointerCancel = (): void => {
+  const onPointerCancel = (event: PointerEvent<HTMLElement>): void => {
+    if (!event.isPrimary) return;
     startRef.current = null;
     wasPressRef.current = false;
     setIsDraggingPastThreshold(false);
