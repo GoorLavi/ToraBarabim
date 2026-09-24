@@ -10,9 +10,6 @@ export const TITLE_LABEL = 'שם השיעור';
 export const TITLE_HELPER = 'לא חובה. בלי שם, השיעור יופיע באתר לפי הנושא שנבחר.';
 
 export const WHEN_SECTION_HEADING = 'מתי מתקיים השיעור';
-export const WEEKDAYS_LABEL = 'כל שבוע, בימים';
-export const START_TIME_LABEL = 'שעת התחלה';
-export const DURATION_LABEL = 'כמה זמן השיעור נמשך (בדקות)';
 
 // The WHERE section's own field labels, helpers and validation copy moved
 // to `~/components/PlacePicker/consts.ts`, the shared component that now
