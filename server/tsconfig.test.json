@@ -2,7 +2,18 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "types": ["node"],
-    "noEmit": true
+    "noEmit": true,
+    // `dedication-band.test.ts` imports the band's pure helpers and the
+    // story fixtures directly from the client, which is how this project
+    // tests client logic at all: there is no browser test runner here, and
+    // `client/src/routes/home.server.ts` already imports server code the
+    // same way in the other direction. Those modules resolve their own
+    // imports through the client's `~` alias, so this suite has to know it
+    // too. Without this, adding an aliased import anywhere in a module the
+    // suite reaches breaks the build in a workspace that does not own it.
+    "paths": {
+      "~/*": ["../client/src/*"]
+    }
   },
   "include": ["src", "test"]
 }

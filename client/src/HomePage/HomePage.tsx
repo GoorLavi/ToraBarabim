@@ -7,6 +7,7 @@ import { useSelectedCity } from '~/hooks/useSelectedCity';
 
 import { CityGrid } from './components/CityGrid/CityGrid';
 import { ContactCta } from './components/ContactCta/ContactCta';
+import { DedicationBand } from './components/DedicationBand/DedicationBand';
 import { HomeRails } from './components/HomeRails/HomeRails';
 import { LessonsSection } from './components/LessonsSection/LessonsSection';
 import { RabbiRow } from './components/RabbiRow/RabbiRow';
@@ -39,6 +40,15 @@ export const HomePage = styled(({ className }: HomePageProps) => {
   const homeRowsQuery = useHomeRows();
   const lessonsQuery = useLessonSearch(filters, mode === 'filtered');
 
+  // Fixed, one type per band, never drawn: `success` between the rails,
+  // `healing` between the rails block and `RabbiRow`, `memorial` at the
+  // foot. A missing or empty group renders nothing, handled inside
+  // `DedicationBand` itself.
+  const dedications = homeRowsQuery.data?.dedications;
+  const successGroup = dedications?.find((group) => group.type === 'success');
+  const healingGroup = dedications?.find((group) => group.type === 'healing');
+  const memorialGroup = dedications?.find((group) => group.type === 'memorial');
+
   const browseItems = mode === 'rail' ? flattenHomeRows(homeRowsQuery.data) : lessonsQuery.data?.items;
   const isBrowseLoading = mode === 'rail' ? homeRowsQuery.isPending : lessonsQuery.isPending;
   const isBrowseError = mode === 'rail' ? homeRowsQuery.isError : lessonsQuery.isError;
@@ -67,7 +77,7 @@ export const HomePage = styled(({ className }: HomePageProps) => {
           )}
 
           {mode === 'rail' ? (
-            <HomeRails query={homeRowsQuery} />
+            <HomeRails {...{ query: homeRowsQuery, dedicationGroup: successGroup }} />
           ) : (
             <LessonsSection
               query={lessonsQuery}
@@ -81,12 +91,16 @@ export const HomePage = styled(({ className }: HomePageProps) => {
           )}
         </div>
 
+        <DedicationBand {...{ group: healingGroup, variant: 'onPage' as const }} />
+
         <RabbiRow {...{ rabbis: homeRowsQuery.data?.rabbis, isLoading: homeRowsQuery.isPending, isError: homeRowsQuery.isError }} />
 
         <CityGrid items={browseItems} isLoading={isBrowseLoading} isError={isBrowseError} onSelectCity={selectCity} />
 
         <ContactCta />
       </div>
+
+      <DedicationBand {...{ group: memorialGroup, variant: 'onPrimary' as const }} />
     </main>
   );
 })`

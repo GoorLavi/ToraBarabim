@@ -1,6 +1,6 @@
-import type { RabbiProminence, Weekday } from '@torabarabim/common';
+import type { AdminDedicationState, DedicationHonorific, DedicationPreviewRequest, DedicationType, HonoredGender, RabbiProminence, Weekday } from '@torabarabim/common';
 
-import type { AdminLessonFilters, AdminPlaceFilters, AdminRabbiFilters, AdminUserFilters } from './models';
+import type { AdminDedicationFilters, AdminLessonFilters, AdminPlaceFilters, AdminRabbiFilters, AdminUserFilters } from './models';
 
 // Mirrors `server/src/service/admin-shared/consts.ts`'s `MAX_ADMIN_PAGE_SIZE`.
 // Used as the page size for "fetch the whole list once and join in memory"
@@ -114,6 +114,13 @@ export const ADMIN_QUERY_KEYS = {
   places: (filters: AdminPlaceFilters) => ['admin', 'places', 'search', filters] as const,
   place: (id: string) => ['admin', 'places', id] as const,
   placeAccount: (id: string) => ['admin', 'places', id, 'account'] as const,
+  dedications: (filters: AdminDedicationFilters) => ['admin', 'dedications', 'search', filters] as const,
+  dedicationsAll: () => ['admin', 'dedications'] as const,
+  dedication: (id: string) => ['admin', 'dedications', id] as const,
+  // `fields` is the live draft, debounced (DedicationFormPage/useDedicationPreview.ts):
+  // a distinct set of field values is its own cache entry, so a response can
+  // never land against a key a later keystroke has already moved past.
+  dedicationPreview: (fields: DedicationPreviewRequest) => ['admin', 'dedications', 'preview', fields] as const,
 };
 
 export const ADMIN_ROUTES = {
@@ -132,6 +139,61 @@ export const ADMIN_ROUTES = {
   placeEdit: (id: string) => `/admin/places/${id}/edit`,
   admins: '/admin/admins',
   adminNew: '/admin/admins/new',
+  dedications: '/admin/dedications',
+  dedicationNew: '/admin/dedications/new',
+  dedicationView: (id: string) => `/admin/dedications/${id}`,
+  dedicationEdit: (id: string) => `/admin/dedications/${id}/edit`,
+};
+
+// Hand-mirrored from `DedicationType` (`common/src/dedication.ts`): that
+// package is types only, so nothing runtime can be imported from it (see
+// `PROMINENCE_OPTIONS` above for the same trap with `RabbiProminence`). The
+// `Record` return type is exhaustive: a fourth type fails this file to build
+// until it is given a Hebrew label.
+export const DEDICATION_TYPE_LABELS: Record<DedicationType, string> = {
+  memorial: 'לעילוי נשמה',
+  healing: 'לרפואה שלמה',
+  success: 'להצלחה',
+};
+export const DEDICATION_TYPE_OPTIONS: readonly DedicationType[] = Object.keys(DEDICATION_TYPE_LABELS) as DedicationType[];
+
+// Hand-mirrored from `DedicationHonorific`, same reason as above.
+export const DEDICATION_HONORIFIC_LABELS: Record<DedicationHonorific, string> = {
+  zl: 'ז״ל',
+  ah: 'ע״ה',
+  hyd: 'הי״ד',
+};
+export const DEDICATION_HONORIFIC_OPTIONS: readonly DedicationHonorific[] = Object.keys(DEDICATION_HONORIFIC_LABELS) as DedicationHonorific[];
+// The honorific is optional on the record (common/src/dedication.ts): this
+// is not itself a `DedicationHonorific` value, only this picker's label for
+// choosing none.
+export const NO_HONORIFIC_LABEL = 'ללא תוספת';
+
+// Hand-mirrored from `HonoredGender`, same reason as above.
+export const HONORED_GENDER_LABELS: Record<HonoredGender, string> = {
+  male: 'בן',
+  female: 'בת',
+};
+export const HONORED_GENDER_OPTIONS: readonly HonoredGender[] = Object.keys(HONORED_GENDER_LABELS) as HonoredGender[];
+
+// Mirrors the comment on `AdminDedicationState` (`common/src/admin.ts`).
+export const DEDICATION_STATE_LABELS: Record<AdminDedicationState, string> = {
+  upcoming: 'טרם התחילה',
+  live: 'מוצגת באתר',
+  ended: 'הסתיימה',
+  takenDown: 'הוסרה',
+};
+
+// The parent-name label depends on the dedication's own type, and is the
+// only thing telling the admin which parent's name the custom asks for: a
+// memorial is named by the father, a healing prayer by the mother, and a
+// success dedication by either. Lifted here rather than colocated with the
+// form, because `DedicationViewPage` has to read the same label the field
+// was filled under.
+export const DEDICATION_PARENT_NAME_LABELS: Record<DedicationType, string> = {
+  memorial: 'שם האב',
+  healing: 'שם האם',
+  success: 'שם האב או האם',
 };
 
 export const lessonNewForRabbi = (rabbiId: string): string => `${ADMIN_ROUTES.lessonNew}?${PRESELECTED_RABBI_PARAM}=${rabbiId}`;

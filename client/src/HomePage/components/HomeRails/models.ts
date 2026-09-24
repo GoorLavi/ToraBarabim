@@ -1,4 +1,4 @@
-import type { HomeResponse } from '@torabarabim/common';
+import type { DedicationGroup, HomeResponse } from '@torabarabim/common';
 
 import type { HomeApiError } from '~/HomePage/api';
 
@@ -16,4 +16,8 @@ export interface HomeRowsQueryState {
 export interface HomeRailsProps {
   className?: string;
   query: HomeRowsQueryState;
+  // The `success` group, fixed to this placement (HomePage.tsx), prop-
+  // drilled by one level rather than read again here. `undefined` when the
+  // pool has no `success` dedications.
+  dedicationGroup: DedicationGroup | undefined;
 }

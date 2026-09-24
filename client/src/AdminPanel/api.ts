@@ -1,4 +1,5 @@
 import type {
+  AdminDedication,
   AdminOccurrenceListResponse,
   AdminPlaceListResponse,
   AdminPlaceResponse,
@@ -6,12 +7,16 @@ import type {
   AdminUserListItem,
   AdminUserListResponse,
   CreateAdminUserRequest,
+  CreateDedicationRequest,
   CreateLessonExceptionRequest,
   CreateLessonRequest,
   CreatePlaceAccountRequest,
   CreatePlaceRequest,
   CreateRabbiAccountRequest,
   CreateRabbiRequest,
+  DedicationListResponse,
+  DedicationPreviewRequest,
+  DedicationPreviewResponse,
   DeleteImpactPreview,
   LessonExceptionListResponse,
   LessonExceptionResponse,
@@ -25,7 +30,9 @@ import type {
   RabbiResponse,
   ResetPlacePasswordResponse,
   ResetRabbiPasswordResponse,
+  TakedownDedicationRequest,
   UpdateAdminUserRequest,
+  UpdateDedicationRequest,
   UpdateLessonExceptionRequest,
   UpdateLessonRequest,
   UpdatePlaceAccountRequest,
@@ -34,31 +41,46 @@ import type {
   UpdateRabbiRequest,
 } from '@torabarabim/common';
 
-import type { AdminLessonFilters, AdminPlaceFilters, AdminRabbiFilters, AdminUserFilters } from './models';
+import type { AdminDedicationFilters, AdminLessonFilters, AdminPlaceFilters, AdminRabbiFilters, AdminUserFilters } from './models';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
+
+// Mirrors a Zod `flatten()` result (server/CLAUDE.md, Validation and
+// Errors): `formErrors` for issues with no single field, `fieldErrors` keyed
+// by the request body's own field names. Carried on `AdminApiError` so a
+// form can render each issue beside its field instead of one banner.
+export interface AdminValidationDetails {
+  formErrors: string[];
+  fieldErrors: Record<string, string[]>;
+}
+
+const isValidationDetails = (value: unknown): value is AdminValidationDetails =>
+  Boolean(value) && typeof value === 'object' && value !== null && 'fieldErrors' in value;
 
 // Carries the HTTP status and, when the server sent one, its `error` code
 // (e.g. 'unknown_rabbi'), so a caller can react to a specific failure
 // without parsing `message` (client/CLAUDE.md, Data and State). Status 0
-// marks a request that never reached the server.
+// marks a request that never reached the server. `details` is only ever
+// present on a 400 `invalid_request` (see `AdminValidationDetails` above).
 export class AdminApiError extends Error {
   constructor(
     public readonly status: number,
     public readonly code: string | undefined,
     message: string,
+    public readonly details: AdminValidationDetails | undefined = undefined,
   ) {
     super(message);
     this.name = 'AdminApiError';
   }
 }
 
-const parseErrorBody = async (response: Response): Promise<{ code?: string }> => {
+const parseErrorBody = async (response: Response): Promise<{ code?: string; details?: AdminValidationDetails }> => {
   try {
     const body: unknown = await response.json();
     if (!body || typeof body !== 'object') return {};
     const code = 'error' in body && typeof body.error === 'string' ? body.error : undefined;
-    return { code };
+    const details = 'details' in body && isValidationDetails(body.details) ? body.details : undefined;
+    return { code, details };
   } catch {
     return {};
   }
@@ -76,8 +98,8 @@ const request = async <T>(url: string, init?: RequestInit): Promise<T> => {
   }
 
   if (!response.ok) {
-    const { code } = await parseErrorBody(response);
-    throw new AdminApiError(response.status, code, `${init?.method ?? 'GET'} ${url} returned ${response.status}`);
+    const { code, details } = await parseErrorBody(response);
+    throw new AdminApiError(response.status, code, `${init?.method ?? 'GET'} ${url} returned ${response.status}`, details);
   }
 
   if (response.status === 204) return undefined as T;
@@ -333,3 +355,42 @@ export const updatePlaceAccount = (placeId: string, body: UpdatePlaceAccountRequ
 // returned only this once. 404 if the place or its account does not exist.
 export const resetPlacePassword = (placeId: string): Promise<ResetPlacePasswordResponse> =>
   request(url(`/v1/admin/places/${placeId}/account/reset-password`).toString(), { method: 'POST' });
+
+// GET /v1/admin/dedications
+// 200 with DedicationListResponse, including an empty items array.
+export const fetchAdminDedications = (filters: AdminDedicationFilters): Promise<DedicationListResponse> => {
+  const target = url('/v1/admin/dedications');
+  target.searchParams.set('page', String(filters.page ?? 1));
+  target.searchParams.set('pageSize', String(filters.pageSize ?? 50));
+  return request(target.toString());
+};
+
+// GET /v1/admin/dedications/:id
+// 200 with AdminDedication. 404 not_found if the dedication does not exist.
+export const fetchAdminDedication = (id: string): Promise<AdminDedication> => request(url(`/v1/admin/dedications/${id}`).toString());
+
+// POST /v1/admin/dedications
+// 201 with AdminDedication. 400 invalid_request, flattened issues in `details`.
+export const createAdminDedication = (body: CreateDedicationRequest): Promise<AdminDedication> =>
+  request(url('/v1/admin/dedications').toString(), { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(body) });
+
+// PATCH /v1/admin/dedications/:id
+// 200 with AdminDedication. 400 invalid_request, flattened issues in `details`.
+// 404 not_found if the dedication does not exist. A full replacement, not a
+// merge: send every field (common/src/admin.ts, `UpdateDedicationRequest`).
+export const updateAdminDedication = (id: string, body: UpdateDedicationRequest): Promise<AdminDedication> =>
+  request(url(`/v1/admin/dedications/${id}`).toString(), { method: 'PATCH', headers: JSON_HEADERS, body: JSON.stringify(body) });
+
+// POST /v1/admin/dedications/:id/takedown
+// 200 with AdminDedication. 400 invalid_request if `reason` is missing or
+// blank. 404 not_found if the dedication does not exist.
+export const takedownAdminDedication = (id: string, body: TakedownDedicationRequest): Promise<AdminDedication> =>
+  request(url(`/v1/admin/dedications/${id}/takedown`).toString(), { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(body) });
+
+// POST /v1/admin/dedications/preview
+// 200 with DedicationPreviewResponse. Only `type` is required; an
+// incomplete draft is a normal 200, never a 400. A deceased person's name
+// must never enter a URL or an access log, so this is a POST rather than a
+// GET with query parameters (server/src/api/admin/dedications/index.ts).
+export const previewAdminDedication = (body: DedicationPreviewRequest): Promise<DedicationPreviewResponse> =>
+  request(url('/v1/admin/dedications/preview').toString(), { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(body) });

@@ -112,6 +112,13 @@ tonight. Every screen is designed and built narrow first, then allowed to grow.
 
 - **No abstraction before the second real caller.** Do not generalize on speculation. A
   helper with one caller is a function in that file, not a shared module.
+- **Look for the component before you write one.** Before building anything whose base
+  is generic, a popover, a picker, a sheet, a field, search for one that already exists
+  and use it. When none fits, build the new one where its second caller could reach it
+  and keep its API generic: the differences between callers are passed in, never
+  branched on by name. Copying a neighbour and editing it is what produced four
+  near-identical pickers, and the Safari dismissal bug then had four files to live in
+  instead of one.
 - **Lift to the nearest common ancestor, not to the top.** When a second place needs
   something, move it up the folder tree only as far as both consumers require, not
   straight to a shared folder.
@@ -246,7 +253,7 @@ different sentences and they are not interchangeable:
 
 - **A screenshot is never proof of correctness.** Rendering the UI is design judgment.
   Say "the design is right", never "it works".
-- **A change with a design is rendered in Storybook and approved by `tora-designer`
+- **A change with a design, meaning one meant to change what a person sees, is rendered in Storybook and approved by `tora-designer`
   before it goes to the human or into a pull request.** Every screen the change
   touches, in every state it has, on mocked data. This is a gate, not a courtesy: the
   app needs a database and a root `.env` that a sandbox does not have, so Storybook is
@@ -259,6 +266,7 @@ different sentences and they are not interchangeable:
 - **A test is written against a defect or a guarantee, never against a coverage
   target.** The suite exists because this project shipped bugs a test would have
   caught; each one earned its assertion.
+- **While a change is in progress, run only the tests that exercise what you just changed; run the whole suite once, when every change is in,** before review and before the pull request.
 - **Never weaken, skip, or delete an assertion to get a green run.** A failing test is
   a finding to report, not an obstacle.
 - If you want to assert something and there is nowhere to assert it, say so in your
@@ -414,6 +422,8 @@ Figma is where new design happens; code is the source of truth for what ships.
 - **The project:** `1600490864286182601` / project `639157253`
   ([open](https://www.figma.com/files/team/1600490864286182601/project/639157253)).
   The plan key for creating files is `team::1600490864286182601`.
+- **Which file holds which screen is in [docs/design-files.md](docs/design-files.md).**
+  Read it before opening Figma, rather than guessing from a file's name.
 - **Code is canonical for design tokens.** Shipped values live in code and are mirrored
   in `.claude/design-system.md`. Figma mirrors code, not the other way around.
 - **Figma is upstream for new design.** A redesign starts in Figma, gets approved, is

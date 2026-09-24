@@ -4,6 +4,7 @@ import { after, afterEach, before, describe, test } from 'node:test';
 import type {
   CitySearchResult,
   CitySuggestionsResponse,
+  DedicationType,
   HomeResponse,
   LessonOccurrence,
   LessonSearchResponse,
@@ -19,9 +20,11 @@ import { eq } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { nanoid } from 'nanoid';
 
+import { toHomeResponse } from '../src/convertors/home';
 import { db } from '../src/db/client';
 import { cities, lessonExceptions, lessons, places } from '../src/db/schema';
 import { HOME_RABBI_ROW_CAP } from '../src/service/home/consts';
+import * as homeService from '../src/service/home/home';
 import { selectAreaPreview } from '../src/service/lesson/area-preview';
 import { addDays, nextDateOnWeekday, todayInIsrael } from '../src/service/lesson/israel-time';
 import type { ResolvedLessonOccurrence } from '../src/service/lesson/models';
@@ -40,6 +43,17 @@ const SEEDED_RABBI_NAME = 'אברהם כהן';
 const SUNDAY_TO_THURSDAY_LESSON_ID = 'lesson-1';
 const SEEDED_CITY_NAME = 'ירושלים';
 const SEEDED_CITY_PREFIX = 'ירוש';
+// A real locality from the data.gov.il dataset `db:seed` fetches for real
+// (not a seed fixture like the names above), used only to assert the city
+// search matches a middle word and tolerates irregular spacing, neither of
+// which a single-word city name like `SEEDED_CITY_NAME` can exercise.
+const RASHON_LETZION_CITY_NAME = 'ראשון לציון';
+
+// The dataset stores some names with irregular internal spacing, so the
+// assertions below compare the collapsed forms: whether the row was found
+// is the question, not how the government spells its whitespace.
+const matchesIgnoringSpacing = (candidate: string, expected: string): boolean =>
+  candidate.replace(/\s+/g, ' ') === expected.replace(/\s+/g, ' ');
 const SEEDED_CITY_RABBI_ID = 'rabbi-3';
 const SEEDED_CITY_RABBI_NAME = 'יעקב מזרחי';
 const SEEDED_RABBANIT_ID = 'rabbi-9';
@@ -50,6 +64,36 @@ const SEEDED_RABBANIT_VENUE_TEXT = 'בית יעל';
 // The rav's women-only lesson seeded for the women's area; see
 // `server/src/db/seed/lessons.ts`.
 const SEEDED_WOMEN_LESSON_ID = 'lesson-27';
+
+// See `server/src/db/seed/dedications.ts`. Every id below is keyed to that
+// file's fixed offsets from "today", so these hold whatever day the suite
+// runs on.
+const LIVE_SEED_DEDICATION_IDS = [
+  'dedication-1',
+  'dedication-2',
+  'dedication-3',
+  'dedication-4',
+  'dedication-5',
+  'dedication-6',
+  'dedication-7',
+  'dedication-8',
+  'dedication-9',
+];
+// A not-yet-started, an expired, and a taken-down dedication, in that order.
+const INACTIVE_SEED_DEDICATION_IDS = ['dedication-10', 'dedication-11', 'dedication-12'];
+// `endsOn` is today itself, exercising the inclusive boundary in `listActive`.
+const ENDS_TODAY_SEED_DEDICATION_ID = 'dedication-3';
+const SEED_DEDICATION_TYPE_BY_ID: Record<string, DedicationType> = {
+  'dedication-1': 'memorial',
+  'dedication-2': 'memorial',
+  'dedication-3': 'memorial',
+  'dedication-4': 'memorial',
+  'dedication-5': 'memorial',
+  'dedication-6': 'healing',
+  'dedication-7': 'healing',
+  'dedication-8': 'success',
+  'dedication-9': 'success',
+};
 
 // The wire `Rabbi` never carries `prominence`, so the ordering assertions
 // read the seeded tiers from here, mirrored by hand from
@@ -713,6 +757,69 @@ describe('public API', () => {
     assert.ok(checkedCount >= MIN_SEEDED_RABBIS_IN_ROW, `expected at least ${MIN_SEEDED_RABBIS_IN_ROW} seeded rabbis in the row, saw ${checkedCount}`);
   });
 
+  describe('GET /v1/home dedications', () => {
+    test('`dedications` is a sibling of `rows`, and no row item ever carries a dedication', async () => {
+      const res = await app.inject({ method: 'GET', url: '/v1/home' });
+      assert.equal(res.statusCode, 200);
+
+      const body = res.json() as HomeResponse;
+      assert.ok(Array.isArray(body.dedications));
+      for (const row of body.rows) {
+        for (const item of row.items) {
+          assert.ok(!('text' in item), "expected a home row's items to be lessons only, never a dedication");
+        }
+      }
+    });
+
+    test('the live seed is served; the not-yet-started, expired and taken-down seeds are never served', async () => {
+      const res = await app.inject({ method: 'GET', url: '/v1/home' });
+      const body = res.json() as HomeResponse;
+      const servedIds = body.dedications.flatMap((group) => group.items.map((item) => item.id));
+
+      for (const id of LIVE_SEED_DEDICATION_IDS) {
+        assert.ok(servedIds.includes(id), `expected the live seed ${id} to be served`);
+      }
+      for (const id of INACTIVE_SEED_DEDICATION_IDS) {
+        assert.ok(!servedIds.includes(id), `expected the inactive seed ${id} never to be served`);
+      }
+    });
+
+    test("every group's items share that group's own type, and no type appears in two groups", async () => {
+      const res = await app.inject({ method: 'GET', url: '/v1/home' });
+      const body = res.json() as HomeResponse;
+
+      const typesSeen = new Set<string>();
+      for (const group of body.dedications) {
+        assert.ok(!typesSeen.has(group.type), `expected type ${group.type} to appear in at most one group`);
+        typesSeen.add(group.type);
+
+        for (const item of group.items) {
+          const expectedType = SEED_DEDICATION_TYPE_BY_ID[item.id];
+          if (!expectedType) continue; // not one of this suite's seeded fixtures
+          assert.equal(expectedType, group.type, `expected seeded dedication ${item.id} to appear only under its own type's group`);
+        }
+      }
+    });
+
+    test('a dedication whose endsOn is today is still served, since endsOn is inclusive', async () => {
+      const res = await app.inject({ method: 'GET', url: '/v1/home' });
+      const body = res.json() as HomeResponse;
+      const servedIds = body.dedications.flatMap((group) => group.items.map((item) => item.id));
+      assert.ok(servedIds.includes(ENDS_TODAY_SEED_DEDICATION_ID));
+    });
+
+    // The public route takes no date parameter (0012), so an empty pool is
+    // exercised through the service directly, the same way this suite
+    // reaches `selectAreaPreview` and `stripLeadingHonorific` for logic the
+    // route itself has no lever to trigger.
+    test('an empty pool is a normal 200 with an empty list, never a 404', async () => {
+      const farPast = new Date('1990-01-01T00:00:00Z');
+      const result = await homeService.getHome(farPast);
+      assert.deepEqual(result.dedicationGroups, []);
+      assert.deepEqual(toHomeResponse(result).dedications, []);
+    });
+  });
+
   // Test 8: a populated summary lists both a rabbanit and a rav among the
   // teachers (the women's set is defined by audience, not by teacher), and
   // at least one city.
@@ -798,6 +905,32 @@ describe('public API', () => {
       const city = items.find((candidate) => candidate.name === SEEDED_RABBANIT_CITY_NAME);
       assert.ok(city, 'the city itself must still match the prefix, even with no general-scope lesson');
       assert.equal(city.lessonCount, 0);
+    });
+
+    // The owner's actual report: he could not find ראשון לציון in the admin
+    // place picker, because `search` used to match a prefix only. These
+    // three guard the substring, whitespace-tolerant match that replaced
+    // it, against a real multi-word locality name (not a seed fixture) so
+    // only a real government dataset, not a mock, could have caught it.
+    test('ראשון לציון is findable by its own name, typed with ordinary single spaces', async () => {
+      const res = await app.inject({ method: 'GET', url: `/v1/cities?q=${encodeURIComponent(RASHON_LETZION_CITY_NAME)}` });
+      assert.equal(res.statusCode, 200);
+      const { items } = res.json() as { items: CitySearchResult[] };
+      assert.ok(items.some((candidate) => matchesIgnoringSpacing(candidate.name, RASHON_LETZION_CITY_NAME)));
+    });
+
+    test('a middle word finds it: לציון alone matches ראשון לציון', async () => {
+      const res = await app.inject({ method: 'GET', url: `/v1/cities?q=${encodeURIComponent('לציון')}` });
+      assert.equal(res.statusCode, 200);
+      const { items } = res.json() as { items: CitySearchResult[] };
+      assert.ok(items.some((candidate) => matchesIgnoringSpacing(candidate.name, RASHON_LETZION_CITY_NAME)));
+    });
+
+    test('irregular spacing between the words in the query does not stop the match', async () => {
+      const res = await app.inject({ method: 'GET', url: `/v1/cities?q=${encodeURIComponent('ראשון   לציון')}` });
+      assert.equal(res.statusCode, 200);
+      const { items } = res.json() as { items: CitySearchResult[] };
+      assert.ok(items.some((candidate) => matchesIgnoringSpacing(candidate.name, RASHON_LETZION_CITY_NAME)));
     });
   });
 

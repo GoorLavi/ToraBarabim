@@ -64,7 +64,7 @@ export const RabbisListPage = styled(({ className }: RabbisListPageProps) => {
         </div>
       )}
 
-      {state.status === 'success' && state.rows.length === 0 && !search.trim() && (
+      {state.status === 'success' && state.rows.length === 0 && !state.appliedSearch && (
         <div className="state empty">
           <p className="headline">{consts.NO_RABBIS_HEADLINE}</p>
           <p className="hint">{consts.NO_RABBIS_HINT}</p>
@@ -74,7 +74,7 @@ export const RabbisListPage = styled(({ className }: RabbisListPageProps) => {
         </div>
       )}
 
-      {state.status === 'success' && state.rows.length === 0 && Boolean(search.trim()) && (
+      {state.status === 'success' && state.rows.length === 0 && Boolean(state.appliedSearch) && (
         <div className="state empty">
           <p className="headline">{consts.NO_MATCHING_RABBIS_HEADLINE}</p>
           <p className="hint">{consts.NO_MATCHING_RABBIS_HINT}</p>

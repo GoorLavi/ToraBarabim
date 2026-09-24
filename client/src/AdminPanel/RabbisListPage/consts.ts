@@ -1,5 +1,11 @@
 export const SEARCH_PARAM = 'q';
 
+// The list re-reads both the rabbis and the lessons on every change, so the
+// search term waits for typing to settle before it reaches the query. Same
+// window as `CityPicker/useCitySearchResults.ts`, the oldest of the four
+// debounced searches this app now has.
+export const SEARCH_DEBOUNCE_MS = 250;
+
 export const HEADING = 'רבנים';
 export const ADD_RABBI_LABEL = 'הוספת רב';
 export const SORT_LABEL = 'מיון: לפי שם';

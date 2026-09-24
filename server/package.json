@@ -9,7 +9,7 @@
     "build": "tsc -p tsconfig.json",
     "start": "node --env-file=../.env dist/index.js",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.test.json",
-    "test": "tsx --env-file=../.env --test --test-concurrency=1 test/public-api.test.ts test/ssr.test.ts test/agent-import.test.ts test/rabbi-order.test.ts test/admin-api.test.ts test/panel-auth.test.ts test/place-api.test.ts test/invariants.test.ts",
+    "test": "tsx --tsconfig tsconfig.test.json --env-file=../.env --test --test-concurrency=1 test/public-api.test.ts test/ssr.test.ts test/agent-import.test.ts test/rabbi-order.test.ts test/admin-api.test.ts test/panel-auth.test.ts test/place-api.test.ts test/invariants.test.ts test/dedication-text.test.ts test/dedication-band.test.ts",
     "db:generate": "node --env-file=../.env ../node_modules/.bin/drizzle-kit generate",
     "db:migrate": "node --env-file=../.env ../node_modules/.bin/drizzle-kit migrate",
     "db:seed": "tsx --env-file=../.env src/db/seed.ts",

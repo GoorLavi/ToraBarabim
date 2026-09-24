@@ -1,6 +1,7 @@
 import type { HomeResponse, HomeRow, LessonOccurrence } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
+import { DEDICATION_GROUP_HEALING, DEDICATION_GROUP_MEMORIAL, DEDICATION_GROUP_SUCCESS } from '~/dedicationFixture';
 import { rabbiFixture } from '~/rabbiFixture';
 
 import { errorResolver, http, jsonResolver, loadingResolver } from '../../.storybook/apiMocks';
@@ -42,6 +43,9 @@ const row = (overrides: Partial<HomeRow>): HomeRow => ({
   ...overrides,
 });
 
+// `dedications` defaults to none: the fetch-state stories below are about
+// the page's loading/empty/error/populated states, not the dedication
+// bands, which have their own stories further down.
 const homeResponse = (overrides: Partial<HomeResponse>): HomeResponse => ({
   rows: [
     row({}),
@@ -53,6 +57,7 @@ const homeResponse = (overrides: Partial<HomeResponse>): HomeResponse => ({
   ],
   womensAreaLessonCount: 4,
   rabbis: [RABBI_1, RABBI_2, RABBI_3],
+  dedications: [],
   ...overrides,
 });
 
@@ -61,6 +66,10 @@ const homeHandler = (response: HomeResponse) => http.get('/v1/home', jsonResolve
 const meta: Meta<typeof HomePage> = {
   title: 'HomePage/HomePage',
   component: HomePage,
+  // The page owns its own gutter (styles.ts), so this only cancels
+  // Storybook's own frame padding, matching every other page-level story
+  // (PlacePage.stories.tsx).
+  parameters: { layout: 'fullscreen' },
 };
 
 export default meta;
@@ -77,4 +86,51 @@ export const ServerError: Story = {
 };
 export const Loading: Story = {
   parameters: { apiMocks: { handlers: { home: http.get('/v1/home', loadingResolver) } } },
+};
+
+// Three real rails, the minimum the between-rails band needs
+// (HomeRails/consts.ts, WOMENS_AREA_BAND_SLOT), and a positive
+// `womensAreaLessonCount`, so the success band's real slot, immediately
+// after the women's-area tile, is the one on screen rather than the
+// tile-absent fallback slot.
+const dedicationRow = (id: HomeRow['id'], title: string): HomeRow => ({
+  id,
+  title,
+  items: [
+    lesson({ lessonId: `${id}-1`, title }),
+    lesson({ lessonId: `${id}-2`, title }),
+    lesson({ lessonId: `${id}-3`, title }),
+  ],
+});
+
+const dedicationHomeResponse = (dedications: HomeResponse['dedications']): HomeResponse => ({
+  rows: [dedicationRow('area', 'שיעורים באזור שלך'), dedicationRow('today', 'הערב'), dedicationRow('weekly', 'שיעור שבועי')],
+  womensAreaLessonCount: 12,
+  rabbis: [RABBI_1, RABBI_2],
+  dedications,
+});
+
+// The full `.band` column in page order: the success band in its real slot
+// inside the rails, right after the women's-area tile, the healing band
+// between the rails block and `RabbiRow`, then `RabbiRow`, `CityGrid` and
+// `ContactCta`, and the memorial band last, full-bleed at the foot. No
+// filters active, so the page is in rail mode (helpers.ts, resolveHomeMode).
+export const AllThreeBands: Story = {
+  parameters: {
+    apiMocks: {
+      handlers: { home: homeHandler(dedicationHomeResponse([DEDICATION_GROUP_SUCCESS, DEDICATION_GROUP_HEALING, DEDICATION_GROUP_MEMORIAL])) },
+    },
+  },
+};
+
+// Healing absent: no hole opens between the rails block and RabbiRow.
+export const OneTypeAbsent: Story = {
+  parameters: {
+    apiMocks: { handlers: { home: homeHandler(dedicationHomeResponse([DEDICATION_GROUP_SUCCESS, DEDICATION_GROUP_MEMORIAL])) } },
+  },
+};
+
+// Healing and memorial both absent: only the between-rails success band renders.
+export const TwoTypesAbsent: Story = {
+  parameters: { apiMocks: { handlers: { home: homeHandler(dedicationHomeResponse([DEDICATION_GROUP_SUCCESS])) } } },
 };

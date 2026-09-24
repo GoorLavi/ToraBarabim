@@ -121,9 +121,11 @@ export const buildAgentImportTestApp = async (agentKey: string | undefined): Pro
 };
 
 // A third app, for `admin-api.test.ts` only: cookies, the admin auth and
-// admin CRUD routes, nothing else. No rabbi routes, no agent import, no
-// SSR catch-all: this suite exercises the admin lesson occurrences route
-// and its guard, not the rest of the admin surface's own tests.
+// admin CRUD routes, plus the public `/v1/home` route (no SSR catch-all
+// needed for it). No rabbi routes, no agent import: this suite exercises
+// the admin surface's own tests, and `/v1/home` only so a dedication
+// takedown test can assert the record actually leaves the public listing
+// without needing a client build for the SSR-mounted `buildApp`.
 export const buildAdminTestApp = async (): Promise<FastifyInstance> => {
   const config = loadConfig(process.env);
 
@@ -132,6 +134,7 @@ export const buildAdminTestApp = async (): Promise<FastifyInstance> => {
   registerEmptyBodySupport(app);
   await registerAdminAuthRoutes(app);
   await registerAdminRoutes(app);
+  await registerHomeRoutes(app);
   registerErrorHandler(app);
   return app;
 };

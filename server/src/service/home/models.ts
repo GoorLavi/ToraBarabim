@@ -2,6 +2,7 @@ import type { CityWithLessonCount, HomeRowId, LessonAudience, LessonTopic, Lesso
 
 import type { rabbis } from '../../db/schema';
 import type { AddressCityRow } from '../shared/address';
+import type { DedicationGroupResult } from '../dedication/models';
 
 // Kept distinct from the wire `LessonOccurrence`: it carries the sort-only
 // `rabbiProminenceRank` and `shuffleKey`, and the raw `cityCode` the
@@ -40,6 +41,11 @@ export interface HomeResult {
   // The "לפי רב" avatar row's rabbis, sorted and capped, as raw rows: the
   // convertor is what turns them into wire `Rabbi`s.
   rabbis: RabbiRow[];
+  // The active dedication groups, drawn from `dedicationService.listActive`
+  // in the same `Promise.all` as `loadWindow`. `toHomeResponse` reads these
+  // off this result directly, so the response can never disagree with the
+  // `HomeResult` it was built from.
+  dedicationGroups: DedicationGroupResult[];
 }
 
 // `GET /v1/women`'s summary, built from the same women's-set step `getHome`
