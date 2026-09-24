@@ -26,10 +26,10 @@ const ThreeFocusables = (): ReactElement => (
   </>
 );
 
-// Focus moves onto the panel itself on open, per the plan (1.3, option A),
-// never onto its first focusable descendant: a sheet whose first control is
-// destructive (`DiscardChangesSheet`'s own discard button) must never sit
-// one Enter key away from being activated by accident.
+// Focus moves onto the panel itself on open, never onto its first focusable
+// descendant: a sheet whose first control is destructive
+// (`DiscardChangesSheet`'s own discard button) must never sit one Enter key
+// away from being activated by accident.
 export const FocusMovesInOnOpen: Story = {
   render: (args) => (
     <ResponsiveSheet {...args}>
@@ -74,9 +74,11 @@ export const EscapeCloses: Story = {
   },
 };
 
-// The city-picker guard (docs in ResponsiveSheet.tsx): an inner control that
-// already claimed the Escape key, the same contract `useDismissPopover.ts`
-// relies on, leaves the sheet's own Escape handler with nothing to do.
+// An inner control that already claimed the Escape key (`preventDefault` in
+// the capture phase, the contract `useDismissPopover.ts` relies on) leaves
+// the sheet's own handler with nothing to do. A synthetic stand-in: only
+// `SearchSelect.stories.tsx`'s `PopoverInsideASheet` exercises the real
+// document-capture-phase listener a nested popover actually uses.
 export const EscapeAlreadyHandledInsideIsLeftAlone: Story = {
   render: (args) => (
     <ResponsiveSheet {...args}>

@@ -8,24 +8,22 @@ import type { StateCardAction, StateCardProps } from './models';
 import * as styles from './styles';
 
 // Rendered in JSX, never chosen into a variable: `QuietButton` and
-// `PrimaryButton` carry different prop unions (QuietButton's own third,
-// `href`, branch among them), and a variable typed to hold either is a
-// JSX element type TypeScript cannot resolve to one call signature
-// (TS2604). Branching in the markup itself, on both `actionStyle` and which
-// of `actionTo`/`onAction` the action carries, needs no cast to get there.
+// `PrimaryButton` carry different prop unions, and a variable typed to hold
+// either is a JSX element type TypeScript cannot resolve to one call
+// signature (TS2604).
 const renderAction = (action: StateCardAction): ReactNode => {
   if (action.actionStyle === 'quiet') {
     return 'actionTo' in action ? (
-      <QuietButton className="action" label={action.actionLabel} to={action.actionTo} />
+      <QuietButton {...{ className: 'action', label: action.actionLabel, to: action.actionTo }} />
     ) : (
-      <QuietButton className="action" label={action.actionLabel} onClick={action.onAction} />
+      <QuietButton {...{ className: 'action', label: action.actionLabel, onClick: action.onAction }} />
     );
   }
 
   return 'actionTo' in action ? (
-    <PrimaryButton className="action" label={action.actionLabel} to={action.actionTo} />
+    <PrimaryButton {...{ className: 'action', label: action.actionLabel, to: action.actionTo }} />
   ) : (
-    <PrimaryButton className="action" label={action.actionLabel} onClick={action.onAction} />
+    <PrimaryButton {...{ className: 'action', label: action.actionLabel, onClick: action.onAction }} />
   );
 };
 

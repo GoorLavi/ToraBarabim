@@ -1,44 +1,33 @@
 import { useRef, useState } from 'react';
-import type { PointerEvent } from 'react';
+import type { MouseEvent, PointerEvent } from 'react';
 
+import type { PressHandlers } from './models';
 import { isPressGesture } from './helpers';
 
-export interface PressHandlers {
-  // Exposed so the band can switch its own cursor to "grabbing" only once a
-  // drag actually clears the press threshold (designer decisions: cursor is
-  // "pointer" at rest and on hover, "grabbing" only past the 10px bar),
-  // rather than the instant a mouse goes down the way the crawl's own
-  // `isDragging` does.
-  isDraggingPastThreshold: boolean;
-  onPointerDown: (event: PointerEvent<HTMLElement>) => void;
-  onPointerMove: (event: PointerEvent<HTMLElement>) => void;
-  onPointerUp: (event: PointerEvent<HTMLElement>) => void;
-  onPointerCancel: () => void;
-}
-
 // Press-versus-drag detection for the band as a whole, wired onto the
-// `<section>` that wraps the crawl's own `.viewport` (DedicationBand.tsx).
-// Both sets of pointer handlers see the same bubbling events, since
-// `.viewport` is this element's own child and neither this hook nor
-// `useDedicationCrawl` ever calls `stopPropagation`, so a press or a drag
-// that starts on the crawling viewport itself is still seen here.
-// `pointercancel` (a touch scroll taking over) clears the start position
-// without ever calling `onPress`, per the design rule's own first point.
+// `<section>` that wraps the crawl's own `.viewport` (DedicationBand.tsx):
+// both hooks' pointer handlers see the same bubbling events, since neither
+// calls `stopPropagation`.
+//
+// `onPointerUp` only records whether the gesture was a press; `onClick` is
+// what actually opens. Opening on `pointerup` itself mounts the scrim under
+// a finger still on the screen, and the tap's own follow-up `click` then
+// lands on that scrim and closes what it just opened; a tap that stops a
+// page fling fires `pointerdown`/`pointerup` with no travel but has its
+// `click` suppressed by the browser, so keying off `pointerup` would open
+// the window for a gesture that was never meant to. `event.detail === 0`
+// always counts too: a keyboard `Enter`/`Space` activation of the
+// invitation button bubbles up as a `click` with no pointer event at all.
 export const usePressHandlers = (onPress: () => void): PressHandlers => {
   const startRef = useRef<{ x: number; y: number } | null>(null);
+  const wasPressRef = useRef(false);
   const [isDraggingPastThreshold, setIsDraggingPastThreshold] = useState(false);
 
-  const clear = (): void => {
-    startRef.current = null;
-    setIsDraggingPastThreshold(false);
-  };
-
-  // A mouse's secondary or auxiliary button never starts a press; every
-  // touch or pen point does, since neither carries a meaningful `button`
-  // value the way a mouse does.
   const onPointerDown = (event: PointerEvent<HTMLElement>): void => {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
     startRef.current = { x: event.clientX, y: event.clientY };
+    wasPressRef.current = false;
+    setIsDraggingPastThreshold(false);
   };
 
   const onPointerMove = (event: PointerEvent<HTMLElement>): void => {
@@ -49,10 +38,22 @@ export const usePressHandlers = (onPress: () => void): PressHandlers => {
 
   const onPointerUp = (event: PointerEvent<HTMLElement>): void => {
     const start = startRef.current;
-    const wasPress = start !== null && isPressGesture(event.clientX - start.x, event.clientY - start.y);
-    clear();
-    if (wasPress) onPress();
+    wasPressRef.current = start !== null && isPressGesture(event.clientX - start.x, event.clientY - start.y);
+    startRef.current = null;
+    setIsDraggingPastThreshold(false);
   };
 
-  return { isDraggingPastThreshold, onPointerDown, onPointerMove, onPointerUp, onPointerCancel: clear };
+  const onPointerCancel = (): void => {
+    startRef.current = null;
+    wasPressRef.current = false;
+    setIsDraggingPastThreshold(false);
+  };
+
+  const onClick = (event: MouseEvent<HTMLElement>): void => {
+    const shouldOpen = wasPressRef.current || event.detail === 0;
+    wasPressRef.current = false;
+    if (shouldOpen) onPress();
+  };
+
+  return { isDraggingPastThreshold, onPointerDown, onPointerMove, onPointerUp, onPointerCancel, onClick };
 };

@@ -1,24 +1,15 @@
 import { css } from 'styled-components';
 
 import { VARIANT_TOKENS, ornamentColorVarsCss } from '~/components/DedicationUnit/consts';
-import { WHATSAPP_BRAND_COLOR, WHATSAPP_BRAND_COLOR_HOVER } from '~/consts';
+import { DEDICATION_WHATSAPP_COLOR, DEDICATION_WHATSAPP_COLOR_HOVER } from '~/consts';
 
 import * as consts from './consts';
 
-// Inset: option C (root plan's "Area ownership" table). This styles
-// `ResponsiveSheet`'s own public `.panel` slot directly, the same way
+// Styles `ResponsiveSheet`'s own public `.panel` slot directly, the same way
 // `FilterDrawer/styles.ts` already does, rather than growing a prop on
-// `ResponsiveSheet` itself: the panel goes edge to edge and this component
-// pads its own header and body separately, at two different paddings.
-//
-// Every one of this component's own elements (`.close`, `.header`, `.body`)
-// is a DOM child of `.panel`, not of the sheet's backdrop root this
-// generated class also lands on (`ResponsiveSheet.tsx` renders `{children}`
-// inside `.panel`), so each has to be nested inside the `> .panel` block
-// below to actually match anything: written as siblings of it, as this once
-// was, matches nothing and every one of them rendered with browser
-// defaults instead (an unset `<svg>` defaults to 300x150, which is the
-// "giant black X" that finding was).
+// `ResponsiveSheet` itself. Every one of this component's own elements is a
+// DOM child of `.panel`, not of the sheet's backdrop root this generated
+// class also lands on, so each is nested inside the `> .panel` block below.
 export const DedicationWindow = css(
   ({ theme }) => `
   > .panel {
@@ -45,7 +36,7 @@ export const DedicationWindow = css(
       color: ${theme.colors.textOnPrimary};
       cursor: pointer;
 
-      > svg {
+      > .icon {
         inline-size: 20px;
         block-size: 20px;
       }
@@ -66,12 +57,8 @@ export const DedicationWindow = css(
       padding-inline: ${theme.spacing.xl};
       background: ${theme.colors.primaryStrong};
 
-      /* Two instances, real and mirrored, same as a dedication unit's own
-         ornament pair (DedicationUnit/styles.ts): the design frames the
-         gold lines above and below, not once. Each sets its own colour
-         scope, since a custom property has no way to be set once and
-         shared between two sibling elements that are not one another's
-         ancestor. */
+      /* Two instances, real and mirrored: a custom property has no way to
+         be set once and shared between two sibling elements. */
       > .ornament {
         ${ornamentColorVarsCss(VARIANT_TOKENS.onPrimary)}
 
@@ -80,9 +67,9 @@ export const DedicationWindow = css(
 
       > .title {
         color: ${theme.colors.textOnPrimary};
-        font-weight: ${theme.typography.sectionHeading.fontWeight};
-        font-size: ${theme.typography.sectionHeading.phone.fontSize};
-        line-height: ${theme.typography.sectionHeading.phone.lineHeight};
+        font-weight: ${theme.typography.pageHeading.fontWeight};
+        font-size: ${theme.typography.pageHeading.phone.fontSize};
+        line-height: ${theme.typography.pageHeading.phone.lineHeight};
       }
 
       > .formulas {
@@ -108,19 +95,24 @@ export const DedicationWindow = css(
       flex-direction: column;
       gap: ${theme.spacing.lg};
       padding-block: ${consts.BODY_PADDING_TOP_PX}px ${theme.spacing.xl};
-      padding-inline: ${theme.spacing.xl};
+      padding-inline: ${theme.spacing.lg};
       overflow-y: auto;
       background: ${theme.colors.surface};
 
-      > .paragraph,
-      > .leadIn {
+      @media (min-width: ${theme.breakpoints.md}) {
+        padding-inline: ${theme.spacing.xl};
+      }
+
+      > .paragraph {
         color: ${theme.colors.text};
         font-size: ${theme.typography.body.phone.fontSize};
         line-height: ${theme.typography.body.phone.lineHeight};
       }
 
       > .leadIn {
-        font-weight: ${theme.typography.fontWeight.semiBold};
+        color: ${theme.colors.textSecondary};
+        font-size: ${theme.typography.secondary.phone.fontSize};
+        line-height: ${theme.typography.secondary.phone.lineHeight};
       }
 
       > .actions {
@@ -128,21 +120,36 @@ export const DedicationWindow = css(
         flex-direction: column;
         gap: ${theme.spacing.sm};
 
+        > .whatsapp,
+        > .call {
+          gap: ${theme.spacing.sm};
+        }
+
         > .whatsapp {
-          background: ${WHATSAPP_BRAND_COLOR};
-          border-color: ${WHATSAPP_BRAND_COLOR};
+          background: ${DEDICATION_WHATSAPP_COLOR};
+          border-color: ${DEDICATION_WHATSAPP_COLOR};
           color: ${theme.colors.textOnPrimary};
+
+          > .icon {
+            inline-size: 22px;
+            block-size: 22px;
+          }
 
           &:hover,
           &:active {
-            background: ${WHATSAPP_BRAND_COLOR_HOVER};
-            border-color: ${WHATSAPP_BRAND_COLOR_HOVER};
+            background: ${DEDICATION_WHATSAPP_COLOR_HOVER};
+            border-color: ${DEDICATION_WHATSAPP_COLOR_HOVER};
             color: ${theme.colors.textOnPrimary};
           }
         }
 
         > .call {
-          direction: ltr;
+          color: ${theme.colors.primary};
+
+          > .icon {
+            inline-size: 20px;
+            block-size: 20px;
+          }
         }
       }
     }

@@ -40,6 +40,7 @@ const DedicationBandTrack = ({ className, group, variant }: DedicationBandTrackP
         onPointerMove={press.onPointerMove}
         onPointerUp={press.onPointerUp}
         onPointerCancel={press.onPointerCancel}
+        onClick={press.onClick}
       >
         <div
           className="viewport"
@@ -74,12 +75,15 @@ const DedicationBandTrack = ({ className, group, variant }: DedicationBandTrackP
           )}
         </div>
 
-        <button type="button" className="invite" ref={inviteButtonRef} onClick={() => setIsWindowOpen(true)}>
+        <button type="button" className="invite" ref={inviteButtonRef}>
           {consts.INVITATION_LABEL}
+          <svg className="chevron" viewBox="0 0 7 12" fill="none" aria-hidden="true">
+            <path d="M6 1L1 6L6 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </button>
       </section>
 
-      {isWindowOpen && <DedicationWindow bandType={group.type} onDismiss={closeWindow} />}
+      {isWindowOpen && <DedicationWindow {...{ bandType: group.type, onDismiss: closeWindow }} />}
     </>
   );
 };

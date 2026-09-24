@@ -29,7 +29,6 @@ export const FORGOT_PASSWORD_NOTE =
 // Genericised from the rabbi-only page's message: this door now also serves
 // place accounts, so the prefilled text no longer names a specific panel.
 export const WHATSAPP_SUPPORT_MESSAGE = 'שלום, נתקלתי בבעיה בהתחברות לפאנל ואשמח לעזרה.';
-// Site spelling (root CLAUDE.md's copy list, "the site spells וואטסאפ").
 export const WHATSAPP_SUPPORT_TOOLTIP = 'פנו אלינו בוואטסאפ';
 
 // The one element on this page allowed to break the 48px tap-target scale,

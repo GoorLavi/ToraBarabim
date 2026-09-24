@@ -141,16 +141,15 @@ export const addressLine = (street: string, floor: string | undefined): string =
 // reaches the URL.
 const navigationQuery = (place: Pick<ResolvedAddress, 'street' | 'city'>): string => `${place.street.trim()}, ${place.city.trim()}`;
 
+// This site's own contact number, prefilled with a caller's own message.
+// `wa.me` wants the international number with no leading `+` or separators,
+// which `SITE_CONTACT_PHONE_INTERNATIONAL` already is.
+export const whatsAppHref = (message: string): string => `https://wa.me/${SITE_CONTACT_PHONE_INTERNATIONAL}?text=${encodeURIComponent(message)}`;
+
 // `undefined` unless both street and city are present, so the caller hides
 // the whole nav row rather than link out to a bare street or a bare city
 // (fail closed: a navigation link that only narrows down part of the
 // address is worse than none).
-// The one WhatsApp deep link this site sends a reader to: this site's own
-// contact number, prefilled with a caller's own message. `wa.me` wants the
-// international number with no leading `+` or separators, which
-// `SITE_CONTACT_PHONE_INTERNATIONAL` already is.
-export const whatsAppHref = (message: string): string => `https://wa.me/${SITE_CONTACT_PHONE_INTERNATIONAL}?text=${encodeURIComponent(message)}`;
-
 export const wazeHref = (place: Pick<ResolvedAddress, 'street' | 'city'>): string | undefined =>
   place.street.trim() && place.city.trim()
     ? `https://waze.com/ul?q=${encodeURIComponent(navigationQuery(place))}&navigate=yes`

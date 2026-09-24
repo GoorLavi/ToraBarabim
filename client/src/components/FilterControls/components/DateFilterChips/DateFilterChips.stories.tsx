@@ -117,24 +117,27 @@ export const NextMonthDisabledAtForwardBound: Story = {
   },
 };
 
-// The city-picker guard (docs in ResponsiveSheet.tsx): below `md` the picker
-// is `DateFilterSheet`, `ResponsiveSheet`'s own portal, so this forces the
-// iframe narrow rather than relying on whatever the runner's default width
-// happens to be (mirrors DedicationBand.stories.tsx's own `frameElement`
-// technique).
+// Below `md` the picker is `DateFilterSheet`, `ResponsiveSheet`'s own portal,
+// so this forces the iframe narrow rather than relying on the runner's
+// default width.
 export const PhoneWidthEscapeClosesTheSheet: Story = {
   play: async ({ canvasElement }) => {
     const frame = window.frameElement as HTMLIFrameElement | null;
     if (!frame) throw new Error('DateFilterChips story: window.frameElement not found, expected to be running inside the test runner\'s iframe');
+    const originalWidth = frame.style.width;
     frame.style.width = '375px';
     await new Promise((resolve) => window.setTimeout(resolve, 100));
 
-    const canvas = await openTrigger(canvasElement);
-    await within(document.body).findByRole('dialog', { name: 'בחירת תאריך' });
+    try {
+      const canvas = await openTrigger(canvasElement);
+      await within(document.body).findByRole('dialog', { name: 'בחירת תאריך' });
 
-    await userEvent.keyboard('{Escape}');
+      await userEvent.keyboard('{Escape}');
 
-    expect(within(document.body).queryByRole('dialog', { name: 'בחירת תאריך' })).not.toBeInTheDocument();
-    await expect(canvas.getByRole('button', { name: 'בחירת תאריך אחר' })).toHaveFocus();
+      expect(within(document.body).queryByRole('dialog', { name: 'בחירת תאריך' })).not.toBeInTheDocument();
+      await expect(canvas.getByRole('button', { name: 'בחירת תאריך אחר' })).toHaveFocus();
+    } finally {
+      frame.style.width = originalWidth;
+    }
   },
 };

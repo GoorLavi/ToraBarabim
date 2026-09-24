@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fireEvent, fn, userEvent, waitFor, within } from 'storybook/test';
+import { expect, fireEvent, fn, userEvent, within } from 'storybook/test';
 
 import { whatsAppHref } from '~/helpers';
 
@@ -15,81 +15,96 @@ const meta: Meta<typeof DedicationWindow> = {
 export default meta;
 type Story = StoryObj<typeof DedicationWindow>;
 
-const resizeFrame = async (widthPx: number, heightPx: number): Promise<void> => {
+// Runs `play` at a forced iframe size, then restores it, so one story's
+// resize never leaks into the next.
+const atFrameSize = async (widthPx: number, heightPx: number, play: () => Promise<void>): Promise<void> => {
   const frame = window.frameElement as HTMLIFrameElement | null;
   if (!frame) throw new Error('DedicationWindow story: window.frameElement not found, expected to be running inside the test runner\'s iframe');
+  const originalWidth = frame.style.width;
+  const originalHeight = frame.style.height;
   frame.style.width = `${widthPx}px`;
   frame.style.height = `${heightPx}px`;
   await new Promise((resolve) => window.setTimeout(resolve, 100));
+  try {
+    await play();
+  } finally {
+    frame.style.width = originalWidth;
+    frame.style.height = originalHeight;
+  }
 };
 
-// Every string, both hrefs, the accessible names, and that the panel itself
-// never scrolls at the one width the design was built to clear (designer
-// decisions: "Window 574px, under 576 at 320x640").
+// Every string, both hrefs, the accessible names, and that the body's own
+// scrolling region never scrolls at the width the design was built to clear.
 export const Phone320x640: Story = {
-  play: async () => {
-    await resizeFrame(320, 640);
-    const body = within(document.body);
+  play: () =>
+    atFrameSize(320, 640, async () => {
+      const body = within(document.body);
 
-    await body.findByRole('dialog', { name: consts.WINDOW_TITLE });
-    await expect(body.findByText(consts.FORMULA_MEMORIAL)).resolves.toBeInTheDocument();
-    await expect(body.findByText(consts.FORMULA_HEALING)).resolves.toBeInTheDocument();
-    await expect(body.findByText(consts.FORMULA_SUCCESS)).resolves.toBeInTheDocument();
-    await expect(body.findByText(consts.PARAGRAPH)).resolves.toBeInTheDocument();
-    await expect(body.findByText(consts.LEAD_IN)).resolves.toBeInTheDocument();
+      await body.findByRole('dialog', { name: consts.WINDOW_TITLE });
+      await expect(body.findByText(consts.FORMULA_MEMORIAL)).resolves.toBeInTheDocument();
+      await expect(body.findByText(consts.FORMULA_HEALING)).resolves.toBeInTheDocument();
+      await expect(body.findByText(consts.FORMULA_SUCCESS)).resolves.toBeInTheDocument();
+      await expect(body.findByText(consts.PARAGRAPH)).resolves.toBeInTheDocument();
+      await expect(body.findByText(consts.LEAD_IN)).resolves.toBeInTheDocument();
 
-    const whatsappLink = await body.findByRole('link', { name: consts.WHATSAPP_LABEL });
-    await expect(whatsappLink).toHaveAttribute('href', whatsAppHref(consts.WHATSAPP_MESSAGE));
+      const whatsappLink = await body.findByRole('link', { name: consts.WHATSAPP_LABEL });
+      await expect(whatsappLink).toHaveAttribute('href', whatsAppHref(consts.WHATSAPP_MESSAGE));
 
-    const callLink = await body.findByRole('link', { name: consts.CALL_ACCESSIBLE_NAME });
-    await expect(callLink).toHaveAttribute('href', consts.CALL_HREF);
+      const callLink = await body.findByRole('link', { name: consts.CALL_ACCESSIBLE_NAME });
+      await expect(callLink).toHaveAttribute('href', consts.CALL_HREF);
 
-    await body.findByRole('button', { name: consts.CLOSE_LABEL });
+      await body.findByRole('button', { name: consts.CLOSE_LABEL });
 
-    const panel = document.body.querySelector<HTMLElement>('.panel');
-    if (!panel) throw new Error('DedicationWindow story: .panel not found');
-    expect(panel.scrollHeight).toBeLessThanOrEqual(panel.clientHeight + 1);
-  },
+      // `.panel` is `overflow: hidden`, so its own scrollHeight never
+      // exceeds its clientHeight regardless of content; `.body` is the
+      // actual scrolling region.
+      const scrollRegion = document.body.querySelector<HTMLElement>('.body');
+      if (!scrollRegion) throw new Error('DedicationWindow story: .body not found');
+      expect(scrollRegion.scrollHeight).toBeLessThanOrEqual(scrollRegion.clientHeight + 1);
+    }),
 };
 
-// Centred, 480 wide, from `md` up (ResponsiveSheet/styles.ts).
+// Centred, from `md` up (ResponsiveSheet/styles.ts): the panel sits above
+// the viewport's own bottom edge (never bottom-anchored), horizontally
+// centred, and every corner rounded.
 export const Desktop: Story = {
-  play: async () => {
-    await resizeFrame(1280, 900);
-    const body = within(document.body);
-    const dialog = await body.findByRole('dialog', { name: consts.WINDOW_TITLE });
+  play: () =>
+    atFrameSize(1280, 900, async () => {
+      const dialog = await within(document.body).findByRole('dialog', { name: consts.WINDOW_TITLE });
+      const rect = dialog.getBoundingClientRect();
 
-    await waitFor(() => expect(getComputedStyle(dialog).borderRadius).not.toEqual('0px'));
-    expect(dialog.getBoundingClientRect().width).toBeLessThanOrEqual(480);
-  },
+      expect(rect.bottom).toBeLessThan(window.innerHeight);
+      expect(Math.abs((rect.left + rect.right) / 2 - window.innerWidth / 2)).toBeLessThanOrEqual(1);
+
+      const style = getComputedStyle(dialog);
+      expect(style.borderTopLeftRadius).not.toEqual('0px');
+      expect(style.borderTopRightRadius).not.toEqual('0px');
+      expect(style.borderBottomLeftRadius).not.toEqual('0px');
+      expect(style.borderBottomRightRadius).not.toEqual('0px');
+    }),
 };
 
 // The X, the backdrop and Escape each close the window exactly once: three
 // separate closes, not three separately mounted instances (this story's own
 // `onDismiss` is a mock, so closing never actually unmounts anything here).
 export const ClosePaths: Story = {
-  play: async ({ args }) => {
-    await resizeFrame(1280, 900);
-    const body = within(document.body);
+  play: ({ args }) =>
+    atFrameSize(1280, 900, async () => {
+      const body = within(document.body);
 
-    await userEvent.click(await body.findByRole('button', { name: consts.CLOSE_LABEL }));
-    await expect(args.onDismiss).toHaveBeenCalledTimes(1);
+      await userEvent.click(await body.findByRole('button', { name: consts.CLOSE_LABEL }));
+      await expect(args.onDismiss).toHaveBeenCalledTimes(1);
 
-    await userEvent.keyboard('{Escape}');
-    await expect(args.onDismiss).toHaveBeenCalledTimes(2);
+      await userEvent.keyboard('{Escape}');
+      await expect(args.onDismiss).toHaveBeenCalledTimes(2);
 
-    // `fireEvent`, not `userEvent`: the overlay's own bounding box is the
-    // full viewport, but `.panel` sits centred inside it and covers the
-    // exact point `userEvent.click`'s realistic pointer simulation would
-    // aim for (the element's own centre), so a request to click the
-    // backdrop lands its hit-test on the panel instead and never resolves.
-    // `fireEvent.click` dispatches directly on the node passed to it, with
-    // no coordinate hit-test, which is what this assertion actually needs:
-    // that the backdrop's own `onClick` fires, not that a point on screen
-    // happens to be backdrop and not content.
-    const overlay = document.body.querySelector<HTMLElement>('[role="presentation"]');
-    if (!overlay) throw new Error('DedicationWindow story: scrim overlay not found');
-    fireEvent.click(overlay);
-    await expect(args.onDismiss).toHaveBeenCalledTimes(3);
-  },
+      // `fireEvent`, not `userEvent`: `.panel` sits centred over the exact
+      // point a realistic pointer click on the overlay would aim for, so a
+      // hit-tested click never reaches the backdrop. `fireEvent.click`
+      // dispatches directly on the node passed to it, with no hit-test.
+      const overlay = document.body.querySelector<HTMLElement>('[role="presentation"]');
+      if (!overlay) throw new Error('DedicationWindow story: scrim overlay not found');
+      fireEvent.click(overlay);
+      await expect(args.onDismiss).toHaveBeenCalledTimes(3);
+    }),
 };

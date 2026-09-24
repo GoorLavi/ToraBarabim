@@ -67,6 +67,9 @@ export const DateFilterChips = styled(
 
     const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
       if (event.key === 'Escape') {
+        // Deliberately not skipped when `defaultPrevented`: below `md` the
+        // sheet closes first, without returning focus, and only this handler
+        // puts focus back on the trigger.
         event.preventDefault();
         closePicker();
         return;

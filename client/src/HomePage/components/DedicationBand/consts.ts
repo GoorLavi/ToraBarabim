@@ -39,16 +39,12 @@ export const RESUME_AFTER_INTERACTION_MS = 4000;
 // content.
 export const DEDICATION_BAND_EDGE_PADDING_PX = 16;
 
-// Press versus drag (design-system.md, dedication interaction, "Press
-// versus drag"): a primary pointer (any touch or pen point, or a mouse with
-// button 0) that travels strictly under this many pixels on both axes
-// between down and up is a press, never a drag. The same threshold also
-// gates the cursor's own switch to "grabbing" (styles.ts), so a drag has to
-// clear this same bar before the cursor admits it is one.
+// A primary pointer (any touch or pen point, or a mouse with button 0) that
+// travels a straight-line distance strictly under this many pixels between
+// down and up is a press, never a drag. Also gates the cursor's own switch
+// to "grabbing" (styles.ts).
 export const PRESS_MAX_TRAVEL_PX = 10;
 
-// The invitation line: the one real, 48px button on every band, whose own
-// accessible name is its visible text (final copy, root CLAUDE.md's list).
 export const INVITATION_LABEL = 'להקדשת פעילות האתר';
 
 // One label per type, not a shared generic one: up to three of these

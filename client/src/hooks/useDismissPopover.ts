@@ -38,15 +38,11 @@ export const useDismissPopover = ({ isOpen, rootRef, onDismiss, triggerRef }: Di
       latest.current.onDismiss();
     };
 
-    // Capture phase, and `preventDefault()` once this handles Escape: a
-    // popover of this shape can itself sit inside a `ResponsiveSheet` (the
-    // dedication window's `MoveExceptionSheet`/`MoveOccurrenceSheet` are the
-    // existing callers), whose own Escape handler is a bubble-phase listener
-    // on `.panel` and checks `defaultPrevented` before closing (the
-    // city-picker guard, ResponsiveSheet.tsx). Capture runs before bubble on
-    // the very same keydown, so this always gets first refusal: Escape
-    // closes the popover alone, and only a second Escape, with nothing left
-    // open to claim it, reaches the sheet.
+    // Capture phase, with `preventDefault()`: a popover of this shape can
+    // itself sit inside a `ResponsiveSheet` (`MoveExceptionSheet`'s
+    // `CitySelect` is a real caller), whose own Escape handler is a
+    // bubble-phase listener that checks `defaultPrevented`, so this always
+    // gets first refusal.
     const handleKeyDown = (event: KeyboardEvent): void => {
       if (event.key !== 'Escape') return;
       event.preventDefault();

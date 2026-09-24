@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { ReactElement, ReactNode } from 'react';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, spyOn, userEvent, waitFor, within } from 'storybook/test';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import * as mixpanel from '~/analytics/mixpanel';
 import { DEDICATION_UNIT_WIDTH_PX } from '~/components/DedicationUnit/consts';
 import {
   DEDICATION_GROUP_HEALING,
@@ -341,6 +343,26 @@ export const MousePressOpensTheWindow: Story = {
   },
 };
 
+// The invitation button has no click handler of its own; a real pointer
+// press on it opens the window through the section's own unified `onClick`
+// (its native click bubbles there), exactly once, and fires the open event
+// exactly once.
+export const PointerPressOnInviteButtonOpensOnce: Story = {
+  args: { group: DEDICATION_GROUP_HEALING, variant: 'onPage' },
+  play: async ({ canvasElement }) => {
+    const openSpy = spyOn(mixpanel, 'trackEvent');
+    const inviteButton = within(canvasElement).getByRole('button', { name: INVITATION_LABEL });
+    const box = inviteButton.getBoundingClientRect();
+
+    await dispatchRealMouseClick(box.left + box.width / 2, box.top + box.height / 2);
+
+    const dialogs = await within(document.body).findAllByRole('dialog', { name: WINDOW_TITLE });
+    expect(dialogs).toHaveLength(1);
+    expect(openSpy).toHaveBeenCalledTimes(1);
+    expect(openSpy).toHaveBeenCalledWith(MIXPANEL_EVENTS.dedicationWindowOpen, { bandType: 'healing' });
+  },
+};
+
 // A real mouse drag that travels well past PRESS_MAX_TRAVEL_PX never opens
 // the window, whether or not the band is overflowing enough to actually
 // scroll under it.
@@ -524,14 +546,8 @@ const widthComparison = (): ReactElement => (
 // for (DedicationBand/consts.ts), so the real height lands close to that
 // floor-composed minimum rather than to 165 or 180.
 //
-// The four figures below add exactly 56px to each of those (styles.ts:
-// `.invite`'s own 48px `min-block-size` plus its 8px `margin-block-start`,
-// `theme.spacing.sm`), computed from the box model rather than re-measured
-// in a render: a flex column's children never collapse margins with one
-// another or with the parent, so nothing else in the band's own height
-// changed. Still worth a from-scratch measurement the first time this
-// renders for real, since this arithmetic assumes the invitation line's own
-// text never grows taller than its 48px floor.
+// The four figures below add 56px to each of those (the invite line's 48px
+// min-block-size plus its 8px margin-block-start), computed, not measured.
 //
 // A tolerance, not an exact equality: font rasterisation and subpixel
 // layout will not reproduce to the hundredth across environments, and an

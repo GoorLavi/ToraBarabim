@@ -6,7 +6,6 @@ import type { DateFilterOption } from '~/hooks/models';
 import { MIXPANEL_EVENTS } from './consts';
 import type {
   AppSurface,
-  DedicationContactChannel,
   FilterCitySource,
   FilterDateSource,
   LessonSurface,
@@ -158,6 +157,8 @@ export interface FilterDateProps {
 export interface DedicationWindowOpenProps {
   bandType: DedicationType;
 }
+
+export type DedicationContactChannel = 'whatsapp' | 'call';
 
 export interface DedicationContactClickProps {
   channel: DedicationContactChannel;

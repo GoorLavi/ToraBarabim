@@ -27,10 +27,6 @@ export const MIXPANEL_EVENTS = {
   dedicationContactClick: 'Dedication Contact Click',
 } as const;
 
-// The one channel the dedication window ever sends a reader to, WhatsApp or
-// a phone call, whichever contact button they pressed.
-export type DedicationContactChannel = 'whatsapp' | 'call';
-
 // A `LessonCard` can sit in any of these lists; `homeRail` is the only one
 // that also carries a `railTitle` (analytics/models.ts, LessonClickContext).
 export type LessonSurface =

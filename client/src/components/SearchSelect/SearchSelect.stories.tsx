@@ -183,24 +183,23 @@ export const EscapeClosesAndReturnsFocus: Story = {
   },
 };
 
-// The city-picker guard (ResponsiveSheet.tsx, `useDismissPopover.ts`): a
-// `SearchSelect` opened inside a `ResponsiveSheet`, the same shape
-// `MoveExceptionSheet`'s `CitySelect` actually renders in. One Escape has to
-// close the popover alone and leave the sheet open, since the popover's own
-// capture-phase Escape listener claims the key first; only a second Escape,
-// with nothing left open to claim it, reaches the sheet.
+// A `SearchSelect` opened inside a `ResponsiveSheet`, the same shape
+// `MoveExceptionSheet`'s `CitySelect` actually renders in: one Escape closes
+// the popover alone and leaves the sheet open (`useDismissPopover.ts` owns
+// Escape in the capture phase); a second, with nothing left to claim it,
+// reaches the sheet. `SearchSelectProps<Option>` has no `onDismiss` of its
+// own, so this story's own args are cast to add the one this render needs.
 const SHEET_LABEL = 'גיליון לדוגמה';
-const sheetOnDismiss = fn();
 
 export const PopoverInsideASheet: Story = {
-  args: { items: options },
+  args: { items: options, onDismiss: fn() } as unknown as SearchSelectProps<Option>,
   render: (args) => (
-    <ResponsiveSheet ariaLabel={SHEET_LABEL} onDismiss={sheetOnDismiss}>
+    <ResponsiveSheet {...{ ariaLabel: SHEET_LABEL, onDismiss: (args as SearchSelectProps<Option> & { onDismiss: () => void }).onDismiss }}>
       <ControlledSearchSelect {...args} />
     </ResponsiveSheet>
   ),
-  play: async () => {
-    sheetOnDismiss.mockClear();
+  play: async ({ args }) => {
+    const onDismiss = (args as SearchSelectProps<Option> & { onDismiss: () => void }).onDismiss;
     const body = within(document.body);
     await userEvent.click(await body.findByRole('button', { name: PLACEHOLDER_LABEL }));
     await body.findByRole('textbox', { name: SEARCH_LABEL });
@@ -210,6 +209,6 @@ export const PopoverInsideASheet: Story = {
     await body.findByRole('dialog', { name: SHEET_LABEL });
 
     await userEvent.keyboard('{Escape}');
-    await expect(sheetOnDismiss).toHaveBeenCalledTimes(1);
+    await expect(onDismiss).toHaveBeenCalledTimes(1);
   },
 };

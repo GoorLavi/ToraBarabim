@@ -8,57 +8,48 @@ import { focusableElementsIn } from '~/components/helpers';
 import type { ResponsiveSheetProps } from './models';
 import * as styles from './styles';
 
-// Portalled into `document.body`. `PinnedHeaderBar` carries `transform:
-// translateY(...)` in both its states, and a transformed ancestor becomes
-// the containing block for a `position: fixed` descendant: without the
-// portal, a sheet opened from inside that bar (FilterFieldsGrid renders
-// there below `lg`) would cover only the bar's own box instead of the
-// viewport. `document` does not exist during server rendering, but this
-// component only ever renders after an interaction, so it is never part of
-// the server output; the guard below makes that true by construction rather
-// than by luck. The portal moves only the DOM node, not the React tree, so
-// the styled-components theme context (and any other context) still reaches
-// `.panel` and its children normally, and React's own synthetic events keep
-// bubbling by React-tree order rather than DOM order: a caller's own
-// ancestor handler (DateFilterChips's `calendarWrapper`, for instance)
-// still sees an event that started inside `.panel`.
+// Portalled into `document.body`: a transformed ancestor (`PinnedHeaderBar`)
+// would otherwise become the containing block for this `position: fixed`
+// element and clip it to the bar's own box instead of the viewport.
 export const ResponsiveSheet = styled(({ className, ariaLabel, onDismiss, children }: ResponsiveSheetProps) => {
   const panelRef = useRef<HTMLDivElement>(null);
 
-  // Focus-in-on-open: the panel itself, per the plan (1.3, option A), not
-  // its first focusable descendant, since the first descendant in a sheet
-  // like `DiscardChangesSheet` is its destructive action, and a keyboard
-  // user who opens the sheet and presses Enter must never throw their own
-  // edit away by doing nothing but accepting where focus already was. This
-  // component only ever mounts while the sheet is open (there is no
-  // `isOpen` prop to key an effect on), so a plain mount effect *is* "once
-  // per open". Skipped when focus already sits inside the panel, which is
-  // what keeps a picker's own autofocused search input (CityPickerPanel,
-  // SearchSelect) its focus rather than losing it to the panel a beat
-  // later: a descendant's own mount effect always runs before an
-  // ancestor's in the same commit, so by the time this runs, a
-  // self-focusing child has already claimed it (the city-picker guard).
+  // Focus moves onto the panel itself, not its first focusable descendant,
+  // so a sheet whose first control is destructive (`DiscardChangesSheet`)
+  // is never one blind Enter away from being activated; skipped when focus
+  // already sits inside (a picker's own autofocused search input keeps its
+  // focus, since a descendant's mount effect always runs before this one).
+  // On unmount, focus is returned to whatever held it before, but only if
+  // that element is still in the document and focus has not already moved
+  // somewhere else on purpose (outside the panel and off `<body>`).
   useEffect(() => {
     const panel = panelRef.current;
     if (!panel) return;
-    if (panel.contains(document.activeElement)) return;
-    panel.focus();
+
+    const previouslyFocused = document.activeElement;
+    if (!panel.contains(document.activeElement)) panel.focus();
+
+    return () => {
+      if (!(previouslyFocused instanceof HTMLElement) || !document.contains(previouslyFocused)) return;
+      if (!panel.contains(document.activeElement) && document.activeElement !== document.body) return;
+      previouslyFocused.focus();
+    };
   }, []);
 
-  // The Tab trap reacts to `keydown` Tab only: never `focusout`, `focusin`,
-  // `blur` or a pointer event, and never moves focus in response to any of
-  // those (the city-picker guard, a36eaba: that is exactly the Safari trap
-  // this codebase already shipped and fixed once).
+  // Reacts to `keydown` Tab only, never a focus or pointer event: that is
+  // the Safari trap this codebase already shipped and fixed once (a36eaba).
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     if (event.key === 'Escape') {
       // Never `stopPropagation`, only `defaultPrevented`: a popover nested
-      // inside this sheet (`useDismissPopover.ts`, the SearchSelect-in-a-
-      // sheet case `MoveExceptionSheet`'s `CitySelect` is the real caller
-      // of) owns Escape in the capture phase and calls `preventDefault()`
-      // when it closes itself, so by the time this bubble-phase handler
-      // runs, an Escape already claimed by something inside is a no-op
-      // here. This handler does the same for whatever sits above it.
+      // inside this sheet owns Escape in its own capture-phase listener and
+      // calls `preventDefault()` when it closes itself, so this only acts
+      // once nothing inside has already claimed the key.
       if (event.defaultPrevented) return;
+      // Escape closes the sheet even while a caller has disabled its own
+      // back button for a pending request (five panel sheets do this), the
+      // same as a scrim tap already does, so an in-flight error can be lost
+      // this way; accepted for now (owner decision), not fixed by an
+      // `isDismissible` prop.
       event.preventDefault();
       onDismiss();
       return;
@@ -72,11 +63,10 @@ export const ResponsiveSheet = styled(({ className, ariaLabel, onDismiss, childr
     const last = focusable[focusable.length - 1];
     if (!first || !last) return;
 
-    // Focus opens on the panel itself, not on `first` (above), so
-    // shift+Tab from there has to wrap the same way it would from `first`:
-    // otherwise the panel, sitting outside the normal tab sequence
-    // (`tabIndex={-1}`), lets shift+Tab fall back to whatever precedes this
-    // portal's own position in the document, escaping the sheet entirely.
+    // Focus opens on the panel itself (above), not on `first`, so
+    // shift+Tab from there has to wrap the same way shift+Tab from `first`
+    // does, or it escapes the sheet through whatever precedes this portal
+    // in the document instead.
     if (event.shiftKey && (document.activeElement === panel || document.activeElement === first)) {
       event.preventDefault();
       last.focus();

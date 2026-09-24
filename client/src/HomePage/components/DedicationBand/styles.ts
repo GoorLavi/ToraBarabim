@@ -180,13 +180,13 @@ export const DedicationBand = css(
     gap: ${consts.DEDICATION_UNIT_GAP_PX}px;
   }
 
-  /* The invitation line: the one real, 48px button on every band (root
-     CLAUDE.md's copy list). Plain text, not a bordered chip, since it reads
-     as an invitation sitting under the strip, not a control beside it. */
+  /* Plain text, not a bordered chip: it reads as an invitation sitting
+     under the strip, not a control beside it. */
   > .invite {
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 6px;
     inline-size: 100%;
     min-block-size: 48px;
     margin-block-start: ${theme.spacing.sm};
@@ -199,18 +199,21 @@ export const DedicationBand = css(
     text-decoration: none;
     cursor: pointer;
 
+    > .chevron {
+      inline-size: 7px;
+      block-size: 12px;
+      flex-shrink: 0;
+    }
+
     &:focus-visible {
       outline: 2px solid currentColor;
       outline-offset: 2px;
     }
   }
 
-  /* Names never change state on hover, press or focus (design-system.md,
-     dedication interaction rule): scoped to ".invite" alone, never to the
-     band as a whole, so a hover over a dedication's own name is unaffected. */
-  &:hover > .invite,
-  &:focus-within > .invite {
-    filter: brightness(1.2);
+  /* Names never change state on hover, press or focus: scoped to ".invite"
+     alone, never to the band as a whole. */
+  &:hover > .invite {
     text-decoration: underline;
   }
 

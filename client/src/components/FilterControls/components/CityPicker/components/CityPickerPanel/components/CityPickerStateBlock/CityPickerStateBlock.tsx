@@ -27,9 +27,9 @@ export const CityPickerStateBlock = styled(({ className, title, danger, body, ac
           // own `renderAction` for why (TS2604 on a union of two components
           // with diverging prop shapes).
           action.style === 'primary' ? (
-            <PrimaryButton key={action.label} label={action.label} onClick={action.onClick} />
+            <PrimaryButton key={action.label} {...{ label: action.label, onClick: action.onClick }} />
           ) : (
-            <QuietButton key={action.label} label={action.label} onClick={action.onClick} />
+            <QuietButton key={action.label} {...{ label: action.label, onClick: action.onClick }} />
           ),
         )}
       </div>
