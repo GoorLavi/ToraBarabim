@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { ReactElement, ReactNode } from 'react';
-import { expect, userEvent, waitFor } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { DEDICATION_UNIT_WIDTH_PX } from '~/components/DedicationUnit/consts';
 import {
@@ -12,7 +12,8 @@ import {
 } from '~/dedicationFixture';
 import { ARGAMAN_VE_ZAHAV_THEME } from '~/theme/themes';
 
-import { DEDICATION_UNIT_GAP_PX, RESUME_AFTER_INTERACTION_MS } from './consts';
+import { WINDOW_TITLE } from './components/DedicationWindow/consts';
+import { DEDICATION_UNIT_GAP_PX, INVITATION_LABEL, RESUME_AFTER_INTERACTION_MS } from './consts';
 import { DedicationBand } from './DedicationBand';
 import { wrapTrackPosition } from './helpers';
 
@@ -259,6 +260,10 @@ export const VerticalSwipeScrollsThePage: Story = {
       await new Promise((resolve) => window.setTimeout(resolve, 200));
 
       expect(Math.abs(window.scrollY - restingScrollY)).toBeGreaterThan(50);
+      // A vertical swipe travels well past PRESS_MAX_TRAVEL_PX on the
+      // vertical axis, so it is a scroll, never a press: the window never
+      // opens underneath it.
+      expect(document.body.querySelector('[role="dialog"]')).toBeNull();
     } finally {
       document.body.removeChild(filler);
       window.scrollTo(0, 0);
@@ -282,6 +287,10 @@ const dispatchRealMouseClick = async (x: number, y: number): Promise<void> => {
   await client.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: 'left', clickCount: 1 });
 };
 
+// Reworked once the band itself became pressable (owner, explicit approval,
+// Gate 2): a real mouse click here now also opens the dedication window, so
+// the click has to be followed by an Escape to close it before the crawl's
+// own resume behaviour can be observed at all.
 export const MouseClickDoesNotFreezeTheCrawl: Story = {
   args: { group: DEDICATION_GROUP_OVERFLOWING, variant: 'onPage' },
   play: async ({ canvasElement }) => {
@@ -301,6 +310,10 @@ export const MouseClickDoesNotFreezeTheCrawl: Story = {
     // sitting on the band would freeze it for a real reason and prove
     // nothing about the focus bug.
     await dispatchRealMouseClick(box.left + box.width / 2, box.top + box.height / 2);
+    await within(document.body).findByRole('dialog', { name: WINDOW_TITLE });
+    await userEvent.keyboard('{Escape}');
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+
     const { cdp } = await import('vitest/browser');
     await cdp().send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 5, y: 5 });
     await new Promise((resolve) => window.setTimeout(resolve, RESUME_AFTER_INTERACTION_MS + 500));
@@ -310,6 +323,117 @@ export const MouseClickDoesNotFreezeTheCrawl: Story = {
     const later = viewport.scrollLeft;
 
     expect(later).not.toEqual(afterCooldown);
+  },
+};
+
+// A real mouse click, no travel at all, on a non-overflowing (so
+// non-crawling) band: the simplest possible press, opening the shared
+// window with this band's own accessible name.
+export const MousePressOpensTheWindow: Story = {
+  args: { group: DEDICATION_GROUP_HEALING, variant: 'onPage' },
+  play: async ({ canvasElement }) => {
+    const section = canvasElement.querySelector<HTMLElement>('section');
+    if (!section) throw new Error('DedicationBand story: section not found');
+    const box = section.getBoundingClientRect();
+
+    await dispatchRealMouseClick(box.left + box.width / 2, box.top + box.height / 2);
+    await within(document.body).findByRole('dialog', { name: WINDOW_TITLE });
+  },
+};
+
+// A real mouse drag that travels well past PRESS_MAX_TRAVEL_PX never opens
+// the window, whether or not the band is overflowing enough to actually
+// scroll under it.
+export const MouseDragDoesNotOpenTheWindow: Story = {
+  args: { group: DEDICATION_GROUP_HEALING, variant: 'onPage' },
+  play: async ({ canvasElement }) => {
+    const section = canvasElement.querySelector<HTMLElement>('section');
+    if (!section) throw new Error('DedicationBand story: section not found');
+    const box = section.getBoundingClientRect();
+    const y = box.top + box.height / 2;
+    const startX = box.left + 4;
+    const endX = startX + 40;
+
+    const { cdp } = await import('vitest/browser');
+    const client = cdp();
+    await client.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: startX, y });
+    await client.send('Input.dispatchMouseEvent', { type: 'mousePressed', x: startX, y, button: 'left', clickCount: 1 });
+    const steps = 6;
+    for (let step = 1; step <= steps; step++) {
+      const x = startX + ((endX - startX) * step) / steps;
+      await client.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y, buttons: 1 });
+      await new Promise((resolve) => window.setTimeout(resolve, 16));
+    }
+    await client.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: endX, y, button: 'left', clickCount: 1 });
+    await new Promise((resolve) => window.setTimeout(resolve, 200));
+
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+  },
+};
+
+// During a crawl, the first press still opens the window: the crawl's own
+// self-advance never blocks or eats a genuine press (design rule's own
+// third point).
+export const PressWhileCrawlingOpensOnFirstPress: Story = {
+  args: { group: DEDICATION_GROUP_OVERFLOWING, variant: 'onPage' },
+  play: async ({ canvasElement }) => {
+    const viewport = canvasElement.querySelector<HTMLElement>('.viewport');
+    if (!viewport) throw new Error('DedicationBand story: .viewport not found');
+    await waitFor(() => expect(getComputedStyle(viewport).overflowX).toEqual('auto'));
+    // Let the crawl actually advance first, so this presses a moving band,
+    // not one that merely measured as overflowing.
+    await new Promise((resolve) => window.setTimeout(resolve, 300));
+
+    const box = viewport.getBoundingClientRect();
+    await dispatchRealMouseClick(box.left + box.width / 2, box.top + box.height / 2);
+    await within(document.body).findByRole('dialog', { name: WINDOW_TITLE });
+  },
+};
+
+// A horizontal touch swipe, the crawling band's own native scroll gesture,
+// travels well past the press threshold and never opens the window either.
+const dispatchHorizontalTouchSwipe = async (startX: number, y: number, distancePx: number): Promise<void> => {
+  const { cdp } = await import('vitest/browser');
+  const client = cdp();
+  const steps = 8;
+  await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: startX, y }] });
+  for (let step = 1; step <= steps; step++) {
+    const x = startX - (distancePx * step) / steps;
+    await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x, y }] });
+    await new Promise((resolve) => window.setTimeout(resolve, 16));
+  }
+  await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+};
+
+export const HorizontalTouchSwipeDoesNotOpen: Story = {
+  args: { group: DEDICATION_GROUP_OVERFLOWING, variant: 'onPage' },
+  play: async ({ canvasElement }) => {
+    const viewport = canvasElement.querySelector<HTMLElement>('.viewport');
+    if (!viewport) throw new Error('DedicationBand story: .viewport not found');
+    await waitFor(() => expect(getComputedStyle(viewport).overflowX).toEqual('auto'));
+
+    const box = viewport.getBoundingClientRect();
+    await dispatchHorizontalTouchSwipe(box.left + box.width / 2, box.top + box.height / 2, 120);
+    await new Promise((resolve) => window.setTimeout(resolve, 200));
+
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+  },
+};
+
+// Keyboard activation of the invitation line opens the window, and closing
+// it (Escape) returns focus to that same button, never to the body.
+export const KeyboardOpensAndFocusReturns: Story = {
+  args: { group: DEDICATION_GROUP_HEALING, variant: 'onPage' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const inviteButton = canvas.getByRole('button', { name: INVITATION_LABEL });
+    inviteButton.focus();
+    await userEvent.keyboard('{Enter}');
+
+    await within(document.body).findByRole('dialog', { name: WINDOW_TITLE });
+    await userEvent.keyboard('{Escape}');
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+    await expect(inviteButton).toHaveFocus();
   },
 };
 
@@ -393,12 +517,21 @@ const widthComparison = (): ReactElement => (
 // itself, seen from inside it, so resizing that directly is what actually
 // crosses the md breakpoint this story means to test.
 //
-// Asserted against the heights actually measured (375: onPrimary 205.4,
-// onPage 196.1; 1280: onPrimary 209.1, onPage 197.5), not the owner's own
-// target: the individual floors on formula, name, parent, closing and
-// donor already sit above what either target asks for
-// (DedicationBand/consts.ts), so the real height lands close to that
+// Asserted against the heights actually measured before the invitation line
+// existed (375: onPrimary 205.4, onPage 196.1; 1280: onPrimary 209.1, onPage
+// 197.5), not the owner's own target: the individual floors on formula,
+// name, parent, closing and donor already sit above what either target asks
+// for (DedicationBand/consts.ts), so the real height lands close to that
 // floor-composed minimum rather than to 165 or 180.
+//
+// The four figures below add exactly 56px to each of those (styles.ts:
+// `.invite`'s own 48px `min-block-size` plus its 8px `margin-block-start`,
+// `theme.spacing.sm`), computed from the box model rather than re-measured
+// in a render: a flex column's children never collapse margins with one
+// another or with the parent, so nothing else in the band's own height
+// changed. Still worth a from-scratch measurement the first time this
+// renders for real, since this arithmetic assumes the invitation line's own
+// text never grows taller than its 48px floor.
 //
 // A tolerance, not an exact equality: font rasterisation and subpixel
 // layout will not reproduce to the hundredth across environments, and an
@@ -441,12 +574,12 @@ const measureBandHeightsAtWidth = (widthPx: number, expectedOnPrimaryPx: number,
 
 export const WidthPhone: Story = {
   render: widthComparison,
-  play: measureBandHeightsAtWidth(375, 205.4, 196.1),
+  play: measureBandHeightsAtWidth(375, 261.4, 252.1),
 };
 
 export const WidthDesktop: Story = {
   render: widthComparison,
-  play: measureBandHeightsAtWidth(1280, 209.1, 197.5),
+  play: measureBandHeightsAtWidth(1280, 265.1, 253.5),
 };
 
 // wrapTrackPosition has to bring a position several periods out of range

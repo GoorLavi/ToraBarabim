@@ -5,6 +5,7 @@ import styled from 'styled-components';
 
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
+import { focusableElementsIn } from '~/components/helpers';
 import { dayLabel, numericDayLabel, todayInIsrael } from '~/HomePage/helpers';
 
 import { DateFilterSheet } from './components/DateFilterSheet/DateFilterSheet';
@@ -13,13 +14,6 @@ import * as consts from './consts';
 import type { DateFilterChipsProps } from './models';
 import * as styles from './styles';
 import { useIsDesktopViewport } from './useIsDesktopViewport';
-
-// Reads focusable buttons still inside the panel, in tab order, so Tab can
-// be made to cycle inside the dialog instead of escaping it.
-const focusableButtonsIn = (panel: HTMLElement): HTMLButtonElement[] =>
-  Array.from(panel.querySelectorAll<HTMLButtonElement>('button:not([disabled])')).filter(
-    (button) => button.tabIndex !== -1,
-  );
 
 export const DateFilterChips = styled(
   ({ className, option, customDate, onSelectOption, onSelectCustomDate, onClearDate }: DateFilterChipsProps) => {
@@ -79,7 +73,7 @@ export const DateFilterChips = styled(
       }
       if (event.key !== 'Tab' || !panelRef.current) return;
 
-      const focusable = focusableButtonsIn(panelRef.current);
+      const focusable = focusableElementsIn(panelRef.current);
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
       if (!first || !last) return;

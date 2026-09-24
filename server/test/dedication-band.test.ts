@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 
-import { isTrackOverflowing, stepByUnitPitch, wrapTrackPosition } from '../../client/src/HomePage/components/DedicationBand/helpers';
+import { isPressGesture, isTrackOverflowing, stepByUnitPitch, wrapTrackPosition } from '../../client/src/HomePage/components/DedicationBand/helpers';
 import { WOMENS_AREA_BAND_SLOT } from '../../client/src/HomePage/components/HomeRails/consts';
 import { dedicationBandSlot, shouldShowBetweenRailsDedication } from '../../client/src/HomePage/components/HomeRails/helpers';
 
@@ -101,6 +101,29 @@ describe('stepByUnitPitch (arrow key stepping)', () => {
     for (let i = 0; i < 9; i += 1) position = stepByUnitPitch(position, 1, TEST_UNIT_PITCH_PX);
     for (let i = 0; i < 9; i += 1) position = stepByUnitPitch(position, -1, TEST_UNIT_PITCH_PX);
     assert.equal(position % TEST_UNIT_PITCH_PX, 0, `ended mid-unit at ${position}`);
+  });
+});
+
+describe('isPressGesture (press versus drag)', () => {
+  test('zero move is a press', () => {
+    assert.equal(isPressGesture(0, 0), true);
+  });
+
+  test('a straight-line distance of about 9.4px (5, 8) is a press', () => {
+    assert.equal(isPressGesture(5, 8), true);
+  });
+
+  test('a straight-line distance of exactly 10px (6, 8) is not a press', () => {
+    assert.equal(isPressGesture(6, 8), false);
+  });
+
+  test('exactly 10px on a single axis (10, 0) is not a press', () => {
+    assert.equal(isPressGesture(10, 0), false);
+  });
+
+  test('a negative delta is measured the same as a positive one', () => {
+    assert.equal(isPressGesture(-5, -8), true);
+    assert.equal(isPressGesture(-6, -8), false);
   });
 });
 

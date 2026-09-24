@@ -2,6 +2,8 @@ import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
+import { ResponsiveSheet } from '~/components/ResponsiveSheet/ResponsiveSheet';
+
 import { SearchSelect } from './SearchSelect';
 import type { SearchSelectProps } from './models';
 
@@ -178,5 +180,36 @@ export const EscapeClosesAndReturnsFocus: Story = {
     await userEvent.keyboard('{Escape}');
     expect(canvas.queryByRole('textbox', { name: SEARCH_LABEL })).not.toBeInTheDocument();
     await expect(canvas.getByRole('button', { name: PLACEHOLDER_LABEL })).toHaveFocus();
+  },
+};
+
+// The city-picker guard (ResponsiveSheet.tsx, `useDismissPopover.ts`): a
+// `SearchSelect` opened inside a `ResponsiveSheet`, the same shape
+// `MoveExceptionSheet`'s `CitySelect` actually renders in. One Escape has to
+// close the popover alone and leave the sheet open, since the popover's own
+// capture-phase Escape listener claims the key first; only a second Escape,
+// with nothing left open to claim it, reaches the sheet.
+const SHEET_LABEL = 'גיליון לדוגמה';
+const sheetOnDismiss = fn();
+
+export const PopoverInsideASheet: Story = {
+  args: { items: options },
+  render: (args) => (
+    <ResponsiveSheet ariaLabel={SHEET_LABEL} onDismiss={sheetOnDismiss}>
+      <ControlledSearchSelect {...args} />
+    </ResponsiveSheet>
+  ),
+  play: async () => {
+    sheetOnDismiss.mockClear();
+    const body = within(document.body);
+    await userEvent.click(await body.findByRole('button', { name: PLACEHOLDER_LABEL }));
+    await body.findByRole('textbox', { name: SEARCH_LABEL });
+
+    await userEvent.keyboard('{Escape}');
+    expect(body.queryByRole('textbox', { name: SEARCH_LABEL })).not.toBeInTheDocument();
+    await body.findByRole('dialog', { name: SHEET_LABEL });
+
+    await userEvent.keyboard('{Escape}');
+    await expect(sheetOnDismiss).toHaveBeenCalledTimes(1);
   },
 };

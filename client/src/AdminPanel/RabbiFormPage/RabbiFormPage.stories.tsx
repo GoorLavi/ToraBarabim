@@ -1,7 +1,7 @@
 import type { RabbiAccountResponse, RabbiResponse } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Route, Routes } from 'react-router-dom';
-import { userEvent, within } from 'storybook/test';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { rabbiFixture } from '~/rabbiFixture';
 import { installMockFetch, jsonResponse } from '~/storyMocks';
@@ -61,5 +61,18 @@ export const EditModeDiscardChangesSheet: Story = {
     await userEvent.type(nameInput, ' הי');
     await userEvent.click(canvas.getByRole('link', { name: 'ביטול' }));
     await within(document.body).findByRole('dialog', { name: 'לצאת בלי לשמור?' });
+
+    // Focus lands on the sheet itself, never on its destructive discard
+    // button (ResponsiveSheet's own option A behaviour): a keyboard user
+    // who opens this and presses Enter without reading must never throw
+    // their edit away by doing nothing.
+    const discardButton = within(document.body).getByRole('button', { name: 'כן, לצאת בלי לשמור' });
+    expect(discardButton).not.toHaveFocus();
+
+    // Escape closes the sheet too (ResponsiveSheet's own option A
+    // behaviour), returning to editing with the form's own changes intact.
+    await userEvent.keyboard('{Escape}');
+    expect(within(document.body).queryByRole('dialog', { name: 'לצאת בלי לשמור?' })).not.toBeInTheDocument();
+    await expect(canvas.findByDisplayValue(`${rabbi.name} הי`)).resolves.toBeInTheDocument();
   },
 };

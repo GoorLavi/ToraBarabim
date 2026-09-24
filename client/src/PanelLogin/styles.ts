@@ -1,5 +1,7 @@
 import { css } from 'styled-components';
 
+import { WHATSAPP_BRAND_COLOR, WHATSAPP_BRAND_COLOR_HOVER } from '~/consts';
+
 import * as consts from './consts';
 
 export const PanelLogin = css(
@@ -211,7 +213,7 @@ export const PanelLogin = css(
     align-items: center;
     justify-content: center;
     border-radius: ${theme.radii.pill};
-    background: ${consts.WHATSAPP_BUTTON_COLOR};
+    background: ${WHATSAPP_BRAND_COLOR};
     color: ${theme.colors.textOnPrimary};
     box-shadow: ${theme.shadows.raised};
     z-index: ${consts.WHATSAPP_BUTTON_Z_INDEX};
@@ -219,7 +221,7 @@ export const PanelLogin = css(
 
     &:hover,
     &:active {
-      background: ${consts.WHATSAPP_BUTTON_COLOR_HOVER};
+      background: ${WHATSAPP_BRAND_COLOR_HOVER};
     }
 
     &:focus-visible {

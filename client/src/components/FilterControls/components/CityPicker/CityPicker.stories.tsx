@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, within } from 'storybook/test';
 import styled from 'styled-components';
 
 import type { SelectedCity } from '~/hooks/models';
@@ -227,5 +227,56 @@ export const GroupedError: Story = {
   play: async ({ canvasElement }) => {
     const canvas = await openPicker(canvasElement);
     await expect(canvas.findByText('לא הצלחנו לטעון את רשימת הערים')).resolves.toBeInTheDocument();
+  },
+};
+
+// The city-picker guard (docs in ResponsiveSheet.tsx): below `sm` the panel
+// is `FilterDrawer`, `ResponsiveSheet`'s own portal, so this forces the
+// iframe narrow rather than relying on whatever the runner's default width
+// happens to be (mirrors DedicationBand.stories.tsx's own `frameElement`
+// technique, the established way to cross a breakpoint in this suite).
+const resizeFrameNarrow = async (): Promise<void> => {
+  const frame = window.frameElement as HTMLIFrameElement | null;
+  if (!frame) throw new Error('CityPicker story: window.frameElement not found, expected to be running inside the test runner\'s iframe');
+  frame.style.width = '375px';
+  await new Promise((resolve) => window.setTimeout(resolve, 100));
+};
+
+// The guarantee the whole Tab-trap change exists not to break (the
+// city-picker guard's own required test): picking a city inside the phone
+// drawer still calls `onSelectCity` and still closes the drawer, the same
+// Safari-mousedown-focus shape `CitySelect.stories.tsx`'s own equivalent
+// story exists for.
+export const PhoneWidthSelectsACityAndClosesTheDrawer: Story = {
+  decorators: [withSuggestionsScenario('loaded'), withRecentCities([])],
+  args: { onSelectCity: fn() },
+  play: async ({ canvasElement, args }) => {
+    await resizeFrameNarrow();
+    const canvas = await openPicker(canvasElement);
+    const body = within(document.body);
+
+    await userEvent.type(await body.findByRole('textbox', { name: 'חיפוש עיר' }), 'חי');
+    await userEvent.click(await body.findByText('חיפה עילית'));
+
+    await expect(args.onSelectCity).toHaveBeenCalledWith({ id: '5090', name: 'חיפה עילית' });
+    expect(body.queryByRole('dialog', { name: 'בחירת עיר' })).not.toBeInTheDocument();
+    expect(canvas.queryByRole('textbox')).not.toBeInTheDocument();
+  },
+};
+
+// Escape closes the drawer and returns focus to the pill: `ResponsiveSheet`'s
+// own new Escape handling (option A), reaching `PanelFrame`'s Tab trap
+// unbroken.
+export const PhoneWidthEscapeClosesTheDrawer: Story = {
+  decorators: [withSuggestionsScenario('loaded'), withRecentCities([])],
+  play: async ({ canvasElement }) => {
+    await resizeFrameNarrow();
+    const canvas = await openPicker(canvasElement);
+    await within(document.body).findByRole('dialog', { name: 'בחירת עיר' });
+
+    await userEvent.keyboard('{Escape}');
+
+    expect(within(document.body).queryByRole('dialog', { name: 'בחירת עיר' })).not.toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: 'כל הארץ' })).toHaveFocus();
   },
 };

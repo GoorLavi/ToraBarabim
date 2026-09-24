@@ -22,10 +22,16 @@ export const CityPickerStateBlock = styled(({ className, title, danger, body, ac
     </p>
     {actions && actions.length > 0 && (
       <div className="actions">
-        {actions.map((action) => {
-          const ActionButton = action.style === 'primary' ? PrimaryButton : QuietButton;
-          return <ActionButton key={action.label} {...{ label: action.label, onClick: action.onClick }} />;
-        })}
+        {actions.map((action) =>
+          // Rendered in JSX, never chosen into a variable: see StateCard.tsx's
+          // own `renderAction` for why (TS2604 on a union of two components
+          // with diverging prop shapes).
+          action.style === 'primary' ? (
+            <PrimaryButton key={action.label} label={action.label} onClick={action.onClick} />
+          ) : (
+            <QuietButton key={action.label} label={action.label} onClick={action.onClick} />
+          ),
+        )}
       </div>
     )}
   </div>

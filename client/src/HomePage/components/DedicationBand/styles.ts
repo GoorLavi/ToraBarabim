@@ -13,6 +13,25 @@ import * as consts from './consts';
 export const DedicationBand = css(
   ({ theme }) => `
   position: relative;
+  display: flex;
+  flex-direction: column;
+
+  /* The whole band is pressable now, not only the invite line
+     (design-system.md, dedication interaction: "Press versus drag"), so the
+     pointer cursor covers the whole element at rest and on hover. Touch has
+     no cursor to set. "grabbing" only replaces it once a drag actually
+     clears the press threshold (.dragging below, set by usePressHandlers.ts,
+     never the instant a mouse goes down the way the crawl's own isDragging
+     used to drive this). */
+  @media (pointer: fine) {
+    cursor: pointer;
+  }
+
+  &.dragging {
+    @media (pointer: fine) {
+      cursor: grabbing;
+    }
+  }
 
   /* The band's own scale driver, read by every scaled dedication value
      (DedicationUnit/styles.ts, and the padding-block below): a fixed
@@ -61,6 +80,10 @@ export const DedicationBand = css(
       outline: 2px solid ${theme.colors.textOnPrimary};
       outline-offset: 2px;
     }
+
+    > .invite {
+      color: ${theme.colors.textOnPrimary};
+    }
   }
 
   &.onPage {
@@ -71,6 +94,10 @@ export const DedicationBand = css(
     > .viewport:focus-visible {
       outline: 2px solid ${theme.colors.primary};
       outline-offset: 2px;
+    }
+
+    > .invite {
+      color: ${theme.colors.primary};
     }
   }
 
@@ -132,16 +159,6 @@ export const DedicationBand = css(
     /* A crawling or scrollable track starts at its own inline start, never
        centred: a centred scroll origin has no natural resting position. */
     justify-content: flex-start;
-
-    @media (pointer: fine) {
-      cursor: grab;
-    }
-  }
-
-  &.dragging > .viewport {
-    @media (pointer: fine) {
-      cursor: grabbing;
-    }
   }
 
   /* The loop's second copy is marked aria-hidden, so a screen reader never
@@ -161,6 +178,40 @@ export const DedicationBand = css(
     display: flex;
     align-items: stretch;
     gap: ${consts.DEDICATION_UNIT_GAP_PX}px;
+  }
+
+  /* The invitation line: the one real, 48px button on every band (root
+     CLAUDE.md's copy list). Plain text, not a bordered chip, since it reads
+     as an invitation sitting under the strip, not a control beside it. */
+  > .invite {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 100%;
+    min-block-size: 48px;
+    margin-block-start: ${theme.spacing.sm};
+    background: none;
+    border: none;
+    padding: 0;
+    font-weight: ${theme.typography.fontWeight.semiBold};
+    font-size: ${theme.typography.secondary.phone.fontSize};
+    line-height: ${theme.typography.secondary.phone.lineHeight};
+    text-decoration: none;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 2px;
+    }
+  }
+
+  /* Names never change state on hover, press or focus (design-system.md,
+     dedication interaction rule): scoped to ".invite" alone, never to the
+     band as a whole, so a hover over a dedication's own name is unaffected. */
+  &:hover > .invite,
+  &:focus-within > .invite {
+    filter: brightness(1.2);
+    text-decoration: underline;
   }
 
 `,
