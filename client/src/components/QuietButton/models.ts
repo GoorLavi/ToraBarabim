@@ -2,9 +2,9 @@ import type { ReactNode } from 'react';
 
 interface QuietButtonBaseProps {
   className?: string;
-  // A plain string for every caller but the dedication window's contact
-  // buttons, which need an inline-start icon beside the text.
-  label: ReactNode;
+  label: string;
+  // Rendered before the label, at the inline start, with an inline-end gap.
+  icon?: ReactNode;
 }
 
 // A navigation action renders as a link, a retry, a clear-filter or a

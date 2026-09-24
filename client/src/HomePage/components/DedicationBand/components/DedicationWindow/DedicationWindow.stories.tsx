@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fireEvent, fn, userEvent, within } from 'storybook/test';
 
 import { whatsAppHref } from '~/helpers';
+import { atFrameSize } from '~/storyMocks';
 
 import * as consts from './consts';
 import { DedicationWindow } from './DedicationWindow';
@@ -14,24 +15,6 @@ const meta: Meta<typeof DedicationWindow> = {
 
 export default meta;
 type Story = StoryObj<typeof DedicationWindow>;
-
-// Runs `play` at a forced iframe size, then restores it, so one story's
-// resize never leaks into the next.
-const atFrameSize = async (widthPx: number, heightPx: number, play: () => Promise<void>): Promise<void> => {
-  const frame = window.frameElement as HTMLIFrameElement | null;
-  if (!frame) throw new Error('DedicationWindow story: window.frameElement not found, expected to be running inside the test runner\'s iframe');
-  const originalWidth = frame.style.width;
-  const originalHeight = frame.style.height;
-  frame.style.width = `${widthPx}px`;
-  frame.style.height = `${heightPx}px`;
-  await new Promise((resolve) => window.setTimeout(resolve, 100));
-  try {
-    await play();
-  } finally {
-    frame.style.width = originalWidth;
-    frame.style.height = originalHeight;
-  }
-};
 
 // Every string, both hrefs, the accessible names, and that the body's own
 // scrolling region never scrolls at the width the design was built to clear.

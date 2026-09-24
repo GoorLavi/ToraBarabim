@@ -29,12 +29,7 @@ export const CALL_ICON_PATH =
 // deliberately small, not clipped against it.
 export const ORNAMENT_SCALE_PX = '0.45px';
 
-// The header's own bespoke padding, settled by the designer directly rather
-// than drawn from the general 8px spacing scale (mirrors DedicationBand/
-// consts.ts's own DEDICATION_BAND_PADDING_* figures, the one other place a
-// dedication surface's spacing is a fixed design figure, not a token).
-// Trimmed once already, at every width, from 32/28 to these: the window's
-// own height had to clear the sheet's 90vh cap at 320x640.
-export const HEADER_PADDING_TOP_PX = 24;
+// Bespoke, not drawn from the spacing scale: the window's own height has to
+// clear the sheet's 90vh cap at 320x640.
 export const HEADER_PADDING_BOTTOM_PX = 20;
 export const BODY_PADDING_TOP_PX = 20;

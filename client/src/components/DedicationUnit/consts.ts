@@ -85,11 +85,7 @@ export const scaledCss = (referenceNumber: number, floorPx: number): string =>
   `max(${floorPx}px, calc(${referenceNumber} * var(--dedication-scale-px, 1px)))`;
 
 // The ornament's own three gradient-stop custom properties, the colour
-// fragment `Ornament.tsx`'s `<linearGradient>` reads (styles.ts). Exported
-// so a caller outside this component's own two variant blocks below (the
-// dedication window, HomePage/components/DedicationBand/components/
-// DedicationWindow) can render the same `<Ornament />` with the same
-// colours without retyping this three-line mapping a second time.
+// fragment `Ornament.tsx`'s `<linearGradient>` reads (styles.ts).
 export const ornamentColorVarsCss = (tokens: DedicationVariantTokens): string => `
   --dedication-ornament-stop-0: ${tokens.ornamentStop0};
   --dedication-ornament-stop-40: ${tokens.ornamentStop40};

@@ -3,6 +3,7 @@ import { useRef, useState } from 'react';
 import styled from 'styled-components';
 
 import { DedicationUnit } from '~/components/DedicationUnit/DedicationUnit';
+import { Chevron } from '~/HomePage/components/Chevron/Chevron';
 
 import { DedicationWindow } from './components/DedicationWindow/DedicationWindow';
 import * as consts from './consts';
@@ -77,9 +78,7 @@ const DedicationBandTrack = ({ className, group, variant }: DedicationBandTrackP
 
         <button type="button" className="invite" ref={inviteButtonRef}>
           {consts.INVITATION_LABEL}
-          <svg className="chevron" viewBox="0 0 7 12" fill="none" aria-hidden="true">
-            <path d="M6 1L1 6L6 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          <Chevron />
         </button>
       </section>
 

@@ -16,13 +16,10 @@ export const DedicationBand = css(
   display: flex;
   flex-direction: column;
 
-  /* The whole band is pressable now, not only the invite line
-     (design-system.md, dedication interaction: "Press versus drag"), so the
-     pointer cursor covers the whole element at rest and on hover. Touch has
-     no cursor to set. "grabbing" only replaces it once a drag actually
-     clears the press threshold (.dragging below, set by usePressHandlers.ts,
-     never the instant a mouse goes down the way the crawl's own isDragging
-     used to drive this). */
+  /* The whole band is a press target, not only the invite line, so the
+     pointer cursor covers the whole element at rest and on hover; "grabbing"
+     only replaces it once a drag clears the press threshold (.dragging
+     below, usePressHandlers.ts). Touch has no cursor to set. */
   @media (pointer: fine) {
     cursor: pointer;
   }
@@ -181,7 +178,13 @@ export const DedicationBand = css(
   }
 
   /* Plain text, not a bordered chip: it reads as an invitation sitting
-     under the strip, not a control beside it. */
+     under the strip, not a control beside it. Its own rules, not
+     TextLink/styles.ts's: full width and centred where TextLink is
+     content-width, a variant-driven colour (.onPrimary/.onPage above)
+     where TextLink's is fixed, hover is underline-only where TextLink's
+     also changes colour, and there is no active-state background. Only the
+     chevron glyph is actually shared (Chevron.tsx); the rest would mean
+     overriding most of TextLink's own block regardless. */
   > .invite {
     display: flex;
     align-items: center;

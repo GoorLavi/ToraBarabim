@@ -129,6 +129,10 @@ tidies it away:
 - **`01 בית · הקדשות · לאישור`** (`323:488`), beside `01 בית`: the home page with the
   dedication bands drawn at their measured heights, four phone frames and no desktop
   yet. It waits on the owner, and on the width decision above.
+- **`01 בית · חלון הקדשה · לאישור`** (`331:690`), beside the page above: the one
+  dedication window every band opens, and the bands' invitation line. Phone at 390 and
+  320, desktop at 1280, and the band's rest, hover and focus states. Aligned to the
+  built code on 2026-09-24; it folds into `01 בית` with the dedication page.
 - **`הקדשות · אזור בדיקה`** (`123:2`), a page at the end of the site file: the
   dedication masters, the notes for directions F to N with the reasoning for each,
   and an archive section. Those notes are the only place that reasoning is written,

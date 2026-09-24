@@ -8,6 +8,7 @@ export const QuietButton = css(
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: ${theme.spacing.sm};
   min-block-size: 48px;
   padding-block: 11px;
   padding-inline: ${theme.spacing.xl};

@@ -3,6 +3,7 @@ import { expect, userEvent, within } from 'storybook/test';
 import styled from 'styled-components';
 
 import { todayInIsrael } from '~/HomePage/helpers';
+import { atFrameSize } from '~/storyMocks';
 
 import { MAX_MONTHS_AHEAD } from './components/HebrewDatePicker/consts';
 import * as pickerHelpers from './components/HebrewDatePicker/helpers';
@@ -121,14 +122,8 @@ export const NextMonthDisabledAtForwardBound: Story = {
 // so this forces the iframe narrow rather than relying on the runner's
 // default width.
 export const PhoneWidthEscapeClosesTheSheet: Story = {
-  play: async ({ canvasElement }) => {
-    const frame = window.frameElement as HTMLIFrameElement | null;
-    if (!frame) throw new Error('DateFilterChips story: window.frameElement not found, expected to be running inside the test runner\'s iframe');
-    const originalWidth = frame.style.width;
-    frame.style.width = '375px';
-    await new Promise((resolve) => window.setTimeout(resolve, 100));
-
-    try {
+  play: ({ canvasElement }) =>
+    atFrameSize(375, undefined, async () => {
       const canvas = await openTrigger(canvasElement);
       await within(document.body).findByRole('dialog', { name: 'בחירת תאריך' });
 
@@ -136,8 +131,5 @@ export const PhoneWidthEscapeClosesTheSheet: Story = {
 
       expect(within(document.body).queryByRole('dialog', { name: 'בחירת תאריך' })).not.toBeInTheDocument();
       await expect(canvas.getByRole('button', { name: 'בחירת תאריך אחר' })).toHaveFocus();
-    } finally {
-      frame.style.width = originalWidth;
-    }
-  },
+    }),
 };

@@ -12,6 +12,7 @@ import {
   DEDICATION_GROUP_SINGLE,
   DEDICATION_GROUP_SUCCESS,
 } from '~/dedicationFixture';
+import { atFrameSize } from '~/storyMocks';
 import { ARGAMAN_VE_ZAHAV_THEME } from '~/theme/themes';
 
 import { WINDOW_TITLE } from './components/DedicationWindow/consts';
@@ -289,10 +290,9 @@ const dispatchRealMouseClick = async (x: number, y: number): Promise<void> => {
   await client.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: 'left', clickCount: 1 });
 };
 
-// Reworked once the band itself became pressable (owner, explicit approval,
-// Gate 2): a real mouse click here now also opens the dedication window, so
-// the click has to be followed by an Escape to close it before the crawl's
-// own resume behaviour can be observed at all.
+// A real mouse click here also opens the dedication window, so the click
+// has to be followed by an Escape to close it before the crawl's own
+// resume behaviour can be observed at all.
 export const MouseClickDoesNotFreezeTheCrawl: Story = {
   args: { group: DEDICATION_GROUP_OVERFLOWING, variant: 'onPage' },
   play: async ({ canvasElement }) => {
@@ -561,32 +561,21 @@ const expectHeightNear = (actualPx: number, expectedPx: number): void => {
   expect(Math.abs(actualPx - expectedPx)).toBeLessThan(HEIGHT_ASSERTION_TOLERANCE_PX);
 };
 
-const measureBandHeightsAtWidth = (widthPx: number, expectedOnPrimaryPx: number, expectedOnPagePx: number) => async ({
-  canvasElement,
-}: {
-  canvasElement: HTMLElement;
-}): Promise<void> => {
-  const frame = window.frameElement as HTMLIFrameElement | null;
-  if (!frame) throw new Error('DedicationBand story: window.frameElement not found, expected to be running inside the test runner\'s iframe');
+const measureBandHeightsAtWidth =
+  (widthPx: number, expectedOnPrimaryPx: number, expectedOnPagePx: number) =>
+  ({ canvasElement }: { canvasElement: HTMLElement }): Promise<void> =>
+    atFrameSize(widthPx, undefined, async () => {
+      const onPrimaryBand = canvasElement.querySelector<HTMLElement>('.onPrimary');
+      const onPageBand = canvasElement.querySelector<HTMLElement>('.onPage');
+      if (!onPrimaryBand) throw new Error('DedicationBand story: .onPrimary band not found');
+      if (!onPageBand) throw new Error('DedicationBand story: .onPage band not found');
 
-  const originalWidth = frame.style.width;
-  frame.style.width = `${widthPx}px`;
-  try {
-    await new Promise((resolve) => window.setTimeout(resolve, 100));
-    const onPrimaryBand = canvasElement.querySelector<HTMLElement>('.onPrimary');
-    const onPageBand = canvasElement.querySelector<HTMLElement>('.onPage');
-    if (!onPrimaryBand) throw new Error('DedicationBand story: .onPrimary band not found');
-    if (!onPageBand) throw new Error('DedicationBand story: .onPage band not found');
+      const onPrimaryHeight = onPrimaryBand.getBoundingClientRect().height;
+      const onPageHeight = onPageBand.getBoundingClientRect().height;
 
-    const onPrimaryHeight = onPrimaryBand.getBoundingClientRect().height;
-    const onPageHeight = onPageBand.getBoundingClientRect().height;
-
-    expectHeightNear(onPrimaryHeight, expectedOnPrimaryPx);
-    expectHeightNear(onPageHeight, expectedOnPagePx);
-  } finally {
-    frame.style.width = originalWidth;
-  }
-};
+      expectHeightNear(onPrimaryHeight, expectedOnPrimaryPx);
+      expectHeightNear(onPageHeight, expectedOnPagePx);
+    });
 
 export const WidthPhone: Story = {
   render: widthComparison,

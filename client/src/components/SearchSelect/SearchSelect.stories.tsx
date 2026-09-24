@@ -187,19 +187,17 @@ export const EscapeClosesAndReturnsFocus: Story = {
 // `MoveExceptionSheet`'s `CitySelect` actually renders in: one Escape closes
 // the popover alone and leaves the sheet open (`useDismissPopover.ts` owns
 // Escape in the capture phase); a second, with nothing left to claim it,
-// reaches the sheet. `SearchSelectProps<Option>` has no `onDismiss` of its
-// own, so this story's own args are cast to add the one this render needs.
+// reaches the sheet.
 const SHEET_LABEL = 'גיליון לדוגמה';
 
-export const PopoverInsideASheet: Story = {
-  args: { items: options, onDismiss: fn() } as unknown as SearchSelectProps<Option>,
-  render: (args) => (
-    <ResponsiveSheet {...{ ariaLabel: SHEET_LABEL, onDismiss: (args as SearchSelectProps<Option> & { onDismiss: () => void }).onDismiss }}>
+export const PopoverInsideASheet: StoryObj<SearchSelectProps<Option> & { onDismiss: () => void }> = {
+  args: { items: options, onDismiss: fn() },
+  render: ({ onDismiss, ...args }) => (
+    <ResponsiveSheet {...{ ariaLabel: SHEET_LABEL, onDismiss }}>
       <ControlledSearchSelect {...args} />
     </ResponsiveSheet>
   ),
   play: async ({ args }) => {
-    const onDismiss = (args as SearchSelectProps<Option> & { onDismiss: () => void }).onDismiss;
     const body = within(document.body);
     await userEvent.click(await body.findByRole('button', { name: PLACEHOLDER_LABEL }));
     await body.findByRole('textbox', { name: SEARCH_LABEL });
@@ -209,6 +207,6 @@ export const PopoverInsideASheet: Story = {
     await body.findByRole('dialog', { name: SHEET_LABEL });
 
     await userEvent.keyboard('{Escape}');
-    await expect(onDismiss).toHaveBeenCalledTimes(1);
+    await expect(args.onDismiss).toHaveBeenCalledTimes(1);
   },
 };

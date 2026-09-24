@@ -5,12 +5,18 @@ import type { QuietButtonProps } from './models';
 import * as styles from './styles';
 
 export const QuietButton = styled((props: QuietButtonProps) => {
-  const { className, label } = props;
+  const { className, label, icon } = props;
+  const content = (
+    <>
+      {icon}
+      <span className="label">{label}</span>
+    </>
+  );
 
   if ('to' in props) {
     return (
       <Link to={props.to} className={className}>
-        {label}
+        {content}
       </Link>
     );
   }
@@ -18,14 +24,14 @@ export const QuietButton = styled((props: QuietButtonProps) => {
   if ('href' in props) {
     return (
       <a href={props.href} className={className} aria-label={props.ariaLabel} target={props.target} rel={props.rel} onClick={props.onClick}>
-        {label}
+        {content}
       </a>
     );
   }
 
   return (
     <button type="button" className={className} onClick={props.onClick} disabled={props.disabled}>
-      {label}
+      {content}
     </button>
   );
 })`

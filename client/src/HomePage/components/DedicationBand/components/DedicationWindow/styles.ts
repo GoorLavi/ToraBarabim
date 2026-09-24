@@ -53,7 +53,7 @@ export const DedicationWindow = css(
       align-items: center;
       text-align: center;
       gap: ${theme.spacing.sm};
-      padding-block: ${consts.HEADER_PADDING_TOP_PX}px ${consts.HEADER_PADDING_BOTTOM_PX}px;
+      padding-block: ${theme.spacing.xl} ${consts.HEADER_PADDING_BOTTOM_PX}px;
       padding-inline: ${theme.spacing.xl};
       background: ${theme.colors.primaryStrong};
 
@@ -120,11 +120,6 @@ export const DedicationWindow = css(
         flex-direction: column;
         gap: ${theme.spacing.sm};
 
-        > .whatsapp,
-        > .call {
-          gap: ${theme.spacing.sm};
-        }
-
         > .whatsapp {
           background: ${DEDICATION_WHATSAPP_COLOR};
           border-color: ${DEDICATION_WHATSAPP_COLOR};
@@ -149,6 +144,12 @@ export const DedicationWindow = css(
           > .icon {
             inline-size: 20px;
             block-size: 20px;
+          }
+
+          /* Only the number, not the whole button: the icon still sits at
+             the true inline start, before this in DOM order. */
+          > .label {
+            direction: ltr;
           }
         }
       }

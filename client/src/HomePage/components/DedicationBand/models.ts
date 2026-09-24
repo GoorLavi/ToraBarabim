@@ -3,6 +3,11 @@ import type { MouseEvent, PointerEvent } from 'react';
 
 import type { DedicationVariant } from '~/components/DedicationUnit/models';
 
+export interface PressStartPoint {
+  x: number;
+  y: number;
+}
+
 export interface PressHandlers {
   // Drives the band's own cursor, switching to "grabbing" once a drag
   // clears the press threshold (styles.ts).

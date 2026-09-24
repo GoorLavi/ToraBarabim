@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import type { MouseEvent, PointerEvent } from 'react';
 
-import type { PressHandlers } from './models';
+import type { PressHandlers, PressStartPoint } from './models';
 import { isPressGesture } from './helpers';
 
 // Press-versus-drag detection for the band as a whole, wired onto the
@@ -19,11 +19,12 @@ import { isPressGesture } from './helpers';
 // always counts too: a keyboard `Enter`/`Space` activation of the
 // invitation button bubbles up as a `click` with no pointer event at all.
 export const usePressHandlers = (onPress: () => void): PressHandlers => {
-  const startRef = useRef<{ x: number; y: number } | null>(null);
+  const startRef = useRef<PressStartPoint | null>(null);
   const wasPressRef = useRef(false);
   const [isDraggingPastThreshold, setIsDraggingPastThreshold] = useState(false);
 
   const onPointerDown = (event: PointerEvent<HTMLElement>): void => {
+    if (!event.isPrimary) return;
     if (event.pointerType === 'mouse' && event.button !== 0) return;
     startRef.current = { x: event.clientX, y: event.clientY };
     wasPressRef.current = false;

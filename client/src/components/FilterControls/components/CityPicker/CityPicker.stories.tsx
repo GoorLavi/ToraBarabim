@@ -7,6 +7,7 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 import styled from 'styled-components';
 
 import type { SelectedCity } from '~/hooks/models';
+import { atFrameSize } from '~/storyMocks';
 
 import { errorResolver, http, jsonResolver, loadingResolver, queryOf, respondWithJson } from '../../../../../.storybook/apiMocks';
 import type { MockResolver } from '../../../../../.storybook/apiMocks';
@@ -185,19 +186,8 @@ export const GroupedError: Story = {
 
 // Below `sm` the panel is `FilterDrawer`, `ResponsiveSheet`'s own portal, so
 // this forces the iframe narrow rather than relying on the runner's default
-// width, then restores it.
-const atNarrowWidth = async (play: () => Promise<void>): Promise<void> => {
-  const frame = window.frameElement as HTMLIFrameElement | null;
-  if (!frame) throw new Error('CityPicker story: window.frameElement not found, expected to be running inside the test runner\'s iframe');
-  const originalWidth = frame.style.width;
-  frame.style.width = '375px';
-  await new Promise((resolve) => window.setTimeout(resolve, 100));
-  try {
-    await play();
-  } finally {
-    frame.style.width = originalWidth;
-  }
-};
+// width.
+const atNarrowWidth = (play: () => Promise<void>): Promise<void> => atFrameSize(375, undefined, play);
 
 // The guarantee the whole Tab-trap change exists not to break: picking a
 // city inside the phone drawer still calls `onSelectCity` and still closes

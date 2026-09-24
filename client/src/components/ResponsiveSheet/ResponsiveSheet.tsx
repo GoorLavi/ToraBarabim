@@ -26,8 +26,12 @@ export const ResponsiveSheet = styled(({ className, ariaLabel, onDismiss, childr
     const panel = panelRef.current;
     if (!panel) return;
 
-    const previouslyFocused = document.activeElement;
-    if (!panel.contains(document.activeElement)) panel.focus();
+    // Only when focus is still outside: a descendant's own mount effect
+    // (which runs first) may have already claimed it, and that focus is not
+    // this effect's to remember or restore.
+    const focusWasOutside = !panel.contains(document.activeElement);
+    const previouslyFocused = focusWasOutside ? document.activeElement : null;
+    if (focusWasOutside) panel.focus();
 
     return () => {
       if (!(previouslyFocused instanceof HTMLElement) || !document.contains(previouslyFocused)) return;

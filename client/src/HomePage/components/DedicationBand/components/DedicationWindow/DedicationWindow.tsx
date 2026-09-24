@@ -58,14 +58,12 @@ export const DedicationWindow = styled(({ className, bandType, onDismiss }: Dedi
           <QuietButton
             {...{
               className: 'whatsapp',
-              label: (
-                <>
-                  <svg className="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d={WHATSAPP_ICON_PATH} />
-                  </svg>
-                  {consts.WHATSAPP_LABEL}
-                </>
+              icon: (
+                <svg className="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d={WHATSAPP_ICON_PATH} />
+                </svg>
               ),
+              label: consts.WHATSAPP_LABEL,
               href: whatsAppHref(consts.WHATSAPP_MESSAGE),
               target: '_blank',
               rel: 'noopener noreferrer',
@@ -75,14 +73,12 @@ export const DedicationWindow = styled(({ className, bandType, onDismiss }: Dedi
           <QuietButton
             {...{
               className: 'call',
-              label: (
-                <>
-                  <svg className="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d={consts.CALL_ICON_PATH} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <span dir="ltr">{consts.CALL_LABEL}</span>
-                </>
+              icon: (
+                <svg className="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d={consts.CALL_ICON_PATH} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               ),
+              label: consts.CALL_LABEL,
               href: consts.CALL_HREF,
               ariaLabel: consts.CALL_ACCESSIBLE_NAME,
               onClick: () => trackContact('call'),
