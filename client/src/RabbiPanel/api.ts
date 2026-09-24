@@ -1,5 +1,9 @@
 import type {
+  CourseListResponse,
+  CourseResponse,
+  DuplicateCourseRequest,
   PanelLoginResponse,
+  RabbiCreateCourseRequest,
   RabbiCreateLessonExceptionRequest,
   RabbiCreateLessonRequest,
   RabbiLessonExceptionListResponse,
@@ -9,6 +13,7 @@ import type {
   RabbiOccurrenceListResponse,
   RabbiProfileResponse,
   RabbiSessionUser,
+  RabbiUpdateCourseRequest,
   RabbiUpdateLessonExceptionRequest,
   RabbiUpdateLessonRequest,
   UpdateRabbiProfileRequest,
@@ -155,3 +160,63 @@ export const updateLessonException = (
 // 204 on success. 404 if the lesson or exception does not exist.
 export const deleteLessonException = (lessonId: string, exceptionId: number): Promise<void> =>
   request(url(`/v1/rabbi/lessons/${lessonId}/exceptions/${exceptionId}`).toString(), { method: 'DELETE' });
+
+// GET /v1/rabbi/courses
+// 200 with CourseListResponse, including an empty items array.
+export const fetchCourses = (): Promise<CourseListResponse> => request(url('/v1/rabbi/courses').toString());
+
+// GET /v1/rabbi/courses/:id
+// 200 with CourseResponse. 404 if the course does not exist or belongs to another rabbi.
+export const fetchCourse = (id: string): Promise<CourseResponse> => request(url(`/v1/rabbi/courses/${id}`).toString());
+
+// POST /v1/rabbi/courses (multipart: one `course` JSON part, one `cover` file part)
+// 201 with CourseResponse. 400 cover_required / invalid_request / unknown_city. 413 too large. 415 wrong content type.
+export const createCourse = (body: RabbiCreateCourseRequest, cover: File): Promise<CourseResponse> => {
+  const formData = new FormData();
+  formData.append('course', JSON.stringify(body));
+  formData.append('cover', cover);
+  return request(url('/v1/rabbi/courses').toString(), { method: 'POST', body: formData });
+};
+
+// PATCH /v1/rabbi/courses/:id
+// 200 with CourseResponse. 400 invalid_request / unknown_city. 404 as above.
+export const updateCourse = (id: string, body: RabbiUpdateCourseRequest): Promise<CourseResponse> =>
+  request(url(`/v1/rabbi/courses/${id}`).toString(), { method: 'PATCH', headers: JSON_HEADERS, body: JSON.stringify(body) });
+
+// POST /v1/rabbi/courses/:id/cover (multipart, one `cover` file part)
+// 200 with CourseResponse. 400/413/415 as create. 404 as above.
+export const uploadCourseCover = (id: string, file: File): Promise<CourseResponse> => {
+  const formData = new FormData();
+  formData.append('cover', file);
+  return request(url(`/v1/rabbi/courses/${id}/cover`).toString(), { method: 'POST', body: formData });
+};
+
+// POST /v1/rabbi/courses/:id/photos (multipart, one `photo` file part)
+// 200 with CourseResponse. 409 course_photo_limit at 8. 404 as above.
+export const uploadCoursePhoto = (id: string, file: File): Promise<CourseResponse> => {
+  const formData = new FormData();
+  formData.append('photo', file);
+  return request(url(`/v1/rabbi/courses/${id}/photos`).toString(), { method: 'POST', body: formData });
+};
+
+// DELETE /v1/rabbi/courses/:id/photos/:photoId
+// 200 with CourseResponse. 404 if the course or the photo does not exist.
+export const deleteCoursePhoto = (id: string, photoId: string): Promise<CourseResponse> =>
+  request(url(`/v1/rabbi/courses/${id}/photos/${photoId}`).toString(), { method: 'DELETE' });
+
+// POST /v1/rabbi/courses/:id/close
+// 200 with CourseResponse. 409 registration_already_closed. 404 as above.
+export const closeCourse = (id: string): Promise<CourseResponse> => request(url(`/v1/rabbi/courses/${id}/close`).toString(), { method: 'POST' });
+
+// POST /v1/rabbi/courses/:id/full
+// 200 with CourseResponse. 409 registration_already_closed. 404 as above.
+export const markCourseFull = (id: string): Promise<CourseResponse> => request(url(`/v1/rabbi/courses/${id}/full`).toString(), { method: 'POST' });
+
+// POST /v1/rabbi/courses/:id/duplicate
+// 201 with the new CourseResponse. 400 invalid_request. 404 as above.
+export const duplicateCourse = (id: string, body: DuplicateCourseRequest): Promise<CourseResponse> =>
+  request(url(`/v1/rabbi/courses/${id}/duplicate`).toString(), { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(body) });
+
+// DELETE /v1/rabbi/courses/:id
+// 204 on success. 404 as above. Cascades to the course's own photos server-side.
+export const deleteCourse = (id: string): Promise<void> => request(url(`/v1/rabbi/courses/${id}`).toString(), { method: 'DELETE' });

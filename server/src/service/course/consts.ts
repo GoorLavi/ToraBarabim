@@ -65,7 +65,7 @@ export const courseNotClosedMessage = (courseName: string): string =>
   `אפשר לשכפל רק קורס שההרשמה אליו נסגרה או שסומן "תפוסה מלאה". ההרשמה לקורס ${courseName} עדיין פתוחה.`;
 
 export const courseWouldBeClosedMessage = (openingDate: string): string =>
-  `צריך תאריך פתיחה שעוד לא הגיע, או לסמן "אפשר להצטרף גם אחרי הפתיחה". התאריך ${formatHebrewDayMonth(openingDate)} כבר הגיע, וההרשמה הייתה נסגרת מיד.`;
+  `צריך תאריך פתיחה שעוד לא הגיע, או לאפשר להצטרף גם אחרי הפתיחה. התאריך ${formatHebrewDayMonth(openingDate)} כבר הגיע, וההרשמה הייתה נסגרת מיד.`;
 
 export const openingDateNotFutureMessage = (openingDate: string): string =>
   `לקורס החדש צריך תאריך פתיחה שעוד לא הגיע. התאריך שנבחר הוא ${formatHebrewDayMonth(openingDate)}.`;

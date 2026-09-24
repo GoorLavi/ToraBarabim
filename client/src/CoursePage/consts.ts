@@ -15,18 +15,20 @@ export const SERVER_ERROR_HEADING = 'לא הצלחנו לטעון את הקור�
 export const SERVER_ERROR_EXPLANATION = 'משהו השתבש בדרך אלינו. אפשר לנסות שוב.';
 export const RETRY_LABEL = 'נסו שוב';
 
-// Facts list labels, after the editor (spec section 13): nouns throughout,
-// not "איפה"/"למי", so the five labels are one grammatical kind.
-export const FACT_OPENING_LABEL = 'פתיחה';
-export const FACT_SCOPE_LABEL = 'היקף';
-export const FACT_VENUE_LABEL = 'מקום';
-export const FACT_AUDIENCE_LABEL = 'קהל';
-export const FACT_PRICE_LABEL = 'מחיר';
+// "מחזור" and its number are joined with a no-break space (design brief B,
+// item 3).
+export const cycleLabel = (cycle: number): string => `מחזור ${cycle}`;
 
-export const cycleLabel = (cycle: number): string => `מחזור ${cycle}`;
+export const ABOUT_COURSE_HEADING = 'על הקורס';
 
 export const CONTACT_BAR_WHATSAPP_LABEL = 'וואטסאפ';
 export const CONTACT_BAR_CALL_LABEL = 'שיחה';
+
+// The side card's own fuller treatment (design brief A, item 12), the
+// dedication window's own wording: the roomier desktop card affords it
+// where the phone's fixed bar cannot.
+export const REGISTRATION_LABEL = 'להרשמה';
+export const WHATSAPP_FULL_LABEL = 'שליחת הודעה בוואטסאפ';
 
 // The course's own WhatsApp opening line (spec section 8), naming the
 // course, never a person, so it reads the same whether or not a rabbi is

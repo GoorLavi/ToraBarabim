@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { COURSE_STATE_TAG_CLOSED, COURSE_STATE_TAG_FULL } from '~/consts';
 import { teacherPageLink } from '~/CoursePage/helpers';
 
-import * as consts from './consts';
 import { closedFactLine } from './helpers';
 import type { ClosedPanelProps } from './models';
 import * as styles from './styles';
@@ -17,8 +17,8 @@ export const ClosedPanel = styled(({ className, reason, openingDate, weeks, teac
   return (
     <div className={className}>
       <span className="rule" aria-hidden="true" />
-      <h2 className="heading">{reason === 'full' ? consts.FULL_HEADING : consts.CLOSED_HEADING}</h2>
-      <p className="factLine">{closedFactLine(openingDate, weeks)}</p>
+      <h2 className="heading">{reason === 'full' ? COURSE_STATE_TAG_FULL : COURSE_STATE_TAG_CLOSED}</h2>
+      <p className="factLine">{closedFactLine(reason, openingDate, weeks)}</p>
       <Link className="link" to={teacherLink.to} dir="auto">
         {teacherLink.label}
       </Link>

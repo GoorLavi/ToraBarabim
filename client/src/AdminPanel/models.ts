@@ -1,3 +1,5 @@
+import type { Rabbi } from '@torabarabim/common';
+
 // Server-side filters, sent as query params on GET /v1/admin/lessons.
 export interface AdminLessonFilters {
   cityId?: string;
@@ -30,4 +32,13 @@ export interface AdminPlaceFilters {
   q?: string;
   page?: number;
   pageSize?: number;
+}
+
+// Lifted from `LessonFormPage/components/RabbiPicker/models.ts` once
+// `CourseFormPage/components/TeacherPicker` became a second caller of
+// `useRabbiSearch`.
+export interface RabbiSearchResults {
+  items: Rabbi[];
+  isPending: boolean;
+  isError: boolean;
 }

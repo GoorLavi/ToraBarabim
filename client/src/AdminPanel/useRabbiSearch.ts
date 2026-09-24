@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
-import { fetchAdminRabbis } from '~/AdminPanel/api';
-import { ADMIN_QUERY_KEYS, MAX_ADMIN_PAGE_SIZE } from '~/AdminPanel/consts';
-
+import { fetchAdminRabbis } from './api';
+import { ADMIN_QUERY_KEYS, MAX_ADMIN_PAGE_SIZE } from './consts';
 import type { RabbiSearchResults } from './models';
 
 const DEBOUNCE_MS = 250;
 
+// Lifted from `LessonFormPage/components/RabbiPicker/` once
+// `CourseFormPage/components/TeacherPicker` became a second caller (client/
+// CLAUDE.md: a hook shared by two features lifts to the nearest folder both
+// parents can see).
 export const useRabbiSearch = (query: string): RabbiSearchResults => {
   const [debouncedQuery, setDebouncedQuery] = useState(query);
 

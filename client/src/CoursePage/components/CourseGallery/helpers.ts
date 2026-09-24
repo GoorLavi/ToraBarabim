@@ -1,5 +1,4 @@
-// Wraps rather than clamps: the last photo's "next" returns to the first,
-// matching a swipeable strip's own behaviour, and never leaves the arrow
-// disabled at either end (unlike `Rail`, which is a browsing list, not a
-// fixed, small set of a single course's own photos).
-export const wrappedIndex = (index: number, length: number): number => ((index % length) + length) % length;
+// Clamped, not wrapped: the arrows go disabled at the ends instead
+// (design brief A, item 7, "disabled at the ends... never hidden"), the
+// same convention `Rail` uses.
+export const clampedIndex = (index: number, length: number): number => Math.min(Math.max(index, 0), length - 1);

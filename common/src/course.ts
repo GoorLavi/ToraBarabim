@@ -45,6 +45,7 @@ export interface CourseDetailResponse extends Omit<CourseSummary, 'state'> {
   weeks: number;
   sessions: number;
   hours?: number;
+  topic?: CourseTopic;
   priceShekels?: number;
   photos: { id: string; url: string }[];
 }

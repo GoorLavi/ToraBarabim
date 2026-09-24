@@ -3,10 +3,11 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Route, Routes } from 'react-router-dom';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { COURSE_FACT_PRICE_LABEL } from '~/consts';
 import { courseDetailFixture } from '~/courseFixture';
 import { phoneToInternational, whatsAppHref } from '~/helpers';
 import { rabbiFixture } from '~/rabbiFixture';
-import { placeholderPhoto } from '~/storyMocks';
+import { atFrameSize, placeholderPhoto } from '~/storyMocks';
 
 import { errorResolver, http, jsonResolver, loadingResolver } from '../../.storybook/apiMocks';
 import * as consts from './consts';
@@ -86,6 +87,39 @@ export const Open: Story = {
   },
 };
 
+// Desktop, 1280: two columns, the fixed bar gone (design brief A, item 1).
+export const OpenDesktop: Story = {
+  decorators: [withRoute('story-open-desktop')],
+  parameters: {
+    apiMocks: {
+      handlers: {
+        course: courseHandler(
+          courseDetailFixture({
+            id: 'story-open-desktop',
+            name: 'יסודות האמונה',
+            cycle: 3,
+            priceShekels: 350,
+            state: { status: 'open', contactPhone: '0501234567' },
+          }),
+        ),
+      },
+    },
+  },
+  play: async ({ canvasElement }) =>
+    atFrameSize(1280, 900, async () => {
+      const canvas = within(canvasElement);
+      const layout = canvasElement.querySelector<HTMLElement>('.layout');
+      if (!layout) throw new Error('CoursePage story: .layout not found');
+      await waitFor(() => expect(getComputedStyle(layout).flexDirection).toEqual('row'));
+
+      const phoneActions = canvasElement.querySelector<HTMLElement>('.phoneActions');
+      if (!phoneActions) throw new Error('CoursePage story: .phoneActions not found');
+      expect(getComputedStyle(phoneActions).display).toEqual('none');
+
+      await expect(canvas.findByRole('link', { name: consts.WHATSAPP_FULL_LABEL })).resolves.toBeInTheDocument();
+    }),
+};
+
 export const NotOpenYet: Story = {
   decorators: [withRoute('story-not-open')],
   parameters: {
@@ -125,7 +159,9 @@ export const ClosedByCalendar: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await canvas.findByText('ההרשמה נסגרה');
+    // Rendered twice (real and mirrored, one per breakpoint); only its
+    // presence matters here, not which copy is visible.
+    await waitFor(() => expect(canvas.getAllByText('ההרשמה נסגרה').length).toBeGreaterThan(0));
     await expect(canvas.queryByRole('link', { name: consts.CONTACT_BAR_WHATSAPP_LABEL })).not.toBeInTheDocument();
     await expect(canvas.queryByRole('link', { name: consts.CONTACT_BAR_CALL_LABEL })).not.toBeInTheDocument();
   },
@@ -148,7 +184,7 @@ export const MarkedFull: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await canvas.findByText('תפוסה מלאה');
+    await waitFor(() => expect(canvas.getAllByText('תפוסה מלאה').length).toBeGreaterThan(0));
     await expect(canvas.queryByRole('link', { name: consts.CONTACT_BAR_WHATSAPP_LABEL })).not.toBeInTheDocument();
   },
 };
@@ -167,7 +203,7 @@ export const NoPriceNoHours: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.queryByText(consts.FACT_PRICE_LABEL)).not.toBeInTheDocument();
+    await expect(canvas.queryByText(COURSE_FACT_PRICE_LABEL)).not.toBeInTheDocument();
   },
 };
 
@@ -191,8 +227,8 @@ export const UnlinkedTeacherClosed: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await canvas.findByText('ההרשמה נסגרה');
-    await expect(canvas.getByRole('link', { name: 'לעמוד הבית' })).toBeInTheDocument();
+    await waitFor(() => expect(canvas.getAllByText('ההרשמה נסגרה').length).toBeGreaterThan(0));
+    await expect(canvas.getAllByRole('link', { name: 'לעמוד הבית' }).length).toBeGreaterThan(0);
   },
 };
 

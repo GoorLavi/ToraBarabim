@@ -28,6 +28,3 @@ export const teacherPageLink = (teacher: CourseTeacher): { label: string; to: st
     ? { label: `לעמוד של ${rabbiDisplayName(teacher.rabbi)}`, to: rabbiPath(teacher.rabbi) }
     : { label: 'לעמוד הבית', to: '/' };
 
-// "350 ₪ לכל הקורס", with a thousands comma for a four-digit price and up.
-const priceFormatter = new Intl.NumberFormat('he-IL');
-export const formatPriceShekels = (priceShekels: number): string => `${priceFormatter.format(priceShekels)} ₪ לכל הקורס`;

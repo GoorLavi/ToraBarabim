@@ -5,11 +5,11 @@ import styled from 'styled-components';
 
 import { ADMIN_ROUTES } from '~/AdminPanel/consts';
 import { adminErrorMessage, validatePhotoFile } from '~/AdminPanel/helpers';
-import { usePhotoPreviewUrl } from '~/AdminPanel/usePhotoPreviewUrl';
 import { CitySelect } from '~/components/CitySelect/CitySelect';
 import { PLACE_PHOTO_MIN_HEIGHT, PLACE_PHOTO_MIN_WIDTH } from '~/components/PhotoPicker/consts';
 import { PhotoPicker } from '~/components/PhotoPicker/PhotoPicker';
 import { directionForValue } from '~/helpers';
+import { usePhotoPreviewUrl } from '~/hooks/usePhotoPreviewUrl';
 
 import { PlaceAccountSection } from './components/PlaceAccountSection/PlaceAccountSection';
 import * as consts from './consts';

@@ -1,4 +1,13 @@
-import type { CourseDetailResponse, CourseState, CourseSummary, LessonVenue } from '@torabarabim/common';
+import type {
+  CourseDetailResponse,
+  CourseLifecycleView,
+  CourseResponse,
+  CourseState,
+  CourseSummary,
+  LessonVenue,
+  LessonVenuePanel,
+  PanelCourseTeacher,
+} from '@torabarabim/common';
 
 import { rabbiFixture } from '~/rabbiFixture';
 import { placeholderPhoto, slugFromName } from '~/storyMocks';
@@ -55,3 +64,42 @@ export const courseDetailFixture = (
     ],
   };
 };
+
+const defaultVenuePanel: LessonVenuePanel = {
+  kind: 'address',
+  name: 'בית הכנסת המרכזי',
+  street: 'רחוב ויצמן 45',
+  cityCode: 4000,
+  cityName: 'נתניה',
+};
+
+const defaultTeacher: PanelCourseTeacher = { kind: 'rabbi', rabbiId: 'course-rabbi', rabbi: rabbiFixture({ id: 'course-rabbi', name: 'אייל עמרמי' }) };
+
+const defaultLifecycle: CourseLifecycleView = { status: 'open', closesOn: '2027-01-15' };
+
+// The rabbi and admin panels' own shape, built independently of
+// `courseFixture` above rather than on top of it: `CourseResponse` and
+// `CourseSummary` share no common ancestor type, only some field names, and
+// their `venue` and `teacher` arms differ (`LessonVenuePanel`/`PanelCourseTeacher`
+// versus the public `LessonVenue`/`CourseTeacher`).
+export const courseResponseFixture = (course: Partial<CourseResponse> & Pick<CourseResponse, 'name'>): CourseResponse => ({
+  id: course.id ?? `course-${nextCourseId++}`,
+  slug: course.slug ?? slugFromName(course.name),
+  name: course.name,
+  cycle: course.cycle,
+  description: course.description ?? 'קורס עיוני בנושאי אמונה והלכה, למתחילים ולמתקדמים כאחד.',
+  teacher: course.teacher ?? defaultTeacher,
+  openingDate: course.openingDate ?? '2026-11-03',
+  weeks: course.weeks ?? 10,
+  sessions: course.sessions ?? 10,
+  hours: course.hours,
+  venue: course.venue ?? defaultVenuePanel,
+  audience: course.audience ?? 'mixed',
+  topic: course.topic,
+  joinableAfterOpening: course.joinableAfterOpening ?? false,
+  contactPhone: course.contactPhone ?? '0501234567',
+  priceShekels: course.priceShekels,
+  coverUrl: course.coverUrl ?? placeholderPhoto(600, 800),
+  photos: course.photos ?? [],
+  lifecycle: course.lifecycle ?? defaultLifecycle,
+});

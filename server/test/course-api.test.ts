@@ -134,6 +134,7 @@ describe('course API', () => {
     closeReason?: 'closed' | 'full' | null;
     coverKey?: string;
     name?: string;
+    topic?: 'gemara' | 'halacha' | 'parasha' | 'mussar' | 'chassidut' | 'tanach' | 'machshava' | 'other';
   }
 
   const insertCourse = async (fixture: CourseFixture = {}): Promise<string> => {
@@ -160,6 +161,7 @@ describe('course API', () => {
       coverKey: fixture.coverKey ?? `test/${id}/cover.png`,
       registrationClosedAt: fixture.registrationClosedAt ?? null,
       closeReason: fixture.closeReason ?? null,
+      topic: fixture.topic ?? null,
     });
     cleanupCourseIds.add(id);
     return id;
@@ -235,12 +237,13 @@ describe('course API', () => {
   });
 
   test('an open course returns 200 with contactPhone; a course past its closed week returns 200, closed, with no phone anywhere', async () => {
-    const openId = await insertCourse({ openingDate: addDays(todayInIsrael(new Date()), 5) });
+    const openId = await insertCourse({ openingDate: addDays(todayInIsrael(new Date()), 5), topic: 'gemara' });
     const openRes = await app.inject({ method: 'GET', url: `/v1/courses/${openId}` });
     assert.equal(openRes.statusCode, 200);
     const openBody = openRes.json() as CourseDetailResponse;
     assert.equal(openBody.state.status, 'notOpen');
     assert.equal(typeof openBody.state.contactPhone, 'string');
+    assert.deepEqual(openBody.topic, { value: 'gemara' });
 
     const today = todayInIsrael(new Date());
     const goneId = await insertCourse({ openingDate: addDays(today, -8), weeks: 1, joinableAfterOpening: false });

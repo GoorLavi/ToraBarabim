@@ -229,4 +229,7 @@ export type AnalyticsEventProps = {
   [MIXPANEL_EVENTS.dedicationContactClick]: DedicationContactClickProps;
   [MIXPANEL_EVENTS.courseClick]: CourseClickProps;
   [MIXPANEL_EVENTS.courseContactClick]: CourseContactClickProps;
+  [MIXPANEL_EVENTS.courseSaved]: UntypedPanelEventProps;
+  [MIXPANEL_EVENTS.courseDeleted]: UntypedPanelEventProps;
+  [MIXPANEL_EVENTS.courseRegistrationClosed]: UntypedPanelEventProps;
 };

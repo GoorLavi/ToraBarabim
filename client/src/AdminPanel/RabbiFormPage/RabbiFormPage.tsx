@@ -6,12 +6,12 @@ import styled from 'styled-components';
 
 import { ADMIN_ROUTES, lessonNewForRabbi, PROMINENCE_LABELS } from '~/AdminPanel/consts';
 import { adminErrorMessage, validatePhotoFile } from '~/AdminPanel/helpers';
-import { usePhotoPreviewUrl } from '~/AdminPanel/usePhotoPreviewUrl';
 import { RABBI_PHOTO_MIN_HEIGHT, RABBI_PHOTO_MIN_WIDTH } from '~/components/PhotoPicker/consts';
 import { PhotoPicker } from '~/components/PhotoPicker/PhotoPicker';
 import { ReadOnlyField } from '~/components/ReadOnlyField/ReadOnlyField';
 import { RABBI_HONORIFIC_LABELS } from '~/consts';
 import { directionForValue, rabbiDisplayName } from '~/helpers';
+import { usePhotoPreviewUrl } from '~/hooks/usePhotoPreviewUrl';
 
 import { DeleteRabbiButton } from './components/DeleteRabbiButton/DeleteRabbiButton';
 import { DiscardChangesSheet } from './components/DiscardChangesSheet/DiscardChangesSheet';

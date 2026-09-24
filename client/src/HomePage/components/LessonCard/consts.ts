@@ -1,5 +1,3 @@
-import type { LessonTopic } from '@torabarabim/common';
-
 import posterShtenderWindow from '~/assets/lessonFallbackPosters/lesson-fallback-01-shtender-window.webp';
 import posterBindingsShelf from '~/assets/lessonFallbackPosters/lesson-fallback-02-bindings-shelf.webp';
 import posterBookcaseBrass from '~/assets/lessonFallbackPosters/lesson-fallback-03-bookcase-brass.webp';
@@ -16,17 +14,6 @@ export const SUBSTITUTE_LABEL = 'הפעם';
 // description never wraps with the dot left dangling alone at a line's end
 // (design review, card meta at 375).
 export const META_SEPARATOR = ' · ';
-
-export const LESSON_TOPIC_LABELS: Record<LessonTopic, string> = {
-  gemara: 'גמרא',
-  halacha: 'הלכה',
-  parasha: 'פרשת השבוע',
-  mussar: 'מוסר',
-  chassidut: 'חסידות',
-  tanach: 'תנ״ך',
-  machshava: 'מחשבה',
-  other: 'כללי',
-};
 
 // The floor from design-system.md, Type ("the card title steps down to
 // 15 / 21... in a two-column poster grid on a phone, roughly 171px wide")

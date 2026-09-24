@@ -33,6 +33,7 @@ export const toCourseDetailResponse = (record: CourseDetailRecord): CourseDetail
   weeks: record.weeks,
   sessions: record.sessions,
   hours: record.hours,
+  topic: record.topic,
   priceShekels: record.priceShekels,
   photos: record.photos.map((photo) => ({ id: photo.id, url: storage.publicUrl(photo.storageKey) })),
 });

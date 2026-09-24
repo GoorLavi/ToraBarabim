@@ -1,4 +1,4 @@
-import type { LessonAudience, RabbiHonorific } from '@torabarabim/common';
+import type { LessonAudience, LessonTopic, RabbiHonorific } from '@torabarabim/common';
 
 import { SITE_NAME, SITE_ORIGIN } from '../consts';
 
@@ -24,6 +24,30 @@ export const SUBSTITUTE_PREFIX_BY_HONORIFIC: Record<RabbiHonorific, string> = {
   rabbanit: 'במקומה של',
 };
 
+// A course's own state tag, read by the public card, the course page, and
+// every panel row or record that shows one (the coordinator's word choices,
+// 2026-09-25). "Registration open" covers both `notOpen` and `open`: a
+// reader deciding whether to press "for registration" does not need the
+// distinction a panel row does.
+export const COURSE_STATE_TAG_OPEN = 'ההרשמה פתוחה';
+export const COURSE_STATE_TAG_FULL = 'תפוסה מלאה';
+export const COURSE_STATE_TAG_CLOSED = 'ההרשמה נסגרה';
+
+// The floor on the shorter side, for a course's cover and every gallery
+// photo. Hand-mirrored from server/src/service/course/consts.ts's own
+// COURSE_PHOTO_MIN_SIDE.
+export const COURSE_PHOTO_MIN_SIDE = 600;
+
+// A course's fact labels, nouns throughout rather than "איפה"/"למי", so the
+// five read as one grammatical kind (spec section 13, editor). Lifted from
+// `CoursePage/consts.ts` once the rabbi panel's own read-only course record
+// became a second caller.
+export const COURSE_FACT_OPENING_LABEL = 'פתיחה';
+export const COURSE_FACT_SCOPE_LABEL = 'היקף';
+export const COURSE_FACT_VENUE_LABEL = 'מקום';
+export const COURSE_FACT_AUDIENCE_LABEL = 'קהל';
+export const COURSE_FACT_PRICE_LABEL = 'מחיר';
+
 export const lessonCountLabel = (count: number): string => (count === 1 ? 'שיעור אחד' : `${count} שיעורים`);
 export const cityCountLabel = (count: number): string => (count === 1 ? 'עיר אחת' : `${count} ערים`);
 
@@ -48,6 +72,22 @@ export const AUDIENCE_LABELS: Record<LessonAudience, string> = {
   men: 'גברים',
   women: 'נשים',
   mixed: 'גם גברים וגם נשים',
+};
+
+// The lesson topic vocabulary. Read by the lesson card, the lesson row, the
+// lesson ticket, the place panel's lesson form, and the course page (a
+// course's own topic is the same `LessonTopic` list, plus `אחר` with its
+// own free text). Lifted here once the course page became a fourth reach
+// into `HomePage/components/LessonCard/consts.ts` for it.
+export const LESSON_TOPIC_LABELS: Record<LessonTopic, string> = {
+  gemara: 'גמרא',
+  halacha: 'הלכה',
+  parasha: 'פרשת השבוע',
+  mussar: 'מוסר',
+  chassidut: 'חסידות',
+  tanach: 'תנ״ך',
+  machshava: 'מחשבה',
+  other: 'כללי',
 };
 
 // Read by `PanelLogin`, the one login door shared by a rabbi and a place

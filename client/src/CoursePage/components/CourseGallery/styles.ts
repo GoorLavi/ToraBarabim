@@ -1,10 +1,21 @@
 import { css } from 'styled-components';
 
+// Below `lg`: the square frame, then a horizontal thumbnail strip under it.
+// From `lg` up (design brief A, item 7): a fixed 780 by 560 block, the
+// frame at 560 square, a 2-column thumbnail grid beside it.
 export const CourseGallery = css(
   ({ theme }) => `
   display: flex;
   flex-direction: column;
   gap: ${theme.spacing.sm};
+
+  @media (min-width: ${theme.breakpoints.lg}) {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: ${theme.spacing.lg};
+    inline-size: 780px;
+    max-inline-size: 100%;
+  }
 
   > .frame {
     position: relative;
@@ -12,6 +23,12 @@ export const CourseGallery = css(
     overflow: hidden;
     border-radius: ${theme.radii.lg};
     background: ${theme.colors.primarySoft};
+
+    @media (min-width: ${theme.breakpoints.lg}) {
+      flex: 0 0 560px;
+      inline-size: 560px;
+      block-size: 560px;
+    }
 
     > .imageButton {
       display: block;
@@ -46,6 +63,10 @@ export const CourseGallery = css(
       color: ${theme.colors.primary};
       box-shadow: ${theme.shadows.raised};
 
+      &:disabled {
+        opacity: 0.4;
+      }
+
       > svg {
         inline-size: 20px;
         block-size: 20px;
@@ -66,12 +87,18 @@ export const CourseGallery = css(
       inset-inline-end: ${theme.spacing.sm};
       padding-block: ${theme.spacing.xs};
       padding-inline: ${theme.spacing.sm};
+      border: 1px solid ${theme.colors.accentOnDark};
       border-radius: ${theme.radii.sm};
-      background: ${theme.colors.scrim};
+      background: ${theme.colors.primary};
       color: ${theme.colors.textOnPrimary};
+      font-weight: ${theme.typography.tagAndCaption.fontWeight};
       font-size: ${theme.typography.tagAndCaption.phone.fontSize};
       line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
-      font-weight: ${theme.typography.tagAndCaption.fontWeight};
+
+      @media (min-width: ${theme.breakpoints.lg}) {
+        inset-block-end: ${theme.spacing.md};
+        inset-inline-end: ${theme.spacing.md};
+      }
     }
   }
 
@@ -83,6 +110,15 @@ export const CourseGallery = css(
 
     &::-webkit-scrollbar {
       display: none;
+    }
+
+    @media (min-width: ${theme.breakpoints.lg}) {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(2, 98px);
+      gap: ${theme.spacing.sm};
+      overflow: visible;
+      align-content: start;
     }
 
     > .thumbnail {
@@ -97,6 +133,12 @@ export const CourseGallery = css(
 
       &.active {
         border-color: ${theme.colors.primary};
+      }
+
+      @media (min-width: ${theme.breakpoints.lg}) {
+        flex-basis: auto;
+        inline-size: 98px;
+        block-size: 98px;
       }
 
       > img {
