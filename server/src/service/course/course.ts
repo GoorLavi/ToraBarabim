@@ -124,6 +124,34 @@ export const listForPlace = (placeId: string, now: Date): Promise<CourseSummaryR
 
 export const listForWomenArea = (now: Date): Promise<CourseSummaryRecord[]> => listCourses('women', now);
 
+// The sitemap's own membership: every published course whose registration
+// is still open, stricter than a listing surface's seven-day grace (a
+// closed course leaves the sitemap the day it closes, though its own page
+// stays reachable by direct link). One query, no per-row work: only the
+// columns the lifecycle and the slug need, no place/rabbi join at all.
+export const listForSitemap = async (now: Date): Promise<{ id: string; slug: string }[]> => {
+  const today = todayInIsrael(now);
+  const rows = await db
+    .select({
+      id: courses.id,
+      name: courses.name,
+      openingDate: courses.openingDate,
+      weeks: courses.weeks,
+      joinableAfterOpening: courses.joinableAfterOpening,
+      registrationClosedAt: courses.registrationClosedAt,
+      closeReason: courses.closeReason,
+    })
+    .from(courses)
+    .where(eq(courses.published, true));
+
+  return rows
+    .filter((row) => {
+      const input: CourseLifecycleInput = { ...row, closeReason: row.closeReason as CourseLifecycleInput['closeReason'] };
+      return courseLifecycle(input, today).status !== 'closed';
+    })
+    .map((row) => ({ id: row.id, slug: toSlug(row.name) || row.id }));
+};
+
 // A panel list's own order (owner, addendum): not-closed courses first, by
 // opening date ascending, then closed ones (closed or full alike) by their
 // own closing date descending, so the most recently closed sits first.
