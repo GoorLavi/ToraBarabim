@@ -90,10 +90,11 @@ second `Lesson card` set sitting loose on that page (`272:70`), built at 171 and
 because the library's card is 165.5 and 296. Two component sets for one card, one per
 width.
 
-**Which pair is the reference is not decided.** `tora-designer` recommends 390 phone
-and 1280 desktop: 390 because the design system's own card cell is measured there,
-1280 because it is the content cap. Either way the library is rebuilt at the chosen
-widths, or its phone parts are set to fill their frame so one variant serves both.
+**The reference pair is not decided yet.** `tora-designer` recommends 390 phone and
+1280 desktop: 390 because the design system's own card cell is measured there, 1280
+because it is the content cap. Whichever pair is chosen, the library can be fixed in
+one of two ways: rebuilt at those widths, or with its phone parts set to fill their
+frame so one variant serves both 375 and 390.
 
 The library and `01 בית` were re-read on 2026-09-24; the other pages' widths come from
 a full-file audit on 2026-09-23.
