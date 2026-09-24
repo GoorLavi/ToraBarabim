@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { CandlesEmblem } from '~/HomePage/components/CandlesEmblem/CandlesEmblem';
+import { Chevron } from '~/HomePage/components/Chevron/Chevron';
 import { WOMEN_PAGE_PATH } from '~/hooks/consts';
 
 import * as consts from './consts';
@@ -31,9 +32,7 @@ export const WomensAreaTile = styled(({ className, lessonCount }: WomensAreaTile
     <div className="white">
       <h3 className="heading">{consts.TILE_HEADING}</h3>
       <span className="seeAll">
-        <svg className="chevron" viewBox="0 0 7 12" fill="none" aria-hidden="true">
-          <path d="M6 1L1 6L6 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <Chevron />
         <span className="label">{consts.TILE_LINK_LABEL}</span>
       </span>
     </div>

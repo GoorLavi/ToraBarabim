@@ -24,6 +24,28 @@ export const installMockFetch = (respond: (url: URL) => Response | Promise<Respo
   };
 };
 
+// Forces the test runner's own iframe to a given size for the duration of
+// `play`, then restores it, so one story's resize never leaks into the
+// next. `heightPx` is optional: a story that only needs to cross a width
+// breakpoint leaves the runner's own height alone.
+export const atFrameSize = async (widthPx: number, heightPx: number | undefined, play: () => Promise<void>): Promise<void> => {
+  const frame = window.frameElement as HTMLIFrameElement | null;
+  if (!frame) throw new Error('story: window.frameElement not found, expected to be running inside the test runner\'s iframe');
+
+  const originalWidth = frame.style.width;
+  const originalHeight = frame.style.height;
+  frame.style.width = `${widthPx}px`;
+  if (heightPx !== undefined) frame.style.height = `${heightPx}px`;
+  await new Promise((resolve) => window.setTimeout(resolve, 100));
+
+  try {
+    await play();
+  } finally {
+    frame.style.width = originalWidth;
+    if (heightPx !== undefined) frame.style.height = originalHeight;
+  }
+};
+
 export const jsonResponse = (status: number, body: unknown): Response =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 

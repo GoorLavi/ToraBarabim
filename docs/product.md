@@ -64,8 +64,9 @@ decision record, not a pull request comment.
 ## What it is not
 
 Not a social network, and not a place for comments, ratings, or attendance. Not a
-streaming or recording archive. Not a donation platform. Not a general Jewish content
-site: it answers where and when, nothing more.
+streaming or recording archive. Not a donation platform: it invites dedications by
+contact only ([0036](decisions/0036-the-site-invites-dedications-by-contact-only.md)).
+Not a general Jewish content site: it answers where and when, nothing more.
 
 ## Where everything else lives
 

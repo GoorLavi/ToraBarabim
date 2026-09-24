@@ -3,6 +3,9 @@ import type { FormEvent } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { WHATSAPP_ICON_PATH } from '~/consts';
+import { whatsAppHref } from '~/helpers';
+
 import * as consts from './consts';
 import { panelErrorMessage } from './helpers';
 import type { PanelLoginFormState, PanelLoginProps } from './models';
@@ -81,13 +84,13 @@ export const PanelLogin = styled(({ className }: PanelLoginProps) => {
 
       <a
         className="whatsapp"
-        href={consts.WHATSAPP_SUPPORT_HREF}
+        href={whatsAppHref(consts.WHATSAPP_SUPPORT_MESSAGE)}
         target="_blank"
         rel="noopener noreferrer"
         aria-label={consts.WHATSAPP_SUPPORT_TOOLTIP}
       >
         <svg className="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <path d={consts.WHATSAPP_ICON_PATH} />
+          <path d={WHATSAPP_ICON_PATH} />
         </svg>
         <span className="tooltip" aria-hidden="true">
           {consts.WHATSAPP_SUPPORT_TOOLTIP}

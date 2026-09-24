@@ -1,6 +1,6 @@
 import type { AreaSummary, City, LessonOccurrence, LessonVenue, LessonVenuePanel, Place, Rabbi, ResolvedAddress } from '@torabarabim/common';
 
-import { RABBI_HONORIFIC_LABELS } from './consts';
+import { RABBI_HONORIFIC_LABELS, SITE_CONTACT_PHONE_INTERNATIONAL } from './consts';
 import type { DayGroup } from './models';
 
 // The one place a rabbi's display name is composed, from the bare stored
@@ -140,6 +140,11 @@ export const addressLine = (street: string, floor: string | undefined): string =
 // one place the query string is actually built, so stray whitespace never
 // reaches the URL.
 const navigationQuery = (place: Pick<ResolvedAddress, 'street' | 'city'>): string => `${place.street.trim()}, ${place.city.trim()}`;
+
+// This site's own contact number, prefilled with a caller's own message.
+// `wa.me` wants the international number with no leading `+` or separators,
+// which `SITE_CONTACT_PHONE_INTERNATIONAL` already is.
+export const whatsAppHref = (message: string): string => `https://wa.me/${SITE_CONTACT_PHONE_INTERNATIONAL}?text=${encodeURIComponent(message)}`;
 
 // `undefined` unless both street and city are present, so the caller hides
 // the whole nav row rather than link out to a bare street or a bare city

@@ -1,4 +1,4 @@
-import type { LessonAudience, LessonOccurrence } from '@torabarabim/common';
+import type { DedicationType, LessonAudience, LessonOccurrence } from '@torabarabim/common';
 import type { ReactNode } from 'react';
 
 import type { DateFilterOption } from '~/hooks/models';
@@ -154,6 +154,17 @@ export interface FilterDateProps {
   source: FilterDateSource;
 }
 
+export interface DedicationWindowOpenProps {
+  bandType: DedicationType;
+}
+
+export type DedicationContactChannel = 'whatsapp' | 'call';
+
+export interface DedicationContactClickProps {
+  channel: DedicationContactChannel;
+  bandType: DedicationType;
+}
+
 export interface SuperProperties {
   viewport: Viewport;
   appSurface: AppSurface;
@@ -192,4 +203,6 @@ export type AnalyticsEventProps = {
   [MIXPANEL_EVENTS.occurrenceMoved]: UntypedPanelEventProps;
   [MIXPANEL_EVENTS.profileSaved]: UntypedPanelEventProps;
   [MIXPANEL_EVENTS.profilePhotoUploaded]: UntypedPanelEventProps;
+  [MIXPANEL_EVENTS.dedicationWindowOpen]: DedicationWindowOpenProps;
+  [MIXPANEL_EVENTS.dedicationContactClick]: DedicationContactClickProps;
 };

@@ -39,6 +39,14 @@ export const RESUME_AFTER_INTERACTION_MS = 4000;
 // content.
 export const DEDICATION_BAND_EDGE_PADDING_PX = 16;
 
+// A primary pointer (any touch or pen point, or a mouse with button 0) that
+// travels a straight-line distance strictly under this many pixels between
+// down and up is a press, never a drag. Also gates the cursor's own switch
+// to "grabbing" (styles.ts).
+export const PRESS_MAX_TRAVEL_PX = 10;
+
+export const INVITATION_LABEL = 'להקדשת פעילות האתר';
+
 // One label per type, not a shared generic one: up to three of these
 // regions can be on the same page at once (HomePage.tsx), and a
 // screen-reader user needs to tell them apart. Drafts, not final copy:

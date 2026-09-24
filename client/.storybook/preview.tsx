@@ -30,6 +30,13 @@ import { ARGAMAN_VE_ZAHAV_THEME } from '../src/theme/themes';
 import { BREAKPOINTS } from '../src/theme/tokens';
 import { installApiMocks } from './apiMocks';
 
+// A sheet portals into `document.body`, outside the preview's own `dir="rtl"`
+// wrapper below, so it rendered left to right in Storybook until this line:
+// `document.documentElement` is the one ancestor every portal actually sits
+// under.
+document.documentElement.dir = 'rtl';
+document.documentElement.lang = 'he';
+
 // React Query pauses a retry while the tab is not visible or believes the
 // network is down, neither of which applies to a story: its `fetch` never
 // leaves the page, and a review often happens in a background tab. Without

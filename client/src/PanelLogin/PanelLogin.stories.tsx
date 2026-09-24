@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { userEvent, within } from 'storybook/test';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { RATE_LIMITED_ERROR } from '~/consts';
+import { whatsAppHref } from '~/helpers';
 import { installMockFetch, jsonResponse, NEVER_RESOLVES } from '~/storyMocks';
 
 import * as consts from './consts';
@@ -36,8 +37,17 @@ const fillAndSubmit = async (canvasElement: HTMLElement): Promise<void> => {
   await userEvent.click(canvas.getByRole('button', { name: consts.SUBMIT_LABEL }));
 };
 
-// idle: the untouched form, before any submission.
-export const Idle: Story = {};
+// idle: the untouched form, before any submission. Also the one place the
+// exact WhatsApp support href is asserted, so the lifted `whatsAppHref` and
+// the lifted phone/message constants (client/src/consts.ts) never silently
+// drift for this, the first caller.
+export const Idle: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const link = canvas.getByRole('link', { name: consts.WHATSAPP_SUPPORT_TOOLTIP });
+    await expect(link).toHaveAttribute('href', whatsAppHref(consts.WHATSAPP_SUPPORT_MESSAGE));
+  },
+};
 
 // submitting: the request never resolves, so the button stays in its
 // pending state for the story to capture.

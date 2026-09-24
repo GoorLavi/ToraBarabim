@@ -82,18 +82,14 @@ export const DedicationUnit = css(
     --dedication-text: ${consts.VARIANT_TOKENS.onPrimary.text};
     --dedication-closing-text: ${consts.VARIANT_TOKENS.onPrimary.closingText};
     --dedication-shadow: ${consts.VARIANT_TOKENS.onPrimary.shadow};
-    --dedication-ornament-stop-0: ${consts.VARIANT_TOKENS.onPrimary.ornamentStop0};
-    --dedication-ornament-stop-40: ${consts.VARIANT_TOKENS.onPrimary.ornamentStop40};
-    --dedication-ornament-stop-100: ${consts.VARIANT_TOKENS.onPrimary.ornamentStop100};
+    ${consts.ornamentColorVarsCss(consts.VARIANT_TOKENS.onPrimary)}
   }
 
   &.onPage {
     --dedication-text: ${consts.VARIANT_TOKENS.onPage.text};
     --dedication-closing-text: ${consts.VARIANT_TOKENS.onPage.closingText};
     --dedication-shadow: ${consts.VARIANT_TOKENS.onPage.shadow};
-    --dedication-ornament-stop-0: ${consts.VARIANT_TOKENS.onPage.ornamentStop0};
-    --dedication-ornament-stop-40: ${consts.VARIANT_TOKENS.onPage.ornamentStop40};
-    --dedication-ornament-stop-100: ${consts.VARIANT_TOKENS.onPage.ornamentStop100};
+    ${consts.ornamentColorVarsCss(consts.VARIANT_TOKENS.onPage)}
 
     /* Page-field contrast, driven off each line's own computed size, never
        a breakpoint: color.dedication (the default --dedication-text just

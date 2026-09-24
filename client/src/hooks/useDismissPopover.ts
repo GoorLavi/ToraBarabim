@@ -38,19 +38,25 @@ export const useDismissPopover = ({ isOpen, rootRef, onDismiss, triggerRef }: Di
       latest.current.onDismiss();
     };
 
+    // Capture phase, with `preventDefault()`: a popover of this shape can
+    // itself sit inside a `ResponsiveSheet` (`MoveExceptionSheet`'s
+    // `CitySelect` is a real caller), whose own Escape handler is a
+    // bubble-phase listener that checks `defaultPrevented`, so this always
+    // gets first refusal.
     const handleKeyDown = (event: KeyboardEvent): void => {
       if (event.key !== 'Escape') return;
+      event.preventDefault();
       latest.current.onDismiss();
       latest.current.triggerRef?.current?.focus();
     };
 
     document.addEventListener('pointerdown', handlePointerDown);
     document.addEventListener('focusout', handleFocusOut);
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown, { capture: true });
     return () => {
       document.removeEventListener('pointerdown', handlePointerDown);
       document.removeEventListener('focusout', handleFocusOut);
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keydown', handleKeyDown, { capture: true });
     };
   }, [isOpen, rootRef]);
 };

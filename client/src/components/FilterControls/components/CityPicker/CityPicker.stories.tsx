@@ -1,9 +1,13 @@
 import type { CityAreaSuggestionGroup, CitySearchResult, CitySuggestionsResponse } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, userEvent, within } from 'storybook/test';
+import { useState } from 'react';
+import type { ReactNode } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { expect, fn, userEvent, within } from 'storybook/test';
 import styled from 'styled-components';
 
 import type { SelectedCity } from '~/hooks/models';
+import { atFrameSize } from '~/storyMocks';
 
 import { errorResolver, http, jsonResolver, loadingResolver, queryOf, respondWithJson } from '../../../../../.storybook/apiMocks';
 import type { MockResolver } from '../../../../../.storybook/apiMocks';
@@ -178,4 +182,47 @@ export const GroupedError: Story = {
     const canvas = await openPicker(canvasElement);
     await expect(canvas.findByText('לא הצלחנו לטעון את רשימת הערים')).resolves.toBeInTheDocument();
   },
+};
+
+// Below `sm` the panel is `FilterDrawer`, `ResponsiveSheet`'s own portal, so
+// this forces the iframe narrow rather than relying on the runner's default
+// width.
+const atNarrowWidth = (play: () => Promise<void>): Promise<void> => atFrameSize(375, undefined, play);
+
+// The guarantee the whole Tab-trap change exists not to break: picking a
+// city inside the phone drawer still calls `onSelectCity` and still closes
+// the drawer, the same Safari-mousedown-focus shape `CitySelect.stories.tsx`'s
+// own equivalent story exists for.
+export const PhoneWidthSelectsACityAndClosesTheDrawer: Story = {
+  decorators: [withRecentCities([])],
+  args: { onSelectCity: fn() },
+  play: ({ canvasElement, args }) =>
+    atNarrowWidth(async () => {
+      const canvas = await openPicker(canvasElement);
+      const body = within(document.body);
+
+      await userEvent.type(await body.findByRole('textbox', { name: 'חיפוש עיר' }), 'חי');
+      await userEvent.click(await body.findByText('חיפה עילית'));
+
+      await expect(args.onSelectCity).toHaveBeenCalledWith({ id: '5090', name: 'חיפה עילית' });
+      expect(body.queryByRole('dialog', { name: 'בחירת עיר' })).not.toBeInTheDocument();
+      expect(canvas.queryByRole('textbox')).not.toBeInTheDocument();
+    }),
+};
+
+// Escape closes the drawer and returns focus to the pill: `PanelFrame`'s own
+// Escape handler is the closer ancestor here (nested inside `.panel`), so it
+// acts first, and its own `onClose` is what returns focus.
+export const PhoneWidthEscapeClosesTheDrawer: Story = {
+  decorators: [withRecentCities([])],
+  play: ({ canvasElement }) =>
+    atNarrowWidth(async () => {
+      const canvas = await openPicker(canvasElement);
+      await within(document.body).findByRole('dialog', { name: 'בחירת עיר' });
+
+      await userEvent.keyboard('{Escape}');
+
+      expect(within(document.body).queryByRole('dialog', { name: 'בחירת עיר' })).not.toBeInTheDocument();
+      await expect(canvas.getByRole('button', { name: 'כל הארץ' })).toHaveFocus();
+    }),
 };

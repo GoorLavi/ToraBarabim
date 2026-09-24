@@ -3,6 +3,7 @@ import { expect, userEvent, within } from 'storybook/test';
 import styled from 'styled-components';
 
 import { todayInIsrael } from '~/HomePage/helpers';
+import { atFrameSize } from '~/storyMocks';
 
 import { MAX_MONTHS_AHEAD } from './components/HebrewDatePicker/consts';
 import * as pickerHelpers from './components/HebrewDatePicker/helpers';
@@ -115,4 +116,20 @@ export const NextMonthDisabledAtForwardBound: Story = {
     const canvas = await openTrigger(canvasElement);
     await expect(canvas.getByRole('button', { name: 'לחודש הבא' })).toBeDisabled();
   },
+};
+
+// Below `md` the picker is `DateFilterSheet`, `ResponsiveSheet`'s own portal,
+// so this forces the iframe narrow rather than relying on the runner's
+// default width.
+export const PhoneWidthEscapeClosesTheSheet: Story = {
+  play: ({ canvasElement }) =>
+    atFrameSize(375, undefined, async () => {
+      const canvas = await openTrigger(canvasElement);
+      await within(document.body).findByRole('dialog', { name: 'בחירת תאריך' });
+
+      await userEvent.keyboard('{Escape}');
+
+      expect(within(document.body).queryByRole('dialog', { name: 'בחירת תאריך' })).not.toBeInTheDocument();
+      await expect(canvas.getByRole('button', { name: 'בחירת תאריך אחר' })).toHaveFocus();
+    }),
 };

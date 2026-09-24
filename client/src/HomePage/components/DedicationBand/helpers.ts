@@ -1,4 +1,4 @@
-import { DEDICATION_BAND_EDGE_PADDING_PX, DEDICATION_UNIT_GAP_PX } from './consts';
+import { DEDICATION_BAND_EDGE_PADDING_PX, DEDICATION_UNIT_GAP_PX, PRESS_MAX_TRAVEL_PX } from './consts';
 
 // No unit-count threshold: a count is the wrong shape, since three units
 // fill a phone and do not fill 1280, and this one comparison is correct at
@@ -46,3 +46,9 @@ export const stepByUnitPitch = (position: number, direction: 1 | -1, unitPitchPx
 // available to it, not the viewport's raw box.
 export const availableTrackWidthPx = (viewportClientWidthPx: number): number =>
   viewportClientWidthPx - 2 * DEDICATION_BAND_EDGE_PADDING_PX;
+
+// Press versus drag: the straight-line distance the pointer travelled,
+// strictly under PRESS_MAX_TRAVEL_PX, per the design rule ("the pointer
+// travels less than 10px"). Not a per-axis check: that would let a diagonal
+// move of up to about 14px (10 on each axis) through as a press.
+export const isPressGesture = (deltaXPx: number, deltaYPx: number): boolean => Math.hypot(deltaXPx, deltaYPx) < PRESS_MAX_TRAVEL_PX;

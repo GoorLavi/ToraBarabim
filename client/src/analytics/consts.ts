@@ -23,6 +23,8 @@ export const MIXPANEL_EVENTS = {
   occurrenceMoved: 'Occurrence Moved',
   profileSaved: 'Profile Saved',
   profilePhotoUploaded: 'Profile Photo Uploaded',
+  dedicationWindowOpen: 'Dedication Window Open',
+  dedicationContactClick: 'Dedication Contact Click',
 } as const;
 
 // A `LessonCard` can sit in any of these lists; `homeRail` is the only one

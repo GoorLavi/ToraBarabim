@@ -13,6 +13,22 @@ import * as consts from './consts';
 export const DedicationBand = css(
   ({ theme }) => `
   position: relative;
+  display: flex;
+  flex-direction: column;
+
+  /* The whole band is a press target, not only the invite line, so the
+     pointer cursor covers the whole element at rest and on hover; "grabbing"
+     only replaces it once a drag clears the press threshold (.dragging
+     below, usePressHandlers.ts). Touch has no cursor to set. */
+  @media (pointer: fine) {
+    cursor: pointer;
+  }
+
+  &.dragging {
+    @media (pointer: fine) {
+      cursor: grabbing;
+    }
+  }
 
   /* The band's own scale driver, read by every scaled dedication value
      (DedicationUnit/styles.ts, and the padding-block below): a fixed
@@ -61,6 +77,10 @@ export const DedicationBand = css(
       outline: 2px solid ${theme.colors.textOnPrimary};
       outline-offset: 2px;
     }
+
+    > .invite {
+      color: ${theme.colors.textOnPrimary};
+    }
   }
 
   &.onPage {
@@ -71,6 +91,10 @@ export const DedicationBand = css(
     > .viewport:focus-visible {
       outline: 2px solid ${theme.colors.primary};
       outline-offset: 2px;
+    }
+
+    > .invite {
+      color: ${theme.colors.primary};
     }
   }
 
@@ -132,16 +156,6 @@ export const DedicationBand = css(
     /* A crawling or scrollable track starts at its own inline start, never
        centred: a centred scroll origin has no natural resting position. */
     justify-content: flex-start;
-
-    @media (pointer: fine) {
-      cursor: grab;
-    }
-  }
-
-  &.dragging > .viewport {
-    @media (pointer: fine) {
-      cursor: grabbing;
-    }
   }
 
   /* The loop's second copy is marked aria-hidden, so a screen reader never
@@ -161,6 +175,49 @@ export const DedicationBand = css(
     display: flex;
     align-items: stretch;
     gap: ${consts.DEDICATION_UNIT_GAP_PX}px;
+  }
+
+  /* Plain text, not a bordered chip: it reads as an invitation sitting
+     under the strip, not a control beside it. Its own rules, not
+     TextLink/styles.ts's: full width and centred where TextLink is
+     content-width, a variant-driven colour (.onPrimary/.onPage above)
+     where TextLink's is fixed, hover is underline-only where TextLink's
+     also changes colour, and there is no active-state background. Only the
+     chevron glyph is actually shared (Chevron.tsx); the rest would mean
+     overriding most of TextLink's own block regardless. */
+  > .invite {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    inline-size: 100%;
+    min-block-size: 48px;
+    margin-block-start: ${theme.spacing.sm};
+    background: none;
+    border: none;
+    padding: 0;
+    font-weight: ${theme.typography.fontWeight.semiBold};
+    font-size: ${theme.typography.secondary.phone.fontSize};
+    line-height: ${theme.typography.secondary.phone.lineHeight};
+    text-decoration: none;
+    cursor: pointer;
+
+    > .chevron {
+      inline-size: 7px;
+      block-size: 12px;
+      flex-shrink: 0;
+    }
+
+    &:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 2px;
+    }
+  }
+
+  /* Names never change state on hover, press or focus: scoped to ".invite"
+     alone, never to the band as a whole. */
+  &:hover > .invite {
+    text-decoration: underline;
   }
 
 `,

@@ -1,6 +1,23 @@
 import type { DedicationGroup } from '@torabarabim/common';
+import type { MouseEvent, PointerEvent } from 'react';
 
 import type { DedicationVariant } from '~/components/DedicationUnit/models';
+
+export interface PressStartPoint {
+  x: number;
+  y: number;
+}
+
+export interface PressHandlers {
+  // Drives the band's own cursor, switching to "grabbing" once a drag
+  // clears the press threshold (styles.ts).
+  isDraggingPastThreshold: boolean;
+  onPointerDown: (event: PointerEvent<HTMLElement>) => void;
+  onPointerMove: (event: PointerEvent<HTMLElement>) => void;
+  onPointerUp: (event: PointerEvent<HTMLElement>) => void;
+  onPointerCancel: (event: PointerEvent<HTMLElement>) => void;
+  onClick: (event: MouseEvent<HTMLElement>) => void;
+}
 
 export interface DedicationBandProps {
   className?: string;

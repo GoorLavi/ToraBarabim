@@ -1,12 +1,16 @@
 import classNames from 'classnames';
+import { useRef, useState } from 'react';
 import styled from 'styled-components';
 
 import { DedicationUnit } from '~/components/DedicationUnit/DedicationUnit';
+import { Chevron } from '~/HomePage/components/Chevron/Chevron';
 
+import { DedicationWindow } from './components/DedicationWindow/DedicationWindow';
 import * as consts from './consts';
 import type { DedicationBandProps, DedicationBandTrackProps } from './models';
 import * as styles from './styles';
 import { useDedicationCrawl } from './useDedicationCrawl';
+import { usePressHandlers } from './usePressHandlers';
 
 // Split out of `DedicationBand` because `useDedicationCrawl` is a hook: the
 // rules of hooks forbid calling it after `DedicationBand`'s own early
@@ -16,42 +20,70 @@ import { useDedicationCrawl } from './useDedicationCrawl';
 // element the hook measures.
 const DedicationBandTrack = ({ className, group, variant }: DedicationBandTrackProps) => {
   const crawl = useDedicationCrawl();
+  const [isWindowOpen, setIsWindowOpen] = useState(false);
+  const inviteButtonRef = useRef<HTMLButtonElement>(null);
+  const press = usePressHandlers(() => setIsWindowOpen(true));
+
+  // Always refocuses the invite button regardless of which path closed the
+  // window (X, backdrop, Escape): unlike CityPicker's own drawer, no path
+  // here sends the reader anywhere else on the page, so there is nothing a
+  // forced refocus could ever fight.
+  const closeWindow = (): void => {
+    setIsWindowOpen(false);
+    inviteButtonRef.current?.focus();
+  };
 
   return (
-    <section className={classNames(className, { overflowing: crawl.isOverflowing, dragging: crawl.isDragging })}>
-      <div
-        className="viewport"
-        ref={crawl.viewportRef}
-        role={crawl.isOverflowing ? 'region' : undefined}
-        tabIndex={crawl.isOverflowing ? 0 : undefined}
-        aria-label={crawl.isOverflowing ? consts.VIEWPORT_ARIA_LABEL_BY_TYPE[group.type] : undefined}
-        onPointerDown={crawl.onPointerDown}
-        onPointerMove={crawl.onPointerMove}
-        onPointerUp={crawl.onPointerUp}
-        onPointerCancel={crawl.onPointerCancel}
-        onPointerEnter={crawl.onPointerEnter}
-        onPointerLeave={crawl.onPointerLeave}
-        onFocus={crawl.onFocus}
-        onBlur={crawl.onBlur}
-        onKeyDown={crawl.onKeyDown}
+    <>
+      <section
+        className={classNames(className, { overflowing: crawl.isOverflowing, dragging: press.isDraggingPastThreshold })}
+        onPointerDown={press.onPointerDown}
+        onPointerMove={press.onPointerMove}
+        onPointerUp={press.onPointerUp}
+        onPointerCancel={press.onPointerCancel}
+        onClick={press.onClick}
       >
-        <div className="track" ref={crawl.trackRef}>
-          {group.items.map((dedication) => (
-            <DedicationUnit key={dedication.id} {...{ text: dedication.text, variant }} />
-          ))}
-        </div>
-        {/* The crawl's own looped duplicate, needed only for the seamless
-            wrap: hidden from a screen reader so it never meets this band's
-            own names twice. */}
-        {crawl.isOverflowing && (
-          <div className="track duplicate" aria-hidden="true">
+        <div
+          className="viewport"
+          ref={crawl.viewportRef}
+          role={crawl.isOverflowing ? 'region' : undefined}
+          tabIndex={crawl.isOverflowing ? 0 : undefined}
+          aria-label={crawl.isOverflowing ? consts.VIEWPORT_ARIA_LABEL_BY_TYPE[group.type] : undefined}
+          onPointerDown={crawl.onPointerDown}
+          onPointerMove={crawl.onPointerMove}
+          onPointerUp={crawl.onPointerUp}
+          onPointerCancel={crawl.onPointerCancel}
+          onPointerEnter={crawl.onPointerEnter}
+          onPointerLeave={crawl.onPointerLeave}
+          onFocus={crawl.onFocus}
+          onBlur={crawl.onBlur}
+          onKeyDown={crawl.onKeyDown}
+        >
+          <div className="track" ref={crawl.trackRef}>
             {group.items.map((dedication) => (
               <DedicationUnit key={dedication.id} {...{ text: dedication.text, variant }} />
             ))}
           </div>
-        )}
-      </div>
-    </section>
+          {/* The crawl's own looped duplicate, needed only for the seamless
+              wrap: hidden from a screen reader so it never meets this band's
+              own names twice. */}
+          {crawl.isOverflowing && (
+            <div className="track duplicate" aria-hidden="true">
+              {group.items.map((dedication) => (
+                <DedicationUnit key={dedication.id} {...{ text: dedication.text, variant }} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        <button type="button" className="invite" ref={inviteButtonRef}>
+          {consts.INVITATION_LABEL}
+          <Chevron />
+        </button>
+      </section>
+
+      {isWindowOpen && <DedicationWindow {...{ bandType: group.type, onDismiss: closeWindow }} />}
+    </>
   );
 };
 

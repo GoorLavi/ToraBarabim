@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react';
 import type { KeyboardEvent } from 'react';
 import styled from 'styled-components';
 
-import { focusableElementsIn } from './helpers';
+import { focusableElementsIn } from '~/components/helpers';
+
 import type { PanelFrameProps } from './models';
 import * as styles from './styles';
 

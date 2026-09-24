@@ -53,6 +53,16 @@ export const ResponsiveSheet = css(
     @media (prefers-reduced-motion: reduce) {
       animation: none;
     }
+
+    /* Focus lands here programmatically on open (ResponsiveSheet.tsx), not
+       through a keyboard Tab, so the browser's default focus ring (meant
+       for a Tab arriving somewhere) reads as a stray outline around the
+       whole sheet rather than a signal of anything. A real keyboard user
+       tabbing to a control inside still gets that control's own
+       focus-visible ring. */
+    &:focus {
+      outline: none;
+    }
   }
 
   @keyframes responsiveSheetScrimIn {
