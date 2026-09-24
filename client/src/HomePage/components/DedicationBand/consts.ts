@@ -1,3 +1,5 @@
+import type { DedicationType } from '@torabarabim/common';
+
 import { DEDICATION_UNIT_WIDTH_PX } from '~/components/DedicationUnit/consts';
 
 // Gap between units (design-system.md, dedication geometry).
@@ -37,7 +39,15 @@ export const RESUME_AFTER_INTERACTION_MS = 4000;
 // content.
 export const DEDICATION_BAND_EDGE_PADDING_PX = 16;
 
-export const VIEWPORT_ARIA_LABEL = 'הקדשות, אפשר לגלול עם החצים';
+// One label per type, not a shared generic one: up to three of these
+// regions can be on the same page at once (HomePage.tsx), and a
+// screen-reader user needs to tell them apart. Drafts, not final copy:
+// tora-hebrew-editor may return different wording.
+export const VIEWPORT_ARIA_LABEL_BY_TYPE: Record<DedicationType, string> = {
+  success: 'הקדשות להצלחה, אפשר לגלול עם החצים',
+  healing: 'הקדשות לרפואה שלמה, אפשר לגלול עם החצים',
+  memorial: 'הקדשות לעילוי נשמה, אפשר לגלול עם החצים',
+};
 
 // The band's own scale driver (design-system.md, dedication geometry): a
 // fixed value per breakpoint, selected by the same `md` width query every

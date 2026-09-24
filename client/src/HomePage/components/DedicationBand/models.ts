@@ -10,7 +10,7 @@ export interface DedicationBandProps {
   variant: DedicationVariant;
 }
 
-export interface DedicationBandDrawnProps {
+export interface DedicationBandTrackProps {
   className?: string;
   group: DedicationGroup;
   variant: DedicationVariant;

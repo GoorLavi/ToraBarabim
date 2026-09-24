@@ -1,7 +1,7 @@
 import type { HomeRow, LessonOccurrence } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import { DEDICATION_GROUP_MEMORIAL } from '~/dedicationFixture';
+import { DEDICATION_GROUP_SUCCESS } from '~/dedicationFixture';
 import { rabbiFixture } from '~/rabbiFixture';
 
 import { HomeRails } from './HomeRails';
@@ -47,7 +47,7 @@ type Story = StoryObj<typeof HomeRails>;
 export const WithBetweenRailsDedication: Story = {
   args: {
     query: queryWithRows([homeRow('area', 'שיעורים באזור שלך'), homeRow('today', 'הערב'), homeRow('weekly', 'שיעור שבועי')]),
-    dedicationGroup: DEDICATION_GROUP_MEMORIAL,
+    dedicationGroup: DEDICATION_GROUP_SUCCESS,
   },
 };
 
@@ -57,7 +57,7 @@ export const WithBetweenRailsDedication: Story = {
 export const TwoRailsNoBetweenRailsDedication: Story = {
   args: {
     query: queryWithRows([homeRow('area', 'שיעורים באזור שלך'), homeRow('today', 'הערב')]),
-    dedicationGroup: DEDICATION_GROUP_MEMORIAL,
+    dedicationGroup: DEDICATION_GROUP_SUCCESS,
   },
 };
 
