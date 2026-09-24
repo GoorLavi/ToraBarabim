@@ -1,21 +1,15 @@
 import { css } from 'styled-components';
 
+import { RAIL_CARD_WIDTH_MD, RAIL_CARD_WIDTH_SM, RAIL_CARD_WIDTH_WIDE, RAIL_CARD_WIDTH_XWIDE, RAIL_COLUMNS_PHONE } from '~/components/Rail/consts';
+import { railCardWidth, railEdgeOffset } from '~/components/Rail/helpers';
 import { CARD_WIDE_THRESHOLD } from '~/HomePage/components/LessonCard/consts';
-import {
-  RAIL_CARD_WIDTH_MD,
-  RAIL_CARD_WIDTH_SM,
-  RAIL_CARD_WIDTH_WIDE,
-  RAIL_CARD_WIDTH_XWIDE,
-  RAIL_COLUMNS_PHONE,
-} from '~/HomePage/components/LessonRail/consts';
-import { railCardWidth, railEdgeOffset } from '~/HomePage/components/LessonRail/helpers';
 import { POSTER_ASPECT_RATIO } from '~/HomePage/consts';
 import type { Theme } from '~/theme/models';
 
 import { EMBLEM_SIZE_FLOOR, EMBLEM_WIDTH_FACTOR } from './consts';
 
 // The same phone formula the rail's own `<li>` uses to size a card
-// (LessonRail/styles.ts, LessonRail/helpers.ts): this is the one place the
+// (Rail/styles.ts, Rail/helpers.ts): this is the one place the
 // tile's rendered width is computed, so reusing it here for the emblem,
 // rather than a CSS percentage that would resolve against `.plum`'s own
 // narrower content box, keeps a single source of truth instead of a second
@@ -96,7 +90,7 @@ export const WomensAreaTile = css(
       block-size: auto;
       aspect-ratio: 1;
 
-      /* Fixed, matching LessonRail/styles.ts's own ladder: one card width
+      /* Fixed, matching Rail/styles.ts's own ladder: one card width
          constant per tier from \`sm\` up, so the emblem tracks the card
          exactly at every step. */
       @media (min-width: ${theme.breakpoints.sm}) {

@@ -7,10 +7,18 @@ import type { PhotoPickerAspectRatio } from './models';
 // 2.0) has no client mirror any more: the crop step below always produces an
 // exact 16:9 crop, which clears that band by construction, so there is
 // nothing left for a client-side ratio check or a ratio line in the help
-// text to do. Exported for the crop step's own floor, read from
-// `helpers.ts`.
+// text to do. Read by every '16:9' caller and passed to `PhotoPicker` as its
+// `minWidth`/`minHeight` props, rather than assumed inside the component.
 export const PLACE_PHOTO_MIN_WIDTH = 800;
 export const PLACE_PHOTO_MIN_HEIGHT = 450;
+
+// The design doc's own stated minimum for a rabbi's portrait
+// (design-system.md, "The poster image"). Unlike the place pair above, this
+// has no server-side check to mirror: the poster is cropped on display with
+// no in-browser tool (helpers.ts, `ASPECT_RATIO_VALUE`), so nothing on the
+// server ever measures the source file against it.
+export const RABBI_PHOTO_MIN_WIDTH = 900;
+export const RABBI_PHOTO_MIN_HEIGHT = 1200;
 
 // The one client-side copy of the server's `invalid_photo` rejection
 // (`server/src/api/admin/places/index.ts`, `server/src/api/place/profile/index.ts`):
@@ -39,6 +47,18 @@ export const PHOTO_PICKER_16X9_FRAME_MAX_WIDTH = 320;
 // line rendered narrower than the frame above them, a ragged edge).
 export const PHOTO_PICKER_3X4_FRAME_WIDTH = 160;
 
+// The one place a ratio variant becomes the number the crop math (and
+// `PhotoCropStep`, which knows nothing of '3:4'/'16:9' as concepts) actually
+// needs. '3:4' never reaches the crop step today (only '16:9' does,
+// `PhotoPicker.tsx`), but it still needs a real ratio for `aspect-ratio` on
+// its own frame (styles.ts reads the CSS value directly, not through this
+// map, since a CSS rule cannot import a TypeScript constant; this is the
+// script-side mirror of the same two numbers).
+export const ASPECT_RATIO_VALUE: Record<PhotoPickerAspectRatio, number> = {
+  '3:4': 3 / 4,
+  '16:9': 16 / 9,
+};
+
 // One noun for one thing across all three buttons: the field is called
 // "התמונה שלי" in the panel, so "קובץ" is kept only for the lines that are
 // actually about the file format.
@@ -46,36 +66,16 @@ export const PHOTO_CHOOSE_LABEL = 'בחירת תמונה';
 export const PHOTO_REPLACE_LABEL = 'החלפת תמונה';
 export const PHOTO_HELP_TYPE = 'JPG או PNG, עד 5MB';
 
-// Dimensions read as "900 על 1200", never "900x1200": a multiplication sign
-// between two numbers is bidi-neutral, inherits the paragraph's direction,
-// and renders the pair reversed to anyone reading it as a Latin unit.
-// Keyed by ratio, the single place this component's size requirement
-// changes: '3:4' is every rabbi's portrait, cropped on display with no
-// in-browser tool; '16:9' is a place's own photo, which now gets cropped to
-// shape before it ever uploads, so its own line describes that step instead
-// of a rejection. Copy approved by `tora-hebrew-editor`.
-export const PHOTO_HELP_SIZE: Record<PhotoPickerAspectRatio, string> = {
-  '3:4': 'לפחות 900 על 1200 פיקסלים',
-  '16:9': `לפחות ${PLACE_PHOTO_MIN_WIDTH} על ${PLACE_PHOTO_MIN_HEIGHT} פיקסלים. אחרי הבחירה אפשר לסמן איזה חלק מהתמונה יופיע באתר.`,
-};
-
 // '3:4' only: the poster is cropped on display with no in-browser tool, so
 // the reader needs to know to keep the face away from the edge. '16:9' had
 // the same kind of line for the same reason (an accepted photo could still
 // lose its sides on display), but the crop step now produces exactly the
 // ratio the hero displays at, so nothing is cropped a second time and the
 // line no longer applies; removed rather than kept beside the new '16:9'
-// help text above (build brief for the crop step).
+// help text (helpers.ts, `photoHelpSize`).
 export const PHOTO_HELP_CROP: Partial<Record<PhotoPickerAspectRatio, string>> = {
   '3:4': 'בכרטיס באתר התמונה נחתכת ליחס 3:4, לכן כדאי שהפנים יהיו במרכז ולא בקצה.',
 };
-
-// Shown by the picker itself, in place of the normal help list, when a just
-// picked '16:9' file cannot yield a crop at the floor above: said before the
-// crop step ever opens, per the build brief, rather than after someone has
-// already spent time framing a photo that was always going to be refused.
-// Copy approved by `tora-hebrew-editor`.
-export const PHOTO_TOO_SMALL_TO_CROP_ERROR = `התמונה קטנה מדי. צריך תמונה בגודל ${PLACE_PHOTO_MIN_WIDTH} על ${PLACE_PHOTO_MIN_HEIGHT} פיקסלים לפחות.`;
 
 // The real upload states (rabbi-panel-copy.md, section 6): shown only when
 // a caller passes `uploadStatus`, so the admin rabbi form (which never

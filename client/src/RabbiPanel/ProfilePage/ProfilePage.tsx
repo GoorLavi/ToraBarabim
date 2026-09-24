@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { RABBI_PHOTO_MIN_HEIGHT, RABBI_PHOTO_MIN_WIDTH } from '~/components/PhotoPicker/consts';
 import { PhotoPicker } from '~/components/PhotoPicker/PhotoPicker';
 import { ReadOnlyField } from '~/components/ReadOnlyField/ReadOnlyField';
 import { RABBI_HONORIFIC_LABELS } from '~/consts';
@@ -98,6 +99,8 @@ export const ProfilePage = styled(({ className }: ProfilePageProps) => {
             errorMessage={photoValidationError}
             uploadStatus={photoUpload.status}
             onRetryUpload={photoUpload.retry}
+            minWidth={RABBI_PHOTO_MIN_WIDTH}
+            minHeight={RABBI_PHOTO_MIN_HEIGHT}
           />
         </div>
 

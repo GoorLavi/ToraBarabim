@@ -1,30 +1,22 @@
 import * as consts from './consts';
-import type { CropRect, CropTransform, ImageDimensions } from './models';
+import type { CropRect, CropTransform, ImageDimensions, PhotoPickerAspectRatio } from './models';
 
-// 16 / 9 as a ratio rather than a literal, so every formula below (and the
-// crop step's own viewport measurement, which needs the same ratio to turn
-// a measured width into a height) reads as "the crop's own ratio" rather
-// than repeating two numbers. The CSS `aspect-ratio: 16 / 9` on the crop
-// step's own viewport box (styles.ts) is the one place that still writes
-// the two numbers directly: a CSS rule cannot import a TypeScript constant.
-export const CROP_ASPECT_RATIO = 16 / 9;
-
-// The largest 16:9 rectangle that fits inside a source image: the crop
-// someone gets at zoom 1, before they zoom in at all. Anchored so whichever
-// axis has slack (the one the ratio does not already consume) is the one a
-// person can pan across.
-export const maxCropForSource = (source: ImageDimensions): ImageDimensions => {
-  if (source.width / source.height >= CROP_ASPECT_RATIO) {
-    return { width: source.height * CROP_ASPECT_RATIO, height: source.height };
+// The largest rectangle at `aspectRatio` that fits inside a source image:
+// the crop someone gets at zoom 1, before they zoom in at all. Anchored so
+// whichever axis has slack (the one the ratio does not already consume) is
+// the one a person can pan across.
+export const maxCropForSource = (source: ImageDimensions, aspectRatio: number): ImageDimensions => {
+  if (source.width / source.height >= aspectRatio) {
+    return { width: source.height * aspectRatio, height: source.height };
   }
-  return { width: source.width, height: source.width / CROP_ASPECT_RATIO };
+  return { width: source.width, height: source.width / aspectRatio };
 };
 
 // Whether a source image can yield a crop that clears the floor at all: the
 // pre-check the picker runs before ever opening the crop step.
-export const canCropToFloor = (source: ImageDimensions): boolean => {
-  const max = maxCropForSource(source);
-  return max.width >= consts.PLACE_PHOTO_MIN_WIDTH && max.height >= consts.PLACE_PHOTO_MIN_HEIGHT;
+export const canCropToFloor = (source: ImageDimensions, aspectRatio: number, minWidth: number, minHeight: number): boolean => {
+  const max = maxCropForSource(source, aspectRatio);
+  return max.width >= minWidth && max.height >= minHeight;
 };
 
 // The scale at which the source image, drawn at its natural size, just
@@ -33,12 +25,12 @@ export const canCropToFloor = (source: ImageDimensions): boolean => {
 export const coverScale = (source: ImageDimensions, viewport: ImageDimensions): number => Math.max(viewport.width / source.width, viewport.height / source.height);
 
 // The zoom, relative to `coverScale`, beyond which the crop rectangle's own
-// source pixels would drop below the floor. The viewport is always 16:9
-// itself (the crop step's own frame), so this bound is the same whether it
-// is derived from the viewport's width or its height.
-export const maxZoom = (source: ImageDimensions, viewport: ImageDimensions): number => {
+// source pixels would drop below the floor's width. The viewport is always
+// at the caller's own ratio (the crop step's own frame), so this bound is
+// the same whether it is derived from the viewport's width or its height.
+export const maxZoom = (source: ImageDimensions, viewport: ImageDimensions, minWidth: number): number => {
   const visibleSourceWidthAtZoom1 = viewport.width / coverScale(source, viewport);
-  return visibleSourceWidthAtZoom1 / consts.PLACE_PHOTO_MIN_WIDTH;
+  return visibleSourceWidthAtZoom1 / minWidth;
 };
 
 // Pulls an offset back to whichever edge would otherwise open a gap, so the
@@ -48,8 +40,8 @@ export const clampOffset = (offset: number, viewportSize: number, displaySize: n
 // Clamps a transform's zoom to [1, maxZoom] and its offsets to whatever that
 // zoom now allows, in that order: an offset valid at the old zoom can open a
 // gap at the new one.
-export const clampTransform = (transform: CropTransform, source: ImageDimensions, viewport: ImageDimensions): CropTransform => {
-  const zoom = Math.min(Math.max(transform.zoom, 1), maxZoom(source, viewport));
+export const clampTransform = (transform: CropTransform, source: ImageDimensions, viewport: ImageDimensions, minWidth: number): CropTransform => {
+  const zoom = Math.min(Math.max(transform.zoom, 1), maxZoom(source, viewport, minWidth));
   const scale = coverScale(source, viewport) * zoom;
   return {
     zoom,
@@ -73,10 +65,17 @@ export const initialTransform = (source: ImageDimensions, viewport: ImageDimensi
 // midpoint, or a pointer position under a wheel event) in the same place in
 // the viewport, rather than letting the image jump to recenter on the
 // viewport itself.
-export const zoomAroundPoint = (transform: CropTransform, point: { x: number; y: number }, nextZoom: number, source: ImageDimensions, viewport: ImageDimensions): CropTransform => {
+export const zoomAroundPoint = (
+  transform: CropTransform,
+  point: { x: number; y: number },
+  nextZoom: number,
+  source: ImageDimensions,
+  viewport: ImageDimensions,
+  minWidth: number,
+): CropTransform => {
   const scale = coverScale(source, viewport);
   const previousScale = scale * transform.zoom;
-  const clampedZoom = Math.min(Math.max(nextZoom, 1), maxZoom(source, viewport));
+  const clampedZoom = Math.min(Math.max(nextZoom, 1), maxZoom(source, viewport, minWidth));
   const ratio = (scale * clampedZoom) / previousScale;
   return clampTransform(
     {
@@ -86,6 +85,7 @@ export const zoomAroundPoint = (transform: CropTransform, point: { x: number; y:
     },
     source,
     viewport,
+    minWidth,
   );
 };
 
@@ -103,3 +103,24 @@ export const sourceCropRect = (transform: CropTransform, source: ImageDimensions
 };
 
 export const distanceBetween = (a: { x: number; y: number }, b: { x: number; y: number }): number => Math.hypot(a.x - b.x, a.y - b.y);
+
+// Dimensions read as "900 על 1200", never "900x1200": a multiplication sign
+// between two numbers is bidi-neutral, inherits the paragraph's direction,
+// and renders the pair reversed to anyone reading it as a Latin unit.
+// '16:9' gets an extra sentence: it is the one ratio that opens the crop
+// step below, so its own help line says so instead of just stating a floor.
+// Copy approved by `tora-hebrew-editor`.
+export const photoHelpSize = (aspectRatio: PhotoPickerAspectRatio, minWidth: number, minHeight: number): string => {
+  const floor = `לפחות ${minWidth} על ${minHeight} פיקסלים`;
+  if (aspectRatio === '16:9') return `${floor}. אחרי הבחירה אפשר לסמן איזה חלק מהתמונה יופיע באתר.`;
+  return floor;
+};
+
+// Shown by the picker itself, in place of the normal help list, when a just
+// picked file cannot yield a crop at the floor a caller passed in: said
+// before the crop step ever opens, per the build brief, rather than after
+// someone has already spent time framing a photo that was always going to
+// be refused. Copy approved by `tora-hebrew-editor`.
+export const photoTooSmallError = (minWidth: number, minHeight: number): string => `התמונה קטנה מדי. צריך תמונה בגודל ${minWidth} על ${minHeight} פיקסלים לפחות.`;
+
+export const aspectRatioValue = (aspectRatio: PhotoPickerAspectRatio): number => consts.ASPECT_RATIO_VALUE[aspectRatio];

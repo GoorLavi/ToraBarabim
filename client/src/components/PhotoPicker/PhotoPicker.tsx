@@ -33,13 +33,14 @@ const loadImageDimensions = (file: File): Promise<{ objectUrl: string; width: nu
 // file's preview, dimmed, with a progress bar) and failed (the previous
 // photo back at full opacity, with retry and choose-other actions).
 // `aspectRatio` ('3:4', every rabbi's portrait, the default; '16:9', a
-// place's own photo) is the one thing that changes the frame's proportions,
-// its width, and the help copy below it; see `styles.ts` and `consts.ts` for
-// the single place each lives. Only '16:9' gets an in-browser crop step
-// (`components/PhotoCropStep`): a rabbi's portrait is still cropped on
-// display with no tool of its own, exactly as before.
+// place's own photo) changes the frame's proportions (styles.ts) and its
+// help copy (helpers.ts, `photoHelpSize`); `minWidth`/`minHeight` are a
+// caller's own floor, never assumed here. Only '16:9' gets an in-browser
+// crop step (`components/PhotoCropStep`): a rabbi's portrait is still
+// cropped on display with no tool of its own, exactly as before.
 export const PhotoPicker = styled(
-  ({ className, previewUrl, hasExistingPhoto, onSelectFile, errorMessage, uploadStatus, onRetryUpload, aspectRatio = '3:4' }: PhotoPickerProps) => {
+  ({ className, previewUrl, hasExistingPhoto, onSelectFile, errorMessage, uploadStatus, onRetryUpload, aspectRatio = '3:4', minWidth, minHeight }: PhotoPickerProps) => {
+    const ratioValue = helpers.aspectRatioValue(aspectRatio);
     const hasPhoto = Boolean(previewUrl || hasExistingPhoto);
     const isUploading = uploadStatus === 'uploading';
     const hasFailed = uploadStatus === 'failed';
@@ -69,9 +70,9 @@ export const PhotoPicker = styled(
       setCropUnavailableError(undefined);
       void loadImageDimensions(file).then(
         ({ objectUrl, width, height }) => {
-          if (!helpers.canCropToFloor({ width, height })) {
+          if (!helpers.canCropToFloor({ width, height }, ratioValue, minWidth, minHeight)) {
             URL.revokeObjectURL(objectUrl);
-            setCropUnavailableError(consts.PHOTO_TOO_SMALL_TO_CROP_ERROR);
+            setCropUnavailableError(helpers.photoTooSmallError(minWidth, minHeight));
             return;
           }
           setCropCandidate({ file, objectUrl, dimensions: { width, height } });
@@ -145,7 +146,7 @@ export const PhotoPicker = styled(
               {!isUploading && (
                 <ul className="help">
                   <li className="helpItem">{consts.PHOTO_HELP_TYPE}</li>
-                  <li className="helpItem">{consts.PHOTO_HELP_SIZE[aspectRatio]}</li>
+                  <li className="helpItem">{helpers.photoHelpSize(aspectRatio, minWidth, minHeight)}</li>
                   {consts.PHOTO_HELP_CROP[aspectRatio] && <li className="helpItem">{consts.PHOTO_HELP_CROP[aspectRatio]}</li>}
                 </ul>
               )}
@@ -160,6 +161,8 @@ export const PhotoPicker = styled(
               file: cropCandidate.file,
               imageUrl: cropCandidate.objectUrl,
               sourceDimensions: cropCandidate.dimensions,
+              aspectRatio: ratioValue,
+              minWidth,
               onConfirm: (croppedFile: File): void => {
                 setCropCandidate(undefined);
                 onSelectFile(croppedFile);

@@ -105,6 +105,8 @@ export const ProfilePage = styled(({ className }: ProfilePageProps) => {
             onSelectFile={handleSelectFile}
             errorMessage={photoValidationError}
             aspectRatio="16:9"
+            minWidth={consts.MIN_WIDTH_PX}
+            minHeight={consts.MIN_HEIGHT_PX}
             uploadStatus={photoUpload.status}
             onRetryUpload={photoUpload.retry}
           />

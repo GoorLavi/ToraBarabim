@@ -23,7 +23,7 @@ export interface DedicationCrawlHandlers {
 }
 
 // `scrollLeft`'s sign in a `direction: rtl` container is not consistent
-// enough to assign directly (mirrors LessonRail/helpers.ts, scrollRailBy):
+// enough to assign directly (mirrors Rail/helpers.ts, scrollRailBy):
 // reading the computed direction rather than assuming a sign is what this
 // codebase already does at the one other place that moves a rail's scroll
 // position from code.

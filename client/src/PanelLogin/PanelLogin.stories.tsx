@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { RATE_LIMITED_ERROR } from '~/consts';
+import { RATE_LIMITED_ERROR, SITE_CONTACT_PHONE_INTERNATIONAL } from '~/consts';
 import { whatsAppHref } from '~/helpers';
 import { installMockFetch, jsonResponse, NEVER_RESOLVES } from '~/storyMocks';
 
@@ -45,7 +45,7 @@ export const Idle: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const link = canvas.getByRole('link', { name: consts.WHATSAPP_SUPPORT_TOOLTIP });
-    await expect(link).toHaveAttribute('href', whatsAppHref(consts.WHATSAPP_SUPPORT_MESSAGE));
+    await expect(link).toHaveAttribute('href', whatsAppHref(consts.WHATSAPP_SUPPORT_MESSAGE, SITE_CONTACT_PHONE_INTERNATIONAL));
   },
 };
 

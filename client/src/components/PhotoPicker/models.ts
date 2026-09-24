@@ -43,6 +43,12 @@ export interface PhotoPickerProps {
   onSelectFile: (file: File) => void;
   errorMessage: string | undefined;
   aspectRatio?: PhotoPickerAspectRatio;
+  // The floor a caller's own photo must clear: shown in the help text for
+  // every ratio, and fed to the crop step's own math for the one ratio that
+  // opens it ('16:9' today). No default: a caller with no real floor of its
+  // own would be a defect to leave silent, not a case worth a fallback for.
+  minWidth: number;
+  minHeight: number;
   // Additive: real upload progress driven by the parent, used by the
   // rabbi profile screen, which uploads immediately on file selection and
   // keeps the previous photo visible until the upload either succeeds or

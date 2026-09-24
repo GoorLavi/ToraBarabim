@@ -4,7 +4,11 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { placeholderPhoto } from '~/storyMocks';
 
 import * as consts from './consts';
+import * as helpers from './helpers';
 import { PhotoPicker } from './PhotoPicker';
+
+const RATIO_3X4 = { aspectRatio: '3:4' as const, minWidth: consts.RABBI_PHOTO_MIN_WIDTH, minHeight: consts.RABBI_PHOTO_MIN_HEIGHT };
+const RATIO_16X9 = { aspectRatio: '16:9' as const, minWidth: consts.PLACE_PHOTO_MIN_WIDTH, minHeight: consts.PLACE_PHOTO_MIN_HEIGHT };
 
 const portraitPhoto =
   'data:image/svg+xml;utf8,' +
@@ -28,33 +32,33 @@ type Story = StoryObj<typeof PhotoPicker>;
 
 // The default ratio: every rabbi's portrait poster.
 export const Portrait3x4Empty: Story = {
-  args: { aspectRatio: '3:4', previewUrl: undefined, hasExistingPhoto: false },
+  args: { ...RATIO_3X4, previewUrl: undefined, hasExistingPhoto: false },
 };
 
 export const Portrait3x4WithPhoto: Story = {
-  args: { aspectRatio: '3:4', previewUrl: portraitPhoto, hasExistingPhoto: true },
+  args: { ...RATIO_3X4, previewUrl: portraitPhoto, hasExistingPhoto: true },
 };
 
 // The new ratio: a place's own photo, wider and with its own size and ratio
 // requirement copy instead of the portrait's crop note.
 export const Landscape16x9Empty: Story = {
-  args: { aspectRatio: '16:9', previewUrl: undefined, hasExistingPhoto: false },
+  args: { ...RATIO_16X9, previewUrl: undefined, hasExistingPhoto: false },
 };
 
 export const Landscape16x9WithPhoto: Story = {
-  args: { aspectRatio: '16:9', previewUrl: landscapePhoto, hasExistingPhoto: true },
+  args: { ...RATIO_16X9, previewUrl: landscapePhoto, hasExistingPhoto: true },
 };
 
 export const Landscape16x9RejectedFile: Story = {
-  args: { aspectRatio: '16:9', previewUrl: undefined, hasExistingPhoto: false, errorMessage: 'אפשר להעלות קובץ JPG או PNG בלבד' },
+  args: { ...RATIO_16X9, previewUrl: undefined, hasExistingPhoto: false, errorMessage: 'אפשר להעלות קובץ JPG או PNG בלבד' },
 };
 
 export const Portrait3x4Uploading: Story = {
-  args: { aspectRatio: '3:4', previewUrl: portraitPhoto, hasExistingPhoto: true, uploadStatus: 'uploading' },
+  args: { ...RATIO_3X4, previewUrl: portraitPhoto, hasExistingPhoto: true, uploadStatus: 'uploading' },
 };
 
 export const Portrait3x4UploadFailed: Story = {
-  args: { aspectRatio: '3:4', previewUrl: portraitPhoto, hasExistingPhoto: true, uploadStatus: 'failed', onRetryUpload: () => {} },
+  args: { ...RATIO_3X4, previewUrl: portraitPhoto, hasExistingPhoto: true, uploadStatus: 'failed', onRetryUpload: () => {} },
 };
 
 // A real, decodable image file, generated at runtime so the story never
@@ -129,10 +133,12 @@ const selectGeneratedFile = async (canvasElement: HTMLElement, width: number, he
 // before anyone spends time framing a photo that was always going to be
 // refused (build brief).
 export const Landscape16x9TooSmallToCrop: Story = {
-  args: { aspectRatio: '16:9', previewUrl: undefined, hasExistingPhoto: false },
+  args: { ...RATIO_16X9, previewUrl: undefined, hasExistingPhoto: false },
   play: async ({ canvasElement }) => {
     await selectGeneratedFile(canvasElement, 300, 200);
-    await waitFor(() => expect(within(canvasElement).getByText(consts.PHOTO_TOO_SMALL_TO_CROP_ERROR)).toBeInTheDocument());
+    await waitFor(() =>
+      expect(within(canvasElement).getByText(helpers.photoTooSmallError(RATIO_16X9.minWidth, RATIO_16X9.minHeight))).toBeInTheDocument(),
+    );
   },
 };
 
@@ -140,7 +146,7 @@ export const Landscape16x9TooSmallToCrop: Story = {
 // the whole picker: the integration this component's report calls out as
 // exercised rather than merely compiled.
 export const Landscape16x9CropStepOpen: Story = {
-  args: { aspectRatio: '16:9', previewUrl: undefined, hasExistingPhoto: false },
+  args: { ...RATIO_16X9, previewUrl: undefined, hasExistingPhoto: false },
   play: async ({ canvasElement }) => {
     await selectGeneratedFile(canvasElement, 1600, 1000);
     // `.window`, not the pre-branch `.viewport`: the crop step's own frame

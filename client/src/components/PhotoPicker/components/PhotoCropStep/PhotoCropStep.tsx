@@ -39,7 +39,7 @@ const cropToFile = (image: HTMLImageElement, rect: CropRect): Promise<File> => {
 // containing block, covering only that ancestor's box instead of the
 // viewport. Never part of the server output, since it only ever mounts
 // after a person has picked a file.
-export const PhotoCropStep = styled(({ className, file, imageUrl, sourceDimensions, onConfirm, onCancel }: PhotoCropStepProps) => {
+export const PhotoCropStep = styled(({ className, file, imageUrl, sourceDimensions, aspectRatio, minWidth, onConfirm, onCancel }: PhotoCropStepProps) => {
   const stageRef = useRef<HTMLDivElement>(null);
   const windowRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -73,20 +73,28 @@ export const PhotoCropStep = styled(({ className, file, imageUrl, sourceDimensio
     return () => observer.disconnect();
   }, []);
 
-  // The crop window: the largest 16:9 box the stage's own measured content
-  // area has room for (helpers.ts), capped at its historical desktop width.
-  // Every helper below still calls this "viewport", matching the parameter
-  // name in ../../helpers.ts, even though the DOM element it now sizes is
-  // `.window` rather than the stage itself: the photo is no longer clipped
-  // to it (styles.ts).
-  const viewport: ImageDimensions | undefined = useMemo(() => (stageSize ? stepHelpers.windowSizeForStage(stageSize) : undefined), [stageSize]);
+  // The crop window: the largest box at `aspectRatio` the stage's own
+  // measured content area has room for (helpers.ts), capped at its
+  // historical desktop width. Every helper below still calls this
+  // "viewport", matching the parameter name in ../../helpers.ts, even though
+  // the DOM element it now sizes is `.window` rather than the stage itself:
+  // the photo is no longer clipped to it (styles.ts).
+  const viewport: ImageDimensions | undefined = useMemo(
+    () => (stageSize ? stepHelpers.windowSizeForStage(stageSize, aspectRatio) : undefined),
+    [stageSize, aspectRatio],
+  );
 
-  const hasNoFramingRoom = useMemo(() => (viewport ? stepHelpers.hasNoFramingRoom(sourceDimensions, viewport) : false), [sourceDimensions, viewport]);
+  const hasNoFramingRoom = useMemo(
+    () => (viewport ? stepHelpers.hasNoFramingRoom(sourceDimensions, viewport, minWidth) : false),
+    [sourceDimensions, viewport, minWidth],
+  );
 
   useEffect(() => {
     if (!viewport) return;
-    setTransform((previous) => (previous ? helpers.clampTransform(previous, sourceDimensions, viewport) : helpers.initialTransform(sourceDimensions, viewport)));
-  }, [viewport, sourceDimensions]);
+    setTransform((previous) =>
+      previous ? helpers.clampTransform(previous, sourceDimensions, viewport, minWidth) : helpers.initialTransform(sourceDimensions, viewport),
+    );
+  }, [viewport, sourceDimensions, minWidth]);
 
   // Both the drag/pinch handlers below and the wheel handler here read pointer
   // and cursor positions in window-local coordinates (the coordinate space
@@ -108,7 +116,7 @@ export const PhotoCropStep = styled(({ className, file, imageUrl, sourceDimensio
       event.preventDefault();
       const point = pointFromClient(event.clientX, event.clientY);
       const direction = event.deltaY > 0 ? -1 : 1;
-      setTransform((previous) => previous && helpers.zoomAroundPoint(previous, point, previous.zoom + direction * consts.WHEEL_ZOOM_STEP, sourceDimensions, viewport));
+      setTransform((previous) => previous && helpers.zoomAroundPoint(previous, point, previous.zoom + direction * consts.WHEEL_ZOOM_STEP, sourceDimensions, viewport, minWidth));
     };
 
     // React attaches `onWheel` as a passive listener, so `preventDefault`
@@ -117,7 +125,7 @@ export const PhotoCropStep = styled(({ className, file, imageUrl, sourceDimensio
     // the only way to opt back into a blocking one.
     element.addEventListener('wheel', handleWheel, { passive: false });
     return () => element.removeEventListener('wheel', handleWheel);
-  }, [viewport, sourceDimensions]);
+  }, [viewport, sourceDimensions, minWidth]);
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>): void => {
     if (!windowRef.current) return;
@@ -154,7 +162,7 @@ export const PhotoCropStep = styled(({ className, file, imageUrl, sourceDimensio
       if (!start) return;
       const nextZoom = start.transform.zoom * (helpers.distanceBetween(first, second) / start.distance);
       const midpoint = { x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 };
-      setTransform(helpers.zoomAroundPoint(start.transform, midpoint, nextZoom, sourceDimensions, viewport));
+      setTransform(helpers.zoomAroundPoint(start.transform, midpoint, nextZoom, sourceDimensions, viewport, minWidth));
       return;
     }
 
@@ -164,6 +172,7 @@ export const PhotoCropStep = styled(({ className, file, imageUrl, sourceDimensio
           { ...transform, offsetX: transform.offsetX + (point.x - previous.x), offsetY: transform.offsetY + (point.y - previous.y) },
           sourceDimensions,
           viewport,
+          minWidth,
         ),
       );
     }

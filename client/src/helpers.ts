@@ -1,6 +1,6 @@
 import type { AreaSummary, City, LessonOccurrence, LessonVenue, LessonVenuePanel, Place, Rabbi, ResolvedAddress } from '@torabarabim/common';
 
-import { RABBI_HONORIFIC_LABELS, SITE_CONTACT_PHONE_INTERNATIONAL } from './consts';
+import { RABBI_HONORIFIC_LABELS } from './consts';
 import type { DayGroup } from './models';
 
 // The one place a rabbi's display name is composed, from the bare stored
@@ -39,6 +39,12 @@ export const areaPath = (area: Pick<AreaSummary, 'slug'>): string => `/areas/${e
 // segments percent-encoded, `Place.slug` never empty so there is no bare-id
 // fallback to fall back to.
 export const placePath = (place: Pick<Place, 'id' | 'slug'>): string => `/places/${encodeURIComponent(place.id)}/${encodeURIComponent(place.slug)}`;
+
+// The one place a course's public path is built, mirroring rabbiPath and
+// placePath: both segments percent-encoded. Typed against a minimal shape
+// rather than the wire `CourseSummary` (not landed yet), so this can ship
+// ahead of it; the wire type will structurally satisfy this once it lands.
+export const coursePath = (course: { id: string; slug: string }): string => `/courses/${encodeURIComponent(course.id)}/${encodeURIComponent(course.slug)}`;
 
 // The one place a lesson occurrence's public path is built, from the lesson
 // id React Router matches on and the ISO date of the specific occurrence.
@@ -141,10 +147,13 @@ export const addressLine = (street: string, floor: string | undefined): string =
 // reaches the URL.
 const navigationQuery = (place: Pick<ResolvedAddress, 'street' | 'city'>): string => `${place.street.trim()}, ${place.city.trim()}`;
 
-// This site's own contact number, prefilled with a caller's own message.
-// `wa.me` wants the international number with no leading `+` or separators,
-// which `SITE_CONTACT_PHONE_INTERNATIONAL` already is.
-export const whatsAppHref = (message: string): string => `https://wa.me/${SITE_CONTACT_PHONE_INTERNATIONAL}?text=${encodeURIComponent(message)}`;
+// A WhatsApp deep link prefilled with a caller's own message, to a number
+// the caller passes explicitly (this site's own support line, or a course's
+// contact number). `wa.me` wants the international number with no leading
+// `+` or separators, which `SITE_CONTACT_PHONE_INTERNATIONAL` and a
+// course's own `contactPhone` are both stored as.
+export const whatsAppHref = (message: string, phoneInternational: string): string =>
+  `https://wa.me/${phoneInternational}?text=${encodeURIComponent(message)}`;
 
 // `undefined` unless both street and city are present, so the caller hides
 // the whole nav row rather than link out to a bare street or a bare city
