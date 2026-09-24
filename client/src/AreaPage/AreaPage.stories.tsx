@@ -3,8 +3,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Route, Routes } from 'react-router-dom';
 
 import { rabbiFixture } from '~/rabbiFixture';
-import { installMockFetch, jsonResponse, NEVER_RESOLVES } from '~/storyMocks';
 
+import { errorResolver, http, jsonResolver, loadingResolver } from '../../.storybook/apiMocks';
 import { AreaPage } from './AreaPage';
 
 const areaDetail = (overrides: Partial<AreaDetailResponse>): AreaDetailResponse => ({
@@ -41,78 +41,40 @@ const areaDirectory = (overrides: Partial<AreaDirectoryResponse>): AreaDirectory
   ...overrides,
 });
 
-installMockFetch((url) => {
-  // `URL#pathname` is always percent-encoded, even for a plain assignment
-  // like `new URL('/v1/areas/עיר')`: comparing it against a literal Hebrew
-  // string never matches, which is exactly the 404 this looked like before
-  // decoding it back (mirrors CityPage.stories.tsx).
-  const pathname = decodeURIComponent(url.pathname);
+const areaHandler = (detail: AreaDetailResponse) => http.get('/v1/areas/:slug', jsonResolver(detail));
+const lessonsHandler = (items: LessonOccurrence[], total = items.length) =>
+  http.get('/v1/lessons', jsonResolver({ items, page: 1, pageSize: 24, total }));
 
-  if (pathname === '/v1/areas/חיפה-והקריות') return jsonResponse(200, areaDetail({}));
-  if (pathname === '/v1/areas/השרון') {
-    return jsonResponse(
-      200,
-      areaDetail({
-        area: 'sharon',
-        areaName: 'השרון',
-        slug: 'השרון',
-        cities: [
-          { id: '4200', name: 'רעננה', slug: 'רעננה', area: 'sharon', lessonCount: 3 },
-          { id: '4210', name: 'כפר סבא', slug: 'כפר-סבא', area: 'sharon', lessonCount: 2 },
-          { id: '4220', name: 'הוד השרון', slug: 'הוד-השרון', area: 'sharon', lessonCount: 1 },
-        ],
-      }),
-    );
-  }
-  if (pathname === '/v1/areas/הדרום') {
-    return jsonResponse(200, areaDetail({ area: 'south', areaName: 'הדרום', slug: 'הדרום', cities: [] }));
-  }
-  if (pathname === '/v1/areas/אזור-שלא-קיים') return jsonResponse(404, { error: 'area_not_found', message: 'האזור המבוקש לא נמצא' });
-  if (pathname === '/v1/areas/אזור-שגיאה') return jsonResponse(500, { error: 'internal_error', message: 'שגיאה' });
-  if (pathname === '/v1/areas/אזור-בטעינה') return NEVER_RESOLVES;
+const haifaLessons: LessonOccurrence[] = [
+  lesson({ lessonId: 'l1', date: '2026-09-14', startTime: '20:00' }),
+  lesson({
+    lessonId: 'l2',
+    date: '2026-09-14',
+    startTime: '06:30',
+    rabbi: rabbiFixture({ id: 'r2', name: 'שמואל וקנין' }),
+    title: 'שיעור דף יומי',
+    topic: 'gemara',
+  }),
+  lesson({
+    lessonId: 'l3',
+    date: '2026-09-17',
+    startTime: '19:30',
+    audience: 'women',
+    title: undefined,
+    topic: undefined,
+    venue: { kind: 'address', name: 'אולם קהילתי', street: 'רחוב הרצל 8', city: 'קריית ביאליק', citySlug: 'קריית-ביאליק', area: 'haifa' },
+  }),
+];
 
-  if (pathname === '/v1/lessons') {
-    if (url.searchParams.get('area') === 'haifa') {
-      return jsonResponse(200, {
-        items: [
-          lesson({ lessonId: 'l1', date: '2026-09-14', startTime: '20:00' }),
-          lesson({
-            lessonId: 'l2',
-            date: '2026-09-14',
-            startTime: '06:30',
-            rabbi: rabbiFixture({ id: 'r2', name: 'שמואל וקנין' }),
-            title: 'שיעור דף יומי',
-            topic: 'gemara',
-          }),
-          lesson({
-            lessonId: 'l3',
-            date: '2026-09-17',
-            startTime: '19:30',
-            audience: 'women',
-            title: undefined,
-            topic: undefined,
-            venue: { kind: 'address', name: 'אולם קהילתי', street: 'רחוב הרצל 8', city: 'קריית ביאליק', citySlug: 'קריית-ביאליק', area: 'haifa' },
-          }),
-        ],
-        page: 1,
-        pageSize: 24,
-        total: 5,
-      });
-    }
-    if (url.searchParams.get('area') === 'sharon') {
-      return jsonResponse(200, { items: [], page: 1, pageSize: 24, total: 0 });
-    }
-    // Falls through for every other lessons query rather than answering it.
-    // Each stories file wraps `window.fetch` and keeps the previous wrapper,
-    // so returning a response here stops the chain: a catch-all would swallow
-    // CityPage's and RabbiPage's own lessons mocks depending on which module
-    // Storybook happened to load first.
-    return null;
-  }
-
-  if (pathname === '/v1/areas') return jsonResponse(200, areaDirectory({}));
-
-  return null;
+const sharonDetail = areaDetail({
+  area: 'sharon',
+  areaName: 'השרון',
+  slug: 'השרון',
+  cities: [
+    { id: '4200', name: 'רעננה', slug: 'רעננה', area: 'sharon', lessonCount: 3 },
+    { id: '4210', name: 'כפר סבא', slug: 'כפר-סבא', area: 'sharon', lessonCount: 2 },
+    { id: '4220', name: 'הוד השרון', slug: 'הוד-השרון', area: 'sharon', lessonCount: 1 },
+  ],
 });
 
 // See RabbiPage.stories.tsx for why this uses `Routes`'s `location` override
@@ -126,14 +88,40 @@ const withRoute = (areaSlug: string) => (Story: React.ComponentType) => (
 const meta: Meta<typeof AreaPage> = {
   title: 'AreaPage/AreaPage',
   component: AreaPage,
+  parameters: { apiMocks: { handlers: { areaDirectory: http.get('/v1/areas', jsonResolver(areaDirectory({}))) } } },
 };
 
 export default meta;
 type Story = StoryObj<typeof AreaPage>;
 
-export const Populated: Story = { decorators: [withRoute('חיפה-והקריות')] };
-export const CitiesButWindowEmpty: Story = { decorators: [withRoute('השרון')] };
-export const AreaGenuinelyEmpty: Story = { decorators: [withRoute('הדרום')] };
-export const NotFound: Story = { decorators: [withRoute('אזור-שלא-קיים')] };
-export const ServerError: Story = { decorators: [withRoute('אזור-שגיאה')] };
-export const Loading: Story = { decorators: [withRoute('אזור-בטעינה')] };
+export const Populated: Story = {
+  decorators: [withRoute('חיפה-והקריות')],
+  parameters: { apiMocks: { handlers: { area: areaHandler(areaDetail({})), lessons: lessonsHandler(haifaLessons, 5) } } },
+};
+export const CitiesButWindowEmpty: Story = {
+  decorators: [withRoute('השרון')],
+  parameters: { apiMocks: { handlers: { area: areaHandler(sharonDetail), lessons: lessonsHandler([]) } } },
+};
+export const AreaGenuinelyEmpty: Story = {
+  decorators: [withRoute('הדרום')],
+  parameters: {
+    apiMocks: {
+      handlers: {
+        area: areaHandler(areaDetail({ area: 'south', areaName: 'הדרום', slug: 'הדרום', cities: [] })),
+        lessons: lessonsHandler([]),
+      },
+    },
+  },
+};
+export const NotFound: Story = {
+  decorators: [withRoute('אזור-שלא-קיים')],
+  parameters: { apiMocks: { handlers: { area: http.get('/v1/areas/:slug', errorResolver(404, 'area_not_found', 'האזור המבוקש לא נמצא')) } } },
+};
+export const ServerError: Story = {
+  decorators: [withRoute('אזור-שגיאה')],
+  parameters: { apiMocks: { handlers: { area: http.get('/v1/areas/:slug', errorResolver()) } } },
+};
+export const Loading: Story = {
+  decorators: [withRoute('אזור-בטעינה')],
+  parameters: { apiMocks: { handlers: { area: http.get('/v1/areas/:slug', loadingResolver) } } },
+};

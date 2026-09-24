@@ -4,13 +4,9 @@ import { Route, Routes } from 'react-router-dom';
 
 import { rabbiFixture } from '~/rabbiFixture';
 
+import { errorResolver, http, jsonResolver, loadingResolver } from '../../.storybook/apiMocks';
 import { LessonPage } from './LessonPage';
 import type { AreaPreview, AreaPreviewLessons } from './models';
-
-// No live API in Storybook's own preview server: see RabbiPage.stories.tsx
-// for why every route this page calls is answered here instead.
-const jsonResponse = (status: number, body: unknown): Response =>
-  new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 
 // A minimal, valid SVG portrait so every photo story stays off the network
 // (mirrors LessonTicket.stories.tsx).
@@ -20,17 +16,8 @@ const PLACEHOLDER_PHOTO =
     '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="320"><rect width="240" height="320" fill="lightgray"/></svg>',
   );
 
-const NEVER_RESOLVES = new Promise<AreaPreviewLessons>(() => {});
-
-const installMockFetch = (respond: (url: URL) => Response | Promise<Response> | null): void => {
-  const previousFetch = window.fetch;
-  window.fetch = (async (input, init) => {
-    const url = input instanceof Request ? new URL(input.url) : new URL(input.toString(), window.location.origin);
-    const result = respond(url);
-    if (result) return result;
-    return previousFetch(input, init);
-  }) as typeof fetch;
-};
+// A preview that never settles, so the `Suspense` fallback stays on screen.
+const PENDING_AREA_PREVIEW_LESSONS = new Promise<AreaPreviewLessons>(() => {});
 
 const lesson = (overrides: Partial<LessonOccurrence>): LessonOccurrence => ({
   lessonId: 'lesson-1',
@@ -68,42 +55,28 @@ const areaPreview = (lessons: Promise<AreaPreviewLessons>): AreaPreview => ({
   lessons,
 });
 
-installMockFetch((url) => {
-  const pathname = decodeURIComponent(url.pathname);
+const occurrenceHandler = (occurrence: LessonOccurrence) => http.get('/v1/lessons/:lessonId/occurrences/:date', jsonResolver(occurrence));
 
-  if (pathname === '/v1/lessons/lesson-1/occurrences/2026-09-08') return jsonResponse(200, lesson({}));
-  if (pathname === '/v1/lessons/lesson-populated/occurrences/2026-09-08') {
-    return jsonResponse(
-      200,
-      lesson({
-        lessonId: 'lesson-populated',
-        rabbi: rabbiFixture({ id: 'rabbi-populated', name: 'יעקב מזרחי', photoUrl: PLACEHOLDER_PHOTO }),
-      }),
-    );
-  }
-  if (pathname === '/v1/lessons/lesson-long/occurrences/2026-09-08') {
-    return jsonResponse(
-      200,
-      lesson({
-        lessonId: 'lesson-long',
-        rabbi: rabbiFixture({
-          id: 'rabbi-long',
-          name: 'פרופסור יהודה אריה לייב הכהן שוורצנברג-אייזנשטיין',
-          photoUrl: PLACEHOLDER_PHOTO,
-        }),
-        venue: {
-          kind: 'address',
-          name: 'בית הכנסת הגדול "היכל התורה והתפילה"',
-          street: 'רחוב הרב קוק הראשי 128',
-          city: 'קריית מלאכי והמושבים הסמוכים לה בעוטף עזה',
-          citySlug: 'קריית-מלאכי-והמושבים-הסמוכים-לה-בעוטף-עזה',
-          area: 'south',
-        },
-      }),
-    );
-  }
+const populatedLesson = lesson({
+  lessonId: 'lesson-populated',
+  rabbi: rabbiFixture({ id: 'rabbi-populated', name: 'יעקב מזרחי', photoUrl: PLACEHOLDER_PHOTO }),
+});
 
-  return null;
+const longNamesLesson = lesson({
+  lessonId: 'lesson-long',
+  rabbi: rabbiFixture({
+    id: 'rabbi-long',
+    name: 'פרופסור יהודה אריה לייב הכהן שוורצנברג-אייזנשטיין',
+    photoUrl: PLACEHOLDER_PHOTO,
+  }),
+  venue: {
+    kind: 'address',
+    name: 'בית הכנסת הגדול "היכל התורה והתפילה"',
+    street: 'רחוב הרב קוק הראשי 128',
+    city: 'קריית מלאכי והמושבים הסמוכים לה בעוטף עזה',
+    citySlug: 'קריית-מלאכי-והמושבים-הסמוכים-לה-בעוטף-עזה',
+    area: 'south',
+  },
 });
 
 const withRoute = (lessonId: string, date: string) => (Story: React.ComponentType) => (
@@ -125,6 +98,7 @@ type Story = StoryObj<typeof LessonPage>;
 // for the ticket's layout (a photoless ticket is its own, separate variant).
 export const AreaPreviewPopulated: Story = {
   decorators: [withRoute('lesson-populated', '2026-09-08')],
+  parameters: { apiMocks: { handlers: { occurrence: occurrenceHandler(populatedLesson) } } },
   args: { areaPreview: areaPreview(Promise.resolve({ kind: 'ready', items: [1, 2, 3, 4].map(previewLesson) })) },
 };
 
@@ -135,11 +109,13 @@ export const AreaPreviewPopulated: Story = {
 // poster.
 export const AreaPreviewLoading: Story = {
   decorators: [withRoute('lesson-1', '2026-09-08')],
-  args: { areaPreview: areaPreview(NEVER_RESOLVES) },
+  parameters: { apiMocks: { handlers: { occurrence: occurrenceHandler(lesson({})) } } },
+  args: { areaPreview: areaPreview(PENDING_AREA_PREVIEW_LESSONS) },
 };
 
 export const AreaPreviewEmpty: Story = {
   decorators: [withRoute('lesson-1', '2026-09-08')],
+  parameters: { apiMocks: { handlers: { occurrence: occurrenceHandler(lesson({})) } } },
   args: { areaPreview: areaPreview(Promise.resolve({ kind: 'ready', items: [] })) },
 };
 
@@ -147,6 +123,7 @@ export const AreaPreviewEmpty: Story = {
 // renders nothing (LOCKED PLAN, "which renders nothing").
 export const AreaPreviewUnavailable: Story = {
   decorators: [withRoute('lesson-1', '2026-09-08')],
+  parameters: { apiMocks: { handlers: { occurrence: occurrenceHandler(lesson({})) } } },
   args: { areaPreview: areaPreview(Promise.resolve({ kind: 'unavailable' })) },
 };
 
@@ -155,5 +132,33 @@ export const AreaPreviewUnavailable: Story = {
 // which is the real worst case for a long name.
 export const LongRabbiName: Story = {
   decorators: [withRoute('lesson-long', '2026-09-08')],
+  parameters: { apiMocks: { handlers: { occurrence: occurrenceHandler(longNamesLesson) } } },
   args: { areaPreview: areaPreview(Promise.resolve({ kind: 'ready', items: [1, 2, 3, 4].map(previewLesson) })) },
+};
+
+// The occurrence request itself, not the area preview: the ticket and
+// details skeletons stay on screen while it is in flight.
+export const OccurrenceLoading: Story = {
+  decorators: [withRoute('lesson-loading', '2026-09-08')],
+  parameters: { apiMocks: { handlers: { occurrence: http.get('/v1/lessons/:lessonId/occurrences/:date', loadingResolver) } } },
+  args: { areaPreview: areaPreview(Promise.resolve({ kind: 'ready', items: [] })) },
+};
+
+// The lesson does not exist, or has no occurrence on this date: the
+// not-found screen, with a way back to all lessons (lessonErrorCopy in
+// helpers.ts).
+export const OccurrenceNotFound: Story = {
+  decorators: [withRoute('lesson-notfound', '2026-09-08')],
+  parameters: {
+    apiMocks: { handlers: { occurrence: http.get('/v1/lessons/:lessonId/occurrences/:date', errorResolver(404, 'lesson_not_found', 'לא נמצא')) } },
+  },
+  args: { areaPreview: areaPreview(Promise.resolve({ kind: 'ready', items: [] })) },
+};
+
+// A transient failure: the same screen shape as not-found but with a retry
+// action instead of a way out (lessonErrorCopy in helpers.ts).
+export const OccurrenceServerError: Story = {
+  decorators: [withRoute('lesson-error', '2026-09-08')],
+  parameters: { apiMocks: { handlers: { occurrence: http.get('/v1/lessons/:lessonId/occurrences/:date', errorResolver()) } } },
+  args: { areaPreview: areaPreview(Promise.resolve({ kind: 'ready', items: [] })) },
 };

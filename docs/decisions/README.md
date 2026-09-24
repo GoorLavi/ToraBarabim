@@ -102,3 +102,4 @@ The real alternatives and why each lost. If there was no alternative, say so.
 | [0032](0032-import-matches-rabbis-by-name-and-site.md) | The import matches rabbis by name and site, and learns only what the owner confirmed | accepted |
 | [0033](0033-a-one-time-lesson-outside-the-two-week-window-cannot-be-cancelled-yet.md) | A one-time lesson outside the two-week window cannot be cancelled yet | accepted, to be fixed in its own change |
 | [0034](0034-a-place-is-an-entity-again-and-a-lessons-venue-is-a-place-or-an-address.md) | A place is an entity again, and a lesson's venue is a place or an address | accepted, supersedes [0016](0016-a-venue-is-a-field-of-the-lesson.md) |
+| [0035](0035-storybook-mocks-fetch-with-an-in-house-layer-not-msw.md) | Storybook mocks `fetch` with an in-house layer, not msw | accepted |
