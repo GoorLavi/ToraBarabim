@@ -64,7 +64,8 @@ export const DedicationBand = css(
   }
 
   &.onPage {
-    /* No bleed: stays inside the rails column it is spliced into. */
+    /* No bleed: both onPage bands, between the rails and above RabbiRow,
+       keep the page's gutter, unlike the full-bleed onPrimary foot band. */
     padding-block: ${scaledCss(consts.DEDICATION_BAND_PADDING_ON_PAGE_REFERENCE, consts.DEDICATION_BAND_PADDING_FLOOR_PX)};
 
     > .viewport:focus-visible {

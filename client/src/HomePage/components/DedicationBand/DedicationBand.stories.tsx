@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { cdp } from 'vitest/browser';
 import type { ReactElement, ReactNode } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 
@@ -64,6 +63,8 @@ export const SuccessBand: Story = {
   args: { group: DEDICATION_GROUP_SUCCESS, variant: 'onPage' },
 };
 
+// Also the static, no self-advance case: the group's own width fits the
+// container.
 export const HealingBand: Story = {
   args: { group: DEDICATION_GROUP_HEALING, variant: 'onPage' },
 };
@@ -71,11 +72,6 @@ export const HealingBand: Story = {
 export const MemorialBand: Story = {
   args: { group: DEDICATION_GROUP_MEMORIAL, variant: 'onPrimary' },
   decorators: [onPrimaryField],
-};
-
-// Static, no self-advance: the group's own width fits the container.
-export const FitsNoCrawl: Story = {
-  args: { group: DEDICATION_GROUP_HEALING, variant: 'onPage' },
 };
 
 // Wider than the container: crawls.
@@ -222,7 +218,12 @@ export const NoDedicationsRendersNothing: Story = {
 // moved the page 0px; the identical swipe just above the band moved it
 // normally). Without this assertion the next reader has only the comment
 // in styles.ts to go on.
+// `cdp` is imported dynamically, here and at every other call site in this
+// file, never at module scope: a static `import { cdp } from 'vitest/
+// browser'` throws outside a real test run, which failed every story in
+// this file, including the ones that never touch `cdp` at all.
 const dispatchVerticalTouchSwipe = async (x: number, startY: number, distancePx: number): Promise<void> => {
+  const { cdp } = await import('vitest/browser');
   const client = cdp();
   const steps = 8;
   await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y: startY }] });
@@ -274,6 +275,7 @@ export const VerticalSwipeScrollsThePage: Story = {
 // genuine mouse click leaves it at, and would make this story pass whether
 // the bug were fixed or not.
 const dispatchRealMouseClick = async (x: number, y: number): Promise<void> => {
+  const { cdp } = await import('vitest/browser');
   const client = cdp();
   await client.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y });
   await client.send('Input.dispatchMouseEvent', { type: 'mousePressed', x, y, button: 'left', clickCount: 1 });
@@ -299,6 +301,7 @@ export const MouseClickDoesNotFreezeTheCrawl: Story = {
     // sitting on the band would freeze it for a real reason and prove
     // nothing about the focus bug.
     await dispatchRealMouseClick(box.left + box.width / 2, box.top + box.height / 2);
+    const { cdp } = await import('vitest/browser');
     await cdp().send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 5, y: 5 });
     await new Promise((resolve) => window.setTimeout(resolve, RESUME_AFTER_INTERACTION_MS + 500));
     const afterCooldown = viewport.scrollLeft;
@@ -348,6 +351,7 @@ export const DragDoesNotSelectText: Story = {
     const startX = box.left + 4;
     const endX = box.right - 4;
 
+    const { cdp } = await import('vitest/browser');
     const client = cdp();
     await client.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: startX, y });
     await client.send('Input.dispatchMouseEvent', { type: 'mousePressed', x: startX, y, button: 'left', clickCount: 1 });
@@ -370,7 +374,7 @@ export const DragDoesNotSelectText: Story = {
 // DEDICATION_SCALE_BELOW_MD / DEDICATION_SCALE_FROM_MD), not a function of
 // viewport height the way the superseded 100svh-driven version was. Both
 // variants, and a group that carries both a wrapped name and a short unit
-// (no parent, no donor) in the same drawn group, since a name that wraps
+// (no parent, no donor) in the same group, since a name that wraps
 // and a unit missing two lines are the two shapes most likely to expose a
 // height regression the single-line fixtures above would not.
 const widthComparison = (): ReactElement => (
