@@ -11,6 +11,7 @@ import type {
   Place,
   PlaceListResponse,
   PlaceSimilarResponse,
+  RabbiDetailResponse,
   RabbiDirectoryEntry,
   RabbiDirectoryResponse,
   RabbiProminence,
@@ -1137,7 +1138,7 @@ describe('public API', () => {
       const res = await app.inject({ method: 'GET', url: `/v1/rabbis/${SEEDED_RABBI_ID}` });
       assert.equal(res.statusCode, 200);
 
-      const body = res.json() as RabbiDirectoryEntry;
+      const body = res.json() as RabbiDetailResponse;
       assert.equal(body.id, SEEDED_RABBI_ID);
       assert.equal(body.name, SEEDED_RABBI_NAME);
       assert.ok(body.lessonCount > 0);
@@ -1145,6 +1146,7 @@ describe('public API', () => {
       assert.ok(body.slug.length > 0);
       assert.equal(body.slug, toSlug(SEEDED_RABBI_NAME));
       assert.equal(body.honorific, 'rav');
+      assert.ok(Array.isArray(body.courses));
     });
 
     test('a genuinely missing rabbi returns 404', async () => {

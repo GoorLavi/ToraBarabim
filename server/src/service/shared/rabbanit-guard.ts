@@ -18,7 +18,7 @@ export const assertAudienceAllowedForHonorific = (
   rabbiId: string,
   audience: LessonAudience,
 ): void => {
-  if (honorific === 'rabbanit' && audience !== 'women') throw new RabbanitAudienceMustBeWomenError(rabbiId);
+  if (honorific === 'rabbanit' && audience !== 'women') throw new RabbanitAudienceMustBeWomenError(rabbiId, audience);
 };
 
 // A rabbi can only ever write his own lessons, but his own honorific can

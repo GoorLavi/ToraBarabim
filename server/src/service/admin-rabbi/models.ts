@@ -76,4 +76,5 @@ export interface RabbiListResult {
 export interface DeleteRabbiPreviewResult {
   lessonCount: number;
   exceptionCount: number;
+  courseCount: number;
 }

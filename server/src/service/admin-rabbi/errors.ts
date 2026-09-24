@@ -12,8 +12,9 @@ export class RabbiDeleteConfirmationRequiredError extends Error {
   constructor(
     public readonly lessonCount: number,
     public readonly exceptionCount: number,
+    public readonly courseCount: number,
   ) {
-    super(`Deleting this rabbi requires confirmation: it would destroy ${lessonCount} lesson(s) and ${exceptionCount} exception(s)`);
+    super(`Deleting this rabbi requires confirmation: it would destroy ${lessonCount} lesson(s), ${exceptionCount} exception(s) and ${courseCount} course(s)`);
     this.name = 'RabbiDeleteConfirmationRequiredError';
   }
 }

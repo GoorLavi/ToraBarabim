@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 
+import { registerRabbiCourseRoutes } from './courses';
 import { registerRabbiLessonExceptionRoutes } from './lesson-exceptions';
 import { registerRabbiLessonRoutes } from './lessons';
 import { registerRabbiProfileRoutes } from './profile';
@@ -10,4 +11,5 @@ export const registerRabbiRoutes = async (app: FastifyInstance): Promise<void> =
   await registerRabbiProfileRoutes(app);
   await registerRabbiLessonRoutes(app);
   await registerRabbiLessonExceptionRoutes(app);
+  await registerRabbiCourseRoutes(app);
 };

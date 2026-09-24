@@ -4,6 +4,7 @@ import { and, gte, inArray, lte } from 'drizzle-orm';
 import { AREAS } from '../../db/schema/enums';
 import { db } from '../../db/client';
 import { cities, lessonExceptions, lessons, places, rabbis } from '../../db/schema';
+import * as courseService from '../course/course';
 import * as dedicationService from '../dedication/dedication';
 import { applyException, expandLesson, resolveRecord, toExceptionDomain, toLessonDomain, type ResolvedOccurrence } from '../lesson/occurrence';
 import { addDays, compareIsoDates, todayInIsrael } from '../lesson/israel-time';
@@ -23,7 +24,11 @@ import {
   WOMENS_AREA_TILE_MIN_LESSONS,
   WOMENS_AREA_TILE_ROW_CADENCE,
 } from './consts';
-import type { HomeResult, HomeRowResult, LoadedWindow, ResolvedHomeOccurrence, WomenAreaResult, WomensSet } from './models';
+import type { CourseHomeRowResult, HomeResult, HomeRowResult, LessonHomeRowResult, LoadedWindow, ResolvedHomeOccurrence, WomenAreaResult, WomensSet } from './models';
+
+// The home row's own title (spec section 13): the one wording true of
+// every card in the row, open or closed alike.
+const COURSE_ROW_TITLE = 'קורסים';
 
 const MINUTES_PER_DAY = 24 * 60;
 
@@ -107,12 +112,12 @@ const orderRow = (occurrences: ResolvedHomeOccurrence[]): ResolvedHomeOccurrence
   });
 
 const buildRow = (
-  id: HomeRowResult['id'],
+  id: LessonHomeRowResult['id'],
   title: string,
   matches: ResolvedHomeOccurrence[],
-): HomeRowResult | undefined => {
+): LessonHomeRowResult | undefined => {
   const items = orderRow(pickNearestPerLesson(matches)).slice(0, MAX_ITEMS_PER_ROW);
-  return items.length >= MIN_ITEMS_PER_ROW ? { id, title, items } : undefined;
+  return items.length >= MIN_ITEMS_PER_ROW ? { kind: 'lessons', id, title, items } : undefined;
 };
 
 // The four rows filter on different, overlapping axes (area, day, audience,
@@ -123,10 +128,10 @@ const buildRow = (
 // entirely by `buildRow`, never sent half-empty.
 const buildRowExcluding = (
   usedLessonIds: Set<string>,
-  id: HomeRowResult['id'],
+  id: LessonHomeRowResult['id'],
   title: string,
   matches: ResolvedHomeOccurrence[],
-): HomeRowResult | undefined => {
+): LessonHomeRowResult | undefined => {
   const eligible = matches.filter((occurrence) => !usedLessonIds.has(occurrence.lessonId));
   const row = buildRow(id, title, eligible);
   row?.items.forEach((item) => usedLessonIds.add(item.lessonId));
@@ -235,9 +240,10 @@ const loadWindow = async (now: Date): Promise<LoadedWindow> => {
 export const getHome = async (now: Date): Promise<HomeResult> => {
   // Independent of each other, so they run together rather than adding a
   // second sequential round trip to the response.
-  const [{ from: today, resolved: allResolved, cityByCode, rabbiRows, rabbiIdsWithLessons }, dedicationGroups] = await Promise.all([
+  const [{ from: today, resolved: allResolved, cityByCode, rabbiRows, rabbiIdsWithLessons }, dedicationGroups, courseItems] = await Promise.all([
     loadWindow(now),
     dedicationService.listActive(now),
+    courseService.listForHomeRow(now),
   ]);
 
   // The "לפי רב" avatar row: every rabbi in the general directory scope
@@ -265,7 +271,7 @@ export const getHome = async (now: Date): Promise<HomeResult> => {
   const area = chooseArea(resolved);
   const usedLessonIds = new Set<string>();
 
-  const rows = [
+  const lessonRows = [
     area
       ? buildRowExcluding(
           usedLessonIds,
@@ -287,33 +293,45 @@ export const getHome = async (now: Date): Promise<HomeResult> => {
       'שיעורים קבועים כל שבוע',
       resolved.filter((o) => o.recurrenceKind === 'weekly'),
     ),
-  ].filter((row): row is HomeRowResult => row !== undefined);
+  ].filter((row): row is LessonHomeRowResult => row !== undefined);
 
   // Places at most one tile: starting from the candidate row, scan forward
   // for the first row with enough lessons for the tile's slot. If none
   // qualifies, no tile is placed. A second candidate (cadence rows on from
   // wherever the tile actually landed) never applies today, since the home
   // page never has more rows than the first candidate's own cadence, but
-  // the loop is written to keep working if that changes.
+  // the loop is written to keep working if that changes. Runs before the
+  // course row is spliced in below: the tile only ever lands in a lesson
+  // row, and this loop's indices are always into `lessonRows` alone.
   if (womensAreaLessonCount > 0) {
     let candidateRow = WOMENS_AREA_TILE_FIRST_CANDIDATE_ROW;
-    while (candidateRow < rows.length) {
-      const placedAt = rows.findIndex(
+    while (candidateRow < lessonRows.length) {
+      const placedAt = lessonRows.findIndex(
         (row, index) => index >= candidateRow && row.items.length >= WOMENS_AREA_TILE_MIN_LESSONS,
       );
-      const row = placedAt === -1 ? undefined : rows[placedAt];
+      const row = placedAt === -1 ? undefined : lessonRows[placedAt];
       if (!row) break;
 
-      rows[placedAt] = { ...row, womensAreaTileIndex: WOMENS_AREA_TILE_INDEX };
+      lessonRows[placedAt] = { ...row, womensAreaTileIndex: WOMENS_AREA_TILE_INDEX };
       candidateRow = placedAt + WOMENS_AREA_TILE_ROW_CADENCE;
     }
   }
+
+  // Sent from the first course, with no count cap and no lookahead cap
+  // (spec section 5): the row appears the moment one listed course exists.
+  const courseRow: CourseHomeRowResult | undefined =
+    courseItems.length > 0 ? { kind: 'courses', id: 'courses', title: COURSE_ROW_TITLE, items: courseItems } : undefined;
+
+  // Plain A (owner, at the gate): the course row rides inside `rows`
+  // itself, directly after the first lesson row, or at index 0 when there
+  // is none. No skew mitigation for an open tab during a deploy.
+  const rows: HomeRowResult[] = courseRow ? [...lessonRows.slice(0, 1), courseRow, ...lessonRows.slice(1)] : lessonRows;
 
   return { rows, womensAreaLessonCount, rabbis: homeRabbis, dedicationGroups };
 };
 
 export const getWomenArea = async (now: Date): Promise<WomenAreaResult> => {
-  const { resolved, cityByCode, rabbiRows } = await loadWindow(now);
+  const [{ resolved, cityByCode, rabbiRows }, courses] = await Promise.all([loadWindow(now), courseService.listForWomenArea(now)]);
   const { lessonCount, teachers, cities: womenCities } = buildWomensSet(resolved, cityByCode);
 
   if (lessonCount === 0) {
@@ -321,8 +339,8 @@ export const getWomenArea = async (now: Date): Promise<WomenAreaResult> => {
       .filter((row) => isRabbiInDirectoryScope('women', row.honorific))
       .map((row) => toRabbi(row))
       .sort((a, b) => collator.compare(a.name, b.name));
-    return { kind: 'empty', rabbaniyot };
+    return { kind: 'empty', rabbaniyot, courses };
   }
 
-  return { kind: 'populated', lessonCount, teachers, cities: womenCities };
+  return { kind: 'populated', lessonCount, teachers, cities: womenCities, courses };
 };

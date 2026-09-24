@@ -2,12 +2,13 @@ import { eq, inArray, sql } from 'drizzle-orm';
 
 import { db } from '../../db/client';
 import { cities, lessons, rabbis } from '../../db/schema';
+import * as courseService from '../course/course';
 import { isRabbiInDirectoryScope } from '../shared/audience-scope';
 import { compareRabbiOrder } from '../shared/rabbi-order';
 import { toRabbiSummary } from '../shared/rabbi-summary';
 import { toSlug } from '../shared/slug';
 import { RabbiNotFoundError } from './errors';
-import type { RabbiCityRecord, RabbiDirectoryEntryRecord, RabbiListQuery, RabbiListResult, RabbiSummaryRecord } from './models';
+import type { RabbiCityRecord, RabbiDetailResult, RabbiDirectoryEntryRecord, RabbiListQuery, RabbiListResult, RabbiSummaryRecord } from './models';
 
 type RabbiRow = typeof rabbis.$inferSelect;
 
@@ -105,12 +106,16 @@ export const list = async (query: RabbiListQuery): Promise<RabbiListResult> => {
   return { items, page: query.page, pageSize: query.pageSize, total };
 };
 
-export const getById = async (rabbiId: string): Promise<RabbiDirectoryEntryRecord> => {
+export const getById = async (rabbiId: string, now: Date): Promise<RabbiDetailResult> => {
   const [rabbiRow] = await db.select().from(rabbis).where(eq(rabbis.id, rabbiId)).limit(1);
   if (!rabbiRow) {
     throw new RabbiNotFoundError(rabbiId);
   }
 
-  const statsByRabbi = await loadLessonStats([rabbiId]);
-  return toDirectoryEntry(rabbiRow, statsByRabbi.get(rabbiId) ?? emptyStats);
+  // A rav's page uses the general scope, a rabbanit's the women's scope,
+  // exactly the same split her lessons already use: her page is women-
+  // scoped throughout, not just for the audience tag.
+  const scope = rabbiRow.honorific === 'rabbanit' ? 'women' : 'general';
+  const [statsByRabbi, courses] = await Promise.all([loadLessonStats([rabbiId]), courseService.listForRabbi(rabbiId, scope, now)]);
+  return { ...toDirectoryEntry(rabbiRow, statsByRabbi.get(rabbiId) ?? emptyStats), courses };
 };

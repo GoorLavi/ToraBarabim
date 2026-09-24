@@ -1,5 +1,6 @@
 import type { DedicationGroup, HomeResponse, HomeRow, LessonOccurrence } from '@torabarabim/common';
 
+import { toCourseSummary } from './course';
 import type { DedicationGroupResult } from '../service/dedication/models';
 import type { HomeResult, HomeRowResult, ResolvedHomeOccurrence } from '../service/home/models';
 import { toRabbiSummary } from '../service/shared/rabbi-summary';
@@ -20,13 +21,10 @@ const toLessonOccurrence = (record: ResolvedHomeOccurrence): LessonOccurrence =>
   note: record.note,
 });
 
-const toHomeRow = (row: HomeRowResult): HomeRow => ({
-  kind: 'lessons',
-  id: row.id,
-  title: row.title,
-  items: row.items.map(toLessonOccurrence),
-  womensAreaTileIndex: row.womensAreaTileIndex,
-});
+const toHomeRow = (row: HomeRowResult): HomeRow =>
+  row.kind === 'lessons'
+    ? { kind: 'lessons', id: row.id, title: row.title, items: row.items.map(toLessonOccurrence), womensAreaTileIndex: row.womensAreaTileIndex }
+    : { kind: 'courses', id: row.id, title: row.title, items: row.items.map(toCourseSummary) };
 
 const toDedicationGroup = (group: DedicationGroupResult): DedicationGroup => ({
   type: group.type,
