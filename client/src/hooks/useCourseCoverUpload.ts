@@ -6,7 +6,7 @@ import type { CourseResponse } from '@torabarabim/common';
 import { TOO_LARGE_ERROR } from '~/components/PhotoPicker/consts';
 import { COURSE_COVER_SOFT_MIN_HEIGHT, COURSE_COVER_SOFT_MIN_WIDTH, COURSE_PHOTO_SMALL_WARNING } from '~/consts';
 import { courseErrorMessage, isCourseErrorCode } from '~/courseErrors';
-import { readImageDimensions } from '~/helpers';
+import { decodeImageFile } from '~/helpers';
 
 export interface CourseCoverUploadApi {
   uploadCover: (courseId: string, file: File) => Promise<CourseResponse>;
@@ -87,7 +87,7 @@ export const useCourseCoverUpload = (courseId: string, api: CourseCoverUploadApi
       // just leaves the warning off, since the upload's own response is
       // the real check for that case.
       const readId = ++dimensionsReadRef.current;
-      void readImageDimensions(file).then(
+      void decodeImageFile(file).then(
         ({ objectUrl: readUrl, width, height }) => {
           URL.revokeObjectURL(readUrl);
           if (dimensionsReadRef.current === readId) setIsSmall(width < COURSE_COVER_SOFT_MIN_WIDTH || height < COURSE_COVER_SOFT_MIN_HEIGHT);

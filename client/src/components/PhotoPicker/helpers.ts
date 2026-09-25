@@ -1,12 +1,17 @@
+import { decodeImageFile } from '~/helpers';
+
 import * as consts from './consts';
 import type { CropRect, CropTransform, ImageDimensions, PhotoPickerAspectRatio } from './models';
 
 // Draws `rect` from `image` onto a canvas, scaled down to `maxLongSide` on
 // its own long side when larger, never up, and exports it as a JPEG: the
-// one encoder both the crop step's own confirmed crop rect and the
-// picker's non-crop path (the full source rect, no crop) go through, so a
-// phone photo neither one ever ships at full source resolution.
-export const exportImage = (image: HTMLImageElement, rect: CropRect, maxLongSide: number): Promise<File> => {
+// one encoder both the crop step's own confirmed crop rect and `capPhotoSize`
+// below (the full source rect, no crop) go through, so a phone photo neither
+// one ever ships at full source resolution. `async` so a synchronous throw
+// (an unavailable canvas context, a same-origin `drawImage` failure) becomes
+// a rejection like every other failure here, rather than escaping past the
+// callers that only ever `.then` or `await` this.
+export const exportImage = async (image: HTMLImageElement, rect: CropRect, maxLongSide: number): Promise<File> => {
   const longSide = Math.max(rect.width, rect.height);
   const scale = Math.min(1, maxLongSide / longSide);
 
@@ -14,7 +19,7 @@ export const exportImage = (image: HTMLImageElement, rect: CropRect, maxLongSide
   canvas.width = Math.round(rect.width * scale);
   canvas.height = Math.round(rect.height * scale);
   const context = canvas.getContext('2d');
-  if (!context) return Promise.reject(new Error('canvas 2d context unavailable for photo export'));
+  if (!context) throw new Error('canvas 2d context unavailable for photo export');
   context.drawImage(image, rect.x, rect.y, rect.width, rect.height, 0, 0, canvas.width, canvas.height);
 
   return new Promise((resolve, reject) => {
@@ -30,6 +35,30 @@ export const exportImage = (image: HTMLImageElement, rect: CropRect, maxLongSide
       consts.CROP_OUTPUT_QUALITY,
     );
   });
+};
+
+// Decodes `file` and, when its long side exceeds `CROP_OUTPUT_MAX_LONG_SIDE`
+// or its own byte size exceeds `MAX_PHOTO_UPLOAD_BYTES`, re-encodes it whole
+// (no crop) through `exportImage` at that same cap; otherwise hands the
+// original file straight back. The one place this runs: the picker's own
+// non-crop '3:4' path (`PhotoPicker.tsx`, which has no crop step to have
+// already brought a photo under either limit) and the gallery's own upload
+// path (`GalleryField.tsx`, which has no crop step at all), so a phone photo
+// large enough to clear the server's own 413 in either place. Fails open
+// throughout: a file the browser cannot decode, or a re-encode that itself
+// fails, both resolve with the original file rather than block the pick.
+export const capPhotoSize = async (file: File): Promise<File> => {
+  const decoded = await decodeImageFile(file).catch(() => undefined);
+  if (!decoded) return file;
+  const { objectUrl, image, width, height } = decoded;
+  try {
+    const longSide = Math.max(width, height);
+    const exceedsUploadLimit = longSide > consts.CROP_OUTPUT_MAX_LONG_SIDE || file.size > consts.MAX_PHOTO_UPLOAD_BYTES;
+    if (!exceedsUploadLimit) return file;
+    return await exportImage(image, { x: 0, y: 0, width, height }, consts.CROP_OUTPUT_MAX_LONG_SIDE).catch(() => file);
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
 };
 
 // The largest rectangle at `aspectRatio` that fits inside a source image:

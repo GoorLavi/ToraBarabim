@@ -8,7 +8,11 @@ import * as consts from './consts';
 import { GalleryField } from './GalleryField';
 import type { GalleryPhoto } from './models';
 
-const photo = (id: string): GalleryPhoto => ({ id, url: placeholderPhoto(200, 200), status: 'uploaded' });
+// At least 600 on the short side (the soft floor, `~/consts`,
+// `COURSE_GALLERY_SOFT_MIN_SIDE`): the default fixture for every story that
+// is not itself about a small photo, so a story never shows the warning by
+// accident (reviewer finding, this round).
+const photo = (id: string): GalleryPhoto => ({ id, url: placeholderPhoto(800, 800), status: 'uploaded' });
 
 const meta: Meta<typeof GalleryField> = {
   title: 'components/GalleryField',
@@ -33,13 +37,13 @@ export const SomePhotos: Story = {
 
 export const Uploading: Story = {
   args: {
-    photos: [photo('1'), photo('2'), { id: 'pending', url: placeholderPhoto(200, 200), status: 'uploading' }],
+    photos: [photo('1'), photo('2'), { id: 'pending', url: placeholderPhoto(800, 800), status: 'uploading' }],
   },
 };
 
 export const UploadFailed: Story = {
   args: {
-    photos: [photo('1'), { id: 'broken', url: placeholderPhoto(200, 200), status: 'failed', failureReason: consts.GALLERY_UPLOAD_FAILED_LABEL, canRetry: true }],
+    photos: [photo('1'), { id: 'broken', url: placeholderPhoto(800, 800), status: 'failed', failureReason: consts.GALLERY_UPLOAD_FAILED_LABEL, canRetry: true }],
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -56,7 +60,7 @@ export const UploadFailed: Story = {
 // clears the stuck slot.
 export const UploadFailedNotRetryable: Story = {
   args: {
-    photos: [{ id: 'rejected', url: placeholderPhoto(200, 200), status: 'failed', failureReason: consts.GALLERY_UPLOAD_FAILED_LABEL, canRetry: false }],
+    photos: [{ id: 'rejected', url: placeholderPhoto(800, 800), status: 'failed', failureReason: consts.GALLERY_UPLOAD_FAILED_LABEL, canRetry: false }],
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -69,7 +73,7 @@ export const UploadFailedNotRetryable: Story = {
 // upload's ("the gallery calls the action הסרה everywhere").
 export const RemoveFailed: Story = {
   args: {
-    photos: [{ id: 'photo-1', url: placeholderPhoto(200, 200), status: 'failed', failureReason: consts.GALLERY_REMOVE_FAILED_LABEL, canRetry: true }],
+    photos: [{ id: 'photo-1', url: placeholderPhoto(800, 800), status: 'failed', failureReason: consts.GALLERY_REMOVE_FAILED_LABEL, canRetry: true }],
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

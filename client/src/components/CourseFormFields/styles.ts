@@ -80,14 +80,15 @@ const fieldFragment = (theme: DefaultTheme): string => `
      round, designer): the field's own gap above (fieldFragment's
      "gap: ${theme.spacing.xs}") reads as too little space for a warning to
      stand apart, so this tops it up to a full "md" rather than stacking a
-     second margin on top of it. 14/20 in the normal text color, the same
-     treatment as the gallery's own single warning
-     (GalleryField/styles.ts), same in create and edit. */
+     second margin on top of it. Secondary, not secondaryCompact (measured
+     smaller than the help line and the failure reason around it, both
+     secondary at 15/22): the same treatment as the gallery's own single
+     warning (GalleryField/styles.ts), same in create and edit. */
   > .coverWarning {
     margin-block-start: calc(${theme.spacing.md} - ${theme.spacing.xs});
     color: ${theme.colors.text};
-    font-size: ${theme.typography.secondaryCompact.phone.fontSize};
-    line-height: ${theme.typography.secondaryCompact.phone.lineHeight};
+    font-size: ${theme.typography.secondary.phone.fontSize};
+    line-height: ${theme.typography.secondary.phone.lineHeight};
   }
 
   /* The joinable-after-opening field's own pill pair (CourseFormFields.tsx):

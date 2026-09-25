@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import classNames from 'classnames';
 import styled from 'styled-components';
 
-import { readImageDimensions } from '~/helpers';
+import { decodeImageFile } from '~/helpers';
 
 import { PhotoCropStep } from './components/PhotoCropStep/PhotoCropStep';
 import * as consts from './consts';
@@ -70,44 +70,19 @@ export const PhotoPicker = styled(
       const isLatestPick = (): boolean => pickIdRef.current === pickId;
 
       if (aspectRatio !== '16:9') {
-        void readImageDimensions(file).then(
-          ({ objectUrl, image, width, height }) => {
-            const longSide = Math.max(width, height);
-            const exceedsUploadLimit = longSide > consts.CROP_OUTPUT_MAX_LONG_SIDE || file.size > consts.MAX_PHOTO_UPLOAD_BYTES;
-            if (!exceedsUploadLimit) {
-              URL.revokeObjectURL(objectUrl);
-              if (isLatestPick()) onSelectFile(file);
-              return;
-            }
-            // '3:4' has no crop step of its own (only '16:9' opens one), so
-            // an oversized phone photo is re-encoded whole here instead, at
-            // the same cap and quality the crop step's own confirmed rect
-            // goes through (`helpers.exportImage`), rather than left to fail
-            // on the server's own 413. Fails open on the encoder itself: the
-            // original file goes on unchanged rather than blocking selection
-            // on a canvas failure that is not expected from a same-origin
-            // blob URL.
-            void helpers
-              .exportImage(image, { x: 0, y: 0, width, height }, consts.CROP_OUTPUT_MAX_LONG_SIDE)
-              .then(
-                (exported) => {
-                  if (isLatestPick()) onSelectFile(exported);
-                },
-                () => {
-                  if (isLatestPick()) onSelectFile(file);
-                },
-              )
-              .finally(() => URL.revokeObjectURL(objectUrl));
-          },
-          () => {
-            if (isLatestPick()) onSelectFile(file);
-          },
-        );
+        // '3:4' has no crop step of its own (only '16:9' opens one), so an
+        // oversized phone photo is capped here instead, the same shared
+        // helper the gallery's own upload path runs every file through
+        // (`GalleryField.tsx`), rather than left to fail on the server's
+        // own 413.
+        void helpers.capPhotoSize(file).then((cappedFile) => {
+          if (isLatestPick()) onSelectFile(cappedFile);
+        });
         return;
       }
 
       setCropUnavailableError(undefined);
-      void readImageDimensions(file).then(
+      void decodeImageFile(file).then(
         ({ objectUrl, width, height }) => {
           if (!isLatestPick()) {
             URL.revokeObjectURL(objectUrl);

@@ -86,12 +86,20 @@ export const Open: Story = {
       // freeze the tracker at its pre-tap value instead of the destination
       // just requested, so two "next" taps in a row landed on the same
       // slide instead of advancing twice (useVisibleSlideIndex.ts,
-      // reviewer finding B1).
-      const nextArrow = canvas.getByRole('button', { name: 'לתמונה הבאה' });
-      const prevArrow = canvas.getByRole('button', { name: 'לתמונה הקודמת' });
+      // reviewer finding B1). Scoped to ".stage": the desktop frame below
+      // renders the same counter text, only hidden by CSS (`display: none`
+      // below `lg`, CourseGallery/styles.ts), which `getByRole` excludes
+      // but `getByText` does not, so an unscoped query at this width still
+      // finds both and throws (reviewer finding, this round).
+      const stageElement = canvasElement.querySelector<HTMLElement>('.stage');
+      if (!stageElement) throw new Error('CoursePage story: gallery stage not found');
+      const stage = within(stageElement);
+
+      const nextArrow = stage.getByRole('button', { name: 'לתמונה הבאה' });
+      const prevArrow = stage.getByRole('button', { name: 'לתמונה הקודמת' });
       await userEvent.click(nextArrow);
       await userEvent.click(nextArrow);
-      await waitFor(() => expect(canvas.getByText('3 מתוך 9')).toBeInTheDocument());
+      await waitFor(() => expect(stage.getByText('3 מתוך 9')).toBeInTheDocument());
       expect(prevArrow).toBeEnabled();
 
       const fourthSlide = canvas.getByRole('button', { name: 'הצגת תמונה 4 במסך מלא' });

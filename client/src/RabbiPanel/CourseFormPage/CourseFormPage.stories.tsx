@@ -42,7 +42,7 @@ const courseWithOnePhoto = courseResponseFixture({
   id: 'course-3',
   name: 'יסודות האמונה',
   cycle: 3,
-  photos: [{ id: 'photo-1', url: placeholderPhoto(200, 200) }],
+  photos: [{ id: 'photo-1', url: placeholderPhoto(800, 800) }],
 });
 
 const profileHandler = (profile = rabbiProfile) => http.get('/v1/rabbi/profile', jsonResolver(profile));
@@ -301,12 +301,12 @@ const multiFileAddResolver: MockResolver = () => {
   const photos =
     multiFileAddCallCount === 1
       ? [
-          { id: 'photo-1', url: placeholderPhoto(200, 200) },
-          { id: 'photo-2', url: placeholderPhoto(200, 200) },
+          { id: 'photo-1', url: placeholderPhoto(800, 800) },
+          { id: 'photo-2', url: placeholderPhoto(800, 800) },
         ]
       : [
-          { id: 'photo-1', url: placeholderPhoto(200, 200) },
-          { id: 'photo-3', url: placeholderPhoto(200, 200) },
+          { id: 'photo-1', url: placeholderPhoto(800, 800) },
+          { id: 'photo-3', url: placeholderPhoto(800, 800) },
         ];
   return respondWithJson(courseResponseFixture({ ...courseWithOnePhoto, photos }));
 };

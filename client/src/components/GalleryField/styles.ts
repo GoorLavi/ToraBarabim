@@ -191,16 +191,16 @@ export const GalleryField = css(
     line-height: ${theme.typography.secondary.phone.lineHeight};
   }
 
-  /* 14/20 in the normal text color (design gate fix round, designer): a
-     warning, not a rejection like ".error" above it, and not the field's
-     own quieter help line below it (CourseFormFields.tsx). Reuses the
-     typography scale's secondaryCompact role, its only 14/20 size at
-     regular weight, outside the narrow lesson-card context its own name
-     suggests. */
+  /* Secondary, not secondaryCompact (design gate fix round, designer: 14/20
+     measured smaller than the help line and the failure reason around it,
+     both secondary at 15/22; secondaryCompact keeps its own lesson-card
+     meaning, no new role added here). Normal text color, not the help
+     color: a warning, not a rejection like ".error" above it, and not the
+     field's own quieter help line below it (CourseFormFields.tsx). */
   > .warning {
     color: ${theme.colors.text};
-    font-size: ${theme.typography.secondaryCompact.phone.fontSize};
-    line-height: ${theme.typography.secondaryCompact.phone.lineHeight};
+    font-size: ${theme.typography.secondary.phone.fontSize};
+    line-height: ${theme.typography.secondary.phone.lineHeight};
   }
 `,
 );

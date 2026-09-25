@@ -1,7 +1,7 @@
 import type { PlaceProfileResponse } from '@torabarabim/common';
 
 import * as photoPickerConsts from '~/components/PhotoPicker/consts';
-import { readImageDimensions } from '~/helpers';
+import { decodeImageFile } from '~/helpers';
 
 import * as consts from './consts';
 import type { ProfileFormErrors, ProfileFormState } from './models';
@@ -44,7 +44,7 @@ export const validatePlacePhotoFile = async (file: File): Promise<string | undef
   if (!ACCEPTED_PHOTO_TYPES.includes(file.type)) return photoPickerConsts.UNSUPPORTED_TYPE_ERROR;
   if (file.size > photoPickerConsts.MAX_PHOTO_UPLOAD_BYTES) return photoPickerConsts.TOO_LARGE_ERROR;
 
-  const { objectUrl, width, height } = await readImageDimensions(file);
+  const { objectUrl, width, height } = await decodeImageFile(file);
   try {
     if (width < consts.MIN_WIDTH_PX || height < consts.MIN_HEIGHT_PX) {
       return consts.PHOTO_INVALID_ERROR;

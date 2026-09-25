@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { COURSE_COVER_SOFT_MIN_HEIGHT, COURSE_COVER_SOFT_MIN_WIDTH, COURSE_PHOTO_SMALL_WARNING } from '~/consts';
-import { readImageDimensions } from '~/helpers';
+import { decodeImageFile } from '~/helpers';
 
 // The create form's own cover (`CourseFormState.cover`) has no upload of its
 // own to warn "after": it only uploads once the whole course is saved. This
@@ -17,7 +17,7 @@ export const useCreateCoverWarning = (cover: File | undefined): string | undefin
     }
     let cancelled = false;
     setWarning(undefined);
-    void readImageDimensions(cover).then(
+    void decodeImageFile(cover).then(
       ({ objectUrl, width, height }) => {
         URL.revokeObjectURL(objectUrl);
         if (!cancelled) setWarning(width < COURSE_COVER_SOFT_MIN_WIDTH || height < COURSE_COVER_SOFT_MIN_HEIGHT ? COURSE_PHOTO_SMALL_WARNING : undefined);
