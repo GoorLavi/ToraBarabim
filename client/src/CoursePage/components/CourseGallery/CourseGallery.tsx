@@ -3,6 +3,7 @@ import classNames from 'classnames';
 import styled from 'styled-components';
 
 import { PhotoViewer } from '~/components/PhotoViewer/PhotoViewer';
+import * as photoViewerConsts from '~/components/PhotoViewer/consts';
 
 import * as consts from './consts';
 import { clampedIndex } from './helpers';
@@ -36,17 +37,17 @@ export const CourseGallery = styled(({ className, courseName, photos }: CourseGa
 
         {hasMultiple && (
           <>
-            <button type="button" className="arrow prev" disabled={atStart} aria-label={consts.PREV_LABEL} onClick={() => goTo(activeIndex - 1)}>
+            <button type="button" className="arrow prev" disabled={atStart} aria-label={photoViewerConsts.PREV_LABEL} onClick={() => goTo(activeIndex - 1)}>
               <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
-            <button type="button" className="arrow next" disabled={atEnd} aria-label={consts.NEXT_LABEL} onClick={() => goTo(activeIndex + 1)}>
+            <button type="button" className="arrow next" disabled={atEnd} aria-label={photoViewerConsts.NEXT_LABEL} onClick={() => goTo(activeIndex + 1)}>
               <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
-            <span className="counter">{consts.counterLabel(activeIndex, photos.length)}</span>
+            <span className="counter">{photoViewerConsts.counterLabel(activeIndex, photos.length)}</span>
           </>
         )}
       </div>

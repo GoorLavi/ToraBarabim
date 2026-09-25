@@ -121,6 +121,13 @@ export const photoHelpSize = (aspectRatio: PhotoPickerAspectRatio, minWidth: num
 // before the crop step ever opens, per the build brief, rather than after
 // someone has already spent time framing a photo that was always going to
 // be refused. Copy approved by `tora-hebrew-editor`.
-export const photoTooSmallError = (minWidth: number, minHeight: number): string => `התמונה קטנה מדי. צריך תמונה בגודל ${minWidth} על ${minHeight} פיקסלים לפחות.`;
+// `measured`, when given, names the picked file's own size too (the
+// course cover's own approved line, `~/courseErrors.ts`'s server-rejection
+// twin): the '16:9' place photo keeps its original, shorter sentence.
+export const photoTooSmallError = (minWidth: number, minHeight: number, measured?: ImageDimensions): string => {
+  const floor = `צריך תמונה בגודל ${minWidth} על ${minHeight} פיקסלים לפחות`;
+  if (!measured) return `התמונה קטנה מדי. ${floor}.`;
+  return `התמונה קטנה מדי. ${floor}, והתמונה הזאת ${measured.width} על ${measured.height}.`;
+};
 
 export const aspectRatioValue = (aspectRatio: PhotoPickerAspectRatio): number => consts.ASPECT_RATIO_VALUE[aspectRatio];

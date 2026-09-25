@@ -75,6 +75,13 @@ export const CoursesTable = css(
       color: ${theme.colors.text};
       font-size: ${theme.typography.tagAndCaption.phone.fontSize};
       line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
+
+      /* A closed or full status is a terminal state (design gate finding),
+         filled solid rather than the soft tint an open status keeps. */
+      &.terminal {
+        background: ${theme.colors.primary};
+        color: ${theme.colors.textOnPrimary};
+      }
     }
 
     > .actions > .details {

@@ -80,8 +80,12 @@ export const PHOTO_HELP_CROP: Partial<Record<PhotoPickerAspectRatio, string>> = 
 // The real upload states (rabbi-panel-copy.md, section 6): shown only when
 // a caller passes `uploadStatus`, so the admin rabbi form (which never
 // does) renders exactly as before.
-export const PHOTO_UPLOADING_MESSAGE = 'מעלה את התמונה...';
-export const PHOTO_UPLOAD_FAILED = 'העלאת התמונה לא הצליחה. התמונה הקודמת נשארה באתר.';
+export const PHOTO_UPLOADING_MESSAGE = 'מעלים את התמונה...';
+// The second sentence only applies once a previous photo exists to have
+// stayed on the site; a caller with none (a course being created) passes
+// `hasPreviousPhotoOnFailure={false}` to drop it.
+export const PHOTO_UPLOAD_FAILED = 'העלאת התמונה לא הצליחה.';
+export const PHOTO_UPLOAD_FAILED_PREVIOUS_KEPT = 'העלאת התמונה לא הצליחה. התמונה הקודמת נשארה באתר.';
 export const PHOTO_RETRY_LABEL = 'ניסיון נוסף';
 export const PHOTO_CHOOSE_OTHER = 'בחירת תמונה אחרת';
 export const PHOTO_MISSING_NOTE = 'עוד אין תמונה. בינתיים יוצג באתר רקע רך במקומה.';

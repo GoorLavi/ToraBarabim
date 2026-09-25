@@ -51,6 +51,10 @@ export const PhotoPicker = styled(
     minWidth,
     minHeight,
     cropHelpOverride,
+    enforceFloor,
+    missingPhotoNoteOverride,
+    hasPreviousPhotoOnFailure,
+    failureReasonOverride,
   }: PhotoPickerProps) => {
     const ratioValue = helpers.aspectRatioValue(aspectRatio);
     const hasPhoto = Boolean(previewUrl || hasExistingPhoto);
@@ -75,7 +79,22 @@ export const PhotoPicker = styled(
       if (!file) return;
 
       if (aspectRatio !== '16:9') {
-        onSelectFile(file);
+        if (!enforceFloor) {
+          onSelectFile(file);
+          return;
+        }
+        setCropUnavailableError(undefined);
+        void loadImageDimensions(file).then(
+          ({ objectUrl, width, height }) => {
+            URL.revokeObjectURL(objectUrl);
+            if (width < minWidth || height < minHeight) {
+              setCropUnavailableError(helpers.photoTooSmallError(minWidth, minHeight, { width, height }));
+              return;
+            }
+            onSelectFile(file);
+          },
+          () => onSelectFile(file),
+        );
         return;
       }
 
@@ -123,9 +142,16 @@ export const PhotoPicker = styled(
 
           {hasFailed && (
             <div className="failure">
-              <button type="button" className="retry" onClick={onRetryUpload}>
-                {consts.PHOTO_RETRY_LABEL}
-              </button>
+              {/* A rejection named by `failureReasonOverride` (too small, an
+                  unsupported type) would fail the same way again with the
+                  same file: only "choose another file" can succeed then, so
+                  retry is offered only for an unclassified (likely network)
+                  failure. */}
+              {!failureReasonOverride && (
+                <button type="button" className="retry" onClick={onRetryUpload}>
+                  {consts.PHOTO_RETRY_LABEL}
+                </button>
+              )}
               <label className="chooseOther">
                 <span>{consts.PHOTO_CHOOSE_OTHER}</span>
                 <input type="file" accept="image/jpeg,image/png" onChange={handleChange} />
@@ -133,7 +159,9 @@ export const PhotoPicker = styled(
               {/* Below the actions, matching where the rejected-file error
                   sits under .chooseFile (design gate nits: the two used to
                   disagree on which side the error sits). */}
-              <p className="error">{consts.PHOTO_UPLOAD_FAILED}</p>
+              <p className="error">
+                {failureReasonOverride ?? (hasPreviousPhotoOnFailure === false ? consts.PHOTO_UPLOAD_FAILED : consts.PHOTO_UPLOAD_FAILED_PREVIOUS_KEPT)}
+              </p>
             </div>
           )}
 
@@ -153,7 +181,7 @@ export const PhotoPicker = styled(
               </label>
 
               {!isUploading && displayedError && <p className="error">{displayedError}</p>}
-              {!isUploading && !hasPhoto && <p className="missingNote">{consts.PHOTO_MISSING_NOTE}</p>}
+              {!isUploading && !hasPhoto && <p className="missingNote">{missingPhotoNoteOverride ?? consts.PHOTO_MISSING_NOTE}</p>}
 
               {!isUploading && (
                 <ul className="help">

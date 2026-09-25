@@ -1,7 +1,4 @@
-export interface DuplicateCourseRequestBody {
-  openingDate: string;
-  cycle: number | undefined;
-}
+import type { DuplicateCourseRequest } from '@torabarabim/common';
 
 export interface DuplicateCourseSheetProps {
   className?: string;
@@ -11,6 +8,6 @@ export interface DuplicateCourseSheetProps {
   sourceCycle: number | undefined;
   isPending: boolean;
   errorMessage: string | undefined;
-  onConfirm: (body: DuplicateCourseRequestBody) => void;
+  onConfirm: (body: DuplicateCourseRequest) => void;
   onDismiss: () => void;
 }

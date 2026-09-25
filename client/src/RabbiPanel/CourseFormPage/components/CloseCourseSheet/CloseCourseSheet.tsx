@@ -1,8 +1,8 @@
+import * as consts from '~/components/CloseCourseSheet/consts';
+import type { CloseCourseSheetProps } from '~/components/CloseCourseSheet/models';
 import { CourseConfirmSheet } from '~/components/CourseConfirmSheet/CourseConfirmSheet';
 import { rabbiErrorMessage } from '~/RabbiPanel/helpers';
 
-import * as consts from './consts';
-import type { CloseCourseSheetProps } from './models';
 import { useCloseCourse } from './useCloseCourse';
 
 export const CloseCourseSheet = ({ courseId, courseName, onDismiss, onClosed }: CloseCourseSheetProps) => {

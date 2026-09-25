@@ -11,7 +11,7 @@ export const useDuplicateCourse = (courseId: string): UseMutationResult<CourseRe
   return useMutation({
     mutationFn: (body: DuplicateCourseRequest) => duplicateAdminCourse(courseId, body),
     onSuccess: (course) => {
-      void queryClient.invalidateQueries({ queryKey: ['admin', 'courses'] });
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.coursesAll() });
       queryClient.setQueryData(ADMIN_QUERY_KEYS.course(course.id), course);
     },
   });

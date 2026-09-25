@@ -34,17 +34,23 @@ export class RabbiApiError extends Error {
     public readonly status: number,
     public readonly code: string | undefined,
     message: string,
+    // Whatever the server sent under `details` for this error, unnarrowed:
+    // `~/courseErrors.ts`'s `courseErrorMessage` is the one place that
+    // knows each course error code's own shape.
+    public readonly details: unknown = undefined,
   ) {
     super(message);
     this.name = 'RabbiApiError';
   }
 }
 
-const parseErrorBody = async (response: Response): Promise<{ code?: string }> => {
+const parseErrorBody = async (response: Response): Promise<{ code?: string; details?: unknown }> => {
   try {
     const body: unknown = await response.json();
-    const code = body && typeof body === 'object' && 'error' in body && typeof body.error === 'string' ? body.error : undefined;
-    return { code };
+    if (!body || typeof body !== 'object') return {};
+    const code = 'error' in body && typeof body.error === 'string' ? body.error : undefined;
+    const details = 'details' in body ? body.details : undefined;
+    return { code, details };
   } catch {
     return {};
   }
@@ -63,8 +69,8 @@ const request = async <T>(url: string, init?: RequestInit): Promise<T> => {
   }
 
   if (!response.ok) {
-    const { code } = await parseErrorBody(response);
-    throw new RabbiApiError(response.status, code, `${init?.method ?? 'GET'} ${url} returned ${response.status}`);
+    const { code, details } = await parseErrorBody(response);
+    throw new RabbiApiError(response.status, code, `${init?.method ?? 'GET'} ${url} returned ${response.status}`, details);
   }
 
   if (response.status === 204) return undefined as T;
@@ -179,7 +185,7 @@ export const createCourse = (body: RabbiCreateCourseRequest, cover: File): Promi
 };
 
 // PATCH /v1/rabbi/courses/:id
-// 200 with CourseResponse. 400 invalid_request / unknown_city. 404 as above.
+// 200 with CourseResponse. 400 invalid_request / unknown_city / course_would_be_closed. 404 as above. 409 course_closed.
 export const updateCourse = (id: string, body: RabbiUpdateCourseRequest): Promise<CourseResponse> =>
   request(url(`/v1/rabbi/courses/${id}`).toString(), { method: 'PATCH', headers: JSON_HEADERS, body: JSON.stringify(body) });
 
@@ -192,7 +198,7 @@ export const uploadCourseCover = (id: string, file: File): Promise<CourseRespons
 };
 
 // POST /v1/rabbi/courses/:id/photos (multipart, one `photo` file part)
-// 200 with CourseResponse. 409 course_photo_limit at 8. 404 as above.
+// 201 with CourseResponse. 409 course_photo_limit at 8. 404 as above.
 export const uploadCoursePhoto = (id: string, file: File): Promise<CourseResponse> => {
   const formData = new FormData();
   formData.append('photo', file);
@@ -200,20 +206,20 @@ export const uploadCoursePhoto = (id: string, file: File): Promise<CourseRespons
 };
 
 // DELETE /v1/rabbi/courses/:id/photos/:photoId
-// 200 with CourseResponse. 404 if the course or the photo does not exist.
-export const deleteCoursePhoto = (id: string, photoId: string): Promise<CourseResponse> =>
+// 204 on success, no body. 404 if the course or the photo does not exist.
+export const deleteCoursePhoto = (id: string, photoId: string): Promise<void> =>
   request(url(`/v1/rabbi/courses/${id}/photos/${photoId}`).toString(), { method: 'DELETE' });
 
 // POST /v1/rabbi/courses/:id/close
-// 200 with CourseResponse. 409 registration_already_closed. 404 as above.
+// 200 with CourseResponse. 409 course_closed. 404 as above.
 export const closeCourse = (id: string): Promise<CourseResponse> => request(url(`/v1/rabbi/courses/${id}/close`).toString(), { method: 'POST' });
 
 // POST /v1/rabbi/courses/:id/full
-// 200 with CourseResponse. 409 registration_already_closed. 404 as above.
+// 200 with CourseResponse. 409 course_closed. 404 as above.
 export const markCourseFull = (id: string): Promise<CourseResponse> => request(url(`/v1/rabbi/courses/${id}/full`).toString(), { method: 'POST' });
 
 // POST /v1/rabbi/courses/:id/duplicate
-// 201 with the new CourseResponse. 400 invalid_request. 404 as above.
+// 201 with the new CourseResponse. 400 invalid_request / opening_date_not_future. 404 as above. 409 course_not_closed.
 export const duplicateCourse = (id: string, body: DuplicateCourseRequest): Promise<CourseResponse> =>
   request(url(`/v1/rabbi/courses/${id}/duplicate`).toString(), { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(body) });
 

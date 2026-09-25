@@ -9,16 +9,16 @@ import * as styles from './styles';
 // RabbiViewPage): plain text, no fill, no border, distinct from
 // `ReadOnlyField`, which reads as a disabled form input and belongs inside
 // an otherwise-editable form instead.
-export const RecordField = styled(({ className, label, value, isEmpty = false, linkTo }: RecordFieldProps) => (
+export const RecordField = styled(({ className, label, value, isEmpty = false, linkTo, valueDir }: RecordFieldProps) => (
   <div className={classNames(className, { empty: isEmpty })}>
     <span className="label">{label}</span>
     <p className="value">
       {linkTo ? (
         <Link className="valueLink" to={linkTo}>
-          <bdi>{value}</bdi>
+          <bdi dir={valueDir}>{value}</bdi>
         </Link>
       ) : (
-        <bdi>{value}</bdi>
+        <bdi dir={valueDir}>{value}</bdi>
       )}
     </p>
   </div>

@@ -110,6 +110,8 @@ export const ADMIN_QUERY_KEYS = {
   lesson: (id: string) => ['admin', 'lessons', id] as const,
   courses: (filters: AdminCourseFilters) => ['admin', 'courses', 'search', filters] as const,
   course: (id: string) => ['admin', 'courses', id] as const,
+  // The root every course-list invalidation reaches for, like `dedicationsAll`.
+  coursesAll: () => ['admin', 'courses'] as const,
   lessonOccurrences: (lessonId: string) => ['admin', 'lessons', lessonId, 'occurrences'] as const,
   lessonExceptions: (lessonId: string) => ['admin', 'lessons', lessonId, 'exceptions'] as const,
   adminUsers: (filters: AdminUserFilters) => ['admin', 'admin-users', 'search', filters] as const,

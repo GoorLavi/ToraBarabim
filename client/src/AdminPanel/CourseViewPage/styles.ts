@@ -229,6 +229,41 @@ export const CourseViewPage = css(
             > .teacherUnlinked {
               color: ${theme.colors.textSecondary};
             }
+
+            > .tag,
+            > .closedRow > .tag {
+              align-self: flex-start;
+              inline-size: fit-content;
+              padding-block: 2px;
+              padding-inline: ${theme.spacing.sm};
+              border-radius: ${theme.radii.sm};
+              background: ${theme.colors.primarySoft};
+              color: ${theme.colors.text};
+              font-size: ${theme.typography.tagAndCaption.phone.fontSize};
+              line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
+            }
+
+            /* A closed or full status is a terminal state (design gate
+               finding), filled solid rather than the soft tint an open
+               status keeps. */
+            > .tag.terminal,
+            > .closedRow > .tag {
+              background: ${theme.colors.primary};
+              color: ${theme.colors.textOnPrimary};
+            }
+
+            > .closedRow {
+              display: flex;
+              flex-wrap: wrap;
+              align-items: center;
+              gap: ${theme.spacing.xs};
+
+              > .closedLine {
+                color: ${theme.colors.textSecondary};
+                font-size: ${theme.typography.secondary.phone.fontSize};
+                line-height: ${theme.typography.secondary.phone.lineHeight};
+              }
+            }
           }
         }
 

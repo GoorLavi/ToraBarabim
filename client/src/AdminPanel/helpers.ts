@@ -1,7 +1,8 @@
 import type { AdminDedication, CourseResponse, Lesson, Rabbi, Weekday } from '@torabarabim/common';
 
 import { COURSE_STATE_TAG_CLOSED, COURSE_STATE_TAG_FULL, COURSE_STATE_TAG_OPEN } from '~/consts';
-import { rabbiDisplayName } from '~/helpers';
+import { courseErrorMessage, isCourseErrorCode } from '~/courseErrors';
+import { closedVerb, israelDayMonthLabel, joinWithMiddleDot, rabbiDisplayName, weeksPhrase } from '~/helpers';
 
 import { AdminApiError } from './api';
 import * as consts from './consts';
@@ -25,6 +26,17 @@ export const adminCourseStatusTagLabel = (course: CourseResponse): string => {
   if (bucket === 'full') return COURSE_STATE_TAG_FULL;
   if (bucket === 'closed') return COURSE_STATE_TAG_CLOSED;
   return COURSE_STATE_TAG_OPEN;
+};
+
+// The admin's own closed-line: the closed date and the course's own
+// length, never the "leaves the lists on" date the public-facing panels
+// show (`~/helpers.ts`'s own `courseClosedLineLabel`), since an admin row
+// or record already carries a status tag naming the reason. Shared by
+// `CoursesListPage` and `CourseViewPage`'s own header once it became a
+// second caller.
+export const adminCourseClosedLineLabel = (course: CourseResponse): string => {
+  if (course.lifecycle.status !== 'closed') return '';
+  return joinWithMiddleDot([`${closedVerb(course.lifecycle.reason)} ב־${israelDayMonthLabel(course.lifecycle.closedOn)}`, weeksPhrase(course.weeks)]);
 };
 
 // Used to prefill a new account's username field from the account's full
@@ -62,12 +74,16 @@ export const validatePhotoFile = (file: File): string | undefined => {
 // Status-aware, with per-call overrides keyed by the server's `error` code
 // first and its HTTP status second, so a caller can surface e.g.
 // 'unknown_rabbi' against a specific field while everything else falls
-// back to generic, calm Hebrew copy. Never renders the raw server message.
+// back to generic, calm Hebrew copy. Never renders the raw server message,
+// except for the course error codes `~/courseErrors.ts` covers, whose
+// Hebrew is itself the approved copy (spec section 13).
 export const adminErrorMessage = (error: unknown, overrides: Partial<Record<string | number, string>> = {}): string => {
   if (!(error instanceof AdminApiError)) return consts.GENERIC_ERROR_MESSAGE;
 
   const byCode = error.code ? overrides[error.code] : undefined;
   if (byCode !== undefined) return byCode;
+
+  if (isCourseErrorCode(error.code)) return courseErrorMessage(error.code, error.rawDetails);
 
   if (error.code === 'invalid_photo') return consts.INVALID_PHOTO_MESSAGE;
 
@@ -81,6 +97,13 @@ export const adminErrorMessage = (error: unknown, overrides: Partial<Record<stri
   if (error.status === 400) return consts.INVALID_REQUEST_MESSAGE;
   return consts.GENERIC_ERROR_MESSAGE;
 };
+
+// The shape `~/hooks/useCourseCoverUpload.ts` and `~/hooks/useCourseGalleryPhotos.ts`
+// read a failed upload's code and details through, since those hooks are
+// shared with the rabbi panel and never import either panel's own error
+// class by name.
+export const describeAdminError = (error: unknown): { code?: string; details?: unknown; status: number } | undefined =>
+  error instanceof AdminApiError ? { code: error.code, details: error.rawDetails, status: error.status } : undefined;
 
 const israeliDateFormatter = new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Jerusalem' });
 

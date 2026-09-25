@@ -76,22 +76,48 @@ export const courseToFormState = (course: CourseResponse): CourseFormState => ({
 // hand-mirrored here so a malformed number never reaches the request.
 const ISRAELI_MOBILE_PHONE_PATTERN = /^05\d{8}$/;
 
+// Strips spaces, dashes, and a leading international prefix the way the
+// server does before validating, so "050-123-4567" and "+972501234567" both
+// pass and both land on the wire in the same canonical local form.
+export const normalizeIsraeliMobilePhone = (raw: string): string => {
+  const stripped = raw.trim().replace(/[\s-]/g, '');
+  if (stripped.startsWith('+972')) return `0${stripped.slice(4)}`;
+  if (stripped.startsWith('972')) return `0${stripped.slice(3)}`;
+  return stripped;
+};
+
 export const validateCourseForm = (form: CourseFormState, isCreating: boolean): CourseFormErrors => {
   const errors: CourseFormErrors = {};
 
   if (!form.name.trim()) errors.name = consts.REQUIRED_NAME_ERROR;
+  else if (form.name.trim().length > consts.COURSE_NAME_MAX_LENGTH) errors.name = consts.NAME_TOO_LONG_ERROR;
+
   if (!form.description.trim()) errors.description = consts.REQUIRED_DESCRIPTION_ERROR;
+  else if (form.description.trim().length > consts.COURSE_DESCRIPTION_MAX_LENGTH) errors.description = consts.DESCRIPTION_TOO_LONG_ERROR;
+
   if (form.topic.kind === 'other' && !form.topic.otherText.trim()) errors.topicOther = consts.REQUIRED_TOPIC_OTHER_ERROR;
 
   if (isCreating && !form.cover) errors.cover = consts.REQUIRED_COVER_ERROR;
 
   if (!form.openingDate) errors.openingDate = consts.REQUIRED_OPENING_DATE_ERROR;
 
+  if (form.cycle.trim()) {
+    const cycle = Number(form.cycle);
+    if (!Number.isInteger(cycle) || cycle <= 0 || cycle > consts.COURSE_CYCLE_MAX) errors.cycle = consts.CYCLE_RANGE_ERROR;
+  }
+
   const weeks = Number(form.weeks);
   if (!Number.isInteger(weeks) || weeks <= 0) errors.weeks = consts.REQUIRED_WEEKS_ERROR;
+  else if (weeks > consts.COURSE_WEEKS_MAX) errors.weeks = consts.WEEKS_RANGE_ERROR;
 
   const sessions = Number(form.sessions);
   if (!Number.isInteger(sessions) || sessions <= 0) errors.sessions = consts.REQUIRED_SESSIONS_ERROR;
+  else if (sessions > consts.COURSE_SESSIONS_MAX) errors.sessions = consts.SESSIONS_RANGE_ERROR;
+
+  if (form.hours.trim()) {
+    const hours = Number(form.hours);
+    if (!Number.isInteger(hours) || hours <= 0 || hours > consts.COURSE_HOURS_MAX) errors.hours = consts.HOURS_RANGE_ERROR;
+  }
 
   if (form.venue.kind === 'address') {
     if (!form.city) errors.city = placePickerConsts.REQUIRED_CITY_ERROR;
@@ -101,10 +127,12 @@ export const validateCourseForm = (form: CourseFormState, isCreating: boolean): 
 
   if (!form.audience) errors.audience = consts.REQUIRED_AUDIENCE_ERROR;
 
-  if (!ISRAELI_MOBILE_PHONE_PATTERN.test(form.contactPhone.trim())) errors.contactPhone = consts.REQUIRED_CONTACT_PHONE_ERROR;
+  if (!ISRAELI_MOBILE_PHONE_PATTERN.test(normalizeIsraeliMobilePhone(form.contactPhone))) errors.contactPhone = consts.REQUIRED_CONTACT_PHONE_ERROR;
 
-  if (form.priceShekels.trim() && (!Number.isInteger(Number(form.priceShekels)) || Number(form.priceShekels) <= 0)) {
-    errors.priceShekels = consts.INVALID_PRICE_ERROR;
+  if (form.priceShekels.trim()) {
+    const price = Number(form.priceShekels);
+    if (!Number.isInteger(price) || price <= 0) errors.priceShekels = consts.INVALID_PRICE_ERROR;
+    else if (price > consts.COURSE_PRICE_MAX) errors.priceShekels = consts.PRICE_TOO_HIGH_ERROR;
   }
 
   return errors;
@@ -146,7 +174,7 @@ export const buildCoursePayload = (form: CourseFormState): CourseFieldsRequest =
     audience: form.audience,
     topic: buildTopic(form.topic),
     joinableAfterOpening: form.joinableAfterOpening,
-    contactPhone: form.contactPhone.trim(),
+    contactPhone: normalizeIsraeliMobilePhone(form.contactPhone),
     priceShekels: form.priceShekels.trim() ? Number(form.priceShekels) : undefined,
   };
 };

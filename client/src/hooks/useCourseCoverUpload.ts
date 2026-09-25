@@ -3,14 +3,23 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { QueryKey } from '@tanstack/react-query';
 import type { CourseResponse } from '@torabarabim/common';
 
+import { courseErrorMessage, isCourseErrorCode } from '~/courseErrors';
+
 export interface CourseCoverUploadApi {
   uploadCover: (courseId: string, file: File) => Promise<CourseResponse>;
   courseQueryKey: (courseId: string) => QueryKey;
+  // Reads a thrown error's code and details without this shared hook
+  // importing either panel's own error class by name.
+  describeError: (error: unknown) => { code?: string; details?: unknown; status: number } | undefined;
 }
 
 export interface CourseCoverUploadState {
   previewUrl: string | undefined;
   status: 'uploading' | 'failed' | undefined;
+  // The approved reason a rejected cover cannot be saved (spec section 13),
+  // undefined for a plain network failure, which `PhotoPicker`'s own
+  // generic failure line already covers.
+  failureReason: string | undefined;
   upload: (file: File) => void;
   retry: () => void;
 }
@@ -44,9 +53,13 @@ export const useCourseCoverUpload = (courseId: string, api: CourseCoverUploadApi
     },
   });
 
+  const errorInfo = mutation.isError ? api.describeError(mutation.error) : undefined;
+  const failureReason = errorInfo && isCourseErrorCode(errorInfo.code) ? courseErrorMessage(errorInfo.code, errorInfo.details) : undefined;
+
   return {
     previewUrl: mutation.isPending || mutation.isError ? objectUrl : undefined,
     status: mutation.isPending ? 'uploading' : mutation.isError ? 'failed' : undefined,
+    failureReason,
     upload: (file: File) => {
       setSelectedFile(file);
       mutation.mutate(file);

@@ -30,7 +30,7 @@ export const ALL_RABBIS_LABEL = 'לכל הרבנים';
 
 export const NO_LESSONS_META_LABEL = 'אין כרגע שיעורים בלוח';
 
-export const COURSES_HEADING = 'הקורסים';
+export const COURSES_HEADING = 'קורסים';
 
 export const LESSONS_HEADING = 'השיעורים';
 export const LESSONS_SUBHEADING = 'לפי המועד הקרוב';

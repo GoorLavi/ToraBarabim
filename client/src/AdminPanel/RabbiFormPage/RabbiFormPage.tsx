@@ -269,7 +269,7 @@ export const RabbiFormPage = styled(({ className }: RabbiFormPageProps) => {
 
           {id && (
             <div className="dangerZone">
-              <DeleteRabbiButton rabbiId={id} onDeleted={() => navigate(ADMIN_ROUTES.rabbis)} />
+              <DeleteRabbiButton {...{ rabbiId: id, honorific: form.honorific, onDeleted: () => navigate(ADMIN_ROUTES.rabbis) }} />
             </div>
           )}
         </form>

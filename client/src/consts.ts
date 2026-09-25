@@ -33,6 +33,22 @@ export const COURSE_STATE_TAG_OPEN = 'ההרשמה פתוחה';
 export const COURSE_STATE_TAG_FULL = 'תפוסה מלאה';
 export const COURSE_STATE_TAG_CLOSED = 'ההרשמה נסגרה';
 
+// A closed or full course's own record explanation, read by both panels'
+// read-only records (the rabbi's `ReadOnlyCourseRecord` and the admin's
+// `CourseViewPage`), so the one sentence cannot drift into two.
+export const COURSE_CLOSED_RECORD_EXPLANATION = 'הקורס נשאר כמו שהיה. כדי לפתוח ממנו מחזור חדש, משכפלים אותו לתאריך חדש.';
+
+// The five course lifecycle actions, worded identically wherever a course
+// record offers them: the rabbi's own edit form (as buttons) and the
+// admin's record page and the rabbi's own read-only record (as links or
+// buttons). Each opens its own confirm sheet or navigates, so these are
+// trigger labels, distinct from a sheet's own confirm-button wording.
+export const COURSE_VIEW_ON_SITE_ACTION_LABEL = 'לעמוד הקורס באתר';
+export const COURSE_MARK_FULL_ACTION_LABEL = 'סימון תפוסה מלאה';
+export const COURSE_CLOSE_REGISTRATION_ACTION_LABEL = 'סגירת ההרשמה';
+export const COURSE_DUPLICATE_ACTION_LABEL = 'שכפול לתאריך חדש';
+export const COURSE_DELETE_ACTION_LABEL = 'מחיקת הקורס';
+
 // The floor on the shorter side, for a course's cover and every gallery
 // photo. Hand-mirrored from server/src/service/course/consts.ts's own
 // COURSE_PHOTO_MIN_SIDE.
@@ -118,3 +134,26 @@ export const PANEL_LOGIN_WHATSAPP_COLOR = '#1DA851';
 export const PANEL_LOGIN_WHATSAPP_COLOR_HOVER = '#17853F';
 export const DEDICATION_WHATSAPP_COLOR = '#17853F';
 export const DEDICATION_WHATSAPP_COLOR_HOVER = '#136C33';
+
+// Hand-mirrored by name from server/src/service/course/consts.ts: a course
+// cannot be saved without a cover, so its floor matches the rabbi poster's
+// own (PhotoPicker/consts.ts's RABBI_PHOTO_MIN_WIDTH/HEIGHT), the same
+// numbers from a different source, kept as its own copy rather than reused.
+// The gallery is optional and looser: checked against whichever side of a
+// photo is shorter, since a gallery photo can be portrait or landscape.
+export const COURSE_COVER_MIN_WIDTH = 900;
+export const COURSE_COVER_MIN_HEIGHT = 1200;
+export const COURSE_GALLERY_PHOTO_MIN_SIDE = 600;
+
+// A plain space-dot-space, joining two short facts on one rendered line (a
+// name and its cycle number, an audience tag and a city): read by every
+// card and row that joins such a pair, so the one join never has two
+// retyped copies drifting apart. Unlike `helpers.ts`'s own
+// `joinWithMiddleDot`, this dot is not NBSP-bound: every caller here
+// already controls where its own line may wrap.
+export const MIDDLE_DOT_SEPARATOR = ' · ';
+
+// The floor from design-system.md's card width step: every rail card
+// (`LessonCard`, `CourseCard`) steps its own type scale at this rendered
+// width, via `@container` rather than a viewport media query.
+export const CARD_WIDE_THRESHOLD = '190px';

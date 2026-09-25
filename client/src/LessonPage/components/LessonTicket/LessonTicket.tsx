@@ -131,6 +131,8 @@ export const LessonTicket = styled(({ className, occurrence }: LessonTicketProps
                   heading: consts.NAV_ROW_HEADING_LABEL,
                   wazeUrl,
                   googleMapsUrl,
+                  wazeAriaLabel: consts.WAZE_ARIA_LABEL,
+                  googleMapsAriaLabel: consts.GOOGLE_MAPS_ARIA_LABEL,
                   onNavigate: handleNavigationClick,
                 }}
               />

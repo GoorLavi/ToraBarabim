@@ -3,11 +3,15 @@ import styled from 'styled-components';
 import { ReadOnlyField } from '~/components/ReadOnlyField/ReadOnlyField';
 import {
   AUDIENCE_LABELS,
+  COURSE_CLOSED_RECORD_EXPLANATION,
+  COURSE_DELETE_ACTION_LABEL,
+  COURSE_DUPLICATE_ACTION_LABEL,
   COURSE_FACT_AUDIENCE_LABEL,
   COURSE_FACT_OPENING_LABEL,
   COURSE_FACT_PRICE_LABEL,
   COURSE_FACT_SCOPE_LABEL,
   COURSE_FACT_VENUE_LABEL,
+  COURSE_VIEW_ON_SITE_ACTION_LABEL,
 } from '~/consts';
 import {
   addressLine,
@@ -17,10 +21,10 @@ import {
   courseTopicLabel,
   formatCourseScope,
   formatPriceShekels,
+  phoneDisplay,
   venuePanelCityName,
 } from '~/helpers';
 
-import * as formConsts from '../../consts';
 import * as consts from './consts';
 import type { ReadOnlyCourseRecordProps } from './models';
 import * as styles from './styles';
@@ -37,11 +41,11 @@ export const ReadOnlyCourseRecord = styled(({ className, course, onOpenDuplicate
       <h1 className="heading" dir="auto">
         {course.name}
       </h1>
-      <p className="explanation">{consts.RECORD_EXPLANATION}</p>
+      <p className="explanation">{COURSE_CLOSED_RECORD_EXPLANATION}</p>
 
       {stillListed && (
         <a className="viewOnSite" href={coursePath(course)} target="_blank" rel="noreferrer">
-          {consts.VIEW_ON_SITE_LABEL}
+          {COURSE_VIEW_ON_SITE_ACTION_LABEL}
         </a>
       )}
 
@@ -58,7 +62,7 @@ export const ReadOnlyCourseRecord = styled(({ className, course, onOpenDuplicate
           value={`${course.venue.name}, ${addressLine(course.venue.street, course.venue.floor)}, ${venuePanelCityName(course.venue)}`}
         />
         <ReadOnlyField label={COURSE_FACT_AUDIENCE_LABEL} value={AUDIENCE_LABELS[course.audience]} />
-        <ReadOnlyField label={consts.FACT_CONTACT_PHONE_LABEL} value={course.contactPhone} />
+        <ReadOnlyField label={consts.FACT_CONTACT_PHONE_LABEL} value={phoneDisplay(course.contactPhone)} />
         {course.priceShekels !== undefined && <ReadOnlyField label={COURSE_FACT_PRICE_LABEL} value={formatPriceShekels(course.priceShekels)} />}
       </div>
 
@@ -75,10 +79,10 @@ export const ReadOnlyCourseRecord = styled(({ className, course, onOpenDuplicate
 
       <div className="dangerZone">
         <button type="button" className="action" onClick={onOpenDuplicate}>
-          {consts.DUPLICATE_LABEL}
+          {COURSE_DUPLICATE_ACTION_LABEL}
         </button>
         <button type="button" className="action delete" onClick={onOpenDelete}>
-          {formConsts.DELETE_LABEL}
+          {COURSE_DELETE_ACTION_LABEL}
         </button>
       </div>
     </div>

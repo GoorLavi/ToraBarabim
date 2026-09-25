@@ -1,14 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import type { QueryKey } from '@tanstack/react-query';
 import type { CourseResponse } from '@torabarabim/common';
 
+import { courseErrorMessage, isCourseErrorCode } from '~/courseErrors';
 import type { GalleryPhoto } from '~/components/GalleryField/models';
 
 export interface CourseGalleryPhotosApi {
   uploadPhoto: (courseId: string, file: File) => Promise<CourseResponse>;
-  deletePhoto: (courseId: string, photoId: string) => Promise<CourseResponse>;
+  // The server answers 204 with no body: there is nothing left to return.
+  deletePhoto: (courseId: string, photoId: string) => Promise<void>;
   courseQueryKey: (courseId: string) => QueryKey;
+  // Reads a thrown error's code and details without this shared hook
+  // importing either panel's own error class by name.
+  describeError: (error: unknown) => { code?: string; details?: unknown; status: number } | undefined;
 }
 
 type PendingStatus = 'draft' | 'uploading' | 'failed';
@@ -18,6 +23,8 @@ interface PendingPhoto {
   file: File;
   objectUrl: string;
   status: PendingStatus;
+  failureReason?: string;
+  canRetry: boolean;
 }
 
 export interface CourseGalleryPhotosState {
@@ -32,6 +39,15 @@ export interface CourseGalleryPhotosState {
   uploadDraftsAfterCreate: (courseId: string) => Promise<File[]>;
 }
 
+// An approved rejection (too small, the gallery already full) will fail the
+// same way every time it is retried; only a genuine network failure is
+// worth offering a retry for.
+const failureFrom = (api: CourseGalleryPhotosApi, error: unknown): { reason: string | undefined; canRetry: boolean } => {
+  const info = api.describeError(error);
+  if (!info || !isCourseErrorCode(info.code)) return { reason: undefined, canRetry: true };
+  return { reason: courseErrorMessage(info.code, info.details), canRetry: false };
+};
+
 // Shared by the rabbi and admin panels' own course forms (lifted here once
 // the admin panel became a second, identical caller). `courseId` is
 // undefined while creating: `addFiles` then only ever holds a file locally
@@ -39,8 +55,9 @@ export interface CourseGalleryPhotosState {
 // a real id exists, either because this is an edit from the start or
 // because `uploadDraftsAfterCreate` just ran, every further `addFiles` call
 // uploads immediately, the same as the cover's own `useCourseCoverUpload`.
-// The two panels differ only in which endpoints upload and delete a photo
-// and which query key the result belongs under, both passed in.
+// The two panels differ only in which endpoints upload and delete a photo,
+// which query key the result belongs under, and how to read their own
+// error class, all passed in.
 export const useCourseGalleryPhotos = (
   courseId: string | undefined,
   savedPhotos: { id: string; url: string }[],
@@ -49,8 +66,15 @@ export const useCourseGalleryPhotos = (
 ): CourseGalleryPhotosState => {
   const queryClient = useQueryClient();
   const [pending, setPending] = useState<PendingPhoto[]>(() =>
-    seedFailedFiles.map((file) => ({ localId: crypto.randomUUID(), file, objectUrl: URL.createObjectURL(file), status: 'failed' as const })),
+    seedFailedFiles.map((file) => ({
+      localId: crypto.randomUUID(),
+      file,
+      objectUrl: URL.createObjectURL(file),
+      status: 'failed' as const,
+      canRetry: true,
+    })),
   );
+  const [failedDeletes, setFailedDeletes] = useState<Map<string, { reason: string | undefined; canRetry: boolean }>>(new Map());
   const objectUrlsRef = useRef<Set<string>>(new Set(pending.map((photo) => photo.objectUrl)));
 
   useEffect(
@@ -60,52 +84,64 @@ export const useCourseGalleryPhotos = (
     [],
   );
 
-  const uploadMutation = useMutation({
-    mutationFn: ({ id, file }: { id: string; file: File }) => api.uploadPhoto(id, file),
-  });
+  // `mutateAsync`-style direct calls rather than a shared `useMutation`
+  // instance's `mutate` callbacks: a create can hold several local files
+  // uploaded one after another, and each call's own `await` has to resolve
+  // with that call's own result, not whichever call's callback TanStack
+  // Query fired last.
+  const runUpload = async (id: string, localId: string, file: File): Promise<boolean> => {
+    try {
+      const course = await api.uploadPhoto(id, file);
+      queryClient.setQueryData(api.courseQueryKey(id), course);
+      setPending((prev) => {
+        const item = prev.find((photo) => photo.localId === localId);
+        if (item) {
+          URL.revokeObjectURL(item.objectUrl);
+          objectUrlsRef.current.delete(item.objectUrl);
+        }
+        return prev.filter((photo) => photo.localId !== localId);
+      });
+      return true;
+    } catch (error) {
+      const { reason, canRetry } = failureFrom(api, error);
+      setPending((prev) => prev.map((photo) => (photo.localId === localId ? { ...photo, status: 'failed', failureReason: reason, canRetry } : photo)));
+      return false;
+    }
+  };
 
-  const deleteMutation = useMutation({
-    mutationFn: (photoId: string) => api.deletePhoto(courseId as string, photoId),
-    onSuccess: (course) => queryClient.setQueryData(api.courseQueryKey(courseId as string), course),
-  });
-
-  const runUpload = (id: string, localId: string, file: File): Promise<boolean> =>
-    new Promise((resolve) => {
-      uploadMutation.mutate(
-        { id, file },
-        {
-          onSuccess: (course) => {
-            queryClient.setQueryData(api.courseQueryKey(id), course);
-            setPending((prev) => {
-              const item = prev.find((photo) => photo.localId === localId);
-              if (item) {
-                URL.revokeObjectURL(item.objectUrl);
-                objectUrlsRef.current.delete(item.objectUrl);
-              }
-              return prev.filter((photo) => photo.localId !== localId);
-            });
-            resolve(true);
-          },
-          onError: () => {
-            setPending((prev) => prev.map((photo) => (photo.localId === localId ? { ...photo, status: 'failed' } : photo)));
-            resolve(false);
-          },
-        },
+  const removeSaved = async (photoId: string): Promise<void> => {
+    try {
+      await api.deletePhoto(courseId as string, photoId);
+      queryClient.setQueryData<CourseResponse>(api.courseQueryKey(courseId as string), (course) =>
+        course ? { ...course, photos: course.photos.filter((photo) => photo.id !== photoId) } : course,
       );
-    });
+      setFailedDeletes((prev) => {
+        if (!prev.has(photoId)) return prev;
+        const next = new Map(prev);
+        next.delete(photoId);
+        return next;
+      });
+    } catch (error) {
+      setFailedDeletes((prev) => new Map(prev).set(photoId, failureFrom(api, error)));
+    }
+  };
 
   const addFiles = (files: File[]): void => {
     for (const file of files) {
       const localId = crypto.randomUUID();
       const objectUrl = URL.createObjectURL(file);
       objectUrlsRef.current.add(objectUrl);
-      setPending((prev) => [...prev, { localId, file, objectUrl, status: courseId ? 'uploading' : 'draft' }]);
+      setPending((prev) => [...prev, { localId, file, objectUrl, status: courseId ? 'uploading' : 'draft', canRetry: true }]);
       if (courseId) void runUpload(courseId, localId, file);
     }
   };
 
   const retry = (localId: string): void => {
     if (!courseId) return;
+    if (failedDeletes.has(localId)) {
+      void removeSaved(localId);
+      return;
+    }
     const item = pending.find((photo) => photo.localId === localId);
     if (!item) return;
     setPending((prev) => prev.map((photo) => (photo.localId === localId ? { ...photo, status: 'uploading' } : photo)));
@@ -120,7 +156,7 @@ export const useCourseGalleryPhotos = (
       setPending((prev) => prev.filter((photo) => photo.localId !== id));
       return;
     }
-    deleteMutation.mutate(id);
+    void removeSaved(id);
   };
 
   const uploadDraftsAfterCreate = async (newCourseId: string): Promise<File[]> => {
@@ -139,8 +175,23 @@ export const useCourseGalleryPhotos = (
   };
 
   const photos: GalleryPhoto[] = [
-    ...savedPhotos.map((photo) => ({ id: photo.id, url: photo.url, status: 'uploaded' as const })),
-    ...pending.map((photo) => ({ id: photo.localId, url: photo.objectUrl, status: photo.status === 'draft' ? ('uploaded' as const) : photo.status })),
+    ...savedPhotos.map((photo) => {
+      const failure = failedDeletes.get(photo.id);
+      return {
+        id: photo.id,
+        url: photo.url,
+        status: failure ? ('failed' as const) : ('uploaded' as const),
+        failureReason: failure?.reason,
+        canRetry: failure?.canRetry,
+      };
+    }),
+    ...pending.map((photo) => ({
+      id: photo.localId,
+      url: photo.objectUrl,
+      status: photo.status === 'draft' ? ('uploaded' as const) : photo.status,
+      failureReason: photo.failureReason,
+      canRetry: photo.canRetry,
+    })),
   ];
 
   return { photos, addFiles, retry, remove, uploadDraftsAfterCreate };

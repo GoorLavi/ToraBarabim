@@ -65,6 +65,8 @@ export const VENUE_LINK_BLOCK_PADDING_DESKTOP = '10px'; // (48 - 28px line heigh
 export const CARD_MAX_INLINE_SIZE_NO_POSTER_DESKTOP = '640px';
 
 export const NAV_ROW_HEADING_LABEL = 'ניווט לשיעור';
+export const WAZE_ARIA_LABEL = 'פתיחה ב-Waze';
+export const GOOGLE_MAPS_ARIA_LABEL = 'פתיחה ב-Google Maps';
 
 // Per-brand hover/pressed tints, hardcoded rather than theme tokens: each
 // belongs to one brand's own mark, not a reusable design-system role

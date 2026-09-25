@@ -1,8 +1,8 @@
+import * as consts from '~/components/DeleteCourseSheet/consts';
+import type { DeleteCourseSheetProps } from '~/components/DeleteCourseSheet/models';
 import { CourseConfirmSheet } from '~/components/CourseConfirmSheet/CourseConfirmSheet';
 import { rabbiErrorMessage } from '~/RabbiPanel/helpers';
 
-import * as consts from './consts';
-import type { DeleteCourseSheetProps } from './models';
 import { useDeleteCourse } from './useDeleteCourse';
 
 // Permanent, no restore, cascades to the course's own photos server-side:

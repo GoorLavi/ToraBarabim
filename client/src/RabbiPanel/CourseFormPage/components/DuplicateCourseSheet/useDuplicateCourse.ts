@@ -15,7 +15,7 @@ export const useDuplicateCourse = (courseId: string): UseMutationResult<CourseRe
     onSuccess: (course) => {
       void queryClient.invalidateQueries({ queryKey: RABBI_QUERY_KEYS.courses() });
       queryClient.setQueryData(RABBI_QUERY_KEYS.course(course.id), course);
-      trackEvent(MIXPANEL_EVENTS.courseSaved, { courseId: course.id, source: 'duplicate' });
+      trackEvent(MIXPANEL_EVENTS.courseDuplicated, { sourceCourseId: courseId, courseId: course.id });
     },
   });
 };

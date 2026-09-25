@@ -5,13 +5,14 @@ import styled from 'styled-components';
 import type { CourseFormErrors, CourseFormState } from '~/components/CourseFormFields/models';
 import { CourseFormFields } from '~/components/CourseFormFields/CourseFormFields';
 import * as placePickerConsts from '~/components/PlacePicker/consts';
+import { COURSE_CLOSE_REGISTRATION_ACTION_LABEL, COURSE_DELETE_ACTION_LABEL, COURSE_MARK_FULL_ACTION_LABEL } from '~/consts';
 import { rabbiDisplayName } from '~/helpers';
 import { useCourseCoverUpload } from '~/hooks/useCourseCoverUpload';
 import { useCourseGalleryPhotos } from '~/hooks/useCourseGalleryPhotos';
 import { usePhotoPreviewUrl } from '~/hooks/usePhotoPreviewUrl';
 import { deleteCoursePhoto, RabbiApiError, uploadCourseCover, uploadCoursePhoto } from '~/RabbiPanel/api';
 import { RABBI_QUERY_KEYS, RABBI_ROUTES } from '~/RabbiPanel/consts';
-import { rabbiErrorMessage } from '~/RabbiPanel/helpers';
+import { describeRabbiError, rabbiErrorMessage } from '~/RabbiPanel/helpers';
 import { useRabbiProfile } from '~/RabbiPanel/useRabbiProfile';
 
 import { CloseCourseSheet } from './components/CloseCourseSheet/CloseCourseSheet';
@@ -45,18 +46,28 @@ export const CourseFormPage = styled(({ className }: CourseFormPageProps) => {
   const profile = useRabbiProfile();
   const existing = useExistingCourse(id);
   const saveCourse = useSaveCourse();
-  const coverUpload = useCourseCoverUpload(id ?? '', { uploadCover: uploadCourseCover, courseQueryKey: RABBI_QUERY_KEYS.course });
+  const coverUpload = useCourseCoverUpload(id ?? '', {
+    uploadCover: uploadCourseCover,
+    courseQueryKey: RABBI_QUERY_KEYS.course,
+    describeError: describeRabbiError,
+  });
   const gallery = useCourseGalleryPhotos(
     id,
     existing.status === 'success' ? existing.course.photos : [],
-    { uploadPhoto: uploadCoursePhoto, deletePhoto: deleteCoursePhoto, courseQueryKey: RABBI_QUERY_KEYS.course },
+    { uploadPhoto: uploadCoursePhoto, deletePhoto: deleteCoursePhoto, courseQueryKey: RABBI_QUERY_KEYS.course, describeError: describeRabbiError },
     locationState?.failedGalleryFiles,
   );
 
   const [form, setForm] = useState<CourseFormState>(() => initialFormState());
-  const [isLoadedFromExisting, setIsLoadedFromExisting] = useState(false);
+  // The id of the course `form` was last loaded from, distinct from `id`
+  // itself: navigating from a closed course's duplicate sheet lands on this
+  // same route element with a new `id` but does not remount it, so the form
+  // has to notice its own loaded id fell behind and reload from the new
+  // course rather than keep showing the one it duplicated from.
+  const [loadedCourseId, setLoadedCourseId] = useState<string | undefined>(undefined);
   const [fieldErrors, setFieldErrors] = useState<CourseFormErrors>({});
   const [openSheet, setOpenSheet] = useState<OpenSheet>(undefined);
+  const [isUploadingDrafts, setIsUploadingDrafts] = useState(false);
 
   // Called unconditionally, ahead of every early return below (rules of
   // hooks): only its result is conditional, chosen against `coverUpload`'s
@@ -64,11 +75,12 @@ export const CourseFormPage = styled(({ className }: CourseFormPageProps) => {
   const newCoverPreviewUrl = usePhotoPreviewUrl(form.cover);
 
   useEffect(() => {
-    if (existing.status === 'success' && !isLoadedFromExisting) {
+    if (existing.status === 'success' && existing.course.id !== loadedCourseId) {
       setForm(courseToFormState(existing.course));
-      setIsLoadedFromExisting(true);
+      setLoadedCourseId(existing.course.id);
+      setOpenSheet(undefined);
     }
-  }, [existing, isLoadedFromExisting]);
+  }, [existing, loadedCourseId]);
 
   const isRabbaniteProfile = profile.data?.honorific === 'rabbanit';
   const effectiveForm: CourseFormState = isRabbaniteProfile ? { ...form, audience: 'women' } : form;
@@ -160,6 +172,12 @@ export const CourseFormPage = styled(({ className }: CourseFormPageProps) => {
             navigate(RABBI_ROUTES.courses);
             return;
           }
+          // `saveCourse.isPending` already turned false once the create
+          // itself resolved, well before these drafts finish uploading: a
+          // second tap on "save" while they are still in flight would create
+          // a second course, so the button reads its own, separate state
+          // until the navigation below actually leaves the page.
+          setIsUploadingDrafts(true);
           const failedFiles = await gallery.uploadDraftsAfterCreate(course.id);
           if (failedFiles.length === 0) navigate(RABBI_ROUTES.courses);
           else navigate(RABBI_ROUTES.courseEdit(course.id), { state: { failedGalleryFiles: failedFiles } satisfies CourseFormLocationState });
@@ -208,6 +226,7 @@ export const CourseFormPage = styled(({ className }: CourseFormPageProps) => {
               previewUrl: coverPreviewUrl,
               hasExistingPhoto: Boolean(id),
               uploadStatus: id ? coverUpload.status : undefined,
+              failureReason: id ? coverUpload.failureReason : undefined,
               onRetryUpload: coverUpload.retry,
               onSelectFile: (file) => (id ? coverUpload.upload(file) : setForm((prev) => ({ ...prev, cover: file }))),
             },
@@ -218,8 +237,8 @@ export const CourseFormPage = styled(({ className }: CourseFormPageProps) => {
         <p className="liveNote">{consts.LIVE_NOTE}</p>
 
         <div className="footer">
-          <button type="submit" className="save" disabled={saveCourse.isPending}>
-            {saveCourse.isPending ? consts.SAVING_LABEL : consts.SAVE_LABEL}
+          <button type="submit" className="save" disabled={saveCourse.isPending || isUploadingDrafts}>
+            {isUploadingDrafts ? consts.UPLOADING_LABEL : saveCourse.isPending ? consts.SAVING_LABEL : consts.SAVE_LABEL}
           </button>
           <Link className="cancel" to={RABBI_ROUTES.courses}>
             {consts.CANCEL_LABEL}
@@ -229,14 +248,14 @@ export const CourseFormPage = styled(({ className }: CourseFormPageProps) => {
         {id && (
           <div className="dangerZone">
             <button type="button" className="action" onClick={() => setOpenSheet('full')}>
-              {consts.MARK_FULL_LABEL}
+              {COURSE_MARK_FULL_ACTION_LABEL}
             </button>
             <button type="button" className="action" onClick={() => setOpenSheet('close')}>
-              {consts.CLOSE_REGISTRATION_LABEL}
+              {COURSE_CLOSE_REGISTRATION_ACTION_LABEL}
             </button>
             <p className="helper">{consts.CLOSE_REGISTRATION_HELP}</p>
             <button type="button" className="action delete" onClick={() => setOpenSheet('delete')}>
-              {consts.DELETE_LABEL}
+              {COURSE_DELETE_ACTION_LABEL}
             </button>
           </div>
         )}

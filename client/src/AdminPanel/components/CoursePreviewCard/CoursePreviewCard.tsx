@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
 import { adminCourseStatusTagLabel } from '~/AdminPanel/helpers';
-import { AUDIENCE_LABELS } from '~/consts';
+import { AUDIENCE_LABELS, MIDDLE_DOT_SEPARATOR } from '~/consts';
 import { courseOpeningDateLongLabel, rabbiDisplayName, venuePanelCityName } from '~/helpers';
 
 import * as consts from './consts';
@@ -41,7 +41,7 @@ export const CoursePreviewCard = styled(({ className, course }: CoursePreviewCar
           </p>
           <p className="meta" dir="auto">
             {AUDIENCE_LABELS[course.audience]}
-            {consts.META_SEPARATOR}
+            {MIDDLE_DOT_SEPARATOR}
             {venuePanelCityName(course.venue)}
           </p>
         </div>

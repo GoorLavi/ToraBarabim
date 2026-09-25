@@ -11,7 +11,7 @@ export const useCloseCourse = (courseId: string): UseMutationResult<CourseRespon
   return useMutation({
     mutationFn: () => closeAdminCourse(courseId),
     onSuccess: (course) => {
-      void queryClient.invalidateQueries({ queryKey: ['admin', 'courses'] });
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.coursesAll() });
       queryClient.setQueryData(ADMIN_QUERY_KEYS.course(courseId), course);
     },
   });

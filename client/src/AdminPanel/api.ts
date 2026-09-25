@@ -67,26 +67,31 @@ const isValidationDetails = (value: unknown): value is AdminValidationDetails =>
 // (e.g. 'unknown_rabbi'), so a caller can react to a specific failure
 // without parsing `message` (client/CLAUDE.md, Data and State). Status 0
 // marks a request that never reached the server. `details` is only ever
-// present on a 400 `invalid_request` (see `AdminValidationDetails` above).
+// present on a 400 `invalid_request` (see `AdminValidationDetails` above);
+// `rawDetails` is whatever the server sent under `details` for every other
+// shape, unnarrowed: `~/courseErrors.ts`'s `courseErrorMessage` is the one
+// place that knows each course error code's own shape.
 export class AdminApiError extends Error {
   constructor(
     public readonly status: number,
     public readonly code: string | undefined,
     message: string,
     public readonly details: AdminValidationDetails | undefined = undefined,
+    public readonly rawDetails: unknown = undefined,
   ) {
     super(message);
     this.name = 'AdminApiError';
   }
 }
 
-const parseErrorBody = async (response: Response): Promise<{ code?: string; details?: AdminValidationDetails }> => {
+const parseErrorBody = async (response: Response): Promise<{ code?: string; details?: AdminValidationDetails; rawDetails?: unknown }> => {
   try {
     const body: unknown = await response.json();
     if (!body || typeof body !== 'object') return {};
     const code = 'error' in body && typeof body.error === 'string' ? body.error : undefined;
     const details = 'details' in body && isValidationDetails(body.details) ? body.details : undefined;
-    return { code, details };
+    const rawDetails = 'details' in body ? body.details : undefined;
+    return { code, details, rawDetails };
   } catch {
     return {};
   }
@@ -104,8 +109,8 @@ const request = async <T>(url: string, init?: RequestInit): Promise<T> => {
   }
 
   if (!response.ok) {
-    const { code, details } = await parseErrorBody(response);
-    throw new AdminApiError(response.status, code, `${init?.method ?? 'GET'} ${url} returned ${response.status}`, details);
+    const { code, details, rawDetails } = await parseErrorBody(response);
+    throw new AdminApiError(response.status, code, `${init?.method ?? 'GET'} ${url} returned ${response.status}`, details, rawDetails);
   }
 
   if (response.status === 204) return undefined as T;
@@ -294,7 +299,7 @@ export const createAdminCourse = (body: CreateCourseRequest, cover: File): Promi
 
 // PATCH /v1/admin/courses/:id
 // 200 with CourseResponse. 400 invalid_request / unknown_city / unknown_place /
-// rabbanit_audience_must_be_women. 404 as above. 409 course_closed.
+// rabbanit_audience_must_be_women / course_would_be_closed. 404 as above. 409 course_closed.
 export const updateAdminCourse = (id: string, body: UpdateCourseRequest): Promise<CourseResponse> =>
   request(url(`/v1/admin/courses/${id}`).toString(), { method: 'PATCH', headers: JSON_HEADERS, body: JSON.stringify(body) });
 
@@ -307,7 +312,7 @@ export const uploadAdminCourseCover = (id: string, file: File): Promise<CourseRe
 };
 
 // POST /v1/admin/courses/:id/photos (multipart, one `photo` file part)
-// 200 with CourseResponse. 409 course_photo_limit at 8. 404 as above.
+// 201 with CourseResponse. 409 course_photo_limit at 8. 404 as above.
 export const uploadAdminCoursePhoto = (id: string, file: File): Promise<CourseResponse> => {
   const formData = new FormData();
   formData.append('photo', file);
@@ -315,22 +320,22 @@ export const uploadAdminCoursePhoto = (id: string, file: File): Promise<CourseRe
 };
 
 // DELETE /v1/admin/courses/:id/photos/:photoId
-// 200 with CourseResponse. 404 if the course or the photo does not exist.
-export const deleteAdminCoursePhoto = (id: string, photoId: string): Promise<CourseResponse> =>
+// 204 on success, no body. 404 if the course or the photo does not exist.
+export const deleteAdminCoursePhoto = (id: string, photoId: string): Promise<void> =>
   request(url(`/v1/admin/courses/${id}/photos/${photoId}`).toString(), { method: 'DELETE' });
 
 // POST /v1/admin/courses/:id/close
-// 200 with CourseResponse. 409 registration_already_closed. 404 as above.
+// 200 with CourseResponse. 409 course_closed. 404 as above.
 export const closeAdminCourse = (id: string): Promise<CourseResponse> =>
   request(url(`/v1/admin/courses/${id}/close`).toString(), { method: 'POST' });
 
 // POST /v1/admin/courses/:id/full
-// 200 with CourseResponse. 409 registration_already_closed. 404 as above.
+// 200 with CourseResponse. 409 course_closed. 404 as above.
 export const markAdminCourseFull = (id: string): Promise<CourseResponse> =>
   request(url(`/v1/admin/courses/${id}/full`).toString(), { method: 'POST' });
 
 // POST /v1/admin/courses/:id/duplicate
-// 201 with the new CourseResponse. 400 invalid_request. 404 as above.
+// 201 with the new CourseResponse. 400 invalid_request / opening_date_not_future. 404 as above. 409 course_not_closed.
 export const duplicateAdminCourse = (id: string, body: DuplicateCourseRequest): Promise<CourseResponse> =>
   request(url(`/v1/admin/courses/${id}/duplicate`).toString(), { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(body) });
 

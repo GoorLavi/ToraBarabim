@@ -2,6 +2,7 @@ import styled from 'styled-components';
 
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
+import type { CourseContactChannel } from '~/analytics/models';
 import { ContactActions } from '~/components/ContactActions/ContactActions';
 import * as pageConsts from '~/CoursePage/consts';
 import { phoneDisplay, phoneToInternational } from '~/helpers';
@@ -16,7 +17,7 @@ import * as styles from './styles';
 // treatment inline in the side card from `lg` up (design brief A, item
 // 12). Both fire the same `Course Contact Click`.
 export const ContactBar = styled(({ className, courseId, courseName, contactPhone }: ContactBarProps) => {
-  const trackContact = (channel: 'whatsapp' | 'call'): void => {
+  const trackContact = (channel: CourseContactChannel): void => {
     trackEvent(MIXPANEL_EVENTS.courseContactClick, { channel, courseId, courseName });
   };
 

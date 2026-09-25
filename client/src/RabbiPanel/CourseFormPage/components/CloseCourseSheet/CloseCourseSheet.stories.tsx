@@ -4,7 +4,7 @@ import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { courseResponseFixture } from '~/courseFixture';
 
 import { errorResolver, http, jsonResolver, loadingResolver } from '../../../../../.storybook/apiMocks';
-import * as consts from './consts';
+import * as consts from '~/components/CloseCourseSheet/consts';
 import { CloseCourseSheet } from './CloseCourseSheet';
 
 const course = courseResponseFixture({ id: 'course-1', name: 'יסודות האמונה' });

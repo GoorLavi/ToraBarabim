@@ -1,8 +1,7 @@
 import { css } from 'styled-components';
 
+import { CARD_WIDE_THRESHOLD } from '~/consts';
 import { POSTER_ASPECT_RATIO } from '~/HomePage/consts';
-
-import { CARD_WIDE_THRESHOLD } from './consts';
 
 // Mirrors LessonCard/styles.ts exactly (design-system.md, "the lesson
 // tile's exact size in every rail tier"): same poster ratio, same body

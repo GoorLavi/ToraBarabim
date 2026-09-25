@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { teacherPageLink } from '~/CoursePage/helpers';
+import { rabbiDisplayName } from '~/helpers';
 
 import * as consts from './consts';
 import type { TeacherSectionProps } from './models';
@@ -27,7 +28,7 @@ export const TeacherSection = styled(({ className, teacher }: TeacherSectionProp
 
         <div className="text">
           <p className="name" dir="auto">
-            {rabbi.name}
+            {rabbiDisplayName(rabbi)}
           </p>
 
           {rabbi.title && (

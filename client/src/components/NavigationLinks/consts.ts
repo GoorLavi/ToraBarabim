@@ -3,9 +3,6 @@
 export const WAZE_LABEL = 'Waze';
 export const GOOGLE_MAPS_LABEL = 'Google Maps';
 
-export const WAZE_ARIA_LABEL = 'פתיחה ב-Waze';
-export const GOOGLE_MAPS_ARIA_LABEL = 'פתיחה ב-Google Maps';
-
 // Waze's brand mark, traced from simple-icons
 // (https://github.com/simple-icons/simple-icons/blob/develop/icons/waze.svg): one path
 // whose eyes and smile are cut from the cyan fill as sub-paths, not drawn as separate

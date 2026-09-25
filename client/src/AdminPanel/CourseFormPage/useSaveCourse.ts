@@ -30,7 +30,7 @@ export const useSaveCourse = (): UseMutationResult<CourseResponse, AdminApiError
       return createAdminCourse(payload, form.cover);
     },
     onSuccess: (course) => {
-      void queryClient.invalidateQueries({ queryKey: ['admin', 'courses'] });
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.coursesAll() });
       queryClient.setQueryData(ADMIN_QUERY_KEYS.course(course.id), course);
     },
   });

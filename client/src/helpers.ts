@@ -1,4 +1,4 @@
-import type { AreaSummary, City, CourseTopic, LessonOccurrence, LessonVenue, LessonVenuePanel, Place, Rabbi, ResolvedAddress } from '@torabarabim/common';
+import type { AreaSummary, City, CloseReason, CourseTopic, LessonOccurrence, LessonVenue, LessonVenuePanel, Place, Rabbi, ResolvedAddress } from '@torabarabim/common';
 
 import { LESSON_TOPIC_LABELS, RABBI_HONORIFIC_LABELS } from './consts';
 import type { DayGroup } from './models';
@@ -135,6 +135,15 @@ export const dayGroupHeading = (isoDate: string): string => {
   return `${longWeekdayFormatter.format(date)}, ${dayMonthFormatter.format(date)}`;
 };
 
+// A course's own fixed calendar fact ("יום שני, 3 בנובמבר"), read by a
+// panel record's own opening-date field: unlike `dayGroupHeading` above,
+// this never turns relative ("היום"/"מחר"), since a record shows the same
+// text regardless of when it is viewed.
+export const weekdayAndDayMonthLabel = (isoDate: string): string => {
+  const date = new Date(`${isoDate}T00:00:00Z`);
+  return `${longWeekdayFormatter.format(date)}, ${dayMonthFormatter.format(date)}`;
+};
+
 // Lifted from LessonPage/components/LessonTicket/helpers.ts once the place
 // page became a second caller: this is the nearest folder both can see.
 // No comma when there is no floor (design spec).
@@ -192,13 +201,13 @@ const COURSE_OPENING_DATE_PREFIX = 'פתיחה ב־';
 // is the one place that can drift.
 const NBSP = ' ';
 
-const courseLongDateFormatter = new Intl.DateTimeFormat('he-IL', { day: 'numeric', month: 'long', timeZone: ISRAEL_TIME_ZONE });
 const courseCompactDateFormatter = new Intl.DateTimeFormat('he-IL', { day: 'numeric', month: 'numeric', timeZone: ISRAEL_TIME_ZONE });
 
 // "20 בנובמבר", no prefix: the panel's own lines build their own sentence
 // around a bare date ("נסגרה ב־20 בנובמבר · ..."), unlike the public card's
-// "פתיחה ב־" wording.
-export const israelDayMonthLabel = (isoDate: string): string => courseLongDateFormatter.format(new Date(`${isoDate}T00:00:00Z`)).replace(' ', NBSP);
+// "פתיחה ב־" wording. Shares `dayMonthFormatter` above (day/month, `he-IL`,
+// `long`) rather than a second copy of the same formatter.
+export const israelDayMonthLabel = (isoDate: string): string => dayMonthFormatter.format(new Date(`${isoDate}T00:00:00Z`)).replace(' ', NBSP);
 
 // A course's own opening date, on a card (the long form) or in a narrow
 // rail-tier card (the compact numeric form): the one place both read from,
@@ -208,20 +217,32 @@ export const courseOpeningDateLongLabel = (isoDate: string): string => `${COURSE
 export const courseOpeningDateCompactLabel = (isoDate: string): string =>
   `${COURSE_OPENING_DATE_PREFIX}${courseCompactDateFormatter.format(new Date(`${isoDate}T00:00:00Z`))}`;
 
-export const singularOrCount = (count: number, singular: string, pluralNoun: string): string => (count === 1 ? singular : `${count}${NBSP}${pluralNoun}`);
+// `dual`, when given, is the special two-form a few Hebrew nouns have
+// ("שבועיים", "שעתיים"): not every noun has one ("מפגשים" has none, so its
+// own count of 2 is just "2 מפגשים", the same shape every other count uses).
+export const singularOrCount = (count: number, singular: string, pluralNoun: string, dual?: string): string => {
+  if (count === 1) return singular;
+  if (count === 2 && dual) return dual;
+  return `${count}${NBSP}${pluralNoun}`;
+};
 
 // Joins facts with "·", the space before it non-breaking (bound to the
 // item before it, design brief B item 3) and the space after it a normal
 // one.
 export const joinWithMiddleDot = (parts: string[]): string => parts.join(`${NBSP}· `);
 
+// A course's own weeks count, in words: the one place "שבוע אחד" /
+// "שבועות" / "שבועיים" are spelled out, read by every screen that states a
+// course's length (the facts list, every panel row, the closed panel).
+export const weeksPhrase = (weeks: number): string => singularOrCount(weeks, 'שבוע אחד', 'שבועות', 'שבועיים');
+
 // היקף's value shape (spec section 13): "10 שבועות · 10 מפגשים · 15 שעות",
 // hours dropped when not given, each count in its singular form ("שבוע
 // אחד") when it is exactly 1. Shared by the course page's facts list and
 // every panel row, so none of them can say it two different ways.
 export const formatCourseScope = (weeks: number, sessions: number, hours: number | undefined): string => {
-  const parts = [singularOrCount(weeks, 'שבוע אחד', 'שבועות'), singularOrCount(sessions, 'מפגש אחד', 'מפגשים')];
-  if (hours !== undefined) parts.push(singularOrCount(hours, 'שעה אחת', 'שעות'));
+  const parts = [weeksPhrase(weeks), singularOrCount(sessions, 'מפגש אחד', 'מפגשים')];
+  if (hours !== undefined) parts.push(singularOrCount(hours, 'שעה אחת', 'שעות', 'שעתיים'));
   return joinWithMiddleDot(parts);
 };
 
@@ -238,10 +259,14 @@ export const formatCourseScope = (weeks: number, sessions: number, hours: number
 // באתר" still applies.
 export const courseStillListed = (leavesListsOn: string): boolean => todayInIsrael() < leavesListsOn;
 
-export const courseClosedLineLabel = (lifecycle: { reason: 'closed' | 'full'; closedOn: string; leavesListsOn: string }): string => {
-  const verb = lifecycle.reason === 'full' ? 'סומן' : 'נסגרה';
+// "סומן" when the reason is `full`, "נסגרה" otherwise: the one place this
+// verb pair is spelled out, read by every closed-or-full line across both
+// panels' lists and records.
+export const closedVerb = (reason: CloseReason): string => (reason === 'full' ? 'סומן' : 'נסגרה');
+
+export const courseClosedLineLabel = (lifecycle: { reason: CloseReason; closedOn: string; leavesListsOn: string }): string => {
   const leaveVerb = courseStillListed(lifecycle.leavesListsOn) ? 'יורד' : 'ירד';
-  return `${verb} ב־${israelDayMonthLabel(lifecycle.closedOn)} · הקורס ${leaveVerb} מהרשימות באתר ב־${israelDayMonthLabel(lifecycle.leavesListsOn)}`;
+  return `${closedVerb(lifecycle.reason)} ב־${israelDayMonthLabel(lifecycle.closedOn)} · הקורס ${leaveVerb} מהרשימות באתר ב־${israelDayMonthLabel(lifecycle.leavesListsOn)}`;
 };
 
 // "350 ₪ לכל הקורס", with a thousands comma for a four-digit price and up.

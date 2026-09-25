@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, within } from 'storybook/test';
 
+import { COURSE_CLOSED_RECORD_EXPLANATION } from '~/consts';
 import { courseResponseFixture } from '~/courseFixture';
 import { placeholderPhoto } from '~/storyMocks';
 
@@ -35,7 +36,7 @@ export const ClosedByCalendar: Story = {
   args: { course: closedCourse },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.findByText(consts.RECORD_EXPLANATION)).resolves.toBeInTheDocument();
+    await expect(canvas.findByText(COURSE_CLOSED_RECORD_EXPLANATION)).resolves.toBeInTheDocument();
     await expect(canvas.getByRole('button', { name: 'שכפול הקורס' })).toBeInTheDocument();
     await expect(canvas.getByRole('button', { name: 'מחיקת הקורס' })).toBeInTheDocument();
   },

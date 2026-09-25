@@ -1,24 +1,14 @@
 import type { CourseResponse } from '@torabarabim/common';
 
-import { israelDayMonthLabel, joinWithMiddleDot, rabbiDisplayName, singularOrCount } from '~/helpers';
+import { courseOpeningDateLongLabel, joinWithMiddleDot, rabbiDisplayName, weeksPhrase } from '~/helpers';
 
 import * as consts from './consts';
-
-// The admin list's own closed-line: the closed date and the course's own
-// length, never the "leaves the lists on" date the public-facing panels
-// show (`~/helpers.ts`'s own `courseClosedLineLabel`), since an admin row
-// already carries a status tag naming the reason.
-export const adminCourseClosedLineLabel = (course: CourseResponse): string => {
-  if (course.lifecycle.status !== 'closed') return '';
-  const verb = course.lifecycle.reason === 'full' ? 'סומן' : 'נסגרה';
-  return joinWithMiddleDot([`${verb} ב־${israelDayMonthLabel(course.lifecycle.closedOn)}`, singularOrCount(course.weeks, 'שבוע אחד', 'שבועות')]);
-};
 
 // "פתיחה ב־3 בנובמבר · 10 שבועות" (design brief round 3, item 3's own
 // phone-row copy): the admin row's own shorter pair, weeks only, unlike the
 // rabbi list's own opening line which also names the session count.
 export const adminCourseOpeningLineLabel = (course: CourseResponse): string =>
-  joinWithMiddleDot([`פתיחה ב־${israelDayMonthLabel(course.openingDate)}`, singularOrCount(course.weeks, 'שבוע אחד', 'שבועות')]);
+  joinWithMiddleDot([courseOpeningDateLongLabel(course.openingDate), weeksPhrase(course.weeks)]);
 
 // Shared by `CoursesCardList` and `CoursesTable`: a linked rabbi shows with
 // their own honorific, an unlinked one names the editor's own "אין קישור

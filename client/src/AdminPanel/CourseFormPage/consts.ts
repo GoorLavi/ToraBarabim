@@ -8,8 +8,9 @@ export const TEACHER_SECTION_HELP = 'בוחרים רב מהרשימה. אם מי
 
 export const SAVE_LABEL = 'שמירת הקורס';
 export const SAVING_LABEL = 'שומרים...';
+export const UPLOADING_LABEL = 'מעלים...';
 export const CANCEL_LABEL = 'ביטול';
 
-export const LOADING_MESSAGE = 'טוען...';
+export const LOADING_MESSAGE = 'טוענים...';
 export const LOAD_ERROR_MESSAGE = 'לא הצלחנו לטעון את הקורס';
 export const RETRY_LABEL = 'ניסיון נוסף';

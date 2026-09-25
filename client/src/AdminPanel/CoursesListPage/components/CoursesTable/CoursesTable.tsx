@@ -1,14 +1,15 @@
+import classNames from 'classnames';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { cycleLabel } from '~/CoursePage/consts';
 import { ADMIN_ROUTES, DETAILS_LABEL } from '~/AdminPanel/consts';
 import { adminCourseStatusTagLabel } from '~/AdminPanel/helpers';
-import { israelDayMonthLabel, singularOrCount, venuePanelCityName } from '~/helpers';
+import { MIDDLE_DOT_SEPARATOR } from '~/consts';
+import { israelDayMonthLabel, venuePanelCityName } from '~/helpers';
 
 import * as parentConsts from '../../consts';
 import { adminCourseTeacherLabel } from '../../helpers';
-import * as consts from './consts';
 import type { CoursesTableProps } from './models';
 import * as styles from './styles';
 
@@ -47,7 +48,7 @@ export const CoursesTable = styled(({ className, rows }: CoursesTableProps) => (
             {course.name}
             {course.cycle !== undefined && (
               <span className="cycle">
-                {consts.CYCLE_SEPARATOR}
+                {MIDDLE_DOT_SEPARATOR}
                 {cycleLabel(course.cycle)}
               </span>
             )}
@@ -60,13 +61,13 @@ export const CoursesTable = styled(({ className, rows }: CoursesTableProps) => (
           {israelDayMonthLabel(course.openingDate)}
         </span>
         <span className="weeks" role="cell" dir="auto">
-          {singularOrCount(course.weeks, 'שבוע אחד', 'שבועות')}
+          {course.weeks}
         </span>
         <span className="city" role="cell" dir="auto">
           {venuePanelCityName(course.venue)}
         </span>
         <span className="statusCol" role="cell">
-          <span className="tag">{adminCourseStatusTagLabel(course)}</span>
+          <span className={classNames('tag', { terminal: course.lifecycle.status === 'closed' })}>{adminCourseStatusTagLabel(course)}</span>
         </span>
         <span className="actions" role="cell">
           <Link className="details" to={ADMIN_ROUTES.courseView(course.id)}>

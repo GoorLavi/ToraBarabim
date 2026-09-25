@@ -1,4 +1,4 @@
-import type { RabbiProminence } from '@torabarabim/common';
+import type { RabbiHonorific, RabbiProminence } from '@torabarabim/common';
 
 import { PROMINENCE_LABELS } from '~/AdminPanel/consts';
 import { RABBI_HONORIFIC_LABELS } from '~/consts';
@@ -72,10 +72,38 @@ export const RETRY_LABEL = 'ניסיון נוסף';
 export const DELETE_LABEL = 'מחיקת הרב';
 export const DELETE_CONFIRM_HEADING = 'למחוק את הרב?';
 export const DELETE_CONFIRM_IRREVERSIBLE_NOTE = 'הפעולה בלתי הפיכה.';
-export const deleteConfirmImpactLabel = (lessonCount: number, exceptionCount: number): string => {
-  const lessonsPart = lessonCount === 1 ? 'שיעור אחד' : `${lessonCount} שיעורים`;
-  const exceptionsPart = exceptionCount === 1 ? 'חריג אחד' : `${exceptionCount} חריגים`;
-  return `מחיקת הרב תמחק גם ${lessonsPart} ו-${exceptionsPart} המשויכים אליו.`;
+
+const lessonsPart = (count: number): string => (count === 1 ? 'שיעור אחד' : `${count} שיעורים`);
+const exceptionsPart = (count: number): string => (count === 1 ? 'חריג אחד' : `${count} חריגים`);
+const coursesPart = (count: number): string => (count === 1 ? 'קורס אחד' : `${count} קורסים`);
+
+// A part starting with a digit takes the vav with a maqaf ("ו־3 קורסים"); a
+// part starting with a word takes it directly, with no separator of its own
+// ("וקורס אחד"), the same way the conjunction attaches to any Hebrew word.
+const withLeadingVav = (part: string): string => (/^\d/.test(part) ? `ו־${part}` : `ו${part}`);
+
+// Every non-zero part, comma-separated except the last, which takes the
+// vav instead (the editor's own rule): "שיעור אחד, 2 חריגים וקורס אחד". The
+// closing verb is singular only when the whole sentence names exactly one
+// thing ("קורס אחד המשויך אליו"), plural otherwise, and the sentence
+// follows the rabbi's own honorific ("אליו" for a rav, "אליה" for a
+// rabbanit).
+export const deleteConfirmImpactLabel = (honorific: RabbiHonorific, lessonCount: number, exceptionCount: number, courseCount: number): string => {
+  const parts = [
+    lessonCount > 0 ? lessonsPart(lessonCount) : undefined,
+    exceptionCount > 0 ? exceptionsPart(exceptionCount) : undefined,
+    courseCount > 0 ? coursesPart(courseCount) : undefined,
+  ].filter((part): part is string => part !== undefined);
+
+  const last = parts[parts.length - 1];
+  const partsText = parts.length <= 1 ? (last ?? '') : `${parts.slice(0, -1).join(', ')} ${withLeadingVav(last as string)}`;
+
+  const totalCount = lessonCount + exceptionCount + courseCount;
+  const verb = totalCount === 1 ? 'המשויך' : 'המשויכים';
+  const subject = honorific === 'rabbanit' ? 'מחיקת הרבנית' : 'מחיקת הרב';
+  const ending = honorific === 'rabbanit' ? 'אליה' : 'אליו';
+
+  return `${subject} תמחק גם ${partsText} ${verb} ${ending}.`;
 };
 export const DELETE_CONFIRM_CANCEL_LABEL = 'ביטול';
 export const DELETE_CONFIRM_CONFIRM_LABEL = 'כן, למחוק';

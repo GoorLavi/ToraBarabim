@@ -187,6 +187,31 @@ export interface CourseContactClickProps {
   courseName: string;
 }
 
+// The rabbi and admin panels' own course lifecycle events, typed like
+// `DedicationWindowOpenProps`/`DedicationContactClickProps` above rather
+// than the loose `UntypedPanelEventProps` every other panel event still
+// uses (typing the rest is future work for whoever next touches that).
+export interface CourseSavedProps {
+  courseId: string;
+  isNew: boolean;
+}
+
+export interface CourseDuplicatedProps {
+  sourceCourseId: string;
+  courseId: string;
+}
+
+export interface CourseDeletedProps {
+  courseId: string;
+}
+
+export type CourseCloseReason = 'closed' | 'full';
+
+export interface CourseRegistrationClosedProps {
+  courseId: string;
+  reason: CourseCloseReason;
+}
+
 export interface SuperProperties {
   viewport: Viewport;
   appSurface: AppSurface;
@@ -229,7 +254,8 @@ export type AnalyticsEventProps = {
   [MIXPANEL_EVENTS.dedicationContactClick]: DedicationContactClickProps;
   [MIXPANEL_EVENTS.courseClick]: CourseClickProps;
   [MIXPANEL_EVENTS.courseContactClick]: CourseContactClickProps;
-  [MIXPANEL_EVENTS.courseSaved]: UntypedPanelEventProps;
-  [MIXPANEL_EVENTS.courseDeleted]: UntypedPanelEventProps;
-  [MIXPANEL_EVENTS.courseRegistrationClosed]: UntypedPanelEventProps;
+  [MIXPANEL_EVENTS.courseSaved]: CourseSavedProps;
+  [MIXPANEL_EVENTS.courseDuplicated]: CourseDuplicatedProps;
+  [MIXPANEL_EVENTS.courseDeleted]: CourseDeletedProps;
+  [MIXPANEL_EVENTS.courseRegistrationClosed]: CourseRegistrationClosedProps;
 };

@@ -6,12 +6,12 @@ export const COURSE_PAGE_QUERY_KEYS = {
 // second attempt (mirrors LessonPage/consts.ts, LESSON_PAGE_RETRY_LIMIT).
 export const COURSE_PAGE_RETRY_LIMIT = 1;
 
-export const BACK_TO_HOME_LABEL = 'חזרה לעמוד הבית';
+export const BACK_TO_HOME_LABEL = 'לעמוד הבית';
 
 export const NOT_FOUND_HEADING = 'לא מצאנו את הקורס הזה';
-export const NOT_FOUND_EXPLANATION = 'ייתכן שהקורס הוסר, או שהקישור לא מדויק.';
+export const NOT_FOUND_EXPLANATION = 'ייתכן שהקורס הוסר או שהקישור לא מדויק.';
 
-export const SERVER_ERROR_HEADING = 'לא הצלחנו לטעון את הקורס';
+export const SERVER_ERROR_HEADING = 'לא הצלחנו לטעון את פרטי הקורס';
 export const SERVER_ERROR_EXPLANATION = 'משהו השתבש בדרך אלינו. אפשר לנסות שוב.';
 export const RETRY_LABEL = 'נסו שוב';
 

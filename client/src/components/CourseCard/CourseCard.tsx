@@ -4,10 +4,9 @@ import styled from 'styled-components';
 
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
-import { AUDIENCE_LABELS } from '~/consts';
+import { AUDIENCE_LABELS, MIDDLE_DOT_SEPARATOR } from '~/consts';
 import { courseOpeningDateCompactLabel, courseOpeningDateLongLabel, coursePath } from '~/helpers';
 
-import * as consts from './consts';
 import { courseCardAriaLabel, courseStateTagLabel, isClosedState, teacherLabel } from './helpers';
 import type { CourseCardProps } from './models';
 import * as styles from './styles';
@@ -43,7 +42,7 @@ export const CourseCard = styled(({ className, course, clickContext }: CourseCar
 
         <p className="meta" dir="auto">
           {AUDIENCE_LABELS[course.audience]}
-          {consts.META_SEPARATOR}
+          {MIDDLE_DOT_SEPARATOR}
           {course.venue.city}
         </p>
       </div>

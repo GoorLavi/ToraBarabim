@@ -62,4 +62,24 @@ export interface PhotoPickerProps {
   // is '3:4' too, but has no face to keep off the edge. Omitted, every
   // '3:4' or '16:9' caller keeps the shared line exactly as before.
   cropHelpOverride?: string;
+  // '16:9' already checks a picked file's own dimensions before it ever
+  // reaches `onSelectFile` (the crop step needs to know it can produce a
+  // crop at the floor). A '3:4' caller opts into the same pre-check with
+  // this flag: the rabbi poster has no server-side floor to fail against
+  // and keeps rejecting nothing here, but the course cover does.
+  enforceFloor?: boolean;
+  // A course cannot be saved without a cover, so its own empty state has
+  // nothing analogous to the "a soft background shows in its place" a rabbi
+  // or a place gets meanwhile. Omitted, every caller keeps the shared line.
+  missingPhotoNoteOverride?: string;
+  // The shared failure line's second sentence ("the previous photo stayed
+  // on the site") only makes sense once a previous photo exists to have
+  // stayed: false on a brand-new course, which has no cover yet to fall
+  // back to. Omitted (undefined), every caller keeps the full two-sentence
+  // line exactly as before.
+  hasPreviousPhotoOnFailure?: boolean;
+  // The approved reason a rejected upload failed (spec section 13), shown
+  // instead of the generic failure line. Undefined for a plain network
+  // failure, which keeps the generic line.
+  failureReasonOverride?: string;
 }

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { cycleLabel } from '~/CoursePage/consts';
-import { AUDIENCE_LABELS, COURSE_STATE_TAG_CLOSED, COURSE_STATE_TAG_FULL, COURSE_STATE_TAG_OPEN } from '~/consts';
+import { AUDIENCE_LABELS, COURSE_STATE_TAG_CLOSED, COURSE_STATE_TAG_FULL, COURSE_STATE_TAG_OPEN, MIDDLE_DOT_SEPARATOR } from '~/consts';
 import { courseClosedLineLabel, courseOpeningDateLongLabel, formatCourseScope, joinWithMiddleDot, venuePanelCityName } from '~/helpers';
 import { RABBI_ROUTES } from '~/RabbiPanel/consts';
 
@@ -19,7 +19,7 @@ export const CourseListItem = styled(({ className, course }: CourseListItemProps
         {course.name}
         {course.cycle !== undefined && (
           <span className="cycle">
-            {consts.CYCLE_SEPARATOR}
+            {MIDDLE_DOT_SEPARATOR}
             {cycleLabel(course.cycle)}
           </span>
         )}

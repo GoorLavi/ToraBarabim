@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { errorResolver, http, respondWithJson } from '../../../../../.storybook/apiMocks';
-import * as consts from './consts';
+import * as consts from '~/components/DeleteCourseSheet/consts';
 import { DeleteCourseSheet } from './DeleteCourseSheet';
 
 const meta: Meta<typeof DeleteCourseSheet> = {

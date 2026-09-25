@@ -5,12 +5,31 @@ import styled from 'styled-components';
 import { ADMIN_ROUTES, skeletonFieldKeys } from '~/AdminPanel/consts';
 import { CoursePreviewCard } from '~/AdminPanel/components/CoursePreviewCard/CoursePreviewCard';
 import { RecordField } from '~/AdminPanel/components/RecordField/RecordField';
-import { adminErrorMessage } from '~/AdminPanel/helpers';
+import { adminCourseClosedLineLabel, adminCourseStatusTagLabel, adminErrorMessage } from '~/AdminPanel/helpers';
 import { useExistingCourse } from '~/AdminPanel/useExistingCourse';
 import { cycleLabel } from '~/CoursePage/consts';
 import { PhotoViewer } from '~/components/PhotoViewer/PhotoViewer';
-import { AUDIENCE_LABELS } from '~/consts';
-import { addressLine, coursePath, courseStillListed, courseTopicLabel, rabbiDisplayName, venuePanelCityName } from '~/helpers';
+import {
+  AUDIENCE_LABELS,
+  COURSE_CLOSE_REGISTRATION_ACTION_LABEL,
+  COURSE_CLOSED_RECORD_EXPLANATION,
+  COURSE_DELETE_ACTION_LABEL,
+  COURSE_DUPLICATE_ACTION_LABEL,
+  COURSE_MARK_FULL_ACTION_LABEL,
+  COURSE_VIEW_ON_SITE_ACTION_LABEL,
+  MIDDLE_DOT_SEPARATOR,
+} from '~/consts';
+import {
+  addressLine,
+  coursePath,
+  courseStillListed,
+  courseTopicLabel,
+  formatPriceShekels,
+  phoneDisplay,
+  rabbiDisplayName,
+  venuePanelCityName,
+  weekdayAndDayMonthLabel,
+} from '~/helpers';
 
 import { CloseCourseSheet } from './components/CloseCourseSheet/CloseCourseSheet';
 import { DeleteCourseSheet } from './components/DeleteCourseSheet/DeleteCourseSheet';
@@ -91,7 +110,7 @@ export const CourseViewPage = styled(({ className }: CourseViewPageProps) => {
                   {course.name}
                   {course.cycle !== undefined && (
                     <span className="cycle">
-                      {consts.CYCLE_SEPARATOR}
+                      {MIDDLE_DOT_SEPARATOR}
                       {cycleLabel(course.cycle)}
                     </span>
                   )}
@@ -105,13 +124,22 @@ export const CourseViewPage = styled(({ className }: CourseViewPageProps) => {
                     {course.teacher.name}
                   </span>
                 )}
+
+                {isClosed ? (
+                  <div className="closedRow">
+                    <span className="tag terminal">{adminCourseStatusTagLabel(course)}</span>
+                    <span className="closedLine">{adminCourseClosedLineLabel(course)}</span>
+                  </div>
+                ) : (
+                  <span className="tag">{adminCourseStatusTagLabel(course)}</span>
+                )}
               </div>
             </div>
 
             <div className="actions">
               {isClosed ? (
                 <button type="button" className="action primary" onClick={() => setOpenSheet('duplicate')}>
-                  {consts.DUPLICATE_LABEL}
+                  {COURSE_DUPLICATE_ACTION_LABEL}
                 </button>
               ) : (
                 <Link className="action primary" to={ADMIN_ROUTES.courseEdit(course.id)}>
@@ -121,24 +149,24 @@ export const CourseViewPage = styled(({ className }: CourseViewPageProps) => {
 
               {(!isClosed || stillListed) && (
                 <a className="action" href={coursePath(course)} target="_blank" rel="noreferrer">
-                  {consts.VIEW_ON_SITE_LABEL}
+                  {COURSE_VIEW_ON_SITE_ACTION_LABEL}
                 </a>
               )}
 
               {!isClosed && (
                 <>
                   <button type="button" className="action" onClick={() => setOpenSheet('full')}>
-                    {consts.MARK_FULL_LABEL}
+                    {COURSE_MARK_FULL_ACTION_LABEL}
                   </button>
                   <button type="button" className="action" onClick={() => setOpenSheet('close')}>
-                    {consts.CLOSE_REGISTRATION_LABEL}
+                    {COURSE_CLOSE_REGISTRATION_ACTION_LABEL}
                   </button>
                 </>
               )}
             </div>
           </header>
 
-          {isClosed && <p className="closedExplanation">{consts.CLOSED_EXPLANATION}</p>}
+          {isClosed && <p className="closedExplanation">{COURSE_CLOSED_RECORD_EXPLANATION}</p>}
 
           <div className="fieldsGrid">
             <RecordField
@@ -149,7 +177,7 @@ export const CourseViewPage = styled(({ className }: CourseViewPageProps) => {
             {course.cycle !== undefined && <RecordField label={consts.CYCLE_LABEL} value={String(course.cycle)} />}
             <RecordField className="wide" label={consts.DESCRIPTION_LABEL} value={course.description} />
             <RecordField label={consts.TOPIC_LABEL} isEmpty={!course.topic} value={course.topic ? courseTopicLabel(course.topic) : consts.NO_TOPIC_VALUE} />
-            <RecordField label={consts.OPENING_DATE_LABEL} value={course.openingDate} />
+            <RecordField label={consts.OPENING_DATE_LABEL} value={weekdayAndDayMonthLabel(course.openingDate)} />
             <RecordField label={consts.WEEKS_LABEL} value={String(course.weeks)} />
             <RecordField label={consts.SESSIONS_LABEL} value={String(course.sessions)} />
             <RecordField
@@ -164,11 +192,11 @@ export const CourseViewPage = styled(({ className }: CourseViewPageProps) => {
               value={`${course.venue.name}, ${addressLine(course.venue.street, course.venue.floor)}, ${venuePanelCityName(course.venue)}`}
             />
             <RecordField label={consts.AUDIENCE_LABEL} value={AUDIENCE_LABELS[course.audience]} />
-            <RecordField label={consts.PHONE_LABEL} value={course.contactPhone} />
+            <RecordField label={consts.PHONE_LABEL} value={phoneDisplay(course.contactPhone)} valueDir="ltr" />
             <RecordField
               label={consts.PRICE_LABEL}
               isEmpty={course.priceShekels === undefined}
-              value={course.priceShekels !== undefined ? String(course.priceShekels) : consts.NO_PRICE_VALUE}
+              value={course.priceShekels !== undefined ? formatPriceShekels(course.priceShekels) : consts.NO_PRICE_VALUE}
             />
           </div>
 
@@ -184,7 +212,7 @@ export const CourseViewPage = styled(({ className }: CourseViewPageProps) => {
           </div>
 
           <button type="button" className="deleteAction" onClick={() => setOpenSheet('delete')}>
-            {consts.DELETE_LABEL}
+            {COURSE_DELETE_ACTION_LABEL}
           </button>
         </div>
 

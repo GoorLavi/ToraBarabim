@@ -37,10 +37,12 @@ export type CourseFormField =
   | 'name'
   | 'description'
   | 'topicOther'
+  | 'cycle'
   | 'cover'
   | 'openingDate'
   | 'weeks'
   | 'sessions'
+  | 'hours'
   | 'city'
   | 'addressName'
   | 'street'
@@ -54,6 +56,7 @@ export interface CourseFormCoverProps {
   previewUrl: string | undefined;
   hasExistingPhoto: boolean;
   uploadStatus: PhotoPickerUploadStatus | undefined;
+  failureReason: string | undefined;
   onRetryUpload: () => void;
   onSelectFile: (file: File) => void;
 }

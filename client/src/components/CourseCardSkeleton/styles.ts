@@ -1,6 +1,6 @@
 import { css } from 'styled-components';
 
-import { CARD_WIDE_THRESHOLD } from '~/components/CourseCard/consts';
+import { CARD_WIDE_THRESHOLD } from '~/consts';
 import { POSTER_ASPECT_RATIO } from '~/HomePage/consts';
 
 // Mirrors LessonCardSkeleton exactly (same box, same static-not-pulsing

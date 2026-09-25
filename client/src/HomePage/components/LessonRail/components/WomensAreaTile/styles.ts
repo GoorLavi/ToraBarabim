@@ -2,7 +2,7 @@ import { css } from 'styled-components';
 
 import { RAIL_CARD_WIDTH_MD, RAIL_CARD_WIDTH_SM, RAIL_CARD_WIDTH_WIDE, RAIL_CARD_WIDTH_XWIDE, RAIL_COLUMNS_PHONE } from '~/components/Rail/consts';
 import { railCardWidth, railEdgeOffset } from '~/components/Rail/helpers';
-import { CARD_WIDE_THRESHOLD } from '~/HomePage/components/LessonCard/consts';
+import { CARD_WIDE_THRESHOLD } from '~/consts';
 import { POSTER_ASPECT_RATIO } from '~/HomePage/consts';
 import type { Theme } from '~/theme/models';
 

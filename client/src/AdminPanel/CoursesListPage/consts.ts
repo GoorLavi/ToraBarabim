@@ -15,7 +15,7 @@ export const STATUS_FILTER_OPTIONS: AdminCourseStatusFilter[] = ['all', 'open', 
 export const RABBI_FILTER_PLACEHOLDER = 'כל הרבנים והרבניות';
 export const SEARCH_LABEL = 'חיפוש לפי שם קורס';
 export const SEARCH_PLACEHOLDER = 'חיפוש לפי שם קורס';
-export const FILTERS_TOGGLE_LABEL = (count: number): string => `סינון · ${count}`;
+export const FILTERS_TOGGLE_LABEL = (count: number): string => (count === 0 ? 'סינון' : `סינון · ${count}`);
 export const CLEAR_FILTERS_LABEL = 'איפוס הסינון';
 
 export const SORT_NOTE = '"ההרשמה פתוחה" קודם, מתאריך הפתיחה הקרוב. בסוף: "תפוסה מלאה" ו"ההרשמה נסגרה".';

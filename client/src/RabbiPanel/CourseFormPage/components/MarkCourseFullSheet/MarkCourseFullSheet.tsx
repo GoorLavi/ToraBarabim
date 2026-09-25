@@ -1,8 +1,8 @@
+import * as consts from '~/components/MarkCourseFullSheet/consts';
+import type { MarkCourseFullSheetProps } from '~/components/MarkCourseFullSheet/models';
 import { CourseConfirmSheet } from '~/components/CourseConfirmSheet/CourseConfirmSheet';
 import { rabbiErrorMessage } from '~/RabbiPanel/helpers';
 
-import * as consts from './consts';
-import type { MarkCourseFullSheetProps } from './models';
 import { useMarkCourseFull } from './useMarkCourseFull';
 
 export const MarkCourseFullSheet = ({ courseId, courseName, onDismiss, onMarkedFull }: MarkCourseFullSheetProps) => {

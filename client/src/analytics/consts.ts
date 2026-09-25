@@ -28,6 +28,7 @@ export const MIXPANEL_EVENTS = {
   courseClick: 'Course Click',
   courseContactClick: 'Course Contact Click',
   courseSaved: 'Course Saved',
+  courseDuplicated: 'Course Duplicated',
   courseDeleted: 'Course Deleted',
   courseRegistrationClosed: 'Course Registration Closed',
 } as const;

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import styled from 'styled-components';
 
+import { COURSE_CYCLE_MAX } from '~/components/CourseFormFields/consts';
 import { ResponsiveSheet } from '~/components/ResponsiveSheet/ResponsiveSheet';
 
 import * as consts from './consts';
@@ -12,16 +13,18 @@ import * as styles from './styles';
 // cycle fields, and the missing-date validation, are identical in both.
 export const DuplicateCourseSheet = styled(({ className, courseName, sourceCycle, isPending, errorMessage, onConfirm, onDismiss }: DuplicateCourseSheetProps) => {
   const [openingDate, setOpeningDate] = useState('');
-  const [cycleInput, setCycleInput] = useState(() => (sourceCycle !== undefined ? String(sourceCycle + 1) : ''));
+  const [cycleInput, setCycleInput] = useState(() =>
+    sourceCycle !== undefined ? String(Math.min(sourceCycle + 1, COURSE_CYCLE_MAX)) : '',
+  );
   const [missingDateError, setMissingDateError] = useState(false);
+  const [cycleRangeError, setCycleRangeError] = useState(false);
 
   const handleConfirm = () => {
-    if (!openingDate) {
-      setMissingDateError(true);
-      return;
-    }
-    setMissingDateError(false);
     const cycle = cycleInput.trim() ? Number(cycleInput) : undefined;
+    const hasCycleRangeError = cycle !== undefined && (!Number.isInteger(cycle) || cycle <= 0 || cycle > COURSE_CYCLE_MAX);
+    setMissingDateError(!openingDate);
+    setCycleRangeError(hasCycleRangeError);
+    if (!openingDate || hasCycleRangeError) return;
     onConfirm({ openingDate, cycle });
   };
 
@@ -54,7 +57,7 @@ export const DuplicateCourseSheet = styled(({ className, courseName, sourceCycle
         <label className="field">
           <span className="label">{consts.CYCLE_LABEL}</span>
           <input type="number" inputMode="numeric" min={1} className="input" value={cycleInput} onChange={(event) => setCycleInput(event.target.value)} />
-          <span className="helper">{consts.CYCLE_HELP}</span>
+          {cycleRangeError ? <span className="error">{consts.CYCLE_RANGE_ERROR}</span> : <span className="helper">{consts.CYCLE_HELP}</span>}
         </label>
       </div>
 

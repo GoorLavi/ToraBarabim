@@ -2,6 +2,12 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Route, Routes } from 'react-router-dom';
 import { expect, within } from 'storybook/test';
 
+import {
+  COURSE_CLOSE_REGISTRATION_ACTION_LABEL,
+  COURSE_CLOSED_RECORD_EXPLANATION,
+  COURSE_DUPLICATE_ACTION_LABEL,
+  COURSE_MARK_FULL_ACTION_LABEL,
+} from '~/consts';
 import { courseResponseFixture } from '~/courseFixture';
 import { panelShellDecorator } from '~/storyDecorators';
 import { placeholderPhoto } from '~/storyMocks';
@@ -54,8 +60,8 @@ export const Open: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.findByRole('heading', { name: /יסודות האמונה/ })).resolves.toBeInTheDocument();
     await expect(canvas.getByRole('link', { name: consts.EDIT_LABEL })).toBeInTheDocument();
-    await expect(canvas.getByRole('button', { name: consts.MARK_FULL_LABEL })).toBeInTheDocument();
-    await expect(canvas.getByRole('button', { name: consts.CLOSE_REGISTRATION_LABEL })).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: COURSE_MARK_FULL_ACTION_LABEL })).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: COURSE_CLOSE_REGISTRATION_ACTION_LABEL })).toBeInTheDocument();
   },
 };
 
@@ -73,8 +79,8 @@ export const Closed: Story = {
   parameters: { apiMocks: { handlers: { course: http.get('/v1/admin/courses/:id', jsonResolver(closedCourse)) } } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.findByText(consts.CLOSED_EXPLANATION)).resolves.toBeInTheDocument();
-    await expect(canvas.getByRole('button', { name: consts.DUPLICATE_LABEL })).toBeInTheDocument();
+    await expect(canvas.findByText(COURSE_CLOSED_RECORD_EXPLANATION)).resolves.toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: COURSE_DUPLICATE_ACTION_LABEL })).toBeInTheDocument();
     await expect(canvas.queryByRole('link', { name: consts.EDIT_LABEL })).not.toBeInTheDocument();
   },
 };

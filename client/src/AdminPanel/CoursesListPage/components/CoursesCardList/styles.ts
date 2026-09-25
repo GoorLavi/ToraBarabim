@@ -71,6 +71,14 @@ export const CoursesCardList = css(
         line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
       }
 
+      /* A closed or full status is a terminal state (design gate finding),
+         filled solid rather than the soft tint an open status and every
+         other tag keep. */
+      > .closedRow > .tag {
+        background: ${theme.colors.primary};
+        color: ${theme.colors.textOnPrimary};
+      }
+
       > .closedRow > .closedLine {
         color: ${theme.colors.textSecondary};
         font-size: ${theme.typography.secondary.phone.fontSize};

@@ -14,7 +14,10 @@ export const DuplicateCourseSheet = ({ courseId, courseName, sourceCycle, onDism
         sourceCycle,
         isPending: duplicateCourse.isPending,
         errorMessage: duplicateCourse.isError ? rabbiErrorMessage(duplicateCourse.error) : undefined,
-        onConfirm: (body) => duplicateCourse.mutate(body, { onSuccess: onDuplicated }),
+        // Wrapped rather than passed as `onSuccess` directly: `mutate`'s own
+        // `onSuccess` also receives the mutation's variables and context,
+        // and `onDuplicated` takes only the new course.
+        onConfirm: (body) => duplicateCourse.mutate(body, { onSuccess: (course) => onDuplicated(course) }),
         onDismiss,
       }}
     />

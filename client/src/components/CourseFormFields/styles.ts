@@ -27,12 +27,31 @@ export const CourseFormFields = css(
 
     > .row {
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
       gap: ${theme.spacing.md};
 
       > .field {
         flex: 1;
-        min-inline-size: 140px;
+        min-inline-size: 0;
+      }
+
+      @media (min-width: ${theme.breakpoints.sm}) {
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+    }
+
+    > .row.nameRow {
+      flex-direction: row;
+
+      > .field.name {
+        flex: 1;
+        min-inline-size: 0;
+      }
+
+      > .field.cycle {
+        flex: 0 0 112px;
+        inline-size: 112px;
       }
     }
 
@@ -50,7 +69,8 @@ export const CourseFormFields = css(
       }
 
       > .input,
-      > textarea.input {
+      > textarea.input,
+      > select.input {
         inline-size: 100%;
         min-block-size: 48px;
         padding-inline: ${theme.spacing.md};
@@ -67,6 +87,28 @@ export const CourseFormFields = css(
         padding-block: ${theme.spacing.sm};
         min-block-size: 120px;
         resize: vertical;
+      }
+
+      > textarea.input.description {
+        min-block-size: 208px;
+      }
+
+      > .inputAffix {
+        position: relative;
+        inline-size: 100%;
+
+        > .input {
+          padding-inline-end: ${theme.spacing.xxl};
+        }
+
+        > .affix {
+          position: absolute;
+          inset-inline-end: ${theme.spacing.md};
+          inset-block: 0;
+          display: flex;
+          align-items: center;
+          color: ${theme.colors.textSecondary};
+        }
       }
 
       > .helper {
@@ -87,7 +129,7 @@ export const CourseFormFields = css(
       gap: ${theme.spacing.sm};
 
       > .pill {
-        min-block-size: 40px;
+        min-block-size: 48px;
         min-inline-size: 64px;
         padding-inline: ${theme.spacing.lg};
         border: 1px solid ${theme.colors.border};
@@ -101,29 +143,6 @@ export const CourseFormFields = css(
           border-color: ${theme.colors.primary};
           background: ${theme.colors.primarySoft};
           color: ${theme.colors.primary};
-        }
-      }
-    }
-
-    > .topicChips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: ${theme.spacing.xs};
-
-      > .chip {
-        min-block-size: 40px;
-        padding-inline: ${theme.spacing.md};
-        border: 1px solid ${theme.colors.border};
-        border-radius: ${theme.radii.pill};
-        color: ${theme.colors.text};
-        font-size: ${theme.typography.tagAndCaption.phone.fontSize};
-        line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
-
-        &.selected {
-          border-color: ${theme.colors.primary};
-          background: ${theme.colors.primarySoft};
-          color: ${theme.colors.primary};
-          font-weight: ${theme.typography.fontWeight.semiBold};
         }
       }
     }

@@ -12,6 +12,7 @@ import {
 } from '~/consts';
 import { addressLine, courseOpeningDateLongLabel, formatCourseScope, formatPriceShekels, googleMapsHref, placePath, wazeHref } from '~/helpers';
 
+import * as consts from './consts';
 import type { CourseFactsProps } from './models';
 import * as styles from './styles';
 
@@ -57,7 +58,17 @@ export const CourseFacts = styled(({ className, course }: CourseFactsProps) => {
             {course.venue.city}
           </span>
 
-          {showNavLinks && wazeUrl && googleMapsUrl && <NavigationLinks {...{ className: 'navLinks', wazeUrl, googleMapsUrl }} />}
+          {showNavLinks && wazeUrl && googleMapsUrl && (
+            <NavigationLinks
+              {...{
+                className: 'navLinks',
+                wazeUrl,
+                googleMapsUrl,
+                wazeAriaLabel: consts.WAZE_ARIA_LABEL,
+                googleMapsAriaLabel: consts.GOOGLE_MAPS_ARIA_LABEL,
+              }}
+            />
+          )}
         </div>
       </div>
 

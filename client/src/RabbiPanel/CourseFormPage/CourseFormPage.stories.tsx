@@ -4,6 +4,7 @@ import { expect, within } from 'storybook/test';
 
 import * as courseFormFieldsConsts from '~/components/CourseFormFields/consts';
 import * as galleryFieldConsts from '~/components/GalleryField/consts';
+import { COURSE_CLOSE_REGISTRATION_ACTION_LABEL, COURSE_DELETE_ACTION_LABEL, COURSE_MARK_FULL_ACTION_LABEL } from '~/consts';
 import { courseResponseFixture } from '~/courseFixture';
 import { rabbiFixture } from '~/rabbiFixture';
 import { panelShellDecorator } from '~/storyDecorators';
@@ -79,9 +80,9 @@ export const EditModeOpen: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.findByRole('heading', { name: consts.EDIT_HEADING })).resolves.toBeInTheDocument();
     await expect(canvas.getByDisplayValue('יסודות האמונה')).toBeInTheDocument();
-    await expect(canvas.getByRole('button', { name: consts.MARK_FULL_LABEL })).toBeInTheDocument();
-    await expect(canvas.getByRole('button', { name: consts.CLOSE_REGISTRATION_LABEL })).toBeInTheDocument();
-    await expect(canvas.getByRole('button', { name: consts.DELETE_LABEL })).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: COURSE_MARK_FULL_ACTION_LABEL })).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: COURSE_CLOSE_REGISTRATION_ACTION_LABEL })).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: COURSE_DELETE_ACTION_LABEL })).toBeInTheDocument();
   },
 };
 

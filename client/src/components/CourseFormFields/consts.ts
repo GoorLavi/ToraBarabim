@@ -1,5 +1,7 @@
 import type { LessonTopic } from '@torabarabim/common';
 
+import { COURSE_GALLERY_MAX_PHOTOS } from '~/components/GalleryField/consts';
+
 import type { CourseFormField } from './models';
 
 // `LESSON_TOPIC_LABELS`' own key order, minus `other`: that vocabulary
@@ -22,7 +24,6 @@ export const CYCLE_HELP = 'לא חובה.';
 export const SCOPE_SECTION_HEADING = 'פתיחה והיקף';
 export const OPENING_DATE_LABEL = 'תאריך פתיחה';
 export const WEEKS_LABEL = 'מספר שבועות';
-export const WEEKS_HELP = 'אחרי השבוע האחרון הקורס יורד מעצמו מהרשימות באתר.';
 export const SESSIONS_LABEL = 'מספר מפגשים';
 export const HOURS_LABEL = 'מספר שעות';
 export const HOURS_HELP = 'לא חובה. סך כל שעות הלימוד בקורס.';
@@ -37,16 +38,20 @@ export const AUDIENCE_SECTION_HEADING = 'למי הקורס מיועד';
 export const PHOTOS_SECTION_HEADING = 'תמונות';
 export const COVER_LABEL = 'תמונה ראשית';
 export const COVER_CROP_HELP = 'בכרטיס באתר התמונה נחתכת ליחס 3:4 (לאורך), ולכן כדאי שהעיקר יהיה במרכז ולא בקצוות.';
+// A course cannot be saved without a cover (REQUIRED_COVER_ERROR below), so
+// its empty state has no "meanwhile a soft background shows" to promise.
+export const COVER_MISSING_NOTE = 'עוד אין תמונה.';
 export const GALLERY_FIELD_LABEL = 'תמונות נוספות';
-export const GALLERY_FIELD_HELP = 'לא חובה. אפשר להוסיף עד 8 תמונות, והן יופיעו בעמוד הקורס.';
+export const GALLERY_FIELD_HELP = `לא חובה. אפשר להוסיף עד ${COURSE_GALLERY_MAX_PHOTOS} תמונות, והן יופיעו בעמוד הקורס.`;
 
 export const REGISTRATION_SECTION_HEADING = 'הרשמה';
 export const CONTACT_PHONE_LABEL = 'מספר טלפון ליצירת קשר';
 export const CONTACT_PHONE_HELP = 'המספר יופיע בעמוד הקורס, וכל מי שנכנס יוכל לשלוח הודעה בוואטסאפ או להתקשר.';
 export const PRICE_LABEL = 'מחיר';
 export const PRICE_HELP = 'לא חובה. המחיר לכל הקורס, בשקלים.';
+export const PRICE_CURRENCY_SYMBOL = '₪';
 
-export const ERROR_SUMMARY_HEADING = 'יש להשלים כמה שדות לפני השמירה:';
+export const ERROR_SUMMARY_HEADING = 'יש להשלים לפני השמירה:';
 export const REQUIRED_NAME_ERROR = 'יש למלא את שם הקורס';
 export const REQUIRED_DESCRIPTION_ERROR = 'יש למלא תיאור';
 export const REQUIRED_TOPIC_OTHER_ERROR = 'יש למלא את נושא הקורס';
@@ -54,16 +59,35 @@ export const REQUIRED_COVER_ERROR = 'יש להעלות תמונה ראשית';
 export const REQUIRED_OPENING_DATE_ERROR = 'יש לבחור תאריך פתיחה';
 export const REQUIRED_WEEKS_ERROR = 'יש למלא מספר שבועות';
 export const REQUIRED_SESSIONS_ERROR = 'יש למלא מספר מפגשים';
-export const REQUIRED_CONTACT_PHONE_ERROR = 'יש למלא מספר טלפון תקין';
+export const REQUIRED_CONTACT_PHONE_ERROR = 'יש למלא מספר נייד תקין, למשל 050-123-4567';
 export const REQUIRED_AUDIENCE_ERROR = 'יש לבחור קהל יעד';
 // Zero is refused, not just negative or non-numeric: a price of zero would
 // read as a free course, which the owner never wants a blank field to mean
 // (server/src/service/course/consts.ts carries the same floor).
-export const INVALID_PRICE_ERROR = 'המחיר חייב להיות לפחות 1 ₪. כדי לא להציג מחיר, משאירים ריק.';
+export const INVALID_PRICE_ERROR = 'המחיר צריך להיות מספר שלם בשקלים, לפחות 1. כדי לא להציג מחיר, משאירים את השדה ריק.';
+
+// Upper bounds mirrored from server/src/service/course/consts.ts, each
+// shown only once its own field is out of range (never in the field's
+// normal help line, which stays as approved).
+export const CYCLE_RANGE_ERROR = 'מספר המחזור צריך להיות בין 1 ל-999';
+export const WEEKS_RANGE_ERROR = 'מספר השבועות צריך להיות בין 1 ל-104';
+export const SESSIONS_RANGE_ERROR = 'מספר המפגשים צריך להיות בין 1 ל-500';
+export const HOURS_RANGE_ERROR = 'מספר השעות צריך להיות מספר שלם בין 1 ל-2000';
+export const PRICE_TOO_HIGH_ERROR = 'המחיר לא יכול להיות גבוה מ-100,000 שקלים';
+export const NAME_TOO_LONG_ERROR = 'שם הקורס יכול להיות עד 120 תווים';
+export const DESCRIPTION_TOO_LONG_ERROR = 'התיאור יכול להיות עד 4000 תווים';
+
+export const COURSE_CYCLE_MAX = 999;
+export const COURSE_WEEKS_MAX = 104;
+export const COURSE_SESSIONS_MAX = 500;
+export const COURSE_HOURS_MAX = 2000;
+export const COURSE_PRICE_MAX = 100000;
+export const COURSE_NAME_MAX_LENGTH = 120;
+export const COURSE_DESCRIPTION_MAX_LENGTH = 4000;
 
 export const SECTION_DEFS: { fields: CourseFormField[]; heading: string }[] = [
-  { fields: ['name', 'description', 'topicOther'], heading: ABOUT_SECTION_HEADING },
-  { fields: ['openingDate', 'weeks', 'sessions'], heading: SCOPE_SECTION_HEADING },
+  { fields: ['name', 'description', 'topicOther', 'cycle'], heading: ABOUT_SECTION_HEADING },
+  { fields: ['openingDate', 'weeks', 'sessions', 'hours'], heading: SCOPE_SECTION_HEADING },
   { fields: ['city', 'addressName', 'street'], heading: WHERE_SECTION_HEADING },
   { fields: ['audience'], heading: AUDIENCE_SECTION_HEADING },
   { fields: ['cover'], heading: PHOTOS_SECTION_HEADING },

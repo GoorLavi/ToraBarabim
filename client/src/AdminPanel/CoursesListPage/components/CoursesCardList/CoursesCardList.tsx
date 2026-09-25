@@ -3,11 +3,11 @@ import styled from 'styled-components';
 
 import { cycleLabel } from '~/CoursePage/consts';
 import { ADMIN_ROUTES, DETAILS_LABEL } from '~/AdminPanel/consts';
-import { adminCourseStatusTagLabel } from '~/AdminPanel/helpers';
+import { adminCourseClosedLineLabel, adminCourseStatusTagLabel } from '~/AdminPanel/helpers';
+import { MIDDLE_DOT_SEPARATOR } from '~/consts';
 import { venuePanelCityName } from '~/helpers';
 
-import { adminCourseClosedLineLabel, adminCourseOpeningLineLabel, adminCourseTeacherLabel } from '../../helpers';
-import * as consts from './consts';
+import { adminCourseOpeningLineLabel, adminCourseTeacherLabel } from '../../helpers';
 import type { CoursesCardListProps } from './models';
 import * as styles from './styles';
 
@@ -26,7 +26,7 @@ export const CoursesCardList = styled(({ className, rows }: CoursesCardListProps
               {course.name}
               {course.cycle !== undefined && (
                 <span className="cycle">
-                  {consts.CYCLE_SEPARATOR}
+                  {MIDDLE_DOT_SEPARATOR}
                   {cycleLabel(course.cycle)}
                 </span>
               )}

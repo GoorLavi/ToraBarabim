@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import { deleteAdminCoursePhoto, uploadAdminCourseCover, uploadAdminCoursePhoto } from '~/AdminPanel/api';
 import { CoursePreviewCard } from '~/AdminPanel/components/CoursePreviewCard/CoursePreviewCard';
 import { ADMIN_QUERY_KEYS, ADMIN_ROUTES } from '~/AdminPanel/consts';
-import { adminErrorMessage } from '~/AdminPanel/helpers';
+import { adminErrorMessage, describeAdminError } from '~/AdminPanel/helpers';
 import { useExistingCourse } from '~/AdminPanel/useExistingCourse';
 import { CourseFormFields } from '~/components/CourseFormFields/CourseFormFields';
 import { courseToFormState, initialFormState, validateCourseForm } from '~/components/CourseFormFields/helpers';
@@ -37,29 +37,46 @@ export const CourseFormPage = styled(({ className }: CourseFormPageProps) => {
 
   const existing = useExistingCourse(id);
   const saveCourse = useSaveCourse();
-  const coverUpload = useCourseCoverUpload(id ?? '', { uploadCover: uploadAdminCourseCover, courseQueryKey: ADMIN_QUERY_KEYS.course });
+  const coverUpload = useCourseCoverUpload(id ?? '', {
+    uploadCover: uploadAdminCourseCover,
+    courseQueryKey: ADMIN_QUERY_KEYS.course,
+    describeError: describeAdminError,
+  });
   const gallery = useCourseGalleryPhotos(
     id,
     existing.status === 'success' ? existing.course.photos : [],
-    { uploadPhoto: uploadAdminCoursePhoto, deletePhoto: deleteAdminCoursePhoto, courseQueryKey: ADMIN_QUERY_KEYS.course },
+    { uploadPhoto: uploadAdminCoursePhoto, deletePhoto: deleteAdminCoursePhoto, courseQueryKey: ADMIN_QUERY_KEYS.course, describeError: describeAdminError },
     locationState?.failedGalleryFiles,
   );
 
   const [form, setForm] = useState<CourseFormState>(() => initialFormState());
   const [teacher, setTeacher] = useState<TeacherFormValue>(() => initialTeacherState());
-  const [isLoadedFromExisting, setIsLoadedFromExisting] = useState(false);
+  // The id of the course `form` was last loaded from: a duplicate lands on
+  // this same route element with a new `id` but does not remount it
+  // (mirrors `RabbiPanel/CourseFormPage.tsx`'s own reasoning).
+  const [loadedCourseId, setLoadedCourseId] = useState<string | undefined>(undefined);
   const [fieldErrors, setFieldErrors] = useState<CourseFormErrors>({});
   const [teacherError, setTeacherError] = useState<string | undefined>(undefined);
+  const [isUploadingDrafts, setIsUploadingDrafts] = useState(false);
 
   const newCoverPreviewUrl = usePhotoPreviewUrl(form.cover);
 
   useEffect(() => {
-    if (existing.status === 'success' && !isLoadedFromExisting) {
+    if (existing.status === 'success' && existing.course.id !== loadedCourseId) {
       setForm(courseToFormState(existing.course));
       setTeacher(teacherFromCourse(existing.course));
-      setIsLoadedFromExisting(true);
+      setLoadedCourseId(existing.course.id);
     }
-  }, [existing, isLoadedFromExisting]);
+  }, [existing, loadedCourseId]);
+
+  // A closed course has no editable form: `ReadOnlyCourseRecord`-equivalent
+  // is the view page itself for the admin panel, so navigate there instead
+  // of rendering a form nothing here can save.
+  useEffect(() => {
+    if (id && existing.status === 'success' && existing.course.lifecycle.status === 'closed') {
+      navigate(ADMIN_ROUTES.courseView(id), { replace: true });
+    }
+  }, [id, existing, navigate]);
 
   const isAudienceLocked = teacher.kind === 'rabbi' && teacher.rabbi.honorific === 'rabbanit';
   const effectiveForm: CourseFormState = isAudienceLocked ? { ...form, audience: 'women' } : form;
@@ -87,6 +104,12 @@ export const CourseFormPage = styled(({ className }: CourseFormPageProps) => {
     );
   }
 
+  // The effect above is already navigating away; render nothing rather than
+  // a form for a course that cannot be saved.
+  if (id && existing.status === 'success' && existing.course.lifecycle.status === 'closed') {
+    return null;
+  }
+
   const generalSaveError = saveCourse.isError ? adminErrorMessage(saveCourse.error) : undefined;
 
   const submit = (): void => {
@@ -104,6 +127,11 @@ export const CourseFormPage = styled(({ className }: CourseFormPageProps) => {
             navigate(ADMIN_ROUTES.courseView(course.id));
             return;
           }
+          // `saveCourse.isPending` already turned false once the create
+          // itself resolved: the button holds its own state until these
+          // still-local drafts finish uploading, so a second tap cannot
+          // create a second course.
+          setIsUploadingDrafts(true);
           const failedFiles = await gallery.uploadDraftsAfterCreate(course.id);
           if (failedFiles.length === 0) navigate(ADMIN_ROUTES.courseView(course.id));
           else navigate(ADMIN_ROUTES.courseEdit(course.id), { state: { failedGalleryFiles: failedFiles } satisfies CourseFormLocationState });
@@ -156,6 +184,7 @@ export const CourseFormPage = styled(({ className }: CourseFormPageProps) => {
                 previewUrl: coverPreviewUrl,
                 hasExistingPhoto: Boolean(id),
                 uploadStatus: id ? coverUpload.status : undefined,
+                failureReason: id ? coverUpload.failureReason : undefined,
                 onRetryUpload: coverUpload.retry,
                 onSelectFile: (file) => (id ? coverUpload.upload(file) : setForm((prev) => ({ ...prev, cover: file }))),
               },
@@ -164,8 +193,8 @@ export const CourseFormPage = styled(({ className }: CourseFormPageProps) => {
           />
 
           <div className="footer">
-            <button type="submit" className="save" disabled={saveCourse.isPending}>
-              {saveCourse.isPending ? consts.SAVING_LABEL : consts.SAVE_LABEL}
+            <button type="submit" className="save" disabled={saveCourse.isPending || isUploadingDrafts}>
+              {isUploadingDrafts ? consts.UPLOADING_LABEL : saveCourse.isPending ? consts.SAVING_LABEL : consts.SAVE_LABEL}
             </button>
             <Link className="cancel" to={backLink.to}>
               {consts.CANCEL_LABEL}
@@ -175,7 +204,7 @@ export const CourseFormPage = styled(({ className }: CourseFormPageProps) => {
 
         {existing.status === 'success' && (
           <aside className="preview">
-            <CoursePreviewCard course={existing.course} />
+            <CoursePreviewCard {...{ course: existing.course }} />
           </aside>
         )}
       </div>

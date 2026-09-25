@@ -47,8 +47,9 @@ export const GalleryField = css(
         inline-size: 28px;
         block-size: 28px;
         border-radius: ${theme.radii.pill};
-        background: ${theme.colors.text};
-        color: ${theme.colors.textOnPrimary};
+        border: 1px solid ${theme.colors.border};
+        background: ${theme.colors.surface};
+        color: ${theme.colors.text};
         font-size: ${theme.typography.tagAndCaption.phone.fontSize};
         line-height: 1;
         display: flex;
@@ -124,7 +125,16 @@ export const GalleryField = css(
   }
 
   > .maxReachedNote {
-    color: ${theme.colors.textSecondary};
+    padding: ${theme.spacing.sm} ${theme.spacing.md};
+    border-radius: ${theme.radii.md};
+    background: ${theme.colors.primarySoft};
+    color: ${theme.colors.primary};
+    font-size: ${theme.typography.secondary.phone.fontSize};
+    line-height: ${theme.typography.secondary.phone.lineHeight};
+  }
+
+  > .error {
+    color: ${theme.colors.danger};
     font-size: ${theme.typography.secondary.phone.fontSize};
     line-height: ${theme.typography.secondary.phone.lineHeight};
   }
