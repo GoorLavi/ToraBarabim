@@ -142,20 +142,20 @@ export const CourseFormFields = css(
         flex-direction: row;
         flex-wrap: wrap;
       }
-    }
 
-    > .row.nameRow {
-      flex-direction: row;
+      &.nameRow {
+        flex-direction: row;
 
-      > .field.name {
-        flex: 1;
-        min-inline-size: 0;
-      }
+        > .field.name {
+          flex: 1;
+          min-inline-size: 0;
+        }
 
-      > .field.cycle {
-        flex: 0 0 112px;
-        inline-size: 112px;
-        min-inline-size: 0;
+        > .field.cycle {
+          flex: 0 0 112px;
+          inline-size: 112px;
+          min-inline-size: 0;
+        }
       }
     }
 

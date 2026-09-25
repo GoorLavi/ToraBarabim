@@ -275,6 +275,12 @@ export const EditModeGalleryMultiFileAdd: Story = {
     },
   },
   play: async ({ canvasElement }) => {
+    // A play reruns on every render, including Storybook's own interactive
+    // re-renders, not just once per test run (design gate round 4,
+    // reviewer M3): without this the second run's first call already reads
+    // as call two, and the two photo sets never actually differ.
+    multiFileAddCallCount = 0;
+
     const canvas = within(canvasElement);
     const galleryAddLabel = await canvas.findByText(galleryFieldConsts.GALLERY_ADD_LABEL);
     const galleryInput = galleryAddLabel.closest('.addTile')?.querySelector<HTMLInputElement>('input[type="file"]');

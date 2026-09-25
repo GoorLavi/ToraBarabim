@@ -43,7 +43,7 @@ const closedCourseNoLongerListed = courseResponseFixture({
 const fullCourse = courseResponseFixture({
   id: 'course-4',
   name: 'עיון בפרשת השבוע',
-  lifecycle: { status: 'closed', reason: 'full', closedOn: '2026-09-20', leavesListsOn: '2026-09-27' },
+  lifecycle: { status: 'closed', reason: 'full', closedOn: isoDateOffsetByDays(-3), leavesListsOn: isoDateOffsetByDays(4) },
 });
 
 const withRoute = (id: string) => (Story: React.ComponentType) => (

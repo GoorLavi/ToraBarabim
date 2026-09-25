@@ -3,21 +3,25 @@ import { expect, within } from 'storybook/test';
 
 import { courseResponseFixture } from '~/courseFixture';
 import { panelShellDecorator } from '~/storyDecorators';
+import { isoDateOffsetByDays } from '~/storyMocks';
 
 import { errorResolver, http, jsonResolver, loadingResolver } from '../../../.storybook/apiMocks';
 import * as consts from './consts';
 import { CoursesListPage } from './CoursesListPage';
 
 const openCourse = courseResponseFixture({ id: 'course-open', name: 'יסודות האמונה', cycle: 3 });
+// `closedOn` a week ahead of `leavesListsOn`, the course's own real order,
+// computed against today rather than a fixed date that will quietly move
+// to the other side of it (design gate round 4 finding).
 const closedCourse = courseResponseFixture({
   id: 'course-closed',
   name: 'הלכות שבת מעשיות',
-  lifecycle: { status: 'closed', reason: 'closed', closedOn: '2026-10-01', leavesListsOn: '2026-10-08' },
+  lifecycle: { status: 'closed', reason: 'closed', closedOn: isoDateOffsetByDays(0), leavesListsOn: isoDateOffsetByDays(7) },
 });
 const fullCourse = courseResponseFixture({
   id: 'course-full',
   name: 'עיון בפרשת השבוע',
-  lifecycle: { status: 'closed', reason: 'full', closedOn: '2026-09-20', leavesListsOn: '2026-09-27' },
+  lifecycle: { status: 'closed', reason: 'full', closedOn: isoDateOffsetByDays(-3), leavesListsOn: isoDateOffsetByDays(4) },
 });
 
 const meta: Meta<typeof CoursesListPage> = {

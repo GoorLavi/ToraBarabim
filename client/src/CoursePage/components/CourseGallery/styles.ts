@@ -84,11 +84,10 @@ export const CourseGallery = css(
      the arrows and the counter are positioned against this box, so it has
      to span the same full-viewport width ".slides" itself scrolls across,
      with ".slides" own padding-inline (unchanged) making the peek. Because
-     this box is wider than the current slide it frames, the prev arrow and
-     the counter need their own start and end insets pulled in by that same
-     padding, so they land on the photo itself; the next arrow keeps the
-     shared fragment's own plain inset, since that is exactly where the
-     peek already sits. */
+     this box is wider than the current slide it frames, the prev arrow
+     needs its own start inset pulled in by that same padding, so it lands
+     on the photo itself; the next arrow keeps the shared fragment's own
+     plain inset, since that is exactly where the peek already sits. */
   > .stage {
     position: relative;
     margin-inline: calc(-1 * ${theme.spacing.lg});
@@ -111,47 +110,51 @@ export const CourseGallery = css(
       }
     }
 
+    /* Pulled further in than the arrows (design gate round 4 browser
+       check): the plain fragment inset landed it past the photo's own
+       edge, in the peek. */
     > .counter {
-      inset-inline-end: calc(${theme.spacing.lg} + ${theme.spacing.sm});
+      inset-inline-end: calc(${theme.spacing.xxl} + ${theme.spacing.md});
+    }
+
+    > .slides {
+      display: flex;
+      gap: ${theme.spacing.sm};
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      /* Where a snapped slide's own start edge lands, matching the arrow's
+         own inset above it (design gate round 4 browser check): without
+         this the strip snaps flush to its own padding-box edge, ahead of
+         where the arrow actually sits. */
+      scroll-padding-inline: ${theme.spacing.lg};
+      overscroll-behavior-inline: contain;
+      scrollbar-width: none;
+      padding-inline: ${theme.spacing.lg};
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
 
       @media (min-width: ${theme.breakpoints.md}) {
-        inset-inline-end: calc(${theme.spacing.xl} + ${theme.spacing.sm});
+        padding-inline: ${theme.spacing.xl};
       }
-    }
-  }
 
-  > .slides {
-    display: flex;
-    gap: ${theme.spacing.sm};
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    overscroll-behavior-inline: contain;
-    scrollbar-width: none;
-    padding-inline: ${theme.spacing.lg};
+      > .slide {
+        flex: 0 0 calc(100vw - 48px);
+        aspect-ratio: 1;
+        scroll-snap-align: start;
+        overflow: hidden;
+        border-radius: ${theme.radii.lg};
+        background: ${theme.colors.primarySoft};
+        padding: 0;
+        border: 0;
 
-    &::-webkit-scrollbar {
-      display: none;
-    }
-
-    @media (min-width: ${theme.breakpoints.md}) {
-      padding-inline: ${theme.spacing.xl};
-    }
-
-    > .slide {
-      flex: 0 0 calc(100vw - 48px);
-      aspect-ratio: 1;
-      scroll-snap-align: start;
-      overflow: hidden;
-      border-radius: ${theme.radii.lg};
-      background: ${theme.colors.primarySoft};
-      padding: 0;
-      border: 0;
-
-      > .image {
-        display: block;
-        inline-size: 100%;
-        block-size: 100%;
-        object-fit: cover;
+        > .image {
+          display: block;
+          inline-size: 100%;
+          block-size: 100%;
+          object-fit: cover;
+        }
       }
     }
   }

@@ -29,6 +29,10 @@ const nineGalleryPhotos = Array.from({ length: 8 }, (_, index) => ({ id: `photo-
 const meta: Meta<typeof CoursePage> = {
   title: 'CoursePage/CoursePage',
   component: CoursePage,
+  // Fullscreen, not Storybook's own padded canvas (design gate round 4
+  // finding): the gallery's own bleed only reaches the real viewport edge
+  // when nothing else insets it first.
+  parameters: { layout: 'fullscreen' },
 };
 
 export default meta;
@@ -64,10 +68,10 @@ export const Open: Story = {
     // space, not the normal one a literal comparison would expect.
     const normalizeSpaces = (value: string): string => value.replace(/\s/gu, ' ');
     await expect(
-      canvas.getByText((_, element) => normalizeSpaces(element?.textContent ?? '') === normalizeSpaces(consts.cycleLabel(3)), {
+      canvas.findByText((_, element) => normalizeSpaces(element?.textContent ?? '') === normalizeSpaces(consts.cycleLabel(3)), {
         selector: '.cycleTag',
       }),
-    ).toBeInTheDocument();
+    ).resolves.toBeInTheDocument();
 
     // Gallery on phone: a full-bleed slide strip, one button per photo,
     // each opening the full viewer at its own index (the stage's own

@@ -105,15 +105,12 @@ export const GalleryField = css(
       /* The whole tile is the retry tap target (design gate round 3
          finding), its own pill drawn at the bottom as the button's label
          rather than a second, smaller button inside it; ".remove" above
-         stays reachable through its own higher stacking, and this area's
-         own top inset (its 48px hit area plus the 10px clear the design
-         frame gives it, neither a value the token scale has) starts below
-         it entirely rather than sharing the corner. */
+         stays reachable through its own higher stacking (design gate round
+         4 finding: carving out its own corner needed two raw pixel values
+         neither on the token scale, for no visible difference). */
       > .retryArea {
         position: absolute;
-        inset-inline: 0;
-        inset-block-end: 0;
-        inset-block-start: calc(48px + 10px);
+        inset: 0;
         display: flex;
         align-items: flex-end;
         justify-content: center;

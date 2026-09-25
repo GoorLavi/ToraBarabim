@@ -3,6 +3,7 @@ import { expect, waitFor, within } from 'storybook/test';
 
 import { courseResponseFixture } from '~/courseFixture';
 import { panelShellDecorator } from '~/storyDecorators';
+import { isoDateOffsetByDays } from '~/storyMocks';
 
 import { errorResolver, http, jsonResolver, loadingResolver } from '../../../.storybook/apiMocks';
 import * as consts from './consts';
@@ -14,15 +15,18 @@ const unlinkedCourse = courseResponseFixture({
   name: 'מבוא לתפילה',
   teacher: { kind: 'named', name: 'הרב פלוני אלמוני' },
 });
+// `closedOn` a week ahead of `leavesListsOn`, the course's own real order,
+// computed against today rather than a fixed date that will quietly move
+// to the other side of it (design gate round 4 finding).
 const fullCourse = courseResponseFixture({
   id: 'course-full',
   name: 'עיון בפרשת השבוע',
-  lifecycle: { status: 'closed', reason: 'full', closedOn: '2026-09-20', leavesListsOn: '2026-09-27' },
+  lifecycle: { status: 'closed', reason: 'full', closedOn: isoDateOffsetByDays(-3), leavesListsOn: isoDateOffsetByDays(4) },
 });
 const closedCourse = courseResponseFixture({
   id: 'course-closed',
   name: 'הלכות שבת מעשיות',
-  lifecycle: { status: 'closed', reason: 'closed', closedOn: '2026-10-01', leavesListsOn: '2026-10-08' },
+  lifecycle: { status: 'closed', reason: 'closed', closedOn: isoDateOffsetByDays(0), leavesListsOn: isoDateOffsetByDays(7) },
 });
 
 const coursesHandler = (items: ReturnType<typeof courseResponseFixture>[]) =>

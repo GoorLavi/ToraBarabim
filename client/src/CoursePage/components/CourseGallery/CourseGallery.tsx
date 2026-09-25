@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import classNames from 'classnames';
 import styled from 'styled-components';
 
@@ -25,7 +25,16 @@ export const CourseGallery = styled(({ className, courseName, photos }: CourseGa
 
   const slidesContainerRef = useRef<HTMLDivElement>(null);
   const slideRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const phoneVisibleIndex = useVisibleSlideIndex(slidesContainerRef, slideRefs);
+  const phoneVisibleIndex = useVisibleSlideIndex(slidesContainerRef, slideRefs, photos.length);
+
+  // The thumbnail strip and its `aria-current` are the one shared indicator
+  // for both galleries (design gate round 4 finding: they used to follow
+  // only the desktop frame's own index, never a phone swipe), so a swipe
+  // that never calls `goTo` still moves them, the same index the phone
+  // counter already shows.
+  useEffect(() => {
+    setActiveIndex(phoneVisibleIndex);
+  }, [phoneVisibleIndex]);
 
   if (!activePhoto) return null;
 

@@ -3,24 +3,27 @@ import { expect, fn, within } from 'storybook/test';
 
 import { COURSE_CLOSED_RECORD_EXPLANATION, COURSE_DELETE_ACTION_LABEL, COURSE_DUPLICATE_ACTION_LABEL } from '~/consts';
 import { courseResponseFixture } from '~/courseFixture';
-import { placeholderPhoto } from '~/storyMocks';
+import { isoDateOffsetByDays, placeholderPhoto } from '~/storyMocks';
 
 import * as consts from './consts';
 import { ReadOnlyCourseRecord } from './ReadOnlyCourseRecord';
 
+// `closedOn` a week ahead of `leavesListsOn`, the course's own real order,
+// computed against today rather than a fixed date that will quietly move
+// to the other side of it (design gate round 4 finding).
 const closedCourse = courseResponseFixture({
   id: 'course-1',
   name: 'יסודות האמונה',
   cycle: 3,
   priceShekels: 350,
   photos: [{ id: 'p1', url: placeholderPhoto(600, 450) }],
-  lifecycle: { status: 'closed', reason: 'closed', closedOn: '2026-10-01', leavesListsOn: '2026-10-08' },
+  lifecycle: { status: 'closed', reason: 'closed', closedOn: isoDateOffsetByDays(0), leavesListsOn: isoDateOffsetByDays(7) },
 });
 
 const fullCourse = courseResponseFixture({
   id: 'course-2',
   name: 'עיון בפרשת השבוע',
-  lifecycle: { status: 'closed', reason: 'full', closedOn: '2026-09-20', leavesListsOn: '2026-09-27' },
+  lifecycle: { status: 'closed', reason: 'full', closedOn: isoDateOffsetByDays(-3), leavesListsOn: isoDateOffsetByDays(4) },
 });
 
 const meta: Meta<typeof ReadOnlyCourseRecord> = {
