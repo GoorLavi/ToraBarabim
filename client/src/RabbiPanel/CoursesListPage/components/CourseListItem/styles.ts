@@ -1,8 +1,9 @@
 import { css } from 'styled-components';
 
 // Mirrors LessonListItem/styles.ts. The closed-or-full state adds one row
-// of its own (tag and line, never apart, design brief B item 3) in place
-// of the open state's separate audience-and-city tags.
+// of its own (tag and line, never apart, design brief B item 3) above the
+// same audience-and-city tags the open state shows (design gate round 2
+// finding: a closed course's own audience and city are still worth naming).
 export const CourseListItem = css(
   ({ theme }) => `
   display: flex;
@@ -55,11 +56,14 @@ export const CourseListItem = css(
     }
   }
 
+  /* Never wraps onto two lines (design gate round 2 finding): the tag
+     stays beside its own line, which wraps its own text instead if the two
+     together do not fit the card's width. */
   > .closedRow {
     margin-block-start: ${theme.spacing.sm};
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
+    flex-wrap: nowrap;
+    align-items: baseline;
     gap: ${theme.spacing.xs};
 
     > .tag {
@@ -75,6 +79,7 @@ export const CourseListItem = css(
     }
 
     > .closedLine {
+      flex: 1 1 auto;
       min-inline-size: 0;
       color: ${theme.colors.textSecondary};
       font-size: ${theme.typography.secondary.phone.fontSize};

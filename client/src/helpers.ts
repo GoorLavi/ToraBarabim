@@ -264,9 +264,15 @@ export const courseStillListed = (leavesListsOn: string): boolean => todayInIsra
 // panels' lists and records.
 export const closedVerb = (reason: CloseReason): string => (reason === 'full' ? 'סומן' : 'נסגרה');
 
+// "סומן ב־1 באוקטובר": non-breaking between the verb and the date that
+// names it, the same as `israelDayMonthLabel`'s own day-and-month pair, so
+// a narrow card never splits the verb from its own date (design gate round
+// 2 finding). Shared by both panels' own closed-line builders below.
+export const closedVerbWithDateLabel = (reason: CloseReason, isoDate: string): string => `${closedVerb(reason)}${NBSP}ב־${israelDayMonthLabel(isoDate)}`;
+
 export const courseClosedLineLabel = (lifecycle: { reason: CloseReason; closedOn: string; leavesListsOn: string }): string => {
   const leaveVerb = courseStillListed(lifecycle.leavesListsOn) ? 'יורד' : 'ירד';
-  return `${closedVerb(lifecycle.reason)} ב־${israelDayMonthLabel(lifecycle.closedOn)} · הקורס ${leaveVerb} מהרשימות באתר ב־${israelDayMonthLabel(lifecycle.leavesListsOn)}`;
+  return `${closedVerbWithDateLabel(lifecycle.reason, lifecycle.closedOn)} · הקורס ${leaveVerb} מהרשימות באתר ב־${israelDayMonthLabel(lifecycle.leavesListsOn)}`;
 };
 
 const priceFormatter = new Intl.NumberFormat('he-IL');

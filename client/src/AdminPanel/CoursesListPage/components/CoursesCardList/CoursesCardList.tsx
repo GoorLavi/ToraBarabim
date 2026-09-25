@@ -19,45 +19,51 @@ export const CoursesCardList = styled(({ className, rows }: CoursesCardListProps
       const isClosed = course.lifecycle.status === 'closed';
       return (
         <li key={course.id} className="card">
-          <img className="thumbnail" src={course.coverUrl} alt="" />
+          <div className="top">
+            <img className="thumbnail" src={course.coverUrl} alt="" />
 
-          <div className="body">
-            <span className="title" dir="auto">
-              {course.name}
-              {course.cycle !== undefined && (
-                <span className="cycle">
-                  {MIDDLE_DOT_SEPARATOR}
-                  {cycleLabel(course.cycle)}
-                </span>
-              )}
-            </span>
-            <span className="secondary" dir="auto">
-              {adminCourseTeacherLabel(course)}
-            </span>
-
-            {isClosed ? (
-              <div className="closedRow">
-                <span className="tag">{adminCourseStatusTagLabel(course)}</span>
-                <span className="closedLine">{adminCourseClosedLineLabel(course)}</span>
-              </div>
-            ) : (
-              <>
-                <span className="meta" dir="auto">
-                  {adminCourseOpeningLineLabel(course)}
-                </span>
-                <div className="tags">
-                  <span className="tag open">{adminCourseStatusTagLabel(course)}</span>
-                  <span className="tag city" dir="auto">
-                    {venuePanelCityName(course.venue)}
+            <div className="titleBlock">
+              <span className="title" dir="auto">
+                {course.name}
+                {course.cycle !== undefined && (
+                  <span className="cycle">
+                    {MIDDLE_DOT_SEPARATOR}
+                    {cycleLabel(course.cycle)}
                   </span>
-                </div>
-              </>
-            )}
-
-            <Link className="details" to={ADMIN_ROUTES.courseView(course.id)}>
-              {DETAILS_LABEL}
-            </Link>
+                )}
+              </span>
+              <span className="secondary" dir="auto">
+                {adminCourseTeacherLabel(course)}
+              </span>
+            </div>
           </div>
+
+          {isClosed ? (
+            // Full width, not squeezed beside the thumbnail (design gate
+            // round 2 finding): the closed line already runs long, and the
+            // 64px poster left it too little room to keep the tag and the
+            // line on one row.
+            <div className="closedRow">
+              <span className="tag">{adminCourseStatusTagLabel(course)}</span>
+              <span className="closedLine">{adminCourseClosedLineLabel(course)}</span>
+            </div>
+          ) : (
+            <>
+              <span className="meta" dir="auto">
+                {adminCourseOpeningLineLabel(course)}
+              </span>
+              <div className="tags">
+                <span className="tag open">{adminCourseStatusTagLabel(course)}</span>
+                <span className="tag city" dir="auto">
+                  {venuePanelCityName(course.venue)}
+                </span>
+              </div>
+            </>
+          )}
+
+          <Link className="details" to={ADMIN_ROUTES.courseView(course.id)}>
+            {DETAILS_LABEL}
+          </Link>
         </li>
       );
     })}

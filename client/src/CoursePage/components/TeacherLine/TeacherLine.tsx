@@ -11,12 +11,12 @@ import * as styles from './styles';
 export const TeacherLine = styled(({ className, teacher }: TeacherLineProps) => (
   <div className={className}>
     {teacher.kind === 'rabbi' ? (
-      <>
+      <Link className="link" to={rabbiPath(teacher.rabbi)}>
         {teacher.rabbi.photoUrl && <img className="avatar" src={teacher.rabbi.photoUrl} alt="" />}
-        <Link className="link" to={rabbiPath(teacher.rabbi)} dir="auto">
+        <span className="name" dir="auto">
           {rabbiDisplayName(teacher.rabbi)}
-        </Link>
-      </>
+        </span>
+      </Link>
     ) : (
       <span className="name" dir="auto">
         {teacher.name}

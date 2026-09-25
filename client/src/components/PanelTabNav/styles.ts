@@ -27,7 +27,10 @@ export const PanelTabNav = css(
     align-items: center;
     justify-content: center;
     min-block-size: 48px;
-    padding-inline: ${theme.spacing.lg};
+    /* Tighter than the desktop row's own padding (design gate round 2
+       finding): a phone-width grid cell has too little room for a longer
+       label ("מועדים קרובים") at the desktop padding to still fit one line. */
+    padding-inline: ${theme.spacing.sm};
     border-radius: ${theme.radii.pill};
     background: ${theme.colors.surfaceOnPrimary};
     color: ${theme.colors.textOnPrimary};
@@ -35,6 +38,10 @@ export const PanelTabNav = css(
     font-size: ${theme.typography.body.phone.fontSize};
     line-height: ${theme.typography.body.phone.lineHeight};
     text-decoration: none;
+
+    @media (min-width: ${theme.breakpoints.md}) {
+      padding-inline: ${theme.spacing.lg};
+    }
 
     &.active {
       background: ${theme.colors.surface};

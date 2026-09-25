@@ -41,6 +41,14 @@ export const MissingOpeningDate: Story = {
   },
 };
 
+// `onDuplicated` is asserted here with the new course the request answers
+// with; `CourseFormPage.tsx` itself navigates to that course's own edit
+// route from there (`navigate(RABBI_ROUTES.courseEdit(course.id))`). A
+// story covering that landing (the edit form pre-filled with the new date
+// and cycle) is not expressible in the story pattern this codebase uses:
+// every story renders at a `<Routes location={fixedLocation}>` fixed to one
+// route, which cannot observe a `useNavigate()` call actually changing the
+// rendered route within a single story. Accepted gap, not missed coverage.
 export const Confirming: Story = {
   parameters: { apiMocks: { handlers: { duplicate: http.post(`/v1/rabbi/courses/${course.id}/duplicate`, jsonResolver(duplicate)) } } },
   play: async ({ args }) => {

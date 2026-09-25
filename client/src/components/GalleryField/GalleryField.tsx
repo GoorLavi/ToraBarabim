@@ -36,7 +36,7 @@ export const GalleryField = styled(({ className, photos, onAddFiles, onRemove, o
 
       <div className="grid">
         {photos.map((photo, index) => (
-          <div key={photo.id} className="tile">
+          <div key={photo.id} className={classNames('tile', { failed: photo.status === 'failed' })}>
             <img className={classNames('photo', { dimmed: photo.status !== 'uploaded' })} src={photo.url} alt="" />
 
             {photo.status === 'uploading' && (
@@ -45,15 +45,10 @@ export const GalleryField = styled(({ className, photos, onAddFiles, onRemove, o
               </div>
             )}
 
-            {photo.status === 'failed' && (
-              <div className="status failed">
-                <span className="label">{photo.failureReason}</span>
-                {photo.canRetry !== false && (
-                  <button type="button" className="retry" onClick={() => onRetry(photo.id)}>
-                    {consts.GALLERY_RETRY_LABEL}
-                  </button>
-                )}
-              </div>
+            {photo.status === 'failed' && photo.canRetry !== false && (
+              <button type="button" className="retryPill" onClick={() => onRetry(photo.id)}>
+                {consts.GALLERY_RETRY_LABEL}
+              </button>
             )}
 
             {(photo.status === 'uploaded' || photo.status === 'failed') && (
@@ -80,6 +75,16 @@ export const GalleryField = styled(({ className, photos, onAddFiles, onRemove, o
           {tooSmallError}
         </p>
       )}
+      {/* Below the whole grid, not inside a 94px tile (design gate round 2
+          finding): a failed tile's own reason, one line per tile still
+          failed. */}
+      {photos
+        .filter((photo): photo is typeof photo & { failureReason: string } => photo.status === 'failed' && photo.failureReason !== undefined)
+        .map((photo) => (
+          <p key={photo.id} className="error" role="alert">
+            {photo.failureReason}
+          </p>
+        ))}
       {!canAddMore && <p className="maxReachedNote">{consts.GALLERY_MAX_REACHED_NOTE}</p>}
     </div>
   );

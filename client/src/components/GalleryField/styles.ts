@@ -29,6 +29,14 @@ export const GalleryField = css(
       overflow: hidden;
       background: ${theme.colors.primarySoft};
 
+      /* The photo itself stays visible, dimmed, rather than an opaque
+         overlay hiding it (design gate round 2 finding): its own reason
+         reads below the whole grid instead of fighting for room in a 94px
+         square. */
+      &.failed {
+        border: 1px solid ${theme.colors.danger};
+      }
+
       > .photo {
         inline-size: 100%;
         block-size: 100%;
@@ -57,43 +65,43 @@ export const GalleryField = css(
         justify-content: center;
       }
 
-      > .status {
+      > .status.uploading {
         position: absolute;
         inset: 0;
         display: flex;
-        flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: ${theme.spacing.xs};
         padding-inline: ${theme.spacing.xs};
         text-align: center;
+        background: rgba(32, 27, 29, 0.45);
 
         > .label {
           color: ${theme.colors.textOnPrimary};
           font-size: ${theme.typography.tagAndCaption.phone.fontSize};
           line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
         }
+      }
 
-        &.uploading {
-          background: rgba(32, 27, 29, 0.45);
-        }
-
-        &.failed {
-          background: ${theme.colors.surface};
-          border: 1px solid ${theme.colors.danger};
-
-          > .label {
-            color: ${theme.colors.danger};
-          }
-
-          > .retry {
-            color: ${theme.colors.primary};
-            font-weight: ${theme.typography.fontWeight.semiBold};
-            font-size: ${theme.typography.tagAndCaption.phone.fontSize};
-            line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
-            text-decoration: underline;
-          }
-        }
+      /* Centred with inset-plus-auto-margin, not a translate: a transform's
+         own percentages are physical, not logical, so they would center it
+         wrong in this RTL page. */
+      > .retryPill {
+        position: absolute;
+        inset: 0;
+        margin: auto;
+        inline-size: fit-content;
+        block-size: fit-content;
+        min-block-size: 48px;
+        display: flex;
+        align-items: center;
+        padding-inline: ${theme.spacing.lg};
+        border: 1px solid ${theme.colors.danger};
+        border-radius: ${theme.radii.pill};
+        background: ${theme.colors.surface};
+        color: ${theme.colors.danger};
+        font-weight: ${theme.typography.fontWeight.semiBold};
+        font-size: ${theme.typography.tagAndCaption.phone.fontSize};
+        line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
       }
     }
 

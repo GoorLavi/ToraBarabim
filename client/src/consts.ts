@@ -154,6 +154,15 @@ export const MIDDLE_DOT_SEPARATOR = ' · ';
 // description.
 export const META_LINE_SEPARATOR = ' · ';
 
+// CourseCard's own meta line (design gate round 2 finding): the audience
+// phrase itself never wraps mid-sentence (styles.ts, ".audience"), so the
+// space before the dot can stay a normal, breakable one, moving the whole
+// "· city" tail to its own line when the row runs out of room; the space
+// after the dot stays non-breaking, binding the dot to the city that
+// follows it. Distinct from META_LINE_SEPARATOR above, which every other
+// card keeps as is.
+export const COURSE_CARD_META_SEPARATOR = ' ·\u00A0';
+
 // The floor from design-system.md's card width step: every rail card
 // (`LessonCard`, `CourseCard`) steps its own type scale at this rendered
 // width, via `@container` rather than a viewport media query.

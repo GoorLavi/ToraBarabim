@@ -1,12 +1,14 @@
 import { css } from 'styled-components';
 
-// Below `lg`: a full-bleed, swipeable strip of every photo (design brief A
-// items 1 and 2 revisited), each slide the viewport width less 48px so the
-// next one peeks at the inline end, the same bleed technique as
-// `HomePage/components/RabbiRow/styles.ts`'s own `.row`. From `lg` up
-// (design brief A, item 7): the desktop frame-plus-thumbnails pair,
-// unchanged, a fixed 780 by 560 block with the frame at 560 square and a
-// 2-column thumbnail grid beside it.
+// Below `lg`: the full-bleed, swipeable strip of every photo stays on top
+// (design brief A items 1 and 2), each slide the viewport width less 48px
+// so the next one peeks at the inline end, the same bleed technique as
+// `HomePage/components/RabbiRow/styles.ts`'s own `.row`; the frame and the
+// thumbnail strip (design gate round 2 finding) sit stacked underneath it at
+// every width too, not desktop-only, since the arrows help a reader who
+// never discovers the swipe. From `lg` up (design brief A, item 7): the
+// frame grows to its own fixed 560 square beside a 2-column thumbnail grid,
+// the slides strip hidden (the frame is the browsing surface there).
 export const CourseGallery = css(
   ({ theme }) => `
   display: flex;
@@ -64,7 +66,6 @@ export const CourseGallery = css(
   }
 
   > .frame {
-    display: none;
     position: relative;
     aspect-ratio: 1;
     overflow: hidden;
@@ -72,7 +73,6 @@ export const CourseGallery = css(
     background: ${theme.colors.primarySoft};
 
     @media (min-width: ${theme.breakpoints.lg}) {
-      display: block;
       flex: 0 0 560px;
       inline-size: 560px;
       block-size: 560px;
@@ -151,13 +151,19 @@ export const CourseGallery = css(
   }
 
   > .thumbnails {
-    display: none;
+    display: flex;
+    gap: ${theme.spacing.sm};
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
 
     @media (min-width: ${theme.breakpoints.lg}) {
       flex: 1 1 auto;
       display: grid;
       grid-template-columns: repeat(2, 98px);
-      gap: ${theme.spacing.sm};
       overflow: visible;
       align-content: start;
     }

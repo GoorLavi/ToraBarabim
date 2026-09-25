@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
 import { CourseStateSeal } from '~/components/CourseStateSeal/CourseStateSeal';
-import { AUDIENCE_LABELS, META_LINE_SEPARATOR } from '~/consts';
+import { AUDIENCE_LABELS, COURSE_CARD_META_SEPARATOR } from '~/consts';
 import { courseOpeningDateCompactLabel, courseOpeningDateLongLabel, coursePath } from '~/helpers';
 
 import { courseAudienceTreatment, courseCardAriaLabel, courseStateSealParts, isClosedState, teacherLabel } from './helpers';
@@ -46,7 +46,7 @@ export const CourseCard = styled(({ className, course, surface, clickContext }: 
 
         <p className="meta" dir="auto">
           <span className={classNames('audience', courseAudienceTreatment(course, surface))}>{AUDIENCE_LABELS[course.audience]}</span>
-          {META_LINE_SEPARATOR}
+          {COURSE_CARD_META_SEPARATOR}
           {course.venue.city}
         </p>
       </div>

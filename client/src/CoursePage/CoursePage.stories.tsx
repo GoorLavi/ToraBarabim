@@ -56,8 +56,11 @@ export const Open: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    // The cycle tag beside the course name.
-    await expect(canvas.getByText(consts.cycleLabel(3))).toBeInTheDocument();
+    // The cycle tag beside the course name: matched against the element's
+    // own combined text, not a literal string, since the tag can hold more
+    // than one text node once bidi-wrapped around the Hebrew word and the
+    // digit (design gate round 2 finding).
+    await expect(canvas.getByText((_, element) => element?.textContent === consts.cycleLabel(3))).toBeInTheDocument();
 
     // Gallery on phone: a full-bleed slide strip, one button per photo,
     // each opening the full viewer at its own index (no counter or arrow

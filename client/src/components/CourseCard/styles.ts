@@ -75,7 +75,7 @@ export const CourseCard = css(
     }
 
     > .teacher {
-      color: ${theme.colors.textSecondary};
+      color: ${theme.colors.text};
       font-size: ${theme.typography.secondaryCompact.phone.fontSize};
       line-height: ${theme.typography.secondaryCompact.phone.lineHeight};
       overflow-wrap: break-word;
@@ -133,9 +133,14 @@ export const CourseCard = css(
         line-height: ${theme.typography.secondary.phone.lineHeight};
       }
 
-      /* Mirrors LessonCard/styles.ts's own ".audience" exactly, so a course
-         card beside a lesson card marks a mixed audience the same way. */
+      /* Mirrors LessonCard/styles.ts's own ".audience" for the marked and
+         chip treatments, so a course card beside a lesson card marks a
+         mixed audience the same way; nowrap of its own (design gate round
+         2 finding), since "גם גברים וגם נשים" must stay one phrase, never
+         breaking mid-sentence the way its own normal spaces would allow. */
       > .audience {
+        white-space: nowrap;
+
         &.marked {
           color: ${theme.colors.text};
           font-weight: ${theme.typography.fontWeight.semiBold};

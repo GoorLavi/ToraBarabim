@@ -26,13 +26,21 @@ export const CourseListItem = styled(({ className, course }: CourseListItemProps
       </span>
 
       {course.lifecycle.status === 'closed' ? (
-        // The tag and its line are one row replacing the when-line
-        // entirely (design gate finding): a closed course's own opening
-        // date no longer matters beside when it closed.
-        <div className="closedRow">
-          <span className="tag">{course.lifecycle.reason === 'full' ? COURSE_STATE_TAG_FULL : COURSE_STATE_TAG_CLOSED}</span>
-          <span className="closedLine">{courseClosedLineLabel(course.lifecycle)}</span>
-        </div>
+        <>
+          {/* The tag stays beside its own line, never on a separate one:
+              the line wraps its own text instead if the two together do
+              not fit the card's width (design gate round 2 finding). */}
+          <div className="closedRow">
+            <span className="tag">{course.lifecycle.reason === 'full' ? COURSE_STATE_TAG_FULL : COURSE_STATE_TAG_CLOSED}</span>
+            <span className="closedLine">{courseClosedLineLabel(course.lifecycle)}</span>
+          </div>
+          <div className="tags">
+            <span className="tag">{AUDIENCE_LABELS[course.audience]}</span>
+            <span className="tag" dir="auto">
+              {venuePanelCityName(course.venue)}
+            </span>
+          </div>
+        </>
       ) : (
         <>
           <span className="when" dir="auto">

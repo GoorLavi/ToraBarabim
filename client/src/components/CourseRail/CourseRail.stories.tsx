@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
 
 import { courseFixture } from '~/courseFixture';
+import { atFrameSize } from '~/storyMocks';
 
 import { CourseRail } from './CourseRail';
 
@@ -42,4 +43,14 @@ export const ManyCourses: Story = {
   args: {
     items: Array.from({ length: 6 }, (_, index) => courseFixture({ id: `course-${index + 1}`, name: `קורס מספר ${index + 1}` })),
   },
+  // At a phone-width rail tier, the mixed-audience phrase ("גם גברים וגם
+  // נשים") used to break mid-sentence (design gate round 2 finding): its
+  // own nowrap keeps it one phrase, moving to its own line ahead of the
+  // dot and city instead.
+  play: async ({ canvasElement }) =>
+    atFrameSize(320, undefined, async () => {
+      const [audience] = within(canvasElement).getAllByText('גם גברים וגם נשים');
+      if (!audience) throw new Error('CourseRail story: audience phrase not found');
+      await expect(getComputedStyle(audience).whiteSpace).toEqual('nowrap');
+    }),
 };

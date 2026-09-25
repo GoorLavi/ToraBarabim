@@ -2,7 +2,7 @@ import type { AdminDedication, CourseResponse, Lesson, Rabbi, Weekday } from '@t
 
 import { COURSE_STATE_TAG_CLOSED, COURSE_STATE_TAG_FULL, COURSE_STATE_TAG_OPEN } from '~/consts';
 import { courseErrorMessage, isCourseErrorCode } from '~/courseErrors';
-import { closedVerb, israelDayMonthLabel, joinWithMiddleDot, rabbiDisplayName, weeksPhrase } from '~/helpers';
+import { closedVerbWithDateLabel, joinWithMiddleDot, rabbiDisplayName, weeksPhrase } from '~/helpers';
 
 import { AdminApiError } from './api';
 import * as consts from './consts';
@@ -36,7 +36,7 @@ export const adminCourseStatusTagLabel = (course: CourseResponse): string => {
 // second caller.
 export const adminCourseClosedLineLabel = (course: CourseResponse): string => {
   if (course.lifecycle.status !== 'closed') return '';
-  return joinWithMiddleDot([`${closedVerb(course.lifecycle.reason)} ב־${israelDayMonthLabel(course.lifecycle.closedOn)}`, weeksPhrase(course.weeks)]);
+  return joinWithMiddleDot([closedVerbWithDateLabel(course.lifecycle.reason, course.lifecycle.closedOn), weeksPhrase(course.weeks)]);
 };
 
 // Used to prefill a new account's username field from the account's full

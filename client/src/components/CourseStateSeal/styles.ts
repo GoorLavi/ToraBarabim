@@ -24,10 +24,13 @@ export const CourseStateSeal = css(
     line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
   }
 
+  /* The same role the lesson card's own time badge uses for its big word
+     (HomePage/components/LessonCard/styles.ts, ".time"), not the small
+     word's tagAndCaption role at bold (design gate round 2 finding). */
   > .big {
-    font-weight: ${theme.typography.fontWeight.bold};
-    font-size: ${theme.typography.tagAndCaption.phone.fontSize};
-    line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
+    font-weight: ${theme.typography.timeInCard.fontWeight};
+    font-size: ${theme.typography.timeInCard.phone.fontSize};
+    line-height: ${theme.typography.timeInCard.phone.lineHeight};
   }
 
   /* The two closed reasons get a gold rule between the two words, so a

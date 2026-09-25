@@ -40,9 +40,12 @@ export const DuplicateCourseSheet = styled(({ className, courseName, sourceCycle
       </p>
 
       <div className="fields">
-        <label className="field">
-          <span className="label">{consts.OPENING_DATE_LABEL}</span>
+        <div className="field">
+          <label className="label" htmlFor="duplicateCourseOpeningDate">
+            {consts.OPENING_DATE_LABEL}
+          </label>
           <input
+            id="duplicateCourseOpeningDate"
             type="date"
             className="input"
             value={openingDate}
@@ -50,15 +53,39 @@ export const DuplicateCourseSheet = styled(({ className, courseName, sourceCycle
               setOpeningDate(event.target.value);
               setMissingDateError(false);
             }}
+            aria-describedby={missingDateError ? 'duplicateCourseOpeningDateHint' : undefined}
           />
-          {missingDateError && <span className="error">{consts.MISSING_OPENING_DATE_ERROR}</span>}
-        </label>
+          {missingDateError && (
+            <span className="error" id="duplicateCourseOpeningDateHint">
+              {consts.MISSING_OPENING_DATE_ERROR}
+            </span>
+          )}
+        </div>
 
-        <label className="field">
-          <span className="label">{consts.CYCLE_LABEL}</span>
-          <input type="number" inputMode="numeric" min={1} className="input" value={cycleInput} onChange={(event) => setCycleInput(event.target.value)} />
-          {cycleRangeError ? <span className="error">{CYCLE_RANGE_ERROR}</span> : <span className="helper">{consts.CYCLE_HELP}</span>}
-        </label>
+        <div className="field">
+          <label className="label" htmlFor="duplicateCourseCycle">
+            {consts.CYCLE_LABEL}
+          </label>
+          <input
+            id="duplicateCourseCycle"
+            type="number"
+            inputMode="numeric"
+            min={1}
+            className="input"
+            value={cycleInput}
+            onChange={(event) => setCycleInput(event.target.value)}
+            aria-describedby="duplicateCourseCycleHint"
+          />
+          {cycleRangeError ? (
+            <span className="error" id="duplicateCourseCycleHint">
+              {CYCLE_RANGE_ERROR}
+            </span>
+          ) : (
+            <span className="helper" id="duplicateCourseCycleHint">
+              {consts.CYCLE_HELP}
+            </span>
+          )}
+        </div>
       </div>
 
       {errorMessage && (
