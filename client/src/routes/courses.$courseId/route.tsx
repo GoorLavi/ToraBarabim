@@ -5,9 +5,6 @@ import type { HeadersFunction, LoaderFunctionArgs, MetaFunction } from 'react-ro
 import { isRouteErrorResponse, redirect, useRouteError } from 'react-router';
 
 import { StateCard } from '~/components/StateCard/StateCard';
-// `CoursePage` is tora-client's pass 1 (build tracker #5, queued): this
-// import is written against the plan's shape and does not resolve until it
-// lands, the same way `coursePath` did not until pass 1a landed it.
 import { CoursePage } from '~/CoursePage/CoursePage';
 import * as coursePageConsts from '~/CoursePage/consts';
 import { coursePath } from '~/helpers';
@@ -104,9 +101,9 @@ export function ErrorBoundary() {
       <StateCard
         variant="surface"
         headingLevel="h1"
-        heading={isNotFound ? consts.NOT_FOUND_HEADING : consts.ERROR_HEADING}
-        body={isNotFound ? consts.NOT_FOUND_BODY : consts.ERROR_BODY}
-        action={{ actionLabel: consts.BACK_TO_HOME_LABEL, actionStyle: 'primary', actionTo: '/' }}
+        heading={isNotFound ? coursePageConsts.NOT_FOUND_HEADING : coursePageConsts.SERVER_ERROR_HEADING}
+        body={isNotFound ? coursePageConsts.NOT_FOUND_EXPLANATION : coursePageConsts.SERVER_ERROR_EXPLANATION}
+        action={{ actionLabel: coursePageConsts.BACK_TO_HOME_LABEL, actionStyle: 'primary', actionTo: '/' }}
       />
     </main>
   );

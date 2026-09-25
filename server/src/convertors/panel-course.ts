@@ -1,6 +1,7 @@
 import type { CourseListResponse, CourseLifecycleView, CourseResponse } from '@torabarabim/common';
 
 import type { CourseWriteRecord } from '../service/shared/course-write';
+import type { CourseListResult } from '../service/shared/models';
 import storage from '../storage/storage';
 
 const toLifecycleView = (lifecycle: CourseWriteRecord['lifecycle']): CourseLifecycleView =>
@@ -33,14 +34,7 @@ export const toCourseResponse = (record: CourseWriteRecord): CourseResponse => (
   lifecycle: toLifecycleView(record.lifecycle),
 });
 
-export interface PanelCourseListResult {
-  items: CourseWriteRecord[];
-  page: number;
-  pageSize: number;
-  total: number;
-}
-
-export const toCourseListResponse = (result: PanelCourseListResult): CourseListResponse => ({
+export const toCourseListResponse = (result: CourseListResult): CourseListResponse => ({
   items: result.items.map(toCourseResponse),
   page: result.page,
   pageSize: result.pageSize,

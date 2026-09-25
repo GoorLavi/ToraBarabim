@@ -1,7 +1,5 @@
 import * as areaService from '../../../server/src/service/area/area';
 import * as cityService from '../../../server/src/service/city/city';
-// `listForSitemap` is still landing on the server side (build tracker #2,
-// in progress): written against the plan's shape rather than worked around.
 import * as courseService from '../../../server/src/service/course/course';
 import * as lessonService from '../../../server/src/service/lesson/lesson';
 import * as placeService from '../../../server/src/service/place/place';

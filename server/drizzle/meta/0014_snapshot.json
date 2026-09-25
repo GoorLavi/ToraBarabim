@@ -1,5 +1,5 @@
 {
-  "id": "5c41f9bc-4158-4e7e-9a2d-af30178d22dc",
+  "id": "61c20871-c524-440d-a1ce-838f0ea33064",
   "prevId": "c3934859-4633-4460-9909-c621abb220ed",
   "version": "7",
   "dialect": "postgresql",
@@ -604,6 +604,10 @@
         "courses_topic_shape": {
           "name": "courses_topic_shape",
           "value": "(\"courses\".\"topic\" IS NULL AND \"courses\".\"topic_other\" IS NULL)\n       OR (\"courses\".\"topic\" IS NOT NULL AND \"courses\".\"topic\" <> 'other' AND \"courses\".\"topic_other\" IS NULL)\n       OR (\"courses\".\"topic\" = 'other' AND \"courses\".\"topic_other\" IS NOT NULL)"
+        },
+        "courses_close_shape": {
+          "name": "courses_close_shape",
+          "value": "(\"courses\".\"registration_closed_at\" IS NULL AND \"courses\".\"close_reason\" IS NULL)\n       OR (\"courses\".\"registration_closed_at\" IS NOT NULL AND \"courses\".\"close_reason\" IN ('closed', 'full'))"
         }
       },
       "isRLSEnabled": false

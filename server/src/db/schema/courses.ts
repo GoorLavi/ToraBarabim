@@ -80,6 +80,15 @@ export const courses = pgTable(
        OR (${table.topic} IS NOT NULL AND ${table.topic} <> 'other' AND ${table.topicOther} IS NULL)
        OR (${table.topic} = 'other' AND ${table.topicOther} IS NOT NULL)`,
     ),
+    // `closeReason` is set exactly when `registrationClosedAt` is, and only
+    // to one of the two values the close and full routes ever write: a
+    // CHECK cannot reference a Postgres enum this slice deliberately did
+    // not add, so the two literals are named here by hand instead.
+    check(
+      'courses_close_shape',
+      sql`(${table.registrationClosedAt} IS NULL AND ${table.closeReason} IS NULL)
+       OR (${table.registrationClosedAt} IS NOT NULL AND ${table.closeReason} IN ('closed', 'full'))`,
+    ),
   ],
 );
 

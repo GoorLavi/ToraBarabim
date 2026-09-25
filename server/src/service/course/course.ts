@@ -2,35 +2,25 @@ import type { AudienceScope, CourseTeacher, LessonAudience, PanelCourseTeacher }
 import { and, eq } from 'drizzle-orm';
 
 import { db } from '../../db/client';
-import { cities, courses } from '../../db/schema';
+import { courses } from '../../db/schema';
 import type { AddressCityRow } from '../shared/address';
 import { toVenue } from '../shared/address';
 import {
   baseCourseQuery,
   lifecycleFromRow,
+  loadCityByCode,
   loadCoursePhotos,
   placeByIdFromRow,
+  toCourseTopicFromRow,
   toTeacherFromRow,
   toVenueRefFromRow,
   type CourseWriteRecord,
   type JoinedCourseRow,
 } from '../shared/course-write';
-import { loadConfig } from '../../config';
 import { todayInIsrael } from '../lesson/israel-time';
-import { readImageDimensions, sniffJpegOrPng } from '../shared/photo-dimensions';
 import { toSlug } from '../shared/slug';
-import { COURSE_GALLERY_MAX_PHOTOS, COURSE_PHOTO_MIN_SIDE } from './consts';
 import { courseLifecycle, type CourseLifecycleInput } from './lifecycle';
-import {
-  CourseClosedError,
-  CourseGalleryFullError,
-  CourseNotFoundError,
-  CoursePhotoTooLargeError,
-  CoursePhotoTooSmallError,
-  CourseWouldBeClosedError,
-  MalformedCoursePhotoHeaderError,
-  UnsupportedCoursePhotoTypeError,
-} from './errors';
+import { CourseNotFoundError, CourseWouldBeClosedError } from './errors';
 import type { CourseDetailRecord, CourseSummaryRecord } from './models';
 
 // `general`: men or mixed. `women`: women or mixed, the same as a lesson's
@@ -63,21 +53,19 @@ const toCourseDetail = (row: JoinedCourseRow, cityByCode: Map<number, AddressCit
   hours: row.hours ?? undefined,
   priceShekels: row.priceShekels ?? undefined,
   contactPhone: row.contactPhone,
-  topic: row.topic === null ? undefined : row.topic === 'other' ? { value: 'other', otherText: row.topicOther as string } : { value: row.topic },
+  topic: toCourseTopicFromRow(row),
   photos,
 });
 
-export const loadCityByCode = async (): Promise<Map<number, AddressCityRow>> => {
-  const rows = await db.select({ code: cities.code, nameHe: cities.nameHe, area: cities.area }).from(cities);
-  return new Map(rows.map((row) => [row.code, row] as const));
-};
-
 export const getPublicById = async (id: string, now: Date): Promise<CourseDetailRecord> => {
   const today = todayInIsrael(now);
-  const [rows, cityByCode] = await Promise.all([baseCourseQuery().where(and(eq(courses.id, id), eq(courses.published, true))).limit(1), loadCityByCode()]);
+  const [rows, cityByCode, photos] = await Promise.all([
+    baseCourseQuery().where(and(eq(courses.id, id), eq(courses.published, true))).limit(1),
+    loadCityByCode(),
+    loadCoursePhotos(id),
+  ]);
   const row = rows[0];
   if (!row) throw new CourseNotFoundError(id);
-  const photos = await loadCoursePhotos(id);
   return toCourseDetail(row, cityByCode, photos, today);
 };
 
@@ -181,58 +169,4 @@ export const assertCourseWouldNotAlreadyBeClosed = (
   const today = todayInIsrael(now);
   const result = courseLifecycle({ ...fields, registrationClosedAt: null, closeReason: null }, today);
   if (result.status === 'closed') throw new CourseWouldBeClosedError(fields.openingDate);
-};
-
-const COURSE_PHOTO_CONTENT_TYPE_BY_KIND: Record<'jpg' | 'png', string> = { jpg: 'image/jpeg', png: 'image/png' };
-
-export interface ValidatedCoursePhoto {
-  contentType: string;
-  extension: 'jpg' | 'png';
-}
-
-// Validates a course photo (cover or gallery), in order: size, type, the
-// floor on the shorter side. No aspect-ratio check: the cover's ratio is
-// the picker's job (it crops to 3:4 before upload), and a gallery photo
-// keeps its own ratio outright, so the server never rejects one on shape.
-export const validateCoursePhoto = (bytes: Buffer): ValidatedCoursePhoto => {
-  const { maxUploadBytes } = loadConfig(process.env);
-  if (bytes.byteLength > maxUploadBytes) throw new CoursePhotoTooLargeError(maxUploadBytes);
-
-  const kind = sniffJpegOrPng(bytes, () => new UnsupportedCoursePhotoTypeError());
-  const { width, height } = readImageDimensions(bytes, kind, (malformedKind) => new MalformedCoursePhotoHeaderError(malformedKind));
-
-  const shortestSide = Math.min(width, height);
-  if (shortestSide < COURSE_PHOTO_MIN_SIDE) throw new CoursePhotoTooSmallError(shortestSide);
-
-  return { contentType: COURSE_PHOTO_CONTENT_TYPE_BY_KIND[kind], extension: kind };
-};
-
-export interface LockedCourseRow {
-  name: string;
-  openingDate: string;
-  weeks: number;
-  joinableAfterOpening: boolean;
-  registrationClosedAt: Date | null;
-  // Read straight off the `close_reason` column, which is plain `text`
-  // (this slice adds no new Postgres enum): always 'closed' or 'full' in
-  // practice, since only the close and full routes ever write it.
-  closeReason: string | null;
-}
-
-// Every write on an existing course (other than delete and duplicate) must
-// see the same, locked view of whether it is closed: this reads that
-// locked row's own lifecycle and throws the one closed-course error both
-// panels share, with the reason the card and page would actually show.
-export const assertLockedCourseIsOpen = (locked: LockedCourseRow, now: Date): void => {
-  const input: CourseLifecycleInput = { ...locked, closeReason: locked.closeReason as CourseLifecycleInput['closeReason'] };
-  const result = courseLifecycle(input, todayInIsrael(now));
-  if (result.status === 'closed') throw new CourseClosedError(locked.name, result.reason);
-};
-
-// The cheap check before `storage.put`: refuses the common case without
-// ever uploading. The authoritative check happens again under the course
-// row's own lock, inside the write's transaction (`galleryCount` there is
-// read from the same transaction, so it can never race a concurrent add).
-export const assertGalleryHasRoom = (currentCount: number): void => {
-  if (currentCount >= COURSE_GALLERY_MAX_PHOTOS) throw new CourseGalleryFullError(COURSE_GALLERY_MAX_PHOTOS);
 };

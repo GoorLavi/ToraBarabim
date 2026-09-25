@@ -20,9 +20,11 @@ const LINK_PREVIEW_IMAGE_WIDTH = 1200;
 const LINK_PREVIEW_IMAGE_HEIGHT = 630;
 
 // The sitewide default `og:image`: the site's own logo. Every route composes
-// this after `SITE_WIDE_META_BASE` except the place page, which has a real
-// photo of its own and, when it has none, omits `og:image` entirely rather
-// than falling back to this block.
+// this after `SITE_WIDE_META_BASE` except the place and course pages, each
+// of which composes its own real photo instead: the place page omits
+// `og:image` entirely when it has none rather than falling back to this
+// block, while the course page's cover is unconditional (required at
+// creation, never absent).
 export const DEFAULT_OG_IMAGE_META = [
   { property: 'og:image', content: `${SITE_ORIGIN}${linkPreviewImage}` },
   { property: 'og:image:width', content: String(LINK_PREVIEW_IMAGE_WIDTH) },

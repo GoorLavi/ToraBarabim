@@ -8,10 +8,6 @@ import { UNCACHEABLE_ERROR_HEADERS } from '../consts';
 // The `.server` suffix is React Router's build-time boundary: see
 // rabbis.$rabbiId/rabbi-detail.server.ts for why the service and database
 // code below is excluded from the browser bundle.
-//
-// `convertors/course.ts` is still landing on the server side (build tracker
-// #2, in progress): this import is written against the plan's shape rather
-// than worked around, and does not resolve until that file exists.
 export const loadCourseDetail = async (courseId: string, now: Date): Promise<CourseDetailResponse> => {
   try {
     const record = await courseService.getPublicById(courseId, now);

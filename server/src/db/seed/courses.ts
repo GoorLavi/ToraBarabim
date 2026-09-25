@@ -60,9 +60,9 @@ interface CourseSeed {
 // One course per shape the plan asked this seed to cover: a rav's general
 // course before opening, a joinable one already open, a rabbanit's women's
 // course, an unlinked admin course with a typed address, one closed by
-// hand, and one marked full. `rabbi-1` (rav), `rabbi-3` (rav) and `rabbi-9`
-// (rabbanit) are seeded by `seedLessons`; this module depends on it having
-// already run in the same transaction.
+// hand, and one marked full. `rabbi-1`, `rabbi-3`, `rabbi-5` and `rabbi-6`
+// (ravs) and `rabbi-9` (rabbanit) are seeded by `seedLessons`; this module
+// depends on it having already run in the same transaction.
 const buildCourseSeeds = (todayIso: string): CourseSeed[] => [
   {
     id: 'course-1',

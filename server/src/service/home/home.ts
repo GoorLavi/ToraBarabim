@@ -24,11 +24,8 @@ import {
   WOMENS_AREA_TILE_MIN_LESSONS,
   WOMENS_AREA_TILE_ROW_CADENCE,
 } from './consts';
-import type { CourseHomeRowResult, HomeResult, HomeRowResult, LessonHomeRowResult, LoadedWindow, ResolvedHomeOccurrence, WomenAreaResult, WomensSet } from './models';
-
-// The home row's own title (spec section 13): the one wording true of
-// every card in the row, open or closed alike.
-const COURSE_ROW_TITLE = 'קורסים';
+import { placeCourseRow } from './home-rows';
+import type { HomeResult, HomeRowResult, LessonHomeRowResult, LoadedWindow, ResolvedHomeOccurrence, WomenAreaResult, WomensSet } from './models';
 
 const MINUTES_PER_DAY = 24 * 60;
 
@@ -317,15 +314,7 @@ export const getHome = async (now: Date): Promise<HomeResult> => {
     }
   }
 
-  // Sent from the first course, with no count cap and no lookahead cap
-  // (spec section 5): the row appears the moment one listed course exists.
-  const courseRow: CourseHomeRowResult | undefined =
-    courseItems.length > 0 ? { kind: 'courses', id: 'courses', title: COURSE_ROW_TITLE, items: courseItems } : undefined;
-
-  // Plain A (owner, at the gate): the course row rides inside `rows`
-  // itself, directly after the first lesson row, or at index 0 when there
-  // is none. No skew mitigation for an open tab during a deploy.
-  const rows: HomeRowResult[] = courseRow ? [...lessonRows.slice(0, 1), courseRow, ...lessonRows.slice(1)] : lessonRows;
+  const rows: HomeRowResult[] = placeCourseRow(lessonRows, courseItems);
 
   return { rows, womensAreaLessonCount, rabbis: homeRabbis, dedicationGroups };
 };

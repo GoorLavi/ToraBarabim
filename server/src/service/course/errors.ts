@@ -39,7 +39,7 @@ export class CourseNotClosedError extends Error {
 // once closed. Maps to 400.
 export class CourseWouldBeClosedError extends Error {
   constructor(public readonly openingDate: string) {
-    super(`Expected a course that opens today or later, got opening date '${openingDate}'`);
+    super(`Expected a course whose registration would not already be closed today, got opening date '${openingDate}'`);
     this.name = 'CourseWouldBeClosedError';
   }
 }
@@ -71,9 +71,16 @@ export class MalformedCoursePhotoHeaderError extends Error {
 }
 
 // Fires when the photo's shorter side is below `COURSE_PHOTO_MIN_SIDE`.
+// `kind` decides which of the two floors was checked and which Hebrew line
+// the route builds: the cover is checked against its own width and height
+// (the rabbi poster's floor), a gallery photo against its shorter side.
 export class CoursePhotoTooSmallError extends Error {
-  constructor(public readonly shortestSide: number) {
-    super(`Expected the shorter side to be at least the configured floor, got ${shortestSide}`);
+  constructor(
+    public readonly kind: 'cover' | 'gallery',
+    public readonly width: number,
+    public readonly height: number,
+  ) {
+    super(`Expected the ${kind} to clear its own floor, got ${width}x${height}`);
     this.name = 'CoursePhotoTooSmallError';
   }
 }
@@ -91,6 +98,15 @@ export class CoverRequiredError extends Error {
   constructor() {
     super('Expected a cover file part named \'cover\'');
     this.name = 'CoverRequiredError';
+  }
+}
+
+// Fires when a multipart create's `course` field part is missing, or is
+// present but is not valid JSON. Maps to 400.
+export class MalformedCourseFieldsError extends Error {
+  constructor() {
+    super("Expected a well-formed JSON field part named 'course'");
+    this.name = 'MalformedCourseFieldsError';
   }
 }
 

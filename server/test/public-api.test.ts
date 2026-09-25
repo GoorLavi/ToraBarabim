@@ -693,11 +693,11 @@ describe('public API', () => {
     const body = homeRes.json() as HomeResponse;
     assert.ok(Array.isArray(body.rows));
 
-    // No course row exists yet in this milestone (the courses table has no
-    // writer), so every row is still `kind: 'lessons'`; narrowing here is
-    // what the wire's new row union now requires of every reader.
+    // The row union (`kind: 'lessons' | 'courses'`) means every reader must
+    // narrow before touching a lesson-only field; a course row, if the
+    // shared database happens to have a listed course, is filtered out here
+    // rather than assumed absent.
     const lessonRows = body.rows.filter((row) => row.kind === 'lessons');
-    assert.equal(lessonRows.length, body.rows.length, 'expected no course row yet in this milestone');
 
     const rowsWithTile: number[] = [];
     lessonRows.forEach((row, rowIndex) => {

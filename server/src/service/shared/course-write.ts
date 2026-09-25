@@ -1,13 +1,32 @@
 import type { CloseReason, CourseTopic, LessonAudience, LessonVenuePanel, PanelCourseTeacher, RabbiHonorific } from '@torabarabim/common';
-import { and, eq, inArray, type SQL } from 'drizzle-orm';
+import type { FastifyBaseLogger } from 'fastify';
+import { and, eq, inArray, isNull, sql, type SQL } from 'drizzle-orm';
+import { nanoid } from 'nanoid';
 
+import { loadConfig } from '../../config';
 import { db, type Tx } from '../../db/client';
 import { cities, coursePhotos, courses, places, rabbis } from '../../db/schema';
-import { courseLifecycle, type CourseLifecycleResult } from '../course/lifecycle';
+import {
+  CourseClosedError,
+  CourseGalleryFullError,
+  CourseNotClosedError,
+  CourseNotFoundError,
+  CoursePhotoNotFoundError,
+  CoursePhotoTooLargeError,
+  CoursePhotoTooSmallError,
+  MalformedCoursePhotoHeaderError,
+  OpeningDateNotFutureError,
+  UnsupportedCoursePhotoTypeError,
+} from '../course/errors';
+import { COURSE_COVER_MIN_HEIGHT, COURSE_COVER_MIN_WIDTH, COURSE_GALLERY_MAX_PHOTOS, COURSE_GALLERY_PHOTO_MIN_SIDE } from '../course/consts';
+import { courseLifecycle, type CourseLifecycleInput, type CourseLifecycleResult } from '../course/lifecycle';
+import { compareIsoDates, todayInIsrael } from '../lesson/israel-time';
+import storage from '../../storage/storage';
 import type { AddressCityRow, AddressPlaceRow, VenueRef } from './address';
 import { toVenuePanel } from './address';
-import type { LessonVenueInputSchema } from './models';
+import type { DuplicateCourseInput, LessonVenueInputSchema } from './models';
 import { assertAudienceAllowedForHonorific, assertAudienceAllowedForRabbi, getRabbiHonorific } from './rabbanit-guard';
+import { readImageDimensions, sniffJpegOrPng } from './photo-dimensions';
 import { toRabbiSummary } from './rabbi-summary';
 import { toSlug } from './slug';
 
@@ -63,6 +82,11 @@ export const baseCourseQuery = () =>
     .leftJoin(rabbis, eq(courses.rabbiId, rabbis.id));
 
 export type JoinedCourseRow = Awaited<ReturnType<typeof baseCourseQuery>>[number];
+
+export const loadCityByCode = async (): Promise<Map<number, AddressCityRow>> => {
+  const rows = await db.select({ code: cities.code, nameHe: cities.nameHe, area: cities.area }).from(cities);
+  return new Map(rows.map((row) => [row.code, row] as const));
+};
 
 // A course's venue never denormalizes a place's `cityCode` onto its own row
 // (decision: read through the place, never copied), so the place arm's
@@ -168,6 +192,21 @@ export const toCourseWriteRecord = (
   photos,
   lifecycle: lifecycleFromRow(row, today),
 });
+
+// The one read both panels' `GET /:id` share, differing only in whether the
+// caller narrows to its own rabbiId (`ownerClause`) or not (`undefined`, the
+// admin path). Row, city reference data and photos load together: none
+// depends on another's result.
+export const getCourseWriteRecord = async (id: string, ownerClause: SQL | undefined): Promise<CourseWriteRecord> => {
+  const [rows, cityByCode, photos] = await Promise.all([
+    baseCourseQuery().where(and(eq(courses.id, id), ownerClause)).limit(1),
+    loadCityByCode(),
+    loadCoursePhotos(id),
+  ]);
+  const row = rows[0];
+  if (!row) throw new CourseNotFoundError(id);
+  return toCourseWriteRecord(row, cityByCode, photos, todayInIsrael(new Date()));
+};
 
 export const loadCoursePhotos = async (courseId: string): Promise<{ id: string; storageKey: string }[]> =>
   db.select({ id: coursePhotos.id, storageKey: coursePhotos.storageKey }).from(coursePhotos).where(eq(coursePhotos.courseId, courseId)).orderBy(coursePhotos.position);
@@ -295,16 +334,21 @@ export const verifyCourseReferences = async (options: VerifyCourseReferencesOpti
 };
 
 // Locks the course row for the duration of the write's transaction, then
-// returns just enough of it to compute the lifecycle and to name it in an
-// error: every write on an existing course must see the same, un-raced view
-// of whether it is closed. `whereClause` lets the rabbi path additionally
-// scope the lock to its own rabbiId, so it can never lock (or learn the
-// existence of) another rabbi's course.
+// returns just enough of it to compute the lifecycle, to name it in an
+// error, and (for `removeCourse`) to know its cover key: every write on an
+// existing course must see the same, un-raced view of whether it is closed.
+// `whereClause` must already include `eq(courses.id, id)`: a fully
+// `undefined` clause would lock an arbitrary row instead of failing, so this
+// refuses to run without one rather than trusting every future caller to
+// remember.
 export const lockCourseRow = async (tx: Tx, whereClause: SQL | undefined) => {
+  if (!whereClause) throw new Error('lockCourseRow requires a where clause; refusing to lock the whole table');
+
   const rows = await tx
     .select({
       id: courses.id,
       name: courses.name,
+      coverKey: courses.coverKey,
       openingDate: courses.openingDate,
       weeks: courses.weeks,
       joinableAfterOpening: courses.joinableAfterOpening,
@@ -316,4 +360,323 @@ export const lockCourseRow = async (tx: Tx, whereClause: SQL | undefined) => {
     .for('update')
     .limit(1);
   return rows[0];
+};
+
+export interface LockedCourseRow {
+  name: string;
+  openingDate: string;
+  weeks: number;
+  joinableAfterOpening: boolean;
+  registrationClosedAt: Date | null;
+  // Read straight off the `close_reason` column, which is plain `text`
+  // (this slice adds no new Postgres enum): always 'closed' or 'full' in
+  // practice, since only the close and full routes ever write it.
+  closeReason: string | null;
+}
+
+// Every write on an existing course (other than delete and duplicate) must
+// see the same, locked view of whether it is closed: this reads that
+// locked row's own lifecycle and throws the one closed-course error both
+// panels share, with the reason the card and page would actually show.
+export const assertLockedCourseIsOpen = (locked: LockedCourseRow, now: Date): void => {
+  const input: CourseLifecycleInput = { ...locked, closeReason: locked.closeReason as CourseLifecycleInput['closeReason'] };
+  const result = courseLifecycle(input, todayInIsrael(now));
+  if (result.status === 'closed') throw new CourseClosedError(locked.name, result.reason);
+};
+
+// The cheap check before `storage.put`: refuses the common case without
+// ever uploading. The authoritative check happens again under the course
+// row's own lock, inside the write's transaction.
+export const assertGalleryHasRoom = (currentCount: number): void => {
+  if (currentCount >= COURSE_GALLERY_MAX_PHOTOS) throw new CourseGalleryFullError(COURSE_GALLERY_MAX_PHOTOS);
+};
+
+const COURSE_PHOTO_CONTENT_TYPE_BY_KIND: Record<'jpg' | 'png', string> = { jpg: 'image/jpeg', png: 'image/png' };
+
+export interface ValidatedCoursePhoto {
+  contentType: string;
+  extension: 'jpg' | 'png';
+}
+
+// Size, type, and the real dimensions, shared by the cover and the gallery:
+// only the floor each one checks against differs. No aspect-ratio check: the
+// cover's ratio is the picker's job (it crops to 3:4 before upload), and a
+// gallery photo keeps its own ratio outright, so the server never rejects
+// one on shape.
+const validateCoursePhotoShape = (bytes: Buffer): ValidatedCoursePhoto & { width: number; height: number } => {
+  const { maxUploadBytes } = loadConfig(process.env);
+  if (bytes.byteLength > maxUploadBytes) throw new CoursePhotoTooLargeError(maxUploadBytes);
+
+  const kind = sniffJpegOrPng(bytes, () => new UnsupportedCoursePhotoTypeError());
+  const { width, height } = readImageDimensions(bytes, kind, (malformedKind) => new MalformedCoursePhotoHeaderError(malformedKind));
+
+  return { contentType: COURSE_PHOTO_CONTENT_TYPE_BY_KIND[kind], extension: kind, width, height };
+};
+
+// The cover goes through the rabbi poster's own picker and shares its floor:
+// 900 by 1200, width and height, not a shorter-side rule.
+export const validateCourseCoverPhoto = (bytes: Buffer): ValidatedCoursePhoto => {
+  const { contentType, extension, width, height } = validateCoursePhotoShape(bytes);
+  if (width < COURSE_COVER_MIN_WIDTH || height < COURSE_COVER_MIN_HEIGHT) throw new CoursePhotoTooSmallError('cover', width, height);
+  return { contentType, extension };
+};
+
+// A gallery photo is never cropped, so it keeps the lighter shorter-side
+// floor instead of the cover's width-and-height one.
+export const validateCourseGalleryPhoto = (bytes: Buffer): ValidatedCoursePhoto => {
+  const { contentType, extension, width, height } = validateCoursePhotoShape(bytes);
+  if (Math.min(width, height) < COURSE_GALLERY_PHOTO_MIN_SIDE) throw new CoursePhotoTooSmallError('gallery', width, height);
+  return { contentType, extension };
+};
+
+// An unlocked read, cheap enough to run before `storage.put` so the common
+// case (a closed course) never uploads. The lock inside the write's own
+// transaction is what actually decides; this only short-circuits early.
+const readCourseForPrecheck = (id: string, ownerClause: SQL | undefined) =>
+  db
+    .select({
+      id: courses.id,
+      name: courses.name,
+      openingDate: courses.openingDate,
+      weeks: courses.weeks,
+      joinableAfterOpening: courses.joinableAfterOpening,
+      registrationClosedAt: courses.registrationClosedAt,
+      closeReason: courses.closeReason,
+    })
+    .from(courses)
+    .where(and(eq(courses.id, id), ownerClause))
+    .limit(1);
+
+// Deleting a course locks the row first (a concurrent `addCourseGalleryPhoto`
+// on the same id would otherwise still be free to insert a gallery row
+// between this function's own delete statements and hit a foreign-key
+// error instead of a clean 404), deletes its gallery rows and itself in one
+// transaction, then removes every object it owned. `ownerClause` is
+// `undefined` on the admin path, or `eq(courses.rabbiId, rabbiId)` on the
+// rabbi's own.
+export const removeCourse = async (id: string, ownerClause: SQL | undefined, log: FastifyBaseLogger): Promise<void> => {
+  const { coverKey, photoKeys } = await db.transaction(async (tx) => {
+    const locked = await lockCourseRow(tx, and(eq(courses.id, id), ownerClause));
+    if (!locked) throw new CourseNotFoundError(id);
+
+    const photoRows = await tx.select({ storageKey: coursePhotos.storageKey }).from(coursePhotos).where(eq(coursePhotos.courseId, id));
+    await tx.delete(coursePhotos).where(eq(coursePhotos.courseId, id));
+    await tx.delete(courses).where(eq(courses.id, id));
+    return { coverKey: locked.coverKey, photoKeys: photoRows.map((row) => row.storageKey) };
+  });
+
+  await Promise.all(
+    [coverKey, ...photoKeys].map(async (key) => {
+      try {
+        await storage.remove(key);
+      } catch (error) {
+        log.error({ err: error, courseId: id, key }, 'failed to delete storage object for removed course');
+      }
+    }),
+  );
+};
+
+export const replaceCourseCover = async (id: string, ownerClause: SQL | undefined, bytes: Buffer, log: FastifyBaseLogger): Promise<void> => {
+  const preCheckRows = await readCourseForPrecheck(id, ownerClause);
+  const preCheck = preCheckRows[0];
+  if (!preCheck) throw new CourseNotFoundError(id);
+  assertLockedCourseIsOpen(preCheck, new Date());
+
+  const { contentType, extension } = validateCourseCoverPhoto(bytes);
+  const key = `courses/${id}/cover-${nanoid()}.${extension}`;
+  await storage.put(key, bytes, contentType);
+
+  let previousKey: string | undefined;
+  try {
+    await db.transaction(async (tx) => {
+      const locked = await lockCourseRow(tx, and(eq(courses.id, id), ownerClause));
+      if (!locked) throw new CourseNotFoundError(id);
+      assertLockedCourseIsOpen(locked, new Date());
+      previousKey = locked.coverKey;
+      await tx.update(courses).set({ coverKey: key, updatedAt: new Date() }).where(eq(courses.id, id));
+    });
+  } catch (error) {
+    await storage.remove(key).catch((removeError) => log.error({ err: removeError, key }, 'failed to remove orphaned course cover after a refused replace'));
+    throw error;
+  }
+
+  if (previousKey) {
+    storage.remove(previousKey).catch((error) => log.error({ err: error, courseId: id, key: previousKey }, 'failed to delete previous course cover'));
+  }
+};
+
+export const addCourseGalleryPhoto = async (id: string, ownerClause: SQL | undefined, bytes: Buffer, log: FastifyBaseLogger): Promise<void> => {
+  const [preCheckRows, preCountRows] = await Promise.all([
+    readCourseForPrecheck(id, ownerClause),
+    db.select({ count: sql<number>`count(*)::int` }).from(coursePhotos).where(eq(coursePhotos.courseId, id)),
+  ]);
+  const preCheck = preCheckRows[0];
+  if (!preCheck) throw new CourseNotFoundError(id);
+  assertLockedCourseIsOpen(preCheck, new Date());
+  assertGalleryHasRoom(preCountRows[0]?.count ?? 0);
+
+  const { contentType, extension } = validateCourseGalleryPhoto(bytes);
+  const key = `courses/${id}/gallery-${nanoid()}.${extension}`;
+  await storage.put(key, bytes, contentType);
+
+  try {
+    await db.transaction(async (tx) => {
+      const locked = await lockCourseRow(tx, and(eq(courses.id, id), ownerClause));
+      if (!locked) throw new CourseNotFoundError(id);
+      assertLockedCourseIsOpen(locked, new Date());
+
+      const countRows = await tx.select({ count: sql<number>`count(*)::int` }).from(coursePhotos).where(eq(coursePhotos.courseId, id));
+      assertGalleryHasRoom(countRows[0]?.count ?? 0);
+
+      const maxPositionRows = await tx.select({ maxPosition: sql<number | null>`max(${coursePhotos.position})` }).from(coursePhotos).where(eq(coursePhotos.courseId, id));
+      const nextPosition = (maxPositionRows[0]?.maxPosition ?? -1) + 1;
+      await tx.insert(coursePhotos).values({ id: nanoid(), courseId: id, storageKey: key, position: nextPosition });
+    });
+  } catch (error) {
+    await storage.remove(key).catch((removeError) => log.error({ err: removeError, key }, 'failed to remove orphaned course gallery photo after a refused add'));
+    throw error;
+  }
+};
+
+export const removeCourseGalleryPhoto = async (id: string, ownerClause: SQL | undefined, photoId: string, log: FastifyBaseLogger): Promise<void> => {
+  const removedKey = await db.transaction(async (tx) => {
+    const locked = await lockCourseRow(tx, and(eq(courses.id, id), ownerClause));
+    if (!locked) throw new CourseNotFoundError(id);
+    assertLockedCourseIsOpen(locked, new Date());
+
+    const photoRows = await tx.select({ storageKey: coursePhotos.storageKey }).from(coursePhotos).where(and(eq(coursePhotos.id, photoId), eq(coursePhotos.courseId, id))).limit(1);
+    const photoRow = photoRows[0];
+    if (!photoRow) throw new CoursePhotoNotFoundError(photoId);
+
+    await tx.delete(coursePhotos).where(eq(coursePhotos.id, photoId));
+    return photoRow.storageKey;
+  });
+
+  try {
+    await storage.remove(removedKey);
+  } catch (error) {
+    log.error({ err: error, courseId: id, photoId }, 'failed to delete course gallery photo object');
+  }
+};
+
+export const setCourseClosed = async (id: string, ownerClause: SQL | undefined, reason: CloseReason): Promise<void> => {
+  await db.transaction(async (tx) => {
+    const locked = await lockCourseRow(tx, and(eq(courses.id, id), ownerClause));
+    if (!locked) throw new CourseNotFoundError(id);
+    assertLockedCourseIsOpen(locked, new Date());
+
+    await tx
+      .update(courses)
+      .set({ registrationClosedAt: new Date(), closeReason: reason, updatedAt: new Date() })
+      .where(and(eq(courses.id, id), isNull(courses.registrationClosedAt)));
+  });
+};
+
+const extensionFromKey = (key: string): string => key.split('.').pop() ?? 'jpg';
+
+// Rebuilds the create-shaped venue input from an already-resolved read
+// record: a deactivated place has already fallen back to `kind: 'address'`
+// with its last-known name and street (`toVenuePanel`'s own fallback), so
+// duplicating it naturally copies that address, exactly what an edit and
+// save of the source course would also produce.
+const toVenueInputFromPanel = (venue: LessonVenuePanel): LessonVenueInputSchema =>
+  venue.kind === 'place'
+    ? { kind: 'place', placeId: venue.placeId }
+    : { kind: 'address', name: venue.name, street: venue.street, floor: venue.floor, cityCode: venue.cityCode };
+
+export interface DuplicateCourseTeacherColumns {
+  rabbiId: string | null;
+  teacherName: string | null;
+}
+
+// The whole duplicate flow: the closed and future-date checks, the
+// reference checks, copying the cover and every gallery photo as new
+// objects under `courses/<newId>/`, and the insert, all in one place so the
+// rabbi panel and the admin panel can never drift apart on what "duplicate"
+// means. `teacher` is the caller's own choice (rabbi: always itself; admin:
+// the source's own teacher, since duplicate never reassigns one), passed in
+// rather than derived here, so a future caller can differ deliberately.
+// Returns the new course's id; the caller re-reads it through its own
+// scoped getter, matching how `create` and `update` already read back.
+export const duplicateCourse = async (
+  source: CourseWriteRecord,
+  teacher: DuplicateCourseTeacherColumns,
+  input: DuplicateCourseInput,
+  onUnknownCity: (cityCode: number) => Error,
+  log: FastifyBaseLogger,
+): Promise<string> => {
+  if (source.lifecycle.status !== 'closed') throw new CourseNotClosedError(source.name);
+
+  const today = todayInIsrael(new Date());
+  if (compareIsoDates(input.openingDate, today) <= 0) throw new OpeningDateNotFutureError(input.openingDate);
+
+  const venueInput = toVenueInputFromPanel(source.venue);
+  await verifyCourseReferences({
+    rabbiId: teacher.rabbiId ?? undefined,
+    cityCode: venueInput.kind === 'address' ? venueInput.cityCode : undefined,
+    audience: source.audience,
+    onUnknownCity,
+  });
+
+  const newId = nanoid();
+  const newCoverKey = `courses/${newId}/cover-${nanoid()}.${extensionFromKey(source.coverKey)}`;
+  const photoAssignments = source.photos.map((photo) => ({
+    id: nanoid(),
+    sourceKey: photo.storageKey,
+    newKey: `courses/${newId}/gallery-${nanoid()}.${extensionFromKey(photo.storageKey)}`,
+  }));
+
+  const copyJobs = [{ sourceKey: source.coverKey, newKey: newCoverKey }, ...photoAssignments.map((assignment) => ({ sourceKey: assignment.sourceKey, newKey: assignment.newKey }))];
+  const copyResults = await Promise.allSettled(copyJobs.map((job) => storage.copy(job.sourceKey, job.newKey)));
+
+  const firstFailure = copyResults.find((result): result is PromiseRejectedResult => result.status === 'rejected');
+  if (firstFailure) {
+    const succeededKeys = copyJobs.filter((_job, index) => copyResults[index]?.status === 'fulfilled').map((job) => job.newKey);
+    await Promise.all(
+      succeededKeys.map((key) => storage.remove(key).catch((removeError) => log.error({ err: removeError, key }, 'failed to remove copied course object after a partly failed duplicate'))),
+    );
+    throw firstFailure.reason;
+  }
+
+  try {
+    await db.transaction(async (tx) => {
+      await tx.insert(courses).values({
+        id: newId,
+        rabbiId: teacher.rabbiId,
+        teacherName: teacher.teacherName,
+        coverKey: newCoverKey,
+        registrationClosedAt: null,
+        closeReason: null,
+        ...(await courseColumnsFrom(
+          {
+            name: source.name,
+            cycle: input.cycle,
+            description: source.description,
+            openingDate: input.openingDate,
+            weeks: source.weeks,
+            sessions: source.sessions,
+            hours: source.hours,
+            venue: venueInput,
+            audience: source.audience,
+            topic: source.topic,
+            joinableAfterOpening: source.joinableAfterOpening,
+            contactPhone: source.contactPhone,
+            priceShekels: source.priceShekels,
+          },
+          { executor: tx },
+        )),
+      });
+
+      if (photoAssignments.length) {
+        await tx.insert(coursePhotos).values(photoAssignments.map((assignment, index) => ({ id: assignment.id, courseId: newId, storageKey: assignment.newKey, position: index })));
+      }
+    });
+  } catch (error) {
+    await Promise.all(
+      copyJobs.map((job) => storage.remove(job.newKey).catch((removeError) => log.error({ err: removeError, key: job.newKey }, 'failed to remove copied course object after a refused duplicate'))),
+    );
+    throw error;
+  }
+
+  return newId;
 };

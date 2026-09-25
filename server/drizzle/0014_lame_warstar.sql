@@ -41,7 +41,9 @@ CREATE TABLE "courses" (
 	CONSTRAINT "courses_venue_no_city_code_on_place" CHECK (("courses"."place_id" IS NOT NULL AND "courses"."city_code" IS NULL) OR ("courses"."place_id" IS NULL AND "courses"."city_code" IS NOT NULL)),
 	CONSTRAINT "courses_topic_shape" CHECK (("courses"."topic" IS NULL AND "courses"."topic_other" IS NULL)
        OR ("courses"."topic" IS NOT NULL AND "courses"."topic" <> 'other' AND "courses"."topic_other" IS NULL)
-       OR ("courses"."topic" = 'other' AND "courses"."topic_other" IS NOT NULL))
+       OR ("courses"."topic" = 'other' AND "courses"."topic_other" IS NOT NULL)),
+	CONSTRAINT "courses_close_shape" CHECK (("courses"."registration_closed_at" IS NULL AND "courses"."close_reason" IS NULL)
+       OR ("courses"."registration_closed_at" IS NOT NULL AND "courses"."close_reason" IN ('closed', 'full')))
 );
 --> statement-breakpoint
 ALTER TABLE "course_photos" ADD CONSTRAINT "course_photos_course_id_courses_id_fk" FOREIGN KEY ("course_id") REFERENCES "public"."courses"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint

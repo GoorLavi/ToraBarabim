@@ -1,24 +1,23 @@
 import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
 
-import type { CityDirectoryResponse, LessonOccurrence, LessonSearchResponse } from '@torabarabim/common';
+import type { CityDirectoryResponse, LessonOccurrence, LessonSearchResponse, RabbiHonorific } from '@torabarabim/common';
 import type { FastifyInstance } from 'fastify';
 
 import { HEALTH_RENDER_PROBE_PATH } from '../src/api/health/consts';
 import { buildRequestBody } from '../src/plugins/ssr';
-// `listForSitemap` is still landing on the server side (build tracker #2, in
-// progress): the sitemap case below is written against the plan's shape and
-// will not pass until it exists (see sitemap.server.ts's own comment).
 import * as courseService from '../src/service/course/course';
 import { addDays, nextDateOnWeekday, todayInIsrael } from '../src/service/lesson/israel-time';
 import { toAreaSlug } from '../src/service/shared/consts';
 import { toSlug } from '../src/service/shared/slug';
 import storage from '../src/storage/storage';
 
-// Read-only: the one constant this suite needs from the client workspace, to
-// assert a document's canonical against the same origin the route modules
-// build it from rather than a second, hand-typed copy of the domain.
+// Read-only: the two things this suite needs from the client workspace, so
+// its own assertions run the site's real conversion logic (the origin a
+// document's canonical is built from, the honorific a rabbi's name is
+// composed with) rather than a second, hand-typed copy of the domain.
 import { SITE_ORIGIN } from '../../client/consts';
+import { rabbiDisplayName } from '../../client/src/helpers';
 import { assertClientBuilt, assertDatabaseReachable, buildApp, rawClient } from './app-harness';
 
 const extractTitle = (html: string): string => {
@@ -405,20 +404,18 @@ describe('SSR rendering seam', () => {
     });
   });
 
-  // The 5 seam cases from the plan, section 8. The public course routes are
-  // not registered in `buildApp` (that is tora-server's own row): every case
-  // here exercises a document route or the sitemap resource route, both of
-  // which already call `courseService` in-process, the same way the rabbi
-  // and place document routes call their own services without the JSON API
-  // mounted. Fixtures are inserted with `rawClient` and removed in `after`,
-  // mirroring `course-api.test.ts`'s own approach, since this suite has no
-  // write route to create them through.
+  // The 5 seam cases from the plan, section 8: every case here exercises a
+  // document route or the sitemap resource route, which call
+  // `courseService` in-process, the same way the rabbi and place document
+  // routes call their own services. Fixtures are inserted with `rawClient`
+  // and removed in `after`, mirroring `course-api.test.ts`'s own approach,
+  // since this suite has no write route to create them through.
   describe('the course page and its onward links', () => {
     const today = todayInIsrael(new Date());
 
     let rabbiId: string;
     let rabbiName: string;
-    let rabbiHonorific: string;
+    let rabbiHonorific: RabbiHonorific;
     let cityCode: number;
 
     const linkedCourseId = 'ssr-test-course-linked';
@@ -452,7 +449,7 @@ describe('SSR rendering seam', () => {
       assert.ok(cityRow, 'expected at least one seeded city to address the test courses in');
       rabbiId = rabbiRow.id as string;
       rabbiName = rabbiRow.name as string;
-      rabbiHonorific = rabbiRow.honorific as string;
+      rabbiHonorific = rabbiRow.honorific as RabbiHonorific;
       cityCode = cityRow.code as number;
 
       await Promise.all([
@@ -522,7 +519,7 @@ describe('SSR rendering seam', () => {
       assert.equal(linkedJsonLd['image'], storage.publicUrl(detail.coverKey));
       const linkedProvider = linkedJsonLd['provider'] as Record<string, unknown> | undefined;
       assert.equal(linkedProvider?.['@type'], 'Person');
-      assert.equal(linkedProvider?.['name'], `${rabbiHonorific === 'rav' ? 'הרב' : 'הרבנית'} ${rabbiName}`);
+      assert.equal(linkedProvider?.['name'], rabbiDisplayName({ name: rabbiName, honorific: rabbiHonorific }));
 
       const unlinkedDetail = await courseService.getPublicById(unlinkedCourseId, new Date());
       const unlinkedPath = `/courses/${encodeURIComponent(unlinkedDetail.id)}/${encodeURIComponent(unlinkedDetail.slug)}`;
@@ -573,9 +570,7 @@ describe('SSR rendering seam', () => {
       assert.doesNotMatch(res.body, new RegExp(`<loc>[^<]*${escapeForRegExp(closedPath)}</loc>`));
     });
 
-    // Test 5 (plan, section 8). Goes green only once the rabbi's own page
-    // renders a course rail from `RabbiDetailResponse.courses` (tora-client,
-    // build tracker #5).
+    // Test 5 (plan, section 8).
     test("a rav's rendered page links to his open course's canonical path", async () => {
       const detail = await courseService.getPublicById(linkedCourseId, new Date());
       const courseHref = `/courses/${encodeURIComponent(detail.id)}/${encodeURIComponent(detail.slug)}`;

@@ -19,6 +19,9 @@ import {
   COURSE_WEEKS_MAX,
   COURSE_WEEKS_MIN,
 } from '../course/consts';
+// Type-only: erased at compile time, so this does not form a real runtime
+// cycle with `course-write.ts`'s own (type-only) import from this file.
+import type { CourseWriteRecord } from './course-write';
 
 export interface AudienceScopedLesson {
   audience: LessonAudience;
@@ -138,11 +141,10 @@ export const courseFieldsSchema = z.object({
   priceShekels: z
     .number()
     .int()
-    .min(COURSE_PRICE_MIN, 'המחיר חייב להיות לפחות 1 ₪. כדי לא להציג מחיר, משאירים ריק.')
+    .min(COURSE_PRICE_MIN, `המחיר חייב להיות לפחות ${COURSE_PRICE_MIN} ₪. כדי לא להציג מחיר, משאירים ריק.`)
     .max(COURSE_PRICE_MAX)
     .optional(),
 });
-export type CourseFieldsInput = z.infer<typeof courseFieldsSchema>;
 
 // Shared by both panels' `POST .../:id/duplicate`: the new opening date and
 // an optional cycle number for the copy.
@@ -151,3 +153,23 @@ export const duplicateCourseSchema = z.object({
   cycle: z.number().int().min(COURSE_CYCLE_MIN).max(COURSE_CYCLE_MAX).optional(),
 });
 export type DuplicateCourseInput = z.infer<typeof duplicateCourseSchema>;
+
+// Both panels' own course routes (`/v1/rabbi/courses/:id`,
+// `/v1/admin/courses/:id`) share this one param shape, and the photo routes
+// extend it with the same `photoId`, so neither route file writes its own
+// inline `.extend(...)`.
+export const panelCourseIdParamSchema = z.object({ id: z.string().trim().min(1) });
+export type PanelCourseIdParam = z.infer<typeof panelCourseIdParamSchema>;
+
+export const panelCourseIdWithPhotoIdParamSchema = panelCourseIdParamSchema.extend({ photoId: z.string().trim().min(1) });
+export type PanelCourseIdWithPhotoIdParam = z.infer<typeof panelCourseIdWithPhotoIdParamSchema>;
+
+// The one list-result shape every course list returns, on both panels:
+// `rabbi-course.list`, `admin-course.list`, and the convertor that turns
+// either into the wire `CourseListResponse`.
+export interface CourseListResult {
+  items: CourseWriteRecord[];
+  page: number;
+  pageSize: number;
+  total: number;
+}

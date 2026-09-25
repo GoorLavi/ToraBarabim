@@ -1,18 +1,10 @@
 import type { FastifyInstance, FastifyReply } from 'fastify';
 import { ZodError } from 'zod';
 
-import { readCourseMultipartCreate } from '../../course-multipart';
 import { loadConfig } from '../../../config';
 import { toCourseListResponse, toCourseResponse } from '../../../convertors/panel-course';
 import { requireRabbiAuth } from '../../../plugins/rabbi-guard';
-import {
-  courseClosedMessage,
-  courseNotClosedMessage,
-  courseRabbanitAudienceMessage,
-  coursePhotoTooSmallMessage,
-  courseWouldBeClosedMessage,
-  openingDateNotFutureMessage,
-} from '../../../service/course/consts';
+import { COURSE_COVER_MIN_HEIGHT, COURSE_COVER_MIN_WIDTH, COURSE_GALLERY_PHOTO_MIN_SIDE } from '../../../service/course/consts';
 import {
   CourseClosedError,
   CourseGalleryFullError,
@@ -22,22 +14,24 @@ import {
   CoursePhotoTooLargeError,
   CoursePhotoTooSmallError,
   CourseWouldBeClosedError,
+  CoverRequiredError,
+  MalformedCourseFieldsError,
   MalformedCoursePhotoHeaderError,
   OpeningDateNotFutureError,
   ReferencedPlaceNotFoundError,
   UnknownCityError,
   UnsupportedCoursePhotoTypeError,
 } from '../../../service/course/errors';
-import { courseIdParamSchema, createRabbiCourseSchema, rabbiCourseListQuerySchema, updateRabbiCourseSchema } from '../../../service/rabbi-course/models';
+import { createRabbiCourseSchema, rabbiCourseListQuerySchema, updateRabbiCourseSchema } from '../../../service/rabbi-course/models';
 import * as rabbiCourseService from '../../../service/rabbi-course/rabbi-course';
-import { RabbanitAudienceMustBeWomenError } from '../../../service/shared/errors';
-import { duplicateCourseSchema } from '../../../service/shared/models';
 import { photoTooLargeMessage } from '../../../service/shared/consts';
+import { RabbanitAudienceMustBeWomenError } from '../../../service/shared/errors';
+import { duplicateCourseSchema, panelCourseIdParamSchema, panelCourseIdWithPhotoIdParamSchema } from '../../../service/shared/models';
+import { readCourseMultipartCreate } from '../../course-multipart';
 
 const GENERIC_ERROR_MESSAGE = 'אירעה שגיאה בשרת, נסו שוב מאוחר יותר';
 const COURSE_NOT_FOUND_MESSAGE = 'הקורס המבוקש לא נמצא';
-const COVER_REQUIRED_MESSAGE = 'לא צורף קובץ תמונה ראשית';
-const MALFORMED_COURSE_JSON_MESSAGE = 'חלק ה-JSON של הקורס אינו תקין';
+const MALFORMED_COURSE_JSON_MESSAGE = 'חלק ה-JSON של הקורס אינו תקין או חסר';
 
 const MULTIPART_FILE_TOO_LARGE_CODE = 'FST_REQ_FILE_TOO_LARGE';
 const MULTIPART_INVALID_CONTENT_TYPE_CODE = 'FST_INVALID_MULTIPART_CONTENT_TYPE';
@@ -45,9 +39,20 @@ const hasCode = (error: unknown, code: string): boolean => typeof error === 'obj
 const isMultipartFileTooLargeError = (error: unknown): boolean => hasCode(error, MULTIPART_FILE_TOO_LARGE_CODE);
 const isInvalidMultipartContentTypeError = (error: unknown): boolean => hasCode(error, MULTIPART_INVALID_CONTENT_TYPE_CODE);
 
+// Every course-specific error below carries `code` and a structured
+// `details` object; `message` is the developer-facing English line off the
+// error itself (never shown to a user: the client builds its own Hebrew
+// from `code` and `details`, per the house rule that the client never
+// renders a server message). Every other error here (unknown city, unknown
+// place, not found, malformed request) is the shared, cross-domain shape
+// every route in this codebase already uses, Hebrew message included.
 const handleError = (reply: FastifyReply, error: unknown, routeLabel: string): FastifyReply => {
   if (error instanceof ZodError) {
     return reply.status(400).send({ error: 'invalid_request', message: 'הבקשה אינה תקינה', details: error.flatten() });
+  }
+
+  if (error instanceof MalformedCourseFieldsError) {
+    return reply.status(400).send({ error: 'invalid_request', message: MALFORMED_COURSE_JSON_MESSAGE });
   }
 
   if (error instanceof CourseNotFoundError || error instanceof CoursePhotoNotFoundError) {
@@ -63,35 +68,43 @@ const handleError = (reply: FastifyReply, error: unknown, routeLabel: string): F
   }
 
   if (error instanceof RabbanitAudienceMustBeWomenError) {
-    return reply.status(400).send({ error: 'rabbanit_audience_must_be_women', message: courseRabbanitAudienceMessage(error.audience) });
+    return reply.status(400).send({ error: 'rabbanit_audience_must_be_women', message: error.message, details: { audience: error.audience } });
   }
 
   if (error instanceof CourseWouldBeClosedError) {
-    return reply.status(400).send({ error: 'course_would_be_closed', message: courseWouldBeClosedMessage(error.openingDate) });
+    return reply.status(400).send({ error: 'course_would_be_closed', message: error.message, details: { openingDate: error.openingDate } });
   }
 
   if (error instanceof OpeningDateNotFutureError) {
-    return reply.status(400).send({ error: 'opening_date_not_future', message: openingDateNotFutureMessage(error.openingDate) });
+    return reply.status(400).send({ error: 'opening_date_not_future', message: error.message, details: { openingDate: error.openingDate } });
   }
 
   if (error instanceof CoursePhotoTooSmallError) {
-    return reply.status(400).send({ error: 'photo_too_small', message: coursePhotoTooSmallMessage(error.shortestSide) });
+    const details =
+      error.kind === 'cover'
+        ? { kind: 'cover' as const, measuredWidth: error.width, measuredHeight: error.height, minWidth: COURSE_COVER_MIN_WIDTH, minHeight: COURSE_COVER_MIN_HEIGHT }
+        : { kind: 'gallery' as const, measuredShorterSide: Math.min(error.width, error.height), minimum: COURSE_GALLERY_PHOTO_MIN_SIDE };
+    return reply.status(400).send({ error: 'photo_too_small', message: error.message, details });
   }
 
   if (error instanceof UnsupportedCoursePhotoTypeError || error instanceof MalformedCoursePhotoHeaderError) {
-    return reply.status(400).send({ error: 'unsupported_file_type', message: 'אפשר להעלות קובץ JPG או PNG בלבד' });
+    return reply.status(400).send({ error: 'unsupported_file_type', message: error.message, details: {} });
+  }
+
+  if (error instanceof CoverRequiredError) {
+    return reply.status(400).send({ error: 'cover_required', message: error.message, details: {} });
   }
 
   if (error instanceof CourseClosedError) {
-    return reply.status(409).send({ error: 'course_closed', message: courseClosedMessage(error.courseName, error.reason) });
+    return reply.status(409).send({ error: 'course_closed', message: error.message, details: { courseName: error.courseName, reason: error.reason } });
   }
 
   if (error instanceof CourseNotClosedError) {
-    return reply.status(409).send({ error: 'course_not_closed', message: courseNotClosedMessage(error.courseName) });
+    return reply.status(409).send({ error: 'course_not_closed', message: error.message, details: { courseName: error.courseName } });
   }
 
   if (error instanceof CourseGalleryFullError) {
-    return reply.status(409).send({ error: 'course_photo_limit', message: `אפשר להעלות עד ${error.max} תמונות לגלריה` });
+    return reply.status(409).send({ error: 'course_photo_limit', message: error.message, details: { max: error.max } });
   }
 
   if (error instanceof CoursePhotoTooLargeError) {
@@ -125,7 +138,7 @@ export const registerRabbiCourseRoutes = async (app: FastifyInstance): Promise<v
   app.get('/v1/rabbi/courses/:id', { preHandler: requireRabbiAuth }, async (request, reply) => {
     try {
       if (!request.rabbiUser) return reply;
-      const { id } = courseIdParamSchema.parse(request.params);
+      const { id } = panelCourseIdParamSchema.parse(request.params);
       const record = await rabbiCourseService.getOwnById(request.rabbiUser.rabbiId, id);
       return reply.send(toCourseResponse(record));
     } catch (error) {
@@ -138,24 +151,9 @@ export const registerRabbiCourseRoutes = async (app: FastifyInstance): Promise<v
       if (!request.rabbiUser) return reply;
 
       const { maxUploadBytes } = loadConfig(process.env);
-      const { fieldsJson, cover } = await readCourseMultipartCreate(request, maxUploadBytes);
+      const { fields, cover } = await readCourseMultipartCreate(request, maxUploadBytes, createRabbiCourseSchema);
 
-      if (fieldsJson === undefined) {
-        return reply.status(400).send({ error: 'invalid_request', message: MALFORMED_COURSE_JSON_MESSAGE });
-      }
-      let parsedJson: unknown;
-      try {
-        parsedJson = JSON.parse(fieldsJson);
-      } catch {
-        return reply.status(400).send({ error: 'invalid_request', message: MALFORMED_COURSE_JSON_MESSAGE });
-      }
-      const body = createRabbiCourseSchema.parse(parsedJson);
-
-      if (!cover) {
-        return reply.status(400).send({ error: 'cover_required', message: COVER_REQUIRED_MESSAGE });
-      }
-
-      const record = await rabbiCourseService.create(request.rabbiUser.rabbiId, body, cover, request.log);
+      const record = await rabbiCourseService.create(request.rabbiUser.rabbiId, fields, cover, request.log);
       return reply.status(201).send(toCourseResponse(record));
     } catch (error) {
       return handleError(reply, error, 'POST /v1/rabbi/courses');
@@ -165,7 +163,7 @@ export const registerRabbiCourseRoutes = async (app: FastifyInstance): Promise<v
   app.patch('/v1/rabbi/courses/:id', { preHandler: requireRabbiAuth }, async (request, reply) => {
     try {
       if (!request.rabbiUser) return reply;
-      const { id } = courseIdParamSchema.parse(request.params);
+      const { id } = panelCourseIdParamSchema.parse(request.params);
       const body = updateRabbiCourseSchema.parse(request.body);
       const record = await rabbiCourseService.update(request.rabbiUser.rabbiId, id, body);
       return reply.send(toCourseResponse(record));
@@ -177,11 +175,11 @@ export const registerRabbiCourseRoutes = async (app: FastifyInstance): Promise<v
   app.post('/v1/rabbi/courses/:id/cover', { preHandler: requireRabbiAuth }, async (request, reply) => {
     try {
       if (!request.rabbiUser) return reply;
-      const { id } = courseIdParamSchema.parse(request.params);
+      const { id } = panelCourseIdParamSchema.parse(request.params);
 
       const config = loadConfig(process.env);
       const file = await request.file({ limits: { fileSize: config.maxUploadBytes } });
-      if (!file) return reply.status(400).send({ error: 'invalid_request', message: COVER_REQUIRED_MESSAGE });
+      if (!file) return reply.status(400).send({ error: 'invalid_request', message: 'יש להעלות תמונה ראשית' });
       const bytes = await file.toBuffer();
 
       const record = await rabbiCourseService.replaceCover(request.rabbiUser.rabbiId, id, bytes, request.log);
@@ -194,7 +192,7 @@ export const registerRabbiCourseRoutes = async (app: FastifyInstance): Promise<v
   app.post('/v1/rabbi/courses/:id/photos', { preHandler: requireRabbiAuth }, async (request, reply) => {
     try {
       if (!request.rabbiUser) return reply;
-      const { id } = courseIdParamSchema.parse(request.params);
+      const { id } = panelCourseIdParamSchema.parse(request.params);
 
       const config = loadConfig(process.env);
       const file = await request.file({ limits: { fileSize: config.maxUploadBytes } });
@@ -211,7 +209,7 @@ export const registerRabbiCourseRoutes = async (app: FastifyInstance): Promise<v
   app.delete('/v1/rabbi/courses/:id/photos/:photoId', { preHandler: requireRabbiAuth }, async (request, reply) => {
     try {
       if (!request.rabbiUser) return reply;
-      const { id, photoId } = courseIdParamSchema.extend({ photoId: courseIdParamSchema.shape.id }).parse(request.params);
+      const { id, photoId } = panelCourseIdWithPhotoIdParamSchema.parse(request.params);
       await rabbiCourseService.removePhoto(request.rabbiUser.rabbiId, id, photoId, request.log);
       return reply.status(204).send();
     } catch (error) {
@@ -222,7 +220,7 @@ export const registerRabbiCourseRoutes = async (app: FastifyInstance): Promise<v
   app.post('/v1/rabbi/courses/:id/close', { preHandler: requireRabbiAuth }, async (request, reply) => {
     try {
       if (!request.rabbiUser) return reply;
-      const { id } = courseIdParamSchema.parse(request.params);
+      const { id } = panelCourseIdParamSchema.parse(request.params);
       const record = await rabbiCourseService.close(request.rabbiUser.rabbiId, id);
       return reply.send(toCourseResponse(record));
     } catch (error) {
@@ -233,7 +231,7 @@ export const registerRabbiCourseRoutes = async (app: FastifyInstance): Promise<v
   app.post('/v1/rabbi/courses/:id/full', { preHandler: requireRabbiAuth }, async (request, reply) => {
     try {
       if (!request.rabbiUser) return reply;
-      const { id } = courseIdParamSchema.parse(request.params);
+      const { id } = panelCourseIdParamSchema.parse(request.params);
       const record = await rabbiCourseService.markFull(request.rabbiUser.rabbiId, id);
       return reply.send(toCourseResponse(record));
     } catch (error) {
@@ -244,7 +242,7 @@ export const registerRabbiCourseRoutes = async (app: FastifyInstance): Promise<v
   app.post('/v1/rabbi/courses/:id/duplicate', { preHandler: requireRabbiAuth }, async (request, reply) => {
     try {
       if (!request.rabbiUser) return reply;
-      const { id } = courseIdParamSchema.parse(request.params);
+      const { id } = panelCourseIdParamSchema.parse(request.params);
       const body = duplicateCourseSchema.parse(request.body);
       const record = await rabbiCourseService.duplicate(request.rabbiUser.rabbiId, id, body, request.log);
       return reply.status(201).send(toCourseResponse(record));
@@ -256,7 +254,7 @@ export const registerRabbiCourseRoutes = async (app: FastifyInstance): Promise<v
   app.delete('/v1/rabbi/courses/:id', { preHandler: requireRabbiAuth }, async (request, reply) => {
     try {
       if (!request.rabbiUser) return reply;
-      const { id } = courseIdParamSchema.parse(request.params);
+      const { id } = panelCourseIdParamSchema.parse(request.params);
       await rabbiCourseService.remove(request.rabbiUser.rabbiId, id, request.log);
       return reply.status(204).send();
     } catch (error) {

@@ -1,14 +1,13 @@
 import type { FastifyInstance, FastifyReply } from 'fastify';
-import { z, ZodError } from 'zod';
+import { ZodError } from 'zod';
 
 import { toCourseDetailResponse } from '../../convertors/course';
 import * as courseService from '../../service/course/course';
 import { CourseNotFoundError } from '../../service/course/errors';
+import { coursePageParamSchema } from '../../service/course/models';
 
 const GENERIC_ERROR_MESSAGE = 'אירעה שגיאה בשרת, נסו שוב מאוחר יותר';
 const COURSE_NOT_FOUND_MESSAGE = 'הקורס המבוקש לא נמצא';
-
-const courseIdParamSchema = z.object({ courseId: z.string().trim().min(1) });
 
 const handleError = (reply: FastifyReply, error: unknown, routeLabel: string): FastifyReply => {
   if (error instanceof ZodError) {
@@ -30,7 +29,7 @@ const handleError = (reply: FastifyReply, error: unknown, routeLabel: string): F
 export const registerCourseRoutes = async (app: FastifyInstance): Promise<void> => {
   app.get('/v1/courses/:courseId', async (request, reply) => {
     try {
-      const { courseId } = courseIdParamSchema.parse(request.params);
+      const { courseId } = coursePageParamSchema.parse(request.params);
       const record = await courseService.getPublicById(courseId, new Date());
       return reply.send(toCourseDetailResponse(record));
     } catch (error) {

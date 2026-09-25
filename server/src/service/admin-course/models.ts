@@ -2,12 +2,6 @@ import { z } from 'zod';
 
 import { COURSE_TEACHER_NAME_MAX_LENGTH, DEFAULT_COURSE_PAGE, DEFAULT_COURSE_PAGE_SIZE, MAX_COURSE_PAGE_SIZE } from '../course/consts';
 import { courseFieldsSchema } from '../shared/models';
-import type { CourseWriteRecord } from '../shared/course-write';
-
-export const courseIdParamSchema = z.object({
-  id: z.string().trim().min(1),
-});
-export type CourseIdParam = z.infer<typeof courseIdParamSchema>;
 
 // The three buckets the approved filter shows, not the lifecycle's own
 // three-value status: `open` covers both `notOpen` and `open` ("ההרשמה
@@ -42,10 +36,3 @@ export const createCourseSchema = courseFieldsSchema.extend({ teacher: courseTea
 export type CreateCourseInput = z.infer<typeof createCourseSchema>;
 export const updateCourseSchema = createCourseSchema;
 export type UpdateCourseInput = z.infer<typeof updateCourseSchema>;
-
-export interface CourseListResult {
-  items: CourseWriteRecord[];
-  page: number;
-  pageSize: number;
-  total: number;
-}

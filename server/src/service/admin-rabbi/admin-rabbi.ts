@@ -99,13 +99,8 @@ export const getDeletePreview = async (id: string): Promise<DeleteRabbiPreviewRe
 };
 
 // Deleting a rabbi destroys that rabbi's lessons, those lessons' exceptions,
-// and any other lesson's exception that named this rabbi as a substitute,
-// all in one transaction. The human explicitly chose cascading delete over
-// blocking it; `confirm` on the route is the only thing standing in front
-// of this data loss.
-// Deleting a rabbi destroys that rabbi's lessons, those lessons' exceptions,
 // any other lesson's exception that named this rabbi as a substitute, and
-// now his courses and their gallery photo rows, all in one transaction. The
+// his courses and their gallery photo rows, all in one transaction. The
 // human explicitly chose cascading delete over blocking it; `confirm` on
 // the route is the only thing standing in front of this data loss.
 export const remove = async (id: string, confirm: boolean, log: FastifyBaseLogger): Promise<void> => {
