@@ -11,20 +11,11 @@ import {
 } from '~/consts';
 import { courseResponseFixture } from '~/courseFixture';
 import { panelShellDecorator } from '~/storyDecorators';
-import { placeholderPhoto } from '~/storyMocks';
+import { isoDateOffsetByDays, placeholderPhoto } from '~/storyMocks';
 
 import { errorResolver, http, jsonResolver, loadingResolver } from '../../../.storybook/apiMocks';
 import * as consts from './consts';
 import { CourseViewPage } from './CourseViewPage';
-
-// Computed against today, not a fixed date that will quietly move to the
-// other side of it (the "view on site" link only shows while `leavesListsOn`
-// is still ahead of today, `~/helpers.ts`'s own `courseStillListed`).
-const isoDateOffsetByDays = (days: number): string => {
-  const date = new Date();
-  date.setDate(date.getDate() + days);
-  return date.toISOString().slice(0, 10);
-};
 
 const openCourse = courseResponseFixture({
   id: 'course-1',
@@ -36,15 +27,18 @@ const openCourse = courseResponseFixture({
   ],
 });
 const unlinkedCourse = courseResponseFixture({ id: 'course-2', name: 'מבוא לתפילה', teacher: { kind: 'named', name: 'הרב פלוני אלמוני' } });
+// `closedOn` a week ahead of `leavesListsOn`, the course's own real order
+// (design gate round 3 finding: the two had drifted to read as closing
+// after it already left the lists).
 const closedCourse = courseResponseFixture({
   id: 'course-3',
   name: 'הלכות שבת מעשיות',
-  lifecycle: { status: 'closed', reason: 'closed', closedOn: '2026-10-01', leavesListsOn: isoDateOffsetByDays(7) },
+  lifecycle: { status: 'closed', reason: 'closed', closedOn: isoDateOffsetByDays(0), leavesListsOn: isoDateOffsetByDays(7) },
 });
 const closedCourseNoLongerListed = courseResponseFixture({
   id: 'course-3-delisted',
   name: 'הלכות שבת מעשיות',
-  lifecycle: { status: 'closed', reason: 'closed', closedOn: '2026-10-01', leavesListsOn: isoDateOffsetByDays(-7) },
+  lifecycle: { status: 'closed', reason: 'closed', closedOn: isoDateOffsetByDays(-14), leavesListsOn: isoDateOffsetByDays(-7) },
 });
 const fullCourse = courseResponseFixture({
   id: 'course-4',

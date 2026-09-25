@@ -177,3 +177,15 @@ export const uploadGeneratedFileToInput = async (input: HTMLInputElement, width:
 // real function, so this can still drift from what the server computes;
 // nothing checks that it has not.
 export const slugFromName = (name: string): string => name.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '');
+
+// Computed against today, not a fixed date that will quietly move to the
+// other side of it: a closed-course fixture's own dates (`leavesListsOn`,
+// `closedOn`) read against `courseStillListed`'s own "is this still ahead
+// of today" check (`~/helpers.ts`), so a hardcoded date eventually flips
+// which side of it a story is actually testing. Lifted here once a second
+// panel's own course stories needed it.
+export const isoDateOffsetByDays = (days: number): string => {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  return date.toISOString().slice(0, 10);
+};

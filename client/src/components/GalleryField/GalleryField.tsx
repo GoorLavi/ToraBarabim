@@ -46,14 +46,16 @@ export const GalleryField = styled(({ className, photos, onAddFiles, onRemove, o
             )}
 
             {photo.status === 'failed' && photo.canRetry !== false && (
-              <button type="button" className="retryPill" onClick={() => onRetry(photo.id)}>
-                {consts.GALLERY_RETRY_LABEL}
+              <button type="button" className="retryArea" onClick={() => onRetry(photo.id)}>
+                <span className="retryPill">{consts.GALLERY_RETRY_LABEL}</span>
               </button>
             )}
 
             {(photo.status === 'uploaded' || photo.status === 'failed') && (
               <button type="button" className="remove" aria-label={consts.galleryRemoveLabel(index + 1)} onClick={() => onRemove(photo.id)}>
-                {'×'}
+                <span className="removeIcon" aria-hidden="true">
+                  {'×'}
+                </span>
               </button>
             )}
           </div>

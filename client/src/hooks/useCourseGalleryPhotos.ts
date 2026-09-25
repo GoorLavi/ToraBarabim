@@ -72,6 +72,7 @@ export const useCourseGalleryPhotos = (
       file,
       objectUrl: URL.createObjectURL(file),
       status: 'failed' as const,
+      failureReason: GALLERY_UPLOAD_FAILED_LABEL,
       canRetry: true,
     })),
   );

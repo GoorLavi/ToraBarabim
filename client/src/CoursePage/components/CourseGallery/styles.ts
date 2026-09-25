@@ -1,14 +1,71 @@
 import { css } from 'styled-components';
+import type { DefaultTheme } from 'styled-components';
 
-// Below `lg`: the full-bleed, swipeable strip of every photo stays on top
-// (design brief A items 1 and 2), each slide the viewport width less 48px
-// so the next one peeks at the inline end, the same bleed technique as
-// `HomePage/components/RabbiRow/styles.ts`'s own `.row`; the frame and the
-// thumbnail strip (design gate round 2 finding) sit stacked underneath it at
-// every width too, not desktop-only, since the arrows help a reader who
-// never discovers the swipe. From `lg` up (design brief A, item 7): the
-// frame grows to its own fixed 560 square beside a 2-column thumbnail grid,
-// the slides strip hidden (the frame is the browsing surface there).
+// Shared by the phone stage's own overlay and the desktop frame's own
+// overlay (styles below): the 48px prev and next arrows and the counter,
+// positioned the same way against whichever `position: relative` box they
+// sit in.
+const arrowAndCounterFragment = (theme: DefaultTheme): string => `
+  > .arrow {
+    position: absolute;
+    inset-block-start: 50%;
+    transform: translateY(-50%);
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 48px;
+    block-size: 48px;
+    border: 1px solid ${theme.colors.border};
+    border-radius: ${theme.radii.pill};
+    background: ${theme.colors.surface};
+    color: ${theme.colors.primary};
+    box-shadow: ${theme.shadows.raised};
+
+    &:disabled {
+      opacity: 0.4;
+    }
+
+    > svg {
+      inline-size: 20px;
+      block-size: 20px;
+    }
+
+    &.prev {
+      inset-inline-start: ${theme.spacing.sm};
+    }
+
+    &.next {
+      inset-inline-end: ${theme.spacing.sm};
+    }
+  }
+
+  > .counter {
+    position: absolute;
+    inset-block-end: ${theme.spacing.sm};
+    inset-inline-end: ${theme.spacing.sm};
+    padding-block: ${theme.spacing.xs};
+    padding-inline: ${theme.spacing.sm};
+    border: 1px solid ${theme.colors.accentOnDark};
+    border-radius: ${theme.radii.sm};
+    background: ${theme.colors.primary};
+    color: ${theme.colors.textOnPrimary};
+    font-weight: ${theme.typography.tagAndCaption.fontWeight};
+    font-size: ${theme.typography.tagAndCaption.phone.fontSize};
+    line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
+  }
+`;
+
+// Below `lg`: the full-bleed, swipeable strip of every photo is the
+// browsing surface, its own 48px arrows and counter overlaid on the strip
+// itself (design gate round 3 finding: a second, desktop frame stacked
+// underneath it had doubled every photo). Each slide the viewport width
+// less 48px so the next one peeks at the inline end, the same bleed
+// technique as `HomePage/components/RabbiRow/styles.ts`'s own `.row`. The
+// 56px thumbnail strip stays visible too, scrolling the phone strip to
+// whichever one is tapped (CourseGallery.tsx, `goTo`). From `lg` up
+// (design brief A, item 7): the desktop frame-plus-thumbnails pair, the
+// phone stage hidden (the frame is the browsing surface there instead).
 export const CourseGallery = css(
   ({ theme }) => `
   display: flex;
@@ -23,6 +80,46 @@ export const CourseGallery = css(
     max-inline-size: 100%;
   }
 
+  /* The bleed lives here, not on ".slides" (moved for the round 3 finding):
+     the arrows and the counter are positioned against this box, so it has
+     to span the same full-viewport width ".slides" itself scrolls across,
+     with ".slides" own padding-inline (unchanged) making the peek. Because
+     this box is wider than the current slide it frames, the prev arrow and
+     the counter need their own start and end insets pulled in by that same
+     padding, so they land on the photo itself; the next arrow keeps the
+     shared fragment's own plain inset, since that is exactly where the
+     peek already sits. */
+  > .stage {
+    position: relative;
+    margin-inline: calc(-1 * ${theme.spacing.lg});
+
+    @media (min-width: ${theme.breakpoints.md}) {
+      margin-inline: calc(-1 * ${theme.spacing.xl});
+    }
+
+    @media (min-width: ${theme.breakpoints.lg}) {
+      display: none;
+    }
+
+    ${arrowAndCounterFragment(theme)}
+
+    > .arrow.prev {
+      inset-inline-start: calc(${theme.spacing.lg} + ${theme.spacing.sm});
+
+      @media (min-width: ${theme.breakpoints.md}) {
+        inset-inline-start: calc(${theme.spacing.xl} + ${theme.spacing.sm});
+      }
+    }
+
+    > .counter {
+      inset-inline-end: calc(${theme.spacing.lg} + ${theme.spacing.sm});
+
+      @media (min-width: ${theme.breakpoints.md}) {
+        inset-inline-end: calc(${theme.spacing.xl} + ${theme.spacing.sm});
+      }
+    }
+  }
+
   > .slides {
     display: flex;
     gap: ${theme.spacing.sm};
@@ -30,7 +127,6 @@ export const CourseGallery = css(
     scroll-snap-type: x mandatory;
     overscroll-behavior-inline: contain;
     scrollbar-width: none;
-    margin-inline: calc(-1 * ${theme.spacing.lg});
     padding-inline: ${theme.spacing.lg};
 
     &::-webkit-scrollbar {
@@ -38,12 +134,7 @@ export const CourseGallery = css(
     }
 
     @media (min-width: ${theme.breakpoints.md}) {
-      margin-inline: calc(-1 * ${theme.spacing.xl});
       padding-inline: ${theme.spacing.xl};
-    }
-
-    @media (min-width: ${theme.breakpoints.lg}) {
-      display: none;
     }
 
     > .slide {
@@ -66,6 +157,7 @@ export const CourseGallery = css(
   }
 
   > .frame {
+    display: none;
     position: relative;
     aspect-ratio: 1;
     overflow: hidden;
@@ -73,6 +165,7 @@ export const CourseGallery = css(
     background: ${theme.colors.primarySoft};
 
     @media (min-width: ${theme.breakpoints.lg}) {
+      display: block;
       flex: 0 0 560px;
       inline-size: 560px;
       block-size: 560px;
@@ -95,58 +188,11 @@ export const CourseGallery = css(
       }
     }
 
-    > .arrow {
-      position: absolute;
-      inset-block-start: 50%;
-      transform: translateY(-50%);
-      z-index: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      inline-size: 48px;
-      block-size: 48px;
-      border: 1px solid ${theme.colors.border};
-      border-radius: ${theme.radii.pill};
-      background: ${theme.colors.surface};
-      color: ${theme.colors.primary};
-      box-shadow: ${theme.shadows.raised};
-
-      &:disabled {
-        opacity: 0.4;
-      }
-
-      > svg {
-        inline-size: 20px;
-        block-size: 20px;
-      }
-
-      &.prev {
-        inset-inline-start: ${theme.spacing.sm};
-      }
-
-      &.next {
-        inset-inline-end: ${theme.spacing.sm};
-      }
-    }
+    ${arrowAndCounterFragment(theme)}
 
     > .counter {
-      position: absolute;
-      inset-block-end: ${theme.spacing.sm};
-      inset-inline-end: ${theme.spacing.sm};
-      padding-block: ${theme.spacing.xs};
-      padding-inline: ${theme.spacing.sm};
-      border: 1px solid ${theme.colors.accentOnDark};
-      border-radius: ${theme.radii.sm};
-      background: ${theme.colors.primary};
-      color: ${theme.colors.textOnPrimary};
-      font-weight: ${theme.typography.tagAndCaption.fontWeight};
-      font-size: ${theme.typography.tagAndCaption.phone.fontSize};
-      line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
-
-      @media (min-width: ${theme.breakpoints.lg}) {
-        inset-block-end: ${theme.spacing.md};
-        inset-inline-end: ${theme.spacing.md};
-      }
+      inset-block-end: ${theme.spacing.md};
+      inset-inline-end: ${theme.spacing.md};
     }
   }
 

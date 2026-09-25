@@ -5,6 +5,11 @@ export const GalleryField = css(
   display: flex;
   flex-direction: column;
   gap: ${theme.spacing.sm};
+  /* The shared field fragment's own align-items flex-start
+     (CourseFormFields/styles.ts) shrinks a child with no width of its own
+     to its content size (design gate round 3 finding): this grid needs the
+     field's full width instead. */
+  align-self: stretch;
 
   > .header {
     display: flex;
@@ -48,21 +53,36 @@ export const GalleryField = css(
         }
       }
 
+      /* The tile's own 48px tap target (design gate round 3 finding: 28px
+         was below the minimum), its own 28px circle drawn inside rather
+         than filling the whole button, so the visual size stays as
+         designed. Positioned to overlay ".retryArea" below it: a failed
+         tile's whole surface is that button, so removal needs its own
+         higher stacking, not just DOM order, to stay reachable. */
       > .remove {
         position: absolute;
-        inset-block-start: ${theme.spacing.xs};
-        inset-inline-end: ${theme.spacing.xs};
-        inline-size: 28px;
-        block-size: 28px;
-        border-radius: ${theme.radii.pill};
-        border: 1px solid ${theme.colors.border};
-        background: ${theme.colors.surface};
-        color: ${theme.colors.text};
-        font-size: ${theme.typography.tagAndCaption.phone.fontSize};
-        line-height: 1;
+        z-index: 1;
+        inset-block-start: 0;
+        inset-inline-end: 0;
+        inline-size: 48px;
+        block-size: 48px;
         display: flex;
         align-items: center;
         justify-content: center;
+
+        > .removeIcon {
+          inline-size: 28px;
+          block-size: 28px;
+          border-radius: ${theme.radii.pill};
+          border: 1px solid ${theme.colors.border};
+          background: ${theme.colors.surface};
+          color: ${theme.colors.text};
+          font-size: ${theme.typography.tagAndCaption.phone.fontSize};
+          line-height: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
       }
 
       > .status.uploading {
@@ -82,26 +102,41 @@ export const GalleryField = css(
         }
       }
 
-      /* Centred with inset-plus-auto-margin, not a translate: a transform's
-         own percentages are physical, not logical, so they would center it
-         wrong in this RTL page. */
-      > .retryPill {
+      /* The whole tile is the retry tap target (design gate round 3
+         finding), its own pill drawn at the bottom as the button's label
+         rather than a second, smaller button inside it; ".remove" above
+         stays reachable through its own higher stacking, and this area's
+         own top inset (its 48px hit area plus the 10px clear the design
+         frame gives it, neither a value the token scale has) starts below
+         it entirely rather than sharing the corner. */
+      > .retryArea {
         position: absolute;
-        inset: 0;
-        margin: auto;
-        inline-size: fit-content;
-        block-size: fit-content;
-        min-block-size: 48px;
+        inset-inline: 0;
+        inset-block-end: 0;
+        inset-block-start: calc(48px + 10px);
         display: flex;
-        align-items: center;
-        padding-inline: ${theme.spacing.lg};
-        border: 1px solid ${theme.colors.danger};
-        border-radius: ${theme.radii.pill};
-        background: ${theme.colors.surface};
-        color: ${theme.colors.danger};
-        font-weight: ${theme.typography.fontWeight.semiBold};
-        font-size: ${theme.typography.tagAndCaption.phone.fontSize};
-        line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
+        align-items: flex-end;
+        justify-content: center;
+        padding-block-end: ${theme.spacing.sm};
+        padding-inline: ${theme.spacing.xs};
+        border: 0;
+        background: none;
+
+        /* Quiet, the same as PhotoPicker's own "החלפת תמונה" pill
+           (styles.ts, ".chooseFile"): red stays on the tile's own border
+           and on the reason line below the grid, not repeated here too
+           (design gate round 3 finding). */
+        > .retryPill {
+          padding-block: ${theme.spacing.xs};
+          padding-inline: ${theme.spacing.lg};
+          border: 1px solid ${theme.colors.border};
+          border-radius: ${theme.radii.pill};
+          background: ${theme.colors.surface};
+          color: ${theme.colors.primary};
+          font-weight: ${theme.typography.fontWeight.semiBold};
+          font-size: ${theme.typography.tagAndCaption.phone.fontSize};
+          line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
+        }
       }
     }
 

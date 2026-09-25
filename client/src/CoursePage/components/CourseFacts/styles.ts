@@ -1,8 +1,10 @@
 import { css } from 'styled-components';
 
-// Label-value rows (design brief A, item 12): a fixed 56px label column at
-// the inline start, the value filling the rest, rows separated by a
-// hairline between them rather than a border around the whole list.
+import { FACT_LABEL_COLUMN_WIDTH } from './consts';
+
+// Label-value rows (design brief A, item 12): a fixed label column at the
+// inline start, the value filling the rest, rows separated by a hairline
+// between them rather than a border around the whole list.
 export const CourseFacts = css(
   ({ theme }) => `
   display: flex;
@@ -19,7 +21,7 @@ export const CourseFacts = css(
     }
 
     > .label {
-      flex: 0 0 56px;
+      flex: 0 0 ${FACT_LABEL_COLUMN_WIDTH};
       color: ${theme.colors.textSecondary};
       font-weight: ${theme.typography.fontWeight.semiBold};
       font-size: ${theme.typography.tagAndCaption.phone.fontSize};
@@ -76,7 +78,7 @@ export const CourseFacts = css(
            label column instead, the card's whole inner width. */
         @media (min-width: ${theme.breakpoints.lg}) {
           flex-wrap: nowrap;
-          margin-inline-start: calc(-1 * (56px + ${theme.spacing.sm}));
+          margin-inline-start: calc(-1 * (${FACT_LABEL_COLUMN_WIDTH} + ${theme.spacing.sm}));
         }
 
         > .navButton {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import styled from 'styled-components';
 
 import { COURSE_CYCLE_MAX, CYCLE_RANGE_ERROR } from '~/components/CourseFormFields/consts';
@@ -12,6 +12,8 @@ import * as styles from './styles';
 // thin wrapper supplying its own mutation and error mapping): the date and
 // cycle fields, and the missing-date validation, are identical in both.
 export const DuplicateCourseSheet = styled(({ className, courseName, sourceCycle, isPending, errorMessage, onConfirm, onDismiss }: DuplicateCourseSheetProps) => {
+  const idPrefix = useId();
+  const fieldId = (name: string): string => `${idPrefix}-${name}`;
   const [openingDate, setOpeningDate] = useState('');
   const [cycleInput, setCycleInput] = useState(() =>
     sourceCycle !== undefined ? String(Math.min(sourceCycle + 1, COURSE_CYCLE_MAX)) : '',
@@ -41,11 +43,11 @@ export const DuplicateCourseSheet = styled(({ className, courseName, sourceCycle
 
       <div className="fields">
         <div className="field">
-          <label className="label" htmlFor="duplicateCourseOpeningDate">
+          <label className="label" htmlFor={fieldId('opening-date')}>
             {consts.OPENING_DATE_LABEL}
           </label>
           <input
-            id="duplicateCourseOpeningDate"
+            id={fieldId('opening-date')}
             type="date"
             className="input"
             value={openingDate}
@@ -53,35 +55,35 @@ export const DuplicateCourseSheet = styled(({ className, courseName, sourceCycle
               setOpeningDate(event.target.value);
               setMissingDateError(false);
             }}
-            aria-describedby={missingDateError ? 'duplicateCourseOpeningDateHint' : undefined}
+            aria-describedby={missingDateError ? fieldId('opening-date-error') : undefined}
           />
           {missingDateError && (
-            <span className="error" id="duplicateCourseOpeningDateHint">
+            <span className="error" id={fieldId('opening-date-error')}>
               {consts.MISSING_OPENING_DATE_ERROR}
             </span>
           )}
         </div>
 
         <div className="field">
-          <label className="label" htmlFor="duplicateCourseCycle">
+          <label className="label" htmlFor={fieldId('cycle')}>
             {consts.CYCLE_LABEL}
           </label>
           <input
-            id="duplicateCourseCycle"
+            id={fieldId('cycle')}
             type="number"
             inputMode="numeric"
             min={1}
             className="input"
             value={cycleInput}
             onChange={(event) => setCycleInput(event.target.value)}
-            aria-describedby="duplicateCourseCycleHint"
+            aria-describedby={fieldId('cycle-hint')}
           />
           {cycleRangeError ? (
-            <span className="error" id="duplicateCourseCycleHint">
+            <span className="error" id={fieldId('cycle-hint')}>
               {CYCLE_RANGE_ERROR}
             </span>
           ) : (
-            <span className="helper" id="duplicateCourseCycleHint">
+            <span className="helper" id={fieldId('cycle-hint')}>
               {consts.CYCLE_HELP}
             </span>
           )}

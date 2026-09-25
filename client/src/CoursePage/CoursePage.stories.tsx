@@ -56,18 +56,26 @@ export const Open: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    // The cycle tag beside the course name: matched against the element's
-    // own combined text, not a literal string, since the tag can hold more
-    // than one text node once bidi-wrapped around the Hebrew word and the
-    // digit (design gate round 2 finding).
-    await expect(canvas.getByText((_, element) => element?.textContent === consts.cycleLabel(3))).toBeInTheDocument();
+    // The cycle tag beside the course name: scoped to the tag itself with
+    // a `selector`, since a function matcher also tests ".tags", whose own
+    // combined text repeats it when there is no topic tag beside it
+    // (design gate round 3 finding); whitespace normalized on both sides,
+    // since `cycleLabel` joins the word and the number with a non-breaking
+    // space, not the normal one a literal comparison would expect.
+    const normalizeSpaces = (value: string): string => value.replace(/\s/gu, ' ');
+    await expect(
+      canvas.getByText((_, element) => normalizeSpaces(element?.textContent ?? '') === normalizeSpaces(consts.cycleLabel(3)), {
+        selector: '.cycleTag',
+      }),
+    ).toBeInTheDocument();
 
     // Gallery on phone: a full-bleed slide strip, one button per photo,
-    // each opening the full viewer at its own index (no counter or arrow
-    // in the strip itself; a swipe is the browsing gesture there). The
-    // strip only exists below `lg` (CourseGallery/styles.ts), so this needs
-    // the real, narrow frame, not just Storybook's own cosmetic viewport
-    // global, which the vitest test runner never applies to the page.
+    // each opening the full viewer at its own index (the stage's own
+    // arrows and counter overlay the strip, design gate round 3, but a
+    // swipe or a direct tap still works the same). The strip only exists
+    // below `lg` (CourseGallery/styles.ts), so this needs the real, narrow
+    // frame, not just Storybook's own cosmetic viewport global, which the
+    // vitest test runner never applies to the page.
     await atFrameSize(375, undefined, async () => {
       const fourthSlide = canvas.getByRole('button', { name: 'הצגת תמונה 4 במסך מלא' });
       await userEvent.click(fourthSlide);

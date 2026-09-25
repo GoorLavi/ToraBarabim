@@ -13,34 +13,29 @@ import {
 import { courseResponseFixture } from '~/courseFixture';
 import { rabbiFixture } from '~/rabbiFixture';
 import { panelShellDecorator } from '~/storyDecorators';
-import { generatedImageFile, installMockFetch, jsonResponse, placeholderPhoto, uploadGeneratedFileToInput } from '~/storyMocks';
+import { generatedImageFile, installMockFetch, isoDateOffsetByDays, jsonResponse, placeholderPhoto, uploadGeneratedFileToInput } from '~/storyMocks';
 
 import { errorResolver, http, jsonResolver, loadingResolver, respondWithJson } from '../../../.storybook/apiMocks';
+import type { MockResolver } from '../../../.storybook/apiMocks';
 import * as consts from './consts';
 import { CourseFormPage } from './CourseFormPage';
 
 const rabbiProfile = rabbiFixture({ id: 'story-rabbi', name: 'אייל עמרמי', title: 'ראש כולל' });
 const rabbaniteProfile = rabbiFixture({ id: 'story-rabbanit', name: 'שרה גולדברג', honorific: 'rabbanit', title: 'רבנית הקהילה' });
 
-// Computed against today, not a fixed date that will quietly move to the
-// other side of it (the "view on site" link only shows while `leavesListsOn`
-// is still ahead of today, `~/helpers.ts`'s own `courseStillListed`).
-const isoDateOffsetByDays = (days: number): string => {
-  const date = new Date();
-  date.setDate(date.getDate() + days);
-  return date.toISOString().slice(0, 10);
-};
-
 const openCourse = courseResponseFixture({ id: 'course-1', name: 'יסודות האמונה', cycle: 3 });
+// `closedOn` a week ahead of `leavesListsOn`, the course's own real order
+// (design gate round 3 finding: the two had drifted to read as closing
+// after it already left the lists).
 const closedCourse = courseResponseFixture({
   id: 'course-2',
   name: 'הלכות שבת מעשיות',
-  lifecycle: { status: 'closed', reason: 'closed', closedOn: '2026-10-01', leavesListsOn: isoDateOffsetByDays(7) },
+  lifecycle: { status: 'closed', reason: 'closed', closedOn: isoDateOffsetByDays(0), leavesListsOn: isoDateOffsetByDays(7) },
 });
 const closedCourseNoLongerListed = courseResponseFixture({
   id: 'course-2-delisted',
   name: 'הלכות שבת מעשיות',
-  lifecycle: { status: 'closed', reason: 'closed', closedOn: '2026-10-01', leavesListsOn: isoDateOffsetByDays(-7) },
+  lifecycle: { status: 'closed', reason: 'closed', closedOn: isoDateOffsetByDays(-14), leavesListsOn: isoDateOffsetByDays(-7) },
 });
 const courseWithOnePhoto = courseResponseFixture({
   id: 'course-3',
@@ -228,6 +223,7 @@ export const EditModeGalleryPhotoDeleted: Story = {
         profile: profileHandler(),
         course: http.get('/v1/rabbi/courses/:id', jsonResolver(courseWithOnePhoto)),
         places: placesHandler,
+        similar: similarPlacesHandler,
         deletePhoto: http.delete(`/v1/rabbi/courses/${courseWithOnePhoto.id}/photos/photo-1`, () => respondWithJson(undefined, 204)),
       },
     },
@@ -244,6 +240,27 @@ export const EditModeGalleryPhotoDeleted: Story = {
 // already saved course: `addFiles` uploads every picked file immediately,
 // one request per file, and the merge-by-id fix (N5) keeps both once both
 // requests resolve.
+// Each of the two concurrent uploads answers with its own snapshot, the
+// first not yet knowing about the second's new photo and the second not
+// knowing about the first's (design gate round 3 finding: answering both
+// with the same, already-merged three-photo course could not have told the
+// merge-by-id fix (N5) apart from a plain overwrite).
+let multiFileAddCallCount = 0;
+const multiFileAddResolver: MockResolver = () => {
+  multiFileAddCallCount += 1;
+  const photos =
+    multiFileAddCallCount === 1
+      ? [
+          { id: 'photo-1', url: placeholderPhoto(200, 200) },
+          { id: 'photo-2', url: placeholderPhoto(200, 200) },
+        ]
+      : [
+          { id: 'photo-1', url: placeholderPhoto(200, 200) },
+          { id: 'photo-3', url: placeholderPhoto(200, 200) },
+        ];
+  return respondWithJson(courseResponseFixture({ ...courseWithOnePhoto, photos }));
+};
+
 export const EditModeGalleryMultiFileAdd: Story = {
   decorators: [withRoute(`/courses/${courseWithOnePhoto.id}`)],
   parameters: {
@@ -252,19 +269,8 @@ export const EditModeGalleryMultiFileAdd: Story = {
         profile: profileHandler(),
         course: http.get('/v1/rabbi/courses/:id', jsonResolver(courseWithOnePhoto)),
         places: placesHandler,
-        addPhoto: http.post(
-          `/v1/rabbi/courses/${courseWithOnePhoto.id}/photos`,
-          jsonResolver(
-            courseResponseFixture({
-              ...courseWithOnePhoto,
-              photos: [
-                { id: 'photo-1', url: placeholderPhoto(200, 200) },
-                { id: 'photo-2', url: placeholderPhoto(200, 200) },
-                { id: 'photo-3', url: placeholderPhoto(200, 200) },
-              ],
-            }),
-          ),
-        ),
+        similar: similarPlacesHandler,
+        addPhoto: http.post(`/v1/rabbi/courses/${courseWithOnePhoto.id}/photos`, multiFileAddResolver),
       },
     },
   },

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import type { RefObject } from 'react';
 import classNames from 'classnames';
 import styled from 'styled-components';
@@ -28,6 +28,17 @@ const topicSelectValue = (topic: CourseTopicFormValue): TopicSelectValue => (top
 // caller has to hold a section ref of its own.
 export const CourseFormFields = styled(
   ({ className, form, onChangeForm, fieldErrors, isAudienceLocked, cityError, cover, gallery }: CourseFormFieldsProps) => {
+    // One real id per field, unique even if this form ever rendered twice
+    // on the same page, rather than the fixed strings a second instance
+    // would collide on.
+    const idPrefix = useId();
+    const fieldId = (name: string): string => `${idPrefix}-${name}`;
+    // `aria-describedby` reads every id a field has, its permanent helper
+    // and, once one shows, its error too, rather than replacing the one
+    // with the other: the helper stays useful context even while the
+    // error is what a screen reader announces first.
+    const describedBy = (...ids: (string | undefined)[]): string => ids.filter((id): id is string => id !== undefined).join(' ');
+
     const aboutSectionRef = useRef<HTMLElement>(null);
     const scopeSectionRef = useRef<HTMLElement>(null);
     const whereSectionRef = useRef<HTMLElement>(null);
@@ -64,45 +75,45 @@ export const CourseFormFields = styled(
 
           <div className="row nameRow">
             <div className="field name">
-              <label className="label" htmlFor="courseFormName">
+              <label className="label" htmlFor={fieldId('name')}>
                 {consts.NAME_LABEL}
               </label>
               <input
-                id="courseFormName"
+                id={fieldId('name')}
                 type="text"
                 className="input"
                 dir={directionForValue(form.name)}
                 value={form.name}
                 onChange={(event) => onChangeForm((prev) => ({ ...prev, name: event.target.value }))}
-                aria-describedby={fieldErrors.name ? 'courseFormNameHint' : undefined}
+                aria-describedby={fieldErrors.name ? fieldId('name-error') : undefined}
               />
               {fieldErrors.name && (
-                <span className="error" id="courseFormNameHint">
+                <span className="error" id={fieldId('name-error')}>
                   {fieldErrors.name}
                 </span>
               )}
             </div>
 
             <div className="field cycle">
-              <label className="label" htmlFor="courseFormCycle">
+              <label className="label" htmlFor={fieldId('cycle')}>
                 {consts.CYCLE_LABEL}
               </label>
               <input
-                id="courseFormCycle"
+                id={fieldId('cycle')}
                 type="number"
                 inputMode="numeric"
                 min={1}
                 className="input"
                 value={form.cycle}
                 onChange={(event) => onChangeForm((prev) => ({ ...prev, cycle: event.target.value }))}
-                aria-describedby="courseFormCycleHint"
+                aria-describedby={fieldId('cycle-hint')}
               />
               {fieldErrors.cycle ? (
-                <span className="error" id="courseFormCycleHint">
+                <span className="error" id={fieldId('cycle-hint')}>
                   {fieldErrors.cycle}
                 </span>
               ) : (
-                <span className="helper" id="courseFormCycleHint">
+                <span className="helper" id={fieldId('cycle-hint')}>
                   {consts.CYCLE_HELP}
                 </span>
               )}
@@ -110,33 +121,33 @@ export const CourseFormFields = styled(
           </div>
 
           <div className="field">
-            <label className="label" htmlFor="courseFormDescription">
+            <label className="label" htmlFor={fieldId('description')}>
               {consts.DESCRIPTION_LABEL}
             </label>
             <textarea
-              id="courseFormDescription"
+              id={fieldId('description')}
               className="input description"
               dir={directionForValue(form.description)}
               value={form.description}
               onChange={(event) => onChangeForm((prev) => ({ ...prev, description: event.target.value }))}
-              aria-describedby={fieldErrors.description ? 'courseFormDescriptionError' : 'courseFormDescriptionHelp'}
+              aria-describedby={describedBy(fieldId('description-help'), fieldErrors.description ? fieldId('description-error') : undefined)}
             />
-            <span className="helper" id="courseFormDescriptionHelp">
+            <span className="helper" id={fieldId('description-help')}>
               {consts.DESCRIPTION_HELP}
             </span>
             {fieldErrors.description && (
-              <span className="error" id="courseFormDescriptionError">
+              <span className="error" id={fieldId('description-error')}>
                 {fieldErrors.description}
               </span>
             )}
           </div>
 
           <div className="field">
-            <label className="label" htmlFor="courseTopicSelect">
+            <label className="label" htmlFor={fieldId('topic')}>
               {consts.TOPIC_LABEL}
             </label>
             <select
-              id="courseTopicSelect"
+              id={fieldId('topic')}
               className="input select"
               value={topicSelectValue(form.topic)}
               onChange={(event) => {
@@ -148,7 +159,7 @@ export const CourseFormFields = styled(
                   onChangeForm((prev) => ({ ...prev, topic: { kind: 'set', value: value as (typeof consts.TOPIC_OPTIONS)[number] } }));
                 }
               }}
-              aria-describedby="courseFormTopicHelp"
+              aria-describedby={fieldId('topic-help')}
             >
               <option value="none">{consts.TOPIC_NONE_OPTION_LABEL}</option>
               {consts.TOPIC_OPTIONS.map((value) => (
@@ -158,25 +169,25 @@ export const CourseFormFields = styled(
               ))}
               <option value="other">{consts.TOPIC_OTHER_OPTION_LABEL}</option>
             </select>
-            <span className="helper" id="courseFormTopicHelp">
+            <span className="helper" id={fieldId('topic-help')}>
               {consts.TOPIC_HELP}
             </span>
             {form.topic.kind === 'other' && (
               <div className="field">
-                <label className="label" htmlFor="courseFormTopicOther">
+                <label className="label" htmlFor={fieldId('topic-other')}>
                   {consts.TOPIC_OTHER_LABEL}
                 </label>
                 <input
-                  id="courseFormTopicOther"
+                  id={fieldId('topic-other')}
                   type="text"
                   className="input"
                   dir={directionForValue(form.topic.otherText)}
                   value={form.topic.otherText}
                   onChange={(event) => onChangeForm((prev) => ({ ...prev, topic: { kind: 'other', otherText: event.target.value } }))}
-                  aria-describedby={fieldErrors.topicOther ? 'courseFormTopicOtherHint' : undefined}
+                  aria-describedby={fieldErrors.topicOther ? fieldId('topic-other-error') : undefined}
                 />
                 {fieldErrors.topicOther && (
-                  <span className="error" id="courseFormTopicOtherHint">
+                  <span className="error" id={fieldId('topic-other-error')}>
                     {fieldErrors.topicOther}
                   </span>
                 )}
@@ -189,19 +200,19 @@ export const CourseFormFields = styled(
           <h2 className="sectionHeading">{consts.SCOPE_SECTION_HEADING}</h2>
 
           <div className="field">
-            <label className="label" htmlFor="courseFormOpeningDate">
+            <label className="label" htmlFor={fieldId('opening-date')}>
               {consts.OPENING_DATE_LABEL}
             </label>
             <input
-              id="courseFormOpeningDate"
+              id={fieldId('opening-date')}
               type="date"
               className="input"
               value={form.openingDate}
               onChange={(event) => onChangeForm((prev) => ({ ...prev, openingDate: event.target.value }))}
-              aria-describedby={fieldErrors.openingDate ? 'courseFormOpeningDateHint' : undefined}
+              aria-describedby={fieldErrors.openingDate ? fieldId('opening-date-error') : undefined}
             />
             {fieldErrors.openingDate && (
-              <span className="error" id="courseFormOpeningDateHint">
+              <span className="error" id={fieldId('opening-date-error')}>
                 {fieldErrors.openingDate}
               </span>
             )}
@@ -209,67 +220,67 @@ export const CourseFormFields = styled(
 
           <div className="row scopeRow">
             <div className="field">
-              <label className="label" htmlFor="courseFormWeeks">
+              <label className="label" htmlFor={fieldId('weeks')}>
                 {consts.WEEKS_LABEL}
               </label>
               <input
-                id="courseFormWeeks"
+                id={fieldId('weeks')}
                 type="number"
                 inputMode="numeric"
                 min={1}
                 className="input"
                 value={form.weeks}
                 onChange={(event) => onChangeForm((prev) => ({ ...prev, weeks: event.target.value }))}
-                aria-describedby={fieldErrors.weeks ? 'courseFormWeeksHint' : undefined}
+                aria-describedby={fieldErrors.weeks ? fieldId('weeks-error') : undefined}
               />
               {fieldErrors.weeks && (
-                <span className="error" id="courseFormWeeksHint">
+                <span className="error" id={fieldId('weeks-error')}>
                   {fieldErrors.weeks}
                 </span>
               )}
             </div>
 
             <div className="field">
-              <label className="label" htmlFor="courseFormSessions">
+              <label className="label" htmlFor={fieldId('sessions')}>
                 {consts.SESSIONS_LABEL}
               </label>
               <input
-                id="courseFormSessions"
+                id={fieldId('sessions')}
                 type="number"
                 inputMode="numeric"
                 min={1}
                 className="input"
                 value={form.sessions}
                 onChange={(event) => onChangeForm((prev) => ({ ...prev, sessions: event.target.value }))}
-                aria-describedby={fieldErrors.sessions ? 'courseFormSessionsHint' : undefined}
+                aria-describedby={fieldErrors.sessions ? fieldId('sessions-error') : undefined}
               />
               {fieldErrors.sessions && (
-                <span className="error" id="courseFormSessionsHint">
+                <span className="error" id={fieldId('sessions-error')}>
                   {fieldErrors.sessions}
                 </span>
               )}
             </div>
 
             <div className="field">
-              <label className="label" htmlFor="courseFormHours">
+              <label className="label" htmlFor={fieldId('hours')}>
                 {consts.HOURS_LABEL}
               </label>
               <input
-                id="courseFormHours"
+                id={fieldId('hours')}
                 type="number"
                 inputMode="numeric"
                 min={1}
                 className="input"
                 value={form.hours}
                 onChange={(event) => onChangeForm((prev) => ({ ...prev, hours: event.target.value }))}
-                aria-describedby="courseFormHoursHint"
+                aria-describedby={fieldId('hours-hint')}
               />
               {fieldErrors.hours ? (
-                <span className="error" id="courseFormHoursHint">
+                <span className="error" id={fieldId('hours-hint')}>
                   {fieldErrors.hours}
                 </span>
               ) : (
-                <span className="helper" id="courseFormHoursHint">
+                <span className="helper" id={fieldId('hours-hint')}>
                   {consts.HOURS_HELP}
                 </span>
               )}
@@ -368,52 +379,52 @@ export const CourseFormFields = styled(
           <h2 className="sectionHeading">{consts.REGISTRATION_SECTION_HEADING}</h2>
 
           <div className="field">
-            <label className="label" htmlFor="courseFormContactPhone">
+            <label className="label" htmlFor={fieldId('contact-phone')}>
               {consts.CONTACT_PHONE_LABEL}
             </label>
             <input
-              id="courseFormContactPhone"
+              id={fieldId('contact-phone')}
               type="tel"
               className="input"
               dir="ltr"
               value={form.contactPhone}
               onChange={(event) => onChangeForm((prev) => ({ ...prev, contactPhone: event.target.value }))}
-              aria-describedby={fieldErrors.contactPhone ? 'courseFormContactPhoneError' : 'courseFormContactPhoneHelp'}
+              aria-describedby={describedBy(fieldId('contact-phone-help'), fieldErrors.contactPhone ? fieldId('contact-phone-error') : undefined)}
             />
-            <span className="helper" id="courseFormContactPhoneHelp">
+            <span className="helper" id={fieldId('contact-phone-help')}>
               {consts.CONTACT_PHONE_HELP}
             </span>
             {fieldErrors.contactPhone && (
-              <span className="error" id="courseFormContactPhoneError">
+              <span className="error" id={fieldId('contact-phone-error')}>
                 {fieldErrors.contactPhone}
               </span>
             )}
           </div>
 
           <div className="field">
-            <label className="label" htmlFor="courseFormPrice">
+            <label className="label" htmlFor={fieldId('price')}>
               {consts.PRICE_LABEL}
             </label>
             <div className="inputAffix">
               <input
-                id="courseFormPrice"
+                id={fieldId('price')}
                 type="number"
                 inputMode="numeric"
                 min={1}
                 className="input"
                 value={form.priceShekels}
                 onChange={(event) => onChangeForm((prev) => ({ ...prev, priceShekels: event.target.value }))}
-                aria-describedby={fieldErrors.priceShekels ? 'courseFormPriceError' : 'courseFormPriceHelp'}
+                aria-describedby={describedBy(fieldId('price-help'), fieldErrors.priceShekels ? fieldId('price-error') : undefined)}
               />
               <span className="affix" aria-hidden="true">
                 {consts.PRICE_CURRENCY_SYMBOL}
               </span>
             </div>
-            <span className="helper" id="courseFormPriceHelp">
+            <span className="helper" id={fieldId('price-help')}>
               {consts.PRICE_HELP}
             </span>
             {fieldErrors.priceShekels && (
-              <span className="error" id="courseFormPriceError">
+              <span className="error" id={fieldId('price-error')}>
                 {fieldErrors.priceShekels}
               </span>
             )}

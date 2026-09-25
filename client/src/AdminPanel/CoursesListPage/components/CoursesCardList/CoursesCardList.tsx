@@ -39,14 +39,24 @@ export const CoursesCardList = styled(({ className, rows }: CoursesCardListProps
           </div>
 
           {isClosed ? (
-            // Full width, not squeezed beside the thumbnail (design gate
-            // round 2 finding): the closed line already runs long, and the
-            // 64px poster left it too little room to keep the tag and the
-            // line on one row.
-            <div className="closedRow">
-              <span className="tag">{adminCourseStatusTagLabel(course)}</span>
-              <span className="closedLine">{adminCourseClosedLineLabel(course)}</span>
-            </div>
+            <>
+              {/* Full width, not squeezed beside the thumbnail (design gate
+                  round 2 finding): the closed line already runs long, and the
+                  64px poster left it too little room to keep the tag and the
+                  line on one row. */}
+              <div className="closedRow">
+                <span className="tag">{adminCourseStatusTagLabel(course)}</span>
+                <span className="closedLine">{adminCourseClosedLineLabel(course)}</span>
+              </div>
+              {/* The city, still worth naming on a closed or full card
+                  (design gate round 3 finding), the state tag itself
+                  already carried by ".closedRow" above. */}
+              <div className="tags">
+                <span className="tag city" dir="auto">
+                  {venuePanelCityName(course.venue)}
+                </span>
+              </div>
+            </>
           ) : (
             <>
               <span className="meta" dir="auto">

@@ -135,6 +135,7 @@ export const CourseFormFields = css(
       > .field {
         flex: 1;
         min-inline-size: 0;
+        ${fieldFragment(theme)}
       }
 
       @media (min-width: ${theme.breakpoints.sm}) {
@@ -160,14 +161,10 @@ export const CourseFormFields = css(
 
     > .field {
       ${fieldFragment(theme)}
-    }
 
-    > .row > .field {
-      ${fieldFragment(theme)}
-    }
-
-    > .field > .field {
-      ${fieldFragment(theme)}
+      > .field {
+        ${fieldFragment(theme)}
+      }
     }
   }
 

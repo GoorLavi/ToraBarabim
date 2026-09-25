@@ -5,3 +5,7 @@
 // pass 4 wording round).
 export const WAZE_ARIA_LABEL = 'ניווט ב-Waze';
 export const GOOGLE_MAPS_ARIA_LABEL = 'ניווט ב-Google Maps';
+
+// The fixed label column's own width (design brief A, item 12), read again
+// by the nav buttons row's own pull-back under it (styles.ts).
+export const FACT_LABEL_COLUMN_WIDTH = '56px';
