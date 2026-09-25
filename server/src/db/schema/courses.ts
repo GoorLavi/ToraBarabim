@@ -82,20 +82,30 @@ export const courses = pgTable(
       'courses_venue_no_city_code_on_place',
       sql`(${table.placeId} IS NOT NULL AND ${table.cityCode} IS NULL) OR (${table.placeId} IS NULL AND ${table.cityCode} IS NOT NULL)`,
     ),
+    // The third branch guards with its own `topic IS NOT NULL` rather than
+    // relying on `topic = 'other'` alone: SQL's three-valued logic makes
+    // `NULL = 'other'` evaluate to NULL, not FALSE, and a CHECK whose whole
+    // expression evaluates to NULL is treated as satisfied, not violated,
+    // so `topic IS NULL AND topicOther IS NOT NULL` would otherwise slip
+    // through uncaught.
     check(
       'courses_topic_shape',
       sql`(${table.topic} IS NULL AND ${table.topicOther} IS NULL)
        OR (${table.topic} IS NOT NULL AND ${table.topic} <> 'other' AND ${table.topicOther} IS NULL)
-       OR (${table.topic} = 'other' AND ${table.topicOther} IS NOT NULL)`,
+       OR (${table.topic} IS NOT NULL AND ${table.topic} = 'other' AND ${table.topicOther} IS NOT NULL)`,
     ),
     // `closeReason` is set exactly when `registrationClosedAt` is, and only
     // to one of `CLOSE_REASONS`: a CHECK cannot reference a Postgres enum
     // this slice deliberately did not add, so the list is built from that
-    // tuple instead of naming the two values here by hand.
+    // tuple instead of naming the two values here by hand. The second
+    // branch guards with its own `closeReason IS NOT NULL` for the same
+    // reason `courses_topic_shape` above does: `NULL IN (...)` is NULL, not
+    // FALSE, so `registrationClosedAt IS NOT NULL AND closeReason IS NULL`
+    // would otherwise pass a CHECK whose result is NULL rather than FALSE.
     check(
       'courses_close_shape',
       sql`(${table.registrationClosedAt} IS NULL AND ${table.closeReason} IS NULL)
-       OR (${table.registrationClosedAt} IS NOT NULL AND ${table.closeReason} IN (${closeReasonList}))`,
+       OR (${table.registrationClosedAt} IS NOT NULL AND ${table.closeReason} IS NOT NULL AND ${table.closeReason} IN (${closeReasonList}))`,
     ),
   ],
 );
