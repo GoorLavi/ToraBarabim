@@ -25,7 +25,7 @@ export const CourseConfirmSheet = styled(
     onConfirm,
     onDismiss,
   }: CourseConfirmSheetProps) => (
-    <ResponsiveSheet className={className} ariaLabel={heading} onDismiss={onDismiss}>
+    <ResponsiveSheet {...{ className, ariaLabel: heading, onDismiss }}>
       <h2 className="heading">{heading}</h2>
       <p className="body">
         {bodyBeforeName}

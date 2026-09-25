@@ -66,6 +66,7 @@ export const CourseFormPage = styled(({ className }: CourseFormPageProps) => {
       setForm(courseToFormState(existing.course));
       setTeacher(teacherFromCourse(existing.course));
       setLoadedCourseId(existing.course.id);
+      setIsUploadingDrafts(false);
     }
   }, [existing, loadedCourseId]);
 
@@ -130,11 +131,18 @@ export const CourseFormPage = styled(({ className }: CourseFormPageProps) => {
           // `saveCourse.isPending` already turned false once the create
           // itself resolved: the button holds its own state until these
           // still-local drafts finish uploading, so a second tap cannot
-          // create a second course.
+          // create a second course. Reset in a `finally`: a partial failure
+          // navigates to the edit route of this same component instance
+          // rather than away from it, so nothing else would ever clear the
+          // flag.
           setIsUploadingDrafts(true);
-          const failedFiles = await gallery.uploadDraftsAfterCreate(course.id);
-          if (failedFiles.length === 0) navigate(ADMIN_ROUTES.courseView(course.id));
-          else navigate(ADMIN_ROUTES.courseEdit(course.id), { state: { failedGalleryFiles: failedFiles } satisfies CourseFormLocationState });
+          try {
+            const failedFiles = await gallery.uploadDraftsAfterCreate(course.id);
+            if (failedFiles.length === 0) navigate(ADMIN_ROUTES.courseView(course.id));
+            else navigate(ADMIN_ROUTES.courseEdit(course.id), { state: { failedGalleryFiles: failedFiles } satisfies CourseFormLocationState });
+          } finally {
+            setIsUploadingDrafts(false);
+          }
         },
       },
     );

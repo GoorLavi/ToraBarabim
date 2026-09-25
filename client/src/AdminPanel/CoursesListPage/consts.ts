@@ -31,7 +31,6 @@ export const LOADING_MESSAGE = 'טוענים קורסים...';
 export const EMPTY_HEADLINE = 'עוד אין קורסים במערכת';
 export const EMPTY_HINT = 'הקורס הראשון שיתווסף יופיע כאן.';
 export const NO_MATCH_HEADLINE = 'לא נמצאו קורסים תואמים';
-export const ERROR_MESSAGE = 'לא הצלחנו לטעון את הקורסים';
 export const RETRY_LABEL = 'ניסיון נוסף';
 
 export const UNLINKED_TEACHER_LIST_SUFFIX = 'אין קישור לרב';

@@ -19,6 +19,10 @@ const unlinkedCourse = courseResponseFixture({ id: 'course-2', name: 'מבוא �
 // itself (not just its loading or error state) needs this mocked.
 const rabbisHandler = http.get('/v1/admin/rabbis', jsonResolver({ items: [], page: 1, pageSize: 50, total: 0 }));
 
+// The where-section's own `PlacePicker` mounts unconditionally (CourseFormFields.tsx),
+// so every story that renders the form itself needs this too.
+const placesHandler = http.get('/v1/places', jsonResolver({ items: [] }));
+
 const withRoute = (pathname: string) => (Story: React.ComponentType) => (
   <Routes location={{ pathname, search: '', hash: '', state: null, key: 'story' }}>
     <Route path="/courses/new" element={<Story />} />
@@ -38,7 +42,7 @@ type Story = StoryObj<typeof CourseFormPage>;
 
 export const CreateMode: Story = {
   decorators: [withRoute('/courses/new')],
-  parameters: { apiMocks: { handlers: { rabbis: rabbisHandler } } },
+  parameters: { apiMocks: { handlers: { rabbis: rabbisHandler, places: placesHandler } } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.findByRole('heading', { name: consts.NEW_HEADING })).resolves.toBeInTheDocument();
@@ -49,7 +53,7 @@ export const CreateMode: Story = {
 
 export const EditModeLinkedTeacher: Story = {
   decorators: [withRoute(`/courses/${openCourse.id}/edit`)],
-  parameters: { apiMocks: { handlers: { course: http.get('/v1/admin/courses/:id', jsonResolver(openCourse)), rabbis: rabbisHandler } } },
+  parameters: { apiMocks: { handlers: { course: http.get('/v1/admin/courses/:id', jsonResolver(openCourse)), rabbis: rabbisHandler, places: placesHandler } } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.findByRole('heading', { name: consts.EDIT_HEADING })).resolves.toBeInTheDocument();
@@ -60,7 +64,7 @@ export const EditModeLinkedTeacher: Story = {
 
 export const EditModeUnlinkedTeacher: Story = {
   decorators: [withRoute(`/courses/${unlinkedCourse.id}/edit`)],
-  parameters: { apiMocks: { handlers: { course: http.get('/v1/admin/courses/:id', jsonResolver(unlinkedCourse)), rabbis: rabbisHandler } } },
+  parameters: { apiMocks: { handlers: { course: http.get('/v1/admin/courses/:id', jsonResolver(unlinkedCourse)), rabbis: rabbisHandler, places: placesHandler } } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const input = (await canvas.findByLabelText(teacherPickerConsts.NAMED_LABEL)) as HTMLInputElement;

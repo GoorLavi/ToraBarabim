@@ -79,6 +79,7 @@ export const CourseFormPage = styled(({ className }: CourseFormPageProps) => {
       setForm(courseToFormState(existing.course));
       setLoadedCourseId(existing.course.id);
       setOpenSheet(undefined);
+      setIsUploadingDrafts(false);
     }
   }, [existing, loadedCourseId]);
 
@@ -176,11 +177,18 @@ export const CourseFormPage = styled(({ className }: CourseFormPageProps) => {
           // itself resolved, well before these drafts finish uploading: a
           // second tap on "save" while they are still in flight would create
           // a second course, so the button reads its own, separate state
-          // until the navigation below actually leaves the page.
+          // until the navigation below actually leaves the page. Reset in a
+          // `finally`: a partial failure navigates to the edit route of this
+          // same component instance rather than away from it, so nothing
+          // else would ever clear the flag.
           setIsUploadingDrafts(true);
-          const failedFiles = await gallery.uploadDraftsAfterCreate(course.id);
-          if (failedFiles.length === 0) navigate(RABBI_ROUTES.courses);
-          else navigate(RABBI_ROUTES.courseEdit(course.id), { state: { failedGalleryFiles: failedFiles } satisfies CourseFormLocationState });
+          try {
+            const failedFiles = await gallery.uploadDraftsAfterCreate(course.id);
+            if (failedFiles.length === 0) navigate(RABBI_ROUTES.courses);
+            else navigate(RABBI_ROUTES.courseEdit(course.id), { state: { failedGalleryFiles: failedFiles } satisfies CourseFormLocationState });
+          } finally {
+            setIsUploadingDrafts(false);
+          }
         },
       },
     );

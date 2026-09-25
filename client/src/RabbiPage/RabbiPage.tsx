@@ -88,7 +88,9 @@ export const RabbiPage = styled(({ className }: RabbiPageProps) => {
             )}
           </div>
 
-          {rabbi.courses.length > 0 && <CourseRail title={consts.COURSES_HEADING} items={rabbi.courses} surface="rabbiPage" />}
+          {rabbi.courses.length > 0 && (
+            <CourseRail {...{ title: consts.COURSES_HEADING, items: rabbi.courses, surface: 'general', clickSurface: 'rabbiPage' }} />
+          )}
 
           {hasNoLessons ? (
             <RabbiEmptyLessons

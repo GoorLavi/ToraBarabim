@@ -28,6 +28,11 @@ const closedCourse = courseResponseFixture({
 const coursesHandler = (items: ReturnType<typeof courseResponseFixture>[]) =>
   http.get('/v1/admin/courses', jsonResolver({ items, page: 1, pageSize: 50, total: items.length }));
 
+// The filter bar's own rabbi search fetches immediately on mount (mirrors
+// CourseFormPage.stories.tsx's own TeacherPicker comment), so every story
+// here needs this too.
+const rabbisHandler = http.get('/v1/admin/rabbis', jsonResolver({ items: [], page: 1, pageSize: 50, total: 0 }));
+
 const meta: Meta<typeof CoursesListPage> = {
   title: 'AdminPanel/CoursesListPage',
   component: CoursesListPage,
@@ -39,7 +44,7 @@ export default meta;
 type Story = StoryObj<typeof CoursesListPage>;
 
 export const Populated: Story = {
-  parameters: { apiMocks: { handlers: { courses: coursesHandler([openCourse, unlinkedCourse, fullCourse, closedCourse]) } } },
+  parameters: { apiMocks: { handlers: { courses: coursesHandler([openCourse, unlinkedCourse, fullCourse, closedCourse]), rabbis: rabbisHandler } } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     // The phone card list and the desktop table both render at once (CSS
@@ -50,11 +55,11 @@ export const Populated: Story = {
 };
 
 export const Loading: Story = {
-  parameters: { apiMocks: { handlers: { courses: http.get('/v1/admin/courses', loadingResolver) } } },
+  parameters: { apiMocks: { handlers: { courses: http.get('/v1/admin/courses', loadingResolver), rabbis: rabbisHandler } } },
 };
 
 export const Empty: Story = {
-  parameters: { apiMocks: { handlers: { courses: coursesHandler([]) } } },
+  parameters: { apiMocks: { handlers: { courses: coursesHandler([]), rabbis: rabbisHandler } } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.findByText(consts.EMPTY_HEADLINE)).resolves.toBeInTheDocument();
@@ -63,7 +68,7 @@ export const Empty: Story = {
 };
 
 export const Failed: Story = {
-  parameters: { apiMocks: { handlers: { courses: http.get('/v1/admin/courses', errorResolver()) } } },
+  parameters: { apiMocks: { handlers: { courses: http.get('/v1/admin/courses', errorResolver()), rabbis: rabbisHandler } } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.findByRole('alert')).resolves.toBeInTheDocument();

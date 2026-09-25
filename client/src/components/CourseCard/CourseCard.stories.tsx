@@ -14,7 +14,7 @@ const withWidth = (widthPx: number) => (Story: React.ComponentType) => (
 const meta: Meta<typeof CourseCard> = {
   title: 'components/CourseCard',
   component: CourseCard,
-  args: { clickContext: { surface: 'homeRail', position: 0 } },
+  args: { surface: 'general', clickContext: { surface: 'homeRail', position: 0 } },
   decorators: [withWidth(232)],
 };
 
@@ -53,5 +53,23 @@ export const LongNamePhoneTier: Story = {
       teacher: { kind: 'rabbi', rabbi: rabbiFixture({ id: 'story-rabbanit', name: 'שרה גולדברג', honorific: 'rabbanit' }) },
       audience: 'women',
     }),
+  },
+};
+
+// On a general surface (a rabbi page, a place page, the home rail) נשים
+// renders as a chip, the same as LessonCard's own GeneralSurfaceWomenChip.
+export const GeneralSurfaceWomenChip: Story = {
+  args: {
+    course: courseFixture({ name: 'שיעור נשים בפרשת השבוע', audience: 'women' }),
+    surface: 'general',
+  },
+};
+
+// On the women's area rail every course is already for women, so נשים reads
+// as plain text there, never a chip (the reviewer's own N-round finding).
+export const WomensAreaSurfaceWomenPlain: Story = {
+  args: {
+    course: courseFixture({ name: 'שיעור נשים בפרשת השבוע', audience: 'women' }),
+    surface: 'womensArea',
   },
 };

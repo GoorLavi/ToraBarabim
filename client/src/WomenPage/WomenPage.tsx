@@ -184,7 +184,14 @@ export const WomenPage = styled(({ className }: WomenPageProps) => {
           )}
 
           {!isEmpty && showCourseRail && coursesForCity(summaryQuery.data.courses, city).length > 0 && (
-            <CourseRail title={consts.COURSES_HEADING} items={coursesForCity(summaryQuery.data.courses, city)} surface="womensArea" />
+            <CourseRail
+              {...{
+                title: consts.COURSES_HEADING,
+                items: coursesForCity(summaryQuery.data.courses, city),
+                surface: 'womensArea',
+                clickSurface: 'womensArea',
+              }}
+            />
           )}
 
           {!isEmpty && summaryQuery.data.kind === 'populated' && summaryQuery.data.cities.length > 0 && (
@@ -299,7 +306,14 @@ export const WomenPage = styled(({ className }: WomenPageProps) => {
               )}
 
               {summaryQuery.data.kind === 'empty' && showCourseRail && coursesForCity(summaryQuery.data.courses, city).length > 0 && (
-                <CourseRail title={consts.COURSES_HEADING} items={coursesForCity(summaryQuery.data.courses, city)} surface="womensArea" />
+                <CourseRail
+                  {...{
+                    title: consts.COURSES_HEADING,
+                    items: coursesForCity(summaryQuery.data.courses, city),
+                    surface: 'womensArea',
+                    clickSurface: 'womensArea',
+                  }}
+                />
               )}
             </>
           )}

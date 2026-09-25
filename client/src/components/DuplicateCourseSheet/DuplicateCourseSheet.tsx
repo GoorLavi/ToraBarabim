@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import styled from 'styled-components';
 
-import { COURSE_CYCLE_MAX } from '~/components/CourseFormFields/consts';
+import { COURSE_CYCLE_MAX, CYCLE_RANGE_ERROR } from '~/components/CourseFormFields/consts';
 import { ResponsiveSheet } from '~/components/ResponsiveSheet/ResponsiveSheet';
 
 import * as consts from './consts';
@@ -29,7 +29,7 @@ export const DuplicateCourseSheet = styled(({ className, courseName, sourceCycle
   };
 
   return (
-    <ResponsiveSheet className={className} ariaLabel={consts.DUPLICATE_COURSE_HEADING} onDismiss={onDismiss}>
+    <ResponsiveSheet {...{ className, ariaLabel: consts.DUPLICATE_COURSE_HEADING, onDismiss }}>
       <h2 className="heading">{consts.DUPLICATE_COURSE_HEADING}</h2>
       <p className="body">
         {consts.DUPLICATE_COURSE_BODY_BEFORE_NAME}
@@ -57,7 +57,7 @@ export const DuplicateCourseSheet = styled(({ className, courseName, sourceCycle
         <label className="field">
           <span className="label">{consts.CYCLE_LABEL}</span>
           <input type="number" inputMode="numeric" min={1} className="input" value={cycleInput} onChange={(event) => setCycleInput(event.target.value)} />
-          {cycleRangeError ? <span className="error">{consts.CYCLE_RANGE_ERROR}</span> : <span className="helper">{consts.CYCLE_HELP}</span>}
+          {cycleRangeError ? <span className="error">{CYCLE_RANGE_ERROR}</span> : <span className="helper">{consts.CYCLE_HELP}</span>}
         </label>
       </div>
 

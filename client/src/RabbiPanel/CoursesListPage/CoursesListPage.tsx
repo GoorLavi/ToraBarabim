@@ -51,7 +51,7 @@ export const CoursesListPage = styled(({ className }: CoursesListPageProps) => {
       {state.status === 'success' && state.courses.length > 0 && (
         <ul className="list">
           {state.courses.map((course) => (
-            <CourseListItem key={course.id} course={course} />
+            <CourseListItem key={course.id} {...{ course }} />
           ))}
         </ul>
       )}

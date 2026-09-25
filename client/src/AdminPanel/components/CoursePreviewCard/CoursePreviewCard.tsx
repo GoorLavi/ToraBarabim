@@ -1,8 +1,8 @@
-import classNames from 'classnames';
 import styled from 'styled-components';
 
 import { adminCourseStatusTagLabel, courseStatusBucket } from '~/AdminPanel/helpers';
-import { AUDIENCE_LABELS, MIDDLE_DOT_SEPARATOR } from '~/consts';
+import { CourseStateSeal } from '~/components/CourseStateSeal/CourseStateSeal';
+import { AUDIENCE_LABELS, META_LINE_SEPARATOR } from '~/consts';
 import { courseOpeningDateLongLabel, rabbiDisplayName, stateSealParts, venuePanelCityName } from '~/helpers';
 
 import * as consts from './consts';
@@ -29,13 +29,7 @@ export const CoursePreviewCard = styled(({ className, course }: CoursePreviewCar
       <div className="card">
         <div className="poster">
           <img className="image" src={course.coverUrl} alt="" />
-          {/* The same seal the public CourseCard draws (CourseCard/styles.ts),
-              not a faded admin-only copy (design gate finding). */}
-          <div className={classNames('stateTag', { closed: isClosed })}>
-            <span className="small">{seal.small}</span>
-            {isClosed && <span className="rule" aria-hidden="true" />}
-            <span className="big">{seal.big}</span>
-          </div>
+          <CourseStateSeal {...{ small: seal.small, big: seal.big, isClosed }} />
         </div>
 
         <div className="body">
@@ -50,7 +44,7 @@ export const CoursePreviewCard = styled(({ className, course }: CoursePreviewCar
           </p>
           <p className="meta" dir="auto">
             {AUDIENCE_LABELS[course.audience]}
-            {MIDDLE_DOT_SEPARATOR}
+            {META_LINE_SEPARATOR}
             {venuePanelCityName(course.venue)}
           </p>
         </div>

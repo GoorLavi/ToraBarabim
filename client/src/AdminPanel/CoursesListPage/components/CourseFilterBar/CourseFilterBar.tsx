@@ -49,21 +49,23 @@ export const CourseFilterBar = styled(
           </select>
 
           <SearchSelect<Rabbi>
-            query={rabbiQuery}
-            items={rabbiResults.items}
-            isPending={rabbiResults.isPending}
-            isError={rabbiResults.isError}
-            getItemKey={(item) => item.id}
-            isSelected={(item) => item.id === rabbi?.id}
-            onSelect={selectRabbi}
-            onQueryChange={setRabbiQuery}
-            renderTrigger={() => <span dir="auto">{rabbi ? rabbiDisplayName(rabbi) : parentConsts.RABBI_FILTER_PLACEHOLDER}</span>}
-            renderOption={(item) => <span dir="auto">{rabbiDisplayName(item)}</span>}
-            searchLabel={parentConsts.RABBI_FILTER_PLACEHOLDER}
-            searchPlaceholder={parentConsts.RABBI_FILTER_PLACEHOLDER}
-            loadingMessage={consts.RABBI_SEARCH_LOADING_MESSAGE}
-            emptyMessage={consts.RABBI_SEARCH_EMPTY_MESSAGE}
-            loadErrorMessage={consts.RABBI_SEARCH_LOAD_ERROR_MESSAGE}
+            {...{
+              query: rabbiQuery,
+              items: rabbiResults.items,
+              isPending: rabbiResults.isPending,
+              isError: rabbiResults.isError,
+              getItemKey: (item) => item.id,
+              isSelected: (item) => item.id === rabbi?.id,
+              onSelect: selectRabbi,
+              onQueryChange: setRabbiQuery,
+              renderTrigger: () => <span dir="auto">{rabbi ? rabbiDisplayName(rabbi) : parentConsts.RABBI_FILTER_PLACEHOLDER}</span>,
+              renderOption: (item) => <span dir="auto">{rabbiDisplayName(item)}</span>,
+              searchLabel: parentConsts.RABBI_FILTER_PLACEHOLDER,
+              searchPlaceholder: parentConsts.RABBI_FILTER_PLACEHOLDER,
+              loadingMessage: consts.RABBI_SEARCH_LOADING_MESSAGE,
+              emptyMessage: consts.RABBI_SEARCH_EMPTY_MESSAGE,
+              loadErrorMessage: consts.RABBI_SEARCH_LOAD_ERROR_MESSAGE,
+            }}
           />
 
           <input

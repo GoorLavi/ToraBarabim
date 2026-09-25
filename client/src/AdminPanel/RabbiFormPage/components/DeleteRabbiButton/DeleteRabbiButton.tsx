@@ -32,6 +32,10 @@ export const DeleteRabbiButton = styled(({ className, rabbiId, honorific, onDele
     },
   });
 
+  const impactLabel = preview.data
+    ? parentConsts.deleteConfirmImpactLabel(honorific, preview.data.lessonCount, preview.data.exceptionCount, preview.data.courseCount)
+    : undefined;
+
   return (
     <div className={className}>
       <button type="button" className="deleteTrigger" onClick={() => setIsDialogOpen(true)}>
@@ -45,11 +49,7 @@ export const DeleteRabbiButton = styled(({ className, rabbiId, honorific, onDele
 
             {preview.isPending && <p className="message">{parentConsts.DELETE_PREVIEW_LOADING_MESSAGE}</p>}
             {preview.isError && <p className="message error">{adminErrorMessage(preview.error)}</p>}
-            {preview.data && (
-              <p className="message">
-                {parentConsts.deleteConfirmImpactLabel(honorific, preview.data.lessonCount, preview.data.exceptionCount, preview.data.courseCount)}
-              </p>
-            )}
+            {impactLabel && <p className="message">{impactLabel}</p>}
             <p className="irreversible">{parentConsts.DELETE_CONFIRM_IRREVERSIBLE_NOTE}</p>
 
             {remove.isError && <p className="message error">{adminErrorMessage(remove.error)}</p>}

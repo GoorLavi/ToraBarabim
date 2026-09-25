@@ -1,7 +1,7 @@
 import type { CourseState, CourseSummary, CourseTeacher } from '@torabarabim/common';
 
 import { audienceTreatment } from '~/HomePage/components/LessonCard/helpers';
-import type { AudienceTreatment } from '~/HomePage/components/LessonCard/models';
+import type { AudienceTreatment, LessonCardSurface } from '~/HomePage/components/LessonCard/models';
 import { COURSE_STATE_TAG_CLOSED, COURSE_STATE_TAG_FULL, COURSE_STATE_TAG_OPEN } from '~/consts';
 import { rabbiDisplayName, stateSealParts } from '~/helpers';
 
@@ -21,8 +21,12 @@ export const courseStateSealParts = (state: CourseState): { small: string; big: 
 // Reuses `LessonCard`'s own audience treatment (helpers.ts there): 'marked'
 // for a mixed audience, 'chip' for a plain women's audience in a general
 // listing, 'plain' otherwise, so a course card beside a lesson card in the
-// same rail marks its audience exactly the same way.
-export const courseAudienceTreatment = (course: Pick<CourseSummary, 'audience'>): AudienceTreatment => audienceTreatment(course.audience, 'general');
+// same rail marks its audience exactly the same way. `surface` comes from
+// the caller (CourseCardProps), never hard-coded here: a women's course on
+// the women's area rail must read as plain text, not a chip, the same as
+// every other course listed there.
+export const courseAudienceTreatment = (course: Pick<CourseSummary, 'audience'>, surface: LessonCardSurface): AudienceTreatment =>
+  audienceTreatment(course.audience, surface);
 
 // The teacher line: a linked rabbi always carries the honorific through
 // `rabbiDisplayName`, never a hand-built string (root CLAUDE.md); an

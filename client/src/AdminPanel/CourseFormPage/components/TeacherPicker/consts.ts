@@ -1,3 +1,5 @@
+import { formatNumber } from '~/helpers';
+
 export const SEARCH_LABEL = 'חיפוש רב או רבנית';
 export const SEARCH_PLACEHOLDER = 'בחירת רב מהרשימה';
 export const SEARCH_LOADING_MESSAGE = 'טוענים...';
@@ -13,3 +15,8 @@ export const NAMED_LABEL = 'מי מלמד או מארגן';
 export const NAMED_HELP = 'יופיע באתר בדיוק כך, בלי קישור. אם זה רב או רבנית, כותבים לפני השם "הרב" או "הרבנית".';
 
 export const REQUIRED_TEACHER_ERROR = 'יש לבחור רב מהרשימה או לכתוב מי מלמד';
+
+// Mirrored from server/src/service/course/consts.ts's own
+// COURSE_TEACHER_NAME_MAX_LENGTH.
+export const COURSE_TEACHER_NAME_MAX_LENGTH = 120;
+export const TEACHER_NAME_TOO_LONG_ERROR = `השם יכול להיות עד ${formatNumber(COURSE_TEACHER_NAME_MAX_LENGTH)} תווים`;

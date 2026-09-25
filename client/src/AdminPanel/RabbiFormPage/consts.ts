@@ -88,12 +88,22 @@ const withLeadingVav = (part: string): string => (/^\d/.test(part) ? `ו־${part
 // thing ("קורס אחד המשויך אליו"), plural otherwise, and the sentence
 // follows the rabbi's own honorific ("אליו" for a rav, "אליה" for a
 // rabbanit).
-export const deleteConfirmImpactLabel = (honorific: RabbiHonorific, lessonCount: number, exceptionCount: number, courseCount: number): string => {
+// `undefined` when every count is zero (a rabbi with nothing linked yet):
+// there is no impact sentence to show at all, not one naming zero of
+// everything.
+export const deleteConfirmImpactLabel = (
+  honorific: RabbiHonorific,
+  lessonCount: number,
+  exceptionCount: number,
+  courseCount: number,
+): string | undefined => {
   const parts = [
     lessonCount > 0 ? lessonsPart(lessonCount) : undefined,
     exceptionCount > 0 ? exceptionsPart(exceptionCount) : undefined,
     courseCount > 0 ? coursesPart(courseCount) : undefined,
   ].filter((part): part is string => part !== undefined);
+
+  if (parts.length === 0) return undefined;
 
   const last = parts[parts.length - 1];
   const partsText = parts.length <= 1 ? (last ?? '') : `${parts.slice(0, -1).join(', ')} ${withLeadingVav(last as string)}`;

@@ -14,8 +14,13 @@ export const teacherFromCourse = (course: CourseResponse): TeacherFormValue =>
 
 export const pageHeading = (isEditing: boolean): string => (isEditing ? consts.EDIT_HEADING : consts.NEW_HEADING);
 
-export const validateTeacher = (teacher: TeacherFormValue): string | undefined =>
-  teacher.kind === 'named' && !teacher.name.trim() ? teacherPickerConsts.REQUIRED_TEACHER_ERROR : undefined;
+export const validateTeacher = (teacher: TeacherFormValue): string | undefined => {
+  if (teacher.kind !== 'named') return undefined;
+  const name = teacher.name.trim();
+  if (!name) return teacherPickerConsts.REQUIRED_TEACHER_ERROR;
+  if (name.length > teacherPickerConsts.COURSE_TEACHER_NAME_MAX_LENGTH) return teacherPickerConsts.TEACHER_NAME_TOO_LONG_ERROR;
+  return undefined;
+};
 
 const buildTeacherInput = (teacher: TeacherFormValue): CourseTeacherInput =>
   teacher.kind === 'rabbi' ? { kind: 'rabbi', rabbiId: teacher.rabbi.id } : { kind: 'named', name: teacher.name.trim() };

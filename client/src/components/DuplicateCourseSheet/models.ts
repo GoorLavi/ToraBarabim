@@ -1,4 +1,4 @@
-import type { DuplicateCourseRequest } from '@torabarabim/common';
+import type { CourseResponse, DuplicateCourseRequest } from '@torabarabim/common';
 
 export interface DuplicateCourseSheetProps {
   className?: string;
@@ -10,4 +10,16 @@ export interface DuplicateCourseSheetProps {
   errorMessage: string | undefined;
   onConfirm: (body: DuplicateCourseRequest) => void;
   onDismiss: () => void;
+}
+
+// The one source for both panels' own thin wrapper around the sheet above
+// (RabbiPanel/CourseFormPage and AdminPanel/CourseViewPage each own a
+// `components/DuplicateCourseSheet/`): identical except for which
+// panel-specific error-message helper each reads its mutation through.
+export interface DuplicateCourseTriggerProps {
+  courseId: string;
+  courseName: string;
+  sourceCycle: number | undefined;
+  onDismiss: () => void;
+  onDuplicated: (course: CourseResponse) => void;
 }

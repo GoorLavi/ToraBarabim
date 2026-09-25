@@ -86,7 +86,9 @@ export const PlacePage = styled(({ className }: PlacePageProps) => {
         <>
           <PlaceHero {...{ place, lessonCount }} />
 
-          {place.courses.length > 0 && <CourseRail title={consts.COURSES_HEADING} items={place.courses} surface="placePage" />}
+          {place.courses.length > 0 && (
+            <CourseRail {...{ title: consts.COURSES_HEADING, items: place.courses, surface: 'general', clickSurface: 'placePage' }} />
+          )}
 
           {lessonsQuery.isPending && <DayGroupSkeleton />}
 

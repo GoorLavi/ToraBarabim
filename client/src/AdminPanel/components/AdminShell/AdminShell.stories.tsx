@@ -1,7 +1,7 @@
 import type { AdminUser } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Route, Routes } from 'react-router-dom';
-import { expect, within } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 
 import { ADMIN_ROUTES } from '~/AdminPanel/consts';
 import { atFrameSize } from '~/storyMocks';
@@ -36,8 +36,10 @@ export const TabGridPhoneNonSuper: Story = {
     atFrameSize(375, 700, async () => {
       const nav = await within(canvasElement).findByRole('navigation', { name: consts.NAV_LABEL });
       await expect(within(nav).findAllByRole('link')).resolves.toHaveLength(5);
-      expect(getComputedStyle(nav).display).toEqual('grid');
-      expect(getComputedStyle(nav).gridTemplateColumns.trim().split(/\s+/)).toHaveLength(3);
+      // Waited, not read once: `atFrameSize`'s own resize still has the grid
+      // reflowing for a moment after the frame's width changes.
+      await waitFor(() => expect(getComputedStyle(nav).display).toEqual('grid'));
+      await waitFor(() => expect(getComputedStyle(nav).gridTemplateColumns.trim().split(/\s+/)).toHaveLength(3));
     }),
 };
 
@@ -50,8 +52,8 @@ export const TabGridPhoneSuper: Story = {
     atFrameSize(375, 700, async () => {
       const nav = await within(canvasElement).findByRole('navigation', { name: consts.NAV_LABEL });
       await expect(within(nav).findAllByRole('link')).resolves.toHaveLength(6);
-      expect(getComputedStyle(nav).display).toEqual('grid');
-      expect(getComputedStyle(nav).gridTemplateColumns.trim().split(/\s+/)).toHaveLength(3);
+      await waitFor(() => expect(getComputedStyle(nav).display).toEqual('grid'));
+      await waitFor(() => expect(getComputedStyle(nav).gridTemplateColumns.trim().split(/\s+/)).toHaveLength(3));
     }),
 };
 

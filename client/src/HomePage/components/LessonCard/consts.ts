@@ -10,12 +10,6 @@ export const CANCELLED_LABEL = 'מבוטל השבוע';
 // that follows comes from `SUBSTITUTE_PREFIX_BY_HONORIFIC` (~/consts.ts).
 export const SUBSTITUTE_LABEL = 'הפעם';
 
-// Non-breaking spaces on both sides of the dot, so the meta line's
-// description never wraps with the dot left dangling alone at a line's end
-// (design review, card meta at 375).
-export const META_SEPARATOR = ' · ';
-
-
 // Below this, the cancellation label and the medallion cannot both sit at
 // the poster's top edge without colliding (design review): the label drops
 // to the bottom corner instead, still stepped by the card's own rendered

@@ -5,9 +5,10 @@ import * as consts from './consts';
 
 // Status-aware, with per-call overrides keyed by the server's `error` code
 // first and its HTTP status second, mirroring `AdminPanel/helpers.ts`'s
-// `adminErrorMessage`. Never renders the raw server message, except for the
-// course error codes `~/courseErrors.ts` covers, whose Hebrew is itself the
-// approved copy (spec section 13).
+// `adminErrorMessage`. Never renders the raw server message: a course error
+// code goes through `~/courseErrors.ts` instead, which builds its own
+// approved Hebrew from the code and its details (spec section 13), not from
+// the server's own message string.
 export const rabbiErrorMessage = (error: unknown, overrides: Partial<Record<string | number, string>> = {}): string => {
   if (!(error instanceof RabbiApiError)) return consts.GENERIC_ERROR_MESSAGE;
 

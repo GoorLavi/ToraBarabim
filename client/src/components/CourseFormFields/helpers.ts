@@ -95,7 +95,10 @@ export const validateCourseForm = (form: CourseFormState, isCreating: boolean): 
   if (!form.description.trim()) errors.description = consts.REQUIRED_DESCRIPTION_ERROR;
   else if (form.description.trim().length > consts.COURSE_DESCRIPTION_MAX_LENGTH) errors.description = consts.DESCRIPTION_TOO_LONG_ERROR;
 
-  if (form.topic.kind === 'other' && !form.topic.otherText.trim()) errors.topicOther = consts.REQUIRED_TOPIC_OTHER_ERROR;
+  if (form.topic.kind === 'other') {
+    if (!form.topic.otherText.trim()) errors.topicOther = consts.REQUIRED_TOPIC_OTHER_ERROR;
+    else if (form.topic.otherText.trim().length > consts.COURSE_TOPIC_OTHER_MAX_LENGTH) errors.topicOther = consts.TOPIC_OTHER_TOO_LONG_ERROR;
+  }
 
   if (isCreating && !form.cover) errors.cover = consts.REQUIRED_COVER_ERROR;
 

@@ -8,7 +8,7 @@ import { CourseRail } from './CourseRail';
 const meta: Meta<typeof CourseRail> = {
   title: 'components/CourseRail',
   component: CourseRail,
-  args: { title: 'קורסים', surface: 'homeRail' },
+  args: { title: 'קורסים', surface: 'general', clickSurface: 'homeRail' },
 };
 
 export default meta;

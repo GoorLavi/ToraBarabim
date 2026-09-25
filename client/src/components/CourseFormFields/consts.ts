@@ -1,6 +1,7 @@
 import type { LessonTopic } from '@torabarabim/common';
 
 import { COURSE_GALLERY_MAX_PHOTOS } from '~/components/GalleryField/consts';
+import { formatNumber } from '~/helpers';
 
 import type { CourseFormField } from './models';
 
@@ -66,17 +67,7 @@ export const REQUIRED_AUDIENCE_ERROR = 'יש לבחור קהל יעד';
 // (server/src/service/course/consts.ts carries the same floor).
 export const INVALID_PRICE_ERROR = 'המחיר צריך להיות מספר שלם בשקלים, לפחות 1. כדי לא להציג מחיר, משאירים את השדה ריק.';
 
-// Upper bounds mirrored from server/src/service/course/consts.ts, each
-// shown only once its own field is out of range (never in the field's
-// normal help line, which stays as approved).
-export const CYCLE_RANGE_ERROR = 'מספר המחזור צריך להיות בין 1 ל-999';
-export const WEEKS_RANGE_ERROR = 'מספר השבועות צריך להיות בין 1 ל-104';
-export const SESSIONS_RANGE_ERROR = 'מספר המפגשים צריך להיות בין 1 ל-500';
-export const HOURS_RANGE_ERROR = 'מספר השעות צריך להיות מספר שלם בין 1 ל-2000';
-export const PRICE_TOO_HIGH_ERROR = 'המחיר לא יכול להיות גבוה מ-100,000 שקלים';
-export const NAME_TOO_LONG_ERROR = 'שם הקורס יכול להיות עד 120 תווים';
-export const DESCRIPTION_TOO_LONG_ERROR = 'התיאור יכול להיות עד 4000 תווים';
-
+// Upper bounds mirrored from server/src/service/course/consts.ts.
 export const COURSE_CYCLE_MAX = 999;
 export const COURSE_WEEKS_MAX = 104;
 export const COURSE_SESSIONS_MAX = 500;
@@ -84,6 +75,20 @@ export const COURSE_HOURS_MAX = 2000;
 export const COURSE_PRICE_MAX = 100000;
 export const COURSE_NAME_MAX_LENGTH = 120;
 export const COURSE_DESCRIPTION_MAX_LENGTH = 4000;
+export const COURSE_TOPIC_OTHER_MAX_LENGTH = 120;
+
+// Each shown only once its own field is out of range (never in the field's
+// normal help line, which stays as approved). Built from the bounds above
+// through the site's own number formatter, so a four-digit bound always
+// carries its thousands comma.
+export const CYCLE_RANGE_ERROR = `מספר המחזור צריך להיות בין 1 ל־${formatNumber(COURSE_CYCLE_MAX)}`;
+export const WEEKS_RANGE_ERROR = `מספר השבועות צריך להיות בין 1 ל־${formatNumber(COURSE_WEEKS_MAX)}`;
+export const SESSIONS_RANGE_ERROR = `מספר המפגשים צריך להיות בין 1 ל־${formatNumber(COURSE_SESSIONS_MAX)}`;
+export const HOURS_RANGE_ERROR = `מספר השעות צריך להיות בין 1 ל־${formatNumber(COURSE_HOURS_MAX)}, בלי שברים`;
+export const PRICE_TOO_HIGH_ERROR = `המחיר יכול להיות עד ${formatNumber(COURSE_PRICE_MAX)} ₪`;
+export const NAME_TOO_LONG_ERROR = `שם הקורס יכול להיות עד ${formatNumber(COURSE_NAME_MAX_LENGTH)} תווים`;
+export const DESCRIPTION_TOO_LONG_ERROR = `התיאור יכול להיות עד ${formatNumber(COURSE_DESCRIPTION_MAX_LENGTH)} תווים`;
+export const TOPIC_OTHER_TOO_LONG_ERROR = `נושא הקורס יכול להיות עד ${formatNumber(COURSE_TOPIC_OTHER_MAX_LENGTH)} תווים`;
 
 export const SECTION_DEFS: { fields: CourseFormField[]; heading: string }[] = [
   { fields: ['name', 'description', 'topicOther', 'cycle'], heading: ABOUT_SECTION_HEADING },

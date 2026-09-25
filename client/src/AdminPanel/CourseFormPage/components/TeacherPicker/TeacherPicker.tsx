@@ -26,29 +26,35 @@ export const TeacherPicker = styled(({ className, teacher, onChangeTeacher, erro
     <div className={className}>
       <div className="triggerRow">
         <SearchSelect<Rabbi>
-          {...{ query }}
-          fullWidth
-          invalid={Boolean(errorMessage)}
-          items={results.items}
-          isPending={results.isPending}
-          isError={results.isError}
-          getItemKey={(item) => item.id}
-          isSelected={(item) => teacher.kind === 'rabbi' && item.id === teacher.rabbi.id}
-          onSelect={(rabbi) => onChangeTeacher({ kind: 'rabbi', rabbi })}
-          onQueryChange={setQuery}
-          renderTrigger={() => (
-            <span dir="auto">{teacher.kind === 'rabbi' ? rabbiDisplayName(teacher.rabbi) : consts.SEARCH_PLACEHOLDER}</span>
-          )}
-          renderOption={(item) => <span dir="auto">{rabbiDisplayName(item)}</span>}
-          searchLabel={consts.SEARCH_LABEL}
-          searchPlaceholder={consts.SEARCH_PLACEHOLDER}
-          loadingMessage={consts.SEARCH_LOADING_MESSAGE}
-          emptyMessage={consts.SEARCH_EMPTY_MESSAGE}
-          loadErrorMessage={consts.SEARCH_LOAD_ERROR_MESSAGE}
+          {...{
+            query,
+            fullWidth: true,
+            invalid: Boolean(errorMessage),
+            items: results.items,
+            isPending: results.isPending,
+            isError: results.isError,
+            getItemKey: (item) => item.id,
+            isSelected: (item) => teacher.kind === 'rabbi' && item.id === teacher.rabbi.id,
+            onSelect: (rabbi) => onChangeTeacher({ kind: 'rabbi', rabbi }),
+            onQueryChange: setQuery,
+            renderTrigger: () => <span dir="auto">{teacher.kind === 'rabbi' ? rabbiDisplayName(teacher.rabbi) : consts.SEARCH_PLACEHOLDER}</span>,
+            renderOption: (item) => <span dir="auto">{rabbiDisplayName(item)}</span>,
+            searchLabel: consts.SEARCH_LABEL,
+            searchPlaceholder: consts.SEARCH_PLACEHOLDER,
+            loadingMessage: consts.SEARCH_LOADING_MESSAGE,
+            emptyMessage: consts.SEARCH_EMPTY_MESSAGE,
+            loadErrorMessage: consts.SEARCH_LOAD_ERROR_MESSAGE,
+          }}
         />
 
         {teacher.kind === 'rabbi' && (
-          <QuietButton className="clearSelection" label={consts.CLEAR_SELECTION_LABEL} onClick={() => onChangeTeacher({ kind: 'named', name: '' })} />
+          <QuietButton
+            {...{
+              className: 'clearSelection',
+              label: consts.CLEAR_SELECTION_LABEL,
+              onClick: () => onChangeTeacher({ kind: 'named', name: '' }),
+            }}
+          />
         )}
       </div>
 

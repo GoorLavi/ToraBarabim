@@ -35,42 +35,6 @@ export const CoursePreviewCard = css(
         block-size: 100%;
         object-fit: cover;
       }
-
-      /* The same two-line seal the public CourseCard draws
-         (components/CourseCard/styles.ts), not a faded admin-only tag. */
-      > .stateTag {
-        position: absolute;
-        inset-block-start: ${theme.spacing.sm};
-        inset-inline-end: ${theme.spacing.sm};
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding-block: ${theme.spacing.xs};
-        padding-inline: ${theme.spacing.sm};
-        border: 1px solid ${theme.colors.accentOnDark};
-        border-radius: ${theme.radii.sm};
-        background: ${theme.colors.primary};
-        color: ${theme.colors.textOnPrimary};
-
-        > .small {
-          font-weight: ${theme.typography.fontWeight.regular};
-          font-size: ${theme.typography.tagAndCaption.phone.fontSize};
-          line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
-        }
-
-        > .big {
-          font-weight: ${theme.typography.fontWeight.bold};
-          font-size: ${theme.typography.tagAndCaption.phone.fontSize};
-          line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
-        }
-
-        &.closed > .rule {
-          inline-size: 100%;
-          block-size: 1px;
-          margin-block: 2px;
-          background: ${theme.colors.accentOnDark};
-        }
-      }
     }
 
     > .body {

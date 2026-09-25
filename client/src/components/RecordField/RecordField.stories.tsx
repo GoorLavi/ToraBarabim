@@ -7,7 +7,7 @@ import { RecordField } from './RecordField';
 // this isolates the row itself, its measured height and its wrap padding,
 // which is exactly what the design review is judging.
 const meta: Meta<typeof RecordField> = {
-  title: 'AdminPanel/RecordField',
+  title: 'components/RecordField',
   component: RecordField,
 };
 

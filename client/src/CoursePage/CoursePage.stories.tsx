@@ -6,7 +6,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { CALL_ACCESSIBLE_NAME_PREFIX } from '~/components/ContactActions/consts';
 import { COURSE_FACT_PRICE_LABEL } from '~/consts';
 import { courseDetailFixture } from '~/courseFixture';
-import { phoneDisplay, phoneToInternational, whatsAppHref } from '~/helpers';
+import { phoneDisplay } from '~/helpers';
 import { rabbiFixture } from '~/rabbiFixture';
 import { atFrameSize, placeholderPhoto } from '~/storyMocks';
 
@@ -56,26 +56,36 @@ export const Open: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
+    // The cycle tag beside the course name.
+    await expect(canvas.getByText(consts.cycleLabel(3))).toBeInTheDocument();
+
     // Gallery on phone: a full-bleed slide strip, one button per photo,
     // each opening the full viewer at its own index (no counter or arrow
-    // in the strip itself; a swipe is the browsing gesture there).
-    const fourthSlide = canvas.getByRole('button', { name: 'הצגת תמונה 4 במסך מלא' });
-    await userEvent.click(fourthSlide);
-    const dialog = await within(document.body).findByRole('dialog');
-    await expect(within(dialog).getByText('4 מתוך 9')).toBeInTheDocument();
+    // in the strip itself; a swipe is the browsing gesture there). The
+    // strip only exists below `lg` (CourseGallery/styles.ts), so this needs
+    // the real, narrow frame, not just Storybook's own cosmetic viewport
+    // global, which the vitest test runner never applies to the page.
+    await atFrameSize(375, undefined, async () => {
+      const fourthSlide = canvas.getByRole('button', { name: 'הצגת תמונה 4 במסך מלא' });
+      await userEvent.click(fourthSlide);
+      const dialog = await within(document.body).findByRole('dialog');
+      await expect(within(dialog).getByText('4 מתוך 9')).toBeInTheDocument();
 
-    // The viewer's own next arrow and close button.
-    await userEvent.click(within(dialog).getByRole('button', { name: 'לתמונה הבאה' }));
-    await waitFor(() => expect(within(dialog).getByText('5 מתוך 9')).toBeInTheDocument());
-    await userEvent.click(within(dialog).getByRole('button', { name: 'סגירה' }));
-    await waitFor(() => expect(within(document.body).queryByRole('dialog')).not.toBeInTheDocument());
+      // The viewer's own next arrow and close button.
+      await userEvent.click(within(dialog).getByRole('button', { name: 'לתמונה הבאה' }));
+      await waitFor(() => expect(within(dialog).getByText('5 מתוך 9')).toBeInTheDocument());
+      await userEvent.click(within(dialog).getByRole('button', { name: 'סגירה' }));
+      await waitFor(() => expect(within(document.body).queryByRole('dialog')).not.toBeInTheDocument());
+    });
 
     // The WhatsApp href carries the course name (encoded) and the course's
-    // own number, never the site's own support number.
+    // own number, never the site's own support number: a literal string, not
+    // a call through the same helpers that build it, so the test would
+    // actually notice a broken encoding or a swapped number.
     const whatsappLink = canvas.getByRole('link', { name: consts.CONTACT_BAR_WHATSAPP_LABEL });
     await expect(whatsappLink).toHaveAttribute(
       'href',
-      whatsAppHref(consts.whatsAppMessage('יסודות האמונה'), phoneToInternational('0501234567')),
+      'https://wa.me/972501234567?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%A8%D7%90%D7%99%D7%AA%D7%99%20%D7%91%D7%90%D7%AA%D7%A8%20%D7%AA%D7%95%D7%A8%D7%94%20%D7%91%D7%A8%D7%91%D7%99%D7%9D%20%D7%90%D7%AA%20%D7%94%D7%A7%D7%95%D7%A8%D7%A1%20%22%D7%99%D7%A1%D7%95%D7%93%D7%95%D7%AA%20%D7%94%D7%90%D7%9E%D7%95%D7%A0%D7%94%22%20%D7%95%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A9%D7%9E%D7%95%D7%A2%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A0%D7%95%D7%A1%D7%A4%D7%99%D7%9D.',
     );
 
     // The call href dials the same number, converted to international form.
@@ -83,7 +93,7 @@ export const Open: Story = {
     // visible label ("שיחה"): ContactActions.tsx always names a phone
     // number, never just the action.
     const callLink = canvas.getByRole('link', { name: `${CALL_ACCESSIBLE_NAME_PREFIX} ${phoneDisplay('0501234567')}` });
-    await expect(callLink).toHaveAttribute('href', `tel:+${phoneToInternational('0501234567')}`);
+    await expect(callLink).toHaveAttribute('href', 'tel:+972501234567');
   },
 };
 

@@ -24,7 +24,7 @@ export const GalleryField = styled(({ className, photos, onAddFiles, onRemove, o
     const checks = await Promise.all(files.map(async (file) => ({ file, clearsFloor: await clearsGalleryFloor(file) })));
     const accepted = checks.filter((check) => check.clearsFloor).map((check) => check.file);
     const rejectedCount = checks.length - accepted.length;
-    setTooSmallError(rejectedCount > 0 ? consts.galleryTooSmallError(rejectedCount) : undefined);
+    setTooSmallError(rejectedCount > 0 ? consts.galleryTooSmallError(rejectedCount, accepted.length) : undefined);
     if (accepted.length > 0) onAddFiles(accepted);
   };
 
@@ -47,7 +47,7 @@ export const GalleryField = styled(({ className, photos, onAddFiles, onRemove, o
 
             {photo.status === 'failed' && (
               <div className="status failed">
-                <span className="label">{photo.failureReason ?? consts.GALLERY_FAILED_LABEL}</span>
+                <span className="label">{photo.failureReason}</span>
                 {photo.canRetry !== false && (
                   <button type="button" className="retry" onClick={() => onRetry(photo.id)}>
                     {consts.GALLERY_RETRY_LABEL}
@@ -56,7 +56,7 @@ export const GalleryField = styled(({ className, photos, onAddFiles, onRemove, o
               </div>
             )}
 
-            {photo.status === 'uploaded' && (
+            {(photo.status === 'uploaded' || photo.status === 'failed') && (
               <button type="button" className="remove" aria-label={consts.galleryRemoveLabel(index + 1)} onClick={() => onRemove(photo.id)}>
                 {'×'}
               </button>

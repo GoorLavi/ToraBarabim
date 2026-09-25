@@ -1,4 +1,4 @@
-import type { DedicationType, LessonAudience, LessonOccurrence } from '@torabarabim/common';
+import type { CloseReason, DedicationType, LessonAudience, LessonOccurrence } from '@torabarabim/common';
 import type { ReactNode } from 'react';
 
 import type { DateFilterOption } from '~/hooks/models';
@@ -205,11 +205,9 @@ export interface CourseDeletedProps {
   courseId: string;
 }
 
-export type CourseCloseReason = 'closed' | 'full';
-
 export interface CourseRegistrationClosedProps {
   courseId: string;
-  reason: CourseCloseReason;
+  reason: CloseReason;
 }
 
 export interface SuperProperties {

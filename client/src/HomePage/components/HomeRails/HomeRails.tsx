@@ -67,7 +67,7 @@ export const HomeRails = styled(({ className, query, dedicationGroup }: HomeRail
         {...{ title: row.title, items: row.items, womensAreaTileIndex: row.womensAreaTileIndex, womensAreaLessonCount }}
       />
     ) : (
-      <CourseRail key={row.id} {...{ title: row.title, items: row.items, surface: 'homeRail' as const }} />
+      <CourseRail key={row.id} {...{ title: row.title, items: row.items, surface: 'general' as const, clickSurface: 'homeRail' as const }} />
     ),
   );
 

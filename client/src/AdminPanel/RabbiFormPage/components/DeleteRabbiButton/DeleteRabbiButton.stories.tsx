@@ -65,6 +65,17 @@ export const AllThreeParts: Story = {
   },
 };
 
+// A brand-new rabbi with nothing linked yet: no impact sentence at all,
+// never one naming zero of everything.
+export const NothingLinked: Story = {
+  parameters: { apiMocks: { handlers: { preview: previewHandler({ lessonCount: 0, exceptionCount: 0, courseCount: 0 }) } } },
+  play: async ({ canvasElement }) => {
+    const dialog = await openDialog(canvasElement);
+    await expect(dialog.findByText(parentConsts.DELETE_CONFIRM_IRREVERSIBLE_NOTE)).resolves.toBeInTheDocument();
+    expect(dialog.queryByText(/תמחק גם/)).not.toBeInTheDocument();
+  },
+};
+
 // A rabbanit's own honorific: the sentence's subject and its closing
 // pronoun both follow it, never the rav's own wording.
 export const RabbanitHonorific: Story = {

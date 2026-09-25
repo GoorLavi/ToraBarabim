@@ -81,8 +81,8 @@ export const CoursesListPage = styled(({ className }: CoursesListPageProps) => {
 
       {state.status === 'success' && state.rows.length > 0 && (
         <>
-          <CoursesTable rows={state.rows} />
-          <CoursesCardList rows={state.rows} />
+          <CoursesTable {...{ rows: state.rows }} />
+          <CoursesCardList {...{ rows: state.rows }} />
         </>
       )}
     </div>

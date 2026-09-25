@@ -5,6 +5,5 @@ export const OPENING_DATE_LABEL = 'תאריך פתיחה';
 export const CYCLE_LABEL = 'מחזור';
 export const CYCLE_HELP = 'לא חובה.';
 export const MISSING_OPENING_DATE_ERROR = 'יש לבחור תאריך פתיחה';
-export const CYCLE_RANGE_ERROR = 'מספר המחזור צריך להיות בין 1 ל-999';
 export const DUPLICATE_COURSE_CONFIRM_LABEL = 'שכפול ופתיחת הטופס';
 export const DUPLICATE_COURSE_BACK_LABEL = 'חזרה';

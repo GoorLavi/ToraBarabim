@@ -25,6 +25,9 @@ const closedCourse = courseResponseFixture({
 });
 
 const profileHandler = (profile = rabbiProfile) => http.get('/v1/rabbi/profile', jsonResolver(profile));
+// The where-section's own `PlacePicker` mounts unconditionally (CourseFormFields.tsx),
+// so every story below that reaches the real form needs this too.
+const placesHandler = http.get('/v1/places', jsonResolver({ items: [] }));
 
 const withRoute = (pathname: string) => (Story: React.ComponentType) => (
   <Routes location={{ pathname, search: '', hash: '', state: null, key: 'story' }}>
@@ -48,7 +51,7 @@ type Story = StoryObj<typeof CourseFormPage>;
 // only uploads it once the course itself exists).
 export const CreateMode: Story = {
   decorators: [withRoute('/courses/new')],
-  parameters: { apiMocks: { handlers: { profile: profileHandler() } } },
+  parameters: { apiMocks: { handlers: { profile: profileHandler(), places: placesHandler } } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.findByRole('heading', { name: consts.NEW_HEADING })).resolves.toBeInTheDocument();
@@ -60,10 +63,12 @@ export const CreateMode: Story = {
 // a picker, the same as the lesson form's own treatment.
 export const CreateModeRabbanit: Story = {
   decorators: [withRoute('/courses/new')],
-  parameters: { apiMocks: { handlers: { profile: profileHandler(rabbaniteProfile) } } },
+  parameters: { apiMocks: { handlers: { profile: profileHandler(rabbaniteProfile), places: placesHandler } } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.findByText('נשים')).resolves.toBeInTheDocument();
+    // Locked, not a live choice: the picker itself never renders.
+    expect(canvas.queryByRole('radiogroup')).not.toBeInTheDocument();
   },
 };
 
@@ -73,7 +78,7 @@ export const EditModeOpen: Story = {
   decorators: [withRoute(`/courses/${openCourse.id}`)],
   parameters: {
     apiMocks: {
-      handlers: { profile: profileHandler(), course: http.get('/v1/rabbi/courses/:id', jsonResolver(openCourse)) },
+      handlers: { profile: profileHandler(), course: http.get('/v1/rabbi/courses/:id', jsonResolver(openCourse)), places: placesHandler },
     },
   },
   play: async ({ canvasElement }) => {
@@ -127,6 +132,7 @@ export const EditModeClosedShowsReadOnlyRecord: Story = {
 // endpoint, which does not exist yet for a course with no id.
 export const CreateModeGalleryStaysLocalUntilSaved: Story = {
   decorators: [withRoute('/courses/new')],
+  parameters: { apiMocks: { handlers: { profile: profileHandler(), places: placesHandler } } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await canvas.findByRole('heading', { name: consts.NEW_HEADING });

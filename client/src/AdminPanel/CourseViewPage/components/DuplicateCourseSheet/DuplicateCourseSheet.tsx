@@ -1,10 +1,10 @@
 import { adminErrorMessage } from '~/AdminPanel/helpers';
 import { DuplicateCourseSheet as SharedDuplicateCourseSheet } from '~/components/DuplicateCourseSheet/DuplicateCourseSheet';
+import type { DuplicateCourseTriggerProps } from '~/components/DuplicateCourseSheet/models';
 
-import type { DuplicateCourseSheetProps } from './models';
 import { useDuplicateCourse } from './useDuplicateCourse';
 
-export const DuplicateCourseSheet = ({ courseId, courseName, sourceCycle, onDismiss, onDuplicated }: DuplicateCourseSheetProps) => {
+export const DuplicateCourseSheet = ({ courseId, courseName, sourceCycle, onDismiss, onDuplicated }: DuplicateCourseTriggerProps) => {
   const duplicateCourse = useDuplicateCourse(courseId);
 
   return (

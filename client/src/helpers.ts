@@ -42,8 +42,8 @@ export const placePath = (place: Pick<Place, 'id' | 'slug'>): string => `/places
 
 // The one place a course's public path is built, mirroring rabbiPath and
 // placePath: both segments percent-encoded. Typed against a minimal shape
-// rather than the wire `CourseSummary` (not landed yet), so this can ship
-// ahead of it; the wire type will structurally satisfy this once it lands.
+// rather than the wire `CourseSummary`, so any caller with just an id and a
+// slug (a fixture, a narrower response) can build the same path.
 export const coursePath = (course: { id: string; slug: string }): string => `/courses/${encodeURIComponent(course.id)}/${encodeURIComponent(course.slug)}`;
 
 // The one place a lesson occurrence's public path is built, from the lesson
@@ -269,11 +269,17 @@ export const courseClosedLineLabel = (lifecycle: { reason: CloseReason; closedOn
   return `${closedVerb(lifecycle.reason)} ב־${israelDayMonthLabel(lifecycle.closedOn)} · הקורס ${leaveVerb} מהרשימות באתר ב־${israelDayMonthLabel(lifecycle.leavesListsOn)}`;
 };
 
+const priceFormatter = new Intl.NumberFormat('he-IL');
+
+// A plain integer with a thousands comma ("2,000", "100,000"): the one
+// place this formatting happens, so a count named in an error message and a
+// price never drift on how they group digits.
+export const formatNumber = (value: number): string => priceFormatter.format(value);
+
 // "350 ₪ לכל הקורס", with a thousands comma for a four-digit price and up.
 // Lifted from `CoursePage/helpers.ts` once the rabbi panel's own read-only
 // course record became a second caller.
-const priceFormatter = new Intl.NumberFormat('he-IL');
-export const formatPriceShekels = (priceShekels: number): string => `${priceFormatter.format(priceShekels)} ₪ לכל הקורס`;
+export const formatPriceShekels = (priceShekels: number): string => `${formatNumber(priceShekels)} ₪ לכל הקורס`;
 
 // `other` carries its own free text; every other value reads the shared
 // lesson topic vocabulary (`LESSON_TOPIC_LABELS`), the same set the lesson

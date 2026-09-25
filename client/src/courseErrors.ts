@@ -52,10 +52,6 @@ const COURSE_ERROR_MESSAGES: CourseErrorMessageBuilders = {
 export const isCourseErrorCode = (code: string | undefined): code is CourseErrorCode =>
   Object.prototype.hasOwnProperty.call(COURSE_ERROR_MESSAGES, code as string);
 
-// A network failure (status 0) is the only one worth retrying: every other
-// course error code above is a rejection that will fail again unchanged.
-export const isRetryableCourseError = (status: number): boolean => status === 0;
-
 // `details` arrives as `unknown` off the wire (the two panels' own
 // `ApiError` classes carry it unnarrowed, since they cover every endpoint,
 // not just these). The cast here is the one place that trusts it: the

@@ -4,6 +4,7 @@ import type { QueryKey } from '@tanstack/react-query';
 import type { CourseResponse } from '@torabarabim/common';
 
 import { courseErrorMessage, isCourseErrorCode } from '~/courseErrors';
+import { GALLERY_REMOVE_FAILED_LABEL, GALLERY_UPLOAD_FAILED_LABEL } from '~/components/GalleryField/consts';
 import type { GalleryPhoto } from '~/components/GalleryField/models';
 
 export interface CourseGalleryPhotosApi {
@@ -92,7 +93,16 @@ export const useCourseGalleryPhotos = (
   const runUpload = async (id: string, localId: string, file: File): Promise<boolean> => {
     try {
       const course = await api.uploadPhoto(id, file);
-      queryClient.setQueryData(api.courseQueryKey(id), course);
+      // Merged by photo id, not replaced wholesale: `addFiles` fires one
+      // request per file immediately, so several can be in flight together,
+      // and a response that resolves late must not drop a photo a response
+      // that resolved sooner already added to the cache.
+      queryClient.setQueryData<CourseResponse>(api.courseQueryKey(id), (previous) => {
+        const base = previous ?? course;
+        const photosById = new Map(base.photos.map((photo) => [photo.id, photo]));
+        for (const photo of course.photos) photosById.set(photo.id, photo);
+        return { ...base, photos: Array.from(photosById.values()) };
+      });
       setPending((prev) => {
         const item = prev.find((photo) => photo.localId === localId);
         if (item) {
@@ -104,7 +114,9 @@ export const useCourseGalleryPhotos = (
       return true;
     } catch (error) {
       const { reason, canRetry } = failureFrom(api, error);
-      setPending((prev) => prev.map((photo) => (photo.localId === localId ? { ...photo, status: 'failed', failureReason: reason, canRetry } : photo)));
+      setPending((prev) =>
+        prev.map((photo) => (photo.localId === localId ? { ...photo, status: 'failed', failureReason: reason ?? GALLERY_UPLOAD_FAILED_LABEL, canRetry } : photo)),
+      );
       return false;
     }
   };
@@ -122,7 +134,8 @@ export const useCourseGalleryPhotos = (
         return next;
       });
     } catch (error) {
-      setFailedDeletes((prev) => new Map(prev).set(photoId, failureFrom(api, error)));
+      const { reason, canRetry } = failureFrom(api, error);
+      setFailedDeletes((prev) => new Map(prev).set(photoId, { reason: reason ?? GALLERY_REMOVE_FAILED_LABEL, canRetry }));
     }
   };
 

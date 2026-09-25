@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
@@ -218,7 +219,7 @@ export const CourseViewPage = styled(({ className }: CourseViewPageProps) => {
             <div className="photosGrid">
               {photos.map((photo, index) => (
                 <button key={photo.id} type="button" className="photoTile" onClick={() => setActivePhotoIndex(index)}>
-                  <img className={photo.id === 'cover' ? 'photo cover' : 'photo'} src={photo.url} alt="" />
+                  <img className={classNames('photo', { cover: photo.id === 'cover' })} src={photo.url} alt="" />
                 </button>
               ))}
             </div>
@@ -230,7 +231,7 @@ export const CourseViewPage = styled(({ className }: CourseViewPageProps) => {
         </div>
 
         <aside className="preview">
-          <CoursePreviewCard course={course} />
+          <CoursePreviewCard {...{ course }} />
         </aside>
       </div>
 

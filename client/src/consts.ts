@@ -49,11 +49,6 @@ export const COURSE_CLOSE_REGISTRATION_ACTION_LABEL = 'סגירת ההרשמה';
 export const COURSE_DUPLICATE_ACTION_LABEL = 'שכפול לתאריך חדש';
 export const COURSE_DELETE_ACTION_LABEL = 'מחיקת הקורס';
 
-// The floor on the shorter side, for a course's cover and every gallery
-// photo. Hand-mirrored from server/src/service/course/consts.ts's own
-// COURSE_PHOTO_MIN_SIDE.
-export const COURSE_PHOTO_MIN_SIDE = 600;
-
 // A course's fact labels, nouns throughout rather than "איפה"/"למי", so the
 // five read as one grammatical kind (spec section 13, editor). Lifted from
 // `CoursePage/consts.ts` once the rabbi panel's own read-only course record
@@ -145,13 +140,19 @@ export const COURSE_COVER_MIN_WIDTH = 900;
 export const COURSE_COVER_MIN_HEIGHT = 1200;
 export const COURSE_GALLERY_PHOTO_MIN_SIDE = 600;
 
-// A plain space-dot-space, joining two short facts on one rendered line (a
-// name and its cycle number, an audience tag and a city): read by every
-// card and row that joins such a pair, so the one join never has two
-// retyped copies drifting apart. Unlike `helpers.ts`'s own
-// `joinWithMiddleDot`, this dot is not NBSP-bound: every caller here
-// already controls where its own line may wrap.
-export const MIDDLE_DOT_SEPARATOR = ' · ';
+// A title's own name-and-cycle join ("יסודות האמונה · מחזור 3"): read by
+// every card and row that joins the two. The space before the dot is
+// non-breaking, bound to the name before it so the dot can never dangle
+// alone at a line break (design review); the space after is a normal one,
+// the same shape as `helpers.ts`'s own `joinWithMiddleDot`.
+export const MIDDLE_DOT_SEPARATOR = ' · ';
+
+// A meta line's own two-part join ("גברים · תל אביב", "גברים · תיאור
+// קצר"): both sides non-breaking, so the dot can never dangle alone at
+// either end of a line break (design review, card meta at 375). Read by
+// every card whose meta line joins an audience tag to a city or a short
+// description.
+export const META_LINE_SEPARATOR = ' · ';
 
 // The floor from design-system.md's card width step: every rail card
 // (`LessonCard`, `CourseCard`) steps its own type scale at this rendered
