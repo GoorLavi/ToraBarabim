@@ -14,7 +14,8 @@ import * as styles from './styles';
 // here carries a `cityCode`, never the `citySlug`/`area` pair the public
 // venue needs), and a real `CourseCard` would also link out to the live
 // page and fire a real click event on tap. Mirrors `AdminPanel/components/
-// LessonPreviewCard`'s own precedent for the same reason.
+// LessonPreviewCard`'s own precedent for the same reason. Lifted from
+// `CourseViewPage/components/` once `CourseFormPage` became a second caller.
 export const CoursePreviewCard = styled(({ className, course }: CoursePreviewCardProps) => {
   const teacherLabel = course.teacher.kind === 'rabbi' ? rabbiDisplayName(course.teacher.rabbi) : course.teacher.name;
 

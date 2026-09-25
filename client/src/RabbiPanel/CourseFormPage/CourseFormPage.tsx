@@ -4,11 +4,13 @@ import styled from 'styled-components';
 
 import type { CourseFormErrors, CourseFormState } from '~/components/CourseFormFields/models';
 import { CourseFormFields } from '~/components/CourseFormFields/CourseFormFields';
-import { rabbiDisplayName } from '~/helpers';
-import { usePhotoPreviewUrl } from '~/hooks/usePhotoPreviewUrl';
-import { RabbiApiError } from '~/RabbiPanel/api';
 import * as placePickerConsts from '~/components/PlacePicker/consts';
-import { RABBI_ROUTES } from '~/RabbiPanel/consts';
+import { rabbiDisplayName } from '~/helpers';
+import { useCourseCoverUpload } from '~/hooks/useCourseCoverUpload';
+import { useCourseGalleryPhotos } from '~/hooks/useCourseGalleryPhotos';
+import { usePhotoPreviewUrl } from '~/hooks/usePhotoPreviewUrl';
+import { deleteCoursePhoto, RabbiApiError, uploadCourseCover, uploadCoursePhoto } from '~/RabbiPanel/api';
+import { RABBI_QUERY_KEYS, RABBI_ROUTES } from '~/RabbiPanel/consts';
 import { rabbiErrorMessage } from '~/RabbiPanel/helpers';
 import { useRabbiProfile } from '~/RabbiPanel/useRabbiProfile';
 
@@ -21,8 +23,6 @@ import * as consts from './consts';
 import { courseToFormState, initialFormState, pageHeading, validateCourseForm } from './helpers';
 import type { CourseFormPageProps } from './models';
 import * as styles from './styles';
-import { useCourseCoverUpload } from './useCourseCoverUpload';
-import { useCourseGalleryPhotos } from './useCourseGalleryPhotos';
 import { useExistingCourse } from './useExistingCourse';
 import { useSaveCourse } from './useSaveCourse';
 
@@ -45,10 +45,11 @@ export const CourseFormPage = styled(({ className }: CourseFormPageProps) => {
   const profile = useRabbiProfile();
   const existing = useExistingCourse(id);
   const saveCourse = useSaveCourse();
-  const coverUpload = useCourseCoverUpload(id ?? '');
+  const coverUpload = useCourseCoverUpload(id ?? '', { uploadCover: uploadCourseCover, courseQueryKey: RABBI_QUERY_KEYS.course });
   const gallery = useCourseGalleryPhotos(
     id,
     existing.status === 'success' ? existing.course.photos : [],
+    { uploadPhoto: uploadCoursePhoto, deletePhoto: deleteCoursePhoto, courseQueryKey: RABBI_QUERY_KEYS.course },
     locationState?.failedGalleryFiles,
   );
 

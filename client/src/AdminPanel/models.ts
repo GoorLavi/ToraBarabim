@@ -34,15 +34,13 @@ export interface AdminPlaceFilters {
   pageSize?: number;
 }
 
-// Server-side filters, sent as query params on GET /v1/admin/courses. The
-// server's own `status` has no `full` value of its own (a course marked
-// full is still `status: 'closed'`, `reason: 'full'`): the list page filters
-// a `status: 'closed'` response by `reason` itself for the "תפוסה מלאה" and
-// "ההרשמה נסגרה" options, the same "server narrows, the client narrows
-// further" split `LessonsListPage` already uses for its own filters.
+// Server-side filters, sent as query params on GET /v1/admin/courses. Its
+// own `status` reads "open" as `lifecycle.status` `notOpen` or `open`
+// together (the public card's own "Registration open" bucket), so the
+// three filter buckets map straight onto it with no client-side narrowing.
 export interface AdminCourseFilters {
   q?: string;
-  status?: 'notOpen' | 'open' | 'closed';
+  status?: 'open' | 'full' | 'closed';
   rabbiId?: string;
   page?: number;
   pageSize?: number;

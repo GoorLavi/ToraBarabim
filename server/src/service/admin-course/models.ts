@@ -9,7 +9,11 @@ export const courseIdParamSchema = z.object({
 });
 export type CourseIdParam = z.infer<typeof courseIdParamSchema>;
 
-const COURSE_STATUSES = ['notOpen', 'open', 'closed'] as const;
+// The three buckets the approved filter shows, not the lifecycle's own
+// three-value status: `open` covers both `notOpen` and `open` ("ההרשמה
+// פתוחה"), and a closed course splits by its own `reason` into `full`
+// ("תפוסה מלאה") and `closed` ("ההרשמה נסגרה").
+const COURSE_STATUSES = ['open', 'full', 'closed'] as const;
 
 // `q` matches across course name, teacher, rabbi, place and address (the
 // admin's own free-text search, checked by hand: see the test plan's

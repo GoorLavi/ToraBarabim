@@ -1,9 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type { QueryKey } from '@tanstack/react-query';
+import type { CourseResponse } from '@torabarabim/common';
 
 import type { GalleryPhoto } from '~/components/GalleryField/models';
-import { deleteCoursePhoto, uploadCoursePhoto } from '~/RabbiPanel/api';
-import { RABBI_QUERY_KEYS } from '~/RabbiPanel/consts';
+
+export interface CourseGalleryPhotosApi {
+  uploadPhoto: (courseId: string, file: File) => Promise<CourseResponse>;
+  deletePhoto: (courseId: string, photoId: string) => Promise<CourseResponse>;
+  courseQueryKey: (courseId: string) => QueryKey;
+}
 
 type PendingStatus = 'draft' | 'uploading' | 'failed';
 
@@ -22,19 +28,23 @@ export interface CourseGalleryPhotosState {
   // Only meaningful before a course exists: uploads every still-local file
   // through the new id's own endpoint, one after another, and reports which
   // ones failed so the caller can hand them to the edit form's own retry UI
-  // instead of losing them (design brief round 3, item 2).
+  // instead of losing them.
   uploadDraftsAfterCreate: (courseId: string) => Promise<File[]>;
 }
 
-// `courseId` is undefined while creating: `addFiles` then only ever holds a
-// file locally (no request fires), since there is no course id yet to
-// upload it to. Once a real id exists, either because this is an edit from
-// the start or because `uploadDraftsAfterCreate` just ran, every further
-// `addFiles` call uploads immediately, the same as the cover's own
-// `useCourseCoverUpload.ts`.
+// Shared by the rabbi and admin panels' own course forms (lifted here once
+// the admin panel became a second, identical caller). `courseId` is
+// undefined while creating: `addFiles` then only ever holds a file locally
+// (no request fires), since there is no course id yet to upload it to. Once
+// a real id exists, either because this is an edit from the start or
+// because `uploadDraftsAfterCreate` just ran, every further `addFiles` call
+// uploads immediately, the same as the cover's own `useCourseCoverUpload`.
+// The two panels differ only in which endpoints upload and delete a photo
+// and which query key the result belongs under, both passed in.
 export const useCourseGalleryPhotos = (
   courseId: string | undefined,
   savedPhotos: { id: string; url: string }[],
+  api: CourseGalleryPhotosApi,
   seedFailedFiles: File[] = [],
 ): CourseGalleryPhotosState => {
   const queryClient = useQueryClient();
@@ -51,12 +61,12 @@ export const useCourseGalleryPhotos = (
   );
 
   const uploadMutation = useMutation({
-    mutationFn: ({ id, file }: { id: string; file: File }) => uploadCoursePhoto(id, file),
+    mutationFn: ({ id, file }: { id: string; file: File }) => api.uploadPhoto(id, file),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (photoId: string) => deleteCoursePhoto(courseId as string, photoId),
-    onSuccess: (course) => queryClient.setQueryData(RABBI_QUERY_KEYS.course(courseId as string), course),
+    mutationFn: (photoId: string) => api.deletePhoto(courseId as string, photoId),
+    onSuccess: (course) => queryClient.setQueryData(api.courseQueryKey(courseId as string), course),
   });
 
   const runUpload = (id: string, localId: string, file: File): Promise<boolean> =>
@@ -65,7 +75,7 @@ export const useCourseGalleryPhotos = (
         { id, file },
         {
           onSuccess: (course) => {
-            queryClient.setQueryData(RABBI_QUERY_KEYS.course(id), course);
+            queryClient.setQueryData(api.courseQueryKey(id), course);
             setPending((prev) => {
               const item = prev.find((photo) => photo.localId === localId);
               if (item) {

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
+import * as orDividerConsts from '~/components/OrDivider/consts';
 import { rabbiFixture } from '~/rabbiFixture';
 
 import { http, jsonResolver } from '../../../../../.storybook/apiMocks';
@@ -34,7 +35,7 @@ export const NothingChosen: Story = {
   args: { teacher: { kind: 'named', name: '' } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByText(consts.OR_LABEL)).toBeInTheDocument();
+    await expect(canvas.getByText(orDividerConsts.OR_LABEL)).toBeInTheDocument();
     await expect(canvas.getByLabelText(consts.NAMED_LABEL)).toBeInTheDocument();
   },
 };
@@ -68,7 +69,7 @@ export const RabbiSelected: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByText('הרב אברהם כהן')).toBeInTheDocument();
-    await expect(canvas.queryByText(consts.OR_LABEL)).not.toBeInTheDocument();
+    await expect(canvas.queryByText(orDividerConsts.OR_LABEL)).not.toBeInTheDocument();
     await expect(canvas.queryByLabelText(consts.NAMED_LABEL)).not.toBeInTheDocument();
     await expect(canvas.getByRole('button', { name: consts.CLEAR_SELECTION_LABEL })).toBeInTheDocument();
   },

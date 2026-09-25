@@ -1,25 +1,8 @@
 import type { CourseResponse } from '@torabarabim/common';
 
-import { courseStatusBucket } from '~/AdminPanel/helpers';
 import { israelDayMonthLabel, joinWithMiddleDot, rabbiDisplayName, singularOrCount } from '~/helpers';
 
 import * as consts from './consts';
-import type { AdminCourseStatusFilter } from './models';
-
-export const matchesStatusFilter = (course: CourseResponse, filter: AdminCourseStatusFilter): boolean => {
-  if (filter === 'all') return true;
-  const bucket = courseStatusBucket(course);
-  if (filter === 'open') return bucket === 'notOpen' || bucket === 'open';
-  return bucket === filter;
-};
-
-// "ההרשמה פתוחה" first, nearest opening date first; "תפוסה מלאה" and
-// "ההרשמה נסגרה" both after it (design brief round 3, item 3's own sort
-// note), each group itself by nearest opening date too.
-const bucketRank = (course: CourseResponse): number => (courseStatusBucket(course) === 'closed' || courseStatusBucket(course) === 'full' ? 1 : 0);
-
-export const sortCourseRows = (rows: CourseResponse[]): CourseResponse[] =>
-  [...rows].sort((a, b) => bucketRank(a) - bucketRank(b) || a.openingDate.localeCompare(b.openingDate));
 
 // The admin list's own closed-line: the closed date and the course's own
 // length, never the "leaves the lists on" date the public-facing panels

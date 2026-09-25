@@ -47,6 +47,15 @@ const matchesQuery = (row: JoinedCourseRow, query: string): boolean => {
   return haystacks.some((value) => toSlug(value).includes(normalizedQuery));
 };
 
+// The three-bucket filter, not the lifecycle's own three-value status:
+// `open` is registration still open (`notOpen` or `open`), and a closed
+// course splits by its own `reason` into `full` and `closed`.
+const matchesStatusFilter = (record: CourseWriteRecord, status: AdminCourseListQuery['status']): boolean => {
+  if (status === undefined) return true;
+  if (status === 'open') return record.lifecycle.status !== 'closed';
+  return record.lifecycle.status === 'closed' && record.lifecycle.reason === status;
+};
+
 export const list = async (query: AdminCourseListQuery): Promise<CourseListResult> => {
   const whereClause = query.rabbiId ? eq(courses.rabbiId, query.rabbiId) : undefined;
   const [rows, cityByCode] = await Promise.all([baseCourseQuery().where(whereClause), loadCityByCode()]);
@@ -57,7 +66,7 @@ export const list = async (query: AdminCourseListQuery): Promise<CourseListResul
 
   const items = filteredRows
     .map((row) => toCourseWriteRecord(row, cityByCode, photosByCourseId.get(row.id) ?? [], today))
-    .filter((record) => (query.status === undefined ? true : record.lifecycle.status === query.status))
+    .filter((record) => matchesStatusFilter(record, query.status))
     .sort(comparePanelCourses);
 
   const total = items.length;

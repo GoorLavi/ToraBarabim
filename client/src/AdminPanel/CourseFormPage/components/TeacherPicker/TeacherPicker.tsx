@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import type { Rabbi } from '@torabarabim/common';
 
 import { useRabbiSearch } from '~/AdminPanel/useRabbiSearch';
+import { OrDivider } from '~/components/OrDivider/OrDivider';
 import { ReadOnlyField } from '~/components/ReadOnlyField/ReadOnlyField';
 import { SearchSelect } from '~/components/SearchSelect/SearchSelect';
 import { directionForValue, rabbiDisplayName } from '~/helpers';
@@ -43,13 +44,7 @@ export const TeacherPicker = styled(({ className, teacher, onChangeTeacher, erro
         loadErrorMessage={consts.SEARCH_LOAD_ERROR_MESSAGE}
       />
 
-      {teacher.kind === 'named' && (
-        <div className="orDivider" aria-hidden="true">
-          <span className="line" />
-          <span className="label">{consts.OR_LABEL}</span>
-          <span className="line" />
-        </div>
-      )}
+      {teacher.kind === 'named' && <OrDivider />}
 
       {teacher.kind === 'rabbi' ? (
         <div className="lockedRow">

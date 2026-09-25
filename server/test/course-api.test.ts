@@ -789,20 +789,47 @@ describe('course API', () => {
   });
 
   // 19. Admin list filters and order.
-  test('the admin list filters by status, by rabbiId and by q, and orders not-closed before closed', async () => {
+  test('the admin list filters by status (open, full, closed), by rabbiId and by q, and orders not-closed before closed', async () => {
     const cookie = await loginAsNewAdmin();
     const rabbiA = await createRabbi();
     const rabbiB = await createRabbi();
     const today = todayInIsrael(new Date());
 
     const openCourse = await insertCourse({ rabbiId: rabbiA, name: `קורס פתוח ${uniqueSuffix()}`, openingDate: addDays(today, 10) });
+    // Closed by the calendar (non-joinable, opened 6 days ago): the
+    // calendar close carries no reason and always reads 'closed'.
     const closedCourse = await insertCourse({ rabbiId: rabbiA, openingDate: addDays(today, -6), joinableAfterOpening: false });
+    // Closed by hand and marked full: joinable with `weeks` chosen so the
+    // calendar's own auto-close lands long after the manual one, so the
+    // manual close (and its 'full' reason) is what actually determines the
+    // status here, not the calendar racing ahead of it.
+    const fullCourse = await insertCourse({
+      rabbiId: rabbiA,
+      openingDate: addDays(today, -60),
+      weeks: 20,
+      joinableAfterOpening: true,
+      registrationClosedAt: new Date(`${addDays(today, -3)}T12:00:00.000Z`),
+      closeReason: 'full',
+    });
     const otherRabbiCourse = await insertCourse({ rabbiId: rabbiB, openingDate: addDays(today, 10) });
 
-    const statusRes = await app.inject({ method: 'GET', url: '/v1/admin/courses?status=closed', headers: { cookie } });
-    const statusIds = (statusRes.json() as { items: CourseResponse[] }).items.map((i) => i.id);
-    assert.ok(statusIds.includes(closedCourse));
-    assert.ok(!statusIds.includes(openCourse));
+    const openStatusRes = await app.inject({ method: 'GET', url: '/v1/admin/courses?status=open', headers: { cookie } });
+    const openStatusIds = (openStatusRes.json() as { items: CourseResponse[] }).items.map((i) => i.id);
+    assert.ok(openStatusIds.includes(openCourse));
+    assert.ok(!openStatusIds.includes(closedCourse));
+    assert.ok(!openStatusIds.includes(fullCourse));
+
+    const closedStatusRes = await app.inject({ method: 'GET', url: '/v1/admin/courses?status=closed', headers: { cookie } });
+    const closedStatusIds = (closedStatusRes.json() as { items: CourseResponse[] }).items.map((i) => i.id);
+    assert.ok(closedStatusIds.includes(closedCourse));
+    assert.ok(!closedStatusIds.includes(openCourse));
+    assert.ok(!closedStatusIds.includes(fullCourse));
+
+    const fullStatusRes = await app.inject({ method: 'GET', url: '/v1/admin/courses?status=full', headers: { cookie } });
+    const fullStatusIds = (fullStatusRes.json() as { items: CourseResponse[] }).items.map((i) => i.id);
+    assert.ok(fullStatusIds.includes(fullCourse));
+    assert.ok(!fullStatusIds.includes(openCourse));
+    assert.ok(!fullStatusIds.includes(closedCourse));
 
     const rabbiRes = await app.inject({ method: 'GET', url: `/v1/admin/courses?rabbiId=${rabbiA}`, headers: { cookie } });
     const rabbiIds = (rabbiRes.json() as { items: CourseResponse[] }).items.map((i) => i.id);

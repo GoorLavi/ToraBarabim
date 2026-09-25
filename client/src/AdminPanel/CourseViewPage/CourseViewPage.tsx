@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { ADMIN_ROUTES, skeletonFieldKeys } from '~/AdminPanel/consts';
+import { CoursePreviewCard } from '~/AdminPanel/components/CoursePreviewCard/CoursePreviewCard';
 import { RecordField } from '~/AdminPanel/components/RecordField/RecordField';
 import { adminErrorMessage } from '~/AdminPanel/helpers';
 import { useExistingCourse } from '~/AdminPanel/useExistingCourse';
@@ -12,7 +13,6 @@ import { AUDIENCE_LABELS } from '~/consts';
 import { addressLine, coursePath, courseStillListed, courseTopicLabel, rabbiDisplayName, venuePanelCityName } from '~/helpers';
 
 import { CloseCourseSheet } from './components/CloseCourseSheet/CloseCourseSheet';
-import { CoursePreviewCard } from './components/CoursePreviewCard/CoursePreviewCard';
 import { DeleteCourseSheet } from './components/DeleteCourseSheet/DeleteCourseSheet';
 import { DuplicateCourseSheet } from './components/DuplicateCourseSheet/DuplicateCourseSheet';
 import { MarkCourseFullSheet } from './components/MarkCourseFullSheet/MarkCourseFullSheet';

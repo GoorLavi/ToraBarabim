@@ -2,12 +2,16 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { ADMIN_ROUTES } from '~/AdminPanel/consts';
+import { deleteAdminCoursePhoto, uploadAdminCourseCover, uploadAdminCoursePhoto } from '~/AdminPanel/api';
+import { CoursePreviewCard } from '~/AdminPanel/components/CoursePreviewCard/CoursePreviewCard';
+import { ADMIN_QUERY_KEYS, ADMIN_ROUTES } from '~/AdminPanel/consts';
 import { adminErrorMessage } from '~/AdminPanel/helpers';
 import { useExistingCourse } from '~/AdminPanel/useExistingCourse';
 import { CourseFormFields } from '~/components/CourseFormFields/CourseFormFields';
 import { courseToFormState, initialFormState, validateCourseForm } from '~/components/CourseFormFields/helpers';
 import type { CourseFormErrors, CourseFormState } from '~/components/CourseFormFields/models';
+import { useCourseCoverUpload } from '~/hooks/useCourseCoverUpload';
+import { useCourseGalleryPhotos } from '~/hooks/useCourseGalleryPhotos';
 import { usePhotoPreviewUrl } from '~/hooks/usePhotoPreviewUrl';
 
 import { TeacherPicker } from './components/TeacherPicker/TeacherPicker';
@@ -16,8 +20,6 @@ import * as consts from './consts';
 import { initialTeacherState, pageHeading, teacherFromCourse, validateTeacher } from './helpers';
 import type { CourseFormPageProps } from './models';
 import * as styles from './styles';
-import { useCourseCoverUpload } from './useCourseCoverUpload';
-import { useCourseGalleryPhotos } from './useCourseGalleryPhotos';
 import { useSaveCourse } from './useSaveCourse';
 
 // A create that failed to upload every gallery photo hands the ones still
@@ -35,8 +37,13 @@ export const CourseFormPage = styled(({ className }: CourseFormPageProps) => {
 
   const existing = useExistingCourse(id);
   const saveCourse = useSaveCourse();
-  const coverUpload = useCourseCoverUpload(id ?? '');
-  const gallery = useCourseGalleryPhotos(id, existing.status === 'success' ? existing.course.photos : [], locationState?.failedGalleryFiles);
+  const coverUpload = useCourseCoverUpload(id ?? '', { uploadCover: uploadAdminCourseCover, courseQueryKey: ADMIN_QUERY_KEYS.course });
+  const gallery = useCourseGalleryPhotos(
+    id,
+    existing.status === 'success' ? existing.course.photos : [],
+    { uploadPhoto: uploadAdminCoursePhoto, deletePhoto: deleteAdminCoursePhoto, courseQueryKey: ADMIN_QUERY_KEYS.course },
+    locationState?.failedGalleryFiles,
+  );
 
   const [form, setForm] = useState<CourseFormState>(() => initialFormState());
   const [teacher, setTeacher] = useState<TeacherFormValue>(() => initialTeacherState());
@@ -115,55 +122,63 @@ export const CourseFormPage = styled(({ className }: CourseFormPageProps) => {
         {backLink.label}
       </Link>
 
-      <form
-        className="form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          submit();
-        }}
-        noValidate
-      >
-        <h1 className="heading">{pageHeading(Boolean(id))}</h1>
-
-        {generalSaveError && (
-          <p className="generalError" role="alert">
-            {generalSaveError}
-          </p>
-        )}
-
-        <section className="section teacherSection">
-          <h2 className="sectionHeading">{consts.TEACHER_SECTION_HEADING}</h2>
-          <p className="sectionHelp">{consts.TEACHER_SECTION_HELP}</p>
-          <TeacherPicker {...{ teacher, onChangeTeacher: setTeacher, errorMessage: teacherError }} />
-        </section>
-
-        <CourseFormFields
-          {...{
-            form: effectiveForm,
-            onChangeForm: setForm,
-            fieldErrors,
-            isAudienceLocked,
-            cityError: fieldErrors.city,
-            cover: {
-              previewUrl: coverPreviewUrl,
-              hasExistingPhoto: Boolean(id),
-              uploadStatus: id ? coverUpload.status : undefined,
-              onRetryUpload: coverUpload.retry,
-              onSelectFile: (file) => (id ? coverUpload.upload(file) : setForm((prev) => ({ ...prev, cover: file }))),
-            },
-            gallery: { photos: gallery.photos, onAddFiles: gallery.addFiles, onRetry: gallery.retry, onRemove: gallery.remove },
+      <div className="layout">
+        <form
+          className="main form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            submit();
           }}
-        />
+          noValidate
+        >
+          <h1 className="heading">{pageHeading(Boolean(id))}</h1>
 
-        <div className="footer">
-          <button type="submit" className="save" disabled={saveCourse.isPending}>
-            {saveCourse.isPending ? consts.SAVING_LABEL : consts.SAVE_LABEL}
-          </button>
-          <Link className="cancel" to={backLink.to}>
-            {consts.CANCEL_LABEL}
-          </Link>
-        </div>
-      </form>
+          {generalSaveError && (
+            <p className="generalError" role="alert">
+              {generalSaveError}
+            </p>
+          )}
+
+          <section className="section teacherSection">
+            <h2 className="sectionHeading">{consts.TEACHER_SECTION_HEADING}</h2>
+            <p className="sectionHelp">{consts.TEACHER_SECTION_HELP}</p>
+            <TeacherPicker {...{ teacher, onChangeTeacher: setTeacher, errorMessage: teacherError }} />
+          </section>
+
+          <CourseFormFields
+            {...{
+              form: effectiveForm,
+              onChangeForm: setForm,
+              fieldErrors,
+              isAudienceLocked,
+              cityError: fieldErrors.city,
+              cover: {
+                previewUrl: coverPreviewUrl,
+                hasExistingPhoto: Boolean(id),
+                uploadStatus: id ? coverUpload.status : undefined,
+                onRetryUpload: coverUpload.retry,
+                onSelectFile: (file) => (id ? coverUpload.upload(file) : setForm((prev) => ({ ...prev, cover: file }))),
+              },
+              gallery: { photos: gallery.photos, onAddFiles: gallery.addFiles, onRetry: gallery.retry, onRemove: gallery.remove },
+            }}
+          />
+
+          <div className="footer">
+            <button type="submit" className="save" disabled={saveCourse.isPending}>
+              {saveCourse.isPending ? consts.SAVING_LABEL : consts.SAVE_LABEL}
+            </button>
+            <Link className="cancel" to={backLink.to}>
+              {consts.CANCEL_LABEL}
+            </Link>
+          </div>
+        </form>
+
+        {existing.status === 'success' && (
+          <aside className="preview">
+            <CoursePreviewCard course={existing.course} />
+          </aside>
+        )}
+      </div>
     </div>
   );
 })`

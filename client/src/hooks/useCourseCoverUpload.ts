@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type { QueryKey } from '@tanstack/react-query';
+import type { CourseResponse } from '@torabarabim/common';
 
-import { uploadAdminCourseCover } from '~/AdminPanel/api';
-import { ADMIN_QUERY_KEYS } from '~/AdminPanel/consts';
+export interface CourseCoverUploadApi {
+  uploadCover: (courseId: string, file: File) => Promise<CourseResponse>;
+  courseQueryKey: (courseId: string) => QueryKey;
+}
 
 export interface CourseCoverUploadState {
   previewUrl: string | undefined;
@@ -11,11 +15,13 @@ export interface CourseCoverUploadState {
   retry: () => void;
 }
 
-// Only ever used on an existing course: uploads immediately on file
-// selection, mirroring `RabbiPanel/CourseFormPage/useCourseCoverUpload.ts`'s
-// own reasoning (a retry after a failure is one tap), never bundled into
-// `useSaveCourse.ts`'s own PATCH.
-export const useCourseCoverUpload = (courseId: string): CourseCoverUploadState => {
+// Shared by the rabbi and admin panels' own course forms (lifted here once
+// the admin panel became a second, identical caller): only ever used on an
+// existing course, uploading immediately on file selection so a retry after
+// a failure is one tap, never bundled into either panel's own save
+// mutation. The two panels differ only in which endpoint uploads the file
+// and which query key the result belongs under, both passed in.
+export const useCourseCoverUpload = (courseId: string, api: CourseCoverUploadApi): CourseCoverUploadState => {
   const queryClient = useQueryClient();
   const [selectedFile, setSelectedFile] = useState<File | undefined>();
   const [objectUrl, setObjectUrl] = useState<string | undefined>();
@@ -31,9 +37,9 @@ export const useCourseCoverUpload = (courseId: string): CourseCoverUploadState =
   }, [selectedFile]);
 
   const mutation = useMutation({
-    mutationFn: (file: File) => uploadAdminCourseCover(courseId, file),
+    mutationFn: (file: File) => api.uploadCover(courseId, file),
     onSuccess: (course) => {
-      queryClient.setQueryData(ADMIN_QUERY_KEYS.course(courseId), course);
+      queryClient.setQueryData(api.courseQueryKey(courseId), course);
       setSelectedFile(undefined);
     },
   });

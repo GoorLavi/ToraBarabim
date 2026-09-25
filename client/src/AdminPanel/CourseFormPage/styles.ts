@@ -40,75 +40,102 @@ export const CourseFormPage = css(
     font-weight: ${theme.typography.fontWeight.semiBold};
   }
 
-  > .form {
+  > .layout {
     display: flex;
     flex-direction: column;
-    gap: ${theme.spacing.lg};
+    gap: ${theme.spacing.xl};
 
-    > .heading {
-      color: ${theme.colors.text};
-      font-weight: ${theme.typography.pageHeading.fontWeight};
-      font-size: ${theme.typography.sectionHeading.phone.fontSize};
-      line-height: ${theme.typography.sectionHeading.phone.lineHeight};
+    > .preview {
+      display: none;
     }
 
-    > .generalError {
-      padding: ${theme.spacing.sm};
-      border-radius: ${theme.radii.sm};
-      background: ${theme.colors.accentSoft};
-      color: ${theme.colors.danger};
-      font-size: ${theme.typography.secondary.phone.fontSize};
-      line-height: ${theme.typography.secondary.phone.lineHeight};
-    }
+    @media (min-width: ${theme.breakpoints.lg}) {
+      flex-direction: row;
+      align-items: flex-start;
 
-    > .teacherSection {
-      display: flex;
-      flex-direction: column;
-      gap: ${theme.spacing.sm};
-      padding: ${theme.spacing.lg};
-      border: 1px solid ${theme.colors.border};
-      border-radius: ${theme.radii.lg};
-      background: ${theme.colors.surface};
-
-      > .sectionHeading {
-        color: ${theme.colors.text};
-        font-weight: ${theme.typography.fontWeight.bold};
-        font-size: ${theme.typography.body.phone.fontSize};
-        line-height: ${theme.typography.body.phone.lineHeight};
+      > .main {
+        flex: 0 0 640px;
+        max-inline-size: 640px;
       }
 
-      > .sectionHelp {
-        color: ${theme.colors.textSecondary};
+      > .preview {
+        display: block;
+        flex: 1;
+        position: sticky;
+        inset-block-start: ${theme.spacing.lg};
+      }
+    }
+
+    > .form {
+      display: flex;
+      flex-direction: column;
+      gap: ${theme.spacing.lg};
+
+      > .heading {
+        color: ${theme.colors.text};
+        font-weight: ${theme.typography.pageHeading.fontWeight};
+        font-size: ${theme.typography.sectionHeading.phone.fontSize};
+        line-height: ${theme.typography.sectionHeading.phone.lineHeight};
+      }
+
+      > .generalError {
+        padding: ${theme.spacing.sm};
+        border-radius: ${theme.radii.sm};
+        background: ${theme.colors.accentSoft};
+        color: ${theme.colors.danger};
         font-size: ${theme.typography.secondary.phone.fontSize};
         line-height: ${theme.typography.secondary.phone.lineHeight};
       }
-    }
 
-    > .footer {
-      display: flex;
-      flex-direction: column;
-      gap: ${theme.spacing.sm};
+      > .teacherSection {
+        display: flex;
+        flex-direction: column;
+        gap: ${theme.spacing.sm};
+        padding: ${theme.spacing.lg};
+        border: 1px solid ${theme.colors.border};
+        border-radius: ${theme.radii.lg};
+        background: ${theme.colors.surface};
 
-      > .save {
-        min-block-size: 52px;
-        border-radius: ${theme.radii.md};
-        background: ${theme.colors.primary};
-        color: ${theme.colors.textOnPrimary};
-        font-weight: ${theme.typography.fontWeight.semiBold};
-        font-size: ${theme.typography.body.phone.fontSize};
-        line-height: ${theme.typography.body.phone.lineHeight};
+        > .sectionHeading {
+          color: ${theme.colors.text};
+          font-weight: ${theme.typography.fontWeight.bold};
+          font-size: ${theme.typography.body.phone.fontSize};
+          line-height: ${theme.typography.body.phone.lineHeight};
+        }
 
-        &:disabled {
-          opacity: 0.6;
+        > .sectionHelp {
+          color: ${theme.colors.textSecondary};
+          font-size: ${theme.typography.secondary.phone.fontSize};
+          line-height: ${theme.typography.secondary.phone.lineHeight};
         }
       }
 
-      > .cancel {
-        min-block-size: 48px;
-        color: ${theme.colors.textSecondary};
-        font-weight: ${theme.typography.fontWeight.semiBold};
-        font-size: ${theme.typography.body.phone.fontSize};
-        line-height: ${theme.typography.body.phone.lineHeight};
+      > .footer {
+        display: flex;
+        flex-direction: column;
+        gap: ${theme.spacing.sm};
+
+        > .save {
+          min-block-size: 52px;
+          border-radius: ${theme.radii.md};
+          background: ${theme.colors.primary};
+          color: ${theme.colors.textOnPrimary};
+          font-weight: ${theme.typography.fontWeight.semiBold};
+          font-size: ${theme.typography.body.phone.fontSize};
+          line-height: ${theme.typography.body.phone.lineHeight};
+
+          &:disabled {
+            opacity: 0.6;
+          }
+        }
+
+        > .cancel {
+          min-block-size: 48px;
+          color: ${theme.colors.textSecondary};
+          font-weight: ${theme.typography.fontWeight.semiBold};
+          font-size: ${theme.typography.body.phone.fontSize};
+          line-height: ${theme.typography.body.phone.lineHeight};
+        }
       }
     }
   }

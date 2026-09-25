@@ -5,7 +5,6 @@ export const SEARCH_EMPTY_MESSAGE = 'לא מצאנו רב או רבנית בשם
 export const SEARCH_LOAD_ERROR_MESSAGE = 'לא הצלחנו לטעון את הרשימה';
 
 export const CLEAR_SELECTION_LABEL = 'ביטול הבחירה וכתיבת שם';
-export const OR_LABEL = 'או';
 
 export const NAMED_LABEL = 'מי מלמד או מארגן';
 // Copy exactly as the editor approved it (pass 2 wording round): the
