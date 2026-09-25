@@ -136,6 +136,7 @@ export const CourseGallery = css(
       }
 
       @media (min-width: ${theme.breakpoints.md}) {
+        scroll-padding-inline: ${theme.spacing.xl};
         padding-inline: ${theme.spacing.xl};
       }
 

@@ -91,24 +91,34 @@ export const Open: Story = {
       await waitFor(() => expect(within(dialog).getByText('5 מתוך 9')).toBeInTheDocument());
       await userEvent.click(within(dialog).getByRole('button', { name: 'סגירה' }));
       await waitFor(() => expect(within(document.body).queryByRole('dialog')).not.toBeInTheDocument());
+
+      // The WhatsApp href carries the course name (encoded) and the
+      // course's own number, never the site's own support number: a
+      // literal string, not a call through the same helpers that build it,
+      // so the test would actually notice a broken encoding or a swapped
+      // number. These names exist only in the phone fixed bar (design gate
+      // round 5 finding: the side card's own copy is worded differently),
+      // so this needs the real, narrow frame like the gallery checks above.
+      const whatsappLink = canvas.getByRole('link', { name: consts.CONTACT_BAR_WHATSAPP_LABEL });
+      await expect(whatsappLink).toHaveAttribute(
+        'href',
+        'https://wa.me/972501234567?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%A8%D7%90%D7%99%D7%AA%D7%99%20%D7%91%D7%90%D7%AA%D7%A8%20%D7%AA%D7%95%D7%A8%D7%94%20%D7%91%D7%A8%D7%91%D7%99%D7%9D%20%D7%90%D7%AA%20%D7%94%D7%A7%D7%95%D7%A8%D7%A1%20%22%D7%99%D7%A1%D7%95%D7%93%D7%95%D7%AA%20%D7%94%D7%90%D7%9E%D7%95%D7%A0%D7%94%22%20%D7%95%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A9%D7%9E%D7%95%D7%A2%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A0%D7%95%D7%A1%D7%A4%D7%99%D7%9D.',
+      );
+
+      // The call href dials the same number, converted to international
+      // form. The accessible name is the call button's own override, not
+      // its short visible label ("שיחה"): ContactActions.tsx always names
+      // a phone number, never just the action.
+      const callLink = canvas.getByRole('link', { name: `${CALL_ACCESSIBLE_NAME_PREFIX} ${phoneDisplay('0501234567')}` });
+      await expect(callLink).toHaveAttribute('href', 'tel:+972501234567');
     });
 
-    // The WhatsApp href carries the course name (encoded) and the course's
-    // own number, never the site's own support number: a literal string, not
-    // a call through the same helpers that build it, so the test would
-    // actually notice a broken encoding or a swapped number.
-    const whatsappLink = canvas.getByRole('link', { name: consts.CONTACT_BAR_WHATSAPP_LABEL });
-    await expect(whatsappLink).toHaveAttribute(
-      'href',
-      'https://wa.me/972501234567?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%A8%D7%90%D7%99%D7%AA%D7%99%20%D7%91%D7%90%D7%AA%D7%A8%20%D7%AA%D7%95%D7%A8%D7%94%20%D7%91%D7%A8%D7%91%D7%99%D7%9D%20%D7%90%D7%AA%20%D7%94%D7%A7%D7%95%D7%A8%D7%A1%20%22%D7%99%D7%A1%D7%95%D7%93%D7%95%D7%AA%20%D7%94%D7%90%D7%9E%D7%95%D7%A0%D7%94%22%20%D7%95%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A9%D7%9E%D7%95%D7%A2%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A0%D7%95%D7%A1%D7%A4%D7%99%D7%9D.',
-    );
-
-    // The call href dials the same number, converted to international form.
-    // The accessible name is the call button's own override, not its short
-    // visible label ("שיחה"): ContactActions.tsx always names a phone
-    // number, never just the action.
-    const callLink = canvas.getByRole('link', { name: `${CALL_ACCESSIBLE_NAME_PREFIX} ${phoneDisplay('0501234567')}` });
-    await expect(callLink).toHaveAttribute('href', 'tel:+972501234567');
+    // Desktop, 1280: the fixed bar is gone, the side card's own copy of
+    // these same two actions worded fuller (design gate round 5 finding).
+    await atFrameSize(1280, undefined, async () => {
+      await expect(canvas.getByRole('link', { name: consts.WHATSAPP_FULL_LABEL })).toBeInTheDocument();
+      await expect(canvas.getByRole('link', { name: `${CALL_ACCESSIBLE_NAME_PREFIX} ${phoneDisplay('0501234567')}` })).toBeInTheDocument();
+    });
   },
 };
 

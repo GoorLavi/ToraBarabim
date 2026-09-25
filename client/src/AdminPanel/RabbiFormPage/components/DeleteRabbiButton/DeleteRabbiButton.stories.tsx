@@ -1,7 +1,9 @@
+import type { RabbiHonorific } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import * as parentConsts from '~/AdminPanel/RabbiFormPage/consts';
+import { RABBI_HONORIFIC_LABELS } from '~/consts';
 
 import { http, jsonResolver } from '../../../../../.storybook/apiMocks';
 import { DeleteRabbiButton } from './DeleteRabbiButton';
@@ -18,9 +20,9 @@ const meta: Meta<typeof DeleteRabbiButton> = {
 export default meta;
 type Story = StoryObj<typeof DeleteRabbiButton>;
 
-const openDialog = async (canvasElement: HTMLElement) => {
+const openDialog = async (canvasElement: HTMLElement, honorific: RabbiHonorific = 'rav') => {
   const canvas = within(canvasElement);
-  await userEvent.click(canvas.getByRole('button', { name: parentConsts.DELETE_LABEL }));
+  await userEvent.click(canvas.getByRole('button', { name: parentConsts.deleteLabel(RABBI_HONORIFIC_LABELS[honorific]) }));
   return within(document.body);
 };
 
@@ -76,13 +78,17 @@ export const NothingLinked: Story = {
   },
 };
 
-// A rabbanit's own honorific: the sentence's subject and its closing
-// pronoun both follow it, never the rav's own wording.
+// A rabbanit's own honorific: the trigger, the dialog heading, and the
+// impact sentence's own subject and closing pronoun all follow it, never
+// the rav's own wording (editor's final re-read: the trigger and the
+// heading had stayed fixed masculine while the impact sentence already
+// followed the honorific).
 export const RabbanitHonorific: Story = {
   args: { honorific: 'rabbanit' },
   parameters: { apiMocks: { handlers: { preview: previewHandler({ lessonCount: 0, exceptionCount: 0, courseCount: 1 }) } } },
   play: async ({ canvasElement }) => {
-    const dialog = await openDialog(canvasElement);
+    const dialog = await openDialog(canvasElement, 'rabbanit');
+    await expect(dialog.findByRole('heading', { name: 'למחוק את הרבנית?' })).resolves.toBeInTheDocument();
     await expect(dialog.findByText('מחיקת הרבנית תמחק גם קורס אחד המשויך אליה.')).resolves.toBeInTheDocument();
   },
 };

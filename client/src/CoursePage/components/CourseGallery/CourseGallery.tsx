@@ -25,7 +25,7 @@ export const CourseGallery = styled(({ className, courseName, photos }: CourseGa
 
   const slidesContainerRef = useRef<HTMLDivElement>(null);
   const slideRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const phoneVisibleIndex = useVisibleSlideIndex(slidesContainerRef, slideRefs, photos.length);
+  const { visibleIndex: phoneVisibleIndex, freezeUntilSettled } = useVisibleSlideIndex(slidesContainerRef, slideRefs, photos.length);
 
   // The thumbnail strip and its `aria-current` are the one shared indicator
   // for both galleries (design gate round 4 finding: they used to follow
@@ -43,9 +43,16 @@ export const CourseGallery = styled(({ className, courseName, photos }: CourseGa
   // the phone strip there too. `scrollIntoView`'s `inline: 'start'` is
   // direction-aware (unlike a raw `scrollLeft`), landing the same way the
   // strip's own `scroll-snap-align: start` already does for a swipe.
+  // `freezeUntilSettled` holds the phone tracker at its current value for
+  // the length of the scroll it is about to start, so a fast second tap
+  // (design gate round 5 finding) computes its own target from the
+  // destination just requested, never a slide only passed through, and the
+  // sync effect above never fights this call's own `setActiveIndex` back
+  // down mid-scroll.
   const goTo = (index: number): void => {
     const clamped = clampedIndex(index, photos.length);
     setActiveIndex(clamped);
+    freezeUntilSettled();
     slideRefs.current[clamped]?.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
   };
 

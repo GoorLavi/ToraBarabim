@@ -69,8 +69,12 @@ export const REQUIRED_NAME_ERROR = 'יש למלא שם רב';
 export const LOADING_MESSAGE = 'טוענים...';
 export const RETRY_LABEL = 'ניסיון נוסף';
 
-export const DELETE_LABEL = 'מחיקת הרב';
-export const DELETE_CONFIRM_HEADING = 'למחוק את הרב?';
+// Honorific-aware, the same pattern `backToRabbiLabel` above already uses:
+// pass `RABBI_HONORIFIC_LABELS[honorific]`. The impact sentence below
+// already follows the honorific on its own; these two sat beside it fixed
+// masculine (editor's final re-read).
+export const deleteLabel = (honorific: string): string => `מחיקת ${honorific}`;
+export const deleteConfirmHeading = (honorific: string): string => `למחוק את ${honorific}?`;
 export const DELETE_CONFIRM_IRREVERSIBLE_NOTE = 'הפעולה בלתי הפיכה.';
 
 const lessonsPart = (count: number): string => (count === 1 ? 'שיעור אחד' : `${count} שיעורים`);

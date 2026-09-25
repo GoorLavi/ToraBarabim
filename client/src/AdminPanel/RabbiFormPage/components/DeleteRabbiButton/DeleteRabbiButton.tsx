@@ -6,6 +6,7 @@ import { deleteAdminRabbi, fetchAdminRabbiDeletePreview } from '~/AdminPanel/api
 import { ADMIN_QUERY_KEYS } from '~/AdminPanel/consts';
 import { adminErrorMessage } from '~/AdminPanel/helpers';
 import * as parentConsts from '~/AdminPanel/RabbiFormPage/consts';
+import { RABBI_HONORIFIC_LABELS } from '~/consts';
 
 import type { DeleteRabbiButtonProps } from './models';
 import * as styles from './styles';
@@ -32,6 +33,7 @@ export const DeleteRabbiButton = styled(({ className, rabbiId, honorific, onDele
     },
   });
 
+  const honorificLabel = RABBI_HONORIFIC_LABELS[honorific];
   const impactLabel = preview.data
     ? parentConsts.deleteConfirmImpactLabel(honorific, preview.data.lessonCount, preview.data.exceptionCount, preview.data.courseCount)
     : undefined;
@@ -39,13 +41,13 @@ export const DeleteRabbiButton = styled(({ className, rabbiId, honorific, onDele
   return (
     <div className={className}>
       <button type="button" className="deleteTrigger" onClick={() => setIsDialogOpen(true)}>
-        {parentConsts.DELETE_LABEL}
+        {parentConsts.deleteLabel(honorificLabel)}
       </button>
 
       {isDialogOpen && (
         <div className="overlay" role="presentation" onClick={() => !remove.isPending && setIsDialogOpen(false)}>
           <div className="dialog" role="alertdialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
-            <h2 className="heading">{parentConsts.DELETE_CONFIRM_HEADING}</h2>
+            <h2 className="heading">{parentConsts.deleteConfirmHeading(honorificLabel)}</h2>
 
             {preview.isPending && <p className="message">{parentConsts.DELETE_PREVIEW_LOADING_MESSAGE}</p>}
             {preview.isError && <p className="message error">{adminErrorMessage(preview.error)}</p>}
