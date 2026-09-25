@@ -7,9 +7,6 @@ import { TOO_LARGE_ERROR } from '~/components/PhotoPicker/consts';
 import { courseErrorMessage, isCourseErrorCode } from '~/courseErrors';
 import { GALLERY_REMOVE_FAILED_LABEL, GALLERY_UPLOAD_FAILED_LABEL } from '~/components/GalleryField/consts';
 import type { GalleryPhoto } from '~/components/GalleryField/models';
-import { COURSE_GALLERY_SOFT_MIN_SIDE } from '~/consts';
-
-import { readImageDimensions } from './readImageDimensions';
 
 export interface CourseGalleryPhotosApi {
   uploadPhoto: (courseId: string, file: File) => Promise<CourseResponse>;
@@ -30,10 +27,6 @@ interface PendingPhoto {
   status: PendingStatus;
   failureReason?: string;
   canRetry: boolean;
-  // Set once this file's own pixel dimensions are known to read below the
-  // soft floor (`~/consts`): never blocks it from being added, only names
-  // the risk on its own tile once it is up (`GalleryField.tsx`).
-  isSmall: boolean;
 }
 
 export interface CourseGalleryPhotosState {
@@ -84,7 +77,6 @@ export const useCourseGalleryPhotos = (
       status: 'failed' as const,
       failureReason: GALLERY_UPLOAD_FAILED_LABEL,
       canRetry: true,
-      isSmall: false,
     })),
   );
   const [failedDeletes, setFailedDeletes] = useState<Map<string, { reason: string | undefined; canRetry: boolean }>>(new Map());
@@ -156,15 +148,7 @@ export const useCourseGalleryPhotos = (
       const localId = crypto.randomUUID();
       const objectUrl = URL.createObjectURL(file);
       objectUrlsRef.current.add(objectUrl);
-      setPending((prev) => [...prev, { localId, file, objectUrl, status: courseId ? 'uploading' : 'draft', canRetry: true, isSmall: false }]);
-      // Measured alongside the upload rather than blocking it, same as the
-      // cover's own `useCourseCoverUpload`: a failed decode just leaves the
-      // tile's warning off.
-      void readImageDimensions(file).then(
-        ({ width, height }) =>
-          setPending((prev) => prev.map((photo) => (photo.localId === localId ? { ...photo, isSmall: Math.min(width, height) < COURSE_GALLERY_SOFT_MIN_SIDE } : photo))),
-        () => undefined,
-      );
+      setPending((prev) => [...prev, { localId, file, objectUrl, status: courseId ? 'uploading' : 'draft', canRetry: true }]);
       if (courseId) void runUpload(courseId, localId, file);
     }
   };
@@ -208,9 +192,6 @@ export const useCourseGalleryPhotos = (
   };
 
   const photos: GalleryPhoto[] = [
-    // A photo already saved on the server has no local file to measure: its
-    // own dimensions were only ever checked, if at all, the moment it was
-    // first added, not on every later load.
     ...savedPhotos.map((photo) => {
       const failure = failedDeletes.get(photo.id);
       return {
@@ -219,7 +200,6 @@ export const useCourseGalleryPhotos = (
         status: failure ? ('failed' as const) : ('uploaded' as const),
         failureReason: failure?.reason,
         canRetry: failure?.canRetry,
-        isSmall: false,
       };
     }),
     ...pending.map((photo) => ({
@@ -228,7 +208,6 @@ export const useCourseGalleryPhotos = (
       status: photo.status === 'draft' ? ('uploaded' as const) : photo.status,
       failureReason: photo.failureReason,
       canRetry: photo.canRetry,
-      isSmall: photo.isSmall,
     })),
   ];
 

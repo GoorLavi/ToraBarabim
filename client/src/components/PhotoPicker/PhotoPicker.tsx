@@ -1,33 +1,15 @@
 import type { ChangeEvent } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import classNames from 'classnames';
 import styled from 'styled-components';
+
+import { readImageDimensions } from '~/helpers';
 
 import { PhotoCropStep } from './components/PhotoCropStep/PhotoCropStep';
 import * as consts from './consts';
 import * as helpers from './helpers';
 import type { CropCandidate, PhotoPickerProps } from './models';
 import * as styles from './styles';
-
-// Reads a file's real pixel dimensions by decoding it into an `<img>`, the
-// same technique `PlacePanel/ProfilePage/helpers.ts`'s own
-// `readImageDimensions` uses for its own, separate check: no shared home for
-// either copy (a page-level helper and this shared component do not import
-// from each other), so this is a small, independent duplicate rather than a
-// reach across that boundary. Resolves the loaded `image` itself, not just
-// its dimensions, so the non-crop path below can hand it straight to
-// `helpers.exportImage` without decoding a second time.
-const loadImageDimensions = (file: File): Promise<{ objectUrl: string; image: HTMLImageElement; width: number; height: number }> =>
-  new Promise((resolve, reject) => {
-    const objectUrl = URL.createObjectURL(file);
-    const image = new Image();
-    image.onload = () => resolve({ objectUrl, image, width: image.naturalWidth, height: image.naturalHeight });
-    image.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
-      reject(new Error(`failed to read image dimensions for ${file.name}`));
-    };
-    image.src = objectUrl;
-  });
 
 // A file picker with a fixed preview frame that never disappears and never
 // changes height (rabbi-panel-copy.md, section 6), plus the real upload
@@ -69,6 +51,11 @@ export const PhotoPicker = styled(
     // `onSelectFile`, so no caller validation ever runs on it and no caller
     // state ever learns about it.
     const [cropUnavailableError, setCropUnavailableError] = useState<string | undefined>(undefined);
+    // Counts each `handleChange` call: a second pick before the first one's
+    // own decode or re-encode has resolved must win, never race it, so
+    // every async branch below checks this against the pick it started
+    // from before acting on its result.
+    const pickIdRef = useRef(0);
 
     useEffect(() => {
       if (!cropCandidate) return;
@@ -79,15 +66,17 @@ export const PhotoPicker = styled(
       const file = event.target.files?.[0];
       event.target.value = '';
       if (!file) return;
+      const pickId = ++pickIdRef.current;
+      const isLatestPick = (): boolean => pickIdRef.current === pickId;
 
       if (aspectRatio !== '16:9') {
-        void loadImageDimensions(file).then(
+        void readImageDimensions(file).then(
           ({ objectUrl, image, width, height }) => {
             const longSide = Math.max(width, height);
             const exceedsUploadLimit = longSide > consts.CROP_OUTPUT_MAX_LONG_SIDE || file.size > consts.MAX_PHOTO_UPLOAD_BYTES;
             if (!exceedsUploadLimit) {
               URL.revokeObjectURL(objectUrl);
-              onSelectFile(file);
+              if (isLatestPick()) onSelectFile(file);
               return;
             }
             // '3:4' has no crop step of its own (only '16:9' opens one), so
@@ -101,19 +90,29 @@ export const PhotoPicker = styled(
             void helpers
               .exportImage(image, { x: 0, y: 0, width, height }, consts.CROP_OUTPUT_MAX_LONG_SIDE)
               .then(
-                (exported) => onSelectFile(exported),
-                () => onSelectFile(file),
+                (exported) => {
+                  if (isLatestPick()) onSelectFile(exported);
+                },
+                () => {
+                  if (isLatestPick()) onSelectFile(file);
+                },
               )
               .finally(() => URL.revokeObjectURL(objectUrl));
           },
-          () => onSelectFile(file),
+          () => {
+            if (isLatestPick()) onSelectFile(file);
+          },
         );
         return;
       }
 
       setCropUnavailableError(undefined);
-      void loadImageDimensions(file).then(
+      void readImageDimensions(file).then(
         ({ objectUrl, width, height }) => {
+          if (!isLatestPick()) {
+            URL.revokeObjectURL(objectUrl);
+            return;
+          }
           if (!helpers.canCropToFloor({ width, height }, ratioValue, minWidth, minHeight)) {
             URL.revokeObjectURL(objectUrl);
             setCropUnavailableError(helpers.photoTooSmallError(minWidth, minHeight));
@@ -126,7 +125,7 @@ export const PhotoPicker = styled(
           // caller as-is, so its own type validation catches it and shows
           // its own message, exactly as before this component cropped
           // anything.
-          onSelectFile(file);
+          if (isLatestPick()) onSelectFile(file);
         },
       );
     };

@@ -1,8 +1,9 @@
-import type { ChangeEvent } from 'react';
+import type { ChangeEvent, SyntheticEvent } from 'react';
+import { useState } from 'react';
 import classNames from 'classnames';
 import styled from 'styled-components';
 
-import { COURSE_PHOTO_SMALL_WARNING } from '~/consts';
+import { COURSE_GALLERY_SOFT_MIN_SIDE } from '~/consts';
 
 import * as consts from './consts';
 import type { GalleryFieldProps } from './models';
@@ -14,6 +15,25 @@ import * as styles from './styles';
 // B, item 6).
 export const GalleryField = styled(({ className, photos, onAddFiles, onRemove, onRetry }: GalleryFieldProps) => {
   const canAddMore = photos.length < consts.COURSE_GALLERY_MAX_PHOTOS;
+  // Read from each tile's own rendered `<img>`, the one thing every photo
+  // has regardless of where its URL came from (a freshly picked file's
+  // object URL or an already saved photo's server URL): the one mechanism
+  // that catches a small photo on both forms, in both create and edit, and
+  // survives a reload, with no dimension request of its own (design gate
+  // fix round, reviewer finding B2).
+  const [smallPhotoIds, setSmallPhotoIds] = useState<Set<string>>(new Set());
+
+  const handlePhotoLoad = (photoId: string, event: SyntheticEvent<HTMLImageElement>): void => {
+    const { naturalWidth, naturalHeight } = event.currentTarget;
+    const isSmall = Math.min(naturalWidth, naturalHeight) < COURSE_GALLERY_SOFT_MIN_SIDE;
+    setSmallPhotoIds((previous) => {
+      if (previous.has(photoId) === isSmall) return previous;
+      const next = new Set(previous);
+      if (isSmall) next.add(photoId);
+      else next.delete(photoId);
+      return next;
+    });
+  };
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>): void => {
     const files = Array.from(event.target.files ?? []).slice(0, consts.COURSE_GALLERY_MAX_PHOTOS - photos.length);
@@ -21,6 +41,8 @@ export const GalleryField = styled(({ className, photos, onAddFiles, onRemove, o
     if (files.length === 0) return;
     onAddFiles(files);
   };
+
+  const smallUploadedCount = photos.filter((photo) => photo.status === 'uploaded' && smallPhotoIds.has(photo.id)).length;
 
   return (
     <div className={className}>
@@ -30,35 +52,39 @@ export const GalleryField = styled(({ className, photos, onAddFiles, onRemove, o
 
       <div className="grid">
         {photos.map((photo, index) => (
-          <div key={photo.id} className="tile">
-            <div className={classNames('photoBox', { failed: photo.status === 'failed' })}>
-              <img className={classNames('photo', { dimmed: photo.status !== 'uploaded' })} src={photo.url} alt="" />
+          <div key={photo.id} className={classNames('tile', { failed: photo.status === 'failed' })}>
+            <img
+              className={classNames('photo', { dimmed: photo.status !== 'uploaded' })}
+              src={photo.url}
+              alt=""
+              onLoad={(event) => handlePhotoLoad(photo.id, event)}
+            />
 
-              {photo.status === 'uploading' && (
-                <div className="status uploading">
-                  <span className="label">{consts.GALLERY_UPLOADING_LABEL}</span>
-                </div>
-              )}
+            {/* Above the photo, never under it (a border on the tile itself
+                paints under the `<img>` and would not show): marks which
+                tile the one warning below the grid is about (design gate
+                fix round, designer). */}
+            {photo.status === 'uploaded' && smallPhotoIds.has(photo.id) && <span className="smallRing" aria-hidden="true" />}
 
-              {photo.status === 'failed' && photo.canRetry !== false && (
-                <button type="button" className="retryArea" onClick={() => onRetry(photo.id)}>
-                  <span className="retryPill">{consts.GALLERY_RETRY_LABEL}</span>
-                </button>
-              )}
+            {photo.status === 'uploading' && (
+              <div className="status uploading">
+                <span className="label">{consts.GALLERY_UPLOADING_LABEL}</span>
+              </div>
+            )}
 
-              {(photo.status === 'uploaded' || photo.status === 'failed') && (
-                <button type="button" className="remove" aria-label={consts.galleryRemoveLabel(index + 1)} onClick={() => onRemove(photo.id)}>
-                  <span className="removeIcon" aria-hidden="true">
-                    {'×'}
-                  </span>
-                </button>
-              )}
-            </div>
+            {photo.status === 'failed' && photo.canRetry !== false && (
+              <button type="button" className="retryArea" onClick={() => onRetry(photo.id)}>
+                <span className="retryPill">{consts.GALLERY_RETRY_LABEL}</span>
+              </button>
+            )}
 
-            {/* Beside the photo it concerns, not a rejection: shown once the
-                photo has uploaded, never while it is still uploading or
-                showing a failure reason of its own. */}
-            {photo.status === 'uploaded' && photo.isSmall && <p className="warning">{COURSE_PHOTO_SMALL_WARNING}</p>}
+            {(photo.status === 'uploaded' || photo.status === 'failed') && (
+              <button type="button" className="remove" aria-label={consts.galleryRemoveLabel(index + 1)} onClick={() => onRemove(photo.id)}>
+                <span className="removeIcon" aria-hidden="true">
+                  {'×'}
+                </span>
+              </button>
+            )}
           </div>
         ))}
 
@@ -83,6 +109,12 @@ export const GalleryField = styled(({ className, photos, onAddFiles, onRemove, o
             {photo.failureReason}
           </p>
         ))}
+
+      {/* One line for every marked tile, not a rejection (design gate fix
+          round, designer): after the failure reasons above, before the
+          field's own help line (CourseFormFields.tsx renders that next). */}
+      {smallUploadedCount > 0 && <p className="warning">{consts.gallerySmallPhotoWarning(smallUploadedCount)}</p>}
+
       {!canAddMore && <p className="maxReachedNote">{consts.GALLERY_MAX_REACHED_NOTE}</p>}
     </div>
   );

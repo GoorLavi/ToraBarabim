@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
 
+import { readImageDimensions } from '~/helpers';
 import { uploadGeneratedFileToInput } from '~/storyMocks';
 
 import * as consts from './consts';
@@ -69,20 +70,11 @@ const selectGeneratedFile = async (canvasElement: HTMLElement, width: number, he
 
 // Decodes a file this story received back from `onSelectFile`, to assert on
 // its own real pixel dimensions rather than trust the code path was taken.
-const decodeFileDimensions = (file: File): Promise<{ width: number; height: number }> =>
-  new Promise((resolve, reject) => {
-    const objectUrl = URL.createObjectURL(file);
-    const image = new Image();
-    image.onload = () => {
-      URL.revokeObjectURL(objectUrl);
-      resolve({ width: image.naturalWidth, height: image.naturalHeight });
-    };
-    image.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
-      reject(new Error('PhotoPicker story: failed to decode the selected file'));
-    };
-    image.src = objectUrl;
-  });
+const decodeFileDimensions = async (file: File): Promise<{ width: number; height: number }> => {
+  const { objectUrl, width, height } = await readImageDimensions(file);
+  URL.revokeObjectURL(objectUrl);
+  return { width, height };
+};
 
 // '3:4' has no crop step of its own, so an oversized phone photo is
 // re-encoded whole on selection instead (PhotoPicker.tsx): the file

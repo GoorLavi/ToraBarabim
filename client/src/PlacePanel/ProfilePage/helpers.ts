@@ -1,6 +1,7 @@
 import type { PlaceProfileResponse } from '@torabarabim/common';
 
 import * as photoPickerConsts from '~/components/PhotoPicker/consts';
+import { readImageDimensions } from '~/helpers';
 
 import * as consts from './consts';
 import type { ProfileFormErrors, ProfileFormState } from './models';
@@ -33,21 +34,6 @@ export const nullableTextField = (currentValue: string, existingValue: string | 
 
 const ACCEPTED_PHOTO_TYPES = ['image/jpeg', 'image/png'];
 
-const readImageDimensions = (file: File): Promise<{ width: number; height: number }> =>
-  new Promise((resolve, reject) => {
-    const objectUrl = URL.createObjectURL(file);
-    const image = new Image();
-    image.onload = () => {
-      URL.revokeObjectURL(objectUrl);
-      resolve({ width: image.naturalWidth, height: image.naturalHeight });
-    };
-    image.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
-      reject(new Error(`failed to read image dimensions for ${file.name}`));
-    };
-    image.src = objectUrl;
-  });
-
 // Beyond type and size, a place's photo has to clear the floor the server
 // enforces, so this reads the file's real pixel dimensions before ever
 // uploading it. Async, unlike the rabbi panel's synchronous counterpart, for
@@ -58,10 +44,13 @@ export const validatePlacePhotoFile = async (file: File): Promise<string | undef
   if (!ACCEPTED_PHOTO_TYPES.includes(file.type)) return photoPickerConsts.UNSUPPORTED_TYPE_ERROR;
   if (file.size > photoPickerConsts.MAX_PHOTO_UPLOAD_BYTES) return photoPickerConsts.TOO_LARGE_ERROR;
 
-  const { width, height } = await readImageDimensions(file);
-  if (width < consts.MIN_WIDTH_PX || height < consts.MIN_HEIGHT_PX) {
-    return consts.PHOTO_INVALID_ERROR;
+  const { objectUrl, width, height } = await readImageDimensions(file);
+  try {
+    if (width < consts.MIN_WIDTH_PX || height < consts.MIN_HEIGHT_PX) {
+      return consts.PHOTO_INVALID_ERROR;
+    }
+    return undefined;
+  } finally {
+    URL.revokeObjectURL(objectUrl);
   }
-
-  return undefined;
 };

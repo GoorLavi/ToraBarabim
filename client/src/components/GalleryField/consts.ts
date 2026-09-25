@@ -14,3 +14,15 @@ export const GALLERY_REMOVE_FAILED_LABEL = 'ההסרה לא הצליחה.';
 export const GALLERY_RETRY_LABEL = 'ניסיון נוסף';
 export const galleryRemoveLabel = (position: number): string => `הסרת תמונה ${position}`;
 export const GALLERY_MAX_REACHED_NOTE = `אפשר להוסיף עד ${COURSE_GALLERY_MAX_PHOTOS} תמונות. כדי להוסיף עוד אחת, צריך קודם להסיר תמונה.`;
+
+// One line under the whole grid, not per tile (design gate fix round): the
+// marked tiles (GalleryField.tsx's own ring) are the pointer, so this names
+// them rather than repeating a size. Singular below the plural threshold,
+// each referring to "the marked" photo or photos, matching the cover's own
+// `COURSE_PHOTO_SMALL_WARNING` (`~/consts`) in everything but that: the
+// gallery can hold several small photos where the cover is only ever one.
+// Copy approved by `tora-hebrew-editor`.
+export const gallerySmallPhotoWarning = (smallCount: number): string =>
+  smallCount === 1
+    ? 'התמונה המסומנת קטנה, ובאתר היא עלולה להיראות מטושטשת. אם יש גרסה גדולה יותר, כדאי להעלות אותה.'
+    : 'התמונות המסומנות קטנות, ובאתר הן עלולות להיראות מטושטשות. אם יש גרסאות גדולות יותר, כדאי להעלות אותן.';

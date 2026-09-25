@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { QueryKey } from '@tanstack/react-query';
 import type { CourseResponse } from '@torabarabim/common';
@@ -6,8 +6,7 @@ import type { CourseResponse } from '@torabarabim/common';
 import { TOO_LARGE_ERROR } from '~/components/PhotoPicker/consts';
 import { COURSE_COVER_SOFT_MIN_HEIGHT, COURSE_COVER_SOFT_MIN_WIDTH, COURSE_PHOTO_SMALL_WARNING } from '~/consts';
 import { courseErrorMessage, isCourseErrorCode } from '~/courseErrors';
-
-import { readImageDimensions } from './readImageDimensions';
+import { readImageDimensions } from '~/helpers';
 
 export interface CourseCoverUploadApi {
   uploadCover: (courseId: string, file: File) => Promise<CourseResponse>;
@@ -43,6 +42,10 @@ export const useCourseCoverUpload = (courseId: string, api: CourseCoverUploadApi
   const [selectedFile, setSelectedFile] = useState<File | undefined>();
   const [objectUrl, setObjectUrl] = useState<string | undefined>();
   const [isSmall, setIsSmall] = useState(false);
+  // Counts each `upload` call so a dimension read that resolves after a
+  // later pick's own read has already landed is dropped rather than
+  // overwriting that later pick's own `isSmall` with a stale answer.
+  const dimensionsReadRef = useRef(0);
 
   useEffect(() => {
     if (!selectedFile) {
@@ -83,8 +86,12 @@ export const useCourseCoverUpload = (courseId: string, api: CourseCoverUploadApi
       // blocking it: a failed decode (a type the browser cannot preview)
       // just leaves the warning off, since the upload's own response is
       // the real check for that case.
+      const readId = ++dimensionsReadRef.current;
       void readImageDimensions(file).then(
-        ({ width, height }) => setIsSmall(width < COURSE_COVER_SOFT_MIN_WIDTH || height < COURSE_COVER_SOFT_MIN_HEIGHT),
+        ({ objectUrl: readUrl, width, height }) => {
+          URL.revokeObjectURL(readUrl);
+          if (dimensionsReadRef.current === readId) setIsSmall(width < COURSE_COVER_SOFT_MIN_WIDTH || height < COURSE_COVER_SOFT_MIN_HEIGHT);
+        },
         () => undefined,
       );
       mutation.mutate(file);

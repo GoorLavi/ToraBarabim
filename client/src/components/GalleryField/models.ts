@@ -11,10 +11,6 @@ export interface GalleryPhoto {
   // failure.
   failureReason?: string;
   canRetry?: boolean;
-  // Set once this photo's own pixel dimensions are known to read below the
-  // soft floor (`~/consts`): never a rejection, only a warning shown on its
-  // own tile once it has uploaded (GalleryField.tsx).
-  isSmall?: boolean;
 }
 
 export interface GalleryFieldProps {

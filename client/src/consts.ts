@@ -140,10 +140,12 @@ export const COURSE_COVER_SOFT_MIN_WIDTH = 600;
 export const COURSE_COVER_SOFT_MIN_HEIGHT = 800;
 export const COURSE_GALLERY_SOFT_MIN_SIDE = 600;
 
-// Shown beside the photo it concerns, not as a rejection: under the cover
-// field and on a gallery tile, once its own upload has succeeded and its
-// pixel dimensions read below the soft floor above. One shared line, since
-// the cover and a gallery photo read the same warning.
+// Shown under the cover field, not as a rejection, once the cover has
+// uploaded (or, on the create form, been picked) and its pixel dimensions
+// read below the soft floor above. The gallery reads its own count-aware
+// line instead (`GalleryField/consts.ts`, `gallerySmallPhotoWarning`),
+// since the one warning under its grid can name several marked tiles at
+// once, which the cover, always exactly one photo, never needs to.
 export const COURSE_PHOTO_SMALL_WARNING = 'התמונה קטנה, ובאתר היא עלולה להיראות מטושטשת. אם יש גרסה גדולה יותר, כדאי להעלות אותה.';
 
 // A title's own name-and-cycle join ("יסודות האמונה · מחזור 3"): read by

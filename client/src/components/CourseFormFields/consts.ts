@@ -1,6 +1,7 @@
 import type { LessonTopic } from '@torabarabim/common';
 
 import { COURSE_GALLERY_MAX_PHOTOS } from '~/components/GalleryField/consts';
+import { COURSE_COVER_SOFT_MIN_HEIGHT, COURSE_COVER_SOFT_MIN_WIDTH } from '~/consts';
 import { formatNumber } from '~/helpers';
 
 import type { CourseFormField } from './models';
@@ -42,8 +43,10 @@ export const COVER_CROP_HELP = 'בכרטיס באתר התמונה נחתכת ל
 // Replaces `PhotoPicker/helpers.ts`'s own "לפחות W על H פיקסלים" line: the
 // site does not refuse a smaller cover any more (`~/consts`,
 // `COURSE_PHOTO_SMALL_WARNING`), so its help line reads as a
-// recommendation rather than a requirement.
-export const COVER_SIZE_HELP = 'מומלץ לפחות 600 על 800 פיקסלים';
+// recommendation rather than a requirement. Built from the same soft
+// thresholds the warning itself compares against, never a second, hand-typed
+// copy of the two numbers.
+export const COVER_SIZE_HELP = `מומלץ לפחות ${COURSE_COVER_SOFT_MIN_WIDTH} על ${COURSE_COVER_SOFT_MIN_HEIGHT} פיקסלים`;
 // A course cannot be saved without a cover (REQUIRED_COVER_ERROR below), so
 // its empty state has no "meanwhile a soft background shows" to promise.
 export const COVER_MISSING_NOTE = 'עוד אין תמונה.';

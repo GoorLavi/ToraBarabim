@@ -5,12 +5,13 @@ import { SCROLL_SETTLE_MS } from './consts';
 
 export interface VisibleSlideTracking {
   visibleIndex: number;
-  // Called right before a `goTo`-triggered `scrollIntoView`: freezes
-  // `visibleIndex` at its current value until the scroll settles, so a
-  // fast second arrow tap computes its target from the destination just
-  // requested, never a slide only passed through mid-scroll (design gate
-  // round 5 finding).
-  freezeUntilSettled: () => void;
+  // Called right before a `goTo`-triggered `scrollIntoView`, with the same
+  // index just requested: sets `visibleIndex` to that destination right
+  // away and freezes it there until the scroll settles, so a fast second
+  // arrow tap computes its target from the destination just requested,
+  // never a slide only passed through mid-scroll (design gate round 5
+  // finding).
+  freezeUntilSettled: (target: number) => void;
 }
 
 // Tracks which slide is most visible inside the phone strip's own
@@ -32,8 +33,9 @@ export const useVisibleSlideIndex = (
   const settleTimerRef = useRef<number | undefined>(undefined);
   const scheduleUnfreezeRef = useRef<() => void>(() => {});
 
-  const freezeUntilSettled = (): void => {
+  const freezeUntilSettled = (target: number): void => {
     frozenRef.current = true;
+    setVisibleIndex(target);
     scheduleUnfreezeRef.current();
   };
 
@@ -44,10 +46,35 @@ export const useVisibleSlideIndex = (
 
     ratiosRef.current = new Map(slides.map((slide) => [slide, 0]));
 
+    // The most visible slide by the ratios the observer has recorded so
+    // far, including the ones a freeze skipped acting on: undefined when
+    // every recorded ratio is still 0, a transient mid-scroll state, not
+    // "the first slide is now visible" (design gate round 4, reviewer M1).
+    const mostVisibleIndex = (): number | undefined => {
+      let bestSlide: HTMLElement | undefined;
+      let bestRatio = 0;
+      for (const slide of slides) {
+        const ratio = ratiosRef.current.get(slide) ?? 0;
+        if (ratio > bestRatio) {
+          bestRatio = ratio;
+          bestSlide = slide;
+        }
+      }
+      if (!bestSlide) return undefined;
+      const index = slides.indexOf(bestSlide);
+      return index === -1 ? undefined : index;
+    };
+
     const scheduleUnfreeze = (): void => {
       window.clearTimeout(settleTimerRef.current);
       settleTimerRef.current = window.setTimeout(() => {
         frozenRef.current = false;
+        // Re-picks from the ratios the observer kept recording while
+        // frozen: no further observer callback is guaranteed once the
+        // scroll has already stopped, so nothing else would ever move the
+        // tracker off the frozen target once it lifts.
+        const index = mostVisibleIndex();
+        if (index !== undefined) setVisibleIndex(index);
       }, SCROLL_SETTLE_MS);
     };
     scheduleUnfreezeRef.current = scheduleUnfreeze;
@@ -55,23 +82,9 @@ export const useVisibleSlideIndex = (
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) ratiosRef.current.set(entry.target, entry.intersectionRatio);
-
-        let bestSlide: HTMLElement | undefined;
-        let bestRatio = 0;
-        for (const slide of slides) {
-          const ratio = ratiosRef.current.get(slide) ?? 0;
-          if (ratio > bestRatio) {
-            bestRatio = ratio;
-            bestSlide = slide;
-          }
-        }
-
-        // A callback reporting every slide at 0 is a transient mid-scroll
-        // state, not "the first slide is now visible": ignored rather than
-        // reset to index 0 (design gate round 4, reviewer M1).
-        if (!bestSlide || frozenRef.current) return;
-        const bestIndex = slides.indexOf(bestSlide);
-        if (bestIndex !== -1) setVisibleIndex(bestIndex);
+        if (frozenRef.current) return;
+        const index = mostVisibleIndex();
+        if (index !== undefined) setVisibleIndex(index);
       },
       { root: container, threshold: [0, 0.25, 0.5, 0.75, 1] },
     );

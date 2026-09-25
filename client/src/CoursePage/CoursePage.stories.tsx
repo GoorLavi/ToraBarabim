@@ -81,6 +81,19 @@ export const Open: Story = {
     // frame, not just Storybook's own cosmetic viewport global, which the
     // vitest test runner never applies to the page.
     await atFrameSize(375, undefined, async () => {
+      // The stage's own next/prev arrows and counter, overlaid on the
+      // strip itself, starting from slide 1: a fast second tap used to
+      // freeze the tracker at its pre-tap value instead of the destination
+      // just requested, so two "next" taps in a row landed on the same
+      // slide instead of advancing twice (useVisibleSlideIndex.ts,
+      // reviewer finding B1).
+      const nextArrow = canvas.getByRole('button', { name: 'לתמונה הבאה' });
+      const prevArrow = canvas.getByRole('button', { name: 'לתמונה הקודמת' });
+      await userEvent.click(nextArrow);
+      await userEvent.click(nextArrow);
+      await waitFor(() => expect(canvas.getByText('3 מתוך 9')).toBeInTheDocument());
+      expect(prevArrow).toBeEnabled();
+
       const fourthSlide = canvas.getByRole('button', { name: 'הצגת תמונה 4 במסך מלא' });
       await userEvent.click(fourthSlide);
       const dialog = await within(document.body).findByRole('dialog');

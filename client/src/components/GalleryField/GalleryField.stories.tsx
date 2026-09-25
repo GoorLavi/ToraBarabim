@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, within } from 'storybook/test';
+import { expect, fn, waitFor, within } from 'storybook/test';
 
 import { placeholderPhoto } from '~/storyMocks';
-import { COURSE_PHOTO_SMALL_WARNING } from '~/consts';
+import { COURSE_GALLERY_SOFT_MIN_SIDE } from '~/consts';
 
 import * as consts from './consts';
 import { GalleryField } from './GalleryField';
@@ -92,15 +92,37 @@ export const AtMaxPhotos: Story = {
   },
 };
 
-// The owner's call: a small gallery photo still uploads, never rejected,
-// with its own warning on its own tile ("לקבל כל גודל, עם אזהרה על טשטוש").
+// The owner's call: a small gallery photo still uploads, never rejected. A
+// real photo below the soft floor, the same way the app itself finds out
+// (its own tile's `<img onLoad>`, GalleryField.tsx), not a hand-set flag: a
+// story that fakes the flag directly is a story that cannot catch the state
+// the hook never actually produces (design gate fix round, reviewer B2).
+// One warning under the whole grid, singular for exactly one marked tile.
 export const SmallPhotoWarning: Story = {
   args: {
-    photos: [photo('1'), { id: 'small', url: placeholderPhoto(200, 200), status: 'uploaded', isSmall: true }],
+    photos: [photo('1'), { id: 'small', url: placeholderPhoto(400, 500), status: 'uploaded' }],
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByText(COURSE_PHOTO_SMALL_WARNING)).toBeInTheDocument();
+    await waitFor(() => expect(canvas.getByText(consts.gallerySmallPhotoWarning(1))).toBeInTheDocument());
+    await expect(canvasElement.querySelectorAll('.smallRing')).toHaveLength(1);
+  },
+};
+
+// Two marked tiles: the warning's own plural form, and the ring on each one
+// small photo, not just the first.
+export const SmallPhotoWarningPlural: Story = {
+  args: {
+    photos: [
+      photo('1'),
+      { id: 'small-1', url: placeholderPhoto(400, 500), status: 'uploaded' },
+      { id: 'small-2', url: placeholderPhoto(Math.round(COURSE_GALLERY_SOFT_MIN_SIDE * 0.8), Math.round(COURSE_GALLERY_SOFT_MIN_SIDE * 0.8)), status: 'uploaded' },
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => expect(canvas.getByText(consts.gallerySmallPhotoWarning(2))).toBeInTheDocument());
+    await expect(canvasElement.querySelectorAll('.smallRing')).toHaveLength(2);
   },
 };
 
