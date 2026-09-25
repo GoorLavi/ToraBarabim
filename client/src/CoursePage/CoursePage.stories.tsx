@@ -3,9 +3,10 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Route, Routes } from 'react-router-dom';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { CALL_ACCESSIBLE_NAME_PREFIX } from '~/components/ContactActions/consts';
 import { COURSE_FACT_PRICE_LABEL } from '~/consts';
 import { courseDetailFixture } from '~/courseFixture';
-import { phoneToInternational, whatsAppHref } from '~/helpers';
+import { phoneDisplay, phoneToInternational, whatsAppHref } from '~/helpers';
 import { rabbiFixture } from '~/rabbiFixture';
 import { atFrameSize, placeholderPhoto } from '~/storyMocks';
 
@@ -78,7 +79,10 @@ export const Open: Story = {
     );
 
     // The call href dials the same number, converted to international form.
-    const callLink = canvas.getByRole('link', { name: consts.CONTACT_BAR_CALL_LABEL });
+    // The accessible name is the call button's own override, not its short
+    // visible label ("שיחה"): ContactActions.tsx always names a phone
+    // number, never just the action.
+    const callLink = canvas.getByRole('link', { name: `${CALL_ACCESSIBLE_NAME_PREFIX} ${phoneDisplay('0501234567')}` });
     await expect(callLink).toHaveAttribute('href', `tel:+${phoneToInternational('0501234567')}`);
   },
 };
@@ -160,7 +164,7 @@ export const ClosedByCalendar: Story = {
     // presence matters here, not which copy is visible.
     await waitFor(() => expect(canvas.getAllByText('ההרשמה נסגרה').length).toBeGreaterThan(0));
     await expect(canvas.queryByRole('link', { name: consts.CONTACT_BAR_WHATSAPP_LABEL })).not.toBeInTheDocument();
-    await expect(canvas.queryByRole('link', { name: consts.CONTACT_BAR_CALL_LABEL })).not.toBeInTheDocument();
+    await expect(canvas.queryByRole('link', { name: `${CALL_ACCESSIBLE_NAME_PREFIX} ${phoneDisplay('0501234567')}` })).not.toBeInTheDocument();
     // A closed course keeps its price row: the facts list never conditions
     // on state, only on whether a price was ever set.
     await expect(canvas.getAllByText('350 ₪ לכל הקורס').length).toBeGreaterThan(0);

@@ -4,7 +4,7 @@ import type { Rabbi } from '@torabarabim/common';
 
 import { useRabbiSearch } from '~/AdminPanel/useRabbiSearch';
 import { OrDivider } from '~/components/OrDivider/OrDivider';
-import { ReadOnlyField } from '~/components/ReadOnlyField/ReadOnlyField';
+import { QuietButton } from '~/components/QuietButton/QuietButton';
 import { SearchSelect } from '~/components/SearchSelect/SearchSelect';
 import { directionForValue, rabbiDisplayName } from '~/helpers';
 
@@ -24,52 +24,52 @@ export const TeacherPicker = styled(({ className, teacher, onChangeTeacher, erro
 
   return (
     <div className={className}>
-      <SearchSelect<Rabbi>
-        {...{ query }}
-        fullWidth
-        invalid={Boolean(errorMessage)}
-        items={results.items}
-        isPending={results.isPending}
-        isError={results.isError}
-        getItemKey={(item) => item.id}
-        isSelected={(item) => teacher.kind === 'rabbi' && item.id === teacher.rabbi.id}
-        onSelect={(rabbi) => onChangeTeacher({ kind: 'rabbi', rabbi })}
-        onQueryChange={setQuery}
-        renderTrigger={() => (
-          <span dir="auto">{teacher.kind === 'rabbi' ? rabbiDisplayName(teacher.rabbi) : consts.SEARCH_PLACEHOLDER}</span>
+      <div className="triggerRow">
+        <SearchSelect<Rabbi>
+          {...{ query }}
+          fullWidth
+          invalid={Boolean(errorMessage)}
+          items={results.items}
+          isPending={results.isPending}
+          isError={results.isError}
+          getItemKey={(item) => item.id}
+          isSelected={(item) => teacher.kind === 'rabbi' && item.id === teacher.rabbi.id}
+          onSelect={(rabbi) => onChangeTeacher({ kind: 'rabbi', rabbi })}
+          onQueryChange={setQuery}
+          renderTrigger={() => (
+            <span dir="auto">{teacher.kind === 'rabbi' ? rabbiDisplayName(teacher.rabbi) : consts.SEARCH_PLACEHOLDER}</span>
+          )}
+          renderOption={(item) => <span dir="auto">{rabbiDisplayName(item)}</span>}
+          searchLabel={consts.SEARCH_LABEL}
+          searchPlaceholder={consts.SEARCH_PLACEHOLDER}
+          loadingMessage={consts.SEARCH_LOADING_MESSAGE}
+          emptyMessage={consts.SEARCH_EMPTY_MESSAGE}
+          loadErrorMessage={consts.SEARCH_LOAD_ERROR_MESSAGE}
+        />
+
+        {teacher.kind === 'rabbi' && (
+          <QuietButton className="clearSelection" label={consts.CLEAR_SELECTION_LABEL} onClick={() => onChangeTeacher({ kind: 'named', name: '' })} />
         )}
-        renderOption={(item) => <span dir="auto">{rabbiDisplayName(item)}</span>}
-        searchLabel={consts.SEARCH_LABEL}
-        searchPlaceholder={consts.SEARCH_PLACEHOLDER}
-        loadingMessage={consts.SEARCH_LOADING_MESSAGE}
-        emptyMessage={consts.SEARCH_EMPTY_MESSAGE}
-        loadErrorMessage={consts.SEARCH_LOAD_ERROR_MESSAGE}
-      />
+      </div>
 
-      {teacher.kind === 'named' && <OrDivider />}
-
-      {teacher.kind === 'rabbi' ? (
-        <div className="lockedRow">
-          <ReadOnlyField quiet value={rabbiDisplayName(teacher.rabbi)} />
-          <button type="button" className="clearSelection" onClick={() => onChangeTeacher({ kind: 'named', name: '' })}>
-            {consts.CLEAR_SELECTION_LABEL}
-          </button>
-        </div>
-      ) : (
-        <div className="field">
-          <label className="label" htmlFor="teacherNamedInput">
-            {consts.NAMED_LABEL}
-          </label>
-          <input
-            id="teacherNamedInput"
-            type="text"
-            className="input"
-            dir={directionForValue(teacher.name)}
-            value={teacher.name}
-            onChange={(event) => onChangeTeacher({ kind: 'named', name: event.target.value })}
-          />
-          <span className="helper">{consts.NAMED_HELP}</span>
-        </div>
+      {teacher.kind === 'named' && (
+        <>
+          <OrDivider />
+          <div className="field">
+            <label className="label" htmlFor="teacherNamedInput">
+              {consts.NAMED_LABEL}
+            </label>
+            <input
+              id="teacherNamedInput"
+              type="text"
+              className="input"
+              dir={directionForValue(teacher.name)}
+              value={teacher.name}
+              onChange={(event) => onChangeTeacher({ kind: 'named', name: event.target.value })}
+            />
+            <span className="helper">{consts.NAMED_HELP}</span>
+          </div>
+        </>
       )}
 
       {errorMessage && <p className="error">{errorMessage}</p>}

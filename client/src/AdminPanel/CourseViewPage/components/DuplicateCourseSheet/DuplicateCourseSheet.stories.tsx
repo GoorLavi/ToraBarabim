@@ -20,10 +20,12 @@ export default meta;
 type Story = StoryObj<typeof DuplicateCourseSheet>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
+  play: async () => {
+    // The sheet portals into document.body (ResponsiveSheet), never the
+    // canvas root: every query here reads from there.
     const canvas = within(document.body);
     await expect(canvas.findByRole('heading', { name: consts.DUPLICATE_COURSE_HEADING })).resolves.toBeInTheDocument();
-    const cycleInput = (await within(canvasElement).findByLabelText(consts.CYCLE_LABEL)) as HTMLInputElement;
+    const cycleInput = (await canvas.findByLabelText(consts.CYCLE_LABEL)) as HTMLInputElement;
     await expect(cycleInput.value).toEqual('3');
   },
 };

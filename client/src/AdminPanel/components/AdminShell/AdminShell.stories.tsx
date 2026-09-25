@@ -28,29 +28,28 @@ const meta: Meta<typeof AdminShell> = {
 export default meta;
 type Story = StoryObj<typeof AdminShell>;
 
-// A non-super admin's four tabs, below `md`: a full 2 by 2 grid, no empty
-// cell.
+// A non-super admin's five tabs (courses added a tab), below `md`: a 3
+// column grid (`gridColumns`, `ceil(5 / 2)` is 3), one cell short of full.
 export const TabGridPhoneNonSuper: Story = {
   parameters: { apiMocks: { handlers: { session: http.get('/v1/admin/me', jsonResolver(nonSuperAdmin)) } } },
   play: async ({ canvasElement }) =>
     atFrameSize(375, 700, async () => {
       const nav = await within(canvasElement).findByRole('navigation', { name: consts.NAV_LABEL });
-      await expect(within(nav).findAllByRole('link')).resolves.toHaveLength(4);
+      await expect(within(nav).findAllByRole('link')).resolves.toHaveLength(5);
       expect(getComputedStyle(nav).display).toEqual('grid');
-      expect(getComputedStyle(nav).gridTemplateColumns.trim().split(/\s+/)).toHaveLength(2);
+      expect(getComputedStyle(nav).gridTemplateColumns.trim().split(/\s+/)).toHaveLength(3);
     }),
 };
 
-// A super admin's fifth tab pushes the grid to 3 columns (`gridColumns`,
-// `ceil(5 / 2)` is 3), which is one column short of the six-tab case, so the
-// grid's last cell sits empty: the scenario the admin panel's tab overflow
-// was first found in (plan section 3.4).
+// A super admin's sixth tab fills the same 3 column grid exactly (`ceil(6 /
+// 2)` is also 3): the scenario the admin panel's tab overflow was first
+// found in (plan section 3.4).
 export const TabGridPhoneSuper: Story = {
   parameters: { apiMocks: { handlers: { session: http.get('/v1/admin/me', jsonResolver(superAdmin)) } } },
   play: async ({ canvasElement }) =>
     atFrameSize(375, 700, async () => {
       const nav = await within(canvasElement).findByRole('navigation', { name: consts.NAV_LABEL });
-      await expect(within(nav).findAllByRole('link')).resolves.toHaveLength(5);
+      await expect(within(nav).findAllByRole('link')).resolves.toHaveLength(6);
       expect(getComputedStyle(nav).display).toEqual('grid');
       expect(getComputedStyle(nav).gridTemplateColumns.trim().split(/\s+/)).toHaveLength(3);
     }),

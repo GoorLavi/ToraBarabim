@@ -28,17 +28,16 @@ const meta: Meta<typeof RabbiShell> = {
 export default meta;
 type Story = StoryObj<typeof RabbiShell>;
 
-// Three tabs, below `md`: the fixed two-row grid the tab strip now uses
-// instead of the wrap it used to fall back to, one column short of full
-// (`gridColumns`, `ceil(3 / 2)` is 2, so the third tab sits alone in the
-// second row).
+// Four tabs (courses added a tab), below `md`: the fixed two-row grid the
+// tab strip now uses instead of the wrap it used to fall back to, a full 2
+// by 2 grid (`gridColumns`, `ceil(4 / 2)` is 2).
 export const TabGridPhone: Story = {
   play: async ({ canvasElement }) =>
     atFrameSize(375, 700, async () => {
       const nav = within(canvasElement).getByRole('navigation', { name: consts.NAV_LABEL });
       expect(getComputedStyle(nav).display).toEqual('grid');
       expect(getComputedStyle(nav).gridTemplateColumns.trim().split(/\s+/)).toHaveLength(2);
-      expect(within(nav).getAllByRole('link')).toHaveLength(3);
+      expect(within(nav).getAllByRole('link')).toHaveLength(4);
     }),
 };
 

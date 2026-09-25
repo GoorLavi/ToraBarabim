@@ -37,20 +37,24 @@ export const CoursePage = styled(({ className }: CoursePageProps) => {
 
   return (
     <main className={className}>
-      <BackLink to="/" label={consts.BACK_TO_HOME_LABEL} />
+      <BackLink {...{ to: '/', label: consts.BACK_TO_HOME_LABEL }} />
 
       {query.isPending && <CoursePageSkeleton />}
 
       {errorCopy && (
         <>
           {errorCopy.kind === 'not-found' ? (
-            <NotFoundScreen heading={errorCopy.heading} explanation={errorCopy.explanation} actionLabel={consts.BACK_TO_HOME_LABEL} actionTo="/" />
+            <NotFoundScreen
+              {...{ heading: errorCopy.heading, explanation: errorCopy.explanation, actionLabel: consts.BACK_TO_HOME_LABEL, actionTo: '/' }}
+            />
           ) : (
             <NotFoundScreen
-              heading={errorCopy.heading}
-              explanation={errorCopy.explanation}
-              actionLabel={consts.RETRY_LABEL}
-              onAction={() => query.refetch()}
+              {...{
+                heading: errorCopy.heading,
+                explanation: errorCopy.explanation,
+                actionLabel: consts.RETRY_LABEL,
+                onAction: () => query.refetch(),
+              }}
             />
           )}
         </>
@@ -59,7 +63,7 @@ export const CoursePage = styled(({ className }: CoursePageProps) => {
       {course && (
         <div className="layout">
           <div className="storyColumn">
-            <CourseGallery courseName={course.name} photos={[{ id: 'cover', url: course.coverUrl }, ...course.photos]} />
+            <CourseGallery {...{ courseName: course.name, photos: [{ id: 'cover', url: course.coverUrl }, ...course.photos] }} />
 
             <div className="heading">
               {(course.cycle !== undefined || course.topic) && (
@@ -78,7 +82,7 @@ export const CoursePage = styled(({ className }: CoursePageProps) => {
               </h1>
             </div>
 
-            <TeacherLine teacher={course.teacher} />
+            <TeacherLine {...{ teacher: course.teacher }} />
 
             {course.state.status === 'closed' && (
               <ClosedPanel
@@ -89,7 +93,7 @@ export const CoursePage = styled(({ className }: CoursePageProps) => {
             {/* Phone only (styles.ts): from `lg` up the facts live in the
                 side card below instead, the same "render twice, CSS picks
                 one" shape `ClosedPanel` already uses. */}
-            <CourseFacts className="factsNearTop" course={course} />
+            <CourseFacts {...{ className: 'factsNearTop', course }} />
 
             <div className="about">
               <h2 className="aboutHeading">{consts.ABOUT_COURSE_HEADING}</h2>
@@ -98,20 +102,20 @@ export const CoursePage = styled(({ className }: CoursePageProps) => {
               </p>
             </div>
 
-            <TeacherSection teacher={course.teacher} />
+            <TeacherSection {...{ teacher: course.teacher }} />
 
-            <BackLink to="/" label={consts.BACK_TO_HOME_LABEL} />
+            <BackLink {...{ to: '/', label: consts.BACK_TO_HOME_LABEL }} />
           </div>
 
           <div className="sideCard">
-            <CourseFacts className="factsInCard" course={course} />
+            <CourseFacts {...{ className: 'factsInCard', course }} />
 
             {course.state.status === 'closed' ? (
               <ClosedPanel
                 {...{ className: 'closedInCard', reason: course.state.reason, openingDate: course.openingDate, weeks: course.weeks, teacher: course.teacher }}
               />
             ) : (
-              <ContactBar courseId={course.id} courseName={course.name} contactPhone={course.state.contactPhone} />
+              <ContactBar {...{ courseId: course.id, courseName: course.name, contactPhone: course.state.contactPhone }} />
             )}
           </div>
         </div>

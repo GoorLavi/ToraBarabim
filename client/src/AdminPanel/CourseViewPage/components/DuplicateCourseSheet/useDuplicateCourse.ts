@@ -2,6 +2,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { UseMutationResult } from '@tanstack/react-query';
 import type { CourseResponse, DuplicateCourseRequest } from '@torabarabim/common';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
 import { AdminApiError, duplicateAdminCourse } from '~/AdminPanel/api';
 import { ADMIN_QUERY_KEYS } from '~/AdminPanel/consts';
 
@@ -13,6 +15,7 @@ export const useDuplicateCourse = (courseId: string): UseMutationResult<CourseRe
     onSuccess: (course) => {
       void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.coursesAll() });
       queryClient.setQueryData(ADMIN_QUERY_KEYS.course(course.id), course);
+      trackEvent(MIXPANEL_EVENTS.courseDuplicated, { sourceCourseId: courseId, courseId: course.id });
     },
   });
 };

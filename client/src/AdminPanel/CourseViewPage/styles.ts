@@ -246,13 +246,22 @@ export const CourseViewPage = css(
               color: ${theme.colors.textOnPrimary};
             }
 
+            /* Never wraps onto two lines (design gate finding, matching
+               CoursesCardList/styles.ts's own rule): the tag stays beside
+               its own line, which wraps its own text instead. */
             > .closedRow {
               display: flex;
-              flex-wrap: wrap;
-              align-items: center;
+              flex-wrap: nowrap;
+              align-items: baseline;
               gap: ${theme.spacing.xs};
 
+              > .tag {
+                flex: 0 0 auto;
+              }
+
               > .closedLine {
+                flex: 1 1 auto;
+                min-inline-size: 0;
                 color: ${theme.colors.textSecondary};
                 font-size: ${theme.typography.secondary.phone.fontSize};
                 line-height: ${theme.typography.secondary.phone.lineHeight};

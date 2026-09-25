@@ -58,7 +58,10 @@ export const Open: Story = {
   parameters: { apiMocks: { handlers: { course: http.get('/v1/admin/courses/:id', jsonResolver(openCourse)) } } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.findByRole('heading', { name: /יסודות האמונה/ })).resolves.toBeInTheDocument();
+    // Level 1 only: the preview aside's own CoursePreviewCard repeats the
+    // course name in its own heading (an h3), which a bare name query would
+    // also match.
+    await expect(canvas.findByRole('heading', { name: /יסודות האמונה/, level: 1 })).resolves.toBeInTheDocument();
     await expect(canvas.getByRole('link', { name: consts.EDIT_LABEL })).toBeInTheDocument();
     await expect(canvas.getByRole('button', { name: COURSE_MARK_FULL_ACTION_LABEL })).toBeInTheDocument();
     await expect(canvas.getByRole('button', { name: COURSE_CLOSE_REGISTRATION_ACTION_LABEL })).toBeInTheDocument();

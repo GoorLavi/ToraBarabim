@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, within } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 
 import { courseResponseFixture } from '~/courseFixture';
 import { panelShellDecorator } from '~/storyDecorators';
@@ -42,7 +42,9 @@ export const Populated: Story = {
   parameters: { apiMocks: { handlers: { courses: coursesHandler([openCourse, unlinkedCourse, fullCourse, closedCourse]) } } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.findByText('יסודות האמונה')).resolves.toBeInTheDocument();
+    // The phone card list and the desktop table both render at once (CSS
+    // picks which one shows), so every course name appears twice.
+    await waitFor(() => expect(canvas.getAllByText('יסודות האמונה').length).toBeGreaterThan(0));
     await expect(canvas.getAllByText('מבוא לתפילה').length).toBeGreaterThan(0);
   },
 };

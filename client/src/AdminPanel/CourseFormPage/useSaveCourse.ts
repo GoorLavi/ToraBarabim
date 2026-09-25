@@ -2,6 +2,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { UseMutationResult } from '@tanstack/react-query';
 import type { CourseResponse } from '@torabarabim/common';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
 import { AdminApiError, createAdminCourse, updateAdminCourse } from '~/AdminPanel/api';
 import { ADMIN_QUERY_KEYS } from '~/AdminPanel/consts';
 import type { CourseFormState } from '~/components/CourseFormFields/models';
@@ -29,9 +31,10 @@ export const useSaveCourse = (): UseMutationResult<CourseResponse, AdminApiError
       if (!form.cover) throw new Error('useSaveCourse called to create a course before a cover was chosen');
       return createAdminCourse(payload, form.cover);
     },
-    onSuccess: (course) => {
+    onSuccess: (course, { existingCourseId }) => {
       void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.coursesAll() });
       queryClient.setQueryData(ADMIN_QUERY_KEYS.course(course.id), course);
+      trackEvent(MIXPANEL_EVENTS.courseSaved, { courseId: course.id, isNew: !existingCourseId });
     },
   });
 };

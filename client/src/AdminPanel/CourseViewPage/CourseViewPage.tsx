@@ -170,33 +170,46 @@ export const CourseViewPage = styled(({ className }: CourseViewPageProps) => {
 
           <div className="fieldsGrid">
             <RecordField
-              label={consts.TEACHER_LABEL}
-              value={course.teacher.kind === 'rabbi' ? rabbiDisplayName(course.teacher.rabbi) : `${course.teacher.name} · ${consts.UNLINKED_TEACHER_SUFFIX}`}
-              linkTo={course.teacher.kind === 'rabbi' ? ADMIN_ROUTES.rabbiView(course.teacher.rabbi.id) : undefined}
+              {...{
+                label: consts.TEACHER_LABEL,
+                value:
+                  course.teacher.kind === 'rabbi' ? rabbiDisplayName(course.teacher.rabbi) : `${course.teacher.name} · ${consts.UNLINKED_TEACHER_SUFFIX}`,
+                linkTo: course.teacher.kind === 'rabbi' ? ADMIN_ROUTES.rabbiView(course.teacher.rabbi.id) : undefined,
+              }}
             />
-            {course.cycle !== undefined && <RecordField label={consts.CYCLE_LABEL} value={String(course.cycle)} />}
-            <RecordField className="wide" label={consts.DESCRIPTION_LABEL} value={course.description} />
-            <RecordField label={consts.TOPIC_LABEL} isEmpty={!course.topic} value={course.topic ? courseTopicLabel(course.topic) : consts.NO_TOPIC_VALUE} />
-            <RecordField label={consts.OPENING_DATE_LABEL} value={weekdayAndDayMonthLabel(course.openingDate)} />
-            <RecordField label={consts.WEEKS_LABEL} value={String(course.weeks)} />
-            <RecordField label={consts.SESSIONS_LABEL} value={String(course.sessions)} />
+            {course.cycle !== undefined && <RecordField {...{ label: consts.CYCLE_LABEL, value: String(course.cycle) }} />}
+            <RecordField {...{ className: 'wide', label: consts.DESCRIPTION_LABEL, value: course.description }} />
             <RecordField
-              label={consts.HOURS_LABEL}
-              isEmpty={course.hours === undefined}
-              value={course.hours !== undefined ? String(course.hours) : consts.NO_HOURS_VALUE}
+              {...{ label: consts.TOPIC_LABEL, isEmpty: !course.topic, value: course.topic ? courseTopicLabel(course.topic) : consts.NO_TOPIC_VALUE }}
             />
-            <RecordField label={consts.JOINABLE_LABEL} value={course.joinableAfterOpening ? consts.JOINABLE_YES_VALUE : consts.JOINABLE_NO_VALUE} />
+            <RecordField {...{ label: consts.OPENING_DATE_LABEL, value: weekdayAndDayMonthLabel(course.openingDate) }} />
+            <RecordField {...{ label: consts.WEEKS_LABEL, value: String(course.weeks) }} />
+            <RecordField {...{ label: consts.SESSIONS_LABEL, value: String(course.sessions) }} />
             <RecordField
-              className="wide"
-              label={consts.VENUE_LABEL}
-              value={`${course.venue.name}, ${addressLine(course.venue.street, course.venue.floor)}, ${venuePanelCityName(course.venue)}`}
+              {...{
+                label: consts.HOURS_LABEL,
+                isEmpty: course.hours === undefined,
+                value: course.hours !== undefined ? String(course.hours) : consts.NO_HOURS_VALUE,
+              }}
             />
-            <RecordField label={consts.AUDIENCE_LABEL} value={AUDIENCE_LABELS[course.audience]} />
-            <RecordField label={consts.PHONE_LABEL} value={phoneDisplay(course.contactPhone)} valueDir="ltr" />
             <RecordField
-              label={consts.PRICE_LABEL}
-              isEmpty={course.priceShekels === undefined}
-              value={course.priceShekels !== undefined ? formatPriceShekels(course.priceShekels) : consts.NO_PRICE_VALUE}
+              {...{ label: consts.JOINABLE_LABEL, value: course.joinableAfterOpening ? consts.JOINABLE_YES_VALUE : consts.JOINABLE_NO_VALUE }}
+            />
+            <RecordField
+              {...{
+                className: 'wide',
+                label: consts.VENUE_LABEL,
+                value: `${course.venue.name}, ${addressLine(course.venue.street, course.venue.floor)}, ${venuePanelCityName(course.venue)}`,
+              }}
+            />
+            <RecordField {...{ label: consts.AUDIENCE_LABEL, value: AUDIENCE_LABELS[course.audience] }} />
+            <RecordField {...{ label: consts.PHONE_LABEL, value: phoneDisplay(course.contactPhone), valueDir: 'ltr' }} />
+            <RecordField
+              {...{
+                label: consts.PRICE_LABEL,
+                isEmpty: course.priceShekels === undefined,
+                value: course.priceShekels !== undefined ? formatPriceShekels(course.priceShekels) : consts.NO_PRICE_VALUE,
+              }}
             />
           </div>
 

@@ -6,19 +6,21 @@ export const TeacherPicker = css(
   flex-direction: column;
   gap: ${theme.spacing.sm};
 
-  > .lockedRow {
+  > .triggerRow {
     display: flex;
-    flex-direction: column;
     align-items: flex-start;
-    gap: ${theme.spacing.xs};
+    gap: ${theme.spacing.sm};
+
+    /* The trigger's own fullWidth class (SearchSelect/styles.ts) sets a
+       plain 100% width, meant for sitting alone: shared with the clear
+       button here, it grows and shrinks in the row instead. */
+    > .fullWidth {
+      flex: 1;
+      min-inline-size: 0;
+    }
 
     > .clearSelection {
-      min-block-size: 48px;
-      color: ${theme.colors.primary};
-      font-weight: ${theme.typography.fontWeight.semiBold};
-      font-size: ${theme.typography.secondary.phone.fontSize};
-      line-height: ${theme.typography.secondary.phone.lineHeight};
-      text-decoration: underline;
+      flex: 0 0 auto;
     }
   }
 

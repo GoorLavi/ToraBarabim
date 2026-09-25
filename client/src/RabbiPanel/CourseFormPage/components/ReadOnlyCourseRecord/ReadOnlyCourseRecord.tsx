@@ -78,18 +78,20 @@ export const ReadOnlyCourseRecord = styled(({ className, course, onOpenDuplicate
       <p className="explanation">{COURSE_CLOSED_RECORD_EXPLANATION}</p>
 
       <div className="fields">
-        {course.cycle !== undefined && <RecordField label={consts.FACT_CYCLE_LABEL} value={String(course.cycle)} />}
-        <RecordField label={consts.FACT_DESCRIPTION_LABEL} value={course.description} />
-        {course.topic && <RecordField label={consts.FACT_TOPIC_LABEL} value={courseTopicLabel(course.topic)} />}
-        <RecordField label={COURSE_FACT_OPENING_LABEL} value={courseOpeningDateLongLabel(course.openingDate)} />
-        <RecordField label={COURSE_FACT_SCOPE_LABEL} value={formatCourseScope(course.weeks, course.sessions, course.hours)} />
+        {course.cycle !== undefined && <RecordField {...{ label: consts.FACT_CYCLE_LABEL, value: String(course.cycle) }} />}
+        <RecordField {...{ label: consts.FACT_DESCRIPTION_LABEL, value: course.description }} />
+        {course.topic && <RecordField {...{ label: consts.FACT_TOPIC_LABEL, value: courseTopicLabel(course.topic) }} />}
+        <RecordField {...{ label: COURSE_FACT_OPENING_LABEL, value: courseOpeningDateLongLabel(course.openingDate) }} />
+        <RecordField {...{ label: COURSE_FACT_SCOPE_LABEL, value: formatCourseScope(course.weeks, course.sessions, course.hours) }} />
         <RecordField
-          label={COURSE_FACT_VENUE_LABEL}
-          value={`${course.venue.name}, ${addressLine(course.venue.street, course.venue.floor)}, ${venuePanelCityName(course.venue)}`}
+          {...{
+            label: COURSE_FACT_VENUE_LABEL,
+            value: `${course.venue.name}, ${addressLine(course.venue.street, course.venue.floor)}, ${venuePanelCityName(course.venue)}`,
+          }}
         />
-        <RecordField label={COURSE_FACT_AUDIENCE_LABEL} value={AUDIENCE_LABELS[course.audience]} />
-        <RecordField label={consts.FACT_CONTACT_PHONE_LABEL} value={phoneDisplay(course.contactPhone)} valueDir="ltr" />
-        {course.priceShekels !== undefined && <RecordField label={COURSE_FACT_PRICE_LABEL} value={formatPriceShekels(course.priceShekels)} />}
+        <RecordField {...{ label: COURSE_FACT_AUDIENCE_LABEL, value: AUDIENCE_LABELS[course.audience] }} />
+        <RecordField {...{ label: consts.FACT_CONTACT_PHONE_LABEL, value: phoneDisplay(course.contactPhone), valueDir: 'ltr' }} />
+        {course.priceShekels !== undefined && <RecordField {...{ label: COURSE_FACT_PRICE_LABEL, value: formatPriceShekels(course.priceShekels) }} />}
       </div>
 
       {course.photos.length > 0 && (
