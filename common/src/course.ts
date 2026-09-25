@@ -123,21 +123,11 @@ export interface CourseListResponse {
 // server actually sends for it: the first typed error body in the
 // codebase, kept to the course codes on purpose. `message` is the
 // developer-facing English line off the thrown error, never rendered; a
-// client surface builds its own Hebrew from `error` and `details`.
-export const COURSE_ERROR_CODES = [
-  'rabbanit_audience_must_be_women',
-  'course_would_be_closed',
-  'opening_date_not_future',
-  'photo_too_small',
-  'unsupported_file_type',
-  'cover_required',
-  'course_closed',
-  'course_not_closed',
-  'course_photo_limit',
-] as const;
-
-export type CourseErrorCode = (typeof COURSE_ERROR_CODES)[number];
-
+// client surface builds its own Hebrew from `error` and `details`. This
+// package ships types only (`common/package.json` has no runtime entry), so
+// a value here would crash the server at boot and fail to bundle on the
+// client the moment anything actually imported it; `CourseErrorCode` is
+// derived from the union below instead of a parallel runtime list.
 export type CourseErrorBody =
   | { error: 'rabbanit_audience_must_be_women'; message: string; details: { audience: LessonAudience } }
   | { error: 'course_would_be_closed'; message: string; details: { openingDate: string } }
@@ -154,3 +144,5 @@ export type CourseErrorBody =
   | { error: 'course_closed'; message: string; details: { courseName: string; reason: CloseReason } }
   | { error: 'course_not_closed'; message: string; details: { courseName: string } }
   | { error: 'course_photo_limit'; message: string; details: { max: number } };
+
+export type CourseErrorCode = CourseErrorBody['error'];

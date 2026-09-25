@@ -908,6 +908,21 @@ describe('course API', () => {
     assert.equal(putCallCount(), 1, 'only the first, successful create ever called put');
   });
 
+  test('a second file part on a multipart create answers too_many_files', async () => {
+    const rabbiId = await createRabbi();
+    const cookie = await loginAsRabbi(rabbiId);
+    const cityCode = await jerusalemCode();
+
+    const form = new FormData();
+    form.append('course', JSON.stringify(validCourseFields(cityCode)));
+    form.append('cover', new Blob([toBlobPart(buildPngBytes(COURSE_COVER_MIN_WIDTH, COURSE_COVER_MIN_HEIGHT))], { type: 'image/png' }), 'cover-1.png');
+    form.append('cover', new Blob([toBlobPart(buildPngBytes(COURSE_COVER_MIN_WIDTH, COURSE_COVER_MIN_HEIGHT))], { type: 'image/png' }), 'cover-2.png');
+
+    const res = await app.inject({ method: 'POST', url: '/v1/rabbi/courses', headers: { cookie }, payload: form });
+    assert.equal(res.statusCode, 413);
+    assert.equal(res.json().error, 'too_many_files');
+  });
+
   // 18. No course is saved already closed.
   test('PATCHing an open, non-joinable course to an opening date of yesterday is refused', async () => {
     const rabbiId = await createRabbi();
