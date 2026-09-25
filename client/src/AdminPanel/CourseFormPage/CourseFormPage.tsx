@@ -193,6 +193,7 @@ export const CourseFormPage = styled(({ className }: CourseFormPageProps) => {
                 hasExistingPhoto: Boolean(id),
                 uploadStatus: id ? coverUpload.status : undefined,
                 failureReason: id ? coverUpload.failureReason : undefined,
+                warning: id ? coverUpload.warning : undefined,
                 onRetryUpload: coverUpload.retry,
                 onSelectFile: (file) => (id ? coverUpload.upload(file) : setForm((prev) => ({ ...prev, cover: file }))),
               },

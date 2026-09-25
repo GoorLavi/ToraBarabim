@@ -3,9 +3,13 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { QueryKey } from '@tanstack/react-query';
 import type { CourseResponse } from '@torabarabim/common';
 
+import { TOO_LARGE_ERROR } from '~/components/PhotoPicker/consts';
 import { courseErrorMessage, isCourseErrorCode } from '~/courseErrors';
 import { GALLERY_REMOVE_FAILED_LABEL, GALLERY_UPLOAD_FAILED_LABEL } from '~/components/GalleryField/consts';
 import type { GalleryPhoto } from '~/components/GalleryField/models';
+import { COURSE_GALLERY_SOFT_MIN_SIDE } from '~/consts';
+
+import { readImageDimensions } from './readImageDimensions';
 
 export interface CourseGalleryPhotosApi {
   uploadPhoto: (courseId: string, file: File) => Promise<CourseResponse>;
@@ -26,6 +30,10 @@ interface PendingPhoto {
   status: PendingStatus;
   failureReason?: string;
   canRetry: boolean;
+  // Set once this file's own pixel dimensions are known to read below the
+  // soft floor (`~/consts`): never blocks it from being added, only names
+  // the risk on its own tile once it is up (`GalleryField.tsx`).
+  isSmall: boolean;
 }
 
 export interface CourseGalleryPhotosState {
@@ -40,13 +48,15 @@ export interface CourseGalleryPhotosState {
   uploadDraftsAfterCreate: (courseId: string) => Promise<File[]>;
 }
 
-// An approved rejection (too small, the gallery already full) will fail the
-// same way every time it is retried; only a genuine network failure is
-// worth offering a retry for.
+// An approved rejection (the gallery already full) or a file over the
+// upload limit will fail the same way every time it is retried; only a
+// genuine network failure is worth offering a retry for.
 const failureFrom = (api: CourseGalleryPhotosApi, error: unknown): { reason: string | undefined; canRetry: boolean } => {
   const info = api.describeError(error);
-  if (!info || !isCourseErrorCode(info.code)) return { reason: undefined, canRetry: true };
-  return { reason: courseErrorMessage(info.code, info.details), canRetry: false };
+  if (!info) return { reason: undefined, canRetry: true };
+  if (isCourseErrorCode(info.code)) return { reason: courseErrorMessage(info.code, info.details), canRetry: false };
+  if (info.status === 413) return { reason: TOO_LARGE_ERROR, canRetry: false };
+  return { reason: undefined, canRetry: true };
 };
 
 // Shared by the rabbi and admin panels' own course forms (lifted here once
@@ -74,6 +84,7 @@ export const useCourseGalleryPhotos = (
       status: 'failed' as const,
       failureReason: GALLERY_UPLOAD_FAILED_LABEL,
       canRetry: true,
+      isSmall: false,
     })),
   );
   const [failedDeletes, setFailedDeletes] = useState<Map<string, { reason: string | undefined; canRetry: boolean }>>(new Map());
@@ -145,7 +156,15 @@ export const useCourseGalleryPhotos = (
       const localId = crypto.randomUUID();
       const objectUrl = URL.createObjectURL(file);
       objectUrlsRef.current.add(objectUrl);
-      setPending((prev) => [...prev, { localId, file, objectUrl, status: courseId ? 'uploading' : 'draft', canRetry: true }]);
+      setPending((prev) => [...prev, { localId, file, objectUrl, status: courseId ? 'uploading' : 'draft', canRetry: true, isSmall: false }]);
+      // Measured alongside the upload rather than blocking it, same as the
+      // cover's own `useCourseCoverUpload`: a failed decode just leaves the
+      // tile's warning off.
+      void readImageDimensions(file).then(
+        ({ width, height }) =>
+          setPending((prev) => prev.map((photo) => (photo.localId === localId ? { ...photo, isSmall: Math.min(width, height) < COURSE_GALLERY_SOFT_MIN_SIDE } : photo))),
+        () => undefined,
+      );
       if (courseId) void runUpload(courseId, localId, file);
     }
   };
@@ -189,6 +208,9 @@ export const useCourseGalleryPhotos = (
   };
 
   const photos: GalleryPhoto[] = [
+    // A photo already saved on the server has no local file to measure: its
+    // own dimensions were only ever checked, if at all, the moment it was
+    // first added, not on every later load.
     ...savedPhotos.map((photo) => {
       const failure = failedDeletes.get(photo.id);
       return {
@@ -197,6 +219,7 @@ export const useCourseGalleryPhotos = (
         status: failure ? ('failed' as const) : ('uploaded' as const),
         failureReason: failure?.reason,
         canRetry: failure?.canRetry,
+        isSmall: false,
       };
     }),
     ...pending.map((photo) => ({
@@ -205,6 +228,7 @@ export const useCourseGalleryPhotos = (
       status: photo.status === 'draft' ? ('uploaded' as const) : photo.status,
       failureReason: photo.failureReason,
       canRetry: photo.canRetry,
+      isSmall: photo.isSmall,
     })),
   ];
 

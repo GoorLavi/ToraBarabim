@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, fn, waitFor, within } from 'storybook/test';
 
 import { uploadGeneratedFileToInput } from '~/storyMocks';
 
@@ -65,6 +65,39 @@ const selectGeneratedFile = async (canvasElement: HTMLElement, width: number, he
   const input = canvasElement.querySelector<HTMLInputElement>('input[type="file"]');
   if (!input) throw new Error('photo picker file input not found in canvasElement');
   await uploadGeneratedFileToInput(input, width, height);
+};
+
+// Decodes a file this story received back from `onSelectFile`, to assert on
+// its own real pixel dimensions rather than trust the code path was taken.
+const decodeFileDimensions = (file: File): Promise<{ width: number; height: number }> =>
+  new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve({ width: image.naturalWidth, height: image.naturalHeight });
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('PhotoPicker story: failed to decode the selected file'));
+    };
+    image.src = objectUrl;
+  });
+
+// '3:4' has no crop step of its own, so an oversized phone photo is
+// re-encoded whole on selection instead (PhotoPicker.tsx): the file
+// `onSelectFile` receives is capped at `CROP_OUTPUT_MAX_LONG_SIDE` on its
+// own long side, never the 3000 by 4000 source.
+export const Portrait3x4OversizedFileReencoded: Story = {
+  args: { ...RATIO_3X4, previewUrl: undefined, hasExistingPhoto: false, onSelectFile: fn() },
+  play: async ({ canvasElement, args }) => {
+    await selectGeneratedFile(canvasElement, 3000, 4000);
+    await waitFor(() => expect(args.onSelectFile).toHaveBeenCalled());
+
+    const [selectedFile] = (args.onSelectFile as ReturnType<typeof fn>).mock.calls[0] as [File];
+    const dimensions = await decodeFileDimensions(selectedFile);
+    expect(Math.max(dimensions.width, dimensions.height)).toBeLessThanOrEqual(consts.CROP_OUTPUT_MAX_LONG_SIDE);
+  },
 };
 
 // Picking a file that cannot yield an 800 by 450 crop at all: the crop step

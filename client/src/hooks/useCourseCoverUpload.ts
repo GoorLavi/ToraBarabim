@@ -3,7 +3,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { QueryKey } from '@tanstack/react-query';
 import type { CourseResponse } from '@torabarabim/common';
 
+import { TOO_LARGE_ERROR } from '~/components/PhotoPicker/consts';
+import { COURSE_COVER_SOFT_MIN_HEIGHT, COURSE_COVER_SOFT_MIN_WIDTH, COURSE_PHOTO_SMALL_WARNING } from '~/consts';
 import { courseErrorMessage, isCourseErrorCode } from '~/courseErrors';
+
+import { readImageDimensions } from './readImageDimensions';
 
 export interface CourseCoverUploadApi {
   uploadCover: (courseId: string, file: File) => Promise<CourseResponse>;
@@ -20,6 +24,10 @@ export interface CourseCoverUploadState {
   // undefined for a plain network failure, which `PhotoPicker`'s own
   // generic failure line already covers.
   failureReason: string | undefined;
+  // Set once a cover upload succeeds but its own pixel dimensions read
+  // below the soft floor (`~/consts`): never blocks the upload, only names
+  // the risk, the owner's own call ("לקבל כל גודל, עם אזהרה על טשטוש").
+  warning: string | undefined;
   upload: (file: File) => void;
   retry: () => void;
 }
@@ -34,6 +42,7 @@ export const useCourseCoverUpload = (courseId: string, api: CourseCoverUploadApi
   const queryClient = useQueryClient();
   const [selectedFile, setSelectedFile] = useState<File | undefined>();
   const [objectUrl, setObjectUrl] = useState<string | undefined>();
+  const [isSmall, setIsSmall] = useState(false);
 
   useEffect(() => {
     if (!selectedFile) {
@@ -54,14 +63,30 @@ export const useCourseCoverUpload = (courseId: string, api: CourseCoverUploadApi
   });
 
   const errorInfo = mutation.isError ? api.describeError(mutation.error) : undefined;
-  const failureReason = errorInfo && isCourseErrorCode(errorInfo.code) ? courseErrorMessage(errorInfo.code, errorInfo.details) : undefined;
+  const failureReason = errorInfo
+    ? isCourseErrorCode(errorInfo.code)
+      ? courseErrorMessage(errorInfo.code, errorInfo.details)
+      : errorInfo.status === 413
+        ? TOO_LARGE_ERROR
+        : undefined
+    : undefined;
 
   return {
     previewUrl: mutation.isPending || mutation.isError ? objectUrl : undefined,
     status: mutation.isPending ? 'uploading' : mutation.isError ? 'failed' : undefined,
     failureReason,
+    warning: mutation.isSuccess && isSmall ? COURSE_PHOTO_SMALL_WARNING : undefined,
     upload: (file: File) => {
       setSelectedFile(file);
+      setIsSmall(false);
+      // Measured from the file itself, alongside the upload rather than
+      // blocking it: a failed decode (a type the browser cannot preview)
+      // just leaves the warning off, since the upload's own response is
+      // the real check for that case.
+      void readImageDimensions(file).then(
+        ({ width, height }) => setIsSmall(width < COURSE_COVER_SOFT_MIN_WIDTH || height < COURSE_COVER_SOFT_MIN_HEIGHT),
+        () => undefined,
+      );
       mutation.mutate(file);
     },
     retry: () => {

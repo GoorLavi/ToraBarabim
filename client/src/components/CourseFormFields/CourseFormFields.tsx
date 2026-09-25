@@ -8,12 +8,13 @@ import { GalleryField } from '~/components/GalleryField/GalleryField';
 import { PhotoPicker } from '~/components/PhotoPicker/PhotoPicker';
 import { PlacePicker } from '~/components/PlacePicker/PlacePicker';
 import { ReadOnlyField } from '~/components/ReadOnlyField/ReadOnlyField';
-import { AUDIENCE_LABELS, COURSE_COVER_MIN_HEIGHT, COURSE_COVER_MIN_WIDTH, LESSON_TOPIC_LABELS } from '~/consts';
+import { AUDIENCE_LABELS, COURSE_COVER_SOFT_MIN_HEIGHT, COURSE_COVER_SOFT_MIN_WIDTH, LESSON_TOPIC_LABELS } from '~/consts';
 import { directionForValue } from '~/helpers';
 
 import * as consts from './consts';
 import type { CourseFormFieldsProps, CourseTopicFormValue } from './models';
 import * as styles from './styles';
+import { useCreateCoverWarning } from './useCreateCoverWarning';
 
 type TopicSelectValue = CourseTopicFormValue['kind'] | (typeof consts.TOPIC_OPTIONS)[number];
 
@@ -33,6 +34,10 @@ export const CourseFormFields = styled(
     // would collide on.
     const idPrefix = useId();
     const fieldId = (name: string): string => `${idPrefix}-${name}`;
+    // Undefined on the edit form: it never carries a cover in `form.cover`
+    // (models.ts), so this hook always reads `undefined` there and the
+    // edit-mode line below falls back to `cover.warning` instead.
+    const createCoverWarning = useCreateCoverWarning(form.cover);
     // `aria-describedby` reads every id a field has, its permanent helper
     // and, once one shows, its error too, rather than replacing the one
     // with the other: the helper stays useful context even while the
@@ -351,10 +356,10 @@ export const CourseFormFields = styled(
             <PhotoPicker
               {...{
                 aspectRatio: '3:4',
-                minWidth: COURSE_COVER_MIN_WIDTH,
-                minHeight: COURSE_COVER_MIN_HEIGHT,
-                enforceFloor: true,
+                minWidth: COURSE_COVER_SOFT_MIN_WIDTH,
+                minHeight: COURSE_COVER_SOFT_MIN_HEIGHT,
                 cropHelpOverride: consts.COVER_CROP_HELP,
+                sizeHelpOverride: consts.COVER_SIZE_HELP,
                 missingPhotoNoteOverride: consts.COVER_MISSING_NOTE,
                 hasPreviousPhotoOnFailure: cover.hasExistingPhoto,
                 failureReasonOverride: cover.failureReason,
@@ -366,6 +371,7 @@ export const CourseFormFields = styled(
                 onSelectFile: cover.onSelectFile,
               }}
             />
+            {(cover.warning ?? createCoverWarning) && <p className="coverWarning">{cover.warning ?? createCoverWarning}</p>}
           </div>
 
           <div className="field">

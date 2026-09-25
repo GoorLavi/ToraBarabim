@@ -57,6 +57,13 @@ export interface CourseFormCoverProps {
   hasExistingPhoto: boolean;
   uploadStatus: PhotoPickerUploadStatus | undefined;
   failureReason: string | undefined;
+  // Set once the cover has uploaded but reads below the soft floor
+  // (`~/consts`): never a rejection, only a warning shown under the field.
+  // Undefined on the create form, which uploads the cover only once the
+  // whole course is saved and has no upload of its own to warn after;
+  // `CourseFormFields.tsx`'s own `useCreateCoverWarning` covers that case
+  // instead, from the picked file directly.
+  warning: string | undefined;
   onRetryUpload: () => void;
   onSelectFile: (file: File) => void;
 }

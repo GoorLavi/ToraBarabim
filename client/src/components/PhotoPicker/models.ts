@@ -62,12 +62,12 @@ export interface PhotoPickerProps {
   // is '3:4' too, but has no face to keep off the edge. Omitted, every
   // '3:4' or '16:9' caller keeps the shared line exactly as before.
   cropHelpOverride?: string;
-  // '16:9' already checks a picked file's own dimensions before it ever
-  // reaches `onSelectFile` (the crop step needs to know it can produce a
-  // crop at the floor). A '3:4' caller opts into the same pre-check with
-  // this flag: the rabbi poster has no server-side floor to fail against
-  // and keeps rejecting nothing here, but the course cover does.
-  enforceFloor?: boolean;
+  // Replaces `helpers.photoHelpSize`'s own "לפחות W על H פיקסלים" line: a
+  // caller with no server-side floor to enforce (the course cover, since
+  // "לקבל כל גודל, עם אזהרה על טשטוש") still wants its own floor named, but
+  // as a recommendation rather than a requirement the site does not
+  // actually enforce. Omitted, every caller keeps the shared line.
+  sizeHelpOverride?: string;
   // A course cannot be saved without a cover, so its own empty state has
   // nothing analogous to the "a soft background shows in its place" a rabbi
   // or a place gets meanwhile. Omitted, every caller keeps the shared line.

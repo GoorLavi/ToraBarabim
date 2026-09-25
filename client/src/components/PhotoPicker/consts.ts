@@ -94,3 +94,31 @@ export const PHOTO_MISSING_NOTE = 'עוד אין תמונה. בינתיים יו
 // it must not read two ways depending on which caught it first.
 export const UNSUPPORTED_TYPE_ERROR = 'אפשר להעלות קובץ JPG או PNG בלבד';
 export const TOO_LARGE_ERROR = 'התמונה גדולה מ-5MB';
+
+// Mirrors the server's own `MAX_UPLOAD_BYTES` (server/src/config.ts), value
+// and all, so the client refuses exactly what the server would: read here,
+// rather than only relied on server-side, so a picked file can be
+// re-encoded under the limit before it is ever sent (`helpers.exportImage`).
+// The one source: `AdminPanel/consts.ts`'s `CLIENT_MAX_PHOTO_BYTES` and both
+// `ProfilePage/helpers.ts` files (rabbi and place) import this rather than
+// hold their own copy. `PHOTO_HELP_TYPE` above states this same number in
+// its own copy.
+export const MAX_PHOTO_UPLOAD_BYTES = 5_000_000;
+
+// Lifted out of the crop step (`components/PhotoCropStep/consts.ts`) once
+// the non-crop '3:4' path became a second caller of the same encoder
+// (`helpers.exportImage`): every export this picker produces, cropped or
+// not, goes through the one function reading these.
+//
+// The output always ships as a JPEG regardless of the source file's own
+// type, since it is redrawn from scratch onto a canvas: there is no
+// original file left to preserve the type of.
+export const CROP_OUTPUT_TYPE = 'image/jpeg';
+export const CROP_OUTPUT_QUALITY = 0.92;
+export const EXPORTED_PHOTO_FILE_NAME = 'photo.jpg';
+
+// The exported rect's own long side is capped here before it is drawn to
+// canvas: a phone photo at full source resolution easily clears
+// `MAX_PHOTO_UPLOAD_BYTES` once re-encoded, and nothing on the site ever
+// renders a photo wider than this.
+export const CROP_OUTPUT_MAX_LONG_SIDE = 2000;

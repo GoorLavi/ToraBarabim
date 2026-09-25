@@ -1,10 +1,10 @@
 import type { ChangeEvent } from 'react';
-import { useState } from 'react';
 import classNames from 'classnames';
 import styled from 'styled-components';
 
+import { COURSE_PHOTO_SMALL_WARNING } from '~/consts';
+
 import * as consts from './consts';
-import { clearsGalleryFloor } from './helpers';
 import type { GalleryFieldProps } from './models';
 import * as styles from './styles';
 
@@ -14,18 +14,12 @@ import * as styles from './styles';
 // B, item 6).
 export const GalleryField = styled(({ className, photos, onAddFiles, onRemove, onRetry }: GalleryFieldProps) => {
   const canAddMore = photos.length < consts.COURSE_GALLERY_MAX_PHOTOS;
-  const [tooSmallError, setTooSmallError] = useState<string | undefined>(undefined);
 
-  const handleChange = async (event: ChangeEvent<HTMLInputElement>): Promise<void> => {
+  const handleChange = (event: ChangeEvent<HTMLInputElement>): void => {
     const files = Array.from(event.target.files ?? []).slice(0, consts.COURSE_GALLERY_MAX_PHOTOS - photos.length);
     event.target.value = '';
     if (files.length === 0) return;
-
-    const checks = await Promise.all(files.map(async (file) => ({ file, clearsFloor: await clearsGalleryFloor(file) })));
-    const accepted = checks.filter((check) => check.clearsFloor).map((check) => check.file);
-    const rejectedCount = checks.length - accepted.length;
-    setTooSmallError(rejectedCount > 0 ? consts.galleryTooSmallError(rejectedCount, accepted.length) : undefined);
-    if (accepted.length > 0) onAddFiles(accepted);
+    onAddFiles(files);
   };
 
   return (
@@ -36,28 +30,35 @@ export const GalleryField = styled(({ className, photos, onAddFiles, onRemove, o
 
       <div className="grid">
         {photos.map((photo, index) => (
-          <div key={photo.id} className={classNames('tile', { failed: photo.status === 'failed' })}>
-            <img className={classNames('photo', { dimmed: photo.status !== 'uploaded' })} src={photo.url} alt="" />
+          <div key={photo.id} className="tile">
+            <div className={classNames('photoBox', { failed: photo.status === 'failed' })}>
+              <img className={classNames('photo', { dimmed: photo.status !== 'uploaded' })} src={photo.url} alt="" />
 
-            {photo.status === 'uploading' && (
-              <div className="status uploading">
-                <span className="label">{consts.GALLERY_UPLOADING_LABEL}</span>
-              </div>
-            )}
+              {photo.status === 'uploading' && (
+                <div className="status uploading">
+                  <span className="label">{consts.GALLERY_UPLOADING_LABEL}</span>
+                </div>
+              )}
 
-            {photo.status === 'failed' && photo.canRetry !== false && (
-              <button type="button" className="retryArea" onClick={() => onRetry(photo.id)}>
-                <span className="retryPill">{consts.GALLERY_RETRY_LABEL}</span>
-              </button>
-            )}
+              {photo.status === 'failed' && photo.canRetry !== false && (
+                <button type="button" className="retryArea" onClick={() => onRetry(photo.id)}>
+                  <span className="retryPill">{consts.GALLERY_RETRY_LABEL}</span>
+                </button>
+              )}
 
-            {(photo.status === 'uploaded' || photo.status === 'failed') && (
-              <button type="button" className="remove" aria-label={consts.galleryRemoveLabel(index + 1)} onClick={() => onRemove(photo.id)}>
-                <span className="removeIcon" aria-hidden="true">
-                  {'×'}
-                </span>
-              </button>
-            )}
+              {(photo.status === 'uploaded' || photo.status === 'failed') && (
+                <button type="button" className="remove" aria-label={consts.galleryRemoveLabel(index + 1)} onClick={() => onRemove(photo.id)}>
+                  <span className="removeIcon" aria-hidden="true">
+                    {'×'}
+                  </span>
+                </button>
+              )}
+            </div>
+
+            {/* Beside the photo it concerns, not a rejection: shown once the
+                photo has uploaded, never while it is still uploading or
+                showing a failure reason of its own. */}
+            {photo.status === 'uploaded' && photo.isSmall && <p className="warning">{COURSE_PHOTO_SMALL_WARNING}</p>}
           </div>
         ))}
 
@@ -67,16 +68,11 @@ export const GalleryField = styled(({ className, photos, onAddFiles, onRemove, o
               {'+'}
             </span>
             <span className="label">{consts.GALLERY_ADD_LABEL}</span>
-            <input className="fileInput" type="file" accept="image/jpeg,image/png" multiple onChange={(event) => void handleChange(event)} />
+            <input className="fileInput" type="file" accept="image/jpeg,image/png" multiple onChange={handleChange} />
           </label>
         )}
       </div>
 
-      {tooSmallError && (
-        <p className="error" role="alert">
-          {tooSmallError}
-        </p>
-      )}
       {/* Below the whole grid, not inside a 94px tile (design gate round 2
           finding): a failed tile's own reason, one line per tile still
           failed. */}

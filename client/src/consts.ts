@@ -131,14 +131,20 @@ export const DEDICATION_WHATSAPP_COLOR = '#17853F';
 export const DEDICATION_WHATSAPP_COLOR_HOVER = '#136C33';
 
 // Hand-mirrored by name from server/src/service/course/consts.ts: a course
-// cannot be saved without a cover, so its floor matches the rabbi poster's
-// own (PhotoPicker/consts.ts's RABBI_PHOTO_MIN_WIDTH/HEIGHT), the same
-// numbers from a different source, kept as its own copy rather than reused.
-// The gallery is optional and looser: checked against whichever side of a
-// photo is shorter, since a gallery photo can be portrait or landscape.
-export const COURSE_COVER_MIN_WIDTH = 900;
-export const COURSE_COVER_MIN_HEIGHT = 1200;
-export const COURSE_GALLERY_PHOTO_MIN_SIDE = 600;
+// photo of any size is accepted (the owner's call, "לקבל כל גודל, עם אזהרה
+// על טשטוש"), so nothing here rejects an upload any more. These are the
+// soft thresholds the picker warns below instead, after the upload
+// succeeds, sized to the cover's own card render and the gallery rail's
+// widest tier.
+export const COURSE_COVER_SOFT_MIN_WIDTH = 600;
+export const COURSE_COVER_SOFT_MIN_HEIGHT = 800;
+export const COURSE_GALLERY_SOFT_MIN_SIDE = 600;
+
+// Shown beside the photo it concerns, not as a rejection: under the cover
+// field and on a gallery tile, once its own upload has succeeded and its
+// pixel dimensions read below the soft floor above. One shared line, since
+// the cover and a gallery photo read the same warning.
+export const COURSE_PHOTO_SMALL_WARNING = 'התמונה קטנה, ובאתר היא עלולה להיראות מטושטשת. אם יש גרסה גדולה יותר, כדאי להעלות אותה.';
 
 // A title's own name-and-cycle join ("יסודות האמונה · מחזור 3"): read by
 // every card and row that joins the two. The space before the dot is

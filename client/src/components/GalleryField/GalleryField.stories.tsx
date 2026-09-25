@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, within } from 'storybook/test';
 
 import { placeholderPhoto } from '~/storyMocks';
+import { COURSE_PHOTO_SMALL_WARNING } from '~/consts';
 
 import * as consts from './consts';
 import { GalleryField } from './GalleryField';
@@ -88,6 +89,18 @@ export const AtMaxPhotos: Story = {
     await expect(canvas.queryByText(consts.GALLERY_ADD_LABEL)).not.toBeInTheDocument();
     await expect(canvas.getByText(consts.GALLERY_MAX_REACHED_NOTE)).toBeInTheDocument();
     await expect(canvas.getByText(consts.galleryCountLabel(consts.COURSE_GALLERY_MAX_PHOTOS))).toBeInTheDocument();
+  },
+};
+
+// The owner's call: a small gallery photo still uploads, never rejected,
+// with its own warning on its own tile ("לקבל כל גודל, עם אזהרה על טשטוש").
+export const SmallPhotoWarning: Story = {
+  args: {
+    photos: [photo('1'), { id: 'small', url: placeholderPhoto(200, 200), status: 'uploaded', isSmall: true }],
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText(COURSE_PHOTO_SMALL_WARNING)).toBeInTheDocument();
   },
 };
 

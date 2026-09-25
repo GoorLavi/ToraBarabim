@@ -39,6 +39,11 @@ export const AUDIENCE_SECTION_HEADING = 'למי הקורס מיועד';
 export const PHOTOS_SECTION_HEADING = 'תמונות';
 export const COVER_LABEL = 'תמונה ראשית';
 export const COVER_CROP_HELP = 'בכרטיס באתר התמונה נחתכת ליחס 3:4 (לאורך), ולכן כדאי שהעיקר יהיה במרכז ולא בקצוות.';
+// Replaces `PhotoPicker/helpers.ts`'s own "לפחות W על H פיקסלים" line: the
+// site does not refuse a smaller cover any more (`~/consts`,
+// `COURSE_PHOTO_SMALL_WARNING`), so its help line reads as a
+// recommendation rather than a requirement.
+export const COVER_SIZE_HELP = 'מומלץ לפחות 600 על 800 פיקסלים';
 // A course cannot be saved without a cover (REQUIRED_COVER_ERROR below), so
 // its empty state has no "meanwhile a soft background shows" to promise.
 export const COVER_MISSING_NOTE = 'עוד אין תמונה.';

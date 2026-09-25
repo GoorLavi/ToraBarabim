@@ -76,6 +76,14 @@ const fieldFragment = (theme: DefaultTheme): string => `
     line-height: ${theme.typography.secondary.phone.lineHeight};
   }
 
+  /* Beside the cover it concerns, not a rejection (CourseFormFields.tsx):
+     the same quiet color as .helper, since it is advice, not an error. */
+  > .coverWarning {
+    color: ${theme.colors.textSecondary};
+    font-size: ${theme.typography.secondary.phone.fontSize};
+    line-height: ${theme.typography.secondary.phone.lineHeight};
+  }
+
   /* The joinable-after-opening field's own pill pair (CourseFormFields.tsx):
      only ever a child of a field, wherever that field itself sits. */
   > .pillToggle {

@@ -289,8 +289,8 @@ export const fetchAdminCourse = (id: string): Promise<CourseResponse> => request
 
 // POST /v1/admin/courses (multipart: one `course` JSON part, one `cover` file part)
 // 201 with CourseResponse. 400 cover_required / invalid_request / unknown_city /
-// unknown_place / rabbanit_audience_must_be_women / course_would_be_closed /
-// photo_too_small. 413 too large. 415 wrong content type.
+// unknown_place / rabbanit_audience_must_be_women / course_would_be_closed.
+// 413 too large. 415 wrong content type.
 export const createAdminCourse = (body: CreateCourseRequest, cover: File): Promise<CourseResponse> => {
   const formData = new FormData();
   formData.append('course', JSON.stringify(body));

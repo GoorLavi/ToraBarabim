@@ -30,14 +30,10 @@ export const nullableTextField = (currentValue: string, existingValue: string | 
   return existingValue === undefined ? undefined : null;
 };
 
-// Matches `PHOTO_HELP_TYPE`'s "up to 5MB" (`components/PhotoPicker/consts.ts`):
-// a client-side check ahead of the upload, not a substitute for the
-// server's own validation.
-const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 const ACCEPTED_PHOTO_TYPES = ['image/jpeg', 'image/png'];
 
 export const validatePhotoFile = (file: File): string | undefined => {
   if (!ACCEPTED_PHOTO_TYPES.includes(file.type)) return photoPickerConsts.UNSUPPORTED_TYPE_ERROR;
-  if (file.size > MAX_PHOTO_BYTES) return photoPickerConsts.TOO_LARGE_ERROR;
+  if (file.size > photoPickerConsts.MAX_PHOTO_UPLOAD_BYTES) return photoPickerConsts.TOO_LARGE_ERROR;
   return undefined;
 };

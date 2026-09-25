@@ -31,11 +31,6 @@ export const nullableTextField = (currentValue: string, existingValue: string | 
   return existingValue === undefined ? undefined : null;
 };
 
-// Matches `PHOTO_HELP_TYPE`'s "up to 5MB" (`components/PhotoPicker/consts.ts`):
-// a client-side check ahead of the upload, not a substitute for the server's
-// own validation, mirroring `RabbiPanel/ProfilePage/helpers.ts`'s
-// `validatePhotoFile`.
-const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 const ACCEPTED_PHOTO_TYPES = ['image/jpeg', 'image/png'];
 
 const readImageDimensions = (file: File): Promise<{ width: number; height: number }> =>
@@ -61,7 +56,7 @@ const readImageDimensions = (file: File): Promise<{ width: number; height: numbe
 // test here could only ever fail on a file the person had no way to send.
 export const validatePlacePhotoFile = async (file: File): Promise<string | undefined> => {
   if (!ACCEPTED_PHOTO_TYPES.includes(file.type)) return photoPickerConsts.UNSUPPORTED_TYPE_ERROR;
-  if (file.size > MAX_PHOTO_BYTES) return photoPickerConsts.TOO_LARGE_ERROR;
+  if (file.size > photoPickerConsts.MAX_PHOTO_UPLOAD_BYTES) return photoPickerConsts.TOO_LARGE_ERROR;
 
   const { width, height } = await readImageDimensions(file);
   if (width < consts.MIN_WIDTH_PX || height < consts.MIN_HEIGHT_PX) {

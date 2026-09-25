@@ -5,34 +5,12 @@ import classNames from 'classnames';
 import styled from 'styled-components';
 
 import * as helpers from '../../helpers';
-import type { CropRect, CropTransform, ImageDimensions } from '../../models';
+import * as pickerConsts from '../../consts';
+import type { CropTransform, ImageDimensions } from '../../models';
 import * as consts from './consts';
 import * as stepHelpers from './helpers';
 import type { Point, PhotoCropStepProps } from './models';
 import * as styles from './styles';
-
-const cropToFile = (image: HTMLImageElement, rect: CropRect): Promise<File> => {
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.round(rect.width);
-  canvas.height = Math.round(rect.height);
-  const context = canvas.getContext('2d');
-  if (!context) return Promise.reject(new Error('canvas 2d context unavailable for photo crop'));
-  context.drawImage(image, rect.x, rect.y, rect.width, rect.height, 0, 0, canvas.width, canvas.height);
-
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => {
-        if (!blob) {
-          reject(new Error('cropped canvas produced no blob'));
-          return;
-        }
-        resolve(new File([blob], consts.CROPPED_PHOTO_FILE_NAME, { type: consts.CROP_OUTPUT_TYPE }));
-      },
-      consts.CROP_OUTPUT_TYPE,
-      consts.CROP_OUTPUT_QUALITY,
-    );
-  });
-};
 
 // Portalled into `document.body`, same reasoning as `ResponsiveSheet`: this
 // is `position: fixed`, and a transformed ancestor would become its
@@ -188,7 +166,7 @@ export const PhotoCropStep = styled(({ className, file, imageUrl, sourceDimensio
     setIsProcessing(true);
     try {
       const rect = helpers.sourceCropRect(transform, sourceDimensions, viewport);
-      const croppedFile = await cropToFile(imgRef.current, rect);
+      const croppedFile = await helpers.exportImage(imgRef.current, rect, pickerConsts.CROP_OUTPUT_MAX_LONG_SIDE);
       onConfirm(croppedFile);
     } catch {
       // Fail open: hand the original, uncropped file to the caller rather

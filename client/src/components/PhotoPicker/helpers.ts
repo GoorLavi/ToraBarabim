@@ -1,6 +1,37 @@
 import * as consts from './consts';
 import type { CropRect, CropTransform, ImageDimensions, PhotoPickerAspectRatio } from './models';
 
+// Draws `rect` from `image` onto a canvas, scaled down to `maxLongSide` on
+// its own long side when larger, never up, and exports it as a JPEG: the
+// one encoder both the crop step's own confirmed crop rect and the
+// picker's non-crop path (the full source rect, no crop) go through, so a
+// phone photo neither one ever ships at full source resolution.
+export const exportImage = (image: HTMLImageElement, rect: CropRect, maxLongSide: number): Promise<File> => {
+  const longSide = Math.max(rect.width, rect.height);
+  const scale = Math.min(1, maxLongSide / longSide);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(rect.width * scale);
+  canvas.height = Math.round(rect.height * scale);
+  const context = canvas.getContext('2d');
+  if (!context) return Promise.reject(new Error('canvas 2d context unavailable for photo export'));
+  context.drawImage(image, rect.x, rect.y, rect.width, rect.height, 0, 0, canvas.width, canvas.height);
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          reject(new Error('exported canvas produced no blob'));
+          return;
+        }
+        resolve(new File([blob], consts.EXPORTED_PHOTO_FILE_NAME, { type: consts.CROP_OUTPUT_TYPE }));
+      },
+      consts.CROP_OUTPUT_TYPE,
+      consts.CROP_OUTPUT_QUALITY,
+    );
+  });
+};
+
 // The largest rectangle at `aspectRatio` that fits inside a source image:
 // the crop someone gets at zoom 1, before they zoom in at all. Anchored so
 // whichever axis has slack (the one the ratio does not already consume) is
@@ -117,17 +148,9 @@ export const photoHelpSize = (aspectRatio: PhotoPickerAspectRatio, minWidth: num
 };
 
 // Shown by the picker itself, in place of the normal help list, when a just
-// picked file cannot yield a crop at the floor a caller passed in: said
-// before the crop step ever opens, per the build brief, rather than after
-// someone has already spent time framing a photo that was always going to
-// be refused. Copy approved by `tora-hebrew-editor`.
-// `measured`, when given, names the picked file's own size too (the
-// course cover's own approved line, `~/courseErrors.ts`'s server-rejection
-// twin): the '16:9' place photo keeps its original, shorter sentence.
-export const photoTooSmallError = (minWidth: number, minHeight: number, measured?: ImageDimensions): string => {
-  const floor = `צריך תמונה בגודל ${minWidth} על ${minHeight} פיקסלים לפחות`;
-  if (!measured) return `התמונה קטנה מדי. ${floor}.`;
-  return `התמונה קטנה מדי. ${floor}, והתמונה הזאת ${measured.width} על ${measured.height}.`;
-};
+// picked file cannot yield a crop at the floor a caller passed in ('16:9'
+// only: the crop step needs to know it can produce a crop at the floor
+// before it ever opens). Copy approved by `tora-hebrew-editor`.
+export const photoTooSmallError = (minWidth: number, minHeight: number): string => `התמונה קטנה מדי. צריך תמונה בגודל ${minWidth} על ${minHeight} פיקסלים לפחות.`;
 
 export const aspectRatioValue = (aspectRatio: PhotoPickerAspectRatio): number => consts.ASPECT_RATIO_VALUE[aspectRatio];

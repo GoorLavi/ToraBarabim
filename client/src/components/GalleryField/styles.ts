@@ -28,112 +28,124 @@ export const GalleryField = css(
     gap: ${theme.spacing.sm};
 
     > .tile {
-      position: relative;
-      aspect-ratio: 1;
-      border-radius: ${theme.radii.md};
-      overflow: hidden;
-      background: ${theme.colors.primarySoft};
+      display: flex;
+      flex-direction: column;
+      gap: ${theme.spacing.xs};
 
-      /* The photo itself stays visible, dimmed, rather than an opaque
-         overlay hiding it (design gate round 2 finding): its own reason
-         reads below the whole grid instead of fighting for room in a 94px
-         square. */
-      &.failed {
-        border: 1px solid ${theme.colors.danger};
-      }
+      > .photoBox {
+        position: relative;
+        aspect-ratio: 1;
+        border-radius: ${theme.radii.md};
+        overflow: hidden;
+        background: ${theme.colors.primarySoft};
 
-      > .photo {
-        inline-size: 100%;
-        block-size: 100%;
-        object-fit: cover;
-        display: block;
-
-        &.dimmed {
-          opacity: 0.5;
+        /* The photo itself stays visible, dimmed, rather than an opaque
+           overlay hiding it (design gate round 2 finding): its own reason
+           reads below the whole grid instead of fighting for room in a 94px
+           square. */
+        &.failed {
+          border: 1px solid ${theme.colors.danger};
         }
-      }
 
-      /* The tile's own 48px tap target (design gate round 3 finding: 28px
-         was below the minimum), its own 28px circle drawn inside rather
-         than filling the whole button, so the visual size stays as
-         designed. Positioned to overlay ".retryArea" below it: a failed
-         tile's whole surface is that button, so removal needs its own
-         higher stacking, not just DOM order, to stay reachable. */
-      > .remove {
-        position: absolute;
-        z-index: 1;
-        inset-block-start: 0;
-        inset-inline-end: 0;
-        inline-size: 48px;
-        block-size: 48px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        > .photo {
+          inline-size: 100%;
+          block-size: 100%;
+          object-fit: cover;
+          display: block;
 
-        > .removeIcon {
-          inline-size: 28px;
-          block-size: 28px;
-          border-radius: ${theme.radii.pill};
-          border: 1px solid ${theme.colors.border};
-          background: ${theme.colors.surface};
-          color: ${theme.colors.text};
-          font-size: ${theme.typography.tagAndCaption.phone.fontSize};
-          line-height: 1;
+          &.dimmed {
+            opacity: 0.5;
+          }
+        }
+
+        /* The tile's own 48px tap target (design gate round 3 finding: 28px
+           was below the minimum), its own 28px circle drawn inside rather
+           than filling the whole button, so the visual size stays as
+           designed. Positioned to overlay ".retryArea" below it: a failed
+           tile's whole surface is that button, so removal needs its own
+           higher stacking, not just DOM order, to stay reachable. */
+        > .remove {
+          position: absolute;
+          z-index: 1;
+          inset-block-start: 0;
+          inset-inline-end: 0;
+          inline-size: 48px;
+          block-size: 48px;
           display: flex;
           align-items: center;
           justify-content: center;
+
+          > .removeIcon {
+            inline-size: 28px;
+            block-size: 28px;
+            border-radius: ${theme.radii.pill};
+            border: 1px solid ${theme.colors.border};
+            background: ${theme.colors.surface};
+            color: ${theme.colors.text};
+            font-size: ${theme.typography.tagAndCaption.phone.fontSize};
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+        }
+
+        > .status.uploading {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding-inline: ${theme.spacing.xs};
+          text-align: center;
+          background: rgba(32, 27, 29, 0.45);
+
+          > .label {
+            color: ${theme.colors.textOnPrimary};
+            font-size: ${theme.typography.tagAndCaption.phone.fontSize};
+            line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
+          }
+        }
+
+        /* The whole tile is the retry tap target (design gate round 3
+           finding), its own pill drawn at the bottom as the button's label
+           rather than a second, smaller button inside it; ".remove" above
+           stays reachable through its own higher stacking (design gate round
+           4 finding: carving out its own corner needed two raw pixel values
+           neither on the token scale, for no visible difference). */
+        > .retryArea {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: flex-end;
+          justify-content: center;
+          padding-block-end: ${theme.spacing.sm};
+          padding-inline: ${theme.spacing.xs};
+          border: 0;
+          background: none;
+
+          /* Quiet, the same as PhotoPicker's own "החלפת תמונה" pill
+             (styles.ts, ".chooseFile"): red stays on the tile's own border
+             and on the reason line below the grid, not repeated here too
+             (design gate round 3 finding). */
+          > .retryPill {
+            padding-block: ${theme.spacing.xs};
+            padding-inline: ${theme.spacing.lg};
+            border: 1px solid ${theme.colors.border};
+            border-radius: ${theme.radii.pill};
+            background: ${theme.colors.surface};
+            color: ${theme.colors.primary};
+            font-weight: ${theme.typography.fontWeight.semiBold};
+            font-size: ${theme.typography.tagAndCaption.phone.fontSize};
+            line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
+          }
         }
       }
 
-      > .status.uploading {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding-inline: ${theme.spacing.xs};
-        text-align: center;
-        background: rgba(32, 27, 29, 0.45);
-
-        > .label {
-          color: ${theme.colors.textOnPrimary};
-          font-size: ${theme.typography.tagAndCaption.phone.fontSize};
-          line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
-        }
-      }
-
-      /* The whole tile is the retry tap target (design gate round 3
-         finding), its own pill drawn at the bottom as the button's label
-         rather than a second, smaller button inside it; ".remove" above
-         stays reachable through its own higher stacking (design gate round
-         4 finding: carving out its own corner needed two raw pixel values
-         neither on the token scale, for no visible difference). */
-      > .retryArea {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        align-items: flex-end;
-        justify-content: center;
-        padding-block-end: ${theme.spacing.sm};
-        padding-inline: ${theme.spacing.xs};
-        border: 0;
-        background: none;
-
-        /* Quiet, the same as PhotoPicker's own "החלפת תמונה" pill
-           (styles.ts, ".chooseFile"): red stays on the tile's own border
-           and on the reason line below the grid, not repeated here too
-           (design gate round 3 finding). */
-        > .retryPill {
-          padding-block: ${theme.spacing.xs};
-          padding-inline: ${theme.spacing.lg};
-          border: 1px solid ${theme.colors.border};
-          border-radius: ${theme.radii.pill};
-          background: ${theme.colors.surface};
-          color: ${theme.colors.primary};
-          font-weight: ${theme.typography.fontWeight.semiBold};
-          font-size: ${theme.typography.tagAndCaption.phone.fontSize};
-          line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
-        }
+      > .warning {
+        color: ${theme.colors.textSecondary};
+        font-size: ${theme.typography.tagAndCaption.phone.fontSize};
+        line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
       }
     }
 

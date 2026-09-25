@@ -14,12 +14,14 @@ import * as styles from './styles';
 // `readImageDimensions` uses for its own, separate check: no shared home for
 // either copy (a page-level helper and this shared component do not import
 // from each other), so this is a small, independent duplicate rather than a
-// reach across that boundary.
-const loadImageDimensions = (file: File): Promise<{ objectUrl: string; width: number; height: number }> =>
+// reach across that boundary. Resolves the loaded `image` itself, not just
+// its dimensions, so the non-crop path below can hand it straight to
+// `helpers.exportImage` without decoding a second time.
+const loadImageDimensions = (file: File): Promise<{ objectUrl: string; image: HTMLImageElement; width: number; height: number }> =>
   new Promise((resolve, reject) => {
     const objectUrl = URL.createObjectURL(file);
     const image = new Image();
-    image.onload = () => resolve({ objectUrl, width: image.naturalWidth, height: image.naturalHeight });
+    image.onload = () => resolve({ objectUrl, image, width: image.naturalWidth, height: image.naturalHeight });
     image.onerror = () => {
       URL.revokeObjectURL(objectUrl);
       reject(new Error(`failed to read image dimensions for ${file.name}`));
@@ -51,7 +53,7 @@ export const PhotoPicker = styled(
     minWidth,
     minHeight,
     cropHelpOverride,
-    enforceFloor,
+    sizeHelpOverride,
     missingPhotoNoteOverride,
     hasPreviousPhotoOnFailure,
     failureReasonOverride,
@@ -79,19 +81,30 @@ export const PhotoPicker = styled(
       if (!file) return;
 
       if (aspectRatio !== '16:9') {
-        if (!enforceFloor) {
-          onSelectFile(file);
-          return;
-        }
-        setCropUnavailableError(undefined);
         void loadImageDimensions(file).then(
-          ({ objectUrl, width, height }) => {
-            URL.revokeObjectURL(objectUrl);
-            if (width < minWidth || height < minHeight) {
-              setCropUnavailableError(helpers.photoTooSmallError(minWidth, minHeight, { width, height }));
+          ({ objectUrl, image, width, height }) => {
+            const longSide = Math.max(width, height);
+            const exceedsUploadLimit = longSide > consts.CROP_OUTPUT_MAX_LONG_SIDE || file.size > consts.MAX_PHOTO_UPLOAD_BYTES;
+            if (!exceedsUploadLimit) {
+              URL.revokeObjectURL(objectUrl);
+              onSelectFile(file);
               return;
             }
-            onSelectFile(file);
+            // '3:4' has no crop step of its own (only '16:9' opens one), so
+            // an oversized phone photo is re-encoded whole here instead, at
+            // the same cap and quality the crop step's own confirmed rect
+            // goes through (`helpers.exportImage`), rather than left to fail
+            // on the server's own 413. Fails open on the encoder itself: the
+            // original file goes on unchanged rather than blocking selection
+            // on a canvas failure that is not expected from a same-origin
+            // blob URL.
+            void helpers
+              .exportImage(image, { x: 0, y: 0, width, height }, consts.CROP_OUTPUT_MAX_LONG_SIDE)
+              .then(
+                (exported) => onSelectFile(exported),
+                () => onSelectFile(file),
+              )
+              .finally(() => URL.revokeObjectURL(objectUrl));
           },
           () => onSelectFile(file),
         );
@@ -186,7 +199,7 @@ export const PhotoPicker = styled(
               {!isUploading && (
                 <ul className="help">
                   <li className="helpItem">{consts.PHOTO_HELP_TYPE}</li>
-                  <li className="helpItem">{helpers.photoHelpSize(aspectRatio, minWidth, minHeight)}</li>
+                  <li className="helpItem">{sizeHelpOverride ?? helpers.photoHelpSize(aspectRatio, minWidth, minHeight)}</li>
                   {(cropHelpOverride ?? consts.PHOTO_HELP_CROP[aspectRatio]) && (
                     <li className="helpItem">{cropHelpOverride ?? consts.PHOTO_HELP_CROP[aspectRatio]}</li>
                   )}

@@ -177,7 +177,7 @@ export const fetchCourse = (id: string): Promise<CourseResponse> => request(url(
 
 // POST /v1/rabbi/courses (multipart: one `course` JSON part, one `cover` file part)
 // 201 with CourseResponse. 400 cover_required / invalid_request / unknown_city /
-// unknown_place / course_would_be_closed / photo_too_small / rabbanit_audience_must_be_women.
+// unknown_place / course_would_be_closed / rabbanit_audience_must_be_women.
 // 413 too large. 415 wrong content type.
 export const createCourse = (body: RabbiCreateCourseRequest, cover: File): Promise<CourseResponse> => {
   const formData = new FormData();

@@ -8,6 +8,7 @@ import {
   COURSE_CLOSE_REGISTRATION_ACTION_LABEL,
   COURSE_DELETE_ACTION_LABEL,
   COURSE_MARK_FULL_ACTION_LABEL,
+  COURSE_PHOTO_SMALL_WARNING,
   COURSE_VIEW_ON_SITE_ACTION_LABEL,
 } from '~/consts';
 import { courseResponseFixture } from '~/courseFixture';
@@ -79,6 +80,27 @@ export const CreateMode: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.findByRole('heading', { name: consts.NEW_HEADING })).resolves.toBeInTheDocument();
     await expect(canvas.getByText(courseFormFieldsConsts.GALLERY_FIELD_LABEL)).toBeInTheDocument();
+  },
+};
+
+// The create form's own cover has no upload of its own to warn "after"
+// (design brief round 3, item 2: it only uploads once the whole course is
+// saved), so `useCreateCoverWarning` warns the moment it is picked instead,
+// no `cover` endpoint mocked here since nothing requests it.
+export const CreateModeCoverSmallWarning: Story = {
+  decorators: [withRoute('/courses/new')],
+  parameters: { apiMocks: { handlers: { profile: profileHandler(), places: placesHandler } } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole('heading', { name: consts.NEW_HEADING });
+
+    const coverLabel = await canvas.findByText(courseFormFieldsConsts.COVER_LABEL);
+    const coverInput = coverLabel.closest('.field')?.querySelector<HTMLInputElement>('input[type="file"]');
+    if (!coverInput) throw new Error('CourseFormPage story: cover file input not found');
+
+    await uploadGeneratedFileToInput(coverInput, 400, 500);
+
+    await waitFor(() => expect(canvas.getByText(COURSE_PHOTO_SMALL_WARNING)).toBeInTheDocument());
   },
 };
 
@@ -209,6 +231,34 @@ export const CreateModeGalleryStaysLocalUntilSaved: Story = {
     } finally {
       restoreFetch();
     }
+  },
+};
+
+// The owner's call: a replaced cover below the soft floor still uploads and
+// saves, never rejected, with its own warning under the field once the
+// upload succeeds ("לקבל כל גודל, עם אזהרה על טשטוש").
+export const EditModeCoverSmallWarning: Story = {
+  decorators: [withRoute(`/courses/${openCourse.id}`)],
+  parameters: {
+    apiMocks: {
+      handlers: {
+        profile: profileHandler(),
+        course: http.get('/v1/rabbi/courses/:id', jsonResolver(openCourse)),
+        places: placesHandler,
+        similar: similarPlacesHandler,
+        cover: http.post(`/v1/rabbi/courses/${openCourse.id}/cover`, jsonResolver(openCourse)),
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const coverLabel = await canvas.findByText(courseFormFieldsConsts.COVER_LABEL);
+    const coverInput = coverLabel.closest('.field')?.querySelector<HTMLInputElement>('input[type="file"]');
+    if (!coverInput) throw new Error('CourseFormPage story: cover file input not found');
+
+    await uploadGeneratedFileToInput(coverInput, 400, 500);
+
+    await waitFor(() => expect(canvas.getByText(COURSE_PHOTO_SMALL_WARNING)).toBeInTheDocument());
   },
 };
 

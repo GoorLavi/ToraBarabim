@@ -1,5 +1,7 @@
 import type { AdminDedicationState, DedicationHonorific, DedicationPreviewRequest, DedicationType, HonoredGender, RabbiProminence, Weekday } from '@torabarabim/common';
 
+import { MAX_PHOTO_UPLOAD_BYTES } from '~/components/PhotoPicker/consts';
+
 import type { AdminCourseFilters, AdminDedicationFilters, AdminLessonFilters, AdminPlaceFilters, AdminRabbiFilters, AdminUserFilters } from './models';
 
 // Mirrors `server/src/service/admin-shared/consts.ts`'s `MAX_ADMIN_PAGE_SIZE`.
@@ -19,11 +21,12 @@ export const PASSWORD_MISMATCH_ERROR = 'הסיסמאות אינן תואמות';
 // place's own photo): the client-side type/size check is identical no
 // matter which entity the photo belongs to, so the threshold and its two
 // messages live here once `PlaceFormPage` became a second caller.
-// Kept identical to `~/components/PhotoPicker/consts.ts`'s own pair: the
-// same rejection reaches the person from either this form's validation or
-// the picker's, and it must not read two ways depending on which caught it
-// first.
-export const CLIENT_MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+// `CLIENT_MAX_PHOTO_BYTES` reads `~/components/PhotoPicker/consts.ts`'s own
+// `MAX_PHOTO_UPLOAD_BYTES`, the one source. The two messages below are kept
+// identical to that file's own pair by hand: the same rejection reaches the
+// person from either this form's validation or the picker's, and it must
+// not read two ways depending on which caught it first.
+export const CLIENT_MAX_PHOTO_BYTES = MAX_PHOTO_UPLOAD_BYTES;
 export const UNSUPPORTED_TYPE_CLIENT_ERROR = 'אפשר להעלות קובץ JPG או PNG בלבד';
 export const TOO_LARGE_CLIENT_ERROR = 'התמונה גדולה מ-5MB';
 
