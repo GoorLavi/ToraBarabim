@@ -28,13 +28,6 @@ export const COURSE_ERROR_STATUS: Record<CourseErrorCode, number> = {
   course_photo_limit: 409,
 };
 
-// The exhaustive list of the nine codes, derived from `COURSE_ERROR_STATUS`
-// rather than duplicated: that Record already fails the type check if a code
-// is missing, the same guarantee `db/schema/enums.ts` gets from mirroring a
-// wire union with `satisfies`. `common` ships types only, so this runtime
-// list lives here, not beside `CourseErrorCode` itself.
-export const COURSE_ERROR_CODES = Object.keys(COURSE_ERROR_STATUS) as CourseErrorCode[];
-
 // Builds the one wire body for a thrown course error, shared by both panel
 // routers instead of built twice, by hand, in each router's own
 // `handleError`. Returns `undefined` for anything that is not one of the
