@@ -2,6 +2,7 @@ import type {
   AgentImportLinkDecision,
   AgentImportRuleKind,
   Area,
+  CloseReason,
   DedicationHonorific,
   DedicationType,
   HonoredGender,
@@ -43,6 +44,12 @@ export const LESSON_TOPICS = [
 ] as const satisfies readonly LessonTopic[];
 
 export const LESSON_AUDIENCES = ['men', 'women', 'mixed'] as const satisfies readonly LessonAudience[];
+
+// Not a Postgres enum (`courses.close_reason` is plain text, since only the
+// close and full routes ever write it): the tuple here is read by the
+// `courses_close_shape` CHECK, so the constraint's own literal list can
+// never drift from `CloseReason`.
+export const CLOSE_REASONS = ['closed', 'full'] as const satisfies readonly CloseReason[];
 
 export const RECURRENCE_KINDS = ['weekly', 'once'] as const;
 export const EXCEPTION_KINDS = ['cancelled', 'modified'] as const;

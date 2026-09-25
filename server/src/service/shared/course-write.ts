@@ -369,8 +369,8 @@ export interface LockedCourseRow {
   joinableAfterOpening: boolean;
   registrationClosedAt: Date | null;
   // Read straight off the `close_reason` column, which is plain `text`
-  // (this slice adds no new Postgres enum): always 'closed' or 'full' in
-  // practice, since only the close and full routes ever write it.
+  // (this slice adds no new Postgres enum): `courses_close_shape` guarantees
+  // it is 'closed' or 'full' whenever it is set at all.
   closeReason: string | null;
 }
 

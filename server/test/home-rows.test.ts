@@ -30,10 +30,6 @@ describe('placeCourseRow', () => {
 
     const rows = placeCourseRow(lessonRows, []);
 
-    // `deepEqual` against `lessonRows` (typed `LessonHomeRowResult[]`) already
-    // proves no `kind: 'courses'` row was added: TypeScript narrows `rows` to
-    // that same type afterward, so a stray course row would be a compile
-    // error here, not just a runtime one.
     assert.deepEqual(rows, lessonRows);
   });
 

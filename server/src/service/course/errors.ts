@@ -70,10 +70,10 @@ export class MalformedCoursePhotoHeaderError extends Error {
   }
 }
 
-// Fires when the photo's shorter side is below `COURSE_PHOTO_MIN_SIDE`.
-// `kind` decides which of the two floors was checked and which Hebrew line
-// the route builds: the cover is checked against its own width and height
-// (the rabbi poster's floor), a gallery photo against its shorter side.
+// Fires when the photo is below its own floor. `kind` decides which floor
+// was checked: the cover against its own width and height (the rabbi
+// poster's floor, `COURSE_COVER_MIN_WIDTH`/`COURSE_COVER_MIN_HEIGHT`), a
+// gallery photo against its shorter side (`COURSE_GALLERY_PHOTO_MIN_SIDE`).
 export class CoursePhotoTooSmallError extends Error {
   constructor(
     public readonly kind: 'cover' | 'gallery',

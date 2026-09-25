@@ -1,6 +1,10 @@
 // The length of the home window in days, counting today as day one.
 export const HOME_WINDOW_DAYS = 14;
 
+// The home row's own title (spec section 13): the one wording true of every
+// card in the row, open or closed alike.
+export const COURSE_ROW_TITLE = 'קורסים';
+
 export const MAX_ITEMS_PER_ROW = 12;
 export const MIN_ITEMS_PER_ROW = 3;
 

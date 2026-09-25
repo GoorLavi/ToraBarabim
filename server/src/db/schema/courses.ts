@@ -2,9 +2,16 @@ import { sql } from 'drizzle-orm';
 import { boolean, check, date, integer, pgTable, text, timestamp, unique } from 'drizzle-orm/pg-core';
 
 import { cities } from './cities';
-import { lessonAudienceEnum, lessonTopicEnum } from './enums';
+import { CLOSE_REASONS, lessonAudienceEnum, lessonTopicEnum } from './enums';
 import { places } from './places';
 import { rabbis } from './rabbis';
+
+// Built from `CLOSE_REASONS`, not hand-typed: `sql.raw` is safe here since
+// the list is a fixed internal constant, never user input.
+const closeReasonList = sql.join(
+  CLOSE_REASONS.map((reason) => sql.raw(`'${reason}'`)),
+  sql.raw(', '),
+);
 
 export const courses = pgTable(
   'courses',
@@ -51,7 +58,8 @@ export const courses = pgTable(
     // Set only by the close and full routes, only while NULL, and never
     // cleared: closing (by either reason) is final. `closeReason` is plain
     // text, not a Postgres enum: this slice adds no new enum type, and the
-    // two values ('closed', 'full') are validated at the service boundary.
+    // two values ('closed', 'full') are enforced by `courses_close_shape`
+    // below.
     registrationClosedAt: timestamp('registration_closed_at', { withTimezone: true }),
     closeReason: text('close_reason'),
     // No writer today: every public read filters on this in one base
@@ -81,13 +89,13 @@ export const courses = pgTable(
        OR (${table.topic} = 'other' AND ${table.topicOther} IS NOT NULL)`,
     ),
     // `closeReason` is set exactly when `registrationClosedAt` is, and only
-    // to one of the two values the close and full routes ever write: a
-    // CHECK cannot reference a Postgres enum this slice deliberately did
-    // not add, so the two literals are named here by hand instead.
+    // to one of `CLOSE_REASONS`: a CHECK cannot reference a Postgres enum
+    // this slice deliberately did not add, so the list is built from that
+    // tuple instead of naming the two values here by hand.
     check(
       'courses_close_shape',
       sql`(${table.registrationClosedAt} IS NULL AND ${table.closeReason} IS NULL)
-       OR (${table.registrationClosedAt} IS NOT NULL AND ${table.closeReason} IN ('closed', 'full'))`,
+       OR (${table.registrationClosedAt} IS NOT NULL AND ${table.closeReason} IN (${closeReasonList}))`,
     ),
   ],
 );

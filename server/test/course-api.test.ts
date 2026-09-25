@@ -213,7 +213,7 @@ describe('course API', () => {
     return view;
   };
 
-  const multipartBody = (fields: Record<string, unknown>, coverBytes: Buffer = buildPngBytes(600, 600)): FormData => {
+  const multipartBody = (fields: Record<string, unknown>, coverBytes: Buffer = buildPngBytes(COURSE_COVER_MIN_WIDTH, COURSE_COVER_MIN_HEIGHT)): FormData => {
     const form = new FormData();
     form.append('course', JSON.stringify(fields));
     form.append('cover', new Blob([toBlobPart(coverBytes)], { type: 'image/png' }), 'cover.png');
@@ -239,21 +239,10 @@ describe('course API', () => {
     return row && row.kind === 'courses' ? row.items.map((item) => item.id) : [];
   };
 
-  // 1. Course page.
-  test('GET /v1/home never lists a course before it exists, and lists it once created', async () => {
-    const beforeRes = await app.inject({ method: 'GET', url: '/v1/home' });
-    assert.equal(beforeRes.statusCode, 200);
-    const idsBefore = courseRowIds(beforeRes.json() as HomeResponse);
-
-    const courseId = await insertCourse();
-    const afterRes = await app.inject({ method: 'GET', url: '/v1/home' });
-    assert.equal(afterRes.statusCode, 200);
-    const idsAfter = courseRowIds(afterRes.json() as HomeResponse);
-
-    assert.ok(!idsBefore.includes(courseId));
-    assert.ok(idsAfter.includes(courseId));
-  });
-
+  // 1. Course page. The no-listed-course-gives-no-row case is proven, for
+  // real, by the pure `placeCourseRow` suite (`test/home-rows.test.ts`):
+  // this shared database is never empty, so a "before it exists" half here
+  // could never fail, and its "after" half only repeated test 3 below.
   test('an open course returns 200 with contactPhone; a course past its closed week returns 200, closed, with no phone anywhere', async () => {
     const openId = await insertCourse({ openingDate: addDays(todayInIsrael(new Date()), 5), topic: 'gemara' });
     const openRes = await app.inject({ method: 'GET', url: `/v1/courses/${openId}` });
@@ -849,6 +838,29 @@ describe('course API', () => {
     assert.equal(todayRes.json().error, 'opening_date_not_future');
     assert.deepEqual(todayRes.json().details, { openingDate: todayOpeningDate });
     assert.equal(await courseCount(), countBefore, 'a refused duplicate creates no row');
+  });
+
+  test('admin duplicate of a free-text-teacher course carries the name over, still unlinked to any rabbi', async () => {
+    const cookie = await loginAsNewAdmin();
+    const courseId = await insertCourse({ teacherName: 'מורה עצמאי' });
+
+    await app.inject({ method: 'POST', url: `/v1/admin/courses/${courseId}/close`, headers: { cookie } });
+
+    stubStorage();
+    const dupRes = await app.inject({
+      method: 'POST',
+      url: `/v1/admin/courses/${courseId}/duplicate`,
+      headers: { cookie },
+      payload: { openingDate: addDays(todayInIsrael(new Date()), 30) },
+    });
+    assert.equal(dupRes.statusCode, 201);
+    const dupBody = dupRes.json() as CourseResponse;
+    cleanupCourseIds.add(dupBody.id);
+
+    assert.deepEqual(dupBody.teacher, { kind: 'named', name: 'מורה עצמאי' });
+    const newRow = await readCourseRow(dupBody.id);
+    assert.equal(newRow?.rabbiId, null);
+    assert.equal(newRow?.teacherName, 'מורה עצמאי');
   });
 
   // 17. Multipart create succeeds.

@@ -1,34 +1,27 @@
 import type { FastifyInstance, FastifyReply } from 'fastify';
 import { ZodError } from 'zod';
 
+import type { CourseErrorBody } from '@torabarabim/common';
+
 import { loadConfig } from '../../../config';
 import { toCourseListResponse, toCourseResponse } from '../../../convertors/panel-course';
 import { requireAdminAuth } from '../../../plugins/admin-guard';
 import { adminCourseListQuerySchema, createCourseSchema, updateCourseSchema } from '../../../service/admin-course/models';
 import * as adminCourseService from '../../../service/admin-course/admin-course';
-import { COURSE_COVER_MIN_HEIGHT, COURSE_COVER_MIN_WIDTH, COURSE_GALLERY_PHOTO_MIN_SIDE } from '../../../service/course/consts';
+import { COURSE_ERROR_STATUS, toCourseErrorBody } from '../../course-error-reply';
 import {
-  CourseClosedError,
-  CourseGalleryFullError,
-  CourseNotClosedError,
   CourseNotFoundError,
   CoursePhotoNotFoundError,
   CoursePhotoTooLargeError,
-  CoursePhotoTooSmallError,
-  CourseWouldBeClosedError,
   CoverRequiredError,
   MalformedCourseFieldsError,
-  MalformedCoursePhotoHeaderError,
-  OpeningDateNotFutureError,
   ReferencedPlaceNotFoundError,
   ReferencedRabbiNotFoundError,
   UnknownCityError,
-  UnsupportedCoursePhotoTypeError,
 } from '../../../service/course/errors';
 import { photoTooLargeMessage } from '../../../service/shared/consts';
-import { RabbanitAudienceMustBeWomenError } from '../../../service/shared/errors';
 import { duplicateCourseSchema, panelCourseIdParamSchema, panelCourseIdWithPhotoIdParamSchema } from '../../../service/shared/models';
-import { readCourseMultipartCreate } from '../../course-multipart';
+import { multipartPluginErrorReply, readCourseMultipartCreate } from '../../course-multipart';
 
 const GENERIC_ERROR_MESSAGE = 'אירעה שגיאה בשרת, נסו שוב מאוחר יותר';
 const COURSE_NOT_FOUND_MESSAGE = 'הקורס המבוקש לא נמצא';
@@ -40,15 +33,18 @@ const hasCode = (error: unknown, code: string): boolean => typeof error === 'obj
 const isMultipartFileTooLargeError = (error: unknown): boolean => hasCode(error, MULTIPART_FILE_TOO_LARGE_CODE);
 const isInvalidMultipartContentTypeError = (error: unknown): boolean => hasCode(error, MULTIPART_INVALID_CONTENT_TYPE_CODE);
 
-// Every course-specific error below carries `code` and a structured
-// `details` object; `message` is the developer-facing English line off the
-// error itself (never shown to a user: the client builds its own Hebrew
-// from `code` and `details`, per the house rule that the client never
-// renders a server message). Every other error here (unknown city, unknown
-// place, unknown rabbi, not found, malformed request) is the shared,
-// cross-domain shape every route in this codebase already uses, Hebrew
-// message included.
+// The nine course-specific codes are handled through `toCourseErrorBody`,
+// shared with the rabbi router so the two never build the same shape twice;
+// `message` on each is the developer-facing English line off the error
+// itself, never shown to a user (the client builds its own Hebrew from
+// `error` and `details`, per the house rule that the client never renders a
+// server message). Every other error here (unknown city, unknown place,
+// unknown rabbi, not found, malformed request) is the shared, cross-domain
+// shape every route in this codebase already uses, Hebrew message included.
 const handleError = (reply: FastifyReply, error: unknown, routeLabel: string): FastifyReply => {
+  const courseError = toCourseErrorBody(error);
+  if (courseError) return reply.status(COURSE_ERROR_STATUS[courseError.error]).send(courseError satisfies CourseErrorBody);
+
   if (error instanceof ZodError) {
     return reply.status(400).send({ error: 'invalid_request', message: 'הבקשה אינה תקינה', details: error.flatten() });
   }
@@ -73,46 +69,6 @@ const handleError = (reply: FastifyReply, error: unknown, routeLabel: string): F
     return reply.status(400).send({ error: 'unknown_rabbi', message: `הרב שנבחר אינו קיים: '${error.rabbiId}'` });
   }
 
-  if (error instanceof RabbanitAudienceMustBeWomenError) {
-    return reply.status(400).send({ error: 'rabbanit_audience_must_be_women', message: error.message, details: { audience: error.audience } });
-  }
-
-  if (error instanceof CourseWouldBeClosedError) {
-    return reply.status(400).send({ error: 'course_would_be_closed', message: error.message, details: { openingDate: error.openingDate } });
-  }
-
-  if (error instanceof OpeningDateNotFutureError) {
-    return reply.status(400).send({ error: 'opening_date_not_future', message: error.message, details: { openingDate: error.openingDate } });
-  }
-
-  if (error instanceof CoursePhotoTooSmallError) {
-    const details =
-      error.kind === 'cover'
-        ? { kind: 'cover' as const, measuredWidth: error.width, measuredHeight: error.height, minWidth: COURSE_COVER_MIN_WIDTH, minHeight: COURSE_COVER_MIN_HEIGHT }
-        : { kind: 'gallery' as const, measuredShorterSide: Math.min(error.width, error.height), minimum: COURSE_GALLERY_PHOTO_MIN_SIDE };
-    return reply.status(400).send({ error: 'photo_too_small', message: error.message, details });
-  }
-
-  if (error instanceof UnsupportedCoursePhotoTypeError || error instanceof MalformedCoursePhotoHeaderError) {
-    return reply.status(400).send({ error: 'unsupported_file_type', message: error.message, details: {} });
-  }
-
-  if (error instanceof CoverRequiredError) {
-    return reply.status(400).send({ error: 'cover_required', message: error.message, details: {} });
-  }
-
-  if (error instanceof CourseClosedError) {
-    return reply.status(409).send({ error: 'course_closed', message: error.message, details: { courseName: error.courseName, reason: error.reason } });
-  }
-
-  if (error instanceof CourseNotClosedError) {
-    return reply.status(409).send({ error: 'course_not_closed', message: error.message, details: { courseName: error.courseName } });
-  }
-
-  if (error instanceof CourseGalleryFullError) {
-    return reply.status(409).send({ error: 'course_photo_limit', message: error.message, details: { max: error.max } });
-  }
-
   if (error instanceof CoursePhotoTooLargeError) {
     return reply.status(413).send({ error: 'file_too_large', message: photoTooLargeMessage(error.maxBytes) });
   }
@@ -124,6 +80,9 @@ const handleError = (reply: FastifyReply, error: unknown, routeLabel: string): F
   if (isInvalidMultipartContentTypeError(error)) {
     return reply.status(415).send({ error: 'invalid_content_type', message: 'יש לשלוח את הבקשה כטופס מסוג multipart/form-data' });
   }
+
+  const multipartError = multipartPluginErrorReply(error);
+  if (multipartError) return reply.status(multipartError.status).send(multipartError.body);
 
   reply.request.log.error({ err: error }, `unhandled error in ${routeLabel}`);
   return reply.status(500).send({ error: 'internal_error', message: GENERIC_ERROR_MESSAGE });
@@ -179,7 +138,7 @@ export const registerAdminCourseRoutes = async (app: FastifyInstance): Promise<v
 
       const config = loadConfig(process.env);
       const file = await request.file({ limits: { fileSize: config.maxUploadBytes } });
-      if (!file) return reply.status(400).send({ error: 'invalid_request', message: 'יש להעלות תמונה ראשית' });
+      if (!file) throw new CoverRequiredError();
       const bytes = await file.toBuffer();
 
       const record = await adminCourseService.replaceCover(id, bytes, request.log);

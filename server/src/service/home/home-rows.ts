@@ -1,9 +1,6 @@
 import type { CourseSummaryRecord } from '../course/models';
+import { COURSE_ROW_TITLE } from './consts';
 import type { CourseHomeRowResult, HomeRowResult, LessonHomeRowResult } from './models';
-
-// The home row's own title (spec section 13): the one wording true of every
-// card in the row, open or closed alike.
-export const COURSE_ROW_TITLE = 'קורסים';
 
 // Pure so it can be proven without a database: no listed course ever means
 // no row, and one listed course always lands right after the first lesson
