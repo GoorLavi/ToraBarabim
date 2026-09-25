@@ -69,6 +69,14 @@ export const CourseFacts = css(
         gap: ${theme.spacing.sm};
         margin-block-start: ${theme.spacing.xs};
 
+        /* The side card's own copy of this component is a fixed 360px
+           column (CoursePage/styles.ts): side by side there, never
+           stacked, so both buttons shrink to share the row instead of
+           wrapping. */
+        @media (min-width: ${theme.breakpoints.lg}) {
+          flex-wrap: nowrap;
+        }
+
         > .navButton {
           flex: 1 1 160px;
           display: flex;
@@ -83,6 +91,14 @@ export const CourseFacts = css(
           font-weight: ${theme.typography.fontWeight.semiBold};
           text-decoration: none;
           white-space: nowrap;
+
+          @media (min-width: ${theme.breakpoints.lg}) {
+            flex: 1 1 0;
+            min-inline-size: 0;
+            padding-inline: ${theme.spacing.sm};
+            white-space: normal;
+            text-align: center;
+          }
         }
       }
     }

@@ -26,11 +26,16 @@ export const TeacherSection = css(
 
     > .portrait {
       flex: 0 0 auto;
-      inline-size: 132px;
-      block-size: 176px;
+      inline-size: 96px;
+      block-size: 128px;
       border-radius: ${theme.radii.md};
       object-fit: cover;
       background: ${theme.colors.primarySoft};
+
+      @media (min-width: ${theme.breakpoints.sm}) {
+        inline-size: 132px;
+        block-size: 176px;
+      }
     }
 
     > .text {

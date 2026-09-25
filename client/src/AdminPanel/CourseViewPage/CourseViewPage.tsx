@@ -4,7 +4,7 @@ import styled from 'styled-components';
 
 import { ADMIN_ROUTES, skeletonFieldKeys } from '~/AdminPanel/consts';
 import { CoursePreviewCard } from '~/AdminPanel/components/CoursePreviewCard/CoursePreviewCard';
-import { RecordField } from '~/AdminPanel/components/RecordField/RecordField';
+import { RecordField } from '~/components/RecordField/RecordField';
 import { adminCourseClosedLineLabel, adminCourseStatusTagLabel, adminErrorMessage } from '~/AdminPanel/helpers';
 import { useExistingCourse } from '~/AdminPanel/useExistingCourse';
 import { cycleLabel } from '~/CoursePage/consts';

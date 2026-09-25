@@ -29,10 +29,12 @@ export const PanelTabNav = css(
     min-block-size: 48px;
     padding-inline: ${theme.spacing.lg};
     border-radius: ${theme.radii.pill};
+    background: ${theme.colors.surfaceOnPrimary};
     color: ${theme.colors.textOnPrimary};
     font-weight: ${theme.typography.fontWeight.semiBold};
     font-size: ${theme.typography.body.phone.fontSize};
     line-height: ${theme.typography.body.phone.lineHeight};
+    text-decoration: none;
 
     &.active {
       background: ${theme.colors.surface};

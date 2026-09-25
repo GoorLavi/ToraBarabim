@@ -25,23 +25,27 @@ export const CourseListItem = styled(({ className, course }: CourseListItemProps
         )}
       </span>
 
-      <span className="when" dir="auto">
-        {joinWithMiddleDot([courseOpeningDateLongLabel(course.openingDate), formatCourseScope(course.weeks, course.sessions, undefined)])}
-      </span>
-
       {course.lifecycle.status === 'closed' ? (
+        // The tag and its line are one row replacing the when-line
+        // entirely (design gate finding): a closed course's own opening
+        // date no longer matters beside when it closed.
         <div className="closedRow">
           <span className="tag">{course.lifecycle.reason === 'full' ? COURSE_STATE_TAG_FULL : COURSE_STATE_TAG_CLOSED}</span>
           <span className="closedLine">{courseClosedLineLabel(course.lifecycle)}</span>
         </div>
       ) : (
-        <div className="tags">
-          <span className="tag open">{COURSE_STATE_TAG_OPEN}</span>
-          <span className="tag">{AUDIENCE_LABELS[course.audience]}</span>
-          <span className="tag" dir="auto">
-            {venuePanelCityName(course.venue)}
+        <>
+          <span className="when" dir="auto">
+            {joinWithMiddleDot([courseOpeningDateLongLabel(course.openingDate), formatCourseScope(course.weeks, course.sessions, undefined)])}
           </span>
-        </div>
+          <div className="tags">
+            <span className="tag open">{COURSE_STATE_TAG_OPEN}</span>
+            <span className="tag">{AUDIENCE_LABELS[course.audience]}</span>
+            <span className="tag" dir="auto">
+              {venuePanelCityName(course.venue)}
+            </span>
+          </div>
+        </>
       )}
 
       <Link className="action" to={RABBI_ROUTES.courseEdit(course.id)}>

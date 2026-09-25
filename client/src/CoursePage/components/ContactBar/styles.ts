@@ -28,7 +28,7 @@ export const ContactBar = css(
       justify-content: center;
       min-block-size: 48px;
       padding-inline: ${theme.spacing.lg};
-      border-radius: ${theme.radii.pill};
+      border-radius: ${theme.radii.md};
       font-weight: ${theme.typography.fontWeight.semiBold};
 
       > .icon {
@@ -38,8 +38,15 @@ export const ContactBar = css(
     }
 
     > .whatsapp {
-      background: ${theme.colors.primary};
+      border: 1px solid ${DEDICATION_WHATSAPP_COLOR};
+      background: ${DEDICATION_WHATSAPP_COLOR};
       color: ${theme.colors.textOnPrimary};
+
+      &:hover,
+      &:active {
+        border-color: ${DEDICATION_WHATSAPP_COLOR_HOVER};
+        background: ${DEDICATION_WHATSAPP_COLOR_HOVER};
+      }
     }
 
     > .call {

@@ -55,22 +55,18 @@ export const Open: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    // Gallery: the counter, the arrow, and a thumbnail tap.
-    await expect(canvas.findByText('1 מתוך 9')).resolves.toBeInTheDocument();
-    await userEvent.click(canvas.getByRole('button', { name: 'לתמונה הבאה' }));
-    await waitFor(() => expect(canvas.getByText('2 מתוך 9')).toBeInTheDocument());
-
-    const thumbnails = canvas.getAllByRole('button', { name: /^תמונה \d+$/ });
-    const fourthThumbnail = thumbnails[3];
-    if (!fourthThumbnail) throw new Error('CoursePage story: fourth thumbnail not found');
-    await userEvent.click(fourthThumbnail);
-    await waitFor(() => expect(canvas.getByText('4 מתוך 9')).toBeInTheDocument());
-
-    // Opens and closes the full-screen viewer.
-    await userEvent.click(canvas.getByRole('button', { name: 'הצגת התמונה במסך מלא' }));
+    // Gallery on phone: a full-bleed slide strip, one button per photo,
+    // each opening the full viewer at its own index (no counter or arrow
+    // in the strip itself; a swipe is the browsing gesture there).
+    const fourthSlide = canvas.getByRole('button', { name: 'הצגת תמונה 4 במסך מלא' });
+    await userEvent.click(fourthSlide);
     const dialog = await within(document.body).findByRole('dialog');
-    const closeButton = within(dialog).getByRole('button', { name: 'סגירה' });
-    await userEvent.click(closeButton);
+    await expect(within(dialog).getByText('4 מתוך 9')).toBeInTheDocument();
+
+    // The viewer's own next arrow and close button.
+    await userEvent.click(within(dialog).getByRole('button', { name: 'לתמונה הבאה' }));
+    await waitFor(() => expect(within(dialog).getByText('5 מתוך 9')).toBeInTheDocument());
+    await userEvent.click(within(dialog).getByRole('button', { name: 'סגירה' }));
     await waitFor(() => expect(within(document.body).queryByRole('dialog')).not.toBeInTheDocument());
 
     // The WhatsApp href carries the course name (encoded) and the course's
@@ -151,6 +147,7 @@ export const ClosedByCalendar: Story = {
           courseDetailFixture({
             id: 'story-closed',
             name: 'יסודות האמונה',
+            priceShekels: 350,
             state: { status: 'closed', reason: 'closed', closedOn: '2026-10-20' },
           }),
         ),
@@ -164,6 +161,9 @@ export const ClosedByCalendar: Story = {
     await waitFor(() => expect(canvas.getAllByText('ההרשמה נסגרה').length).toBeGreaterThan(0));
     await expect(canvas.queryByRole('link', { name: consts.CONTACT_BAR_WHATSAPP_LABEL })).not.toBeInTheDocument();
     await expect(canvas.queryByRole('link', { name: consts.CONTACT_BAR_CALL_LABEL })).not.toBeInTheDocument();
+    // A closed course keeps its price row: the facts list never conditions
+    // on state, only on whether a price was ever set.
+    await expect(canvas.getAllByText('350 ₪ לכל הקורס').length).toBeGreaterThan(0);
   },
 };
 

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { RecordField } from '~/AdminPanel/components/RecordField/RecordField';
+import { RecordField } from '~/components/RecordField/RecordField';
 import { ADMIN_ROUTES, PROMINENCE_LABELS, skeletonFieldKeys } from '~/AdminPanel/consts';
 import { adminErrorMessage } from '~/AdminPanel/helpers';
 import { useExistingRabbi } from '~/AdminPanel/RabbiFormPage/useExistingRabbi';

@@ -35,7 +35,9 @@ export const TeacherPicker = styled(({ className, teacher, onChangeTeacher, erro
         isSelected={(item) => teacher.kind === 'rabbi' && item.id === teacher.rabbi.id}
         onSelect={(rabbi) => onChangeTeacher({ kind: 'rabbi', rabbi })}
         onQueryChange={setQuery}
-        renderTrigger={() => <span dir="auto">{consts.SEARCH_PLACEHOLDER}</span>}
+        renderTrigger={() => (
+          <span dir="auto">{teacher.kind === 'rabbi' ? rabbiDisplayName(teacher.rabbi) : consts.SEARCH_PLACEHOLDER}</span>
+        )}
         renderOption={(item) => <span dir="auto">{rabbiDisplayName(item)}</span>}
         searchLabel={consts.SEARCH_LABEL}
         searchPlaceholder={consts.SEARCH_PLACEHOLDER}
@@ -54,9 +56,12 @@ export const TeacherPicker = styled(({ className, teacher, onChangeTeacher, erro
           </button>
         </div>
       ) : (
-        <label className="field">
-          <span className="label">{consts.NAMED_LABEL}</span>
+        <div className="field">
+          <label className="label" htmlFor="teacherNamedInput">
+            {consts.NAMED_LABEL}
+          </label>
           <input
+            id="teacherNamedInput"
             type="text"
             className="input"
             dir={directionForValue(teacher.name)}
@@ -64,7 +69,7 @@ export const TeacherPicker = styled(({ className, teacher, onChangeTeacher, erro
             onChange={(event) => onChangeTeacher({ kind: 'named', name: event.target.value })}
           />
           <span className="helper">{consts.NAMED_HELP}</span>
-        </label>
+        </div>
       )}
 
       {errorMessage && <p className="error">{errorMessage}</p>}

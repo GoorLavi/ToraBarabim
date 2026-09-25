@@ -26,7 +26,11 @@ export const OneCourse: Story = {
 
 export const TwoCourses: Story = {
   args: {
-    items: [courseFixture({ name: 'יסודות האמונה' }), courseFixture({ name: 'עיון בהלכות שבת', id: 'course-2' })],
+    // Both ids given explicitly: courseFixture's own auto-increment is a
+    // module-level counter shared across every story in the run, so a
+    // literal id here ("course-2") could otherwise collide with whichever
+    // count it has reached (the duplicate React key the design gate found).
+    items: [courseFixture({ id: 'two-courses-1', name: 'יסודות האמונה' }), courseFixture({ id: 'two-courses-2', name: 'עיון בהלכות שבת' })],
   },
   play: async ({ canvasElement }) => {
     const items = within(canvasElement).getAllByRole('listitem');

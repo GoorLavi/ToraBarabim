@@ -1,8 +1,9 @@
+import classNames from 'classnames';
 import styled from 'styled-components';
 
-import { adminCourseStatusTagLabel } from '~/AdminPanel/helpers';
+import { adminCourseStatusTagLabel, courseStatusBucket } from '~/AdminPanel/helpers';
 import { AUDIENCE_LABELS, MIDDLE_DOT_SEPARATOR } from '~/consts';
-import { courseOpeningDateLongLabel, rabbiDisplayName, venuePanelCityName } from '~/helpers';
+import { courseOpeningDateLongLabel, rabbiDisplayName, stateSealParts, venuePanelCityName } from '~/helpers';
 
 import * as consts from './consts';
 import type { CoursePreviewCardProps } from './models';
@@ -18,6 +19,8 @@ import * as styles from './styles';
 // `CourseViewPage/components/` once `CourseFormPage` became a second caller.
 export const CoursePreviewCard = styled(({ className, course }: CoursePreviewCardProps) => {
   const teacherLabel = course.teacher.kind === 'rabbi' ? rabbiDisplayName(course.teacher.rabbi) : course.teacher.name;
+  const isClosed = courseStatusBucket(course) === 'full' || courseStatusBucket(course) === 'closed';
+  const seal = stateSealParts(adminCourseStatusTagLabel(course));
 
   return (
     <div className={className}>
@@ -26,7 +29,13 @@ export const CoursePreviewCard = styled(({ className, course }: CoursePreviewCar
       <div className="card">
         <div className="poster">
           <img className="image" src={course.coverUrl} alt="" />
-          <span className="stateTag">{adminCourseStatusTagLabel(course)}</span>
+          {/* The same seal the public CourseCard draws (CourseCard/styles.ts),
+              not a faded admin-only copy (design gate finding). */}
+          <div className={classNames('stateTag', { closed: isClosed })}>
+            <span className="small">{seal.small}</span>
+            {isClosed && <span className="rule" aria-hidden="true" />}
+            <span className="big">{seal.big}</span>
+          </div>
         </div>
 
         <div className="body">

@@ -7,7 +7,7 @@ import { trackEvent } from '~/analytics/mixpanel';
 import { AUDIENCE_LABELS, MIDDLE_DOT_SEPARATOR } from '~/consts';
 import { courseOpeningDateCompactLabel, courseOpeningDateLongLabel, coursePath } from '~/helpers';
 
-import { courseCardAriaLabel, courseStateTagLabel, isClosedState, teacherLabel } from './helpers';
+import { courseAudienceTreatment, courseCardAriaLabel, courseStateSealParts, isClosedState, teacherLabel } from './helpers';
 import type { CourseCardProps } from './models';
 import * as styles from './styles';
 
@@ -19,11 +19,18 @@ export const CourseCard = styled(({ className, course, clickContext }: CourseCar
     trackEvent(MIXPANEL_EVENTS.courseClick, { courseId: course.id, courseName: course.name, ...clickContext });
   };
 
+  const isClosed = isClosedState(course.state);
+  const seal = courseStateSealParts(course.state);
+
   return (
     <Link to={coursePath(course)} aria-label={courseCardAriaLabel(course)} className={className} onClick={handleClick}>
       <div className="poster">
         <img className="image" src={course.coverUrl} alt="" />
-        <span className={classNames('stateTag', { closed: isClosedState(course.state) })}>{courseStateTagLabel(course.state)}</span>
+        <div className={classNames('stateTag', { closed: isClosed })}>
+          <span className="small">{seal.small}</span>
+          {isClosed && <span className="rule" aria-hidden="true" />}
+          <span className="big">{seal.big}</span>
+        </div>
       </div>
 
       <div className="body">
@@ -41,7 +48,7 @@ export const CourseCard = styled(({ className, course, clickContext }: CourseCar
         </p>
 
         <p className="meta" dir="auto">
-          {AUDIENCE_LABELS[course.audience]}
+          <span className={classNames('audience', courseAudienceTreatment(course))}>{AUDIENCE_LABELS[course.audience]}</span>
           {MIDDLE_DOT_SEPARATOR}
           {course.venue.city}
         </p>

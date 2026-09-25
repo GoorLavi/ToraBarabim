@@ -72,7 +72,10 @@ export const HomeRails = styled(({ className, query, dedicationGroup }: HomeRail
   );
 
   const lessonRowCount = rows.filter((row) => row.kind === 'lessons').length;
-  const showWomensAreaBand = womensAreaLessonCount > 0;
+  // With no lesson rows at all (the course row alone), neither band has a
+  // real "after the Nth lesson row" slot to sit in, so showing one would
+  // land it oddly right after the course row instead (plan addendum).
+  const showWomensAreaBand = womensAreaLessonCount > 0 && lessonRowCount > 0;
   const showBetweenRailsDedication = shouldShowBetweenRailsDedication(
     lessonRowCount,
     dedicationGroup !== undefined && dedicationGroup.items.length > 0,

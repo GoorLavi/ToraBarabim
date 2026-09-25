@@ -1,8 +1,12 @@
 import { css } from 'styled-components';
 
-// Below `lg`: the square frame, then a horizontal thumbnail strip under it.
-// From `lg` up (design brief A, item 7): a fixed 780 by 560 block, the
-// frame at 560 square, a 2-column thumbnail grid beside it.
+// Below `lg`: a full-bleed, swipeable strip of every photo (design brief A
+// items 1 and 2 revisited), each slide the viewport width less 48px so the
+// next one peeks at the inline end, the same bleed technique as
+// `HomePage/components/RabbiRow/styles.ts`'s own `.row`. From `lg` up
+// (design brief A, item 7): the desktop frame-plus-thumbnails pair,
+// unchanged, a fixed 780 by 560 block with the frame at 560 square and a
+// 2-column thumbnail grid beside it.
 export const CourseGallery = css(
   ({ theme }) => `
   display: flex;
@@ -17,7 +21,50 @@ export const CourseGallery = css(
     max-inline-size: 100%;
   }
 
+  > .slides {
+    display: flex;
+    gap: ${theme.spacing.sm};
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: none;
+    margin-inline: calc(-1 * ${theme.spacing.lg});
+    padding-inline: ${theme.spacing.lg};
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    @media (min-width: ${theme.breakpoints.md}) {
+      margin-inline: calc(-1 * ${theme.spacing.xl});
+      padding-inline: ${theme.spacing.xl};
+    }
+
+    @media (min-width: ${theme.breakpoints.lg}) {
+      display: none;
+    }
+
+    > .slide {
+      flex: 0 0 calc(100vw - 48px);
+      aspect-ratio: 1;
+      scroll-snap-align: start;
+      overflow: hidden;
+      border-radius: ${theme.radii.lg};
+      background: ${theme.colors.primarySoft};
+      padding: 0;
+      border: 0;
+
+      > .image {
+        display: block;
+        inline-size: 100%;
+        block-size: 100%;
+        object-fit: cover;
+      }
+    }
+  }
+
   > .frame {
+    display: none;
     position: relative;
     aspect-ratio: 1;
     overflow: hidden;
@@ -25,6 +72,7 @@ export const CourseGallery = css(
     background: ${theme.colors.primarySoft};
 
     @media (min-width: ${theme.breakpoints.lg}) {
+      display: block;
       flex: 0 0 560px;
       inline-size: 560px;
       block-size: 560px;
@@ -103,14 +151,7 @@ export const CourseGallery = css(
   }
 
   > .thumbnails {
-    display: flex;
-    gap: ${theme.spacing.xs};
-    overflow-x: auto;
-    scrollbar-width: none;
-
-    &::-webkit-scrollbar {
-      display: none;
-    }
+    display: none;
 
     @media (min-width: ${theme.breakpoints.lg}) {
       flex: 1 1 auto;

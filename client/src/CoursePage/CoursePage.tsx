@@ -59,6 +59,8 @@ export const CoursePage = styled(({ className }: CoursePageProps) => {
       {course && (
         <div className="layout">
           <div className="storyColumn">
+            <CourseGallery courseName={course.name} photos={[{ id: 'cover', url: course.coverUrl }, ...course.photos]} />
+
             <div className="heading">
               {(course.cycle !== undefined || course.topic) && (
                 <div className="tags">
@@ -84,7 +86,10 @@ export const CoursePage = styled(({ className }: CoursePageProps) => {
               />
             )}
 
-            <CourseGallery courseName={course.name} photos={[{ id: 'cover', url: course.coverUrl }, ...course.photos]} />
+            {/* Phone only (styles.ts): from `lg` up the facts live in the
+                side card below instead, the same "render twice, CSS picks
+                one" shape `ClosedPanel` already uses. */}
+            <CourseFacts className="factsNearTop" course={course} />
 
             <div className="about">
               <h2 className="aboutHeading">{consts.ABOUT_COURSE_HEADING}</h2>
@@ -99,7 +104,7 @@ export const CoursePage = styled(({ className }: CoursePageProps) => {
           </div>
 
           <div className="sideCard">
-            <CourseFacts course={course} />
+            <CourseFacts className="factsInCard" course={course} />
 
             {course.state.status === 'closed' ? (
               <ClosedPanel

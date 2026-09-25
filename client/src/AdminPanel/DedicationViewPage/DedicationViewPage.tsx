@@ -2,7 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { DedicationStateBadge } from '~/AdminPanel/components/DedicationStateBadge/DedicationStateBadge';
-import { RecordField } from '~/AdminPanel/components/RecordField/RecordField';
+import { RecordField } from '~/components/RecordField/RecordField';
 import {
   ADMIN_ROUTES,
   DEDICATION_HONORIFIC_LABELS,

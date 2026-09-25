@@ -124,6 +124,19 @@ export const CourseFormPage = css(
         font-size: ${theme.typography.body.phone.fontSize};
         line-height: ${theme.typography.body.phone.lineHeight};
 
+        /* Mark-full and close-registration are quiet pill buttons (design
+           gate finding), never bare text: delete stays a plain destructive
+           line, matching ReadOnlyCourseRecord's own. */
+        &:not(.delete) {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding-inline: ${theme.spacing.lg};
+          border: 1px solid ${theme.colors.border};
+          border-radius: ${theme.radii.pill};
+          color: ${theme.colors.primary};
+        }
+
         &.delete {
           color: ${theme.colors.danger};
         }

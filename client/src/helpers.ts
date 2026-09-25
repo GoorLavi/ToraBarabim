@@ -280,3 +280,13 @@ export const formatPriceShekels = (priceShekels: number): string => `${priceForm
 // card, row and ticket already show. Lifted alongside `formatPriceShekels`
 // above, for the same reason.
 export const courseTopicLabel = (topic: CourseTopic): string => (topic.value === 'other' ? topic.otherText : LESSON_TOPIC_LABELS[topic.value]);
+
+// A two-word Hebrew status phrase split for the corner seal's two lines
+// (the qualifying word small, the state word big): the one place this
+// split happens, so the public course card and the admin's own preview
+// card draw the same shape from the same three phrases
+// (COURSE_STATE_TAG_OPEN/FULL/CLOSED, ~/consts.ts).
+export const stateSealParts = (label: string): { small: string; big: string } => {
+  const [small, big = ''] = label.split(' ');
+  return { small: small ?? '', big };
+};

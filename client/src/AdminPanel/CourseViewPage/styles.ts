@@ -143,22 +143,16 @@ export const CourseViewPage = css(
         flex-direction: column;
         gap: ${theme.spacing.md};
 
-        @media (min-width: ${theme.breakpoints.md}) {
-          flex-direction: row;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: ${theme.spacing.lg};
-        }
-
+        /* The actions row always sits under the title row, never beside it
+           (design gate finding): wide enough, a row of several buttons
+           beside a growing title used to squeeze the title column down to
+           one letter per line. */
         > .titleRow {
           display: flex;
           align-items: flex-start;
           gap: ${theme.spacing.md};
+          flex: 1;
           min-inline-size: 0;
-
-          @media (min-width: ${theme.breakpoints.md}) {
-            flex: 1;
-          }
 
           > .poster {
             flex: 0 0 auto;

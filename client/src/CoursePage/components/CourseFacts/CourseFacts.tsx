@@ -10,7 +10,7 @@ import {
   COURSE_FACT_SCOPE_LABEL,
   COURSE_FACT_VENUE_LABEL,
 } from '~/consts';
-import { addressLine, courseOpeningDateLongLabel, formatCourseScope, formatPriceShekels, googleMapsHref, placePath, wazeHref } from '~/helpers';
+import { addressLine, formatCourseScope, formatPriceShekels, googleMapsHref, placePath, wazeHref, weekdayAndDayMonthLabel } from '~/helpers';
 
 import * as consts from './consts';
 import type { CourseFactsProps } from './models';
@@ -28,7 +28,7 @@ export const CourseFacts = styled(({ className, course }: CourseFactsProps) => {
       <div className="fact">
         <span className="label">{COURSE_FACT_OPENING_LABEL}</span>
         <span className="value" dir="auto">
-          {courseOpeningDateLongLabel(course.openingDate)}
+          {weekdayAndDayMonthLabel(course.openingDate)}
         </span>
       </div>
 

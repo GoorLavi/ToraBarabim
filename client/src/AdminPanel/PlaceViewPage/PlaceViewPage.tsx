@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { InactiveTag } from '~/components/InactiveTag/InactiveTag';
-import { RecordField } from '~/AdminPanel/components/RecordField/RecordField';
+import { RecordField } from '~/components/RecordField/RecordField';
 import { ADMIN_ROUTES, skeletonFieldKeys } from '~/AdminPanel/consts';
 import { adminErrorMessage } from '~/AdminPanel/helpers';
 import { useExistingPlace } from '~/AdminPanel/PlaceFormPage/useExistingPlace';

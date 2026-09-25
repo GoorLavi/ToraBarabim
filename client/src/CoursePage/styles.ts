@@ -135,11 +135,29 @@ export const CoursePage = css(
           display: none;
         }
       }
+
+      /* Between the closed/full panel and "about" on a single column;
+         hidden from lg up, where the side card's own copy takes over. */
+      > .factsNearTop {
+        @media (min-width: ${theme.breakpoints.lg}) {
+          display: none;
+        }
+      }
     }
 
     > .sideCard {
       display: flex;
       flex-direction: column;
+
+      /* Shown only from lg up, where this is the side card's own copy;
+         hidden below it, where factsNearTop above already shows one. */
+      > .factsInCard {
+        display: none;
+
+        @media (min-width: ${theme.breakpoints.lg}) {
+          display: flex;
+        }
+      }
 
       @media (min-width: ${theme.breakpoints.lg}) {
         flex: 0 0 360px;

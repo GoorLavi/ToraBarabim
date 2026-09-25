@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, within } from 'storybook/test';
 
-import { COURSE_CLOSED_RECORD_EXPLANATION } from '~/consts';
+import { COURSE_CLOSED_RECORD_EXPLANATION, COURSE_DELETE_ACTION_LABEL, COURSE_DUPLICATE_ACTION_LABEL } from '~/consts';
 import { courseResponseFixture } from '~/courseFixture';
 import { placeholderPhoto } from '~/storyMocks';
 
@@ -37,8 +37,8 @@ export const ClosedByCalendar: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.findByText(COURSE_CLOSED_RECORD_EXPLANATION)).resolves.toBeInTheDocument();
-    await expect(canvas.getByRole('button', { name: 'שכפול הקורס' })).toBeInTheDocument();
-    await expect(canvas.getByRole('button', { name: 'מחיקת הקורס' })).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: COURSE_DUPLICATE_ACTION_LABEL })).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: COURSE_DELETE_ACTION_LABEL })).toBeInTheDocument();
   },
 };
 

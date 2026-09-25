@@ -13,7 +13,7 @@ export const TeacherPicker = css(
     gap: ${theme.spacing.xs};
 
     > .clearSelection {
-      min-block-size: 40px;
+      min-block-size: 48px;
       color: ${theme.colors.primary};
       font-weight: ${theme.typography.fontWeight.semiBold};
       font-size: ${theme.typography.secondary.phone.fontSize};

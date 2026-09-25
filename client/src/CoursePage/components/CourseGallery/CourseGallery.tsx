@@ -30,6 +30,28 @@ export const CourseGallery = styled(({ className, courseName, photos }: CourseGa
 
   return (
     <div className={className}>
+      {/* Phone only (styles.ts): every photo as its own full-bleed slide in
+          a native horizontal scroller, the next one peeking at the inline
+          end (the rails' own swipe signal, RabbiRow/styles.ts). Replaces
+          the desktop frame-plus-thumbnails below `lg`, where a swipe is
+          the browsing gesture and a tap still opens the full viewer. */}
+      <div className="slides">
+        {photos.map((photo, index) => (
+          <button
+            key={photo.id}
+            type="button"
+            className="slide"
+            onClick={() => {
+              setActiveIndex(index);
+              setIsViewerOpen(true);
+            }}
+            aria-label={consts.openSlideViewerLabel(index)}
+          >
+            <img className="image" src={photo.url} alt="" />
+          </button>
+        ))}
+      </div>
+
       <div className="frame">
         <button type="button" className="imageButton" onClick={() => setIsViewerOpen(true)} aria-label={consts.OPEN_VIEWER_LABEL}>
           <img className="image" src={activePhoto.url} alt="" />

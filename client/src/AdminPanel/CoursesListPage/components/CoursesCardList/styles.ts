@@ -52,11 +52,20 @@ export const CoursesCardList = css(
         line-height: ${theme.typography.secondary.phone.lineHeight};
       }
 
-      > .tags,
-      > .closedRow {
+      > .tags {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
+        gap: ${theme.spacing.xs};
+      }
+
+      /* Never wraps onto two lines (design gate finding): the tag stays
+         beside its own line, which wraps its own text instead if the two
+         together do not fit the card's width. */
+      > .closedRow {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: baseline;
         gap: ${theme.spacing.xs};
       }
 
@@ -75,11 +84,14 @@ export const CoursesCardList = css(
          filled solid rather than the soft tint an open status and every
          other tag keep. */
       > .closedRow > .tag {
+        flex: 0 0 auto;
         background: ${theme.colors.primary};
         color: ${theme.colors.textOnPrimary};
       }
 
       > .closedRow > .closedLine {
+        flex: 1 1 auto;
+        min-inline-size: 0;
         color: ${theme.colors.textSecondary};
         font-size: ${theme.typography.secondary.phone.fontSize};
         line-height: ${theme.typography.secondary.phone.lineHeight};
