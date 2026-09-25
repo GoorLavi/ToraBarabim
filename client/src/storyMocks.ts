@@ -1,3 +1,5 @@
+import { userEvent } from 'storybook/test';
+
 // Shared support for every Storybook story that answers this app's own
 // fetch calls: Storybook's preview server has no live API behind it (unlike
 // the app itself, which vite.config.ts proxies to the real API in dev), so
@@ -96,6 +98,75 @@ export const placeholderPhoto = (width: number, height: number): string => {
         `</svg>`,
     )
   );
+};
+
+// A real, decodable image file, generated at runtime so a story never
+// depends on a remote host: `width` by `height`, lifted from
+// `PhotoPicker.stories.tsx` once `CourseFormPage.stories.tsx` became a
+// second caller.
+//
+// Rasterized to a PNG rather than handed over as the SVG `placeholderPhoto`
+// itself draws: every real file input this app has carries
+// `accept="image/jpeg,image/png"`, which `userEvent.upload` honours by
+// silently dropping a file whose type does not match, leaving the input's
+// `files` empty and any play step that depends on it stuck (design gate,
+// PhotoPicker.stories.tsx round 7). Drawing the SVG into a canvas keeps
+// `placeholderPhoto` the one source for the generated image's content while
+// still producing a type a picker actually accepts.
+export const generatedImageFile = async (width: number, height: number): Promise<File> => {
+  const image = new Image();
+  image.src = placeholderPhoto(width, height);
+  await new Promise<void>((resolve, reject) => {
+    image.onload = () => resolve();
+    image.onerror = () => reject(new Error(`generatedImageFile: failed to decode the placeholder image at ${width}x${height}`));
+  });
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('generatedImageFile: canvas 2d context unavailable while rasterizing the placeholder image');
+  context.drawImage(image, 0, 0, width, height);
+
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+  if (!blob) throw new Error(`generatedImageFile: canvas failed to produce a png blob at ${width}x${height}`);
+
+  return new File([blob], 'photo.png', { type: 'image/png' });
+};
+
+// Uploads a real generated file into a specific file input and confirms it
+// actually arrived, rather than assuming `userEvent.upload` succeeded:
+// lifted from `PhotoPicker.stories.tsx`'s own `selectGeneratedFile`, which
+// only ever queried the sole file input on its page and could not tell two
+// apart once `CourseFormPage.stories.tsx` (cover and gallery, two inputs on
+// one screen) became a second caller.
+//
+// A file the `accept` filter rejects never fires `change` at all, so a
+// picker's own handler silently does nothing (design gate round 7, on this
+// exact helper). Reading `input.files` after `userEvent.upload` settles is
+// too late to catch that: a picker's own `handleChange` resets
+// `event.target.value` (and with it `.files`) as its first line, so a
+// straight post-await check reports empty even on a real upload. Capturing
+// `files.length` on the `change` event itself, before that handler runs, is
+// the assertion that actually tells the two apart.
+export const uploadGeneratedFileToInput = async (input: HTMLInputElement, width: number, height: number): Promise<void> => {
+  let receivedFileCount: number | undefined;
+  const captureFileCount = (event: Event): void => {
+    receivedFileCount = (event.target as HTMLInputElement).files?.length ?? 0;
+  };
+  input.addEventListener('change', captureFileCount, { capture: true, once: true });
+
+  const file = await generatedImageFile(width, height);
+  await userEvent.upload(input, file);
+  input.removeEventListener('change', captureFileCount, { capture: true });
+
+  if (receivedFileCount !== 1) {
+    throw new Error(
+      `uploadGeneratedFileToInput: file input did not receive the generated ${width}x${height} file (accept="${input.accept}"): ${
+        receivedFileCount === undefined ? 'no change event fired' : `${receivedFileCount} files`
+      }`,
+    );
+  }
 };
 
 // The server derives a rabbi's and a place's slug from its display name the

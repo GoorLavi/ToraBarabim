@@ -34,6 +34,20 @@ export interface AdminPlaceFilters {
   pageSize?: number;
 }
 
+// Server-side filters, sent as query params on GET /v1/admin/courses. The
+// server's own `status` has no `full` value of its own (a course marked
+// full is still `status: 'closed'`, `reason: 'full'`): the list page filters
+// a `status: 'closed'` response by `reason` itself for the "תפוסה מלאה" and
+// "ההרשמה נסגרה" options, the same "server narrows, the client narrows
+// further" split `LessonsListPage` already uses for its own filters.
+export interface AdminCourseFilters {
+  q?: string;
+  status?: 'notOpen' | 'open' | 'closed';
+  rabbiId?: string;
+  page?: number;
+  pageSize?: number;
+}
+
 // Lifted from `LessonFormPage/components/RabbiPicker/models.ts` once
 // `CourseFormPage/components/TeacherPicker` became a second caller of
 // `useRabbiSearch`.

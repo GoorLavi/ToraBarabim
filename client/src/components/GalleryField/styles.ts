@@ -8,15 +8,7 @@ export const GalleryField = css(
 
   > .header {
     display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-
-    > .heading {
-      color: ${theme.colors.text};
-      font-weight: ${theme.typography.fontWeight.semiBold};
-      font-size: ${theme.typography.body.phone.fontSize};
-      line-height: ${theme.typography.body.phone.lineHeight};
-    }
+    justify-content: flex-end;
 
     > .count {
       color: ${theme.colors.textSecondary};
@@ -132,12 +124,6 @@ export const GalleryField = css(
   }
 
   > .maxReachedNote {
-    color: ${theme.colors.textSecondary};
-    font-size: ${theme.typography.secondary.phone.fontSize};
-    line-height: ${theme.typography.secondary.phone.lineHeight};
-  }
-
-  > .help {
     color: ${theme.colors.textSecondary};
     font-size: ${theme.typography.secondary.phone.fontSize};
     line-height: ${theme.typography.secondary.phone.lineHeight};

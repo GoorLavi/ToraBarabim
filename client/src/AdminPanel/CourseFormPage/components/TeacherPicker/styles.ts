@@ -6,25 +6,38 @@ export const TeacherPicker = css(
   flex-direction: column;
   gap: ${theme.spacing.sm};
 
-  > .modeToggle {
+  > .orDivider {
     display: flex;
+    align-items: center;
     gap: ${theme.spacing.sm};
+    padding-block: ${theme.spacing.xs};
 
-    > .modeOption {
+    > .line {
+      flex: 1;
+      block-size: 1px;
+      background: ${theme.colors.border};
+    }
+
+    > .label {
+      color: ${theme.colors.textSecondary};
+      font-size: ${theme.typography.secondary.phone.fontSize};
+      line-height: ${theme.typography.secondary.phone.lineHeight};
+    }
+  }
+
+  > .lockedRow {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: ${theme.spacing.xs};
+
+    > .clearSelection {
       min-block-size: 40px;
-      padding-inline: ${theme.spacing.md};
-      border: 1px solid ${theme.colors.border};
-      border-radius: ${theme.radii.pill};
-      color: ${theme.colors.text};
-      font-size: ${theme.typography.tagAndCaption.phone.fontSize};
-      line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
-
-      &.selected {
-        border-color: ${theme.colors.primary};
-        background: ${theme.colors.primarySoft};
-        color: ${theme.colors.primary};
-        font-weight: ${theme.typography.fontWeight.semiBold};
-      }
+      color: ${theme.colors.primary};
+      font-weight: ${theme.typography.fontWeight.semiBold};
+      font-size: ${theme.typography.secondary.phone.fontSize};
+      line-height: ${theme.typography.secondary.phone.lineHeight};
+      text-decoration: underline;
     }
   }
 

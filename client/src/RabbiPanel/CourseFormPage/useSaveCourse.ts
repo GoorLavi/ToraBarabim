@@ -4,11 +4,10 @@ import type { CourseResponse } from '@torabarabim/common';
 
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
+import { buildCoursePayload } from '~/components/CourseFormFields/helpers';
+import type { CourseFormState } from '~/components/CourseFormFields/models';
 import { createCourse, RabbiApiError, updateCourse } from '~/RabbiPanel/api';
 import { RABBI_QUERY_KEYS } from '~/RabbiPanel/consts';
-
-import { buildCoursePayload } from './helpers';
-import type { CourseFormState } from './models';
 
 export interface SaveCourseInput {
   form: CourseFormState;

@@ -59,5 +59,11 @@ export const RecordField = css(
   &.empty > .value {
     color: ${theme.colors.textSecondary};
   }
+
+  > .value > .valueLink {
+    color: ${theme.colors.primary};
+    font-weight: ${theme.typography.fontWeight.semiBold};
+    text-decoration: underline;
+  }
 `,
 );

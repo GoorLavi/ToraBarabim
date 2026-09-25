@@ -1,34 +1,47 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { CourseResponse } from '@torabarabim/common';
 
 import type { GalleryPhoto } from '~/components/GalleryField/models';
 import { deleteCoursePhoto, uploadCoursePhoto } from '~/RabbiPanel/api';
 import { RABBI_QUERY_KEYS } from '~/RabbiPanel/consts';
 
+type PendingStatus = 'draft' | 'uploading' | 'failed';
+
 interface PendingPhoto {
   localId: string;
   file: File;
   objectUrl: string;
-  status: 'uploading' | 'failed';
+  status: PendingStatus;
 }
 
 export interface CourseGalleryPhotosState {
   photos: GalleryPhoto[];
   addFiles: (files: File[]) => void;
   retry: (localId: string) => void;
-  remove: (photoId: string) => void;
+  remove: (id: string) => void;
+  // Only meaningful before a course exists: uploads every still-local file
+  // through the new id's own endpoint, one after another, and reports which
+  // ones failed so the caller can hand them to the edit form's own retry UI
+  // instead of losing them (design brief round 3, item 2).
+  uploadDraftsAfterCreate: (courseId: string) => Promise<File[]>;
 }
 
-// Every pending tile is a file this component already holds, uploaded one
-// at a time through `RabbiPanel/api.ts`'s own single-file endpoint: there is
-// no batch upload on the wire, so a multi-select just queues one request
-// per file. A tile leaves `pending` only once its own request settles
-// successfully; a failed one stays, with its object URL, until retried.
-export const useCourseGalleryPhotos = (courseId: string, savedPhotos: { id: string; url: string }[]): CourseGalleryPhotosState => {
+// `courseId` is undefined while creating: `addFiles` then only ever holds a
+// file locally (no request fires), since there is no course id yet to
+// upload it to. Once a real id exists, either because this is an edit from
+// the start or because `uploadDraftsAfterCreate` just ran, every further
+// `addFiles` call uploads immediately, the same as the cover's own
+// `useCourseCoverUpload.ts`.
+export const useCourseGalleryPhotos = (
+  courseId: string | undefined,
+  savedPhotos: { id: string; url: string }[],
+  seedFailedFiles: File[] = [],
+): CourseGalleryPhotosState => {
   const queryClient = useQueryClient();
-  const [pending, setPending] = useState<PendingPhoto[]>([]);
-  const objectUrlsRef = useRef<Set<string>>(new Set());
+  const [pending, setPending] = useState<PendingPhoto[]>(() =>
+    seedFailedFiles.map((file) => ({ localId: crypto.randomUUID(), file, objectUrl: URL.createObjectURL(file), status: 'failed' as const })),
+  );
+  const objectUrlsRef = useRef<Set<string>>(new Set(pending.map((photo) => photo.objectUrl)));
 
   useEffect(
     () => () => {
@@ -38,52 +51,87 @@ export const useCourseGalleryPhotos = (courseId: string, savedPhotos: { id: stri
   );
 
   const uploadMutation = useMutation({
-    mutationFn: (file: File) => uploadCoursePhoto(courseId, file),
+    mutationFn: ({ id, file }: { id: string; file: File }) => uploadCoursePhoto(id, file),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (photoId: string) => deleteCoursePhoto(courseId, photoId),
-    onSuccess: (course: CourseResponse) => queryClient.setQueryData(RABBI_QUERY_KEYS.course(courseId), course),
+    mutationFn: (photoId: string) => deleteCoursePhoto(courseId as string, photoId),
+    onSuccess: (course) => queryClient.setQueryData(RABBI_QUERY_KEYS.course(courseId as string), course),
   });
 
-  const runUpload = (localId: string, file: File): void => {
-    uploadMutation.mutate(file, {
-      onSuccess: (course) => {
-        queryClient.setQueryData(RABBI_QUERY_KEYS.course(courseId), course);
-        setPending((prev) => {
-          const item = prev.find((photo) => photo.localId === localId);
-          if (item) {
-            URL.revokeObjectURL(item.objectUrl);
-            objectUrlsRef.current.delete(item.objectUrl);
-          }
-          return prev.filter((photo) => photo.localId !== localId);
-        });
-      },
-      onError: () => setPending((prev) => prev.map((photo) => (photo.localId === localId ? { ...photo, status: 'failed' } : photo))),
+  const runUpload = (id: string, localId: string, file: File): Promise<boolean> =>
+    new Promise((resolve) => {
+      uploadMutation.mutate(
+        { id, file },
+        {
+          onSuccess: (course) => {
+            queryClient.setQueryData(RABBI_QUERY_KEYS.course(id), course);
+            setPending((prev) => {
+              const item = prev.find((photo) => photo.localId === localId);
+              if (item) {
+                URL.revokeObjectURL(item.objectUrl);
+                objectUrlsRef.current.delete(item.objectUrl);
+              }
+              return prev.filter((photo) => photo.localId !== localId);
+            });
+            resolve(true);
+          },
+          onError: () => {
+            setPending((prev) => prev.map((photo) => (photo.localId === localId ? { ...photo, status: 'failed' } : photo)));
+            resolve(false);
+          },
+        },
+      );
     });
-  };
 
   const addFiles = (files: File[]): void => {
     for (const file of files) {
       const localId = crypto.randomUUID();
       const objectUrl = URL.createObjectURL(file);
       objectUrlsRef.current.add(objectUrl);
-      setPending((prev) => [...prev, { localId, file, objectUrl, status: 'uploading' }]);
-      runUpload(localId, file);
+      setPending((prev) => [...prev, { localId, file, objectUrl, status: courseId ? 'uploading' : 'draft' }]);
+      if (courseId) void runUpload(courseId, localId, file);
     }
   };
 
   const retry = (localId: string): void => {
+    if (!courseId) return;
     const item = pending.find((photo) => photo.localId === localId);
     if (!item) return;
     setPending((prev) => prev.map((photo) => (photo.localId === localId ? { ...photo, status: 'uploading' } : photo)));
-    runUpload(localId, item.file);
+    void runUpload(courseId, localId, item.file);
+  };
+
+  const remove = (id: string): void => {
+    const pendingItem = pending.find((photo) => photo.localId === id);
+    if (pendingItem) {
+      URL.revokeObjectURL(pendingItem.objectUrl);
+      objectUrlsRef.current.delete(pendingItem.objectUrl);
+      setPending((prev) => prev.filter((photo) => photo.localId !== id));
+      return;
+    }
+    deleteMutation.mutate(id);
+  };
+
+  const uploadDraftsAfterCreate = async (newCourseId: string): Promise<File[]> => {
+    const drafts = pending.filter((photo) => photo.status === 'draft');
+    const failedFiles: File[] = [];
+    for (const draft of drafts) {
+      setPending((prev) => prev.map((photo) => (photo.localId === draft.localId ? { ...photo, status: 'uploading' } : photo)));
+      // Awaited in sequence on purpose: the server has one upload endpoint
+      // per file, so a course's photos land in the order they were added
+      // only by finishing each request before starting the next.
+      // eslint-disable-next-line no-await-in-loop
+      const succeeded = await runUpload(newCourseId, draft.localId, draft.file);
+      if (!succeeded) failedFiles.push(draft.file);
+    }
+    return failedFiles;
   };
 
   const photos: GalleryPhoto[] = [
     ...savedPhotos.map((photo) => ({ id: photo.id, url: photo.url, status: 'uploaded' as const })),
-    ...pending.map((photo) => ({ id: photo.localId, url: photo.objectUrl, status: photo.status })),
+    ...pending.map((photo) => ({ id: photo.localId, url: photo.objectUrl, status: photo.status === 'draft' ? ('uploaded' as const) : photo.status })),
   ];
 
-  return { photos, addFiles, retry, remove: (photoId: string) => deleteMutation.mutate(photoId) };
+  return { photos, addFiles, retry, remove, uploadDraftsAfterCreate };
 };

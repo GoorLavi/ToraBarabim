@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { ReadOnlyField } from '~/components/ReadOnlyField/ReadOnlyField';
@@ -12,12 +11,12 @@ import {
 } from '~/consts';
 import {
   addressLine,
-  courseClosedLineLabel,
   courseOpeningDateLongLabel,
+  coursePath,
+  courseStillListed,
   courseTopicLabel,
   formatCourseScope,
   formatPriceShekels,
-  placePath,
   venuePanelCityName,
 } from '~/helpers';
 
@@ -31,12 +30,7 @@ import * as styles from './styles';
 // fixed values instead of inputs, plus the two actions that still apply to
 // a closed course.
 export const ReadOnlyCourseRecord = styled(({ className, course, onOpenDuplicate, onOpenDelete }: ReadOnlyCourseRecordProps) => {
-  const venueValue =
-    course.venue.kind === 'place' ? (
-      <Link to={placePath({ id: course.venue.placeId, slug: course.venue.slug })}>{course.venue.name}</Link>
-    ) : (
-      course.venue.name
-    );
+  const stillListed = course.lifecycle.status === 'closed' && courseStillListed(course.lifecycle.leavesListsOn);
 
   return (
     <div className={className}>
@@ -45,7 +39,11 @@ export const ReadOnlyCourseRecord = styled(({ className, course, onOpenDuplicate
       </h1>
       <p className="explanation">{consts.RECORD_EXPLANATION}</p>
 
-      {course.lifecycle.status === 'closed' && <p className="closedLine">{courseClosedLineLabel(course.lifecycle)}</p>}
+      {stillListed && (
+        <a className="viewOnSite" href={coursePath(course)} target="_blank" rel="noreferrer">
+          {consts.VIEW_ON_SITE_LABEL}
+        </a>
+      )}
 
       <img className="cover" src={course.coverUrl} alt="" />
 
@@ -64,14 +62,6 @@ export const ReadOnlyCourseRecord = styled(({ className, course, onOpenDuplicate
         {course.priceShekels !== undefined && <ReadOnlyField label={COURSE_FACT_PRICE_LABEL} value={formatPriceShekels(course.priceShekels)} />}
       </div>
 
-      {course.venue.kind === 'place' && (
-        <p className="explanation">
-          {'הקורס רשום למקום '}
-          {venueValue}
-          {' באתר.'}
-        </p>
-      )}
-
       {course.photos.length > 0 && (
         <div className="gallery">
           <span className="heading">{consts.GALLERY_HEADING}</span>
@@ -84,9 +74,8 @@ export const ReadOnlyCourseRecord = styled(({ className, course, onOpenDuplicate
       )}
 
       <div className="dangerZone">
-        <span className="heading">{consts.DANGER_ZONE_HEADING}</span>
         <button type="button" className="action" onClick={onOpenDuplicate}>
-          {formConsts.DUPLICATE_LABEL}
+          {consts.DUPLICATE_LABEL}
         </button>
         <button type="button" className="action delete" onClick={onOpenDelete}>
           {formConsts.DELETE_LABEL}

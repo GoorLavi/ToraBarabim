@@ -39,7 +39,19 @@ const loadImageDimensions = (file: File): Promise<{ objectUrl: string; width: nu
 // crop step (`components/PhotoCropStep`): a rabbi's portrait is still
 // cropped on display with no tool of its own, exactly as before.
 export const PhotoPicker = styled(
-  ({ className, previewUrl, hasExistingPhoto, onSelectFile, errorMessage, uploadStatus, onRetryUpload, aspectRatio = '3:4', minWidth, minHeight }: PhotoPickerProps) => {
+  ({
+    className,
+    previewUrl,
+    hasExistingPhoto,
+    onSelectFile,
+    errorMessage,
+    uploadStatus,
+    onRetryUpload,
+    aspectRatio = '3:4',
+    minWidth,
+    minHeight,
+    cropHelpOverride,
+  }: PhotoPickerProps) => {
     const ratioValue = helpers.aspectRatioValue(aspectRatio);
     const hasPhoto = Boolean(previewUrl || hasExistingPhoto);
     const isUploading = uploadStatus === 'uploading';
@@ -147,7 +159,9 @@ export const PhotoPicker = styled(
                 <ul className="help">
                   <li className="helpItem">{consts.PHOTO_HELP_TYPE}</li>
                   <li className="helpItem">{helpers.photoHelpSize(aspectRatio, minWidth, minHeight)}</li>
-                  {consts.PHOTO_HELP_CROP[aspectRatio] && <li className="helpItem">{consts.PHOTO_HELP_CROP[aspectRatio]}</li>}
+                  {(cropHelpOverride ?? consts.PHOTO_HELP_CROP[aspectRatio]) && (
+                    <li className="helpItem">{cropHelpOverride ?? consts.PHOTO_HELP_CROP[aspectRatio]}</li>
+                  )}
                 </ul>
               )}
             </>

@@ -28,8 +28,15 @@ const openSearch = async (canvasElement: HTMLElement) => {
   return canvas;
 };
 
-export const RabbiSelected: Story = {
-  args: { teacher: { kind: 'rabbi', rabbi: avraham } },
+// Nothing chosen yet: the search trigger, the "או" divider, and the
+// free-text field all visible at once, the same fork `PlacePicker` uses.
+export const NothingChosen: Story = {
+  args: { teacher: { kind: 'named', name: '' } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText(consts.OR_LABEL)).toBeInTheDocument();
+    await expect(canvas.getByLabelText(consts.NAMED_LABEL)).toBeInTheDocument();
+  },
 };
 
 export const SearchResults: Story = {
@@ -42,8 +49,8 @@ export const SearchResults: Story = {
 };
 
 // A course whose teacher carries no live rabbi link (the editor's own "אין
-// קישור לרב" wording, pass 2 brief): the picker opens straight into the
-// free-text mode, pre-filled, never a search box with nothing selected.
+// קישור לרב" wording, pass 2 brief): the free-text field is pre-filled, the
+// search and the divider stay in place beside it.
 export const NamedFallback: Story = {
   args: { teacher: { kind: 'named', name: 'הרב פלוני אלמוני' } },
   play: async ({ canvasElement }) => {
@@ -51,27 +58,35 @@ export const NamedFallback: Story = {
     const input = canvas.getByLabelText(consts.NAMED_LABEL) as HTMLInputElement;
     await expect(input.value).toEqual('הרב פלוני אלמוני');
     await expect(canvas.getByText(consts.NAMED_HELP)).toBeInTheDocument();
-    await expect(canvas.queryByRole('button', { name: consts.SEARCH_PLACEHOLDER })).not.toBeInTheDocument();
   },
 };
 
-// Switching away from a chosen rabbi, toward a free-text name: the toggle
-// itself never carries the previous rabbi forward into `name`.
-export const SwitchingToNamedMode: Story = {
+// Selecting a rabbi locks the picker: the search and the divider disappear,
+// replaced by the chosen name and a "ביטול הבחירה" way back to free text.
+export const RabbiSelected: Story = {
+  args: { teacher: { kind: 'rabbi', rabbi: avraham } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText('הרב אברהם כהן')).toBeInTheDocument();
+    await expect(canvas.queryByText(consts.OR_LABEL)).not.toBeInTheDocument();
+    await expect(canvas.queryByLabelText(consts.NAMED_LABEL)).not.toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: consts.CLEAR_SELECTION_LABEL })).toBeInTheDocument();
+  },
+};
+
+export const ClearingSelectionReturnsToFreeText: Story = {
   args: { teacher: { kind: 'rabbi', rabbi: avraham } },
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('radio', { name: consts.NAMED_MODE_LABEL }));
-    await expect(canvas.findByLabelText(consts.NAMED_LABEL)).resolves.toBeInTheDocument();
-    await userEvent.type(canvas.getByLabelText(consts.NAMED_LABEL), 'א');
-    await expect(args.onChangeTeacher).toHaveBeenCalledWith({ kind: 'named', name: 'א' });
+    await userEvent.click(canvas.getByRole('button', { name: consts.CLEAR_SELECTION_LABEL }));
+    await expect(args.onChangeTeacher).toHaveBeenCalledWith({ kind: 'named', name: '' });
   },
 };
 
 export const WithFieldError: Story = {
-  args: { teacher: { kind: 'named', name: '' }, errorMessage: 'יש לבחור מי מלמד את הקורס' },
+  args: { teacher: { kind: 'named', name: '' }, errorMessage: consts.REQUIRED_TEACHER_ERROR },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.findByText('יש לבחור מי מלמד את הקורס')).resolves.toBeInTheDocument();
+    await expect(canvas.findByText(consts.REQUIRED_TEACHER_ERROR)).resolves.toBeInTheDocument();
   },
 };

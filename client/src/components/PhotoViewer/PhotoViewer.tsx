@@ -8,6 +8,8 @@ import * as styles from './styles';
 
 // The full-screen photo viewer, whole photos never cropped (unlike
 // `CourseGallery`'s own square frame), portalled through `ResponsiveSheet`.
+// Lifted from `CoursePage/components/CourseGallery/components/` once
+// `AdminPanel/CourseViewPage` became a second caller.
 export const PhotoViewer = styled(({ className, courseName, photos, activeIndex, onNext, onPrev, onDismiss }: PhotoViewerProps) => {
   const activePhoto = photos[activeIndex];
   const hasMultiple = photos.length > 1;

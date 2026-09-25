@@ -6,7 +6,10 @@ import type {
   AdminUser,
   AdminUserListItem,
   AdminUserListResponse,
+  CourseListResponse,
+  CourseResponse,
   CreateAdminUserRequest,
+  CreateCourseRequest,
   CreateDedicationRequest,
   CreateLessonExceptionRequest,
   CreateLessonRequest,
@@ -18,6 +21,7 @@ import type {
   DedicationPreviewRequest,
   DedicationPreviewResponse,
   DeleteImpactPreview,
+  DuplicateCourseRequest,
   LessonExceptionListResponse,
   LessonExceptionResponse,
   LessonListResponse,
@@ -32,6 +36,7 @@ import type {
   ResetRabbiPasswordResponse,
   TakedownDedicationRequest,
   UpdateAdminUserRequest,
+  UpdateCourseRequest,
   UpdateDedicationRequest,
   UpdateLessonExceptionRequest,
   UpdateLessonRequest,
@@ -41,7 +46,8 @@ import type {
   UpdateRabbiRequest,
 } from '@torabarabim/common';
 
-import type { AdminDedicationFilters, AdminLessonFilters, AdminPlaceFilters, AdminRabbiFilters, AdminUserFilters } from './models';
+import { MAX_ADMIN_PAGE_SIZE } from './consts';
+import type { AdminCourseFilters, AdminDedicationFilters, AdminLessonFilters, AdminPlaceFilters, AdminRabbiFilters, AdminUserFilters } from './models';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
@@ -259,6 +265,78 @@ export const updateAdminLessonException = (
 // 204 on success. 404 if the lesson or exception does not exist.
 export const deleteAdminLessonException = (lessonId: string, exceptionId: number): Promise<void> =>
   request(url(`/v1/admin/lessons/${lessonId}/exceptions/${exceptionId}`).toString(), { method: 'DELETE' });
+
+// GET /v1/admin/courses
+// 200 with CourseListResponse, including an empty items array.
+export const fetchAdminCourses = (filters: AdminCourseFilters): Promise<CourseListResponse> => {
+  const target = url('/v1/admin/courses');
+  if (filters.q) target.searchParams.set('q', filters.q);
+  if (filters.status) target.searchParams.set('status', filters.status);
+  if (filters.rabbiId) target.searchParams.set('rabbiId', filters.rabbiId);
+  target.searchParams.set('page', String(filters.page ?? 1));
+  target.searchParams.set('pageSize', String(filters.pageSize ?? MAX_ADMIN_PAGE_SIZE));
+  return request(target.toString());
+};
+
+// GET /v1/admin/courses/:id
+// 200 with CourseResponse. 404 if the course does not exist.
+export const fetchAdminCourse = (id: string): Promise<CourseResponse> => request(url(`/v1/admin/courses/${id}`).toString());
+
+// POST /v1/admin/courses (multipart: one `course` JSON part, one `cover` file part)
+// 201 with CourseResponse. 400 cover_required / invalid_request / unknown_city /
+// unknown_place / rabbanit_audience_must_be_women. 413 too large. 415 wrong content type.
+export const createAdminCourse = (body: CreateCourseRequest, cover: File): Promise<CourseResponse> => {
+  const formData = new FormData();
+  formData.append('course', JSON.stringify(body));
+  formData.append('cover', cover);
+  return request(url('/v1/admin/courses').toString(), { method: 'POST', body: formData });
+};
+
+// PATCH /v1/admin/courses/:id
+// 200 with CourseResponse. 400 invalid_request / unknown_city / unknown_place /
+// rabbanit_audience_must_be_women. 404 as above. 409 course_closed.
+export const updateAdminCourse = (id: string, body: UpdateCourseRequest): Promise<CourseResponse> =>
+  request(url(`/v1/admin/courses/${id}`).toString(), { method: 'PATCH', headers: JSON_HEADERS, body: JSON.stringify(body) });
+
+// POST /v1/admin/courses/:id/cover (multipart, one `cover` file part)
+// 200 with CourseResponse. 400/413/415 as create. 404 as above.
+export const uploadAdminCourseCover = (id: string, file: File): Promise<CourseResponse> => {
+  const formData = new FormData();
+  formData.append('cover', file);
+  return request(url(`/v1/admin/courses/${id}/cover`).toString(), { method: 'POST', body: formData });
+};
+
+// POST /v1/admin/courses/:id/photos (multipart, one `photo` file part)
+// 200 with CourseResponse. 409 course_photo_limit at 8. 404 as above.
+export const uploadAdminCoursePhoto = (id: string, file: File): Promise<CourseResponse> => {
+  const formData = new FormData();
+  formData.append('photo', file);
+  return request(url(`/v1/admin/courses/${id}/photos`).toString(), { method: 'POST', body: formData });
+};
+
+// DELETE /v1/admin/courses/:id/photos/:photoId
+// 200 with CourseResponse. 404 if the course or the photo does not exist.
+export const deleteAdminCoursePhoto = (id: string, photoId: string): Promise<CourseResponse> =>
+  request(url(`/v1/admin/courses/${id}/photos/${photoId}`).toString(), { method: 'DELETE' });
+
+// POST /v1/admin/courses/:id/close
+// 200 with CourseResponse. 409 registration_already_closed. 404 as above.
+export const closeAdminCourse = (id: string): Promise<CourseResponse> =>
+  request(url(`/v1/admin/courses/${id}/close`).toString(), { method: 'POST' });
+
+// POST /v1/admin/courses/:id/full
+// 200 with CourseResponse. 409 registration_already_closed. 404 as above.
+export const markAdminCourseFull = (id: string): Promise<CourseResponse> =>
+  request(url(`/v1/admin/courses/${id}/full`).toString(), { method: 'POST' });
+
+// POST /v1/admin/courses/:id/duplicate
+// 201 with the new CourseResponse. 400 invalid_request. 404 as above.
+export const duplicateAdminCourse = (id: string, body: DuplicateCourseRequest): Promise<CourseResponse> =>
+  request(url(`/v1/admin/courses/${id}/duplicate`).toString(), { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(body) });
+
+// DELETE /v1/admin/courses/:id
+// 204 on success. 404 as above. Cascades to the course's own photos server-side.
+export const deleteAdminCourse = (id: string): Promise<void> => request(url(`/v1/admin/courses/${id}`).toString(), { method: 'DELETE' });
 
 // GET /v1/admin/admin-users
 // 200 with AdminUserListResponse, including an empty items array.

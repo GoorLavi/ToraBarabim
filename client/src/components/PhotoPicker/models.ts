@@ -57,4 +57,9 @@ export interface PhotoPickerProps {
   // so its picker never enters either state and renders exactly as before.
   uploadStatus?: PhotoPickerUploadStatus;
   onRetryUpload?: () => void;
+  // Replaces `consts.PHOTO_HELP_CROP[aspectRatio]`'s own line for a caller
+  // whose crop sentence is not about a rabbi's portrait: the course cover
+  // is '3:4' too, but has no face to keep off the edge. Omitted, every
+  // '3:4' or '16:9' caller keeps the shared line exactly as before.
+  cropHelpOverride?: string;
 }

@@ -2,9 +2,12 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Route, Routes } from 'react-router-dom';
 import { expect, within } from 'storybook/test';
 
+import * as courseFormFieldsConsts from '~/components/CourseFormFields/consts';
+import * as galleryFieldConsts from '~/components/GalleryField/consts';
 import { courseResponseFixture } from '~/courseFixture';
 import { rabbiFixture } from '~/rabbiFixture';
 import { panelShellDecorator } from '~/storyDecorators';
+import { installMockFetch, jsonResponse, uploadGeneratedFileToInput } from '~/storyMocks';
 
 import { errorResolver, http, jsonResolver, loadingResolver } from '../../../.storybook/apiMocks';
 import * as consts from './consts';
@@ -39,16 +42,16 @@ const meta: Meta<typeof CourseFormPage> = {
 export default meta;
 type Story = StoryObj<typeof CourseFormPage>;
 
-// A blank form: no cover picked yet, the gallery replaced by its own
-// after-first-save note (a course with no id has no photos endpoint to
-// upload to).
+// A blank form: no cover picked yet, and the gallery field already usable
+// (design brief round 3, item 2: a create holds its own gallery locally and
+// only uploads it once the course itself exists).
 export const CreateMode: Story = {
   decorators: [withRoute('/courses/new')],
   parameters: { apiMocks: { handlers: { profile: profileHandler() } } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.findByRole('heading', { name: consts.NEW_HEADING })).resolves.toBeInTheDocument();
-    await expect(canvas.getByText(consts.GALLERY_AFTER_FIRST_SAVE_NOTE)).toBeInTheDocument();
+    await expect(canvas.getByText(courseFormFieldsConsts.GALLERY_FIELD_LABEL)).toBeInTheDocument();
   },
 };
 
@@ -114,6 +117,38 @@ export const EditModeClosedShowsReadOnlyRecord: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.findByText('הלכות שבת מעשיות')).resolves.toBeInTheDocument();
     await expect(canvas.queryByRole('button', { name: consts.SAVE_LABEL })).not.toBeInTheDocument();
-    await expect(canvas.getByRole('button', { name: 'שכפול הקורס' })).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: 'שכפול לתאריך חדש' })).toBeInTheDocument();
+  },
+};
+
+// design brief round 3, item 2: a picked gallery file, before the course
+// itself exists, renders as a normal tile with no request to the photos
+// endpoint, which does not exist yet for a course with no id.
+export const CreateModeGalleryStaysLocalUntilSaved: Story = {
+  decorators: [withRoute('/courses/new')],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole('heading', { name: consts.NEW_HEADING });
+
+    let photoUploadRequestCount = 0;
+    const restoreFetch = installMockFetch((url) => {
+      if (!url.pathname.endsWith('/photos')) return null;
+      photoUploadRequestCount += 1;
+      return jsonResponse(200, {});
+    });
+
+    try {
+      const galleryAddLabel = await canvas.findByText(galleryFieldConsts.GALLERY_ADD_LABEL);
+      const galleryInput = galleryAddLabel.closest('.addTile')?.querySelector<HTMLInputElement>('input[type="file"]');
+      if (!galleryInput) throw new Error('CourseFormPage story: gallery file input not found');
+
+      await uploadGeneratedFileToInput(galleryInput, 800, 800);
+
+      await expect(canvas.findByText('1 מתוך 8')).resolves.toBeInTheDocument();
+      await expect(canvas.getByRole('button', { name: 'הסרת תמונה 1' })).toBeInTheDocument();
+      expect(photoUploadRequestCount).toBe(0);
+    } finally {
+      restoreFetch();
+    }
   },
 };

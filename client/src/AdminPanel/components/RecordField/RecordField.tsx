@@ -1,4 +1,5 @@
 import classNames from 'classnames';
+import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 import type { RecordFieldProps } from './models';
@@ -8,11 +9,17 @@ import * as styles from './styles';
 // RabbiViewPage): plain text, no fill, no border, distinct from
 // `ReadOnlyField`, which reads as a disabled form input and belongs inside
 // an otherwise-editable form instead.
-export const RecordField = styled(({ className, label, value, isEmpty = false }: RecordFieldProps) => (
+export const RecordField = styled(({ className, label, value, isEmpty = false, linkTo }: RecordFieldProps) => (
   <div className={classNames(className, { empty: isEmpty })}>
     <span className="label">{label}</span>
     <p className="value">
-      <bdi>{value}</bdi>
+      {linkTo ? (
+        <Link className="valueLink" to={linkTo}>
+          <bdi>{value}</bdi>
+        </Link>
+      ) : (
+        <bdi>{value}</bdi>
+      )}
     </p>
   </div>
 ))`

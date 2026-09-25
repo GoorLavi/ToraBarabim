@@ -1,6 +1,6 @@
 import type { AdminDedicationState, DedicationHonorific, DedicationPreviewRequest, DedicationType, HonoredGender, RabbiProminence, Weekday } from '@torabarabim/common';
 
-import type { AdminDedicationFilters, AdminLessonFilters, AdminPlaceFilters, AdminRabbiFilters, AdminUserFilters } from './models';
+import type { AdminCourseFilters, AdminDedicationFilters, AdminLessonFilters, AdminPlaceFilters, AdminRabbiFilters, AdminUserFilters } from './models';
 
 // Mirrors `server/src/service/admin-shared/consts.ts`'s `MAX_ADMIN_PAGE_SIZE`.
 // Used as the page size for "fetch the whole list once and join in memory"
@@ -108,6 +108,8 @@ export const ADMIN_QUERY_KEYS = {
   rabbiAccount: (id: string) => ['admin', 'rabbis', id, 'account'] as const,
   lessons: (filters: AdminLessonFilters) => ['admin', 'lessons', 'search', filters] as const,
   lesson: (id: string) => ['admin', 'lessons', id] as const,
+  courses: (filters: AdminCourseFilters) => ['admin', 'courses', 'search', filters] as const,
+  course: (id: string) => ['admin', 'courses', id] as const,
   lessonOccurrences: (lessonId: string) => ['admin', 'lessons', lessonId, 'occurrences'] as const,
   lessonExceptions: (lessonId: string) => ['admin', 'lessons', lessonId, 'exceptions'] as const,
   adminUsers: (filters: AdminUserFilters) => ['admin', 'admin-users', 'search', filters] as const,
@@ -129,6 +131,10 @@ export const ADMIN_ROUTES = {
   lessonNew: '/admin/lessons/new',
   lessonView: (id: string) => `/admin/lessons/${id}`,
   lessonEdit: (id: string) => `/admin/lessons/${id}/edit`,
+  courses: '/admin/courses',
+  courseNew: '/admin/courses/new',
+  courseView: (id: string) => `/admin/courses/${id}`,
+  courseEdit: (id: string) => `/admin/courses/${id}/edit`,
   rabbis: '/admin/rabbis',
   rabbiNew: '/admin/rabbis/new',
   rabbiView: (id: string) => `/admin/rabbis/${id}`,

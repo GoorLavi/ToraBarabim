@@ -208,7 +208,7 @@ export const courseOpeningDateLongLabel = (isoDate: string): string => `${COURSE
 export const courseOpeningDateCompactLabel = (isoDate: string): string =>
   `${COURSE_OPENING_DATE_PREFIX}${courseCompactDateFormatter.format(new Date(`${isoDate}T00:00:00Z`))}`;
 
-const singularOrCount = (count: number, singular: string, pluralNoun: string): string => (count === 1 ? singular : `${count}${NBSP}${pluralNoun}`);
+export const singularOrCount = (count: number, singular: string, pluralNoun: string): string => (count === 1 ? singular : `${count}${NBSP}${pluralNoun}`);
 
 // Joins facts with "·", the space before it non-breaking (bound to the
 // item before it, design brief B item 3) and the space after it a normal
@@ -232,10 +232,15 @@ export const formatCourseScope = (weeks: number, sessions: number, hours: number
 // `full` (never "תפוסה מלאה מ־", which would repeat the tag beside it),
 // and "ירד" once the course has actually left the public lists (editor's
 // exact wording, pass 2 brief).
+// Whether a closed course is still on the public lists (its own week has
+// not yet passed): read by `courseClosedLineLabel` below for its verb, and
+// by the panels' own read-only records to decide whether "לעמוד הקורס
+// באתר" still applies.
+export const courseStillListed = (leavesListsOn: string): boolean => todayInIsrael() < leavesListsOn;
+
 export const courseClosedLineLabel = (lifecycle: { reason: 'closed' | 'full'; closedOn: string; leavesListsOn: string }): string => {
   const verb = lifecycle.reason === 'full' ? 'סומן' : 'נסגרה';
-  const hasLeftLists = todayInIsrael() >= lifecycle.leavesListsOn;
-  const leaveVerb = hasLeftLists ? 'ירד' : 'יורד';
+  const leaveVerb = courseStillListed(lifecycle.leavesListsOn) ? 'יורד' : 'ירד';
   return `${verb} ב־${israelDayMonthLabel(lifecycle.closedOn)} · הקורס ${leaveVerb} מהרשימות באתר ב־${israelDayMonthLabel(lifecycle.leavesListsOn)}`;
 };
 

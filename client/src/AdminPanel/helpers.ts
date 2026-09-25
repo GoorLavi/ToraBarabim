@@ -1,9 +1,31 @@
-import type { AdminDedication, Lesson, Rabbi, Weekday } from '@torabarabim/common';
+import type { AdminDedication, CourseResponse, Lesson, Rabbi, Weekday } from '@torabarabim/common';
 
+import { COURSE_STATE_TAG_CLOSED, COURSE_STATE_TAG_FULL, COURSE_STATE_TAG_OPEN } from '~/consts';
 import { rabbiDisplayName } from '~/helpers';
 
 import { AdminApiError } from './api';
 import * as consts from './consts';
+
+// The bucket a course's own `lifecycle` falls into, splitting the server's
+// single `closed` status by `reason`: the server's own filter enum has no
+// `full` value of its own. Shared by `CoursesListPage` (its filter and
+// sort) and `CourseViewPage`'s own preview card once it became a second
+// caller.
+export type CourseStatusBucket = 'notOpen' | 'open' | 'full' | 'closed';
+
+export const courseStatusBucket = (course: CourseResponse): CourseStatusBucket => {
+  if (course.lifecycle.status !== 'closed') return course.lifecycle.status;
+  return course.lifecycle.reason === 'full' ? 'full' : 'closed';
+};
+
+// "Registration open" covers both `notOpen` and `open` (~/CoursePage/consts.ts's
+// own COURSE_STATE_TAG_OPEN comment).
+export const adminCourseStatusTagLabel = (course: CourseResponse): string => {
+  const bucket = courseStatusBucket(course);
+  if (bucket === 'full') return COURSE_STATE_TAG_FULL;
+  if (bucket === 'closed') return COURSE_STATE_TAG_CLOSED;
+  return COURSE_STATE_TAG_OPEN;
+};
 
 // Used to prefill a new account's username field from the account's full
 // name (e.g. "Yogev Malka" -> "yogevmalka"). The admin can still edit the

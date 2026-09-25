@@ -13,6 +13,7 @@ import { useAdminLogout } from './useAdminLogout';
 
 const BASE_TAB_ITEMS: PanelTabNavItem[] = [
   { to: ADMIN_ROUTES.lessons, label: consts.LESSONS_TAB_LABEL },
+  { to: ADMIN_ROUTES.courses, label: consts.COURSES_TAB_LABEL },
   { to: ADMIN_ROUTES.rabbis, label: consts.RABBIS_TAB_LABEL },
   { to: ADMIN_ROUTES.places, label: consts.PLACES_TAB_LABEL },
   { to: ADMIN_ROUTES.dedications, label: consts.DEDICATIONS_TAB_LABEL },

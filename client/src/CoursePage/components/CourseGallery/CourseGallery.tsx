@@ -2,7 +2,8 @@ import { useState } from 'react';
 import classNames from 'classnames';
 import styled from 'styled-components';
 
-import { PhotoViewer } from './components/PhotoViewer/PhotoViewer';
+import { PhotoViewer } from '~/components/PhotoViewer/PhotoViewer';
+
 import * as consts from './consts';
 import { clampedIndex } from './helpers';
 import type { CourseGalleryProps } from './models';

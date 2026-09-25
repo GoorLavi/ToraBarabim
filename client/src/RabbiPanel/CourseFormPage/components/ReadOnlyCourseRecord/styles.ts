@@ -19,13 +19,14 @@ export const ReadOnlyCourseRecord = css(
     line-height: ${theme.typography.body.phone.lineHeight};
   }
 
-  > .closedLine {
-    padding: ${theme.spacing.md};
-    border-radius: ${theme.radii.sm};
-    background: ${theme.colors.primarySoft};
-    color: ${theme.colors.text};
+  > .viewOnSite {
+    align-self: flex-start;
+    min-block-size: 40px;
+    color: ${theme.colors.primary};
+    font-weight: ${theme.typography.fontWeight.semiBold};
     font-size: ${theme.typography.secondary.phone.fontSize};
     line-height: ${theme.typography.secondary.phone.lineHeight};
+    text-decoration: underline;
   }
 
   > .cover {
@@ -72,13 +73,6 @@ export const ReadOnlyCourseRecord = css(
     gap: ${theme.spacing.sm};
     padding-block-start: ${theme.spacing.lg};
     border-block-start: 1px solid ${theme.colors.border};
-
-    > .heading {
-      color: ${theme.colors.textSecondary};
-      font-weight: ${theme.typography.fontWeight.semiBold};
-      font-size: ${theme.typography.secondary.phone.fontSize};
-      line-height: ${theme.typography.secondary.phone.lineHeight};
-    }
 
     > .action {
       align-self: flex-start;

@@ -23,7 +23,6 @@ export const GalleryField = styled(({ className, photos, onAddFiles, onRemove, o
   return (
     <div className={className}>
       <div className="header">
-        <span className="heading">{consts.GALLERY_HEADING}</span>
         <span className="count">{consts.galleryCountLabel(photos.length)}</span>
       </div>
 
@@ -67,7 +66,6 @@ export const GalleryField = styled(({ className, photos, onAddFiles, onRemove, o
       </div>
 
       {!canAddMore && <p className="maxReachedNote">{consts.GALLERY_MAX_REACHED_NOTE}</p>}
-      <p className="help">{consts.GALLERY_HELP_LINE}</p>
     </div>
   );
 })`

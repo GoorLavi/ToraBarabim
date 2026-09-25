@@ -52,6 +52,12 @@ export const DuplicateCourseSheet = css(
           line-height: ${theme.typography.body.phone.lineHeight};
         }
 
+        > .helper {
+          color: ${theme.colors.textSecondary};
+          font-size: ${theme.typography.secondary.phone.fontSize};
+          line-height: ${theme.typography.secondary.phone.lineHeight};
+        }
+
         > .error {
           color: ${theme.colors.danger};
           font-size: ${theme.typography.secondary.phone.fontSize};

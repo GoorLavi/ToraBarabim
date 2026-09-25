@@ -1,29 +1,32 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fireEvent, fn, userEvent, waitFor, within } from 'storybook/test';
 
+import * as consts from '~/components/DuplicateCourseSheet/consts';
 import { courseResponseFixture } from '~/courseFixture';
 
 import { errorResolver, http, jsonResolver } from '../../../../../.storybook/apiMocks';
-import * as consts from './consts';
 import { DuplicateCourseSheet } from './DuplicateCourseSheet';
 
-const course = courseResponseFixture({ id: 'course-1', name: 'יסודות האמונה' });
+const course = courseResponseFixture({ id: 'course-1', name: 'יסודות האמונה', cycle: 2 });
 const duplicate = courseResponseFixture({ id: 'course-2', name: 'יסודות האמונה' });
 
 const meta: Meta<typeof DuplicateCourseSheet> = {
   title: 'RabbiPanel/CourseFormPage/DuplicateCourseSheet',
   component: DuplicateCourseSheet,
-  args: { courseId: course.id, courseName: course.name, onDismiss: fn(), onDuplicated: fn() },
+  args: { courseId: course.id, courseName: course.name, sourceCycle: course.cycle, onDismiss: fn(), onDuplicated: fn() },
 };
 
 export default meta;
 type Story = StoryObj<typeof DuplicateCourseSheet>;
 
 export const Default: Story = {
-  play: async () => {
+  play: async ({ canvasElement }) => {
     const canvas = within(document.body);
     await expect(canvas.findByRole('heading', { name: consts.DUPLICATE_COURSE_HEADING })).resolves.toBeInTheDocument();
     await expect(canvas.findByText('יסודות האמונה')).resolves.toBeInTheDocument();
+    // The cycle field is prefilled one higher than the source's own.
+    const cycleInput = (await within(canvasElement).findByLabelText(consts.CYCLE_LABEL)) as HTMLInputElement;
+    await expect(cycleInput.value).toEqual('3');
   },
 };
 
