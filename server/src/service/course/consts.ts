@@ -5,15 +5,14 @@ export const CLOSED_WEEK_DAYS = 7;
 
 export const COURSE_GALLERY_MAX_PHOTOS = 8;
 
-// The cover goes through the rabbi poster's own picker and shares its floor:
-// 900 by 1200, width and height, matching the poster crop the designer's
-// frame names. A gallery photo is never cropped, so it keeps the lighter
-// shorter-side floor: the widest rail tier is 296 CSS px, 592 device px at
-// 2x, and a higher floor would refuse WhatsApp-compressed flyers. Both are
-// hand-mirrored in the client (`client/src/consts.ts`).
-export const COURSE_COVER_MIN_WIDTH = 900;
-export const COURSE_COVER_MIN_HEIGHT = 1200;
-export const COURSE_GALLERY_PHOTO_MIN_SIDE = 600;
+// The owner's call at his hand run: a course photo of any size is accepted,
+// never refused for being small ("לקבל כל גודל, עם אזהרה על טשטוש"). Nothing
+// on the server reads these: they are the soft thresholds the client mirrors
+// (`client/src/consts.ts`) to warn about blur before upload, sized to the
+// card's own render (600 by 800) and the gallery rail's widest tier.
+export const COURSE_COVER_SOFT_MIN_WIDTH = 600;
+export const COURSE_COVER_SOFT_MIN_HEIGHT = 800;
+export const COURSE_GALLERY_SOFT_MIN_SIDE = 600;
 
 export const COURSE_NAME_MAX_LENGTH = 120;
 export const COURSE_DESCRIPTION_MAX_LENGTH = 4000;

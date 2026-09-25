@@ -13,7 +13,7 @@ import * as adminPlaceService from '../src/service/admin-place/admin-place';
 import * as adminRabbiAccountService from '../src/service/admin-rabbi-account/admin-rabbi-account';
 import { RABBI_SESSION_COOKIE_NAME, SESSION_COOKIE_NAME } from '../src/service/admin-auth/consts';
 import * as adminUserService from '../src/service/admin-user/admin-user';
-import { COURSE_COVER_MIN_HEIGHT, COURSE_COVER_MIN_WIDTH, COURSE_GALLERY_MAX_PHOTOS, COURSE_GALLERY_PHOTO_MIN_SIDE } from '../src/service/course/consts';
+import { COURSE_GALLERY_MAX_PHOTOS } from '../src/service/course/consts';
 import { addDays, todayInIsrael } from '../src/service/lesson/israel-time';
 import storage from '../src/storage/storage';
 import { assertDatabaseReachable, buildCourseTestApp, rawClient } from './app-harness';
@@ -31,6 +31,13 @@ const asPostgresError = (error: unknown): postgres.PostgresError | undefined => 
   return cause instanceof postgres.PostgresError ? cause : undefined;
 };
 const CHECK_VIOLATION = '23514';
+
+// Thrown to force a rollback when a raw insert a CHECK should have refused
+// is wrongly accepted: without it the row would commit and outlive the
+// test, the way three `test-course-*` rows once sat in the owner's local
+// database and blocked `ADD CONSTRAINT courses_topic_shape` until he
+// deleted them by hand.
+class UnexpectedInsertSuccess extends Error {}
 
 // `readPngDimensions` reads width/height from fixed byte offsets (16, 20)
 // with no real decode, matching `place-api.test.ts`'s own technique: a
@@ -213,7 +220,7 @@ describe('course API', () => {
     return view;
   };
 
-  const multipartBody = (fields: Record<string, unknown>, coverBytes: Buffer = buildPngBytes(COURSE_COVER_MIN_WIDTH, COURSE_COVER_MIN_HEIGHT)): FormData => {
+  const multipartBody = (fields: Record<string, unknown>, coverBytes: Buffer = buildPngBytes(600, 600)): FormData => {
     const form = new FormData();
     form.append('course', JSON.stringify(fields));
     form.append('cover', new Blob([toBlobPart(coverBytes)], { type: 'image/png' }), 'cover.png');
@@ -469,8 +476,10 @@ describe('course API', () => {
     assert.equal(putCallCount(), 0, 'the guard must run before storage.put');
   });
 
-  // 9. Photo cap and floor (gallery and cover alike).
-  test('the gallery cap, the gallery photo floor, and the cover floor all refuse before storage.put is ever called', async () => {
+  // 9. Photo cap. A photo of any size is accepted (the owner's call at his
+  // hand run): the client warns about blur before upload instead of the
+  // server refusing, so there is no floor left to test here.
+  test('the gallery cap refuses before storage.put is ever called', async () => {
     const rabbiId = await createRabbi();
     const linkedCourseId = await insertCourse({ rabbiId });
     for (let position = 0; position < COURSE_GALLERY_MAX_PHOTOS; position += 1) await insertCoursePhoto(linkedCourseId, position);
@@ -489,45 +498,22 @@ describe('course API', () => {
     const photosAfterCap = await db.select().from(coursePhotos).where(eq(coursePhotos.courseId, linkedCourseId));
     assert.equal(photosAfterCap.length, COURSE_GALLERY_MAX_PHOTOS);
     assert.equal(putCallCount(), 0);
+  });
 
-    const roomyRabbiId = await createRabbi();
-    const roomyCourseId = await insertCourse({ rabbiId: roomyRabbiId });
-    const roomyCookie = await loginAsRabbi(roomyRabbiId);
+  // A course photo of any size is accepted: a tiny cover and a tiny gallery
+  // photo both succeed.
+  test('a cover and a gallery photo well under the old floor are both accepted', async () => {
+    const rabbiId = await createRabbi();
+    const courseId = await insertCourse({ rabbiId });
+    const cookie = await loginAsRabbi(rabbiId);
+    const tinyPng = buildPngBytes(10, 10);
 
-    mock.restoreAll();
     stubStorage();
-    const smallGallerySide = COURSE_GALLERY_PHOTO_MIN_SIDE - 1;
-    const smallRes = await app.inject({
-      method: 'POST',
-      url: `/v1/rabbi/courses/${roomyCourseId}/photos`,
-      headers: { cookie: roomyCookie },
-      payload: singleFileBody(buildPngBytes(smallGallerySide, smallGallerySide)),
-    });
-    assert.equal(smallRes.statusCode, 400);
-    assert.equal(smallRes.json().error, 'photo_too_small');
-    assert.deepEqual(smallRes.json().details, { kind: 'gallery', measuredShorterSide: smallGallerySide, minimum: COURSE_GALLERY_PHOTO_MIN_SIDE });
-    assert.equal(putCallCount(), 0);
+    const coverRes = await app.inject({ method: 'POST', url: `/v1/rabbi/courses/${courseId}/cover`, headers: { cookie }, payload: singleFileBody(tinyPng) });
+    assert.equal(coverRes.statusCode, 200);
 
-    mock.restoreAll();
-    stubStorage();
-    const smallCoverWidth = COURSE_COVER_MIN_WIDTH - 1;
-    const smallCoverHeight = COURSE_COVER_MIN_HEIGHT - 1;
-    const smallCoverRes = await app.inject({
-      method: 'POST',
-      url: `/v1/rabbi/courses/${roomyCourseId}/cover`,
-      headers: { cookie: roomyCookie },
-      payload: singleFileBody(buildPngBytes(smallCoverWidth, smallCoverHeight)),
-    });
-    assert.equal(smallCoverRes.statusCode, 400);
-    assert.equal(smallCoverRes.json().error, 'photo_too_small');
-    assert.deepEqual(smallCoverRes.json().details, {
-      kind: 'cover',
-      measuredWidth: smallCoverWidth,
-      measuredHeight: smallCoverHeight,
-      minWidth: COURSE_COVER_MIN_WIDTH,
-      minHeight: COURSE_COVER_MIN_HEIGHT,
-    });
-    assert.equal(putCallCount(), 0);
+    const photoRes = await app.inject({ method: 'POST', url: `/v1/rabbi/courses/${courseId}/photos`, headers: { cookie }, payload: singleFileBody(tinyPng) });
+    assert.equal(photoRes.statusCode, 201);
   });
 
   // 10. Close and full are final.
@@ -623,16 +609,29 @@ describe('course API', () => {
     const rabbiId = await createRabbi();
     const placeId = await createPlace();
 
-    const rejectsWith = (values: Record<string, unknown>, constraintName: string) =>
-      assert.rejects(
-        () => db.insert(courses).values(values as typeof courses.$inferInsert),
-        (error: unknown) => {
-          const pgError = asPostgresError(error);
-          assert.equal(pgError?.code, CHECK_VIOLATION);
-          assert.equal(pgError?.constraint_name, constraintName);
-          return true;
-        },
-      );
+    // Runs the insert inside a transaction that always rolls back: a
+    // genuine CHECK violation aborts it on its own, and a wrongly accepted
+    // row forces the same rollback via `UnexpectedInsertSuccess`, so
+    // neither ever survives to block a later migration the way it once did.
+    const rejectsWith = async (values: Record<string, unknown>, constraintName: string): Promise<void> => {
+      let capturedError: unknown;
+      try {
+        await db.transaction(async (tx) => {
+          await tx.insert(courses).values(values as typeof courses.$inferInsert);
+          throw new UnexpectedInsertSuccess();
+        });
+      } catch (error) {
+        capturedError = error;
+      }
+
+      if (capturedError instanceof UnexpectedInsertSuccess) {
+        assert.fail(`expected constraint '${constraintName}' to refuse this row, but it was accepted`);
+      }
+
+      const pgError = asPostgresError(capturedError);
+      assert.equal(pgError?.code, CHECK_VIOLATION);
+      assert.equal(pgError?.constraint_name, constraintName);
+    };
 
     await rejectsWith({ ...base, id: `test-course-${uniqueSuffix()}`, rabbiId, teacherName: 'שם', addressName: 'כתובת', addressStreet: 'רחוב', cityCode }, 'courses_teacher_shape');
     await rejectsWith({ ...base, id: `test-course-${uniqueSuffix()}`, rabbiId: null, teacherName: null, addressName: 'כתובת', addressStreet: 'רחוב', cityCode }, 'courses_teacher_shape');
@@ -863,14 +862,19 @@ describe('course API', () => {
     assert.equal(newRow?.teacherName, 'מורה עצמאי');
   });
 
-  // 17. Multipart create succeeds.
+  // 17. Multipart create succeeds, with a cover well under the old floor.
   test('multipart create persists the JSON fields, with the cover key under courses/<id>/', async () => {
     const rabbiId = await createRabbi();
     const cookie = await loginAsRabbi(rabbiId);
     const cityCode = await jerusalemCode();
 
     stubStorage();
-    const res = await app.inject({ method: 'POST', url: '/v1/rabbi/courses', headers: { cookie }, payload: multipartBody(validCourseFields(cityCode, { name: 'קורס חדש' })) });
+    const res = await app.inject({
+      method: 'POST',
+      url: '/v1/rabbi/courses',
+      headers: { cookie },
+      payload: multipartBody(validCourseFields(cityCode, { name: 'קורס חדש' }), buildPngBytes(10, 10)),
+    });
     assert.equal(res.statusCode, 201);
     const body = res.json() as CourseResponse;
     cleanupCourseIds.add(body.id);
@@ -915,8 +919,8 @@ describe('course API', () => {
 
     const form = new FormData();
     form.append('course', JSON.stringify(validCourseFields(cityCode)));
-    form.append('cover', new Blob([toBlobPart(buildPngBytes(COURSE_COVER_MIN_WIDTH, COURSE_COVER_MIN_HEIGHT))], { type: 'image/png' }), 'cover-1.png');
-    form.append('cover', new Blob([toBlobPart(buildPngBytes(COURSE_COVER_MIN_WIDTH, COURSE_COVER_MIN_HEIGHT))], { type: 'image/png' }), 'cover-2.png');
+    form.append('cover', new Blob([toBlobPart(buildPngBytes(600, 600))], { type: 'image/png' }), 'cover-1.png');
+    form.append('cover', new Blob([toBlobPart(buildPngBytes(600, 600))], { type: 'image/png' }), 'cover-2.png');
 
     const res = await app.inject({ method: 'POST', url: '/v1/rabbi/courses', headers: { cookie }, payload: form });
     assert.equal(res.statusCode, 413);

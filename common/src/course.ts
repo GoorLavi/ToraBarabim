@@ -132,13 +132,6 @@ export type CourseErrorBody =
   | { error: 'rabbanit_audience_must_be_women'; message: string; details: { audience: LessonAudience } }
   | { error: 'course_would_be_closed'; message: string; details: { openingDate: string } }
   | { error: 'opening_date_not_future'; message: string; details: { openingDate: string } }
-  | {
-      error: 'photo_too_small';
-      message: string;
-      details:
-        | { kind: 'cover'; measuredWidth: number; measuredHeight: number; minWidth: number; minHeight: number }
-        | { kind: 'gallery'; measuredShorterSide: number; minimum: number };
-    }
   | { error: 'unsupported_file_type'; message: string; details: Record<string, never> }
   | { error: 'cover_required'; message: string; details: Record<string, never> }
   | { error: 'course_closed'; message: string; details: { courseName: string; reason: CloseReason } }

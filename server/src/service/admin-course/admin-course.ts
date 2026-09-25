@@ -23,7 +23,7 @@ import {
   replaceCourseCover,
   setCourseClosed,
   toCourseWriteRecord,
-  validateCourseCoverPhoto,
+  validateCoursePhoto,
   verifyCourseReferences,
   type CourseWriteRecord,
   type JoinedCourseRow,
@@ -100,7 +100,7 @@ export const create = async (input: CreateCourseInput, coverBytes: Buffer, log: 
   // uploaded means a bad `placeId` never triggers an upload at all.
   const columns = await courseColumnsFrom(input, { onPlaceNotFound });
 
-  const { contentType, extension } = validateCourseCoverPhoto(coverBytes);
+  const { contentType, extension } = validateCoursePhoto(coverBytes);
   const id = nanoid();
   const coverKey = `courses/${id}/cover-${nanoid()}.${extension}`;
   await storage.put(coverKey, coverBytes, contentType);

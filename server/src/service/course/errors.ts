@@ -61,30 +61,6 @@ export class UnsupportedCoursePhotoTypeError extends Error {
   }
 }
 
-// Fires when the file's own header is too short or malformed to read real
-// dimensions from, without decoding the image.
-export class MalformedCoursePhotoHeaderError extends Error {
-  constructor(kind: 'jpg' | 'png') {
-    super(`Expected a well-formed ${kind} header to read its dimensions from`);
-    this.name = 'MalformedCoursePhotoHeaderError';
-  }
-}
-
-// Fires when the photo is below its own floor. `kind` decides which floor
-// was checked: the cover against its own width and height (the rabbi
-// poster's floor, `COURSE_COVER_MIN_WIDTH`/`COURSE_COVER_MIN_HEIGHT`), a
-// gallery photo against its shorter side (`COURSE_GALLERY_PHOTO_MIN_SIDE`).
-export class CoursePhotoTooSmallError extends Error {
-  constructor(
-    public readonly kind: 'cover' | 'gallery',
-    public readonly width: number,
-    public readonly height: number,
-  ) {
-    super(`Expected the ${kind} to clear its own floor, got ${width}x${height}`);
-    this.name = 'CoursePhotoTooSmallError';
-  }
-}
-
 // Fires when the uploaded file exceeds the configured upload limit. Maps to 413.
 export class CoursePhotoTooLargeError extends Error {
   constructor(public readonly maxBytes: number) {

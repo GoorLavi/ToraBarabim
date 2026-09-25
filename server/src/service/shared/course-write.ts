@@ -13,12 +13,10 @@ import {
   CourseNotFoundError,
   CoursePhotoNotFoundError,
   CoursePhotoTooLargeError,
-  CoursePhotoTooSmallError,
-  MalformedCoursePhotoHeaderError,
   OpeningDateNotFutureError,
   UnsupportedCoursePhotoTypeError,
 } from '../course/errors';
-import { COURSE_COVER_MIN_HEIGHT, COURSE_COVER_MIN_WIDTH, COURSE_GALLERY_MAX_PHOTOS, COURSE_GALLERY_PHOTO_MIN_SIDE } from '../course/consts';
+import { COURSE_GALLERY_MAX_PHOTOS } from '../course/consts';
 import { courseLifecycle, type CourseLifecycleInput, type CourseLifecycleResult } from '../course/lifecycle';
 import { compareIsoDates, todayInIsrael } from '../lesson/israel-time';
 import storage from '../../storage/storage';
@@ -26,7 +24,7 @@ import type { AddressCityRow, AddressPlaceRow, VenueRef } from './address';
 import { toVenuePanel } from './address';
 import type { DuplicateCourseInput, LessonVenueInputSchema } from './models';
 import { assertAudienceAllowedForHonorific, assertAudienceAllowedForRabbi, getRabbiHonorific } from './rabbanit-guard';
-import { readImageDimensions, sniffJpegOrPng } from './photo-dimensions';
+import { sniffJpegOrPng } from './photo-dimensions';
 import { toRabbiSummary } from './rabbi-summary';
 import { toSlug } from './slug';
 
@@ -398,35 +396,18 @@ export interface ValidatedCoursePhoto {
   extension: 'jpg' | 'png';
 }
 
-// Size, type, and the real dimensions, shared by the cover and the gallery:
-// only the floor each one checks against differs. No aspect-ratio check: the
-// cover's ratio is the picker's job (it crops to 3:4 before upload), and a
-// gallery photo keeps its own ratio outright, so the server never rejects
-// one on shape.
-const validateCoursePhotoShape = (bytes: Buffer): ValidatedCoursePhoto & { width: number; height: number } => {
+// Size and type, shared by the cover and the gallery: the owner's call at
+// his hand run is that a course photo of any size is accepted, and the
+// client warns about blur before upload instead ("לקבל כל גודל, עם אזהרה על
+// טשטוש"), so no dimension is read here at all. No aspect-ratio check
+// either: the cover's ratio is the picker's job (it crops to 3:4 before
+// upload), and a gallery photo keeps its own ratio outright.
+export const validateCoursePhoto = (bytes: Buffer): ValidatedCoursePhoto => {
   const { maxUploadBytes } = loadConfig(process.env);
   if (bytes.byteLength > maxUploadBytes) throw new CoursePhotoTooLargeError(maxUploadBytes);
 
   const kind = sniffJpegOrPng(bytes, () => new UnsupportedCoursePhotoTypeError());
-  const { width, height } = readImageDimensions(bytes, kind, (malformedKind) => new MalformedCoursePhotoHeaderError(malformedKind));
-
-  return { contentType: COURSE_PHOTO_CONTENT_TYPE_BY_KIND[kind], extension: kind, width, height };
-};
-
-// The cover goes through the rabbi poster's own picker and shares its floor:
-// 900 by 1200, width and height, not a shorter-side rule.
-export const validateCourseCoverPhoto = (bytes: Buffer): ValidatedCoursePhoto => {
-  const { contentType, extension, width, height } = validateCoursePhotoShape(bytes);
-  if (width < COURSE_COVER_MIN_WIDTH || height < COURSE_COVER_MIN_HEIGHT) throw new CoursePhotoTooSmallError('cover', width, height);
-  return { contentType, extension };
-};
-
-// A gallery photo is never cropped, so it keeps the lighter shorter-side
-// floor instead of the cover's width-and-height one.
-export const validateCourseGalleryPhoto = (bytes: Buffer): ValidatedCoursePhoto => {
-  const { contentType, extension, width, height } = validateCoursePhotoShape(bytes);
-  if (Math.min(width, height) < COURSE_GALLERY_PHOTO_MIN_SIDE) throw new CoursePhotoTooSmallError('gallery', width, height);
-  return { contentType, extension };
+  return { contentType: COURSE_PHOTO_CONTENT_TYPE_BY_KIND[kind], extension: kind };
 };
 
 // An unlocked read, cheap enough to run before `storage.put` so the common
@@ -482,7 +463,7 @@ export const replaceCourseCover = async (id: string, ownerClause: SQL | undefine
   if (!preCheck) throw new CourseNotFoundError(id);
   assertLockedCourseIsOpen(preCheck, new Date());
 
-  const { contentType, extension } = validateCourseCoverPhoto(bytes);
+  const { contentType, extension } = validateCoursePhoto(bytes);
   const key = `courses/${id}/cover-${nanoid()}.${extension}`;
   await storage.put(key, bytes, contentType);
 
@@ -515,7 +496,7 @@ export const addCourseGalleryPhoto = async (id: string, ownerClause: SQL | undef
   assertLockedCourseIsOpen(preCheck, new Date());
   assertGalleryHasRoom(preCountRows[0]?.count ?? 0);
 
-  const { contentType, extension } = validateCourseGalleryPhoto(bytes);
+  const { contentType, extension } = validateCoursePhoto(bytes);
   const key = `courses/${id}/gallery-${nanoid()}.${extension}`;
   await storage.put(key, bytes, contentType);
 
