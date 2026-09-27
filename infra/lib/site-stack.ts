@@ -210,11 +210,9 @@ export class SiteStack extends Stack {
       // ignores this property, which CDK otherwise warns about on every
       // no-domain synth.
       minimumProtocolVersion: domain ? cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021 : undefined,
-      // A denylist, never an allowlist, and never one naming the United
-      // States: Google, OpenAI, Anthropic and the WhatsApp and Facebook link
-      // previews all fetch from there (0037). A blocked viewer gets
-      // CloudFront's bare 403, not the outage page, because 403 is
-      // deliberately absent from `errorResponses` below.
+      // A denylist (0037). A blocked viewer gets CloudFront's bare 403, not
+      // the outage page, because 403 is deliberately absent from
+      // `errorResponses` below.
       geoRestriction: cloudfront.GeoRestriction.denylist(...BLOCKED_VIEWER_COUNTRIES),
       // Every path not claimed by a more specific behavior below is a
       // document: the home page, a lesson, a rabbi, a city, `not-found`,

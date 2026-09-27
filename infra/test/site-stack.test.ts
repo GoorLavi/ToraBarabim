@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 
 import { App } from 'aws-cdk-lib';
-import { Match, Template } from 'aws-cdk-lib/assertions';
+import { Template } from 'aws-cdk-lib/assertions';
 
 import { BLOCKED_VIEWER_COUNTRIES } from '../lib/consts';
 import { DatabaseStack } from '../lib/database-stack';
@@ -35,17 +35,14 @@ describe('the distribution geographic restriction', () => {
     const template = buildSiteStackTemplate();
 
     template.hasResourceProperties('AWS::CloudFront::Distribution', {
-      DistributionConfig: Match.objectLike({
+      DistributionConfig: {
         Restrictions: {
           GeoRestriction: { RestrictionType: 'blacklist', Locations: BLOCKED_VIEWER_COUNTRIES },
         },
-      }),
+      },
     });
   });
 
-  // Google, OpenAI and Anthropic all crawl from the United States (0037), so
-  // a list that ever names it takes the site out of every search result it
-  // exists to appear in. Israel is the audience.
   test('never names the United States or Israel', () => {
     assert.ok(!BLOCKED_VIEWER_COUNTRIES.includes('US'), 'US must never be blocked at the edge');
     assert.ok(!BLOCKED_VIEWER_COUNTRIES.includes('IL'), 'IL must never be blocked at the edge');
