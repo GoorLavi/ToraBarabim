@@ -1,5 +1,6 @@
 import type { LessonOccurrence, Rabbi } from '@torabarabim/common';
 
+import { AUTOMATED_USER_AGENT_PATTERN } from './consts';
 import type { AppSurface } from './consts';
 import type { ActiveFilters, LessonClickContext, LessonClickProps, NavigationClickProps } from './models';
 
@@ -93,3 +94,11 @@ export const navigationClickProps = (
   rabbiId: teachingRabbi.id,
   rabbiName,
 });
+
+// `navigator.webdriver` is the flag Playwright, Puppeteer and Selenium set;
+// the user agent catches automation that does not. Fails open: a browser
+// that sets neither is counted as a person. The one known false positive,
+// a Cubot phone whose model name contains "bot", costs that visitor's
+// events and nothing the visitor can see.
+export const isAutomatedBrowser = (browser: Pick<Navigator, 'userAgent' | 'webdriver'>): boolean =>
+  browser.webdriver === true || AUTOMATED_USER_AGENT_PATTERN.test(browser.userAgent);

@@ -23,3 +23,10 @@ export const DOCKER_BUILD_CONTEXT_EXCLUDES = [
   '**/.DS_Store',
   '**/coverage',
 ];
+
+// ISO 3166-1 alpha-2 codes CloudFront refuses at the edge (0037). Only a
+// country with no audience and heavy automated traffic belongs here. The
+// crawlers this site wants, Google's, OpenAI's and Anthropic's, all fetch
+// from the United States, so `US` must never appear; test/site-stack.test.ts
+// fails if it does.
+export const BLOCKED_VIEWER_COUNTRIES = ['CN', 'RU'];
