@@ -27,7 +27,7 @@ let isUnavailable = false;
 const queuedEvents: Array<{ name: string; props?: Parameters<Mixpanel['track']>[1] }> = [];
 let pendingSuperProperties: Partial<SuperProperties> = {};
 
-// The queue goes with it, so nothing sits in memory for the rest of the
+// The queue goes with it, so no event sits in memory for the rest of the
 // session with nothing left to drain it.
 const disableTracking = (): void => {
   isUnavailable = true;
