@@ -85,6 +85,12 @@ control exists for. JPG or
 PNG, up to 5MB. The admin form offers a vertical crop control, because a portrait
 photograph is usually taller than the frame and the face has to survive the crop.
 
+**A course's cover is the same frame, 3:4, and it has no floor.** A cover under 600 by 800
+is accepted with a warning that it may look blurred, and its size line is a
+recommendation, `מומלץ לפחות 600 על 800 פיקסלים`, never a limit
+([0049](../docs/decisions/0049-course-photos-have-no-size-floor.md)). The rabbi's poster
+keeps its 900 by 1200 floor and its own help line.
+
 The poster belongs to the rabbi. A per-lesson override is deliberately **not** in the
 first version: every lesson already has an image through its rabbi, and the override
 would add an upload, a crop, a storage path and a second failure mode to the most-used
@@ -210,7 +216,7 @@ Nineteen color tokens. The theme defines all nineteen.
 | `color.primary` | Primary buttons, links, the header band, the date medallion |
 | `color.primaryStrong` | Hover and pressed state of anything using `primary`, and the one deep field that closes the home page |
 | `color.primarySoft` | Tinted background: quiet bands, inactive chips, avatar fallbacks |
-| `color.accent` | Time and date graphics, large numerals. See the contrast rule below |
+| `color.accent` | Time and date graphics, large numerals, and the ring that marks a notice on a photo. See the rules below |
 | `color.accentSoft` | Tinted background in accent contexts |
 | `color.accentOnDark` | The accent, lightened for use on a `primary` or `primaryStrong` field |
 | `color.text` | Primary text |
@@ -220,7 +226,7 @@ Nineteen color tokens. The theme defines all nineteen.
 | `color.border` | Hairlines, card and field outlines |
 | `color.borderOnPrimary` | Hairlines and perforations on a `primary` fill. White at 30% |
 | `color.surfaceOnPrimary` | A quiet raised block on a `primary` fill, such as a tag on the lesson ticket. White at 12% |
-| `color.danger` | Error text. Text only, never a fill |
+| `color.danger` | Error text, and the fill of the one button that confirms a destructive action. See the rule below |
 | `color.dedication` | A dedication's text on the page field. Its `primary`-field counterpart is `accentOnDark`, so the dark variant adds no color of its own |
 | `color.dedicationMuted` | A dedication's closing line on the page field, the one line that steps back |
 | `color.scrim` | The backdrop behind a fixed sheet's panel (a bottom sheet, a drawer): `color.text` at 45% |
@@ -232,6 +238,19 @@ wrong for a 14px label.
 
 Where the accent has to appear on a dark field, use `accentOnDark`. It is tuned to clear
 3:1 against `primary`.
+
+**The accent as a ring marks a notice, never an error.** A photo in a form that is smaller
+than the card needs gets a 2px inset ring in `accent`, drawn as its own layer above the
+image: a border on the tile itself draws underneath the photo and does not show. The ring
+says look at this one, and the line under the grid says why. A failed photo takes `danger`
+on its tile's border instead, so the two never read as the same thing. The ring is a
+graphic, so the text rule above does not bind it.
+
+**`danger` fills exactly one thing: the button that confirms a destructive action**, inside
+the step that asks about it: deleting a lesson, a course or a rabbi, taking down a
+dedication. Its label is `textOnPrimary`, 7.2:1 on `#A32A22`. Everywhere else `danger` is
+text only. An action that is final but destroys nothing, closing a course's registration or
+marking it full, confirms in `primary`: red is kept for loss, so it keeps meaning loss.
 
 The three on-primary tokens are alpha over the fill rather than opaque values, so they
 hold if `primary` ever changes. They are only valid on a `primary` or `primarySoft`
@@ -702,6 +721,92 @@ text take the full width; they have no grid to keep even, and a blank panel in t
 middle of a plum field reads worse than no panel at all (ratified 2026-09-07 and
 extended to the rabbi page when it was designed). Each of the three is a real gap, not
 an oversight, and each needs a fallback of its own.
+
+### The course card (2026-09-29)
+**A course card is the lesson tile, not a second card.** The same 3:4 poster, the same width
+in every rail tier and grid cell, the same body padding, and the same type step at the
+card's own 190px, so a row that mixes lessons and courses keeps one height and one bottom
+edge. There is one card image ratio on the site, and a course does not get its own.
+
+It adds two things and nothing else:
+
+- **The state seal, in the corner the lesson card's time medallion takes, and built the same
+  way:** a `primary` block with an `accentOnDark` hairline, radius `sm`, `sm` in from the
+  corner. Two words: a small one at `Tag and caption` size in regular weight, and the state
+  itself at `Time in a card` (20 / 24, 600), so a course's state reads with exactly the
+  weight a lesson's start time does: `ההרשמה` / `פתוחה`, `תפוסה` / `מלאה`, `ההרשמה` /
+  `נסגרה`.
+- **The opening date line**, where the lesson card has its day and time. Its size follows
+  the card's type step like every supporting line. Its weight does not: from a card 150px
+  wide it is set in `text` at 600, because after the state the date is the course's next
+  fact, and narrower it is `textSecondary` at 400. At 136px and below it switches to the
+  numeric date (`פתיחה ב־3.11`) rather than shrinking.
+
+The body carries the course name on one line, who teaches, the opening date, and the
+audience with the city. The audience phrase never breaks inside itself. The length and the
+price belong to the course page, the way the address belongs to the lesson page.
+
+### A closed course is a state, not a greyed card (2026-09-29)
+A course whose registration has closed, by its date or because it is full, is designed as a
+state of its own. **Nothing is dimmed, struck through or greyed.** A greyed card reads as
+broken, or as an advert nobody took down, and this one is neither: it is an ending, told in
+the site's own colors.
+
+- **On the card, the seal changes and nothing else does.** The closed and full seals add a
+  1px `accentOnDark` rule between the two words. The poster, the body and the card's colors
+  stay as they were.
+- **On the course page, a `primary` panel takes the place of the contact buttons:** a 40 by 2
+  `accentOnDark` rule, the state as its heading at 24 / 32, 700 in `textOnPrimary`, one fact
+  line at `Secondary` in `textOnPrimaryMuted`, and one way onward, a 48px link to the
+  teacher's page on `surfaceOnPrimary` with a `borderOnPrimary` hairline. Radius `lg`,
+  padding `xl`, centred. The phone's fixed contact bar goes with the buttons, so nothing on
+  the page still offers to call.
+
+### Panel navigation below `md` (2026-09-29)
+The admin and rabbi panels' tabs sit in the plum header band as pills, and both panels use
+the one component, `PanelTabNav`. **From `md` up they are one row. Below `md` they are a grid
+of exactly two rows**, and the column count follows the tab count: four tabs read 2 by 2 (the
+rabbi panel), five or six read 3 by 2 (the admin panel; with five, the empty cell is the last
+one, at the inline end of the second row). The grid replaced a row that wrapped on its own,
+which let five tabs run past the screen.
+
+Each cell is 48 high with `sm` between cells: a `pill` in `surfaceOnPrimary` with
+`textOnPrimary`, and the current tab in `surface` with `primary` text. Below `md` a cell's
+inline padding is `sm` rather than the row's `lg`, so the longest label, `מועדים קרובים`,
+stays on one line at 320.
+
+### Lines under a form field (2026-09-29)
+Three kinds of line sit under a field, and **they share one size, `Secondary` (15 / 22, 400),
+and differ by color alone**: help in `textSecondary`, a warning in `text`, a failure in
+`danger`. A warning is advice the person may ignore (this photo is small, and it will be
+saved anyway), so it has to stand apart from help without borrowing the red that says
+something went wrong.
+
+- **Where more than one appears, the order is failure, then warning, then help.**
+- **Under a photo grid the warning is written once**, however many photos it is about, and
+  the photos it is about carry the `accent` ring (see the color rules).
+- **The course cover's warning sits `md` below the picker's help lines.**
+
+A gap remains: the photo picker's own help lines (`JPG או PNG, עד 5MB` and the size line)
+are 14 / 20 regular, a size taken from `Tag and caption` without its weight, while every
+other help line in a form is `Secondary`. They predate this rule, and bringing them to it is
+a separate change.
+
+### Disabled (2026-09-29)
+**A control that is off for now is shown at 60% opacity and takes no pointer events.** One
+treatment for all of them: the save button while a form saves, the photo picker's
+choose-file control and the photo grid's add tile during that save, and every other form
+and panel control that is waiting on something. It keeps its shape, its place and its label,
+so the person can see what will come back. Nothing is hidden, nothing moves when it returns,
+and disabled is never a color of its own.
+
+**An arrow at the end of a row is the one other case, at 40%**: the rails' arrows and the
+course gallery's. An arrow has no label to keep legible, and on a white circle over a photo
+60% still reads as live.
+
+Neither value is a theme token yet. The 0.6 is written into each styles file that uses it,
+and the 0.4 into the arrows'. Lifting both into the theme is a separate change, in the same
+way as the raw z-index values.
 
 ## Open (not decided yet)
 
