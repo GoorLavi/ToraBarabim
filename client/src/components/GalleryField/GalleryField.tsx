@@ -3,7 +3,6 @@ import { useState } from 'react';
 import classNames from 'classnames';
 import styled from 'styled-components';
 
-import { capPhotoSize } from '~/components/PhotoPicker/helpers';
 import { COURSE_GALLERY_SOFT_MIN_SIDE } from '~/consts';
 
 import * as consts from './consts';
@@ -40,11 +39,13 @@ export const GalleryField = styled(({ className, photos, onAddFiles, onRemove, o
     const files = Array.from(event.target.files ?? []).slice(0, consts.COURSE_GALLERY_MAX_PHOTOS - photos.length);
     event.target.value = '';
     if (files.length === 0) return;
-    // No crop step of its own to have already brought an oversized phone
-    // photo under the server's own upload limit (`PhotoPicker.tsx`'s own
-    // non-crop '3:4' path is the other place this same gap existed), so
-    // every picked file runs through the shared cap first.
-    void Promise.all(files.map((file) => capPhotoSize(file))).then((cappedFiles) => onAddFiles(cappedFiles));
+    // Added to the grid, and counted against the cap above, at the pick
+    // itself: `onAddFiles` (`useCourseGalleryPhotos.ts`) shows each file in
+    // the existing uploading state immediately and only caps its size in
+    // the background, so a second pick sees the tiles the first one just
+    // added rather than a gap that invites picking past the cap (reviewer
+    // finding M1).
+    onAddFiles(files);
   };
 
   const smallUploadedCount = photos.filter((photo) => photo.status === 'uploaded' && smallPhotoIds.has(photo.id)).length;

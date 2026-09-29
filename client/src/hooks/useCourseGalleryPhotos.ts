@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { QueryKey } from '@tanstack/react-query';
 import type { CourseResponse } from '@torabarabim/common';
 
+import { capPhotoSize } from '~/components/PhotoPicker/helpers';
 import { TOO_LARGE_ERROR } from '~/components/PhotoPicker/consts';
 import { courseErrorMessage, isCourseErrorCode } from '~/courseErrors';
 import { GALLERY_REMOVE_FAILED_LABEL, GALLERY_UPLOAD_FAILED_LABEL } from '~/components/GalleryField/consts';
@@ -18,7 +19,12 @@ export interface CourseGalleryPhotosApi {
   describeError: (error: unknown) => { code?: string; details?: unknown; status: number } | undefined;
 }
 
-type PendingStatus = 'draft' | 'uploading' | 'failed';
+// 'capping' is the brief span between a pick and the shared size cap
+// resolving (`capPhotoSize`, PhotoPicker/helpers.ts): `photos` below maps it
+// to the same 'uploading' tile the caller already shows a network upload in
+// (GalleryField.tsx), never a state of its own, so capping never reads as a
+// second design.
+type PendingStatus = 'capping' | 'draft' | 'uploading' | 'failed';
 
 interface PendingPhoto {
   localId: string;
@@ -28,6 +34,11 @@ interface PendingPhoto {
   failureReason?: string;
   canRetry: boolean;
 }
+
+// What one pick resolves to once its own cap has run: `undefined` when the
+// tile was removed while still capping, so `uploadDraftsAfterCreate` below
+// never uploads a photo the person already took back out.
+type CappedPick = { localId: string; file: File } | undefined;
 
 export interface CourseGalleryPhotosState {
   photos: GalleryPhoto[];
@@ -81,6 +92,11 @@ export const useCourseGalleryPhotos = (
   );
   const [failedDeletes, setFailedDeletes] = useState<Map<string, { reason: string | undefined; canRetry: boolean }>>(new Map());
   const objectUrlsRef = useRef<Set<string>>(new Set(pending.map((photo) => photo.objectUrl)));
+  // Every in-flight `capPhotoSize` call from `addFiles` below, keyed by the
+  // pick's own local id: `uploadDraftsAfterCreate` awaits these before
+  // reading `pending`, so a pick still capping when save is tapped is not
+  // silently skipped (reviewer finding M1).
+  const cappingRef = useRef<Map<string, Promise<CappedPick>>>(new Map());
 
   useEffect(
     () => () => {
@@ -148,8 +164,37 @@ export const useCourseGalleryPhotos = (
       const localId = crypto.randomUUID();
       const objectUrl = URL.createObjectURL(file);
       objectUrlsRef.current.add(objectUrl);
-      setPending((prev) => [...prev, { localId, file, objectUrl, status: courseId ? 'uploading' : 'draft', canRetry: true }]);
-      if (courseId) void runUpload(courseId, localId, file);
+      // Shown immediately, in the same 'uploading' tile a network upload
+      // itself uses below, from the original file's own preview: the
+      // person sees the pick right away, and the gallery's own count (the
+      // cap `GalleryField.tsx` checks against) reflects it right away too,
+      // rather than only once the cap below has resolved (reviewer finding
+      // M1). The object URL never changes even once `file` does: a capped
+      // file is the same photo, so there is nothing to gain from a second
+      // preview over the first.
+      setPending((prev) => [...prev, { localId, file, objectUrl, status: 'capping', canRetry: true }]);
+
+      const capping: Promise<CappedPick> = capPhotoSize(file).then((cappedFile) => {
+        let stillPending = false;
+        setPending((prev) =>
+          prev.map((photo) => {
+            if (photo.localId !== localId) return photo;
+            stillPending = true;
+            return { ...photo, file: cappedFile, status: courseId ? 'uploading' : 'draft' };
+          }),
+        );
+        // Removed while still capping: nothing left to upload, and
+        // `uploadDraftsAfterCreate` below must not resurrect it either.
+        if (!stillPending) return undefined;
+        // A course whose edit form was already left behind still finishes
+        // this request harmlessly: it has nowhere left to show its own
+        // result, but nothing here depends on the component still being
+        // mounted.
+        if (courseId) void runUpload(courseId, localId, cappedFile);
+        return { localId, file: cappedFile };
+      });
+      cappingRef.current.set(localId, capping);
+      void capping.finally(() => cappingRef.current.delete(localId));
     }
   };
 
@@ -177,7 +222,13 @@ export const useCourseGalleryPhotos = (
   };
 
   const uploadDraftsAfterCreate = async (newCourseId: string): Promise<File[]> => {
-    const drafts = pending.filter((photo) => photo.status === 'draft');
+    // Waits for any pick still capping (a fast save right after picking):
+    // otherwise this reads `pending` before that pick's own `addFiles` ever
+    // marks it 'draft', and it is silently never uploaded (reviewer finding
+    // M1).
+    const justCapped = (await Promise.all(cappingRef.current.values())).filter((capped): capped is Exclude<CappedPick, undefined> => capped !== undefined);
+    const alreadyDrafted = pending.filter((photo) => photo.status === 'draft').map((photo) => ({ localId: photo.localId, file: photo.file }));
+    const drafts = [...alreadyDrafted, ...justCapped];
     const failedFiles: File[] = [];
     for (const draft of drafts) {
       setPending((prev) => prev.map((photo) => (photo.localId === draft.localId ? { ...photo, status: 'uploading' } : photo)));
@@ -205,7 +256,10 @@ export const useCourseGalleryPhotos = (
     ...pending.map((photo) => ({
       id: photo.localId,
       url: photo.objectUrl,
-      status: photo.status === 'draft' ? ('uploaded' as const) : photo.status,
+      // 'capping' reads as 'uploading' (reviewer finding M1: the existing
+      // uploading tile, not a design of its own); 'draft' reads as
+      // 'uploaded' since a create has no request in flight to show yet.
+      status: photo.status === 'draft' ? ('uploaded' as const) : photo.status === 'capping' ? ('uploading' as const) : photo.status,
       failureReason: photo.failureReason,
       canRetry: photo.canRetry,
     })),

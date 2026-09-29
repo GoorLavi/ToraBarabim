@@ -223,10 +223,18 @@ export const CreateModeGalleryStaysLocalUntilSaved: Story = {
       const galleryInput = galleryAddLabel.closest('.addTile')?.querySelector<HTMLInputElement>('input[type="file"]');
       if (!galleryInput) throw new Error('CourseFormPage story: gallery file input not found');
 
-      await uploadGeneratedFileToInput(galleryInput, 800, 800);
+      // Two files at once, both already the existing uploading tile the
+      // instant they are picked, checked with no `waitFor`: that would
+      // tolerate the very delay this guards against, the size cap
+      // (`capPhotoSize`, PhotoPicker/helpers.ts) resolving before either
+      // tile ever shows (reviewer finding M1).
+      const [fileA, fileB] = await Promise.all([generatedImageFile(800, 800), generatedImageFile(800, 800)]);
+      await userEvent.upload(galleryInput, [fileA, fileB]);
+      expect(canvas.getAllByText(galleryFieldConsts.GALLERY_UPLOADING_LABEL)).toHaveLength(2);
 
-      await expect(canvas.findByText('1 מתוך 8')).resolves.toBeInTheDocument();
+      await expect(canvas.findByText('2 מתוך 8')).resolves.toBeInTheDocument();
       await expect(canvas.getByRole('button', { name: 'הסרת תמונה 1' })).toBeInTheDocument();
+      await expect(canvas.getByRole('button', { name: 'הסרת תמונה 2' })).toBeInTheDocument();
       expect(photoUploadRequestCount).toBe(0);
     } finally {
       restoreFetch();
