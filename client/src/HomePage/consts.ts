@@ -25,7 +25,7 @@ export const RAIL_CONTEXT_LINE = 'שיעורים בכל הארץ בשבועיי�
 
 // The poster's width-to-height ratio, as a plain number so CSS `aspect-ratio`
 // can read it directly. The one place this ratio is written: LessonCard,
-// LessonCardSkeleton, LessonRail's arrow-centring calc and WomensAreaTile's
+// LessonCardSkeleton, Rail's arrow-centring calc and WomensAreaTile's
 // own plum area all read it from here, so a future change to the ratio
 // cannot leave one of them stale (design review, item: "the poster aspect
 // ratio is written in three places"). Stays 3:4, not the 2:3 the design doc

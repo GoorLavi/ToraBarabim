@@ -1,6 +1,6 @@
 import { css } from 'styled-components';
 
-import { CARD_WIDE_THRESHOLD } from '~/HomePage/components/LessonCard/consts';
+import { CARD_WIDE_THRESHOLD } from '~/consts';
 import { POSTER_ASPECT_RATIO } from '~/HomePage/consts';
 
 // Static, no timer-driven motion (design-system.md, Feel: "No heavy

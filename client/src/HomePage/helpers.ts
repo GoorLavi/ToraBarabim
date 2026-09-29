@@ -111,10 +111,11 @@ export const resolveHomeMode = (
 ): HomeMode => (option === 'all' && !city && !searchQuery && !audienceFilter ? 'rail' : 'filtered');
 
 // Rail mode has no server-side rabbi or city list; RabbiRow and CityGrid are
-// fed the union of every row's lesson items instead of a single fetched
-// list.
+// fed the union of every lesson row's items instead of a single fetched
+// list. The one `kind: 'courses'` row is skipped: its items are
+// `CourseSummary`, not something either of those two ever renders.
 export const flattenHomeRows = (data: HomeResponse | undefined): LessonOccurrence[] | undefined =>
-  data ? data.rows.flatMap((row) => row.items) : undefined;
+  data ? data.rows.filter((row) => row.kind === 'lessons').flatMap((row) => row.items) : undefined;
 
 // One element, one string, and only in rail mode. Filtered mode never shows
 // one: the section heading already names the day and city, and

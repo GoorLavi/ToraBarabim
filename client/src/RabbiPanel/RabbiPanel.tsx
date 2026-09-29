@@ -2,6 +2,8 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 
 import { RabbiShell } from './components/RabbiShell/RabbiShell';
 import { RequireRabbiSession } from './components/RequireRabbiSession/RequireRabbiSession';
+import { CourseFormPage } from './CourseFormPage/CourseFormPage';
+import { CoursesListPage } from './CoursesListPage/CoursesListPage';
 import { LessonFormPage } from './LessonFormPage/LessonFormPage';
 import { LessonsListPage } from './LessonsListPage/LessonsListPage';
 import { ProfilePage } from './ProfilePage/ProfilePage';
@@ -33,6 +35,12 @@ export const RabbiPanel = () => (
         <Route path="lessons" element={<LessonsListPage />} />
         <Route path="lessons/new" element={<LessonFormPage />} />
         <Route path="lessons/:id" element={<LessonFormPage />} />
+        <Route path="courses" element={<CoursesListPage />} />
+        <Route path="courses/new" element={<CourseFormPage />} />
+        {/* Also the read-only record for a closed or full course: the page
+            itself switches on `lifecycle.status` (owner's decision, pass 2
+            brief). */}
+        <Route path="courses/:id" element={<CourseFormPage />} />
         <Route path="profile" element={<ProfilePage />} />
       </Route>
     </Route>

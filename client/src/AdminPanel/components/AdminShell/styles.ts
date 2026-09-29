@@ -48,36 +48,6 @@ export const AdminShell = css(
         }
       }
 
-      > .nav {
-        display: flex;
-        gap: ${theme.spacing.sm};
-        order: 3;
-        flex-basis: 100%;
-
-        @media (min-width: ${theme.breakpoints.md}) {
-          order: 0;
-          flex-basis: auto;
-          margin-inline-end: auto;
-        }
-
-        > .tab {
-          display: flex;
-          align-items: center;
-          min-block-size: 48px;
-          padding-inline: ${theme.spacing.lg};
-          border-radius: ${theme.radii.pill};
-          color: ${theme.colors.textOnPrimary};
-          font-weight: ${theme.typography.fontWeight.semiBold};
-          font-size: ${theme.typography.body.phone.fontSize};
-          line-height: ${theme.typography.body.phone.lineHeight};
-
-          &.active {
-            background: ${theme.colors.surface};
-            color: ${theme.colors.primary};
-          }
-        }
-      }
-
       > .account {
         display: flex;
         align-items: center;

@@ -8,6 +8,12 @@ export interface PhotoCropStepProps {
   file: File;
   imageUrl: string;
   sourceDimensions: ImageDimensions;
+  // The ratio to crop to and the floor that bounds how far zoom can go
+  // (helpers.ts, `windowSizeForStage` and `hasNoFramingRoom`), both
+  // `PhotoPicker`'s own values: this component knows nothing of '3:4' or
+  // '16:9' as concepts, only the numbers.
+  aspectRatio: number;
+  minWidth: number;
   onConfirm: (file: File) => void;
   onCancel: () => void;
 }

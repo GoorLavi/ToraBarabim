@@ -4,13 +4,14 @@ import styled from 'styled-components';
 
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
+import { CourseRail } from '~/components/CourseRail/CourseRail';
 
 import { DedicationBand } from '../DedicationBand/DedicationBand';
 import { LessonRail } from '../LessonRail/LessonRail';
 import { WomensAreaBand } from '../WomensAreaBand/WomensAreaBand';
 import { RailSkeleton } from './components/RailSkeleton/RailSkeleton';
 import * as consts from './consts';
-import { dedicationBandSlot, shouldShowBetweenRailsDedication } from './helpers';
+import { dedicationBandSlot, indexAfterNthLessonRow, shouldShowBetweenRailsDedication } from './helpers';
 import type { HomeRailsProps } from './models';
 import * as styles from './styles';
 
@@ -59,31 +60,39 @@ export const HomeRails = styled(({ className, query, dedicationGroup }: HomeRail
 
   const { rows, womensAreaLessonCount } = query.data;
 
-  const rails: ReactNode[] = rows.map((row) => (
-    <LessonRail
-      key={row.id}
-      {...{ title: row.title, items: row.items, womensAreaTileIndex: row.womensAreaTileIndex, womensAreaLessonCount }}
-    />
-  ));
+  const rails: ReactNode[] = rows.map((row) =>
+    row.kind === 'lessons' ? (
+      <LessonRail
+        key={row.id}
+        {...{ title: row.title, items: row.items, womensAreaTileIndex: row.womensAreaTileIndex, womensAreaLessonCount }}
+      />
+    ) : (
+      <CourseRail key={row.id} {...{ title: row.title, items: row.items, surface: 'general' as const, clickSurface: 'homeRail' as const }} />
+    ),
+  );
 
-  const railCount = rails.length;
-  const showWomensAreaBand = womensAreaLessonCount > 0;
+  const lessonRowCount = rows.filter((row) => row.kind === 'lessons').length;
+  // With no lesson rows at all (the course row alone), neither band has a
+  // real "after the Nth lesson row" slot to sit in, so showing one would
+  // land it oddly right after the course row instead (plan addendum).
+  const showWomensAreaBand = womensAreaLessonCount > 0 && lessonRowCount > 0;
   const showBetweenRailsDedication = shouldShowBetweenRailsDedication(
-    railCount,
+    lessonRowCount,
     dedicationGroup !== undefined && dedicationGroup.items.length > 0,
   );
 
+  // Computed once against the original `rows` (never against `rails` after
+  // a splice moves everything after it), and reused for both bands so the
+  // dedication band's own placement stays relative to it (helpers.ts).
+  const womensAreaBandIndex = indexAfterNthLessonRow(rows, consts.WOMENS_AREA_BAND_SLOT);
+
   if (showWomensAreaBand) {
-    rails.splice(
-      Math.min(consts.WOMENS_AREA_BAND_SLOT, railCount),
-      0,
-      <WomensAreaBand key="womens-area-band" {...{ lessonCount: womensAreaLessonCount }} />,
-    );
+    rails.splice(womensAreaBandIndex, 0, <WomensAreaBand key="womens-area-band" {...{ lessonCount: womensAreaLessonCount }} />);
   }
 
   if (showBetweenRailsDedication) {
     rails.splice(
-      dedicationBandSlot(railCount, showWomensAreaBand),
+      dedicationBandSlot(womensAreaBandIndex, showWomensAreaBand),
       0,
       <DedicationBand key="dedication-band" {...{ group: dedicationGroup, variant: 'onPage' as const }} />,
     );

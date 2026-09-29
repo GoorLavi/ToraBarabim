@@ -2,6 +2,7 @@ export const WORDMARK = 'תורה ברבים';
 export const ADMIN_BADGE_LABEL = 'ניהול';
 export const NAV_LABEL = 'ניווט ניהול';
 export const LESSONS_TAB_LABEL = 'שיעורים';
+export const COURSES_TAB_LABEL = 'קורסים';
 export const RABBIS_TAB_LABEL = 'רבנים';
 export const PLACES_TAB_LABEL = 'מקומות';
 export const DEDICATIONS_TAB_LABEL = 'הקדשות';

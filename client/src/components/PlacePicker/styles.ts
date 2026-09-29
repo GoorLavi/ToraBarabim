@@ -12,28 +12,6 @@ export const PlacePicker = css(
     line-height: ${theme.typography.secondary.phone.lineHeight};
   }
 
-  /* The element that turns the block below it into a fork rather than a
-     required first step: it stays in place and goes quiet once a place is
-     chosen, instead of vanishing and making the layout jump. */
-  > .orDivider {
-    display: flex;
-    align-items: center;
-    gap: ${theme.spacing.sm};
-    padding-block: ${theme.spacing.xs};
-
-    > .line {
-      flex: 1;
-      block-size: 1px;
-      background: ${theme.colors.border};
-    }
-
-    > .label {
-      color: ${theme.colors.textSecondary};
-      font-size: ${theme.typography.secondary.phone.fontSize};
-      line-height: ${theme.typography.secondary.phone.lineHeight};
-    }
-  }
-
   > .reason {
     color: ${theme.colors.textSecondary};
     font-size: ${theme.typography.secondary.phone.fontSize};

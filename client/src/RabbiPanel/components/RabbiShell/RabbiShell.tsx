@@ -1,9 +1,9 @@
-import classNames from 'classnames';
-import { NavLink, Outlet } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
+import { PanelTabNav } from '~/components/PanelTabNav/PanelTabNav';
 import { rabbiDisplayName } from '~/helpers';
 import { RABBI_ROUTES } from '~/RabbiPanel/consts';
 import { useRabbiProfile } from '~/RabbiPanel/useRabbiProfile';
@@ -12,6 +12,16 @@ import * as consts from './consts';
 import type { RabbiShellProps } from './models';
 import * as styles from './styles';
 import { useRabbiLogout } from './useRabbiLogout';
+
+// Order is load-bearing below `md`: PanelTabNav's grid fills row by row, so
+// this is "מועדים קרובים"/"השיעורים שלי" on row one, "הקורסים שלי"/"הפרטים
+// שלי" on row two (design brief B, item 1).
+const TAB_ITEMS = [
+  { to: RABBI_ROUTES.upcoming, label: consts.TAB_UPCOMING_LABEL, onClick: () => trackEvent(MIXPANEL_EVENTS.panelTabClick, { tab: 'upcoming' }) },
+  { to: RABBI_ROUTES.lessons, label: consts.TAB_LESSONS_LABEL, onClick: () => trackEvent(MIXPANEL_EVENTS.panelTabClick, { tab: 'lessons' }) },
+  { to: RABBI_ROUTES.courses, label: consts.TAB_COURSES_LABEL, onClick: () => trackEvent(MIXPANEL_EVENTS.panelTabClick, { tab: 'courses' }) },
+  { to: RABBI_ROUTES.profile, label: consts.TAB_PROFILE_LABEL, onClick: () => trackEvent(MIXPANEL_EVENTS.panelTabClick, { tab: 'profile' }) },
+];
 
 // The greeting reads the rabbi's own profile, not the session record: the
 // session's `name` is copied at login and can drift from the profile the
@@ -32,29 +42,7 @@ export const RabbiShell = styled(({ className }: RabbiShellProps) => {
             <span className="badge">{consts.BADGE_LABEL}</span>
           </div>
 
-          <nav className="nav" aria-label={consts.NAV_LABEL}>
-            <NavLink
-              to={RABBI_ROUTES.upcoming}
-              className={({ isActive }) => classNames('tab', { active: isActive })}
-              onClick={() => trackEvent(MIXPANEL_EVENTS.panelTabClick, { tab: 'upcoming' })}
-            >
-              {consts.TAB_UPCOMING_LABEL}
-            </NavLink>
-            <NavLink
-              to={RABBI_ROUTES.lessons}
-              className={({ isActive }) => classNames('tab', { active: isActive })}
-              onClick={() => trackEvent(MIXPANEL_EVENTS.panelTabClick, { tab: 'lessons' })}
-            >
-              {consts.TAB_LESSONS_LABEL}
-            </NavLink>
-            <NavLink
-              to={RABBI_ROUTES.profile}
-              className={({ isActive }) => classNames('tab', { active: isActive })}
-              onClick={() => trackEvent(MIXPANEL_EVENTS.panelTabClick, { tab: 'profile' })}
-            >
-              {consts.TAB_PROFILE_LABEL}
-            </NavLink>
-          </nav>
+          <PanelTabNav {...{ ariaLabel: consts.NAV_LABEL, items: TAB_ITEMS }} />
 
           <div className="account">
             {profile.data && (

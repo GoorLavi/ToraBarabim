@@ -4,6 +4,7 @@ export * from './area';
 export * from './area-directory';
 export * from './city';
 export * from './city-directory';
+export * from './course';
 export * from './dedication';
 export * from './home';
 export * from './rabbi';

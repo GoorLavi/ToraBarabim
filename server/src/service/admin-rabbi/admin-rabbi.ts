@@ -4,7 +4,7 @@ import { nanoid } from 'nanoid';
 
 import { loadConfig } from '../../config';
 import { db } from '../../db/client';
-import { lessonExceptions, lessons, rabbis } from '../../db/schema';
+import { courses, coursePhotos, lessonExceptions, lessons, rabbis } from '../../db/schema';
 import storage from '../../storage/storage';
 import { toRabbiSummary } from '../shared/rabbi-summary';
 import { PhotoTooLargeError, RabbiDeleteConfirmationRequiredError, RabbiNotFoundError, UnsupportedPhotoTypeError } from './errors';
@@ -81,35 +81,37 @@ export const update = async (id: string, input: UpdateRabbiInput): Promise<Rabbi
 export const getDeletePreview = async (id: string): Promise<DeleteRabbiPreviewResult> => {
   await getById(id);
 
-  const [lessonCountRows, exceptionCountRows] = await Promise.all([
+  const [lessonCountRows, exceptionCountRows, courseCountRows] = await Promise.all([
     db.select({ count: sql<number>`count(*)::int` }).from(lessons).where(eq(lessons.rabbiId, id)),
     db
       .select({ count: sql<number>`count(distinct ${lessonExceptions.id})::int` })
       .from(lessonExceptions)
       .leftJoin(lessons, eq(lessonExceptions.lessonId, lessons.id))
       .where(or(eq(lessons.rabbiId, id), eq(lessonExceptions.substituteRabbiId, id))),
+    db.select({ count: sql<number>`count(*)::int` }).from(courses).where(eq(courses.rabbiId, id)),
   ]);
 
   return {
     lessonCount: lessonCountRows[0]?.count ?? 0,
     exceptionCount: exceptionCountRows[0]?.count ?? 0,
+    courseCount: courseCountRows[0]?.count ?? 0,
   };
 };
 
 // Deleting a rabbi destroys that rabbi's lessons, those lessons' exceptions,
-// and any other lesson's exception that named this rabbi as a substitute,
-// all in one transaction. The human explicitly chose cascading delete over
-// blocking it; `confirm` on the route is the only thing standing in front
-// of this data loss.
+// any other lesson's exception that named this rabbi as a substitute, and
+// his courses and their gallery photo rows, all in one transaction. The
+// human explicitly chose cascading delete over blocking it; `confirm` on
+// the route is the only thing standing in front of this data loss.
 export const remove = async (id: string, confirm: boolean, log: FastifyBaseLogger): Promise<void> => {
   const preview = await getDeletePreview(id);
   if (!confirm) {
-    throw new RabbiDeleteConfirmationRequiredError(preview.lessonCount, preview.exceptionCount);
+    throw new RabbiDeleteConfirmationRequiredError(preview.lessonCount, preview.exceptionCount, preview.courseCount);
   }
 
   const rabbi = await getById(id);
 
-  await db.transaction(async (tx) => {
+  const courseObjectKeys = await db.transaction(async (tx) => {
     const ownLessons = await tx.select({ id: lessons.id }).from(lessons).where(eq(lessons.rabbiId, id));
     const ownLessonIds = ownLessons.map((row) => row.id);
 
@@ -120,8 +122,31 @@ export const remove = async (id: string, confirm: boolean, log: FastifyBaseLogge
     if (ownLessonIds.length) {
       await tx.delete(lessons).where(inArray(lessons.id, ownLessonIds));
     }
+
+    const ownCourses = await tx.select({ id: courses.id, coverKey: courses.coverKey }).from(courses).where(eq(courses.rabbiId, id));
+    const ownCourseIds = ownCourses.map((row) => row.id);
+    const ownCoursePhotos = ownCourseIds.length
+      ? await tx.select({ storageKey: coursePhotos.storageKey }).from(coursePhotos).where(inArray(coursePhotos.courseId, ownCourseIds))
+      : [];
+    if (ownCourseIds.length) {
+      await tx.delete(coursePhotos).where(inArray(coursePhotos.courseId, ownCourseIds));
+      await tx.delete(courses).where(inArray(courses.id, ownCourseIds));
+    }
+
     await tx.delete(rabbis).where(eq(rabbis.id, id));
+
+    return [...ownCourses.map((row) => row.coverKey), ...ownCoursePhotos.map((row) => row.storageKey)];
   });
+
+  await Promise.all(
+    courseObjectKeys.map(async (key) => {
+      try {
+        await storage.remove(key);
+      } catch (error) {
+        log.error({ err: error, rabbiId: id, key }, 'failed to delete storage object for a removed course');
+      }
+    }),
+  );
 
   if (!rabbi.photoUrl) return;
   const key = photoKeyFromUrl(rabbi.photoUrl);

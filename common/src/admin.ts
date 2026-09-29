@@ -79,6 +79,7 @@ export type LessonExceptionResponse = ResolvedLessonException & { id: number };
 export interface DeleteImpactPreview {
   lessonCount: number;
   exceptionCount: number;
+  courseCount: number;
 }
 
 export interface RabbiListResponse {

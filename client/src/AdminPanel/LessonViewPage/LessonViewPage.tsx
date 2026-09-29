@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { LessonPreviewCard } from '~/AdminPanel/components/LessonPreviewCard/LessonPreviewCard';
-import { RecordField } from '~/AdminPanel/components/RecordField/RecordField';
+import { RecordField } from '~/components/RecordField/RecordField';
 import { ADMIN_ROUTES, skeletonFieldKeys } from '~/AdminPanel/consts';
 import { adminErrorMessage, lessonPrimaryLabel, recurrenceWhenLabel } from '~/AdminPanel/helpers';
 import { useExistingLesson } from '~/AdminPanel/useExistingLesson';

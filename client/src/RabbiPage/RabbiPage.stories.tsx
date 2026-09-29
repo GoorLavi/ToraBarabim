@@ -2,6 +2,7 @@ import type { LessonOccurrence, RabbiDetailResponse } from '@torabarabim/common'
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Route, Routes } from 'react-router-dom';
 
+import { courseFixture } from '~/courseFixture';
 import { rabbiFixture } from '~/rabbiFixture';
 
 import { errorResolver, http, jsonResolver, loadingResolver, queryOf, respondWithJson } from '../../.storybook/apiMocks';
@@ -19,6 +20,7 @@ const rabbiDetail = (overrides: Partial<RabbiDetailResponse>): RabbiDetailRespon
   }),
   lessonCount: 3,
   cities: [{ id: '4000', name: 'חיפה', slug: 'חיפה', area: 'haifa' }],
+  courses: [],
   ...overrides,
 });
 
@@ -103,7 +105,19 @@ type Story = StoryObj<typeof RabbiPage>;
 
 export const Populated: Story = {
   decorators: [withRoute('story-populated')],
-  parameters: { apiMocks: { handlers: { rabbi: rabbiHandler(rabbiDetail({ id: 'story-populated' })), lessons: lessonsHandler(populatedLessons) } } },
+  parameters: {
+    apiMocks: {
+      handlers: {
+        rabbi: rabbiHandler(
+          rabbiDetail({
+            id: 'story-populated',
+            courses: [courseFixture({ name: 'יסודות האמונה', teacher: { kind: 'rabbi', rabbi: rabbiFixture({ id: 'story-populated', name: 'יעקב מזרחי' }) } })],
+          }),
+        ),
+        lessons: lessonsHandler(populatedLessons),
+      },
+    },
+  },
 };
 export const NoPhoto: Story = {
   decorators: [withRoute('story-nophoto')],
@@ -135,6 +149,25 @@ export const EmptyWidenedToCountry: Story = {
       handlers: {
         rabbi: rabbiHandler(
           rabbiDetail({ ...rabbiFixture({ id: 'story-empty', name: 'שרה גולדברג', honorific: 'rabbanit' }), lessonCount: 0, cities: [] }),
+        ),
+      },
+    },
+  },
+};
+// A rabbi with courses but no lessons of his own: "הקורסים" still renders
+// above the widened-to-country empty state.
+export const EmptyLessonsWithCourse: Story = {
+  decorators: [withRoute('story-empty-with-course')],
+  parameters: {
+    apiMocks: {
+      handlers: {
+        rabbi: rabbiHandler(
+          rabbiDetail({
+            id: 'story-empty-with-course',
+            lessonCount: 0,
+            cities: [],
+            courses: [courseFixture({ name: 'יסודות האמונה', teacher: { kind: 'rabbi', rabbi: rabbiFixture({ id: 'story-empty-with-course', name: 'יעקב מזרחי' }) } })],
+          }),
         ),
       },
     },

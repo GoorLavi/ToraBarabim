@@ -5,8 +5,6 @@ export const HELPER_LINE = 'בוחרים מקום מהרשימה. אם המקו�
 export const PICKER_PLACEHOLDER = 'בחירת מקום מהרשימה';
 export const PICKER_SEARCH_LABEL = 'חיפוש מקום';
 
-export const OR_LABEL = 'או';
-
 export const CANCEL_PLACE_LABEL = 'ביטול הבחירה והקלדת כתובת';
 export const CANCEL_PLACE_ARIA_LABEL = 'ביטול בחירת המקום והקלדת הכתובת בשדות שלמטה';
 

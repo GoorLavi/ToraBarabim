@@ -42,7 +42,7 @@ export const registerRabbiDirectoryRoutes = async (app: FastifyInstance): Promis
   app.get('/v1/rabbis/:rabbiId', async (request, reply) => {
     try {
       const { rabbiId } = rabbiIdParamSchema.parse(request.params);
-      const result = await rabbiService.getById(rabbiId);
+      const result = await rabbiService.getById(rabbiId, new Date());
       return reply.send(toRabbiDetailResponse(result));
     } catch (error) {
       return handleError(reply, error, 'GET /v1/rabbis/:rabbiId');

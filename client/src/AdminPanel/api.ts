@@ -6,7 +6,10 @@ import type {
   AdminUser,
   AdminUserListItem,
   AdminUserListResponse,
+  CourseListResponse,
+  CourseResponse,
   CreateAdminUserRequest,
+  CreateCourseRequest,
   CreateDedicationRequest,
   CreateLessonExceptionRequest,
   CreateLessonRequest,
@@ -18,6 +21,7 @@ import type {
   DedicationPreviewRequest,
   DedicationPreviewResponse,
   DeleteImpactPreview,
+  DuplicateCourseRequest,
   LessonExceptionListResponse,
   LessonExceptionResponse,
   LessonListResponse,
@@ -32,6 +36,7 @@ import type {
   ResetRabbiPasswordResponse,
   TakedownDedicationRequest,
   UpdateAdminUserRequest,
+  UpdateCourseRequest,
   UpdateDedicationRequest,
   UpdateLessonExceptionRequest,
   UpdateLessonRequest,
@@ -41,7 +46,8 @@ import type {
   UpdateRabbiRequest,
 } from '@torabarabim/common';
 
-import type { AdminDedicationFilters, AdminLessonFilters, AdminPlaceFilters, AdminRabbiFilters, AdminUserFilters } from './models';
+import { MAX_ADMIN_PAGE_SIZE } from './consts';
+import type { AdminCourseFilters, AdminDedicationFilters, AdminLessonFilters, AdminPlaceFilters, AdminRabbiFilters, AdminUserFilters } from './models';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
@@ -61,26 +67,31 @@ const isValidationDetails = (value: unknown): value is AdminValidationDetails =>
 // (e.g. 'unknown_rabbi'), so a caller can react to a specific failure
 // without parsing `message` (client/CLAUDE.md, Data and State). Status 0
 // marks a request that never reached the server. `details` is only ever
-// present on a 400 `invalid_request` (see `AdminValidationDetails` above).
+// present on a 400 `invalid_request` (see `AdminValidationDetails` above);
+// `rawDetails` is whatever the server sent under `details` for every other
+// shape, unnarrowed: `~/courseErrors.ts`'s `courseErrorMessage` is the one
+// place that knows each course error code's own shape.
 export class AdminApiError extends Error {
   constructor(
     public readonly status: number,
     public readonly code: string | undefined,
     message: string,
     public readonly details: AdminValidationDetails | undefined = undefined,
+    public readonly rawDetails: unknown = undefined,
   ) {
     super(message);
     this.name = 'AdminApiError';
   }
 }
 
-const parseErrorBody = async (response: Response): Promise<{ code?: string; details?: AdminValidationDetails }> => {
+const parseErrorBody = async (response: Response): Promise<{ code?: string; details?: AdminValidationDetails; rawDetails?: unknown }> => {
   try {
     const body: unknown = await response.json();
     if (!body || typeof body !== 'object') return {};
     const code = 'error' in body && typeof body.error === 'string' ? body.error : undefined;
     const details = 'details' in body && isValidationDetails(body.details) ? body.details : undefined;
-    return { code, details };
+    const rawDetails = 'details' in body ? body.details : undefined;
+    return { code, details, rawDetails };
   } catch {
     return {};
   }
@@ -98,8 +109,8 @@ const request = async <T>(url: string, init?: RequestInit): Promise<T> => {
   }
 
   if (!response.ok) {
-    const { code, details } = await parseErrorBody(response);
-    throw new AdminApiError(response.status, code, `${init?.method ?? 'GET'} ${url} returned ${response.status}`, details);
+    const { code, details, rawDetails } = await parseErrorBody(response);
+    throw new AdminApiError(response.status, code, `${init?.method ?? 'GET'} ${url} returned ${response.status}`, details, rawDetails);
   }
 
   if (response.status === 204) return undefined as T;
@@ -259,6 +270,79 @@ export const updateAdminLessonException = (
 // 204 on success. 404 if the lesson or exception does not exist.
 export const deleteAdminLessonException = (lessonId: string, exceptionId: number): Promise<void> =>
   request(url(`/v1/admin/lessons/${lessonId}/exceptions/${exceptionId}`).toString(), { method: 'DELETE' });
+
+// GET /v1/admin/courses
+// 200 with CourseListResponse, including an empty items array.
+export const fetchAdminCourses = (filters: AdminCourseFilters): Promise<CourseListResponse> => {
+  const target = url('/v1/admin/courses');
+  if (filters.q) target.searchParams.set('q', filters.q);
+  if (filters.status) target.searchParams.set('status', filters.status);
+  if (filters.rabbiId) target.searchParams.set('rabbiId', filters.rabbiId);
+  target.searchParams.set('page', String(filters.page ?? 1));
+  target.searchParams.set('pageSize', String(filters.pageSize ?? MAX_ADMIN_PAGE_SIZE));
+  return request(target.toString());
+};
+
+// GET /v1/admin/courses/:id
+// 200 with CourseResponse. 404 if the course does not exist.
+export const fetchAdminCourse = (id: string): Promise<CourseResponse> => request(url(`/v1/admin/courses/${id}`).toString());
+
+// POST /v1/admin/courses (multipart: one `course` JSON part, one `cover` file part)
+// 201 with CourseResponse. 400 cover_required / invalid_request / unknown_city /
+// unknown_place / rabbanit_audience_must_be_women / course_would_be_closed.
+// 413 too large. 415 wrong content type.
+export const createAdminCourse = (body: CreateCourseRequest, cover: File): Promise<CourseResponse> => {
+  const formData = new FormData();
+  formData.append('course', JSON.stringify(body));
+  formData.append('cover', cover);
+  return request(url('/v1/admin/courses').toString(), { method: 'POST', body: formData });
+};
+
+// PATCH /v1/admin/courses/:id
+// 200 with CourseResponse. 400 invalid_request / unknown_city / unknown_place /
+// rabbanit_audience_must_be_women / course_would_be_closed. 404 as above. 409 course_closed.
+export const updateAdminCourse = (id: string, body: UpdateCourseRequest): Promise<CourseResponse> =>
+  request(url(`/v1/admin/courses/${id}`).toString(), { method: 'PATCH', headers: JSON_HEADERS, body: JSON.stringify(body) });
+
+// POST /v1/admin/courses/:id/cover (multipart, one `cover` file part)
+// 200 with CourseResponse. 400/413/415 as create. 404 as above.
+export const uploadAdminCourseCover = (id: string, file: File): Promise<CourseResponse> => {
+  const formData = new FormData();
+  formData.append('cover', file);
+  return request(url(`/v1/admin/courses/${id}/cover`).toString(), { method: 'POST', body: formData });
+};
+
+// POST /v1/admin/courses/:id/photos (multipart, one `photo` file part)
+// 201 with CourseResponse. 409 course_photo_limit at 8. 404 as above.
+export const uploadAdminCoursePhoto = (id: string, file: File): Promise<CourseResponse> => {
+  const formData = new FormData();
+  formData.append('photo', file);
+  return request(url(`/v1/admin/courses/${id}/photos`).toString(), { method: 'POST', body: formData });
+};
+
+// DELETE /v1/admin/courses/:id/photos/:photoId
+// 204 on success, no body. 404 if the course or the photo does not exist.
+export const deleteAdminCoursePhoto = (id: string, photoId: string): Promise<void> =>
+  request(url(`/v1/admin/courses/${id}/photos/${photoId}`).toString(), { method: 'DELETE' });
+
+// POST /v1/admin/courses/:id/close
+// 200 with CourseResponse. 409 course_closed. 404 as above.
+export const closeAdminCourse = (id: string): Promise<CourseResponse> =>
+  request(url(`/v1/admin/courses/${id}/close`).toString(), { method: 'POST' });
+
+// POST /v1/admin/courses/:id/full
+// 200 with CourseResponse. 409 course_closed. 404 as above.
+export const markAdminCourseFull = (id: string): Promise<CourseResponse> =>
+  request(url(`/v1/admin/courses/${id}/full`).toString(), { method: 'POST' });
+
+// POST /v1/admin/courses/:id/duplicate
+// 201 with the new CourseResponse. 400 invalid_request / opening_date_not_future. 404 as above. 409 course_not_closed.
+export const duplicateAdminCourse = (id: string, body: DuplicateCourseRequest): Promise<CourseResponse> =>
+  request(url(`/v1/admin/courses/${id}/duplicate`).toString(), { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(body) });
+
+// DELETE /v1/admin/courses/:id
+// 204 on success. 404 as above. Cascades to the course's own photos server-side.
+export const deleteAdminCourse = (id: string): Promise<void> => request(url(`/v1/admin/courses/${id}`).toString(), { method: 'DELETE' });
 
 // GET /v1/admin/admin-users
 // 200 with AdminUserListResponse, including an empty items array.

@@ -22,6 +22,8 @@ const route =
 export const http = {
   get: route('GET'),
   post: route('POST'),
+  patch: route('PATCH'),
+  delete: route('DELETE'),
 };
 
 export const respondWithJson = (body: unknown, status = 200): Response =>

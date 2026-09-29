@@ -38,6 +38,7 @@ Every design belongs to one of four, split by who opens it and when.
 | `12 מקום` | A place's page, including both empty widenings, a detail error, a lessons error and the 404 branch |
 | `13 כל המקומות` | The places directory, including search with and without results |
 | `14 אזור` | An area's lessons |
+| `15 קורסים` | Courses: the card in every state, the home row with one, two and three-plus courses and a closed course, the course page in every state at 390, 320 and 1280, the photo viewer, and the rabbi, place and women's area pages with a course rail |
 | `99 Components` | The 29 shared components. Only `07` and `08` are built from instances of them; see the widths section below for why |
 | `99 כרטיס השיעור · כל המצבים` | Every lesson card state, side by side |
 
@@ -50,6 +51,7 @@ Every design belongs to one of four, split by who opens it and when.
 | `03 צפייה בשיעור וברב בפאנל הניהול` | The view-first lesson and rabbi screens, with their loading, empty and error states. Drawn from the shipped screens, because the draft they started from had fallen behind the code |
 | `04 פאנל הניהול: מקומות` | The places list, the place record, and the place form with every state of its sign-in section |
 | `05 כניסה משותפת ופאנלים` | The shared rabbi-and-place login, the three place-panel screens, and the four rabbi-panel screens |
+| `06 קורסים` | The courses area in both panels: the rabbi's list, form and read-only closed record, the close, full, duplicate and delete sheets, the photo field in every state, the admin list with its filters (phone and desktop), record and form, and the phone tab grid |
 
 `01 מסכי ניהול` is behind the code: desktop 1440 only, with a separate admin sign-in
 that the shared login on `05` has replaced, and none of the mobile-first panel that

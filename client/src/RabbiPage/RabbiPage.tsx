@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
 import { BackLink } from '~/components/BackLink/BackLink';
+import { CourseRail } from '~/components/CourseRail/CourseRail';
 import { StateCard } from '~/components/StateCard/StateCard';
 import { rabbiDisplayName } from '~/helpers';
 
@@ -86,6 +87,10 @@ export const RabbiPage = styled(({ className }: RabbiPageProps) => {
               </div>
             )}
           </div>
+
+          {rabbi.courses.length > 0 && (
+            <CourseRail {...{ title: consts.COURSES_HEADING, items: rabbi.courses, surface: 'general', clickSurface: 'rabbiPage' }} />
+          )}
 
           {hasNoLessons ? (
             <RabbiEmptyLessons

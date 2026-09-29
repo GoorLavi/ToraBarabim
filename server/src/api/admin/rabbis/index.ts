@@ -53,6 +53,7 @@ const handleError = (reply: FastifyReply, error: unknown, routeLabel: string): F
       message: CONFIRM_REQUIRED_MESSAGE,
       lessonCount: error.lessonCount,
       exceptionCount: error.exceptionCount,
+      courseCount: error.courseCount,
     });
   }
 

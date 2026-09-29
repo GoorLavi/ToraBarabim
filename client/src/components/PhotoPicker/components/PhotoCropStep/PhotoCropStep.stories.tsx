@@ -14,6 +14,10 @@ const meta: Meta<typeof PhotoCropStep> = {
   title: 'components/PhotoPicker/PhotoCropStep',
   component: PhotoCropStep,
   args: {
+    // Every story here is a place's own '16:9' photo, the one ratio that
+    // reaches this step today (`PhotoPicker.tsx`).
+    aspectRatio: 16 / 9,
+    minWidth: 800,
     onConfirm: () => {},
     onCancel: () => {},
   },

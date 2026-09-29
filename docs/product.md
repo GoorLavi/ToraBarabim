@@ -42,6 +42,15 @@ Everything else is a proxy for that.
   registered by an administrator, has a page of its own listing everything held there,
   and signs in to keep those listings correct. A lesson whose venue is typed in by hand
   is not a place and never becomes one on its own.
+- **A course** belongs to a rav or a rabbanit, or, when an administrator lists it on
+  its own, names a teacher typed in by hand instead. It has an opening date, a length
+  in weeks, a number of sessions, an optional cycle number, a cover photo in a 3:4
+  frame plus up to eight more, and a contact number for a WhatsApp message or a call.
+  A whole-course price in shekels is optional. Registration stays open through the
+  opening date, or through the course's own end for one that can still be joined once
+  it has started, and can also be closed early by hand or once it fills; a closed
+  course is shown as closed for a week, then leaves every list, though its own page
+  stays up.
 - **A city** comes from the official data.gov.il locality list and is chosen, never
   invented.
 
@@ -66,7 +75,9 @@ decision record, not a pull request comment.
 Not a social network, and not a place for comments, ratings, or attendance. Not a
 streaming or recording archive. Not a donation platform: it invites dedications by
 contact only ([0036](decisions/0036-the-site-invites-dedications-by-contact-only.md)).
-Not a general Jewish content site: it answers where and when, nothing more.
+Not a payment platform either: a course may show its price, but paying for it, like
+registering for it, happens off the site, by a call or a WhatsApp message. Not a
+general Jewish content site: it answers where and when, nothing more.
 
 ## Where everything else lives
 

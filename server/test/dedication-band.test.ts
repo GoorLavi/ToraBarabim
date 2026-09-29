@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 
+import type { HomeLessonRowId, HomeRow } from '@torabarabim/common';
+
 import { isPressGesture, isTrackOverflowing, stepByUnitPitch, wrapTrackPosition } from '../../client/src/HomePage/components/DedicationBand/helpers';
 import { WOMENS_AREA_BAND_SLOT } from '../../client/src/HomePage/components/HomeRails/consts';
-import { dedicationBandSlot, shouldShowBetweenRailsDedication } from '../../client/src/HomePage/components/HomeRails/helpers';
+import { dedicationBandSlot, indexAfterNthLessonRow, shouldShowBetweenRailsDedication } from '../../client/src/HomePage/components/HomeRails/helpers';
 
 // Pure logic, so this suite needs neither a database nor a built client,
 // the same shape as rabbi-order.test.ts and dedication-text.test.ts.
@@ -143,11 +145,41 @@ describe('shouldShowBetweenRailsDedication and dedicationBandSlot (placement)', 
     assert.equal(shouldShowBetweenRailsDedication(10, false), false);
   });
 
-  test('the slot is WOMENS_AREA_BAND_SLOT itself when the women\'s-area tile is absent', () => {
-    assert.equal(dedicationBandSlot(5, false), WOMENS_AREA_BAND_SLOT);
+  // `dedicationBandSlot` no longer clamps to `WOMENS_AREA_BAND_SLOT` itself
+  // (plan section 10.7): that clamp, and the "count lesson rows, skip the
+  // course row" rule it now needs, moved to `indexAfterNthLessonRow` below,
+  // called first at the real call site (HomeRails.tsx). What is left here
+  // is only "one slot further once the tile is shown", given whatever
+  // index the caller already computed.
+  test('the slot is the given women\'s-area band index itself when the tile is absent', () => {
+    assert.equal(dedicationBandSlot(5, false), 5);
   });
 
   test('the slot moves one further, immediately after the tile, when it is present', () => {
-    assert.equal(dedicationBandSlot(5, true), WOMENS_AREA_BAND_SLOT + 1);
+    assert.equal(dedicationBandSlot(5, true), 6);
+  });
+});
+
+describe('indexAfterNthLessonRow (plan section 10.7: the course row is never counted)', () => {
+  const lessonRow = (id: HomeLessonRowId): HomeRow => ({ kind: 'lessons', id, title: id, items: [] });
+  const courseRow = (): HomeRow => ({ kind: 'courses', id: 'courses', title: 'קורסים', items: [] });
+
+  test('with fewer than n lesson rows, the index clamps to the end of the list', () => {
+    const rows = [lessonRow('area'), lessonRow('today')];
+    assert.equal(indexAfterNthLessonRow(rows, WOMENS_AREA_BAND_SLOT), rows.length);
+  });
+
+  test('with exactly n lesson rows and no course row, the index lands right after the last one', () => {
+    const rows = [lessonRow('area'), lessonRow('today')];
+    assert.equal(indexAfterNthLessonRow(rows, 2), 2);
+  });
+
+  // The designer's own `HomeRails.stories.tsx` `WithCourseRow` story, the
+  // approved order: lessons, courses, lessons, then the bands. The course
+  // row sits between the two counted lesson rows, so it must not shift the
+  // result forward.
+  test('a course row between two lesson rows is skipped, not counted as one of them', () => {
+    const rows = [lessonRow('area'), courseRow(), lessonRow('today'), lessonRow('weekly')];
+    assert.equal(indexAfterNthLessonRow(rows, WOMENS_AREA_BAND_SLOT), 3);
   });
 });

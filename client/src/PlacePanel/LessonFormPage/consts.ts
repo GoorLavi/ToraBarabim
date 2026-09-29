@@ -1,6 +1,6 @@
 import type { LessonTopic } from '@torabarabim/common';
 
-import { LESSON_TOPIC_LABELS } from '~/HomePage/components/LessonCard/consts';
+import { LESSON_TOPIC_LABELS } from '~/consts';
 
 import type { LessonFormField } from './models';
 
@@ -58,9 +58,9 @@ export const REQUIRED_RABBI_ERROR = 'יש לבחור רב או רבנית';
 export const TOPIC_SECTION_HEADING = 'נושא השיעור';
 export const TOPIC_UNSET_OPTION_LABEL = 'בלי נושא';
 // `LESSON_TOPIC_LABELS` itself is a real, already-shipped reuse (from
-// `HomePage/components/LessonCard/consts.ts`, this builder's own prefix),
-// not a placeholder: it is the exact set of Hebrew topic names the public
-// site already shows.
+// `~/consts.ts`, shared with the public lesson card, row and ticket, and
+// the course page), not a placeholder: it is the exact set of Hebrew topic
+// names the public site already shows.
 export const TOPIC_OPTIONS: { value: LessonTopic; label: string }[] = (
   Object.entries(LESSON_TOPIC_LABELS) as [LessonTopic, string][]
 ).map(([value, label]) => ({ value, label }));

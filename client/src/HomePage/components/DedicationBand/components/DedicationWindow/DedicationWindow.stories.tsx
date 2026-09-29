@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fireEvent, fn, userEvent, within } from 'storybook/test';
 
+import { CALL_ACCESSIBLE_NAME_PREFIX } from '~/components/ContactActions/consts';
+import { SITE_CONTACT_PHONE_DISPLAY, SITE_CONTACT_PHONE_INTERNATIONAL } from '~/consts';
 import { whatsAppHref } from '~/helpers';
 import { atFrameSize } from '~/storyMocks';
 
@@ -31,10 +33,10 @@ export const Phone320x640: Story = {
       await expect(body.findByText(consts.LEAD_IN)).resolves.toBeInTheDocument();
 
       const whatsappLink = await body.findByRole('link', { name: consts.WHATSAPP_LABEL });
-      await expect(whatsappLink).toHaveAttribute('href', whatsAppHref(consts.WHATSAPP_MESSAGE));
+      await expect(whatsappLink).toHaveAttribute('href', whatsAppHref(consts.WHATSAPP_MESSAGE, SITE_CONTACT_PHONE_INTERNATIONAL));
 
-      const callLink = await body.findByRole('link', { name: consts.CALL_ACCESSIBLE_NAME });
-      await expect(callLink).toHaveAttribute('href', consts.CALL_HREF);
+      const callLink = await body.findByRole('link', { name: `${CALL_ACCESSIBLE_NAME_PREFIX} ${SITE_CONTACT_PHONE_DISPLAY}` });
+      await expect(callLink).toHaveAttribute('href', `tel:+${SITE_CONTACT_PHONE_INTERNATIONAL}`);
 
       await body.findByRole('button', { name: consts.CLOSE_LABEL });
 

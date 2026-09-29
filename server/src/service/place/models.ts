@@ -1,6 +1,8 @@
 import type { Area } from '@torabarabim/common';
 import { z } from 'zod';
 
+import type { CourseSummaryRecord } from '../course/models';
+
 export const placeIdParamSchema = z.object({
   id: z.string().trim().min(1),
 });
@@ -35,4 +37,8 @@ export interface PlaceRecord {
 
 export interface PlaceListResult {
   items: PlaceRecord[];
+}
+
+export interface PlaceDetailResult extends PlaceRecord {
+  courses: CourseSummaryRecord[];
 }

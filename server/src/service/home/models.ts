@@ -1,7 +1,8 @@
-import type { CityWithLessonCount, HomeRowId, LessonAudience, LessonTopic, LessonVenue, Rabbi } from '@torabarabim/common';
+import type { CityWithLessonCount, HomeLessonRowId, LessonAudience, LessonTopic, LessonVenue, Rabbi } from '@torabarabim/common';
 
 import type { rabbis } from '../../db/schema';
 import type { AddressCityRow } from '../shared/address';
+import type { CourseSummaryRecord } from '../course/models';
 import type { DedicationGroupResult } from '../dedication/models';
 
 // Kept distinct from the wire `LessonOccurrence`: it carries the sort-only
@@ -26,14 +27,29 @@ export interface ResolvedHomeOccurrence {
   shuffleKey: number;
 }
 
-export interface HomeRowResult {
-  id: HomeRowId;
+export interface LessonHomeRowResult {
+  kind: 'lessons';
+  id: HomeLessonRowId;
   title: string;
   items: ResolvedHomeOccurrence[];
   // The 0-based index in `items` where the women's-area tile renders; see
-  // `getHome`'s placement cadence. Present on at most one row.
+  // `getHome`'s placement cadence. Present on at most one row, and only
+  // ever a lesson row: the tile never lands inside the course row.
   womensAreaTileIndex?: number;
 }
+
+export interface CourseHomeRowResult {
+  kind: 'courses';
+  id: 'courses';
+  title: string;
+  items: CourseSummaryRecord[];
+}
+
+// A union on `kind`, exactly the wire `HomeRow`'s own shape (plain A):
+// `getHome` places the one `kind: 'courses'` row itself, directly after the
+// first lesson row, with no skew mitigation for an open tab during a
+// deploy (the owner's call at the gate).
+export type HomeRowResult = LessonHomeRowResult | CourseHomeRowResult;
 
 export interface HomeResult {
   rows: HomeRowResult[];
@@ -48,16 +64,22 @@ export interface HomeResult {
   dedicationGroups: DedicationGroupResult[];
 }
 
+// What `buildWomensSet` returns: the women's lesson stats alone. `courses`
+// is a separate load (`courseService.listForWomenArea`), not part of this
+// set, since a course carries no lesson-recurrence window to resolve.
+export interface WomensSet {
+  lessonCount: number;
+  teachers: Rabbi[];
+  cities: CityWithLessonCount[];
+}
+
 // `GET /v1/women`'s summary, built from the same women's-set step `getHome`
 // uses for its count and its tile, so the two numbers never drift apart.
+// `courses` is the women's-scope course set, carried on both arms, since a
+// course rail can show beside the lessons-empty state.
 export type WomenAreaResult =
-  | { kind: 'populated'; lessonCount: number; teachers: Rabbi[]; cities: CityWithLessonCount[] }
-  | { kind: 'empty'; rabbaniyot: Rabbi[] };
-
-// What `buildWomensSet` returns: the populated branch of `WomenAreaResult`,
-// without its discriminant, since the caller decides `kind` from the
-// lesson count.
-export type WomensSet = Omit<Extract<WomenAreaResult, { kind: 'populated' }>, 'kind'>;
+  | ({ kind: 'populated' } & WomensSet & { courses: CourseSummaryRecord[] })
+  | { kind: 'empty'; rabbaniyot: Rabbi[]; courses: CourseSummaryRecord[] };
 
 export type RabbiRow = typeof rabbis.$inferSelect;
 

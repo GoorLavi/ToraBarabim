@@ -7,6 +7,7 @@ import { registerAdminAuthRoutes } from './api/admin/auth';
 import { registerAgentRoutes } from './api/agent';
 import { registerAreaRoutes } from './api/areas';
 import { registerCityRoutes } from './api/cities';
+import { registerCourseRoutes } from './api/courses';
 import { registerHealthRoutes } from './api/health';
 import { registerHomeRoutes } from './api/home';
 import { registerLessonRoutes } from './api/lessons';
@@ -59,6 +60,7 @@ const start = async (): Promise<void> => {
   await registerPlaceRoutes(app);
   await registerRabbiDirectoryRoutes(app);
   await registerWomenAreaRoutes(app);
+  await registerCourseRoutes(app);
   await registerAdminAuthRoutes(app);
   await registerAdminRoutes(app);
   await registerPanelAuthRoutes(app);

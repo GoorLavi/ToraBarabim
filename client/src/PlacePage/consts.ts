@@ -4,6 +4,10 @@ import { LESSON_LIST_PAGE_SIZE } from '~/consts';
 
 export const BACK_TO_ALL_PLACES_LABEL = 'חזרה לכל המקומות';
 
+// Plain, like the home row's own title (spec section 13): the one heading
+// true of every course held at this place.
+export const COURSES_HEADING = 'קורסים';
+
 export const PLACE_PAGE_QUERY_KEYS = {
   detail: (placeId: string) => ['place', placeId] as const,
   lessons: (placeId: string) => ['place', placeId, 'lessons'] as const,

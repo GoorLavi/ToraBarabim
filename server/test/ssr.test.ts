@@ -1,18 +1,23 @@
 import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
 
-import type { CityDirectoryResponse, LessonOccurrence, LessonSearchResponse } from '@torabarabim/common';
+import type { CityDirectoryResponse, LessonOccurrence, LessonSearchResponse, RabbiHonorific } from '@torabarabim/common';
 import type { FastifyInstance } from 'fastify';
 
 import { HEALTH_RENDER_PROBE_PATH } from '../src/api/health/consts';
 import { buildRequestBody } from '../src/plugins/ssr';
+import * as courseService from '../src/service/course/course';
 import { addDays, nextDateOnWeekday, todayInIsrael } from '../src/service/lesson/israel-time';
 import { toAreaSlug } from '../src/service/shared/consts';
+import { toSlug } from '../src/service/shared/slug';
+import storage from '../src/storage/storage';
 
-// Read-only: the one constant this suite needs from the client workspace, to
-// assert a document's canonical against the same origin the route modules
-// build it from rather than a second, hand-typed copy of the domain.
+// Read-only: the two things this suite needs from the client workspace, so
+// its own assertions run the site's real conversion logic (the origin a
+// document's canonical is built from, the honorific a rabbi's name is
+// composed with) rather than a second, hand-typed copy of the domain.
 import { SITE_ORIGIN } from '../../client/consts';
+import { rabbiDisplayName } from '../../client/src/helpers';
 import { assertClientBuilt, assertDatabaseReachable, buildApp, rawClient } from './app-harness';
 
 const extractTitle = (html: string): string => {
@@ -396,6 +401,184 @@ describe('SSR rendering seam', () => {
       assert.match(res.body, /<loc>[^<]*\/women<\/loc>/);
       assert.match(res.body, /<loc>[^<]*\/women\/rabbaniyot<\/loc>/);
       assert.match(res.body, new RegExp(`<loc>[^<]*/rabbis/${SEEDED_RABBANIT_ID}/[^<]*</loc>`));
+    });
+  });
+
+  // The 5 seam cases from the plan, section 8: every case here exercises a
+  // document route or the sitemap resource route, which call
+  // `courseService` in-process, the same way the rabbi and place document
+  // routes call their own services. Fixtures are inserted with `rawClient`
+  // and removed in `after`, mirroring `course-api.test.ts`'s own approach,
+  // since this suite has no write route to create them through.
+  describe('the course page and its onward links', () => {
+    const today = todayInIsrael(new Date());
+
+    let rabbiId: string;
+    let rabbiName: string;
+    let rabbiHonorific: RabbiHonorific;
+    let cityCode: number;
+
+    const linkedCourseId = 'ssr-test-course-linked';
+    const unlinkedCourseId = 'ssr-test-course-unlinked';
+    const closedWithinWeekCourseId = 'ssr-test-course-closed-within-week';
+    const closedPastWeekCourseId = 'ssr-test-course-closed-past-week';
+    const allTestCourseIds = [linkedCourseId, unlinkedCourseId, closedWithinWeekCourseId, closedPastWeekCourseId];
+
+    const insertTestCourse = (
+      id: string,
+      fields: { name: string; openingDate: string; weeks: number; joinableAfterOpening: boolean; rabbiId?: string; teacherName?: string; cycle?: number },
+    ) =>
+      rawClient`
+        insert into courses (
+          id, name, cycle, description, rabbi_id, teacher_name, opening_date, weeks, sessions,
+          address_name, address_street, city_code, audience, joinable_after_opening,
+          contact_phone, cover_key
+        ) values (
+          ${id}, ${fields.name}, ${fields.cycle ?? null}, 'תיאור לבדיקת רינדור',
+          ${fields.rabbiId ?? null}, ${fields.teacherName ?? null},
+          ${fields.openingDate}, ${fields.weeks}, 4,
+          'בית מדרש לבדיקה', 'רחוב הבדיקה 1', ${cityCode}, 'men', ${fields.joinableAfterOpening},
+          '0501234567', ${`courses/ssr-test/${id}.jpg`}
+        )
+      `;
+
+    before(async () => {
+      const [rabbiRow] = await rawClient`select id, name, honorific from rabbis where honorific = 'rav' limit 1`;
+      const [cityRow] = await rawClient`select code from cities limit 1`;
+      assert.ok(rabbiRow, 'expected at least one seeded rav to link the test course to');
+      assert.ok(cityRow, 'expected at least one seeded city to address the test courses in');
+      rabbiId = rabbiRow.id as string;
+      rabbiName = rabbiRow.name as string;
+      rabbiHonorific = rabbiRow.honorific as RabbiHonorific;
+      cityCode = cityRow.code as number;
+
+      await Promise.all([
+        // Joinable, opened yesterday, 52 weeks: far from auto-closing, so
+        // `open` today. Carries a cycle to exercise the title.
+        insertTestCourse(linkedCourseId, {
+          name: 'קורס לבדיקת רינדור, מקושר',
+          openingDate: addDays(today, -1),
+          weeks: 52,
+          joinableAfterOpening: true,
+          rabbiId,
+          cycle: 3,
+        }),
+        insertTestCourse(unlinkedCourseId, {
+          name: 'קורס לבדיקת רינדור, ללא רב מקושר',
+          openingDate: addDays(today, -1),
+          weeks: 52,
+          joinableAfterOpening: true,
+          teacherName: 'ישיבת דוגמה לבדיקה',
+        }),
+        // Non-joinable, opened 3 days ago: closes on its own opening day, so
+        // closed since day -3, still inside the 7-day listed window.
+        insertTestCourse(closedWithinWeekCourseId, {
+          name: 'קורס לבדיקה, נסגר השבוע',
+          openingDate: addDays(today, -3),
+          weeks: 4,
+          joinableAfterOpening: false,
+          teacherName: 'ישיבת דוגמה לבדיקה',
+        }),
+        // Same shape, opened 10 days ago: closed since day -10, past the
+        // 7-day listed window, but still published and reachable by link.
+        insertTestCourse(closedPastWeekCourseId, {
+          name: 'קורס לבדיקה, ירד מהרשימות',
+          openingDate: addDays(today, -10),
+          weeks: 4,
+          joinableAfterOpening: false,
+          teacherName: 'ישיבת דוגמה לבדיקה',
+        }),
+      ]);
+    });
+
+    after(async () => {
+      await Promise.all(allTestCourseIds.map((id) => rawClient`delete from courses where id = ${id}`));
+    });
+
+    // Test 1 (plan, section 8): the 301, the canonical page's own title
+    // (carrying the cycle), canonical, cover og:image and Course JSON-LD,
+    // and that the JSON-LD provider is read from the right teacher shape for
+    // both a linked and an unlinked course.
+    test('a course URL without a slug redirects to its canonical path, which carries its own title, canonical, cover og:image and Course JSON-LD', async () => {
+      const detail = await courseService.getPublicById(linkedCourseId, new Date());
+      const canonicalPath = `/courses/${encodeURIComponent(detail.id)}/${encodeURIComponent(detail.slug)}`;
+
+      const redirectRes = await app.inject({ method: 'GET', url: `/courses/${encodeURIComponent(linkedCourseId)}` });
+      assert.equal(redirectRes.statusCode, 301);
+      assert.equal(redirectRes.headers.location, canonicalPath);
+      assert.match(redirectRes.headers['cache-control'] as string, /public/);
+
+      const page = await app.inject({ method: 'GET', url: canonicalPath });
+      assert.equal(page.statusCode, 200);
+      assert.match(extractTitle(page.body), /מחזור 3/);
+      assert.equal(extractCanonical(page.body), `${SITE_ORIGIN}${canonicalPath}`);
+      assert.equal(extractMetaProperty(page.body, 'og:image'), storage.publicUrl(detail.coverKey));
+
+      const linkedJsonLd = extractJsonLd(page.body, 'Course');
+      assert.equal(linkedJsonLd['name'], detail.name);
+      assert.equal(linkedJsonLd['image'], storage.publicUrl(detail.coverKey));
+      const linkedProvider = linkedJsonLd['provider'] as Record<string, unknown> | undefined;
+      assert.equal(linkedProvider?.['@type'], 'Person');
+      assert.equal(linkedProvider?.['name'], rabbiDisplayName({ name: rabbiName, honorific: rabbiHonorific }));
+
+      const unlinkedDetail = await courseService.getPublicById(unlinkedCourseId, new Date());
+      const unlinkedPath = `/courses/${encodeURIComponent(unlinkedDetail.id)}/${encodeURIComponent(unlinkedDetail.slug)}`;
+      const unlinkedPage = await app.inject({ method: 'GET', url: unlinkedPath });
+      assert.equal(unlinkedPage.statusCode, 200);
+      const unlinkedProvider = extractJsonLd(unlinkedPage.body, 'Course')['provider'] as Record<string, unknown> | undefined;
+      assert.equal(unlinkedProvider?.['name'], 'ישיבת דוגמה לבדיקה');
+    });
+
+    // Test 2 (plan, section 8).
+    test('an unknown course id is a real 404, never cached', async () => {
+      const res = await app.inject({ method: 'GET', url: '/courses/does-not-exist' });
+      assert.equal(res.statusCode, 404);
+      assert.equal(res.headers['cache-control'], 'no-store');
+    });
+
+    // Test 3 (plan, section 8): a closed course carries noindex whether it
+    // is still inside its listed week or already past it, and an open
+    // course carries none.
+    test('a closed course carries noindex in and past its listed week; an open course carries none', async () => {
+      for (const id of [closedWithinWeekCourseId, closedPastWeekCourseId]) {
+        const detail = await courseService.getPublicById(id, new Date());
+        const canonicalPath = `/courses/${encodeURIComponent(detail.id)}/${encodeURIComponent(detail.slug)}`;
+        const page = await app.inject({ method: 'GET', url: canonicalPath });
+        assert.equal(page.statusCode, 200);
+        assert.match(page.body, /<meta name="robots" content="noindex"/, `expected ${id} to carry noindex`);
+      }
+
+      const openDetail = await courseService.getPublicById(linkedCourseId, new Date());
+      const openPath = `/courses/${encodeURIComponent(openDetail.id)}/${encodeURIComponent(openDetail.slug)}`;
+      const openPage = await app.inject({ method: 'GET', url: openPath });
+      assert.equal(openPage.statusCode, 200);
+      assert.doesNotMatch(openPage.body, /<meta name="robots" content="noindex"/);
+    });
+
+    // Test 4 (plan, section 8): the sitemap excludes a closed course from
+    // the day it closes, stricter than the seven-day grace every other
+    // surface gives it.
+    test('the sitemap lists an open course and excludes one whose registration is already closed, even inside its listed week', async () => {
+      const openDetail = await courseService.getPublicById(linkedCourseId, new Date());
+      const closedDetail = await courseService.getPublicById(closedWithinWeekCourseId, new Date());
+      const openPath = `/courses/${encodeURIComponent(openDetail.id)}/${encodeURIComponent(openDetail.slug)}`;
+      const closedPath = `/courses/${encodeURIComponent(closedDetail.id)}/${encodeURIComponent(closedDetail.slug)}`;
+
+      const res = await app.inject({ method: 'GET', url: '/sitemap.xml' });
+      assert.equal(res.statusCode, 200);
+      assert.match(res.body, new RegExp(`<loc>[^<]*${escapeForRegExp(openPath)}</loc>`));
+      assert.doesNotMatch(res.body, new RegExp(`<loc>[^<]*${escapeForRegExp(closedPath)}</loc>`));
+    });
+
+    // Test 5 (plan, section 8).
+    test("a rav's rendered page links to his open course's canonical path", async () => {
+      const detail = await courseService.getPublicById(linkedCourseId, new Date());
+      const courseHref = `/courses/${encodeURIComponent(detail.id)}/${encodeURIComponent(detail.slug)}`;
+      const rabbiHref = `/rabbis/${encodeURIComponent(rabbiId)}/${encodeURIComponent(toSlug(rabbiName) || rabbiId)}`;
+
+      const page = await app.inject({ method: 'GET', url: rabbiHref });
+      assert.equal(page.statusCode, 200);
+      assert.ok(page.body.includes(`href="${courseHref}"`), `expected the rabbi's page to link to ${courseHref}`);
     });
   });
 });

@@ -23,4 +23,5 @@ export const toRabbiListResponse = (result: RabbiListResult): RabbiListResponse 
 export const toDeleteRabbiPreviewResponse = (result: DeleteRabbiPreviewResult): DeleteImpactPreview => ({
   lessonCount: result.lessonCount,
   exceptionCount: result.exceptionCount,
+  courseCount: result.courseCount,
 });

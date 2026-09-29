@@ -7,7 +7,7 @@ import { lessonClickProps } from '~/analytics/helpers';
 import { trackEvent } from '~/analytics/mixpanel';
 import { useActiveFilters } from '~/analytics/useActiveFilters';
 import { todayInIsrael } from '~/HomePage/helpers';
-import { AUDIENCE_LABELS, SUBSTITUTE_PREFIX_BY_HONORIFIC } from '~/consts';
+import { AUDIENCE_LABELS, META_LINE_SEPARATOR, SUBSTITUTE_PREFIX_BY_HONORIFIC } from '~/consts';
 import { lessonPath, rabbiDisplayName } from '~/helpers';
 
 import * as consts from './consts';
@@ -61,7 +61,7 @@ export const LessonCard = styled(({ className, lesson, surface, clickContext }: 
 
         <p className="meta" dir="auto">
           <span className={classNames('audience', treatment)}>{AUDIENCE_LABELS[lesson.audience]}</span>
-          {description && <span className="description">{consts.META_SEPARATOR}{description}</span>}
+          {description && <span className="description">{META_LINE_SEPARATOR}{description}</span>}
         </p>
 
         <p className="city" dir="auto">

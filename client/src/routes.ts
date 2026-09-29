@@ -25,6 +25,11 @@ export default [
     // renames itself from its own panel, so the id is the stable key and the
     // slug is decoration, resolved and redirected the same way.
     route('places/:placeId/:slug?', 'routes/places.$placeId/route.tsx'),
+    // The optional trailing segment mirrors rabbis/:rabbiId/:slug? and
+    // places/:placeId/:slug?: the id is the stable key, the slug is derived
+    // at read time and never stored, and a mismatch 301s to the canonical
+    // path.
+    route('courses/:courseId/:slug?', 'routes/courses.$courseId/route.tsx'),
     route('women', 'routes/women/route.tsx'),
     route('women/rabbaniyot', 'routes/women.rabbaniyot.tsx'),
     route('contact', 'routes/contact.tsx'),

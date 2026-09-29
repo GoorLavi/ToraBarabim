@@ -1,6 +1,6 @@
 import type { LessonOccurrence, RabbiHonorific } from '@torabarabim/common';
 
-import { LESSON_TOPIC_LABELS } from '~/HomePage/components/LessonCard/consts';
+import { LESSON_TOPIC_LABELS } from '~/consts';
 import { TEACHING_RABBI_ROLE_LABEL } from '~/LessonPage/consts';
 
 const ISRAEL_TIME_ZONE = 'Asia/Jerusalem';

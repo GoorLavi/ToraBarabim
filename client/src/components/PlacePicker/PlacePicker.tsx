@@ -3,6 +3,7 @@ import classNames from 'classnames';
 import styled from 'styled-components';
 
 import { CitySelect } from '~/components/CitySelect/CitySelect';
+import { OrDivider } from '~/components/OrDivider/OrDivider';
 import { ReadOnlyField } from '~/components/ReadOnlyField/ReadOnlyField';
 import { directionForValue } from '~/helpers';
 
@@ -46,13 +47,7 @@ export const PlacePicker = styled(({ className, venue, onChangeVenue, city, onSe
           alternative "או" would promise (design gate finding, PlacePicker
           nits: "'או' still between them implying the other arm is
           available"). */}
-      {venue.kind === 'address' && (
-        <div className="orDivider" aria-hidden="true">
-          <span className="line" />
-          <span className="label">{consts.OR_LABEL}</span>
-          <span className="line" />
-        </div>
-      )}
+      {venue.kind === 'address' && <OrDivider />}
 
       {venue.kind === 'place' ? (
         <>

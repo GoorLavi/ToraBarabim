@@ -1,13 +1,7 @@
 import { css } from 'styled-components';
 
-import {
-  RAIL_CARD_WIDTH_MD,
-  RAIL_CARD_WIDTH_SM,
-  RAIL_CARD_WIDTH_WIDE,
-  RAIL_CARD_WIDTH_XWIDE,
-  RAIL_COLUMNS_PHONE,
-} from '~/HomePage/components/LessonRail/consts';
-import { railCardWidth, railEdgeOffset } from '~/HomePage/components/LessonRail/helpers';
+import { RAIL_CARD_WIDTH_MD, RAIL_CARD_WIDTH_SM, RAIL_CARD_WIDTH_WIDE, RAIL_CARD_WIDTH_XWIDE, RAIL_COLUMNS_PHONE } from '~/components/Rail/consts';
+import { railCardWidth, railEdgeOffset } from '~/components/Rail/helpers';
 
 // Static, not a pulse: a breathing block reads as a fault to an audience
 // that spans a wide age range and often reads outdoors, and the shape below
@@ -30,7 +24,7 @@ export const RailSkeleton = css(
     display: flex;
     gap: ${theme.spacing.lg};
     overflow: hidden;
-    /* Mirrors LessonRail's .scrollerWrap/.scroller exactly, so a skeleton
+    /* Mirrors Rail's .scrollerWrap/.scroller exactly, so a skeleton
        card lands on the same pixel its real card will occupy, and the row
        never overflows the viewport while loading (design review, item 1). */
     margin-inline: calc(-1 * ${railEdgeOffset(theme, 'gutter')});
@@ -44,7 +38,7 @@ export const RailSkeleton = css(
     > .card {
       flex: 0 0 ${railCardWidth(theme, RAIL_COLUMNS_PHONE, railEdgeOffset(theme, 'gutter'))};
 
-      /* Same four-tier ladder as the real card (LessonRail/styles.ts), so
+      /* Same four-tier ladder as the real card (Rail/styles.ts), so
          the loading skeleton lands on the same pixel the real row will. */
       @media (min-width: ${theme.breakpoints.sm}) {
         flex-basis: ${RAIL_CARD_WIDTH_SM};

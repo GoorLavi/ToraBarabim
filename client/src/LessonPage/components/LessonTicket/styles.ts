@@ -472,24 +472,6 @@ export const TicketShell = css(
         text-decoration: none;
         white-space: nowrap;
 
-        /* Both icons share the same rendered block-size so their optical
-           weight matches; each keeps its own source aspect ratio rather than
-           being forced into a shared square box, since Google Maps' mark is
-           a tall pin, not a square glyph. */
-        > .icon {
-          flex: 0 0 auto;
-          block-size: 20px;
-          inline-size: auto;
-
-          &.waze {
-            aspect-ratio: 1 / 1;
-          }
-
-          &.googleMaps {
-            aspect-ratio: 256 / 367;
-          }
-        }
-
         /* A \`primary\`-colored ring is invisible against this card's own
            \`primary\` background, so the ring is the ticket's on-primary text
            color instead, not the site's usual \`colors.primary\` (unlike
