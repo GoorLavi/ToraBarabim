@@ -62,6 +62,8 @@ ships. Read it as history until someone redraws it.
 | `01 לוגו וסמל` | The mark, the lockup, and the checks at header and icon sizes |
 | `02 תמונות שיתוף` | The share images, square and wide, each on a dark and a light background |
 | `03 טוקנים` | The token board. Behind the code; see Known gaps |
+| `04 פוסטרים חלופיים` | The six lesson-card fallback photos, one frame (`62:3`). Found unlisted on 2026-09-29 |
+| `05 כרזות לתלייה` | The two print posters, A3 with 3 mm bleed, rebuilt as vectors and text from the owner's originals, with placeholders for the background photos and the QR codes, plus a notes frame carrying the open options. Waits on the owner |
 
 ## Components are in the site file, not the components file
 

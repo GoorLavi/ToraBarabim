@@ -151,8 +151,9 @@ page `01 בית`, node `88:2`; the file also holds `02 חיפוש`, `03 עיר`,
 
 The file key `sLBptV1k2ASbu1vKP0caBz` in
 [0014](../docs/decisions/0014-the-logo-is-a-fixed-mark-not-a-theme-token.md) is **not**
-this file: it is a drafts file holding logo work only, and mistaking it for the design
-is the wrong turn to avoid.
+this file: it is the language file (`תורה ברבים · שפה ורכיבים` in the map: logo, share
+images, the token board, the print posters), and mistaking it for the site's design is
+the wrong turn to avoid.
 
 **`get_metadata` with no `nodeId` on this file returns one page, `03 עיר`, out of
 thirteen.** The listing is lazy and silently partial, so an agent cannot find a page
