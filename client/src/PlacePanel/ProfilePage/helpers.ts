@@ -1,7 +1,7 @@
 import type { PlaceProfileResponse } from '@torabarabim/common';
 
 import * as photoPickerConsts from '~/components/PhotoPicker/consts';
-import { decodeImageFile } from '~/helpers';
+import { decodeImageFile } from '~/components/PhotoPicker/helpers';
 
 import * as consts from './consts';
 import type { ProfileFormErrors, ProfileFormState } from './models';

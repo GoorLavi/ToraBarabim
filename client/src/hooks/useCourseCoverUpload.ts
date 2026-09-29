@@ -4,9 +4,9 @@ import type { QueryKey } from '@tanstack/react-query';
 import type { CourseResponse } from '@torabarabim/common';
 
 import { TOO_LARGE_ERROR } from '~/components/PhotoPicker/consts';
+import { decodeImageFile } from '~/components/PhotoPicker/helpers';
 import { COURSE_COVER_SOFT_MIN_HEIGHT, COURSE_COVER_SOFT_MIN_WIDTH, COURSE_PHOTO_SMALL_WARNING } from '~/consts';
 import { courseErrorMessage, isCourseErrorCode } from '~/courseErrors';
-import { decodeImageFile } from '~/helpers';
 
 export interface CourseCoverUploadApi {
   uploadCover: (courseId: string, file: File) => Promise<CourseResponse>;

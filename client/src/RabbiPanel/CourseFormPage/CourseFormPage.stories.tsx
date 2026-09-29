@@ -223,17 +223,23 @@ export const CreateModeGalleryStaysLocalUntilSaved: Story = {
       const galleryInput = galleryAddLabel.closest('.addTile')?.querySelector<HTMLInputElement>('input[type="file"]');
       if (!galleryInput) throw new Error('CourseFormPage story: gallery file input not found');
 
-      // Two files at once, both already the existing uploading tile the
-      // instant they are picked, checked with no `waitFor`: that would
-      // tolerate the very delay this guards against, the size cap
-      // (`capPhotoSize`, PhotoPicker/helpers.ts) resolving before either
-      // tile ever shows (reviewer finding M1).
+      // Two files at once, both tiles already present the instant they are
+      // picked, checked with no `waitFor`: that would tolerate the very
+      // delay this guards against, the size cap (`capPhotoSize`,
+      // PhotoPicker/helpers.ts) resolving before either tile ever shows
+      // (reviewer finding M1). Checked by the tiles' own presence, not by
+      // the "מעלים..." label: that label is a status a fast decode can
+      // already have moved past by the time this line runs, which would
+      // fail a check pinned to it (reviewer finding N1).
       const [fileA, fileB] = await Promise.all([generatedImageFile(800, 800), generatedImageFile(800, 800)]);
       await userEvent.upload(galleryInput, [fileA, fileB]);
-      expect(canvas.getAllByText(galleryFieldConsts.GALLERY_UPLOADING_LABEL)).toHaveLength(2);
+      expect(canvasElement.querySelectorAll('.tile')).toHaveLength(2);
+      expect(canvas.getByText('2 מתוך 8')).toBeInTheDocument();
 
-      await expect(canvas.findByText('2 מתוך 8')).resolves.toBeInTheDocument();
-      await expect(canvas.getByRole('button', { name: 'הסרת תמונה 1' })).toBeInTheDocument();
+      // Settled (each tile's own cap resolved and it became a plain,
+      // removable draft): the eventual state the two immediate checks
+      // above are not a substitute for.
+      await expect(canvas.findByRole('button', { name: 'הסרת תמונה 1' })).resolves.toBeInTheDocument();
       await expect(canvas.getByRole('button', { name: 'הסרת תמונה 2' })).toBeInTheDocument();
       expect(photoUploadRequestCount).toBe(0);
     } finally {
@@ -346,6 +352,14 @@ export const EditModeGalleryMultiFileAdd: Story = {
 
     const [fileA, fileB] = await Promise.all([generatedImageFile(800, 800), generatedImageFile(800, 800)]);
     await userEvent.upload(galleryInput, [fileA, fileB]);
+
+    // Both requests actually fire, not just the first: a pick's second
+    // photo used to freeze at "מעלים..." forever, its own upload never
+    // started because the flag deciding that was read out of a
+    // `setPending` updater before React had actually run it (reviewer
+    // finding B1).
+    await waitFor(() => expect(canvas.queryByText(galleryFieldConsts.GALLERY_UPLOADING_LABEL)).not.toBeInTheDocument());
+    expect(multiFileAddCallCount).toBe(2);
 
     await waitFor(() => expect(canvas.getByText(galleryFieldConsts.galleryCountLabel(3))).toBeInTheDocument());
   },

@@ -3,8 +3,6 @@ import { useEffect, useRef, useState } from 'react';
 import classNames from 'classnames';
 import styled from 'styled-components';
 
-import { decodeImageFile } from '~/helpers';
-
 import { PhotoCropStep } from './components/PhotoCropStep/PhotoCropStep';
 import * as consts from './consts';
 import * as helpers from './helpers';
@@ -82,7 +80,7 @@ export const PhotoPicker = styled(
       }
 
       setCropUnavailableError(undefined);
-      void decodeImageFile(file).then(
+      void helpers.decodeImageFile(file).then(
         ({ objectUrl, width, height }) => {
           if (!isLatestPick()) {
             URL.revokeObjectURL(objectUrl);

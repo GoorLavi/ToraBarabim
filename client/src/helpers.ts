@@ -302,25 +302,3 @@ export const stateSealParts = (label: string): { small: string; big: string } =>
   const [small, big = ''] = label.split(' ');
   return { small: small ?? '', big };
 };
-
-// Decodes a file into an `<img>` to read its own real pixel dimensions: the
-// course cover's own soft-floor warning (both course photo hooks and
-// `CourseFormFields/useCreateCoverWarning.ts`), `PhotoPicker/helpers.ts`'s
-// own size-capping, and their own stories, all read the same decoded file
-// rather than each keeping a separate copy of this. Resolves the `image`
-// element itself, not only its dimensions, since a caller that draws it to
-// canvas (`capPhotoSize`) needs that same decoded element rather than
-// decoding a second one. Named for the live `objectUrl` it hands back too:
-// every caller owns revoking it, once it is done with whichever of the two
-// it actually needed.
-export const decodeImageFile = (file: File): Promise<{ objectUrl: string; image: HTMLImageElement; width: number; height: number }> =>
-  new Promise((resolve, reject) => {
-    const objectUrl = URL.createObjectURL(file);
-    const image = new Image();
-    image.onload = () => resolve({ objectUrl, image, width: image.naturalWidth, height: image.naturalHeight });
-    image.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
-      reject(new Error(`failed to read image dimensions for ${file.name}`));
-    };
-    image.src = objectUrl;
-  });

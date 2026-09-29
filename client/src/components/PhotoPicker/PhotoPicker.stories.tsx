@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
 
-import { decodeImageFile } from '~/helpers';
 import { uploadGeneratedFileToInput } from '~/storyMocks';
 
 import * as consts from './consts';
@@ -71,7 +70,7 @@ const selectGeneratedFile = async (canvasElement: HTMLElement, width: number, he
 // Decodes a file this story received back from `onSelectFile`, to assert on
 // its own real pixel dimensions rather than trust the code path was taken.
 const decodeFileDimensions = async (file: File): Promise<{ width: number; height: number }> => {
-  const { objectUrl, width, height } = await decodeImageFile(file);
+  const { objectUrl, width, height } = await helpers.decodeImageFile(file);
   URL.revokeObjectURL(objectUrl);
   return { width, height };
 };

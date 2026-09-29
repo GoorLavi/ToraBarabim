@@ -26,19 +26,17 @@ export interface CourseGalleryPhotosApi {
 // second design.
 type PendingStatus = 'capping' | 'draft' | 'uploading' | 'failed';
 
+// No `file` field: which file a pending photo uploads is bookkeeping, not
+// something drawn, and belongs in `cappedFilesRef` below, read there
+// synchronously rather than out of a `setPending` updater or a stale
+// closure (reviewer findings B1, B2).
 interface PendingPhoto {
   localId: string;
-  file: File;
   objectUrl: string;
   status: PendingStatus;
   failureReason?: string;
   canRetry: boolean;
 }
-
-// What one pick resolves to once its own cap has run: `undefined` when the
-// tile was removed while still capping, so `uploadDraftsAfterCreate` below
-// never uploads a photo the person already took back out.
-type CappedPick = { localId: string; file: File } | undefined;
 
 export interface CourseGalleryPhotosState {
   photos: GalleryPhoto[];
@@ -80,23 +78,38 @@ export const useCourseGalleryPhotos = (
   seedFailedFiles: File[] = [],
 ): CourseGalleryPhotosState => {
   const queryClient = useQueryClient();
+  // The file to upload for a given local id, once its own cap has resolved:
+  // the one source of truth for "what to send," written synchronously by
+  // `addFiles` below and by the seed initializer just below it, read
+  // synchronously by `retry` and `uploadDraftsAfterCreate`, never derived
+  // from `pending` state or a `setPending` updater's own result (reviewer
+  // findings B1, B2).
+  const cappedFilesRef = useRef<Map<string, File>>(new Map());
+  // Local ids `remove` caught still capping: read once that pick's own
+  // `capPhotoSize` resolves, so it is dropped instead of resurrected
+  // (reviewer finding B2).
+  const removedWhileCappingRef = useRef<Set<string>>(new Set());
+  // Every in-flight `capPhotoSize` call from `addFiles` below, keyed by the
+  // pick's own local id: `uploadDraftsAfterCreate` awaits these before
+  // reading `cappedFilesRef`, so a pick still capping when save is tapped
+  // is not silently skipped (reviewer finding M1).
+  const cappingRef = useRef<Map<string, Promise<void>>>(new Map());
+
   const [pending, setPending] = useState<PendingPhoto[]>(() =>
-    seedFailedFiles.map((file) => ({
-      localId: crypto.randomUUID(),
-      file,
-      objectUrl: URL.createObjectURL(file),
-      status: 'failed' as const,
-      failureReason: GALLERY_UPLOAD_FAILED_LABEL,
-      canRetry: true,
-    })),
+    seedFailedFiles.map((file) => {
+      const localId = crypto.randomUUID();
+      cappedFilesRef.current.set(localId, file);
+      return {
+        localId,
+        objectUrl: URL.createObjectURL(file),
+        status: 'failed' as const,
+        failureReason: GALLERY_UPLOAD_FAILED_LABEL,
+        canRetry: true,
+      };
+    }),
   );
   const [failedDeletes, setFailedDeletes] = useState<Map<string, { reason: string | undefined; canRetry: boolean }>>(new Map());
   const objectUrlsRef = useRef<Set<string>>(new Set(pending.map((photo) => photo.objectUrl)));
-  // Every in-flight `capPhotoSize` call from `addFiles` below, keyed by the
-  // pick's own local id: `uploadDraftsAfterCreate` awaits these before
-  // reading `pending`, so a pick still capping when save is tapped is not
-  // silently skipped (reviewer finding M1).
-  const cappingRef = useRef<Map<string, Promise<CappedPick>>>(new Map());
 
   useEffect(
     () => () => {
@@ -123,6 +136,7 @@ export const useCourseGalleryPhotos = (
         for (const photo of course.photos) photosById.set(photo.id, photo);
         return { ...base, photos: Array.from(photosById.values()) };
       });
+      cappedFilesRef.current.delete(localId);
       setPending((prev) => {
         const item = prev.find((photo) => photo.localId === localId);
         if (item) {
@@ -169,29 +183,28 @@ export const useCourseGalleryPhotos = (
       // person sees the pick right away, and the gallery's own count (the
       // cap `GalleryField.tsx` checks against) reflects it right away too,
       // rather than only once the cap below has resolved (reviewer finding
-      // M1). The object URL never changes even once `file` does: a capped
-      // file is the same photo, so there is nothing to gain from a second
-      // preview over the first.
-      setPending((prev) => [...prev, { localId, file, objectUrl, status: 'capping', canRetry: true }]);
+      // M1). The object URL never changes even once the capped file
+      // replaces it in `cappedFilesRef`: a capped file is the same photo,
+      // so there is nothing to gain from a second preview over the first.
+      setPending((prev) => [...prev, { localId, objectUrl, status: 'capping', canRetry: true }]);
 
-      const capping: Promise<CappedPick> = capPhotoSize(file).then((cappedFile) => {
-        let stillPending = false;
-        setPending((prev) =>
-          prev.map((photo) => {
-            if (photo.localId !== localId) return photo;
-            stillPending = true;
-            return { ...photo, file: cappedFile, status: courseId ? 'uploading' : 'draft' };
-          }),
-        );
-        // Removed while still capping: nothing left to upload, and
-        // `uploadDraftsAfterCreate` below must not resurrect it either.
-        if (!stillPending) return undefined;
-        // A course whose edit form was already left behind still finishes
-        // this request harmlessly: it has nowhere left to show its own
-        // result, but nothing here depends on the component still being
-        // mounted.
+      const capping = capPhotoSize(file).then((cappedFile) => {
+        // Decided from the ref `remove` itself writes, never from a flag
+        // set inside a `setPending` updater and read on the next line:
+        // React only runs an updater eagerly when nothing else is already
+        // queued for this fiber, so a second photo of the same pick
+        // finishing first, a sibling upload's own cache write, or any other
+        // pending state update leaves that flag still false when read
+        // (reviewer finding B1).
+        if (removedWhileCappingRef.current.delete(localId)) return;
+        cappedFilesRef.current.set(localId, cappedFile);
+        setPending((prev) => prev.map((photo) => (photo.localId === localId ? { ...photo, status: courseId ? 'uploading' : 'draft' } : photo)));
+        // Nothing here cancels this on unmount (an edit form left behind
+        // before its own capping resolves): the request still reaches the
+        // server, and only its result (this `setPending` above, and the
+        // cache write inside `runUpload`) lands on a component nobody is
+        // looking at any more.
         if (courseId) void runUpload(courseId, localId, cappedFile);
-        return { localId, file: cappedFile };
       });
       cappingRef.current.set(localId, capping);
       void capping.finally(() => cappingRef.current.delete(localId));
@@ -204,10 +217,10 @@ export const useCourseGalleryPhotos = (
       void removeSaved(localId);
       return;
     }
-    const item = pending.find((photo) => photo.localId === localId);
-    if (!item) return;
+    const file = cappedFilesRef.current.get(localId);
+    if (!file) return;
     setPending((prev) => prev.map((photo) => (photo.localId === localId ? { ...photo, status: 'uploading' } : photo)));
-    void runUpload(courseId, localId, item.file);
+    void runUpload(courseId, localId, file);
   };
 
   const remove = (id: string): void => {
@@ -215,6 +228,8 @@ export const useCourseGalleryPhotos = (
     if (pendingItem) {
       URL.revokeObjectURL(pendingItem.objectUrl);
       objectUrlsRef.current.delete(pendingItem.objectUrl);
+      cappedFilesRef.current.delete(id);
+      if (cappingRef.current.has(id)) removedWhileCappingRef.current.add(id);
       setPending((prev) => prev.filter((photo) => photo.localId !== id));
       return;
     }
@@ -222,13 +237,17 @@ export const useCourseGalleryPhotos = (
   };
 
   const uploadDraftsAfterCreate = async (newCourseId: string): Promise<File[]> => {
-    // Waits for any pick still capping (a fast save right after picking):
-    // otherwise this reads `pending` before that pick's own `addFiles` ever
-    // marks it 'draft', and it is silently never uploaded (reviewer finding
-    // M1).
-    const justCapped = (await Promise.all(cappingRef.current.values())).filter((capped): capped is Exclude<CappedPick, undefined> => capped !== undefined);
-    const alreadyDrafted = pending.filter((photo) => photo.status === 'draft').map((photo) => ({ localId: photo.localId, file: photo.file }));
-    const drafts = [...alreadyDrafted, ...justCapped];
+    // Waits for any pick still capping when save was tapped, then reads the
+    // drafts straight from `cappedFilesRef`, never from `pending`: that
+    // closure is frozen at the moment save was tapped, so a pick whose
+    // capping finishes during the create request itself (the common case)
+    // would otherwise still read here as 'capping' and be silently
+    // dropped, and a pick removed during that same window would still
+    // upload (reviewer finding B2).
+    await Promise.all(cappingRef.current.values());
+    const drafts = Array.from(cappedFilesRef.current.entries())
+      .filter(([localId]) => !removedWhileCappingRef.current.has(localId))
+      .map(([localId, file]) => ({ localId, file }));
     const failedFiles: File[] = [];
     for (const draft of drafts) {
       setPending((prev) => prev.map((photo) => (photo.localId === draft.localId ? { ...photo, status: 'uploading' } : photo)));
