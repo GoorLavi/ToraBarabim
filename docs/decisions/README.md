@@ -104,3 +104,16 @@ The real alternatives and why each lost. If there was no alternative, say so.
 | [0034](0034-a-place-is-an-entity-again-and-a-lessons-venue-is-a-place-or-an-address.md) | A place is an entity again, and a lesson's venue is a place or an address | accepted, supersedes [0016](0016-a-venue-is-a-field-of-the-lesson.md) |
 | [0035](0035-storybook-mocks-fetch-with-an-in-house-layer-not-msw.md) | Storybook mocks `fetch` with an in-house layer, not msw | accepted |
 | [0036](0036-the-site-invites-dedications-by-contact-only.md) | The site invites dedications by contact only, and is not a donation platform | accepted |
+| [0037](0037-courses-launch-free-with-saving-and-publishing-kept-apart.md) | Courses launch free and self-serve, with saving and publishing kept apart | accepted |
+| [0038](0038-a-course-shows-its-price-as-a-number-of-shekels.md) | A course shows its price as a number of shekels, and never the word free | accepted |
+| [0039](0039-an-admin-course-may-have-no-rabbi-and-no-place.md) | A course entered by an administrator may have no rabbi and no place | accepted |
+| [0040](0040-course-gallery-photos-carry-no-restriction-and-no-consent-step.md) | Course gallery photos carry no restriction and no consent step | accepted, a gap accepted on purpose |
+| [0041](0041-an-unlinked-course-names-its-teacher-in-free-text.md) | An unlinked course names its teacher in free text, with no honorific and no audience guard | accepted, a gap accepted on purpose |
+| [0042](0042-a-womens-course-shows-only-in-the-womens-area.md) | A women's course shows only in the women's area | accepted |
+| [0043](0043-a-courses-contact-number-is-public-while-registration-is-open.md) | A course's contact number is public while registration is open | accepted |
+| [0044](0044-a-course-has-one-date-closes-for-good-and-stays-listed-a-week.md) | A course has one date, closes for good, and stays listed for a week | accepted |
+| [0045](0045-a-closed-course-is-read-only-and-the-next-cycle-is-a-duplicate.md) | A closed course is read-only, and the next cycle is a duplicate | accepted |
+| [0046](0046-deleting-a-rabbi-deletes-their-courses.md) | Deleting a rabbi deletes their courses | accepted, extends [0004](0004-deleting-cascades-deliberately.md) |
+| [0047](0047-a-courses-city-is-read-through-its-place.md) | A course's city is read through its place | accepted |
+| [0048](0048-course-photos-are-stored-by-storage-key.md) | Course photos are stored by storage key, not by URL | accepted |
+| [0049](0049-course-photos-have-no-size-floor.md) | Course photos have no size floor; a small photo gets a warning | accepted |
