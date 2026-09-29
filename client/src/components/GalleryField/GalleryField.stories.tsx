@@ -21,6 +21,7 @@ const meta: Meta<typeof GalleryField> = {
     onAddFiles: fn(),
     onRemove: fn(),
     onRetry: fn(),
+    isSaving: false,
   },
 };
 
@@ -137,5 +138,25 @@ export const OneBelowMaxStillOffersAddTile: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByText(consts.GALLERY_ADD_LABEL)).toBeInTheDocument();
+  },
+};
+
+// The form's own save is in flight (the create request, or the draft
+// uploads after it): the add tile takes no new photos meanwhile, or one
+// picked here could still be pending nobody uploads once the page has
+// already navigated away (reviewer finding L1). Reuses the same disabled
+// look the form's other controls already show while saving
+// (PhotoPicker/styles.ts's ".chooseFile.disabled", both panels' own
+// ".save:disabled"), for the designer to look at.
+export const AddTileDisabledWhileSaving: Story = {
+  args: {
+    photos: [photo('1'), photo('2')],
+    isSaving: true,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const input = canvas.getByText(consts.GALLERY_ADD_LABEL).closest('label')?.querySelector('input');
+    if (!input) throw new Error('GalleryField story: add-tile file input not found');
+    expect(input).toBeDisabled();
   },
 };

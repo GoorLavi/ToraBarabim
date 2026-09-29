@@ -6,11 +6,10 @@ import type { CropRect, CropTransform, ImageDimensions, PhotoPickerAspectRatio }
 // `CourseFormFields/useCreateCoverWarning.ts`), `capPhotoSize` below, and
 // their own stories, all read the same decoded file rather than each
 // keeping a separate copy of this. Resolves the `image` element itself, not
-// only its dimensions, since a caller that draws it to canvas
-// (`capPhotoSize`, `PhotoCropStep.tsx`) needs that same decoded element
-// rather than decoding a second one. Named for the live `objectUrl` it
-// hands back too: every caller owns revoking it, once it is done with
-// whichever of the two it actually needed. Lives here, not in the
+// only its dimensions, since `capPhotoSize` draws that same decoded element
+// to canvas rather than decoding a second one. Named for the live
+// `objectUrl` it hands back too: every caller owns revoking it, once it is
+// done with whichever of the two it actually needed. Lives here, not in the
 // app-wide `~/helpers.ts`: `server/tsconfig.test.json` compiles that file
 // too (a route loader reaches it), and it has no DOM lib, so `new Image()`
 // there fails the server's own typecheck.

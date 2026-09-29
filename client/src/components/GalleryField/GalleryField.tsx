@@ -13,7 +13,7 @@ import * as styles from './styles';
 // wrapping tile grid rather than `PhotoPicker`'s single fixed frame, since a
 // gallery has no crop step and no one photo to keep centered (design brief
 // B, item 6).
-export const GalleryField = styled(({ className, photos, onAddFiles, onRemove, onRetry }: GalleryFieldProps) => {
+export const GalleryField = styled(({ className, photos, onAddFiles, onRemove, onRetry, isSaving }: GalleryFieldProps) => {
   const canAddMore = photos.length < consts.COURSE_GALLERY_MAX_PHOTOS;
   // Read from each tile's own rendered `<img>`, the one thing every photo
   // has regardless of where its URL came from (a freshly picked file's
@@ -95,12 +95,12 @@ export const GalleryField = styled(({ className, photos, onAddFiles, onRemove, o
         ))}
 
         {canAddMore && (
-          <label className="addTile">
+          <label className={classNames('addTile', { disabled: isSaving })}>
             <span className="plus" aria-hidden="true">
               {'+'}
             </span>
             <span className="label">{consts.GALLERY_ADD_LABEL}</span>
-            <input className="fileInput" type="file" accept="image/jpeg,image/png" multiple onChange={handleChange} />
+            <input className="fileInput" type="file" accept="image/jpeg,image/png" multiple onChange={handleChange} disabled={isSaving} />
           </label>
         )}
       </div>

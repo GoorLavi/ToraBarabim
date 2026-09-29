@@ -73,6 +73,10 @@ export interface CourseFormGalleryProps {
   onAddFiles: (files: File[]) => void;
   onRetry: (id: string) => void;
   onRemove: (id: string) => void;
+  // The same condition that already disables the page's own save button:
+  // passed straight through to `GalleryField` so its add tile takes no new
+  // photos while a save is in flight either (reviewer finding L1).
+  isSaving: boolean;
 }
 
 export interface CourseFormFieldsProps {

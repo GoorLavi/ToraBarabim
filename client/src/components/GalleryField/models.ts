@@ -19,4 +19,10 @@ export interface GalleryFieldProps {
   onAddFiles: (files: File[]) => void;
   onRemove: (id: string) => void;
   onRetry: (id: string) => void;
+  // The form's own save is in flight (the create request itself, or the
+  // draft uploads after it): the add tile takes no new photos meanwhile, or
+  // one picked here could still be a fresh, unwatched pending photo by the
+  // time `uploadDraftsAfterCreate` has already gathered and started
+  // uploading everything it knows about (reviewer finding L1).
+  isSaving: boolean;
 }

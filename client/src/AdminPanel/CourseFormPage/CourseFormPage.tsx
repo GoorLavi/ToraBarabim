@@ -197,7 +197,13 @@ export const CourseFormPage = styled(({ className }: CourseFormPageProps) => {
                 onRetryUpload: coverUpload.retry,
                 onSelectFile: (file) => (id ? coverUpload.upload(file) : setForm((prev) => ({ ...prev, cover: file }))),
               },
-              gallery: { photos: gallery.photos, onAddFiles: gallery.addFiles, onRetry: gallery.retry, onRemove: gallery.remove },
+              gallery: {
+                photos: gallery.photos,
+                onAddFiles: gallery.addFiles,
+                onRetry: gallery.retry,
+                onRemove: gallery.remove,
+                isSaving: saveCourse.isPending || isUploadingDrafts,
+              },
             }}
           />
 

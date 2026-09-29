@@ -160,6 +160,15 @@ export const GalleryField = css(
       justify-content: center;
       gap: ${theme.spacing.xs};
 
+      /* The same treatment the form's own controls already use while
+         saving (PhotoPicker/styles.ts's ".chooseFile.disabled", both
+         panels' own ".save:disabled"): no separate look invented here
+         (reviewer finding L1). */
+      &.disabled {
+        opacity: 0.6;
+        pointer-events: none;
+      }
+
       > .plus {
         font-size: 24px;
         line-height: 1;

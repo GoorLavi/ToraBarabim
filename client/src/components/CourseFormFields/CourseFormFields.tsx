@@ -376,7 +376,7 @@ export const CourseFormFields = styled(
 
           <div className="field">
             <span className="label">{consts.GALLERY_FIELD_LABEL}</span>
-            <GalleryField {...{ photos: gallery.photos, onAddFiles: gallery.onAddFiles, onRetry: gallery.onRetry, onRemove: gallery.onRemove }} />
+            <GalleryField {...{ photos: gallery.photos, onAddFiles: gallery.onAddFiles, onRetry: gallery.onRetry, onRemove: gallery.onRemove, isSaving: gallery.isSaving }} />
             <span className="helper">{consts.GALLERY_FIELD_HELP}</span>
           </div>
         </section>

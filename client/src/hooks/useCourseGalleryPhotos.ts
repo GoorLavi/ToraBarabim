@@ -201,9 +201,10 @@ export const useCourseGalleryPhotos = (
         setPending((prev) => prev.map((photo) => (photo.localId === localId ? { ...photo, status: courseId ? 'uploading' : 'draft' } : photo)));
         // Nothing here cancels this on unmount (an edit form left behind
         // before its own capping resolves): the request still reaches the
-        // server, and only its result (this `setPending` above, and the
-        // cache write inside `runUpload`) lands on a component nobody is
-        // looking at any more.
+        // server. Its result is not wasted either: `runUpload`'s own cache
+        // write still lands in the shared query cache, so reopening the
+        // course shows the photo; only this `setPending` above goes
+        // nowhere, since there is no component left to draw it.
         if (courseId) void runUpload(courseId, localId, cappedFile);
       });
       cappingRef.current.set(localId, capping);
