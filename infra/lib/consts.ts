@@ -23,3 +23,7 @@ export const DOCKER_BUILD_CONTEXT_EXCLUDES = [
   '**/.DS_Store',
   '**/coverage',
 ];
+
+// ISO 3166-1 alpha-2 codes, as CloudFront expects (0037). Never `US` or
+// `IL`: test/site-stack.test.ts, which CI runs, fails if either is added.
+export const BLOCKED_VIEWER_COUNTRIES: readonly string[] = ['CN', 'RU'];

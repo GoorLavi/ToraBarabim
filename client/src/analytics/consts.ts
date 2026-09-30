@@ -111,3 +111,9 @@ export const EMPTY_ACTIVE_FILTERS: ActiveFilters = {
   date: undefined,
   query: undefined,
 };
+
+// Automation that runs a real browser and so gets past Mixpanel's own
+// crawler list, which matches named bots like Googlebot only: headless
+// Chrome announces itself in the user agent, and a generic bot, crawl or
+// spider word covers the rest.
+export const AUTOMATED_USER_AGENT_PATTERN = /bot|crawl|spider|headless/i;

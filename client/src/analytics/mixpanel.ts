@@ -4,6 +4,7 @@ import { BREAKPOINTS } from '~/theme/tokens';
 
 import { MIXPANEL_PROJECT_TOKEN } from '../../consts';
 import { MIXPANEL_QUEUE_CAP } from './consts';
+import { isAutomatedBrowser } from './helpers';
 import type { AnalyticsEventName, AnalyticsEventProps, SuperProperties } from './models';
 
 // `mixpanel-browser` touches `window`/`document` at import time, and this
@@ -20,10 +21,18 @@ let mixpanelInstance: Mixpanel | null = null;
 let initStarted = false;
 // Fail open: an ad blocker (decision 0025) rejects the dynamic import below.
 // Once that happens, tracking simply stops for the rest of the session
-// rather than the page doing anything the visitor would notice.
+// rather than the page doing anything the visitor would notice. Also set
+// when `initAnalytics` finds an automated browser.
 let isUnavailable = false;
 const queuedEvents: Array<{ name: string; props?: Parameters<Mixpanel['track']>[1] }> = [];
 let pendingSuperProperties: Partial<SuperProperties> = {};
+
+// The queue goes with it, so no event sits in memory for the rest of the
+// session with nothing left to drain it.
+const disableTracking = (): void => {
+  isUnavailable = true;
+  queuedEvents.splice(0);
+};
 
 // Read once per session, on purpose: a session that starts in portrait and
 // rotates keeps reporting its starting viewport rather than re-registering
@@ -35,6 +44,13 @@ const readViewport = (): SuperProperties['viewport'] =>
 export const initAnalytics = (): void => {
   if (typeof window === 'undefined' || !import.meta.env.PROD || initStarted) return;
   initStarted = true;
+
+  // Disabled outright rather than merely skipped, so `trackEvent` drops
+  // events instead of queueing them for an SDK load that never comes.
+  if (isAutomatedBrowser(navigator)) {
+    disableTracking();
+    return;
+  }
 
   void import('mixpanel-browser')
     .then(({ default: mixpanel }) => {
@@ -55,10 +71,8 @@ export const initAnalytics = (): void => {
     })
     .catch(() => {
       // Fails open: an ad blocker (decision 0025) rejects the import above,
-      // so tracking silently stops. The queue is dropped so it cannot grow
-      // unbounded for the rest of the session with nothing left to drain it.
-      isUnavailable = true;
-      queuedEvents.splice(0);
+      // so tracking silently stops.
+      disableTracking();
     });
 };
 
