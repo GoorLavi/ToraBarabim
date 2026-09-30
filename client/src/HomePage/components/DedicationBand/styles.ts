@@ -37,24 +37,26 @@ export const DedicationBand = css(
      individual floors than to either target). */
   ${dedicationScaleCss(theme)}
 
+  /* Full bleed in both variants: a horizontally scrolling row cancels the
+     page gutter and re-applies it as its own inline padding (.viewport
+     below), so the strip reaches the true viewport edge and the next
+     unit's peek is not cut short inside the column. HomePage/styles.ts
+     deliberately keeps a constant two-step gutter (lg, then xl from md)
+     rather than the shared contentGutterInline helper, because this page's
+     band is uncapped and never collapses that gutter to zero, so there is
+     no third breakpoint to mirror here either. */
+  margin-inline: calc(-1 * ${theme.spacing.lg});
+  inline-size: calc(100% + 2 * ${theme.spacing.lg});
+
+  @media (min-width: ${theme.breakpoints.md}) {
+    margin-inline: calc(-1 * ${theme.spacing.xl});
+    inline-size: calc(100% + 2 * ${theme.spacing.xl});
+  }
+
   &.onPrimary {
     background: ${theme.colors.primaryStrong};
-    /* Full bleed: cancels HomePage's own inline gutter so this reaches the
-       true viewport edge instead of stopping at the content band like the
-       page's other sections. HomePage/styles.ts deliberately keeps a
-       constant two-step gutter (lg, then xl from md) rather than the
-       shared contentGutterInline helper, because this page's band is
-       uncapped and never collapses that gutter to zero, so there is no
-       third breakpoint to mirror here either. */
-    margin-inline: calc(-1 * ${theme.spacing.lg});
-    inline-size: calc(100% + 2 * ${theme.spacing.lg});
     padding-block: ${scaledCss(consts.DEDICATION_BAND_PADDING_ON_PRIMARY_REFERENCE, consts.DEDICATION_BAND_PADDING_FLOOR_PX)};
     margin-block-start: ${theme.spacing.section};
-
-    @media (min-width: ${theme.breakpoints.md}) {
-      margin-inline: calc(-1 * ${theme.spacing.xl});
-      inline-size: calc(100% + 2 * ${theme.spacing.xl});
-    }
 
     /* Mirrors SiteLogoLink/styles.ts's own outline colour for the plum
        field: the browser's default focus ring reads poorly against it,
@@ -71,8 +73,6 @@ export const DedicationBand = css(
   }
 
   &.onPage {
-    /* No bleed: both onPage bands, between the rails and above RabbiRow,
-       keep the page's gutter, unlike the full-bleed onPrimary foot band. */
     padding-block: ${scaledCss(consts.DEDICATION_BAND_PADDING_ON_PAGE_REFERENCE, consts.DEDICATION_BAND_PADDING_FLOOR_PX)};
 
     > .viewport:focus-visible {

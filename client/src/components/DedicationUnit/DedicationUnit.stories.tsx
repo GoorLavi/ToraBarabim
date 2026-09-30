@@ -83,7 +83,7 @@ export const HonorificHyd: Story = {
 };
 
 // The wrapping instrument: several given names plus a family name plus the
-// honorific wraps to more than two lines at the unit's width, and none of it may be
+// honorific wraps to two lines at the unit's width, and none of it may be
 // clipped (design-system.md, dedication hard rule 1).
 export const LongestRealisticName: Story = {
   args: { text: DEDICATION_TEXT_MEMORIAL_LONGEST_NAME, variant: 'onPage' },

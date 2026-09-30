@@ -58,7 +58,7 @@ export const DEDICATION_TEXT_MEMORIAL_HYD: DedicationText = {
 
 // The longest realistic name this fixture set carries, for the wrapping
 // instrument: several given names plus a family name plus the honorific,
-// which wraps to more than two lines at the unit's width.
+// which wraps to two lines at the unit's width.
 export const DEDICATION_TEXT_MEMORIAL_LONGEST_NAME: DedicationText = {
   formulaLine: `לעילוי${NBSP}נשמת`,
   nameLine: `יהודה אריה לייב הכהן${NBSP}ז״ל`,
