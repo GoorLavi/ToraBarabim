@@ -64,6 +64,8 @@ ships. Read it as history until someone redraws it.
 | `01 לוגו וסמל` | The mark, the lockup, and the checks at header and icon sizes |
 | `02 תמונות שיתוף` | The share images, square and wide, each on a dark and a light background |
 | `03 טוקנים` | The token board. Behind the code; see Known gaps |
+| `04 פוסטרים חלופיים` | The six lesson-card fallback photos, one frame (`62:3`). Found unlisted on 2026-09-29 |
+| `05 כרזות לתלייה` | The two print posters, final and approved on 2026-09-30. One frame per poster at the originals' 1024 x 1536, with the owner's original image as a locked base layer, the approved changes patched over it (copy fixes, the official mark, בס"ד, real QR codes with a per-poster `utm_source`, the reworked contact panel, the audience glyphs, the tile row and the band order) and a hidden editable vector layer. Beside them, a locked copy of each original and the notes frame that lists every change and the pre-print checks |
 
 ## Components are in the site file, not the components file
 
