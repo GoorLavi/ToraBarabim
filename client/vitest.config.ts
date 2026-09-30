@@ -40,6 +40,18 @@ export default defineConfig({
           },
         },
       },
+      // Pure helpers need no browser and no Storybook config, so this project
+      // does not extend the root config.
+      {
+        resolve: {
+          alias: srcAlias,
+        },
+        test: {
+          name: 'unit',
+          environment: 'node',
+          include: ['src/**/*.test.ts'],
+        },
+      },
     ],
   },
 });

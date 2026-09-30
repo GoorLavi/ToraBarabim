@@ -1,4 +1,4 @@
-import type { ActiveFilters } from './models';
+import type { ActiveFilters, PosterSource } from './models';
 
 export const MIXPANEL_EVENTS = {
   pageView: 'Page View',
@@ -31,6 +31,7 @@ export const MIXPANEL_EVENTS = {
   courseDuplicated: 'Course Duplicated',
   courseDeleted: 'Course Deleted',
   courseRegistrationClosed: 'Course Registration Closed',
+  posterScan: 'Poster Scan',
 } as const;
 
 // A `LessonCard` can sit in any of these lists; `homeRail` is the only one
@@ -117,3 +118,15 @@ export const EMPTY_ACTIVE_FILTERS: ActiveFilters = {
 // Chrome announces itself in the user agent, and a generic bot, crawl or
 // spider word covers the rest.
 export const AUTOMATED_USER_AGENT_PATTERN = /bot|crawl|spider|headless/i;
+
+export const POSTER_SOURCE_PARAM = 'utm_source';
+
+// Hand-mirrored from the QR codes printed on the two posters: the keys are
+// the exact values a scan opens the site with, so changing one here without
+// reprinting that poster silently drops its attribution. A `Map`, not an
+// object literal: an object would answer `?utm_source=constructor` with a
+// function from `Object.prototype`.
+export const POSTER_SOURCES_BY_UTM_VALUE: ReadonlyMap<string, PosterSource> = new Map<string, PosterSource>([
+  ['poster-listers', 'listers'],
+  ['poster-seekers', 'seekers'],
+]);

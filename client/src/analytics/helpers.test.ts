@@ -1,0 +1,33 @@
+import { describe, expect, it } from 'vitest';
+
+import { posterSourceFrom } from './helpers';
+
+describe('posterSourceFrom', () => {
+  it('maps the recruiting poster QR value to listers', () => {
+    expect(posterSourceFrom('?utm_source=poster-listers')).toBe('listers');
+  });
+
+  it('maps the seekers poster QR value to seekers', () => {
+    expect(posterSourceFrom('?utm_source=poster-seekers')).toBe('seekers');
+  });
+
+  it('resolves the source when other params sit around it', () => {
+    expect(posterSourceFrom('?city=jerusalem&utm_source=poster-seekers&utm_medium=qr')).toBe('seekers');
+  });
+
+  it('returns undefined for an empty search string', () => {
+    expect(posterSourceFrom('')).toBeUndefined();
+  });
+
+  it('returns undefined when only unrelated params are present', () => {
+    expect(posterSourceFrom('?city=jerusalem&q=rabbi')).toBeUndefined();
+  });
+
+  it('returns undefined for a value that is not one of the two posters', () => {
+    expect(posterSourceFrom('?utm_source=newsletter')).toBeUndefined();
+  });
+
+  it('returns undefined for a value that names an Object.prototype member', () => {
+    expect(posterSourceFrom('?utm_source=constructor')).toBeUndefined();
+  });
+});
