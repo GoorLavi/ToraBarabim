@@ -458,23 +458,38 @@ export const KeyboardOpensAndFocusReturns: Story = {
   },
 };
 
-// Mixed real data, the shape that showed this on the owner's own
-// screenshot: one unit carries a parent line and a donor credit, one
-// carries neither. Every lower ornament's own bottom edge lines up
-// regardless (measured before the fix: 1693.3, 1609.3, 1693.3, an 84px
-// spread, the shorter unit closing its ornament early into a hole in the
-// row it is meant to frame).
-export const OrnamentsShareABaselineWithMixedContent: Story = {
+// Guards against units stretched to the tallest one in the row, which left
+// a shorter unit (no parent line, no donor credit) with an empty run above
+// its lower ornament.
+export const UnitsCentreOnOneLineWithMixedContent: Story = {
   args: { group: DEDICATION_GROUP_MEMORIAL, variant: 'onPage' },
   play: async ({ canvasElement }) => {
-    const lowerOrnaments = Array.from(canvasElement.querySelectorAll<SVGElement>('.track:not(.duplicate) > * > .mirrored'));
-    expect(lowerOrnaments.length).toBeGreaterThan(1);
+    const units = Array.from(canvasElement.querySelectorAll<HTMLElement>('.track:not(.duplicate) > *'));
+    expect(units.length).toBeGreaterThan(1);
 
-    const bottoms = lowerOrnaments.map((ornament) => ornament.getBoundingClientRect().bottom);
-    const [firstBottom] = bottoms;
-    if (firstBottom === undefined) throw new Error('DedicationBand story: no lower ornaments found');
-    for (const bottom of bottoms) {
-      expect(Math.abs(bottom - firstBottom)).toBeLessThan(1);
+    const rects = units.map((unit) => unit.getBoundingClientRect());
+    const [firstRect] = rects;
+    if (!firstRect) throw new Error('DedicationBand story: no units found');
+    const firstCentre = firstRect.top + firstRect.height / 2;
+    for (const rect of rects) {
+      expect(Math.abs(rect.top + rect.height / 2 - firstCentre)).toBeLessThan(1);
+    }
+
+    // Proves the group really is mixed and nothing was stretched to equal.
+    // The centre check above would also pass under stretch (equal boxes
+    // share a centre), so this spread check is the one that fails there.
+    const heights = rects.map((rect) => rect.height);
+    expect(Math.max(...heights) - Math.min(...heights)).toBeGreaterThan(10);
+
+    // No empty run inside a shorter unit: the lower ornament sits one gap
+    // below the text, not pushed to the bottom of a taller box.
+    for (const unit of units) {
+      const text = unit.querySelector<HTMLElement>('.text');
+      const lowerOrnament = unit.querySelector<SVGSVGElement>('.mirrored');
+      if (!text || !lowerOrnament) throw new Error('DedicationBand story: a unit is missing its text or lower ornament');
+      const gap = Number.parseFloat(getComputedStyle(unit).rowGap);
+      const distance = lowerOrnament.getBoundingClientRect().top - text.getBoundingClientRect().bottom;
+      expect(Math.abs(distance - gap)).toBeLessThan(1);
     }
   },
 };

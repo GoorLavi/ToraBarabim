@@ -154,15 +154,15 @@ export const DedicationBand = css(
      them (above) standing in for the framing padding that used to sit
      here, so the two together form one continuous strip exactly the loop
      period long; a shrink-proof flex item on both keeps that true even
-     while the viewport itself is narrower than either copy. Stretched, not
-     started at the top: every unit in the row takes the height of the
-     tallest one, so a unit with fewer lines does not close its lower
-     ornament short of its neighbours' (DedicationUnit's own lower ornament
-     absorbs the difference with an auto top margin). */
+     while the viewport itself is narrower than either copy. Centred, neither
+     stretched nor started at the top: each unit is only as tall as its own
+     content, so a unit with fewer lines has no empty run above its lower
+     ornament, and every unit shares the row's middle line (owner: the
+     ornaments of different units need not line up). */
   > .viewport > .track {
     flex-shrink: 0;
     display: flex;
-    align-items: stretch;
+    align-items: center;
     gap: ${consts.DEDICATION_UNIT_GAP_PX}px;
   }
 
