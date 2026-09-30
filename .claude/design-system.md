@@ -350,8 +350,8 @@ nowhere else on the site, and a request to reuse it is a request to change what 
 | `dedicationParent` | Frank Ruhl Libre | 32 | 14 | 1.25 | 700 | 0 |
 | `dedicationClosing` | Assistant | 20 | 14 | 1.2 | 400 | `0.12em` |
 
-Every size is `max(floor, reference * scale)`, and the scale is set once, on the unit
-itself, so the home page bands and the admin preview render the same size. At the scales
+Every size is `max(floor, reference * scale)`, and the scale is defined once and declared
+on the unit itself, so the home page bands and the admin preview render the same size. At the scales
 the site ships (about 0.39 on a phone, 0.43 from `md`) every line sits at its floor, so a
 reader sees the floor column. All four are centre aligned, and all four are
 **single-value at every width**. That is a deliberate departure from every responsive
@@ -360,8 +360,8 @@ width everywhere, so a type step would have nothing to respond to. The donor cre
 takes `dedicationClosing` and gets no role of its own.
 
 **Dedication geometry.** The unit is 200 wide at every placement and every width, and
-units sit 32 apart (`xxl`), so one unit plus its gap is 232. The ornament is 120 wide at
-the site's scale. The unit width holds a first name, surname, and honorific on one line;
+units sit 32 apart (`xxl`), so one unit plus its gap is 232. The ornament is about 120 wide
+at the site's scale. The unit width holds a first name, surname, and honorific on one line;
 a longer name wraps into two balanced lines rather than breaking a word. The unit width
 was measured against the floors: if the scale is ever raised so the lines leave their
 floors, revisit the width in the same change.
