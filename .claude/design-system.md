@@ -350,10 +350,10 @@ nowhere else on the site, and a request to reuse it is a request to change what 
 | `dedicationParent` | Frank Ruhl Libre | 32 | 14 | 1.25 | 700 | 0 |
 | `dedicationClosing` | Assistant | 20 | 14 | 1.2 | 400 | `0.12em` |
 
-Every size is `max(floor, reference * scale)`, and the scale is defined once and declared
-on the unit itself, so the home page bands and the admin preview render the same size. At the scales
-the site ships (about 0.39 on a phone, 0.43 from `md`) every line sits at its floor, so a
-reader sees the floor column. All four are centre aligned, and all four are
+Every size is `max(floor, reference * scale)`. The scale is defined once and declared on
+the unit itself (and on the band, for its own padding), so the home page bands and the
+admin preview render the same size. At the scales the site ships (about 0.39 on a phone,
+0.43 from `md`) every line sits at its floor, so a reader sees the floor column. All four are centre aligned, and all four are
 **single-value at every width**. That is a deliberate departure from every responsive
 role above and from `tileCount`'s phone-and-desktop shape: the dedication unit is one
 width everywhere, so a type step would have nothing to respond to. The donor credit line
