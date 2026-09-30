@@ -1,11 +1,11 @@
 import type { Dedication, DedicationGroup, DedicationText } from '@torabarabim/common';
 
 // Non-breaking spaces are load bearing in a composed dedication string, not
-// defensive (design-system.md, "The composed string"): at 280 the name line
-// wraps as a matter of course, and NBSP is what keeps "לעילוי נשמת" and a
-// name-plus-suffix from breaking apart mid-phrase. These fixtures mimic the
-// server's composed output, so they carry the same NBSPs a real response
-// would.
+// defensive (design-system.md, "The composed string"): at the unit's width
+// the name line wraps as a matter of course, and NBSP is what keeps
+// "לעילוי נשמת" and a name-plus-suffix from breaking apart mid-phrase. These
+// fixtures mimic the server's composed output, so they carry the same NBSPs
+// a real response would.
 const NBSP = ' ';
 
 let nextDedicationId = 1;
@@ -20,9 +20,9 @@ export const dedicationFixture = (dedication: Partial<Pick<Dedication, 'id'>> & 
   text: dedication.text,
 });
 
-// A composed memorial line whose name wraps at the unit's 280 width: the
-// plan's own example measures 290px there, so this is never a one-line
-// fixture by accident.
+// A composed memorial line whose name wraps at the unit's width: the
+// plan's own example measured 290px against the old 280, so at the current
+// 200 it is never a one-line fixture by accident.
 export const DEDICATION_TEXT_MEMORIAL_WRAPPING: DedicationText = {
   formulaLine: `לעילוי${NBSP}נשמת`,
   nameLine: `חנה דבורה${NBSP}ע״ה`,
@@ -58,11 +58,21 @@ export const DEDICATION_TEXT_MEMORIAL_HYD: DedicationText = {
 
 // The longest realistic name this fixture set carries, for the wrapping
 // instrument: several given names plus a family name plus the honorific,
-// which wraps to more than two lines at 280.
+// which wraps to more than two lines at the unit's width.
 export const DEDICATION_TEXT_MEMORIAL_LONGEST_NAME: DedicationText = {
   formulaLine: `לעילוי${NBSP}נשמת`,
   nameLine: `יהודה אריה לייב הכהן${NBSP}ז״ל`,
   parentLine: `בן${NBSP}משה יצחק`,
+  closingLine: 'תנצב״ה',
+  donorCreditLine: `תרומת משפחת${NBSP}אשכנזי`,
+};
+
+// A memorial with every optional line and a name long enough to need two
+// lines at the unit's width: the balanced-wrap instrument.
+export const DEDICATION_TEXT_MEMORIAL_LONG_NAME_ALL_LINES: DedicationText = {
+  formulaLine: `לעילוי${NBSP}נשמת`,
+  nameLine: `שרה רבקה לאה גולדשטיין${NBSP}ע״ה`,
+  parentLine: `בת${NBSP}משה יצחק`,
   closingLine: 'תנצב״ה',
   donorCreditLine: `תרומת משפחת${NBSP}אשכנזי`,
 };
@@ -73,6 +83,13 @@ export const DEDICATION_TEXT_HEALING: DedicationText = {
   formulaLine: `לרפואה${NBSP}שלמה${NBSP}של${NBSP}`,
   nameLine: `משה כהן`,
   parentLine: `בן${NBSP}אברהם`,
+};
+
+// A healing line whose name runs long, with no parent line: the name itself
+// is what has to wrap. Ordinary spaces inside the name, so it can break.
+export const DEDICATION_TEXT_HEALING_LONG_NAME: DedicationText = {
+  formulaLine: `לרפואה${NBSP}שלמה${NBSP}של${NBSP}`,
+  nameLine: 'חיים יצחק בן אברהם אבינו',
 };
 
 export const DEDICATION_TEXT_SUCCESS: DedicationText = {
@@ -123,8 +140,8 @@ export const DEDICATION_GROUP_SINGLE: DedicationGroup = {
 };
 
 // Large enough that the drawn group's track overflows a 1280 viewport at
-// the unit's fixed 280 width and 64 gap: nine units alone already clear
-// 9 * (280 + 64) = 3096px, well past 1280.
+// the unit's fixed 200 width and 32 gap: nine units alone already clear
+// 9 * (200 + 32) = 2088px, well past the 1232 a 1280 viewport leaves.
 export const DEDICATION_GROUP_OVERFLOWING: DedicationGroup = {
   type: 'memorial',
   items: Array.from({ length: 9 }, (_, index) =>

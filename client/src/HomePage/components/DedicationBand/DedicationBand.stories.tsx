@@ -87,8 +87,9 @@ export const OverflowsAndCrawls: Story = {
     // Every pair of adjacent units sits exactly DEDICATION_UNIT_GAP_PX
     // apart, including the loop's own seam between the real track's last
     // unit and the duplicate's first: the edge framing used to live on
-    // each `.track` and doubled up there instead of matching the 64px
-    // every other pair gets (measured: eight gaps of 64 and one of 32).
+    // each `.track` and doubled up there instead of matching the gap
+    // every other pair gets (measured then: eight full gaps and one short
+    // one).
     // Sorted by physical position, not DOM order, since direction: rtl
     // reverses which edge is which without reversing the document order.
     const rects = Array.from(canvasElement.querySelectorAll<HTMLElement>('.track > *'))

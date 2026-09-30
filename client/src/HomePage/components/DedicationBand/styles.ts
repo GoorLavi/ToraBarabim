@@ -1,6 +1,6 @@
 import { css } from 'styled-components';
 
-import { scaledCss } from '~/components/DedicationUnit/consts';
+import { dedicationScaleCss, scaledCss } from '~/components/DedicationUnit/consts';
 
 import * as consts from './consts';
 
@@ -30,25 +30,12 @@ export const DedicationBand = css(
     }
   }
 
-  /* The band's own scale driver, read by every scaled dedication value
-     (DedicationUnit/styles.ts, and the padding-block below): a fixed
-     value per breakpoint, chosen by the owner directly rather than
-     derived from the viewport (owner, on the real site: "for
-     the scale, I prefer width"). Selected by the same md width query
-     every other responsive rule in this file already branches on, never a
-     continuous function of the viewport the way the superseded
-     100svh-driven version was.
-     A length, not a unitless ratio: every reference value this is
-     multiplied against elsewhere is written as a bare, unitless number,
-     since a length times a length is an area, not a length.
-     consts.ts explains how these two figures were worked out from the
-     owner's own target band heights, and why the real band lands closer
-     to the individual floors than to either target. */
-  --dedication-scale-px: ${consts.DEDICATION_SCALE_BELOW_MD}px;
-
-  @media (min-width: ${theme.breakpoints.md}) {
-    --dedication-scale-px: ${consts.DEDICATION_SCALE_FROM_MD}px;
-  }
+  /* The band's own padding-block below reads the scale too, so the band
+     declares it as well as every unit inside it, from the one shared
+     definition (DedicationUnit/consts.ts, which also explains how the two
+     figures were worked out and why the real band lands closer to the
+     individual floors than to either target). */
+  ${dedicationScaleCss(theme)}
 
   &.onPrimary {
     background: ${theme.colors.primaryStrong};
@@ -139,11 +126,11 @@ export const DedicationBand = css(
        own width is never track content. */
     padding-inline: ${theme.spacing.lg};
     /* The gap between the real track and its looped duplicate, matching
-       the 64px every other pair of units gets: the track's own padding
-       used to carry this framing instead, which put two copies of it
-       (32px total) at the seam rather than the 64 every internal pair
-       gets. Harmless with a single, non-overflowing track, since a flex
-       gap only applies between children. */
+       the gap every other pair of units gets: the track's own padding
+       used to carry this framing instead, which put two copies of it at
+       the seam rather than the one gap every internal pair gets. Harmless
+       with a single, non-overflowing track, since a flex gap only applies
+       between children. */
     gap: ${consts.DEDICATION_UNIT_GAP_PX}px;
 
     &::-webkit-scrollbar {

@@ -8,7 +8,7 @@ import * as consts from './consts';
 // artwork flipped, never a second path.
 export const Ornament = css`
   display: block;
-  /* Scaled independently of the unit's own fixed 280 (design-system.md,
+  /* Scaled independently of the unit's own fixed width (design-system.md,
      dedication geometry: the unit width is settled separately and does not
      scale), so this is an explicit length, never the 100% that used to
      just mirror the parent. block-size stays auto, derived from this via
@@ -47,18 +47,19 @@ export const Ornament = css`
   }
 `;
 
-// The unit is 280 wide at every placement and every width, with no
-// responsive step, so nothing here reads a breakpoint (design-system.md,
-// dedication geometry). Height is never set directly: it is the natural
-// sum of its content, which now scales with --dedication-scale-px
-// (DedicationBand/styles.ts, the band's own fold-driven scale), and the
-// caller measures it rather than this component asserting a figure.
+// The unit is a fixed width at every placement and every width, with no
+// responsive step in its geometry (design-system.md, dedication geometry);
+// the only breakpoint read is the scale's own, inside dedicationScaleCss.
+// Height is never set directly: it is the natural sum of its content, which
+// scales with --dedication-scale-px, and the caller measures it rather than
+// this component asserting a figure.
 //
 // Both variant blocks below assign nothing but `--dedication-*` custom
 // property values: every rule that reads one lives outside them, so a
 // variant can only ever change colour, never geometry.
 export const DedicationUnit = css(
   ({ theme }) => `
+  ${consts.dedicationScaleCss(theme)}
   inline-size: ${consts.DEDICATION_UNIT_WIDTH_PX}px;
   display: flex;
   flex-direction: column;
@@ -137,6 +138,9 @@ export const DedicationUnit = css(
       inline-size: 100%;
       color: var(--dedication-text);
       text-shadow: var(--dedication-shadow);
+      /* A long name wraps into two even lines instead of one orphan word on
+         the second. */
+      text-wrap: balance;
     }
 
     > .formula {
