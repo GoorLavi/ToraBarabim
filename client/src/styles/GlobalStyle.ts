@@ -9,7 +9,7 @@ export const GlobalStyle = createGlobalStyle(
      reach it: this is the one place it can be registered at all.
      DedicationUnit/styles.ts reads --dedication-formula-size and
      --dedication-parent-size (each a max()/calc() expression driven by the
-     dedication scale, dedicationScaleCss in DedicationUnit/consts.ts)
+     dedication scale, dedicationScaleCss in DedicationUnit/styles.ts)
      inside a container style query, and a style query compares a custom
      property's own resolved value, never its raw, unparsed formula string:
      without registering the type here, the container never actually holds

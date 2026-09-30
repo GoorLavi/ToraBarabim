@@ -1,4 +1,5 @@
 import { css } from 'styled-components';
+import type { DefaultTheme } from 'styled-components';
 
 import * as consts from './consts';
 
@@ -47,19 +48,37 @@ export const Ornament = css`
   }
 `;
 
+// Declares --dedication-scale-px, the one custom property every scaled value
+// below (and the band's own padding-block) reads. A length, not a unitless
+// ratio: every reference value it is multiplied against is written as a
+// bare, unitless number, since a length times a length is an area, not a
+// length. Applied on the unit itself, so a unit renders at site scale
+// wherever it is placed (the admin preview has no band around it), and on
+// the band root, whose own padding-block reads the same property: both
+// elements emit this one fragment, never their own copy of the numbers.
+// Selected by the md width query, never a continuous function of the
+// viewport. The numbers, and how they were worked out, live in consts.ts.
+export const dedicationScaleCss = (theme: DefaultTheme): string => `
+  --dedication-scale-px: ${consts.DEDICATION_SCALE_BELOW_MD}px;
+
+  @media (min-width: ${theme.breakpoints.md}) {
+    --dedication-scale-px: ${consts.DEDICATION_SCALE_FROM_MD}px;
+  }
+`;
+
 // The unit is a fixed width at every placement and every width, with no
 // responsive step in its geometry (design-system.md, dedication geometry);
-// the only breakpoint read is the scale's own, inside dedicationScaleCss.
-// Height is never set directly: it is the natural sum of its content, which
-// scales with --dedication-scale-px, and the caller measures it rather than
-// this component asserting a figure.
+// the only breakpoint read is the scale's own, inside dedicationScaleCss
+// above. Height is never set directly: it is the natural sum of its
+// content, which scales with --dedication-scale-px, and the caller measures
+// it rather than this component asserting a figure.
 //
 // Both variant blocks below assign nothing but `--dedication-*` custom
 // property values: every rule that reads one lives outside them, so a
 // variant can only ever change colour, never geometry.
 export const DedicationUnit = css(
   ({ theme }) => `
-  ${consts.dedicationScaleCss(theme)}
+  ${dedicationScaleCss(theme)}
   inline-size: ${consts.DEDICATION_UNIT_WIDTH_PX}px;
   display: flex;
   flex-direction: column;

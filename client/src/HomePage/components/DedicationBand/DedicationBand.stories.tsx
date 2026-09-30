@@ -515,8 +515,8 @@ export const DragDoesNotSelectText: Story = {
 };
 
 // The scale is now a fixed value per breakpoint, selected by viewport
-// width alone (DedicationUnit/consts.ts: dedicationScaleCss,
-// DEDICATION_SCALE_BELOW_MD / DEDICATION_SCALE_FROM_MD), not a function of
+// width alone (DedicationUnit/styles.ts: dedicationScaleCss;
+// DedicationUnit/consts.ts: DEDICATION_SCALE_BELOW_MD / DEDICATION_SCALE_FROM_MD), not a function of
 // viewport height the way the superseded 100svh-driven version was. Both
 // variants, and a group that carries both a wrapped name and a short unit
 // (no parent, no donor) in the same group, since a name that wraps

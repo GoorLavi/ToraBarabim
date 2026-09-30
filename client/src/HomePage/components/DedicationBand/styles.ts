@@ -1,6 +1,7 @@
 import { css } from 'styled-components';
 
-import { dedicationScaleCss, scaledCss } from '~/components/DedicationUnit/consts';
+import { scaledCss } from '~/components/DedicationUnit/consts';
+import { dedicationScaleCss } from '~/components/DedicationUnit/styles';
 
 import * as consts from './consts';
 

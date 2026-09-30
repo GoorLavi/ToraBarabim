@@ -1,5 +1,3 @@
-import type { DefaultTheme } from 'styled-components';
-
 import { ARGAMAN_VE_ZAHAV_THEME } from '~/theme/themes';
 
 import type { DedicationVariant, DedicationVariantTokens } from './models';
@@ -98,29 +96,11 @@ if (DEDICATION_SCALE_FROM_MD <= DEDICATION_SCALE_BELOW_MD) {
   );
 }
 
-// Declares --dedication-scale-px, the one custom property every scaled value
-// below (and the band's own padding-block) reads. A length, not a unitless
-// ratio: every reference value it is multiplied against is written as a
-// bare, unitless number, since a length times a length is an area, not a
-// length. Applied on the unit itself, so a unit renders at site scale
-// wherever it is placed (the admin preview has no band around it), and on
-// the band root, whose own padding-block reads the same property: both
-// elements emit this one fragment, never their own copy of the numbers.
-// Selected by the md width query, never a continuous function of the
-// viewport.
-export const dedicationScaleCss = (theme: DefaultTheme): string => `
-  --dedication-scale-px: ${DEDICATION_SCALE_BELOW_MD}px;
-
-  @media (min-width: ${theme.breakpoints.md}) {
-    --dedication-scale-px: ${DEDICATION_SCALE_FROM_MD}px;
-  }
-`;
-
 // Every scaled value below is `max(floor, calc(reference * scale))`
 // (design-system.md, dedication geometry), the scale being the custom
-// property `dedicationScaleCss` declares. Every reference here is written
-// as a bare, unitless number rather than a themed "24px" string, for the
-// reason given there. Each one hand-mirrors the matching
+// property `dedicationScaleCss` (styles.ts) declares. Every reference here
+// is written as a bare, unitless number rather than a themed "24px" string,
+// for the reason given there. Each one hand-mirrors the matching
 // theme.typography or theme.spacing value in theme/tokens.ts, the
 // canonical scale-1 reference design-system.md documents; a calc() cannot
 // pull the bare number back out of that value's own "24px" string.
