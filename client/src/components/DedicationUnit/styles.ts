@@ -109,7 +109,7 @@ export const DedicationUnit = css(
        are registered as typed lengths in GlobalStyle.ts's own @property
        block: without that registration this comparison never matches at
        any scale (client/src/components/DedicationUnit/DedicationUnit.stories.tsx,
-       PageFieldContrastSwitchesAtSmallScale, caught exactly that). */
+       PageFieldContrastSwitchesAtSiteScale, caught exactly that). */
     @container dedication-unit style(--dedication-formula-size: ${consts.DEDICATION_FORMULA_SIZE_FLOOR_PX}px) {
       > .text > .formula {
         color: var(--dedication-closing-text);

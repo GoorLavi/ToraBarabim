@@ -4,7 +4,6 @@ import { expect, spyOn, userEvent, waitFor, within } from 'storybook/test';
 
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import * as mixpanel from '~/analytics/mixpanel';
-import { DEDICATION_UNIT_WIDTH_PX } from '~/components/DedicationUnit/consts';
 import {
   DEDICATION_GROUP_HEALING,
   DEDICATION_GROUP_MEMORIAL,
@@ -16,7 +15,7 @@ import { atFrameSize } from '~/storyMocks';
 import { ARGAMAN_VE_ZAHAV_THEME } from '~/theme/themes';
 
 import { WINDOW_TITLE } from './components/DedicationWindow/consts';
-import { DEDICATION_UNIT_GAP_PX, INVITATION_LABEL, RESUME_AFTER_INTERACTION_MS } from './consts';
+import { DEDICATION_UNIT_GAP_PX, DEDICATION_UNIT_PITCH_PX, INVITATION_LABEL, RESUME_AFTER_INTERACTION_MS } from './consts';
 import { DedicationBand } from './DedicationBand';
 import { wrapTrackPosition } from './helpers';
 
@@ -158,7 +157,7 @@ export const ArrowKeyAlwaysLandsOnAUnitBoundary: Story = {
     viewport.focus();
     await userEvent.keyboard('{ArrowLeft}');
 
-    const pitch = DEDICATION_UNIT_WIDTH_PX + DEDICATION_UNIT_GAP_PX;
+    const pitch = DEDICATION_UNIT_PITCH_PX;
     const rtlSign = getComputedStyle(viewport).direction === 'rtl' ? -1 : 1;
     const position = viewport.scrollLeft * rtlSign;
     const offsetFromGridLine = ((position % pitch) + pitch) % pitch;
@@ -517,7 +516,7 @@ export const DragDoesNotSelectText: Story = {
 };
 
 // The scale is now a fixed value per breakpoint, selected by viewport
-// width alone (DedicationBand/styles.ts, DedicationBand/consts.ts:
+// width alone (DedicationUnit/consts.ts: dedicationScaleCss,
 // DEDICATION_SCALE_BELOW_MD / DEDICATION_SCALE_FROM_MD), not a function of
 // viewport height the way the superseded 100svh-driven version was. Both
 // variants, and a group that carries both a wrapped name and a short unit
@@ -544,7 +543,7 @@ const widthComparison = (): ReactElement => (
 // existed (375: onPrimary 205.4, onPage 196.1; 1280: onPrimary 209.1, onPage
 // 197.5), not the owner's own target: the individual floors on formula,
 // name, parent, closing and donor already sit above what either target asks
-// for (DedicationBand/consts.ts), so the real height lands close to that
+// for (DedicationUnit/consts.ts), so the real height lands close to that
 // floor-composed minimum rather than to 165 or 180.
 //
 // The four figures below add 56px to each of those (the invite line's 48px
@@ -599,7 +598,7 @@ export const WidthDesktop: Story = {
 export const WrapTrackPositionHandlesMultiplePeriods: Story = {
   args: { group: DEDICATION_GROUP_SINGLE, variant: 'onPage' },
   play: () => {
-    const period = 344;
+    const period = 100;
 
     expect(wrapTrackPosition(period * 3.5, period)).toEqual(period * 0.5);
     expect(wrapTrackPosition(-period * 2.5, period)).toEqual(period * 0.5);

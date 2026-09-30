@@ -1,6 +1,6 @@
 import { expect, waitFor } from 'storybook/test';
 
-import { DEDICATION_NAME_SIZE_FLOOR_PX, DEDICATION_UNIT_WIDTH_PX } from './consts';
+import { DEDICATION_NAME_SIZE_FLOOR_PX, DEDICATION_UNIT_WIDTH_PX } from '~/components/DedicationUnit/consts';
 
 // The guarantee behind an admin preview: a unit rendered outside the band
 // still lands at the size the public site shows. At every real viewport the

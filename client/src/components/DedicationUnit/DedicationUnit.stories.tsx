@@ -166,10 +166,10 @@ const rgbFromHex = (hex: string): string => {
 // without registering --dedication-formula-size and --dedication-parent-size
 // as typed lengths (GlobalStyle.ts's own @property block) the query was
 // comparing "14px" against the literal formula text and could never match at
-// any scale. This story caught exactly that before
-// the @property registration existed: both lines rendered in the
-// full-contrast colour regardless of how far the scale dropped.
-export const PageFieldContrastSwitchesAtSmallScale: Story = {
+// any scale. This story caught exactly that before the @property
+// registration existed: both lines rendered in the full-contrast colour
+// regardless of how far the scale dropped.
+export const PageFieldContrastSwitchesAtSiteScale: Story = {
   render: () => (
     <div style={{ background: colors.bg, padding: '32px', display: 'inline-block' }}>
       <DedicationUnit text={DEDICATION_TEXT_MEMORIAL_WRAPPING} variant="onPage" />

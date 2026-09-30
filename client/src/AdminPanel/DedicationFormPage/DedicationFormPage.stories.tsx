@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Route, Routes } from 'react-router-dom';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { expectDedicationRendersAtSiteScale } from '~/components/DedicationUnit/expectSiteScale';
+import { expectDedicationRendersAtSiteScale } from '~/AdminPanel/expectDedicationRendersAtSiteScale';
 import { installMockFetch, jsonResponse } from '~/storyMocks';
 
 import { DedicationFormPage } from './DedicationFormPage';

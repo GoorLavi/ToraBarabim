@@ -1,5 +1,7 @@
 import type { DedicationType } from '@torabarabim/common';
 
+import { DEDICATION_UNIT_WIDTH_PX } from '~/components/DedicationUnit/consts';
+
 // Gap between units (design-system.md, dedication geometry). Hand-mirrors
 // `theme.spacing.xxl`: the crawl's loop period and arrow-key pitch need the
 // number outside CSS, so it cannot be read from the theme's "32px" string.
@@ -7,10 +9,8 @@ export const DEDICATION_UNIT_GAP_PX = 32;
 
 // One unit's own footprint plus the gap after it: what an arrow key step
 // moves, so a keyboard user steps whole units and never lands mid-name
-// (design-system.md, dedication interaction rule 5). Hand-mirrors
-// DEDICATION_UNIT_WIDTH_PX (200, DedicationUnit/consts.ts) plus
-// DEDICATION_UNIT_GAP_PX above.
-export const DEDICATION_UNIT_PITCH_PX = 232;
+// (design-system.md, dedication interaction rule 5).
+export const DEDICATION_UNIT_PITCH_PX = DEDICATION_UNIT_WIDTH_PX + DEDICATION_UNIT_GAP_PX;
 
 // A scroll container advanced per frame, not a CSS transform animation
 // (design-system.md, "The band's behaviour"): manual scrolling, wrapping,
