@@ -48,7 +48,7 @@ export const registerPlaceRoutes = async (app: FastifyInstance): Promise<void> =
   app.get('/v1/places/:id', async (request, reply) => {
     try {
       const { id } = placeIdParamSchema.parse(request.params);
-      const result = await placeService.getById(id);
+      const result = await placeService.getDetail(id, new Date());
       return reply.send(toPlaceDetailResponse(result));
     } catch (error) {
       return handleError(reply, error, 'GET /v1/places/:id');

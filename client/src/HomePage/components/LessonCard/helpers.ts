@@ -1,9 +1,9 @@
 import type { LessonAudience, LessonOccurrence } from '@torabarabim/common';
 
-import { AUDIENCE_LABELS } from '~/consts';
+import { AUDIENCE_LABELS, LESSON_TOPIC_LABELS } from '~/consts';
 import { rabbiDisplayName } from '~/helpers';
 
-import { CANCELLED_LABEL, FALLBACK_POSTERS, LESSON_TOPIC_LABELS, cardWeekday } from './consts';
+import { CANCELLED_LABEL, FALLBACK_POSTERS, cardWeekday } from './consts';
 import type { AudienceTreatment, LessonCardSurface } from './models';
 
 // Where the audience line at the head of the meta line lands, per surface

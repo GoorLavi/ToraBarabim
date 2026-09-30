@@ -6,6 +6,7 @@ import { deleteAdminRabbi, fetchAdminRabbiDeletePreview } from '~/AdminPanel/api
 import { ADMIN_QUERY_KEYS } from '~/AdminPanel/consts';
 import { adminErrorMessage } from '~/AdminPanel/helpers';
 import * as parentConsts from '~/AdminPanel/RabbiFormPage/consts';
+import { RABBI_HONORIFIC_LABELS } from '~/consts';
 
 import type { DeleteRabbiButtonProps } from './models';
 import * as styles from './styles';
@@ -14,7 +15,7 @@ import * as styles from './styles';
 // product decision: cascade delete, no soft delete (see the report for
 // this slice). `GET /v1/admin/rabbis/:id/delete-preview` runs first so the
 // confirm dialog can name exactly what will be destroyed.
-export const DeleteRabbiButton = styled(({ className, rabbiId, onDeleted }: DeleteRabbiButtonProps) => {
+export const DeleteRabbiButton = styled(({ className, rabbiId, honorific, onDeleted }: DeleteRabbiButtonProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
@@ -32,22 +33,25 @@ export const DeleteRabbiButton = styled(({ className, rabbiId, onDeleted }: Dele
     },
   });
 
+  const honorificLabel = RABBI_HONORIFIC_LABELS[honorific];
+  const impactLabel = preview.data
+    ? parentConsts.deleteConfirmImpactLabel(honorific, preview.data.lessonCount, preview.data.exceptionCount, preview.data.courseCount)
+    : undefined;
+
   return (
     <div className={className}>
       <button type="button" className="deleteTrigger" onClick={() => setIsDialogOpen(true)}>
-        {parentConsts.DELETE_LABEL}
+        {parentConsts.deleteLabel(honorificLabel)}
       </button>
 
       {isDialogOpen && (
         <div className="overlay" role="presentation" onClick={() => !remove.isPending && setIsDialogOpen(false)}>
           <div className="dialog" role="alertdialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
-            <h2 className="heading">{parentConsts.DELETE_CONFIRM_HEADING}</h2>
+            <h2 className="heading">{parentConsts.deleteConfirmHeading(honorificLabel)}</h2>
 
             {preview.isPending && <p className="message">{parentConsts.DELETE_PREVIEW_LOADING_MESSAGE}</p>}
             {preview.isError && <p className="message error">{adminErrorMessage(preview.error)}</p>}
-            {preview.data && (
-              <p className="message">{parentConsts.deleteConfirmImpactLabel(preview.data.lessonCount, preview.data.exceptionCount)}</p>
-            )}
+            {impactLabel && <p className="message">{impactLabel}</p>}
             <p className="irreversible">{parentConsts.DELETE_CONFIRM_IRREVERSIBLE_NOTE}</p>
 
             {remove.isError && <p className="message error">{adminErrorMessage(remove.error)}</p>}

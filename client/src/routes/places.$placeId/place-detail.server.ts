@@ -29,7 +29,7 @@ export interface PlaceRouteData {
 export const loadPlaceDetail = async (placeId: string, now: Date): Promise<PlaceRouteData> => {
   try {
     const [record, searchResult] = await Promise.all([
-      placeService.getById(placeId),
+      placeService.getDetail(placeId, now),
       lessonService.search({ scope: 'general', placeId, status: 'scheduled', page: 1, pageSize: PLACE_LESSONS_PAGE_SIZE }, now),
     ]);
     return { place: toPlaceDetailResponse(record), occurrences: toLessonSearchResponse(searchResult) };

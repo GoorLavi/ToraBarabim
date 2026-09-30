@@ -2,10 +2,11 @@ import { and, eq, inArray, sql } from 'drizzle-orm';
 
 import { db } from '../../db/client';
 import { cities, lessons, places, rabbis } from '../../db/schema';
+import * as courseService from '../course/course';
 import { toSlug } from '../shared/slug';
 import { PLACE_SIMILAR_LIMIT } from './consts';
 import { PlaceNotFoundError } from './errors';
-import type { PlaceListResult, PlaceRecord, SimilarPlaceQuery } from './models';
+import type { PlaceDetailResult, PlaceListResult, PlaceRecord, SimilarPlaceQuery } from './models';
 
 const collator = new Intl.Collator('he');
 
@@ -105,6 +106,15 @@ export const getById = async (id: string): Promise<PlaceRecord> => {
   if (!row) throw new PlaceNotFoundError(id);
   const countByPlace = await loadPlaceLessonCounts([row.id]);
   return toRecord(row, countByPlace.get(row.id) ?? 0);
+};
+
+// The single-place page's own read: `getById` plus the place's listed,
+// general-scope courses. Kept separate from `getById` (used elsewhere for
+// just the place's own fields) so that reader never pays for a courses
+// query it does not need.
+export const getDetail = async (id: string, now: Date): Promise<PlaceDetailResult> => {
+  const [record, courses] = await Promise.all([getById(id), courseService.listForPlace(id, now)]);
+  return { ...record, courses };
 };
 
 export interface SimilarAddressCandidate {

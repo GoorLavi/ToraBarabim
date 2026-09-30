@@ -1,6 +1,8 @@
-import type { HomeRow, LessonOccurrence } from '@torabarabim/common';
+import type { HomeLessonRowId, HomeRow, LessonOccurrence } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { expect, within } from 'storybook/test';
 
+import { courseFixture } from '~/courseFixture';
 import { DEDICATION_GROUP_SUCCESS } from '~/dedicationFixture';
 import { rabbiFixture } from '~/rabbiFixture';
 
@@ -20,10 +22,18 @@ const lessonItem = (id: string, title: string): LessonOccurrence => ({
   venue: { kind: 'address', name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'נתניה', citySlug: 'נתניה', area: 'sharon' },
 });
 
-const homeRow = (id: HomeRow['id'], title: string): HomeRow => ({
+const homeRow = (id: HomeLessonRowId, title: string): HomeRow => ({
+  kind: 'lessons',
   id,
   title,
   items: [lessonItem(`${id}-1`, title), lessonItem(`${id}-2`, title), lessonItem(`${id}-3`, title)],
+});
+
+const courseRow = (): HomeRow => ({
+  kind: 'courses',
+  id: 'courses',
+  title: 'קורסים',
+  items: [courseFixture({ name: 'יסודות האמונה' }), courseFixture({ name: 'עיון בהלכות שבת', id: 'course-2' })],
 });
 
 const queryWithRows = (rows: HomeRow[]): HomeRowsQueryState => ({
@@ -51,9 +61,10 @@ export const WithBetweenRailsDedication: Story = {
   },
 };
 
-// Below three rails, the constraint "after at least two rails" has no slot
-// that is not also the very end of the list, so the between-rails band is
-// skipped entirely, fail closed (design-system.md, dedication Placement).
+// Below three lesson rails, the constraint "after at least two lesson rows"
+// has no slot that is not also the very end of the list, so the
+// between-rails band is skipped entirely, fail closed (design-system.md,
+// dedication Placement).
 export const TwoRailsNoBetweenRailsDedication: Story = {
   args: {
     query: queryWithRows([homeRow('area', 'שיעורים באזור שלך'), homeRow('today', 'הערב')]),
@@ -67,5 +78,30 @@ export const NoSuccessDedications: Story = {
   args: {
     query: queryWithRows([homeRow('area', 'שיעורים באזור שלך'), homeRow('today', 'הערב'), homeRow('weekly', 'שיעור שבועי')]),
     dedicationGroup: undefined,
+  },
+};
+
+// The course row (plan section 10.7): placed by the server right after the
+// first lesson row, and not counted when placing the women's band or the
+// dedication band, both of which still land after the second *lesson* row
+// (index 3 here: lessons1, courses, lessons2, then the bands).
+export const WithCourseRow: Story = {
+  args: {
+    query: queryWithRows([
+      homeRow('area', 'שיעורים באזור שלך'),
+      courseRow(),
+      homeRow('today', 'הערב'),
+      homeRow('weekly', 'שיעור שבועי'),
+    ]),
+    dedicationGroup: DEDICATION_GROUP_SUCCESS,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const headings = await canvas.findAllByRole('heading', { level: 2 });
+    const headingTexts = headings.map((heading) => heading.textContent);
+
+    expect(headingTexts[0]).toEqual('שיעורים באזור שלך');
+    expect(headingTexts[1]).toEqual('קורסים');
+    expect(headingTexts[2]).toEqual('הערב');
   },
 };

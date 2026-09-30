@@ -1,5 +1,3 @@
-import type { LessonTopic } from '@torabarabim/common';
-
 import posterShtenderWindow from '~/assets/lessonFallbackPosters/lesson-fallback-01-shtender-window.webp';
 import posterBindingsShelf from '~/assets/lessonFallbackPosters/lesson-fallback-02-bindings-shelf.webp';
 import posterBookcaseBrass from '~/assets/lessonFallbackPosters/lesson-fallback-03-bookcase-brass.webp';
@@ -11,29 +9,6 @@ export const CANCELLED_LABEL = 'מבוטל השבוע';
 // The prefix before the substituted rabbi's name; the honorific-aware part
 // that follows comes from `SUBSTITUTE_PREFIX_BY_HONORIFIC` (~/consts.ts).
 export const SUBSTITUTE_LABEL = 'הפעם';
-
-// Non-breaking spaces on both sides of the dot, so the meta line's
-// description never wraps with the dot left dangling alone at a line's end
-// (design review, card meta at 375).
-export const META_SEPARATOR = ' · ';
-
-export const LESSON_TOPIC_LABELS: Record<LessonTopic, string> = {
-  gemara: 'גמרא',
-  halacha: 'הלכה',
-  parasha: 'פרשת השבוע',
-  mussar: 'מוסר',
-  chassidut: 'חסידות',
-  tanach: 'תנ״ך',
-  machshava: 'מחשבה',
-  other: 'כללי',
-};
-
-// The floor from design-system.md, Type ("the card title steps down to
-// 15 / 21... in a two-column poster grid on a phone, roughly 171px wide")
-// is a property of the card's own rendered width, not of the viewport: a
-// rail card can be 200px wide on the same 375px phone. Stepped with
-// `@container` in styles.ts instead of a viewport media query.
-export const CARD_WIDE_THRESHOLD = '190px';
 
 // Below this, the cancellation label and the medallion cannot both sit at
 // the poster's top edge without colliding (design review): the label drops

@@ -11,6 +11,7 @@ import type {
   Place,
   PlaceListResponse,
   PlaceSimilarResponse,
+  RabbiDetailResponse,
   RabbiDirectoryEntry,
   RabbiDirectoryResponse,
   RabbiProminence,
@@ -692,8 +693,14 @@ describe('public API', () => {
     const body = homeRes.json() as HomeResponse;
     assert.ok(Array.isArray(body.rows));
 
+    // The row union (`kind: 'lessons' | 'courses'`) means every reader must
+    // narrow before touching a lesson-only field; a course row, if the
+    // shared database happens to have a listed course, is filtered out here
+    // rather than assumed absent.
+    const lessonRows = body.rows.filter((row) => row.kind === 'lessons');
+
     const rowsWithTile: number[] = [];
-    body.rows.forEach((row, rowIndex) => {
+    lessonRows.forEach((row, rowIndex) => {
       assert.equal(typeof row.id, 'string');
       assert.equal(typeof row.title, 'string');
       assert.ok(Array.isArray(row.items));
@@ -720,7 +727,7 @@ describe('public API', () => {
     } else {
       // The candidate row is the second row (index 1); if it has fewer
       // than four lessons, the tile moves to the next row that does.
-      const expectedRowIndex = body.rows.findIndex((row, index) => index >= 1 && row.items.length >= 4);
+      const expectedRowIndex = lessonRows.findIndex((row, index) => index >= 1 && row.items.length >= 4);
       if (expectedRowIndex === -1) {
         assert.equal(rowsWithTile.length, 0, 'no row has enough lessons to carry the tile');
       } else {
@@ -1131,7 +1138,7 @@ describe('public API', () => {
       const res = await app.inject({ method: 'GET', url: `/v1/rabbis/${SEEDED_RABBI_ID}` });
       assert.equal(res.statusCode, 200);
 
-      const body = res.json() as RabbiDirectoryEntry;
+      const body = res.json() as RabbiDetailResponse;
       assert.equal(body.id, SEEDED_RABBI_ID);
       assert.equal(body.name, SEEDED_RABBI_NAME);
       assert.ok(body.lessonCount > 0);
@@ -1139,6 +1146,7 @@ describe('public API', () => {
       assert.ok(body.slug.length > 0);
       assert.equal(body.slug, toSlug(SEEDED_RABBI_NAME));
       assert.equal(body.honorific, 'rav');
+      assert.ok(Array.isArray(body.courses));
     });
 
     test('a genuinely missing rabbi returns 404', async () => {

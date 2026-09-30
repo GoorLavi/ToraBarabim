@@ -6,6 +6,7 @@ import styled from 'styled-components';
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { navigationClickProps } from '~/analytics/helpers';
 import { trackEvent } from '~/analytics/mixpanel';
+import { NavigationLinks } from '~/components/NavigationLinks/NavigationLinks';
 import { todayInIsrael } from '~/HomePage/helpers';
 import { AUDIENCE_LABELS, SUBSTITUTE_PREFIX_BY_HONORIFIC } from '~/consts';
 import { addressLine, googleMapsHref, placePath, rabbiDisplayName, rabbiPath, wazeHref } from '~/helpers';
@@ -16,10 +17,6 @@ import * as consts from './consts';
 import { computeDurationMinutes, dayNumberLabel, durationLabel, endTimeLabel, kickerLabel, monthLabel, roleLabel, weekdayLabel } from './helpers';
 import type { LessonTicketProps } from './models';
 import * as styles from './styles';
-
-// Both brand marks are a flat list of `<path>`s, each with its own literal fill, so one
-// renderer covers both icons.
-const renderIconPath = ({ d, fill }: { d: string; fill: string }, index: number) => <path key={index} d={d} fill={fill} />;
 
 // Shared by the original rabbi's link and the teaching rabbi's link below: a
 // single name in the ticket, not a ranked list, so there is no real position
@@ -128,39 +125,17 @@ export const LessonTicket = styled(({ className, occurrence }: LessonTicketProps
             </span>
 
             {showNavRow && wazeUrl && googleMapsUrl && (
-              <div className="navRow">
-                <p className="heading" dir="auto">
-                  {consts.NAV_ROW_HEADING_LABEL}
-                </p>
-
-                <a
-                  className="navButton waze"
-                  href={wazeUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={consts.WAZE_ARIA_LABEL}
-                  onClick={() => handleNavigationClick('waze')}
-                >
-                  <svg className="icon waze" viewBox={consts.WAZE_ICON_VIEW_BOX} aria-hidden="true">
-                    {consts.WAZE_ICON_PATHS.map(renderIconPath)}
-                  </svg>
-                  <span dir="ltr">{consts.WAZE_LABEL}</span>
-                </a>
-
-                <a
-                  className="navButton googleMaps"
-                  href={googleMapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={consts.GOOGLE_MAPS_ARIA_LABEL}
-                  onClick={() => handleNavigationClick('googleMaps')}
-                >
-                  <svg className="icon googleMaps" viewBox={consts.GOOGLE_MAPS_ICON_VIEW_BOX} aria-hidden="true">
-                    {consts.GOOGLE_MAPS_ICON_PATHS.map(renderIconPath)}
-                  </svg>
-                  <span dir="ltr">{consts.GOOGLE_MAPS_LABEL}</span>
-                </a>
-              </div>
+              <NavigationLinks
+                {...{
+                  className: 'navRow',
+                  heading: consts.NAV_ROW_HEADING_LABEL,
+                  wazeUrl,
+                  googleMapsUrl,
+                  wazeAriaLabel: consts.WAZE_ARIA_LABEL,
+                  googleMapsAriaLabel: consts.GOOGLE_MAPS_ARIA_LABEL,
+                  onNavigate: handleNavigationClick,
+                }}
+              />
             )}
           </div>
 

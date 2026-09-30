@@ -50,8 +50,8 @@ export const STREET_HELPER = 'הכתובת המלאה מוצגת בעמוד המ
 export const MIN_WIDTH_PX = PLACE_PHOTO_MIN_WIDTH;
 export const MIN_HEIGHT_PX = PLACE_PHOTO_MIN_HEIGHT;
 
-// `PhotoPicker`'s own '16:9' help list (`components/PhotoPicker/consts.ts`,
-// `PHOTO_HELP_SIZE['16:9']`) already states the real requirement, in
+// `PhotoPicker`'s own '16:9' help list (`components/PhotoPicker/helpers.ts`,
+// `photoHelpSize`) already states the real requirement, in
 // already-approved copy, before the file dialog opens (build brief). This
 // screen only needs its own copy for the one thing that component cannot
 // say: the client-side dimension/ratio check below has no exported error

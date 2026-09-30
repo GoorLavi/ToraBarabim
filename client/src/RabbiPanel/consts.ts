@@ -22,6 +22,8 @@ export const RABBI_QUERY_KEYS = {
   lesson: (id: string) => ['rabbi', 'lessons', id] as const,
   occurrences: () => ['rabbi', 'occurrences'] as const,
   exceptions: (lessonId: string) => ['rabbi', 'lessons', lessonId, 'exceptions'] as const,
+  courses: () => ['rabbi', 'courses'] as const,
+  course: (id: string) => ['rabbi', 'courses', id] as const,
 };
 
 export const RABBI_ROUTES = {
@@ -32,5 +34,8 @@ export const RABBI_ROUTES = {
   lessons: '/rabbi/lessons',
   lessonNew: '/rabbi/lessons/new',
   lessonEdit: (id: string) => `/rabbi/lessons/${id}`,
+  courses: '/rabbi/courses',
+  courseNew: '/rabbi/courses/new',
+  courseEdit: (id: string) => `/rabbi/courses/${id}`,
   profile: '/rabbi/profile',
 };

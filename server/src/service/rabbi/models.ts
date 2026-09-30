@@ -1,6 +1,7 @@
 import type { Area, RabbiHonorific } from '@torabarabim/common';
 import { z } from 'zod';
 
+import type { CourseSummaryRecord } from '../course/models';
 import { AUDIENCE_SCOPES, DEFAULT_PAGE, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '../shared/consts';
 
 // `general` lists ravs only, `women` lists rabbaniyot only. Zod's default
@@ -56,4 +57,11 @@ export interface RabbiListResult {
   page: number;
   pageSize: number;
   total: number;
+}
+
+// A single rabbi's own page, unlike a directory row: it additionally
+// carries his courses, scoped by his own honorific (general for a rav,
+// women for a rabbanit, the same scope his lessons already use).
+export interface RabbiDetailResult extends RabbiDirectoryEntryRecord {
+  courses: CourseSummaryRecord[];
 }

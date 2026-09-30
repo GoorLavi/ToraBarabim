@@ -5,6 +5,7 @@ import type { Rabbi } from '@torabarabim/common';
 
 import { ADMIN_ROUTES } from '~/AdminPanel/consts';
 import * as parentConsts from '~/AdminPanel/LessonFormPage/consts';
+import { useRabbiSearch } from '~/AdminPanel/useRabbiSearch';
 import { SearchSelect } from '~/components/SearchSelect/SearchSelect';
 import { rabbiDisplayName } from '~/helpers';
 
@@ -12,7 +13,6 @@ import * as consts from './consts';
 import type { RabbiPickerProps } from './models';
 import * as styles from './styles';
 import { useRabbiLessonCount } from './useRabbiLessonCount';
-import { useRabbiSearch } from './useRabbiSearch';
 
 export const RabbiPicker = styled(({ className, rabbi, onSelectRabbi, errorMessage }: RabbiPickerProps) => {
   const [query, setQuery] = useState('');

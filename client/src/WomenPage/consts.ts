@@ -37,6 +37,9 @@ export const pageSubheading = (count: number, dateLabel: string | undefined, has
 };
 
 export const RAIL_HEADING = 'מי מלמד';
+
+// Plain, like the home row's own title (spec section 13).
+export const COURSES_HEADING = 'קורסים';
 export const ALL_RABBANIYOT_LABEL = 'לכל הרבניות';
 export const ALL_RABBANIYOT_PATH = '/women/rabbaniyot';
 

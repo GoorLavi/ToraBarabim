@@ -1,8 +1,9 @@
 import { css } from 'styled-components';
 
+import { CARD_WIDE_THRESHOLD } from '~/consts';
 import { POSTER_ASPECT_RATIO } from '~/HomePage/consts';
 
-import { CANCELLED_LABEL_BOTTOM_THRESHOLD, CARD_WIDE_THRESHOLD } from './consts';
+import { CANCELLED_LABEL_BOTTOM_THRESHOLD } from './consts';
 
 export const LessonCard = css(
   ({ theme }) => `

@@ -43,6 +43,12 @@ export interface PhotoPickerProps {
   onSelectFile: (file: File) => void;
   errorMessage: string | undefined;
   aspectRatio?: PhotoPickerAspectRatio;
+  // The floor a caller's own photo must clear: shown in the help text for
+  // every ratio, and fed to the crop step's own math for the one ratio that
+  // opens it ('16:9' today). No default: a caller with no real floor of its
+  // own would be a defect to leave silent, not a case worth a fallback for.
+  minWidth: number;
+  minHeight: number;
   // Additive: real upload progress driven by the parent, used by the
   // rabbi profile screen, which uploads immediately on file selection and
   // keeps the previous photo visible until the upload either succeeds or
@@ -51,4 +57,29 @@ export interface PhotoPickerProps {
   // so its picker never enters either state and renders exactly as before.
   uploadStatus?: PhotoPickerUploadStatus;
   onRetryUpload?: () => void;
+  // Replaces `consts.PHOTO_HELP_CROP[aspectRatio]`'s own line for a caller
+  // whose crop sentence is not about a rabbi's portrait: the course cover
+  // is '3:4' too, but has no face to keep off the edge. Omitted, every
+  // '3:4' or '16:9' caller keeps the shared line exactly as before.
+  cropHelpOverride?: string;
+  // Replaces `helpers.photoHelpSize`'s own "לפחות W על H פיקסלים" line: a
+  // caller with no server-side floor to enforce (the course cover, since
+  // "לקבל כל גודל, עם אזהרה על טשטוש") still wants its own floor named, but
+  // as a recommendation rather than a requirement the site does not
+  // actually enforce. Omitted, every caller keeps the shared line.
+  sizeHelpOverride?: string;
+  // A course cannot be saved without a cover, so its own empty state has
+  // nothing analogous to the "a soft background shows in its place" a rabbi
+  // or a place gets meanwhile. Omitted, every caller keeps the shared line.
+  missingPhotoNoteOverride?: string;
+  // The shared failure line's second sentence ("the previous photo stayed
+  // on the site") only makes sense once a previous photo exists to have
+  // stayed: false on a brand-new course, which has no cover yet to fall
+  // back to. Omitted (undefined), every caller keeps the full two-sentence
+  // line exactly as before.
+  hasPreviousPhotoOnFailure?: boolean;
+  // The approved reason a rejected upload failed (spec section 13), shown
+  // instead of the generic failure line. Undefined for a plain network
+  // failure, which keeps the generic line.
+  failureReasonOverride?: string;
 }

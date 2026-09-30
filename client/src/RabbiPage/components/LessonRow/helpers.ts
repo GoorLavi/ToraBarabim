@@ -1,7 +1,6 @@
 import type { LessonOccurrence } from '@torabarabim/common';
 
-import { AUDIENCE_LABELS } from '~/consts';
-import { LESSON_TOPIC_LABELS } from '~/HomePage/components/LessonCard/consts';
+import { AUDIENCE_LABELS, LESSON_TOPIC_LABELS } from '~/consts';
 
 // The rabbi is already known on their own page, so the row's title is the
 // lesson's own title or topic, never the rabbi's name (unlike LessonCard,

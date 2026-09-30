@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import styled from 'styled-components';
 
 import { CityChip } from '~/components/CityChip/CityChip';
+import { CourseRail } from '~/components/CourseRail/CourseRail';
 import { DayGroup } from '~/components/DayGroup/DayGroup';
 import { DayGroupSkeleton } from '~/components/DayGroupSkeleton/DayGroupSkeleton';
 import { QuietButton } from '~/components/QuietButton/QuietButton';
@@ -16,7 +17,7 @@ import { useSearchQuery } from '~/hooks/useSearchQuery';
 import { useSelectedCity } from '~/hooks/useSelectedCity';
 
 import * as consts from './consts';
-import { dateLabel, hasSearchOrDateFilter, resolveWindow } from './helpers';
+import { coursesForCity, dateLabel, hasSearchOrDateFilter, resolveWindow } from './helpers';
 import type { WomenLessonsFilters, WomenPageProps } from './models';
 import * as styles from './styles';
 import { useAreaFallbackLessons } from './useAreaFallbackLessons';
@@ -81,6 +82,11 @@ export const WomenPage = styled(({ className }: WomenPageProps) => {
   };
 
   const dayGroups = groupByDay(items);
+
+  // Hidden under a date or a search, the same axis `hasFilter` already
+  // names; filtered by the chosen city when one is selected (helpers.ts,
+  // coursesForCity).
+  const showCourseRail = !hasFilter;
 
   const activeDateLabel = hasDateFilter ? dateLabel(range.from) : undefined;
   const hasAnyFilter = Boolean(city) || hasDateFilter || Boolean(query);
@@ -173,6 +179,17 @@ export const WomenPage = styled(({ className }: WomenPageProps) => {
                 heading: consts.RAIL_HEADING,
                 rabbis: summaryQuery.data.teachers,
                 allLink: { label: consts.ALL_RABBANIYOT_LABEL, to: consts.ALL_RABBANIYOT_PATH },
+              }}
+            />
+          )}
+
+          {!isEmpty && showCourseRail && coursesForCity(summaryQuery.data.courses, city).length > 0 && (
+            <CourseRail
+              {...{
+                title: consts.COURSES_HEADING,
+                items: coursesForCity(summaryQuery.data.courses, city),
+                surface: 'womensArea',
+                clickSurface: 'womensArea',
               }}
             />
           )}
@@ -284,6 +301,17 @@ export const WomenPage = styled(({ className }: WomenPageProps) => {
                     heading: consts.RAIL_HEADING,
                     rabbis: summaryQuery.data.rabbaniyot,
                     allLink: { label: consts.ALL_RABBANIYOT_LABEL, to: consts.ALL_RABBANIYOT_PATH },
+                  }}
+                />
+              )}
+
+              {summaryQuery.data.kind === 'empty' && showCourseRail && coursesForCity(summaryQuery.data.courses, city).length > 0 && (
+                <CourseRail
+                  {...{
+                    title: consts.COURSES_HEADING,
+                    items: coursesForCity(summaryQuery.data.courses, city),
+                    surface: 'womensArea',
+                    clickSurface: 'womensArea',
                   }}
                 />
               )}

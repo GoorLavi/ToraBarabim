@@ -1,3 +1,5 @@
+import type { Rabbi } from '@torabarabim/common';
+
 // Server-side filters, sent as query params on GET /v1/admin/lessons.
 export interface AdminLessonFilters {
   cityId?: string;
@@ -30,4 +32,25 @@ export interface AdminPlaceFilters {
   q?: string;
   page?: number;
   pageSize?: number;
+}
+
+// Server-side filters, sent as query params on GET /v1/admin/courses. Its
+// own `status` reads "open" as `lifecycle.status` `notOpen` or `open`
+// together (the public card's own "Registration open" bucket), so the
+// three filter buckets map straight onto it with no client-side narrowing.
+export interface AdminCourseFilters {
+  q?: string;
+  status?: 'open' | 'full' | 'closed';
+  rabbiId?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+// Lifted from `LessonFormPage/components/RabbiPicker/models.ts` once
+// `CourseFormPage/components/TeacherPicker` became a second caller of
+// `useRabbiSearch`.
+export interface RabbiSearchResults {
+  items: Rabbi[];
+  isPending: boolean;
+  isError: boolean;
 }

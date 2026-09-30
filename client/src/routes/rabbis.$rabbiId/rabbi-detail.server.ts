@@ -15,9 +15,9 @@ import { UNCACHEABLE_ERROR_HEADERS } from '../consts';
 // failures here are thrown as a Response carrying `UNCACHEABLE_ERROR_HEADERS`
 // instead, so an error response never sits behind the CDN's success caching.
 
-export const loadRabbiDetail = async (rabbiId: string): Promise<RabbiDetailResponse> => {
+export const loadRabbiDetail = async (rabbiId: string, now: Date): Promise<RabbiDetailResponse> => {
   try {
-    const record = await rabbiService.getById(rabbiId);
+    const record = await rabbiService.getById(rabbiId, now);
     return toRabbiDetailResponse(record);
   } catch (error) {
     if (error instanceof RabbiNotFoundError) {

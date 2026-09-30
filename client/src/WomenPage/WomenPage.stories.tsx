@@ -2,6 +2,7 @@ import type { City, CityDetailResponse, LessonOccurrence, WomenAreaResponse } fr
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Route, Routes } from 'react-router-dom';
 
+import { courseFixture } from '~/courseFixture';
 import { rabbiFixture } from '~/rabbiFixture';
 
 import { errorResolver, http, jsonResolver, loadingResolver, queryOf, respondWithJson } from '../../.storybook/apiMocks';
@@ -24,6 +25,13 @@ const lesson = (overrides: Partial<LessonOccurrence>): LessonOccurrence => ({
   ...overrides,
 });
 
+const womensCourse = courseFixture({
+  name: 'שיעורי אמונה למתקדמות',
+  audience: 'women',
+  teacher: { kind: 'rabbi', rabbi: rabbanit },
+  venue: { kind: 'address', name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'חיפה', citySlug: 'חיפה', area: 'haifa' },
+});
+
 const populatedSummary: WomenAreaResponse = {
   kind: 'populated',
   lessonCount: 2,
@@ -32,9 +40,10 @@ const populatedSummary: WomenAreaResponse = {
     { id: '4000', name: 'חיפה', slug: 'חיפה', area: 'haifa', lessonCount: 2 },
     { id: '5000', name: 'ירושלים', slug: 'ירושלים', area: 'jerusalem', lessonCount: 1 },
   ],
+  courses: [womensCourse],
 };
 
-const emptySummary: WomenAreaResponse = { kind: 'empty', rabbaniyot: [rabbanit] };
+const emptySummary: WomenAreaResponse = { kind: 'empty', rabbaniyot: [rabbanit], courses: [womensCourse] };
 
 const emptyLessons = { items: [], page: 1, pageSize: 24, total: 0 };
 

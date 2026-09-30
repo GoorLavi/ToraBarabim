@@ -3,7 +3,7 @@ import type { FormEvent } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { WHATSAPP_ICON_PATH } from '~/consts';
+import { SITE_CONTACT_PHONE_INTERNATIONAL, WHATSAPP_ICON_PATH } from '~/consts';
 import { whatsAppHref } from '~/helpers';
 
 import * as consts from './consts';
@@ -84,7 +84,7 @@ export const PanelLogin = styled(({ className }: PanelLoginProps) => {
 
       <a
         className="whatsapp"
-        href={whatsAppHref(consts.WHATSAPP_SUPPORT_MESSAGE)}
+        href={whatsAppHref(consts.WHATSAPP_SUPPORT_MESSAGE, SITE_CONTACT_PHONE_INTERNATIONAL)}
         target="_blank"
         rel="noopener noreferrer"
         aria-label={consts.WHATSAPP_SUPPORT_TOOLTIP}

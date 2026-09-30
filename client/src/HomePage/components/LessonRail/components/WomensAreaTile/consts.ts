@@ -5,7 +5,7 @@ export const TILE_LINE = 'לפי יום, לפי עיר ולפי רב או רבנ
 export const TILE_LINK_LABEL = 'לכל השיעורים לנשים';
 
 // 44 percent of the CARD's own width (design spec), read via the rail's own
-// width formula (LessonRail/helpers.ts, railCardWidth) rather than a CSS
+// width formula (Rail/helpers.ts, railCardWidth) rather than a CSS
 // percentage: a percentage on `.emblem` would resolve against `.plum`'s own
 // content box, which is narrower than the card by `.plum`'s own inline
 // padding, landing short of 44 percent every time (styles.ts).

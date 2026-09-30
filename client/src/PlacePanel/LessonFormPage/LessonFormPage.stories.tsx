@@ -20,7 +20,7 @@ const profile: PlaceProfileResponse = {
 };
 
 const rabbi = rabbiFixture({ id: 'rabbi-1', name: 'יעקב מזרחי', title: 'ראש ישיבה' });
-const rabbiDetail: RabbiDetailResponse = { ...rabbi, lessonCount: 3, cities: [] };
+const rabbiDetail: RabbiDetailResponse = { ...rabbi, lessonCount: 3, cities: [], courses: [] };
 
 const directory: RabbiDirectoryResponse = {
   items: [

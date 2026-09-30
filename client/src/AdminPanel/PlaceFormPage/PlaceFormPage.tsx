@@ -5,10 +5,11 @@ import styled from 'styled-components';
 
 import { ADMIN_ROUTES } from '~/AdminPanel/consts';
 import { adminErrorMessage, validatePhotoFile } from '~/AdminPanel/helpers';
-import { usePhotoPreviewUrl } from '~/AdminPanel/usePhotoPreviewUrl';
 import { CitySelect } from '~/components/CitySelect/CitySelect';
+import { PLACE_PHOTO_MIN_HEIGHT, PLACE_PHOTO_MIN_WIDTH } from '~/components/PhotoPicker/consts';
 import { PhotoPicker } from '~/components/PhotoPicker/PhotoPicker';
 import { directionForValue } from '~/helpers';
+import { usePhotoPreviewUrl } from '~/hooks/usePhotoPreviewUrl';
 
 import { PlaceAccountSection } from './components/PlaceAccountSection/PlaceAccountSection';
 import * as consts from './consts';
@@ -209,6 +210,8 @@ export const PlaceFormPage = styled(({ className }: PlaceFormPageProps) => {
               hasExistingPhoto={Boolean(form.existingPhotoUrl)}
               onSelectFile={handleSelectFile}
               errorMessage={fieldErrors.photo ?? (savePlace.stepError?.step === 'photo' ? adminErrorMessage(savePlace.stepError.error) : undefined)}
+              minWidth={PLACE_PHOTO_MIN_WIDTH}
+              minHeight={PLACE_PHOTO_MIN_HEIGHT}
             />
           </div>
 

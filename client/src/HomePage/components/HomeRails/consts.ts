@@ -12,8 +12,9 @@ export const RETRY_LABEL = 'נסו שוב';
 // site itself has nothing yet.
 export const EMPTY_HEADLINE = 'אין כרגע שיעורים באתר';
 
-// After the second rail, before the third: one rail in three, never after
-// every rail (design review). With fewer than three rails this clamps to
-// the end of the list, still inside the rails block and still before
-// `לפי רב`.
+// After the second lesson row, before the third: one rail in three, never
+// after every rail (design review). The one `kind: 'courses'` row is never
+// counted towards this (plan section 10.7, helpers.ts's `indexAfterNthLessonRow`).
+// With fewer than three lesson rows this clamps to the end of the list,
+// still inside the rails block and still before `לפי רב`.
 export const WOMENS_AREA_BAND_SLOT = 2;

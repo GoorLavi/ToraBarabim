@@ -1,5 +1,5 @@
 import type { ChangeEvent } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import classNames from 'classnames';
 import styled from 'styled-components';
 
@@ -9,37 +9,36 @@ import * as helpers from './helpers';
 import type { CropCandidate, PhotoPickerProps } from './models';
 import * as styles from './styles';
 
-// Reads a file's real pixel dimensions by decoding it into an `<img>`, the
-// same technique `PlacePanel/ProfilePage/helpers.ts`'s own
-// `readImageDimensions` uses for its own, separate check: no shared home for
-// either copy (a page-level helper and this shared component do not import
-// from each other), so this is a small, independent duplicate rather than a
-// reach across that boundary.
-const loadImageDimensions = (file: File): Promise<{ objectUrl: string; width: number; height: number }> =>
-  new Promise((resolve, reject) => {
-    const objectUrl = URL.createObjectURL(file);
-    const image = new Image();
-    image.onload = () => resolve({ objectUrl, width: image.naturalWidth, height: image.naturalHeight });
-    image.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
-      reject(new Error(`failed to read image dimensions for ${file.name}`));
-    };
-    image.src = objectUrl;
-  });
-
 // A file picker with a fixed preview frame that never disappears and never
 // changes height (rabbi-panel-copy.md, section 6), plus the real upload
 // states a caller can opt into via `uploadStatus`: uploading (the new
 // file's preview, dimmed, with a progress bar) and failed (the previous
 // photo back at full opacity, with retry and choose-other actions).
 // `aspectRatio` ('3:4', every rabbi's portrait, the default; '16:9', a
-// place's own photo) is the one thing that changes the frame's proportions,
-// its width, and the help copy below it; see `styles.ts` and `consts.ts` for
-// the single place each lives. Only '16:9' gets an in-browser crop step
-// (`components/PhotoCropStep`): a rabbi's portrait is still cropped on
-// display with no tool of its own, exactly as before.
+// place's own photo) changes the frame's proportions (styles.ts) and its
+// help copy (helpers.ts, `photoHelpSize`); `minWidth`/`minHeight` are a
+// caller's own floor, never assumed here. Only '16:9' gets an in-browser
+// crop step (`components/PhotoCropStep`): a rabbi's portrait is still
+// cropped on display with no tool of its own, exactly as before.
 export const PhotoPicker = styled(
-  ({ className, previewUrl, hasExistingPhoto, onSelectFile, errorMessage, uploadStatus, onRetryUpload, aspectRatio = '3:4' }: PhotoPickerProps) => {
+  ({
+    className,
+    previewUrl,
+    hasExistingPhoto,
+    onSelectFile,
+    errorMessage,
+    uploadStatus,
+    onRetryUpload,
+    aspectRatio = '3:4',
+    minWidth,
+    minHeight,
+    cropHelpOverride,
+    sizeHelpOverride,
+    missingPhotoNoteOverride,
+    hasPreviousPhotoOnFailure,
+    failureReasonOverride,
+  }: PhotoPickerProps) => {
+    const ratioValue = helpers.aspectRatioValue(aspectRatio);
     const hasPhoto = Boolean(previewUrl || hasExistingPhoto);
     const isUploading = uploadStatus === 'uploading';
     const hasFailed = uploadStatus === 'failed';
@@ -50,6 +49,11 @@ export const PhotoPicker = styled(
     // `onSelectFile`, so no caller validation ever runs on it and no caller
     // state ever learns about it.
     const [cropUnavailableError, setCropUnavailableError] = useState<string | undefined>(undefined);
+    // Counts each `handleChange` call: a second pick before the first one's
+    // own decode or re-encode has resolved must win, never race it, so
+    // every async branch below checks this against the pick it started
+    // from before acting on its result.
+    const pickIdRef = useRef(0);
 
     useEffect(() => {
       if (!cropCandidate) return;
@@ -60,18 +64,31 @@ export const PhotoPicker = styled(
       const file = event.target.files?.[0];
       event.target.value = '';
       if (!file) return;
+      const pickId = ++pickIdRef.current;
+      const isLatestPick = (): boolean => pickIdRef.current === pickId;
 
       if (aspectRatio !== '16:9') {
-        onSelectFile(file);
+        // '3:4' has no crop step of its own (only '16:9' opens one), so an
+        // oversized phone photo is capped here instead, the same shared
+        // helper the gallery's own upload path runs every file through
+        // (`GalleryField.tsx`), rather than left to fail on the server's
+        // own 413.
+        void helpers.capPhotoSize(file).then((cappedFile) => {
+          if (isLatestPick()) onSelectFile(cappedFile);
+        });
         return;
       }
 
       setCropUnavailableError(undefined);
-      void loadImageDimensions(file).then(
+      void helpers.decodeImageFile(file).then(
         ({ objectUrl, width, height }) => {
-          if (!helpers.canCropToFloor({ width, height })) {
+          if (!isLatestPick()) {
             URL.revokeObjectURL(objectUrl);
-            setCropUnavailableError(consts.PHOTO_TOO_SMALL_TO_CROP_ERROR);
+            return;
+          }
+          if (!helpers.canCropToFloor({ width, height }, ratioValue, minWidth, minHeight)) {
+            URL.revokeObjectURL(objectUrl);
+            setCropUnavailableError(helpers.photoTooSmallError(minWidth, minHeight));
             return;
           }
           setCropCandidate({ file, objectUrl, dimensions: { width, height } });
@@ -81,7 +98,7 @@ export const PhotoPicker = styled(
           // caller as-is, so its own type validation catches it and shows
           // its own message, exactly as before this component cropped
           // anything.
-          onSelectFile(file);
+          if (isLatestPick()) onSelectFile(file);
         },
       );
     };
@@ -110,9 +127,16 @@ export const PhotoPicker = styled(
 
           {hasFailed && (
             <div className="failure">
-              <button type="button" className="retry" onClick={onRetryUpload}>
-                {consts.PHOTO_RETRY_LABEL}
-              </button>
+              {/* A rejection named by `failureReasonOverride` (too small, an
+                  unsupported type) would fail the same way again with the
+                  same file: only "choose another file" can succeed then, so
+                  retry is offered only for an unclassified (likely network)
+                  failure. */}
+              {!failureReasonOverride && (
+                <button type="button" className="retry" onClick={onRetryUpload}>
+                  {consts.PHOTO_RETRY_LABEL}
+                </button>
+              )}
               <label className="chooseOther">
                 <span>{consts.PHOTO_CHOOSE_OTHER}</span>
                 <input type="file" accept="image/jpeg,image/png" onChange={handleChange} />
@@ -120,7 +144,9 @@ export const PhotoPicker = styled(
               {/* Below the actions, matching where the rejected-file error
                   sits under .chooseFile (design gate nits: the two used to
                   disagree on which side the error sits). */}
-              <p className="error">{consts.PHOTO_UPLOAD_FAILED}</p>
+              <p className="error">
+                {failureReasonOverride ?? (hasPreviousPhotoOnFailure === false ? consts.PHOTO_UPLOAD_FAILED : consts.PHOTO_UPLOAD_FAILED_PREVIOUS_KEPT)}
+              </p>
             </div>
           )}
 
@@ -140,13 +166,15 @@ export const PhotoPicker = styled(
               </label>
 
               {!isUploading && displayedError && <p className="error">{displayedError}</p>}
-              {!isUploading && !hasPhoto && <p className="missingNote">{consts.PHOTO_MISSING_NOTE}</p>}
+              {!isUploading && !hasPhoto && <p className="missingNote">{missingPhotoNoteOverride ?? consts.PHOTO_MISSING_NOTE}</p>}
 
               {!isUploading && (
                 <ul className="help">
                   <li className="helpItem">{consts.PHOTO_HELP_TYPE}</li>
-                  <li className="helpItem">{consts.PHOTO_HELP_SIZE[aspectRatio]}</li>
-                  {consts.PHOTO_HELP_CROP[aspectRatio] && <li className="helpItem">{consts.PHOTO_HELP_CROP[aspectRatio]}</li>}
+                  <li className="helpItem">{sizeHelpOverride ?? helpers.photoHelpSize(aspectRatio, minWidth, minHeight)}</li>
+                  {(cropHelpOverride ?? consts.PHOTO_HELP_CROP[aspectRatio]) && (
+                    <li className="helpItem">{cropHelpOverride ?? consts.PHOTO_HELP_CROP[aspectRatio]}</li>
+                  )}
                 </ul>
               )}
             </>
@@ -160,6 +188,8 @@ export const PhotoPicker = styled(
               file: cropCandidate.file,
               imageUrl: cropCandidate.objectUrl,
               sourceDimensions: cropCandidate.dimensions,
+              aspectRatio: ratioValue,
+              minWidth,
               onConfirm: (croppedFile: File): void => {
                 setCropCandidate(undefined);
                 onSelectFile(croppedFile);

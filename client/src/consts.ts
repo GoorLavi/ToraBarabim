@@ -1,4 +1,4 @@
-import type { LessonAudience, RabbiHonorific } from '@torabarabim/common';
+import type { LessonAudience, LessonTopic, RabbiHonorific } from '@torabarabim/common';
 
 import { SITE_NAME, SITE_ORIGIN } from '../consts';
 
@@ -24,6 +24,41 @@ export const SUBSTITUTE_PREFIX_BY_HONORIFIC: Record<RabbiHonorific, string> = {
   rabbanit: 'במקומה של',
 };
 
+// A course's own state tag, read by the public card, the course page, and
+// every panel row or record that shows one (the coordinator's word choices,
+// 2026-09-25). "Registration open" covers both `notOpen` and `open`: a
+// reader deciding whether to press "for registration" does not need the
+// distinction a panel row does.
+export const COURSE_STATE_TAG_OPEN = 'ההרשמה פתוחה';
+export const COURSE_STATE_TAG_FULL = 'תפוסה מלאה';
+export const COURSE_STATE_TAG_CLOSED = 'ההרשמה נסגרה';
+
+// A closed or full course's own record explanation, read by both panels'
+// read-only records (the rabbi's `ReadOnlyCourseRecord` and the admin's
+// `CourseViewPage`), so the one sentence cannot drift into two.
+export const COURSE_CLOSED_RECORD_EXPLANATION = 'הקורס נשאר כמו שהיה. כדי לפתוח ממנו מחזור חדש, משכפלים אותו לתאריך חדש.';
+
+// The five course lifecycle actions, worded identically wherever a course
+// record offers them: the rabbi's own edit form (as buttons) and the
+// admin's record page and the rabbi's own read-only record (as links or
+// buttons). Each opens its own confirm sheet or navigates, so these are
+// trigger labels, distinct from a sheet's own confirm-button wording.
+export const COURSE_VIEW_ON_SITE_ACTION_LABEL = 'לעמוד הקורס באתר';
+export const COURSE_MARK_FULL_ACTION_LABEL = 'סימון תפוסה מלאה';
+export const COURSE_CLOSE_REGISTRATION_ACTION_LABEL = 'סגירת ההרשמה';
+export const COURSE_DUPLICATE_ACTION_LABEL = 'שכפול לתאריך חדש';
+export const COURSE_DELETE_ACTION_LABEL = 'מחיקת הקורס';
+
+// A course's fact labels, nouns throughout rather than "איפה"/"למי", so the
+// five read as one grammatical kind (spec section 13, editor). Lifted from
+// `CoursePage/consts.ts` once the rabbi panel's own read-only course record
+// became a second caller.
+export const COURSE_FACT_OPENING_LABEL = 'פתיחה';
+export const COURSE_FACT_SCOPE_LABEL = 'היקף';
+export const COURSE_FACT_VENUE_LABEL = 'מקום';
+export const COURSE_FACT_AUDIENCE_LABEL = 'קהל';
+export const COURSE_FACT_PRICE_LABEL = 'מחיר';
+
 export const lessonCountLabel = (count: number): string => (count === 1 ? 'שיעור אחד' : `${count} שיעורים`);
 export const cityCountLabel = (count: number): string => (count === 1 ? 'עיר אחת' : `${count} ערים`);
 
@@ -48,6 +83,22 @@ export const AUDIENCE_LABELS: Record<LessonAudience, string> = {
   men: 'גברים',
   women: 'נשים',
   mixed: 'גם גברים וגם נשים',
+};
+
+// The lesson topic vocabulary. Read by the lesson card, the lesson row, the
+// lesson ticket, the place panel's lesson form, and the course page (a
+// course's own topic is the same `LessonTopic` list, plus `אחר` with its
+// own free text). Lifted here once the course page became a fourth reach
+// into `HomePage/components/LessonCard/consts.ts` for it.
+export const LESSON_TOPIC_LABELS: Record<LessonTopic, string> = {
+  gemara: 'גמרא',
+  halacha: 'הלכה',
+  parasha: 'פרשת השבוע',
+  mussar: 'מוסר',
+  chassidut: 'חסידות',
+  tanach: 'תנ״ך',
+  machshava: 'מחשבה',
+  other: 'כללי',
 };
 
 // Read by `PanelLogin`, the one login door shared by a rabbi and a place
@@ -78,3 +129,49 @@ export const PANEL_LOGIN_WHATSAPP_COLOR = '#1DA851';
 export const PANEL_LOGIN_WHATSAPP_COLOR_HOVER = '#17853F';
 export const DEDICATION_WHATSAPP_COLOR = '#17853F';
 export const DEDICATION_WHATSAPP_COLOR_HOVER = '#136C33';
+
+// Hand-mirrored by name from server/src/service/course/consts.ts: a course
+// photo of any size is accepted (the owner's call, "לקבל כל גודל, עם אזהרה
+// על טשטוש"), so nothing here rejects an upload any more. These are the
+// soft thresholds the picker warns below instead, after the upload
+// succeeds, sized to the cover's own card render and the gallery rail's
+// widest tier.
+export const COURSE_COVER_SOFT_MIN_WIDTH = 600;
+export const COURSE_COVER_SOFT_MIN_HEIGHT = 800;
+export const COURSE_GALLERY_SOFT_MIN_SIDE = 600;
+
+// Shown under the cover field, not as a rejection, once the cover has
+// uploaded (or, on the create form, been picked) and its pixel dimensions
+// read below the soft floor above. The gallery reads its own count-aware
+// line instead (`GalleryField/consts.ts`, `gallerySmallPhotoWarning`),
+// since the one warning under its grid can name several marked tiles at
+// once, which the cover, always exactly one photo, never needs to.
+export const COURSE_PHOTO_SMALL_WARNING = 'התמונה קטנה, ובאתר היא עלולה להיראות מטושטשת. אם יש גרסה גדולה יותר, כדאי להעלות אותה.';
+
+// A title's own name-and-cycle join ("יסודות האמונה · מחזור 3"): read by
+// every card and row that joins the two. The space before the dot is
+// non-breaking, bound to the name before it so the dot can never dangle
+// alone at a line break (design review); the space after is a normal one,
+// the same shape as `helpers.ts`'s own `joinWithMiddleDot`.
+export const MIDDLE_DOT_SEPARATOR = ' · ';
+
+// A meta line's own two-part join ("גברים · תל אביב", "גברים · תיאור
+// קצר"): both sides non-breaking, so the dot can never dangle alone at
+// either end of a line break (design review, card meta at 375). Read by
+// every card whose meta line joins an audience tag to a city or a short
+// description.
+export const META_LINE_SEPARATOR = ' · ';
+
+// CourseCard's own meta line (design gate round 2 finding): the audience
+// phrase itself never wraps mid-sentence (styles.ts, ".audience"), so the
+// space before the dot can stay a normal, breakable one, moving the whole
+// "· city" tail to its own line when the row runs out of room; the space
+// after the dot stays non-breaking, binding the dot to the city that
+// follows it. Distinct from META_LINE_SEPARATOR above, which every other
+// card keeps as is.
+export const COURSE_CARD_META_SEPARATOR = ' ·\u00A0';
+
+// The floor from design-system.md's card width step: every rail card
+// (`LessonCard`, `CourseCard`) steps its own type scale at this rendered
+// width, via `@container` rather than a viewport media query.
+export const CARD_WIDE_THRESHOLD = '190px';

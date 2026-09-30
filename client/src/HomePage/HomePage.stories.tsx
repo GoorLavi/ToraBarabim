@@ -1,6 +1,7 @@
 import type { HomeResponse, HomeRow, LessonOccurrence } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
+import { courseFixture } from '~/courseFixture';
 import { DEDICATION_GROUP_HEALING, DEDICATION_GROUP_MEMORIAL, DEDICATION_GROUP_SUCCESS } from '~/dedicationFixture';
 import { rabbiFixture } from '~/rabbiFixture';
 
@@ -32,7 +33,10 @@ const lesson = (overrides: Partial<LessonOccurrence>): LessonOccurrence => ({
   ...overrides,
 });
 
-const row = (overrides: Partial<HomeRow>): HomeRow => ({
+type LessonHomeRow = Extract<HomeRow, { kind: 'lessons' }>;
+
+const row = (overrides: Partial<Omit<LessonHomeRow, 'kind'>>): LessonHomeRow => ({
+  kind: 'lessons',
   id: 'today',
   title: 'היום באזור שלכם',
   items: [
@@ -88,12 +92,33 @@ export const Loading: Story = {
   parameters: { apiMocks: { handlers: { home: http.get('/v1/home', loadingResolver) } } },
 };
 
+// The `kind: 'courses'` row, placed by the server right after the first
+// lesson row (plan section 10.7).
+export const WithCourseRow: Story = {
+  parameters: {
+    apiMocks: {
+      handlers: {
+        home: homeHandler(
+          homeResponse({
+            rows: [
+              row({}),
+              { kind: 'courses', id: 'courses', title: 'קורסים', items: [courseFixture({ name: 'יסודות האמונה' })] },
+              row({ id: 'weekly', title: 'שיעורים קבועים השבוע', items: [lesson({ lessonId: 'l4', rabbi: RABBI_3, date: '2026-09-24' })] }),
+            ],
+          }),
+        ),
+      },
+    },
+  },
+};
+
 // Three real rails, the minimum the between-rails band needs
 // (HomeRails/consts.ts, WOMENS_AREA_BAND_SLOT), and a positive
 // `womensAreaLessonCount`, so the success band's real slot, immediately
 // after the women's-area tile, is the one on screen rather than the
 // tile-absent fallback slot.
-const dedicationRow = (id: HomeRow['id'], title: string): HomeRow => ({
+const dedicationRow = (id: LessonHomeRow['id'], title: string): LessonHomeRow => ({
+  kind: 'lessons',
   id,
   title,
   items: [

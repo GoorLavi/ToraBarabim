@@ -1,5 +1,6 @@
 import { readdir } from 'node:fs/promises';
 
+import multipart from '@fastify/multipart';
 import Fastify, { type FastifyInstance } from 'fastify';
 import type postgres from 'postgres';
 
@@ -7,6 +8,7 @@ import { registerAdminRoutes } from '../src/api/admin';
 import { registerAdminAuthRoutes } from '../src/api/admin/auth';
 import { registerAgentRoutes } from '../src/api/agent';
 import { registerCityRoutes } from '../src/api/cities';
+import { registerCourseRoutes } from '../src/api/courses';
 import { registerHealthRoutes } from '../src/api/health';
 import { registerHomeRoutes } from '../src/api/home';
 import { registerLessonRoutes } from '../src/api/lessons';
@@ -88,6 +90,7 @@ export const buildApp = async (): Promise<FastifyInstance> => {
   await registerPlaceRoutes(app);
   await registerRabbiDirectoryRoutes(app);
   await registerWomenAreaRoutes(app);
+  await registerCourseRoutes(app);
   await registerSsr(app);
   registerErrorHandler(app);
   return app;
@@ -156,6 +159,34 @@ export const buildPlaceTestApp = async (): Promise<FastifyInstance> => {
   await registerPanelAuthRoutes(app);
   await registerPlacePortalRoutes(app);
   await registerRabbiDirectoryRoutes(app);
+  registerErrorHandler(app);
+  return app;
+};
+
+// A fifth app, for `course-lifecycle.test.ts`'s sibling `course-api.test.ts`
+// only: cookies, multipart (the panel create routes read a JSON field part
+// and a file part in one request), empty body, both panel login doors and
+// their course routes, the admin rabbi routes (the cascade-delete test
+// needs a rabbi to delete), and every public route a course reaches
+// (`/v1/home`, `/v1/rabbis/:id`, `/v1/places/:id`, `/v1/women`,
+// `/v1/courses/:id`). No SSR catch-all: this suite never needs one.
+export const buildCourseTestApp = async (): Promise<FastifyInstance> => {
+  const config = loadConfig(process.env);
+
+  const app = Fastify({ logger: false });
+  await registerCookies(app, config.sessionSecret);
+  await app.register(multipart);
+  registerEmptyBodySupport(app);
+  await registerAdminAuthRoutes(app);
+  await registerAdminRoutes(app);
+  await registerPanelAuthRoutes(app);
+  await registerRabbiAuthRoutes(app);
+  await registerRabbiRoutes(app);
+  await registerHomeRoutes(app);
+  await registerRabbiDirectoryRoutes(app);
+  await registerPlaceRoutes(app);
+  await registerWomenAreaRoutes(app);
+  await registerCourseRoutes(app);
   registerErrorHandler(app);
   return app;
 };

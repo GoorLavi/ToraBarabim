@@ -1,7 +1,8 @@
 import type { City, RabbiDetailResponse, RabbiDirectoryEntry, RabbiDirectoryResponse } from '@torabarabim/common';
 
+import { toCourseSummary } from './course';
 import { toCitySummary } from '../service/shared/city-summary';
-import type { RabbiCityRecord, RabbiDirectoryEntryRecord, RabbiListResult } from '../service/rabbi/models';
+import type { RabbiCityRecord, RabbiDetailResult, RabbiDirectoryEntryRecord, RabbiListResult } from '../service/rabbi/models';
 
 const toCity = (record: RabbiCityRecord): City => toCitySummary(record);
 
@@ -24,4 +25,4 @@ export const toRabbiDirectoryResponse = (result: RabbiListResult): RabbiDirector
   total: result.total,
 });
 
-export const toRabbiDetailResponse = (result: RabbiDirectoryEntryRecord): RabbiDetailResponse => toDirectoryEntry(result);
+export const toRabbiDetailResponse = (result: RabbiDetailResult): RabbiDetailResponse => ({ ...toDirectoryEntry(result), courses: result.courses.map(toCourseSummary) });
