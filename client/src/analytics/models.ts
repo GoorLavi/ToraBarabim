@@ -210,9 +210,18 @@ export interface CourseRegistrationClosedProps {
   reason: CloseReason;
 }
 
+// Which of the two print posters a visitor's QR scan came from: `listers` is
+// the recruiting poster, `seekers` the one for people looking for a lesson.
+export type PosterSource = 'listers' | 'seekers';
+
+export interface PosterScanProps {
+  posterSource: PosterSource;
+}
+
 export interface SuperProperties {
   viewport: Viewport;
   appSurface: AppSurface;
+  posterSource?: PosterSource;
 }
 
 export type AnalyticsEventName = (typeof MIXPANEL_EVENTS)[keyof typeof MIXPANEL_EVENTS];
@@ -256,4 +265,5 @@ export type AnalyticsEventProps = {
   [MIXPANEL_EVENTS.courseDuplicated]: CourseDuplicatedProps;
   [MIXPANEL_EVENTS.courseDeleted]: CourseDeletedProps;
   [MIXPANEL_EVENTS.courseRegistrationClosed]: CourseRegistrationClosedProps;
+  [MIXPANEL_EVENTS.posterScan]: PosterScanProps;
 };

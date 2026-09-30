@@ -27,19 +27,23 @@ they exist to prevent.
 test, in the real Chromium already installed at `PLAYWRIGHT_BROWSERS_PATH`. Never run
 `playwright install`.
 
-- **A story's `play` function is the test.** There is no separate test file and no
+- **A story's `play` function is the test for anything that renders.** There is no
   second rendering environment: a story that needs an assertion grows a `play`, and a
   story without one still counts, because the runner fails on a story that cannot even
   render. Write the interaction the way a person would perform it, through the
   component's own DOM, the way `CityPicker.stories.tsx`'s `openPicker` helper does.
+- **A pure helper with no DOM gets a vitest unit test beside it** (`*.test.ts`, the
+  `unit` project in `vitest.config.ts`, node, no browser), run alone with
+  `npm run test -w client -- --project unit`. `analytics/helpers.test.ts` is the first.
 - **A `play` runs in Storybook too**, the moment the story renders interactively, not
   only under the runner. So a story that opens its own popover is already open when you
   look at it, and clicking the trigger yourself closes it again. This costs a wasted
   review pass every time someone rediscovers it.
 - **A story that mounts its own `QueryClient` sets `retry: false`,** for the reason
   `.storybook/preview.tsx` already gives at its shared client.
-- **This suite does not run in CI**, by the owner's decision. Nothing will catch a
-  regression here except someone running it, so run it before you hand work over.
+- **Neither project runs in CI**, by the owner's decision, reaffirmed on 2026-09-30 for
+  the unit project. Nothing will catch a regression here except someone running it, so
+  run it before you hand work over.
 
 ## Component Tree
 

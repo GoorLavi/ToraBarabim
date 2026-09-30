@@ -1,8 +1,8 @@
 import type { LessonOccurrence, Rabbi } from '@torabarabim/common';
 
-import { AUTOMATED_USER_AGENT_PATTERN } from './consts';
+import { AUTOMATED_USER_AGENT_PATTERN, POSTER_SOURCE_PARAM, POSTER_SOURCES_BY_UTM_VALUE } from './consts';
 import type { AppSurface } from './consts';
-import type { ActiveFilters, LessonClickContext, LessonClickProps, NavigationClickProps } from './models';
+import type { ActiveFilters, LessonClickContext, LessonClickProps, NavigationClickProps, PosterSource } from './models';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -102,3 +102,9 @@ export const navigationClickProps = (
 // events and nothing the visitor can see.
 export const isAutomatedBrowser = (browser: Pick<Navigator, 'userAgent' | 'webdriver'>): boolean =>
   browser.webdriver === true || AUTOMATED_USER_AGENT_PATTERN.test(browser.userAgent);
+
+export const posterSourceFrom = (search: string): PosterSource | undefined => {
+  const utmSource = new URLSearchParams(search).get(POSTER_SOURCE_PARAM);
+  if (utmSource === null) return undefined;
+  return POSTER_SOURCES_BY_UTM_VALUE.get(utmSource);
+};
