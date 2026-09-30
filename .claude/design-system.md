@@ -362,7 +362,8 @@ takes `dedicationClosing` and gets no role of its own.
 **Dedication geometry.** The unit is 200 wide at every placement and every width, and
 units sit 32 apart (`xxl`), so one unit plus its gap is 232. The ornament is about 120 wide
 at the site's scale. The unit width holds a first name, surname, and honorific on one line;
-a longer name wraps into two balanced lines rather than breaking a word. The unit width
+a longer name wraps into two lines, balanced where the engine allows, rather than breaking
+a word. The unit width
 was measured against the floors: if the scale is ever raised so the lines leave their
 floors, revisit the width in the same change.
 
