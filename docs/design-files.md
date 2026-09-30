@@ -63,7 +63,7 @@ ships. Read it as history until someone redraws it.
 | `02 תמונות שיתוף` | The share images, square and wide, each on a dark and a light background |
 | `03 טוקנים` | The token board. Behind the code; see Known gaps |
 | `04 פוסטרים חלופיים` | The six lesson-card fallback photos, one frame (`62:3`). Found unlisted on 2026-09-29 |
-| `05 כרזות לתלייה` | The two print posters. Two one-to-one frames at the originals' 1024 x 1536, each with the owner's original image as a locked base layer, the five agreed copy fixes patched over it, and a hidden editable vector layer; two earlier A3 rebuilds with the designer's sharpening; the headline face comparison; and a notes frame carrying the open options. Waits on the owner to pick which frames survive |
+| `05 כרזות לתלייה` | The two print posters, final and approved on 2026-09-30. One frame per poster at the originals' 1024 x 1536, with the owner's original image as a locked base layer, the approved changes patched over it (copy fixes, the official mark, בס"ד, real QR codes with a per-poster `utm_source`, the reworked contact panel, the audience glyphs, the tile row and the band order) and a hidden editable vector layer. Beside them, a locked copy of each original and the notes frame that lists every change and the pre-print checks |
 
 ## Components are in the site file, not the components file
 
