@@ -37,14 +37,15 @@ export const DedicationBand = css(
      individual floors than to either target). */
   ${dedicationScaleCss(theme)}
 
-  /* Full bleed in both variants: a horizontally scrolling row cancels the
-     page gutter and re-applies it as its own inline padding (.viewport
-     below), so the strip reaches the true viewport edge and the next
-     unit's peek is not cut short inside the column. HomePage/styles.ts
-     deliberately keeps a constant two-step gutter (lg, then xl from md)
-     rather than the shared contentGutterInline helper, because this page's
-     band is uncapped and never collapses that gutter to zero, so there is
-     no third breakpoint to mirror here either. */
+  /* Full bleed in both variants: cancels the page gutter (lg, then xl from
+     md; HomePage/styles.ts keeps that two-step gutter rather than the
+     shared contentGutterInline helper, because this page's band is uncapped
+     and never collapses it to zero) so the strip reaches the true viewport
+     edge and the next unit's peek is not cut short inside the column. The
+     strip is then framed by a fixed lg (.viewport padding-inline below),
+     not by the page gutter: the loop period and the overflow test read that
+     one number (DEDICATION_BAND_EDGE_PADDING_PX). From md up the first unit
+     therefore sits xl minus lg outside the heading line, an accepted cost. */
   margin-inline: calc(-1 * ${theme.spacing.lg});
   inline-size: calc(100% + 2 * ${theme.spacing.lg});
 

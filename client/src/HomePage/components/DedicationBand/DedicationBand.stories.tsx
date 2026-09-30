@@ -157,11 +157,10 @@ export const ArrowKeyAlwaysLandsOnAUnitBoundary: Story = {
     viewport.focus();
     await userEvent.keyboard('{ArrowLeft}');
 
-    const pitch = DEDICATION_UNIT_PITCH_PX;
     const rtlSign = getComputedStyle(viewport).direction === 'rtl' ? -1 : 1;
     const position = viewport.scrollLeft * rtlSign;
-    const offsetFromGridLine = ((position % pitch) + pitch) % pitch;
-    const distanceFromNearestGridLine = Math.min(offsetFromGridLine, pitch - offsetFromGridLine);
+    const offsetFromGridLine = ((position % DEDICATION_UNIT_PITCH_PX) + DEDICATION_UNIT_PITCH_PX) % DEDICATION_UNIT_PITCH_PX;
+    const distanceFromNearestGridLine = Math.min(offsetFromGridLine, DEDICATION_UNIT_PITCH_PX - offsetFromGridLine);
 
     expect(distanceFromNearestGridLine).toBeLessThan(1);
   },
