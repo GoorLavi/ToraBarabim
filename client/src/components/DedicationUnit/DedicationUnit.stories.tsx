@@ -5,7 +5,9 @@ import { expect, waitFor } from 'storybook/test';
 
 import {
   DEDICATION_TEXT_HEALING,
+  DEDICATION_TEXT_HEALING_LONG_NAME,
   DEDICATION_TEXT_MEMORIAL_HYD,
+  DEDICATION_TEXT_MEMORIAL_LONG_NAME_ALL_LINES,
   DEDICATION_TEXT_MEMORIAL_LONGEST_NAME,
   DEDICATION_TEXT_MEMORIAL_NO_DONOR_CREDIT,
   DEDICATION_TEXT_MEMORIAL_NO_PARENT,
@@ -15,11 +17,12 @@ import {
 
 import { ARGAMAN_VE_ZAHAV_THEME } from '~/theme/themes';
 
+import { DEDICATION_FORMULA_SIZE_FLOOR_PX, DEDICATION_PARENT_SIZE_FLOOR_PX } from './consts';
 import { DedicationUnit } from './DedicationUnit';
 
 const { colors } = ARGAMAN_VE_ZAHAV_THEME;
 
-// The unit is fixed at 280 in every placement, so every story wraps it in a
+// The unit is a fixed width in every placement, so every story wraps it in a
 // field the size of its variant's actual background: `primaryStrong`, the
 // foot band's own field, for `onPrimary`; `bg` for `onPage` (design-system.md,
 // dedication colour and geometry rules; DedicationBand/styles.ts). This is
@@ -80,7 +83,7 @@ export const HonorificHyd: Story = {
 };
 
 // The wrapping instrument: several given names plus a family name plus the
-// honorific wraps to more than two lines at 280, and none of it may be
+// honorific wraps to two lines at the unit's width, and none of it may be
 // clipped (design-system.md, dedication hard rule 1).
 export const LongestRealisticName: Story = {
   args: { text: DEDICATION_TEXT_MEMORIAL_LONGEST_NAME, variant: 'onPage' },
@@ -117,7 +120,7 @@ const twoVariantComparison = (text: DedicationText): ReactElement => (
   </div>
 );
 
-// The instrument for the rendered-height check: both variants at 280,
+// The instrument for the rendered-height check: both variants,
 // side by side, each on its own field. `DEDICATION_TEXT_MEMORIAL_WRAPPING`
 // carries a donor credit line, visible on both sides here: 20/28 in
 // dedicationMuted on the page field, unchanged gold on the plum field
@@ -154,23 +157,21 @@ const rgbFromHex = (hex: string): string => {
 
 // The page-field contrast switch (DedicationUnit/styles.ts's container
 // style queries) only fires once the formula and the parent line have
-// each individually shrunk to their own 14px floor: --dedication-scale-px
-// is forced low enough here to guarantee that, standing in for the band's
-// own fold-driven value the same way a wrapping ancestor's custom property
-// always would. Measured directly against the computed colour, not
-// assumed from the CSS alone: a style query compares a custom property's
-// own resolved value, never its raw formula text, so without registering
-// --dedication-formula-size and --dedication-parent-size as typed lengths
-// (GlobalStyle.ts's own @property block) the query was comparing "14px"
-// against the literal string "max(14px, calc(24 * 0.3px))" and could never
-// match at any scale. This story caught exactly that before the @property
+// each individually shrunk to their own 14px floor. The unit sets its own
+// --dedication-scale-px, so a wrapping ancestor can no longer force the
+// scale: at site scale (both breakpoints) every line already sits on its
+// floor, which is the state this checks. Measured directly against the
+// computed colour, not assumed from the CSS alone: a style query compares a
+// custom property's own resolved value, never its raw formula text, so
+// without registering --dedication-formula-size and --dedication-parent-size
+// as typed lengths (GlobalStyle.ts's own @property block) the query was
+// comparing "14px" against the literal formula text and could never match at
+// any scale. This story caught exactly that before the @property
 // registration existed: both lines rendered in the full-contrast colour
 // regardless of how far the scale dropped.
-export const PageFieldContrastSwitchesAtSmallScale: Story = {
+export const PageFieldContrastSwitchesAtSiteScale: Story = {
   render: () => (
-    <div
-      style={{ background: colors.bg, padding: '32px', display: 'inline-block', ['--dedication-scale-px' as string]: '0.3px' } as React.CSSProperties}
-    >
+    <div style={{ background: colors.bg, padding: '32px', display: 'inline-block' }}>
       <DedicationUnit text={DEDICATION_TEXT_MEMORIAL_WRAPPING} variant="onPage" />
     </div>
   ),
@@ -181,11 +182,35 @@ export const PageFieldContrastSwitchesAtSmallScale: Story = {
     if (!formula || !parent || !name) throw new Error('DedicationUnit story: a text line was not found');
 
     await waitFor(() => {
+      expect(getComputedStyle(formula).fontSize).toEqual(`${DEDICATION_FORMULA_SIZE_FLOOR_PX}px`);
+      expect(getComputedStyle(parent).fontSize).toEqual(`${DEDICATION_PARENT_SIZE_FLOOR_PX}px`);
       expect(getComputedStyle(formula).color).toEqual(rgbFromHex(colors.dedicationMuted));
       expect(getComputedStyle(parent).color).toEqual(rgbFromHex(colors.dedicationMuted));
     });
     // The name never switches: its own floor (24) still clears 4.5:1 in
     // the full-contrast colour at every scale.
     expect(getComputedStyle(name).color).toEqual(rgbFromHex(colors.dedication));
+  },
+};
+
+// The wrapping instrument for real long names, side by side on the page
+// field: a long name breaks into two even lines, never one orphan word, and
+// nothing is clipped by the unit's width. The play asserts the property and
+// the no-overflow half; the even split itself is what to look at.
+export const LongNamesWrapBalanced: Story = {
+  render: () => (
+    <div style={{ background: colors.bg, padding: '32px', display: 'flex', flexWrap: 'wrap', gap: '32px' }}>
+      <DedicationUnit text={DEDICATION_TEXT_MEMORIAL_LONGEST_NAME} variant="onPage" />
+      <DedicationUnit text={DEDICATION_TEXT_HEALING_LONG_NAME} variant="onPage" />
+      <DedicationUnit text={DEDICATION_TEXT_MEMORIAL_LONG_NAME_ALL_LINES} variant="onPage" />
+    </div>
+  ),
+  play: ({ canvasElement }) => {
+    const lines = Array.from(canvasElement.querySelectorAll<HTMLElement>('.text > *'));
+    expect(lines.length).toBeGreaterThan(0);
+    for (const line of lines) {
+      expect(getComputedStyle(line).getPropertyValue('text-wrap-style')).toEqual('balance');
+      expect(line.scrollWidth).toBeLessThanOrEqual(line.clientWidth);
+    }
   },
 };

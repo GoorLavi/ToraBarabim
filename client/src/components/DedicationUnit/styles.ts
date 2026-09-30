@@ -1,4 +1,5 @@
 import { css } from 'styled-components';
+import type { DefaultTheme } from 'styled-components';
 
 import * as consts from './consts';
 
@@ -8,7 +9,7 @@ import * as consts from './consts';
 // artwork flipped, never a second path.
 export const Ornament = css`
   display: block;
-  /* Scaled independently of the unit's own fixed 280 (design-system.md,
+  /* Scaled independently of the unit's own fixed width (design-system.md,
      dedication geometry: the unit width is settled separately and does not
      scale), so this is an explicit length, never the 100% that used to
      just mirror the parent. block-size stays auto, derived from this via
@@ -32,33 +33,42 @@ export const Ornament = css`
     }
   }
 
-  /* Pushed to the bottom of whatever height the unit ends up at, rather
-     than sitting directly after the text block: when the band that lays
-     units out stretches every unit in a row to the tallest one's height, a
-     shorter unit (no parent line, no donor credit) would otherwise close
-     its lower ornament early, leaving its baseline 84px above its
-     neighbours' (measured in a row of three real units). An auto margin on
-     the last flex child claims exactly the leftover space the stretch
-     created, which is zero, a no-op, whenever nothing stretched this unit
-     at all (every story that renders one on its own). */
   &.mirrored {
     transform: scaleY(-1);
-    margin-block-start: auto;
   }
 `;
 
-// The unit is 280 wide at every placement and every width, with no
-// responsive step, so nothing here reads a breakpoint (design-system.md,
-// dedication geometry). Height is never set directly: it is the natural
-// sum of its content, which now scales with --dedication-scale-px
-// (DedicationBand/styles.ts, the band's own fold-driven scale), and the
-// caller measures it rather than this component asserting a figure.
+// Declares --dedication-scale-px, the one custom property every scaled value
+// below (and the band's own padding-block) reads. A length, not a unitless
+// ratio: every reference value it is multiplied against is written as a
+// bare, unitless number, since a length times a length is an area, not a
+// length. Applied on the unit itself, so a unit renders at site scale
+// wherever it is placed (the admin preview has no band around it), and on
+// the band root, whose own padding-block reads the same property: both
+// elements emit this one fragment, never their own copy of the numbers.
+// Selected by the md width query, never a continuous function of the
+// viewport. The numbers, and how they were worked out, live in consts.ts.
+export const dedicationScaleCss = (theme: DefaultTheme): string => `
+  --dedication-scale-px: ${consts.DEDICATION_SCALE_BELOW_MD}px;
+
+  @media (min-width: ${theme.breakpoints.md}) {
+    --dedication-scale-px: ${consts.DEDICATION_SCALE_FROM_MD}px;
+  }
+`;
+
+// The unit is a fixed width at every placement and every width, with no
+// responsive step in its geometry (design-system.md, dedication geometry);
+// the only breakpoint read is the scale's own, inside dedicationScaleCss
+// above. Height is never set directly: it is the natural sum of its
+// content, which scales with --dedication-scale-px, and the caller measures
+// it rather than this component asserting a figure.
 //
 // Both variant blocks below assign nothing but `--dedication-*` custom
 // property values: every rule that reads one lives outside them, so a
 // variant can only ever change colour, never geometry.
 export const DedicationUnit = css(
   ({ theme }) => `
+  ${dedicationScaleCss(theme)}
   inline-size: ${consts.DEDICATION_UNIT_WIDTH_PX}px;
   display: flex;
   flex-direction: column;
@@ -108,7 +118,7 @@ export const DedicationUnit = css(
        are registered as typed lengths in GlobalStyle.ts's own @property
        block: without that registration this comparison never matches at
        any scale (client/src/components/DedicationUnit/DedicationUnit.stories.tsx,
-       PageFieldContrastSwitchesAtSmallScale, caught exactly that). */
+       PageFieldContrastSwitchesAtSiteScale, caught exactly that). */
     @container dedication-unit style(--dedication-formula-size: ${consts.DEDICATION_FORMULA_SIZE_FLOOR_PX}px) {
       > .text > .formula {
         color: var(--dedication-closing-text);
@@ -137,6 +147,9 @@ export const DedicationUnit = css(
       inline-size: 100%;
       color: var(--dedication-text);
       text-shadow: var(--dedication-shadow);
+      /* A long name wraps into two even lines instead of one orphan word on
+         the second. */
+      text-wrap: balance;
     }
 
     > .formula {

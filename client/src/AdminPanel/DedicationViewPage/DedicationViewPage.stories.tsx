@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Route, Routes } from 'react-router-dom';
 import { userEvent, within } from 'storybook/test';
 
+import { expectDedicationRendersAtSiteScale } from '~/AdminPanel/expectDedicationRendersAtSiteScale';
 import { installMockFetch, jsonResponse, NEVER_RESOLVES } from '~/storyMocks';
 
 import { DedicationViewPage } from './DedicationViewPage';
@@ -83,7 +84,12 @@ const meta: Meta<typeof DedicationViewPage> = {
 export default meta;
 type Story = StoryObj<typeof DedicationViewPage>;
 
-export const Live: Story = { decorators: [withRoute('story-live')] };
+// The preview is the same unit the public site shows, at the same size: the
+// preview is only worth looking at if it is what the reader will see.
+export const Live: Story = {
+  decorators: [withRoute('story-live')],
+  play: ({ canvasElement }) => expectDedicationRendersAtSiteScale(canvasElement),
+};
 export const TakenDown: Story = { decorators: [withRoute('story-takendown')] };
 export const SuccessForFamily: Story = { decorators: [withRoute('story-family')] };
 export const NotFound: Story = { decorators: [withRoute('story-notfound')] };

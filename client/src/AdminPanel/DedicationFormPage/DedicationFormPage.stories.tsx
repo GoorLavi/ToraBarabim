@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Route, Routes } from 'react-router-dom';
 import { expect, userEvent, within } from 'storybook/test';
 
+import { expectDedicationRendersAtSiteScale } from '~/AdminPanel/expectDedicationRendersAtSiteScale';
 import { installMockFetch, jsonResponse } from '~/storyMocks';
 
 import { DedicationFormPage } from './DedicationFormPage';
@@ -140,6 +141,7 @@ export const PreviewPopulated: Story = {
     const nameInput = await canvas.findByLabelText('השם שיופיע בהקדשה', { exact: false });
     await userEvent.type(nameInput, 'אברהם כהן');
     await canvas.findByText('אברהם כהן', {}, { timeout: 2000 });
+    await expectDedicationRendersAtSiteScale(canvasElement);
   },
 };
 

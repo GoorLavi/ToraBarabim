@@ -9,13 +9,14 @@ export const GlobalStyle = createGlobalStyle(
      reach it: this is the one place it can be registered at all.
      DedicationUnit/styles.ts reads --dedication-formula-size and
      --dedication-parent-size (each a max()/calc() expression driven by the
-     band's own scale) inside a container style query, and a style query
-     compares a custom property's own resolved value, never its raw,
-     unparsed formula string: without registering the type here, the
-     container never actually holds "14px", it holds the literal text
-     "max(14px, calc(24 * 0.3px))", which a style() condition can never
-     equal a literal 14px, at any scale (measured: the page-field contrast
-     switch this exists for never fired without it). */
+     dedication scale, dedicationScaleCss in DedicationUnit/styles.ts)
+     inside a container style query, and a style query compares a custom
+     property's own resolved value, never its raw, unparsed formula string:
+     without registering the type here, the container never actually holds
+     "14px", it holds the literal text "max(14px, calc(24 * 0.3px))", which
+     a style() condition can never equal a literal 14px, at any scale
+     (measured: the page-field contrast switch this exists for never fired
+     without it). */
   @property --dedication-formula-size {
     syntax: '<length>';
     inherits: true;

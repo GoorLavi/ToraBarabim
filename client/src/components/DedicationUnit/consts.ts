@@ -2,10 +2,10 @@ import { ARGAMAN_VE_ZAHAV_THEME } from '~/theme/themes';
 
 import type { DedicationVariant, DedicationVariantTokens } from './models';
 
-// The unit is 280 wide at every placement and every width: one width, no
+// The unit is 200 wide at every placement and every width: one width, no
 // responsive step (design-system.md, dedication geometry). The one place
 // this number is typed; the band that lays units out reads it too.
-export const DEDICATION_UNIT_WIDTH_PX = 280;
+export const DEDICATION_UNIT_WIDTH_PX = 200;
 
 // The site ships exactly one colour scheme (design-system.md, "The theme
 // and the token contract"), so the concrete theme is read directly rather
@@ -53,13 +53,54 @@ export const ORNAMENT_VIEWBOX_WIDTH = 240;
 export const ORNAMENT_VIEWBOX_MIN_Y = 0.56;
 export const ORNAMENT_VIEWBOX_HEIGHT = 51.96;
 
+// The scale driver (design-system.md, dedication geometry): a fixed value
+// per breakpoint, chosen by the owner directly rather than derived from the
+// viewport (owner, on the real site: "for the scale, I prefer width").
+// 418 is the onPrimary band's own rendered height at scale 1 (unit height,
+// 354.04, plus its own 2 * 32 padding-block), the reference the whole band,
+// not only its type, is measured against. It is a fixed reference, measured
+// when the unit was 280 wide and not remeasured since, so changing it
+// changes the scale itself. onPage is never a second reference here, since
+// it carries less padding-block (16, not 32) and so lands a little shorter
+// at the same scale without needing its own.
+export const DEDICATION_BAND_ON_PRIMARY_HEIGHT_REFERENCE = 418;
+
+// The owner's own target band heights, about 165 at phone and about 180 at
+// desktop, worked backward into a scale through the reference above. Both
+// sit under the arithmetic floor of the band's own content, the total
+// height once every scaled line has already clamped to its own floor
+// (measured at 181px for the unit alone, with no air anywhere): 180 is one
+// pixel under that floor, 165 is sixteen under it. Built to the target
+// scale anyway, on the owner's own instruction, rather than bent upward to
+// clear it; the floors below still clamp where they clamp, and the real
+// band lands closer to that 181px arithmetic minimum than to either target
+// at both breakpoints, reported rather than hidden (root CLAUDE.md, "report
+// the heights actually measured, not the targets themselves").
+export const DEDICATION_BAND_TARGET_HEIGHT_PHONE_PX = 165;
+export const DEDICATION_BAND_TARGET_HEIGHT_DESKTOP_PX = 180;
+export const DEDICATION_SCALE_BELOW_MD = DEDICATION_BAND_TARGET_HEIGHT_PHONE_PX / DEDICATION_BAND_ON_PRIMARY_HEIGHT_REFERENCE;
+export const DEDICATION_SCALE_FROM_MD = DEDICATION_BAND_TARGET_HEIGHT_DESKTOP_PX / DEDICATION_BAND_ON_PRIMARY_HEIGHT_REFERENCE;
+
+// A desktop reader sits roughly twice as far from the screen as a phone
+// reader (about 60cm against 30cm), so a desktop dedication must never end
+// up smaller than a phone one: the invariant the old 0.46-and-up floor pair
+// used to defend directly. That exact threshold does not survive Decision
+// 2, since both new targets sit under it by design, so this checks the
+// ordering the reasoning actually depends on instead of a magic minimum.
+// Checked at import time, once, rather than on every render: a value this
+// only a deploy can change is a startup failure waiting to happen, not a
+// runtime one (root CLAUDE.md, "fail at boot, not at first use").
+if (DEDICATION_SCALE_FROM_MD <= DEDICATION_SCALE_BELOW_MD) {
+  throw new Error(
+    `Dedication scale from md (${DEDICATION_SCALE_FROM_MD}) must exceed the scale below md (${DEDICATION_SCALE_BELOW_MD}), or a desktop reader gets a smaller dedication than a phone reader.`,
+  );
+}
+
 // Every scaled value below is `max(floor, calc(reference * scale))`
-// (design-system.md, dedication geometry: the band's own fold-driven
-// scale). `--dedication-scale-px` (DedicationBand/styles.ts) is a length,
-// not a unitless number, so every reference here is written as a bare,
-// unitless number rather than a themed "24px" string: a length times a
-// length is an area, not a length, so only a bare number times that scale
-// produces a length again. Each one hand-mirrors the matching
+// (design-system.md, dedication geometry), the scale being the custom
+// property `dedicationScaleCss` (styles.ts) declares. Every reference here
+// is written as a bare, unitless number rather than a themed "24px" string,
+// for the reason given there. Each one hand-mirrors the matching
 // theme.typography or theme.spacing value in theme/tokens.ts, the
 // canonical scale-1 reference design-system.md documents; a calc() cannot
 // pull the bare number back out of that value's own "24px" string.
@@ -71,7 +112,11 @@ export const DEDICATION_PARENT_SIZE_REFERENCE = 32;
 export const DEDICATION_CLOSING_SIZE_REFERENCE = 20;
 export const DEDICATION_ORNAMENT_TO_TEXT_GAP_REFERENCE = 16;
 export const DEDICATION_DONOR_MARGIN_TOP_REFERENCE = 8;
-export const DEDICATION_ORNAMENT_WIDTH_REFERENCE = DEDICATION_UNIT_WIDTH_PX;
+// The ornament's own reference, not the unit's width: the unit narrowed to
+// 200 while the ornament kept its 280 reference, which at site scale is
+// still under its floor (or within a pixel of it), so it renders at the
+// floor either way.
+export const DEDICATION_ORNAMENT_WIDTH_REFERENCE = 280;
 
 export const DEDICATION_FORMULA_SIZE_FLOOR_PX = 14;
 export const DEDICATION_NAME_SIZE_FLOOR_PX = 24;

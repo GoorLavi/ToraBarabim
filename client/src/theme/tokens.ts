@@ -94,8 +94,8 @@ export const TYPOGRAPHY: ThemeTypography = {
     fontWeight: 700,
   },
   // Line heights below are unitless ratios, not px values: a ratio scales
-  // for free as the band's own fold-driven scale changes font-size
-  // (DedicationBand/styles.ts, --dedication-scale-px), where a px value
+  // for free as the dedication scale changes font-size
+  // (DedicationUnit/consts.ts, --dedication-scale-px), where a px value
   // would need its own separate scaling. This also corrects a real error:
   // the previous px pairing on formula and closing was reached by
   // compressing leading below an honest constant ratio (formula was

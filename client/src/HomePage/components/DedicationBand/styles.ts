@@ -1,6 +1,7 @@
 import { css } from 'styled-components';
 
 import { scaledCss } from '~/components/DedicationUnit/consts';
+import { dedicationScaleCss } from '~/components/DedicationUnit/styles';
 
 import * as consts from './consts';
 
@@ -30,44 +31,34 @@ export const DedicationBand = css(
     }
   }
 
-  /* The band's own scale driver, read by every scaled dedication value
-     (DedicationUnit/styles.ts, and the padding-block below): a fixed
-     value per breakpoint, chosen by the owner directly rather than
-     derived from the viewport (owner, on the real site: "for
-     the scale, I prefer width"). Selected by the same md width query
-     every other responsive rule in this file already branches on, never a
-     continuous function of the viewport the way the superseded
-     100svh-driven version was.
-     A length, not a unitless ratio: every reference value this is
-     multiplied against elsewhere is written as a bare, unitless number,
-     since a length times a length is an area, not a length.
-     consts.ts explains how these two figures were worked out from the
-     owner's own target band heights, and why the real band lands closer
-     to the individual floors than to either target. */
-  --dedication-scale-px: ${consts.DEDICATION_SCALE_BELOW_MD}px;
+  /* The band's own padding-block below reads the scale too, so the band
+     declares it as well as every unit inside it, from the one shared
+     definition (DedicationUnit/consts.ts, which also explains how the two
+     figures were worked out and why the real band lands closer to the
+     individual floors than to either target). */
+  ${dedicationScaleCss(theme)}
+
+  /* Full bleed in both variants: cancels the page gutter (lg, then xl from
+     md; HomePage/styles.ts keeps that two-step gutter rather than the
+     shared contentGutterInline helper, because this page's band is uncapped
+     and never collapses it to zero) so the strip reaches the true viewport
+     edge and the next unit's peek is not cut short inside the column. The
+     strip is then framed by a fixed lg (.viewport padding-inline below),
+     not by the page gutter: the loop period and the overflow test read that
+     one number (DEDICATION_BAND_EDGE_PADDING_PX). From md up the first unit
+     therefore sits xl minus lg outside the heading line, an accepted cost. */
+  margin-inline: calc(-1 * ${theme.spacing.lg});
+  inline-size: calc(100% + 2 * ${theme.spacing.lg});
 
   @media (min-width: ${theme.breakpoints.md}) {
-    --dedication-scale-px: ${consts.DEDICATION_SCALE_FROM_MD}px;
+    margin-inline: calc(-1 * ${theme.spacing.xl});
+    inline-size: calc(100% + 2 * ${theme.spacing.xl});
   }
 
   &.onPrimary {
     background: ${theme.colors.primaryStrong};
-    /* Full bleed: cancels HomePage's own inline gutter so this reaches the
-       true viewport edge instead of stopping at the content band like the
-       page's other sections. HomePage/styles.ts deliberately keeps a
-       constant two-step gutter (lg, then xl from md) rather than the
-       shared contentGutterInline helper, because this page's band is
-       uncapped and never collapses that gutter to zero, so there is no
-       third breakpoint to mirror here either. */
-    margin-inline: calc(-1 * ${theme.spacing.lg});
-    inline-size: calc(100% + 2 * ${theme.spacing.lg});
     padding-block: ${scaledCss(consts.DEDICATION_BAND_PADDING_ON_PRIMARY_REFERENCE, consts.DEDICATION_BAND_PADDING_FLOOR_PX)};
     margin-block-start: ${theme.spacing.section};
-
-    @media (min-width: ${theme.breakpoints.md}) {
-      margin-inline: calc(-1 * ${theme.spacing.xl});
-      inline-size: calc(100% + 2 * ${theme.spacing.xl});
-    }
 
     /* Mirrors SiteLogoLink/styles.ts's own outline colour for the plum
        field: the browser's default focus ring reads poorly against it,
@@ -84,8 +75,6 @@ export const DedicationBand = css(
   }
 
   &.onPage {
-    /* No bleed: both onPage bands, between the rails and above RabbiRow,
-       keep the page's gutter, unlike the full-bleed onPrimary foot band. */
     padding-block: ${scaledCss(consts.DEDICATION_BAND_PADDING_ON_PAGE_REFERENCE, consts.DEDICATION_BAND_PADDING_FLOOR_PX)};
 
     > .viewport:focus-visible {
@@ -139,11 +128,11 @@ export const DedicationBand = css(
        own width is never track content. */
     padding-inline: ${theme.spacing.lg};
     /* The gap between the real track and its looped duplicate, matching
-       the 64px every other pair of units gets: the track's own padding
-       used to carry this framing instead, which put two copies of it
-       (32px total) at the seam rather than the 64 every internal pair
-       gets. Harmless with a single, non-overflowing track, since a flex
-       gap only applies between children. */
+       the gap every other pair of units gets: the track's own padding
+       used to carry this framing instead, which put two copies of it at
+       the seam rather than the one gap every internal pair gets. Harmless
+       with a single, non-overflowing track, since a flex gap only applies
+       between children. */
     gap: ${consts.DEDICATION_UNIT_GAP_PX}px;
 
     &::-webkit-scrollbar {
@@ -165,15 +154,15 @@ export const DedicationBand = css(
      them (above) standing in for the framing padding that used to sit
      here, so the two together form one continuous strip exactly the loop
      period long; a shrink-proof flex item on both keeps that true even
-     while the viewport itself is narrower than either copy. Stretched, not
-     started at the top: every unit in the row takes the height of the
-     tallest one, so a unit with fewer lines does not close its lower
-     ornament short of its neighbours' (DedicationUnit's own lower ornament
-     absorbs the difference with an auto top margin). */
+     while the viewport itself is narrower than either copy. Centred, neither
+     stretched nor started at the top: each unit is only as tall as its own
+     content, so a unit with fewer lines has no empty run above its lower
+     ornament, and every unit shares the row's middle line (owner: the
+     ornaments of different units need not line up). */
   > .viewport > .track {
     flex-shrink: 0;
     display: flex;
-    align-items: stretch;
+    align-items: center;
     gap: ${consts.DEDICATION_UNIT_GAP_PX}px;
   }
 

@@ -343,18 +343,29 @@ person's name. It is a serif with a different history from Assistant's, and it i
 a name on a memorial does not read in the same voice as a lesson listing. It is used
 nowhere else on the site, and a request to reuse it is a request to change what it means.
 
-| Role | Family | Size / line height | Weight | Tracking |
-|---|---|---|---|---|
-| `dedicationFormula` | Assistant | 24 / 32 | 400 | `0.04em` |
-| `dedicationName` | Frank Ruhl Libre | 52 / 60 | 700 | 0 |
-| `dedicationParent` | Frank Ruhl Libre | 32 / 40 | 700 | 0 |
-| `dedicationClosing` | Assistant | 20 / 28 | 400 | `0.12em` |
+| Role | Family | Reference size | Floor | Line height | Weight | Tracking |
+|---|---|---|---|---|---|---|
+| `dedicationFormula` | Assistant | 24 | 14 | 1.2 | 400 | `0.04em` |
+| `dedicationName` | Frank Ruhl Libre | 52 | 24 | 1.1538 | 700 | 0 |
+| `dedicationParent` | Frank Ruhl Libre | 32 | 14 | 1.25 | 700 | 0 |
+| `dedicationClosing` | Assistant | 20 | 14 | 1.2 | 400 | `0.12em` |
 
-All four are centre aligned, and all four are **single-value at every width**. That is a
-deliberate departure from every responsive role above and from `tileCount`'s phone-and-
-desktop shape: the dedication unit is one width everywhere, so a type step would have
-nothing to respond to. The donor credit line takes `dedicationParent` and gets no role of
-its own.
+Every size is `max(floor, reference * scale)`. The scale is defined once and declared on
+the unit itself (and on the band, for its own padding), so the home page bands and the
+admin preview render the same size. At the scales the site ships (about 0.39 on a phone,
+0.43 from `md`) every line sits at its floor, so a reader sees the floor column. All four are centre aligned, and all four are
+**single-value at every width**. That is a deliberate departure from every responsive
+role above and from `tileCount`'s phone-and-desktop shape: the dedication unit is one
+width everywhere, so a type step would have nothing to respond to. The donor credit line
+takes `dedicationClosing` and gets no role of its own.
+
+**Dedication geometry.** The unit is 200 wide at every placement and every width, and
+units sit 32 apart (`xxl`), so one unit plus its gap is 232. The ornament is about 120 wide
+at the site's scale. The unit width holds a first name, surname, and honorific on one line;
+a longer name wraps into two lines, balanced where the engine allows, rather than breaking
+a word. The unit width
+was measured against the floors: if the scale is ever raised so the lines leave their
+floors, revisit the width in the same change.
 
 **Tracking sits on exactly two of the four, and it is authored proportionally**, which in
 CSS means `em` and never `%`. Loosening the two that carry no tracking would space out a

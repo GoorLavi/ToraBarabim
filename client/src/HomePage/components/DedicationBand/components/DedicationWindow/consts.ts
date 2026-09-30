@@ -18,8 +18,8 @@ export const WHATSAPP_MESSAGE = 'שלום, אשמח להקדיש את פעילו
 export const CALL_LABEL = SITE_CONTACT_PHONE_DISPLAY;
 export const CLOSE_LABEL = 'סגירה';
 
-// Decorative only, sized well under the dedication unit's own 280px, worked
-// out from the ornament's own reference-times-scale arithmetic
+// Decorative only, sized well under the dedication unit's own footprint,
+// worked out from the ornament's own reference-times-scale arithmetic
 // (DedicationUnit/consts.ts: DEDICATION_ORNAMENT_WIDTH_REFERENCE is 280, and
 // its floor is 120): 280 * 0.45 clears that floor by enough to read as
 // deliberately small, not clipped against it.

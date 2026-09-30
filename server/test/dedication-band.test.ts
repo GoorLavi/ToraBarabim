@@ -28,9 +28,9 @@ import { dedicationBandSlot, indexAfterNthLessonRow, shouldShowBetweenRailsDedic
 // adding back.
 //
 // `stepByUnitPitch`'s pitch below is an arbitrary test input, not a mirror
-// of the real unit pitch (`DEDICATION_UNIT_WIDTH_PX` + `DEDICATION_UNIT_
-// GAP_PX`, 280 + 64 in client/src/components/DedicationUnit/consts.ts and
-// client/src/HomePage/components/DedicationBand/consts.ts): both live in
+// of the real unit pitch (`DEDICATION_UNIT_WIDTH_PX` in
+// client/src/components/DedicationUnit/consts.ts plus `DEDICATION_UNIT_GAP_PX`
+// in client/src/HomePage/components/DedicationBand/consts.ts): both live in
 // files that reach the theme through the `~` alias, which only Vite
 // resolves, so neither is reachable from here. `stepByUnitPitch` itself is
 // a generic function that only needs a pitch, not that specific one, to
