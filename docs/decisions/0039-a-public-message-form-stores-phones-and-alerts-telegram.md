@@ -51,7 +51,10 @@ handled or not, and carries a free-text note on how it was handled.
 - Messages pile up unread if the super admin is unreachable, the same single point of
   failure 0020 accepted.
 - Telegram's credential now lives in the server task as well as in the alarm Lambda,
-  read from the same SSM parameter.
+  read from the same SSM parameter. ECS resolves that secret before the container
+  starts, so the server task no longer starts if the parameter is missing, even though
+  the server code treats the variable as optional. The parameter already exists for the
+  alarm notifier; deleting or renaming it now takes the site down at the next deploy.
 - The tiles can move under a visitor's eyes after a refetch; the open window and its
   draft survive that, the tile underneath does not.
 
