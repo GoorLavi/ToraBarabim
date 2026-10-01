@@ -141,6 +141,17 @@ tidies it away:
   dedication masters, the notes for directions F to N with the reasoning for each,
   and an archive section. Those notes are the only place that reasoning is written,
   so deleting the page deletes it.
+- **`01 בית · אריחי עזרה · סבב 2 · לאישור`** (`434:488`), beside `01 בית`: the three
+  help tiles inside lesson rails at 390, 320 and 1280, the row with the women's-area
+  tile, and the message window in its states. Approved by the owner on 2026-10-01; it
+  folds into `01 בית` when the change ships. The page before it, `01 בית · אריחי עזרה ·
+  לאישור` (`419:488`), is a superseded first round (four tiles, a block) kept until the
+  owner says to delete it.
+- **`07 הודעות · סבב 2 · לאישור`** (`197:2`), in the admin file: the messages list at
+  390 and 1280 with the handling note in five states, the three empty states, and the
+  shell tab. Approved on 2026-10-01; it becomes `07 הודעות` when the change ships. The
+  page before it, `07 הודעות · לאישור` (`189:2`), is a superseded first round kept
+  until the owner says to delete it.
 
 Each folds into the numbered structure when its change ships.
 

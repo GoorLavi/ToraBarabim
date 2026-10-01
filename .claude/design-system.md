@@ -679,6 +679,16 @@ of the same lessons.
   which is the right; "more" is to the left. This is free as long as nothing names a side.
   Scrolling a rail from code must derive its direction rather than assume a sign, because
   browsers disagree about what a scroll offset means in a right to left page.
+- **Help tiles are rail items, like the women's-area tile, and never lessons** (owner,
+  2026-10-01). Three of them (request a rav or rabbanit, volunteer, share the site), at
+  most one per row, never in slot 0 or 1, never in a row that carries the women's-area
+  tile, never in a filtered list or a grid, each kind at most once per page, placed at
+  random by the server on every request. They share the lesson card's shell (width,
+  radius, stretch to the row). The request and volunteer tiles sit on a flat tint
+  (`primarySoft`, `accentSoft`) with no poster, no border and no shadow; the share tile
+  is `surface` with `border`. A button-shaped pill, and the whole tile is the target.
+  The window they open has a `primaryStrong` header with no ornament: the ornament
+  stays with dedications.
 
 ### Rabbi image fallback (2026-09-23)
 A lesson can in future carry its own photo, distinct from the rabbi's (not in the wire
@@ -750,7 +760,10 @@ Decided against, so not open and not to be reopened casually:
   necessarily know the topic. Worth adding once the data supports it.
 - **A public add-a-lesson form.** Only an admin or a rabbi adds a lesson, and an admin
   adds it to a specific rabbi. So the home page carries no add-a-lesson link and no admin
-  door. Visitors who want a lesson listed are pointed at `כתבו לנו`.
+  door. A visitor who wants a lesson or a teacher listed has two doors, and both only
+  send the team a message: `כתבו לנו`, and the request tile that some lesson rails
+  carry, which takes a name, a phone and a message. Neither creates a lesson or a
+  rabbi, and nothing a visitor types is published.
 - **A featured slot at the top of the home page.** Designed in three shapes, then
   dropped: the poster grid already supplies the visual richness the slot existed to
   compensate for back when the design assumed there were no images. Revisit only if the

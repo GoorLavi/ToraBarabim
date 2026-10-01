@@ -19,8 +19,10 @@ comy.co.il works for stand-up shows: browse by who is speaking, by where, by whe
 in the next hour. A wide range of ages and comfort with technology. This person is the
 only user the public site is designed for.
 
-**The administrator.** A small trusted group who enter and maintain the listings. Not
-the public. See `decisions/0001-lessons-are-admin-entered.md`.
+**The administrator.** A small trusted group who enter and maintain the listings,
+including volunteers the owner has vetted personally
+([0038](decisions/0038-vetted-volunteers-get-admin-accounts.md)). Not the public. See
+`decisions/0001-lessons-are-admin-entered.md`.
 
 ## The signal that it worked
 
@@ -67,8 +69,12 @@ decision record, not a pull request comment.
   third: it reads wrong to this audience.
 - **Times and dates are Israeli.** Today, tomorrow, and this weekend resolve against
   Israel time, and dates and numbers are formatted the way an Israeli reader expects.
-- **The listings are curated, not crowdsourced.** Accuracy is the product. A lesson
-  that is not really happening is worse than a lesson that is missing.
+- **The listings are curated, not crowdsourced.** The public never adds a listing: it
+  can only send the team a message
+  ([0039](decisions/0039-a-public-message-form-stores-phones-and-alerts-telegram.md)).
+  Only the owner's team, volunteers he has vetted, and the rabbis themselves change what
+  is listed. Accuracy is the product. A lesson that is not really happening is worse
+  than a lesson that is missing.
 
 ## What it is not
 
