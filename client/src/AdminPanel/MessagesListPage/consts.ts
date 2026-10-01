@@ -26,7 +26,5 @@ export const NO_MESSAGES_HEADLINE = 'עוד אין הודעות.';
 export const NO_UNHANDLED_MESSAGES_HEADLINE = 'אין הודעות שמחכות לטיפול.';
 export const NO_HANDLED_MESSAGES_HEADLINE = 'עוד אין הודעות שטופלו.';
 
-// Not in the editor-approved copy: written to match the other lists' own
-// load-more wording and waiting for the editor's pass.
 export const LOAD_MORE_LABEL = 'עוד הודעות';
-export const LOAD_MORE_ERROR_MESSAGE = 'לא הצלחנו לטעון עוד הודעות, נסו שוב';
+export const LOAD_MORE_ERROR_MESSAGE = 'לא הצלחנו לטעון עוד הודעות. אפשר לנסות שוב.';

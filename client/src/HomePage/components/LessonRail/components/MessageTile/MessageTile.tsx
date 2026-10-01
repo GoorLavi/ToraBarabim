@@ -1,5 +1,6 @@
 import { RailItemShell } from '~/HomePage/components/RailItemShell/RailItemShell';
 
+import { helpTileAccessibleName } from '../../helpers';
 import { HelpTileContent } from '../HelpTileContent/HelpTileContent';
 import * as consts from './consts';
 import type { MessageTileProps } from './models';
@@ -15,7 +16,7 @@ export const MessageTile = ({ kind, onPress }: MessageTileProps) => {
         variant: 'tinted' as const,
         tint: consts.MESSAGE_TILE_TINTS[kind],
         renderRoot: (rootClassName, content) => (
-          <button type="button" className={rootClassName} aria-label={`${title} ${buttonLabel}`} onClick={(event) => onPress(event.currentTarget)}>
+          <button type="button" className={rootClassName} aria-label={helpTileAccessibleName(title, buttonLabel)} onClick={(event) => onPress(event.currentTarget)}>
             {content}
           </button>
         ),

@@ -7,6 +7,7 @@ import { rabbiFixture } from '~/rabbiFixture';
 import { atFrameSize } from '~/storyMocks';
 
 import { LessonRail } from './LessonRail';
+import { helpTileAccessibleName } from './helpers';
 import * as messageTileConsts from './components/MessageTile/consts';
 import * as shareTileConsts from './components/ShareTile/consts';
 
@@ -137,7 +138,7 @@ const helpTileStory = (kind: HelpTileKind, index: number = HELP_TILE_SLOT): Stor
       await expect(within(slot).getByRole('link')).toHaveAttribute('href', whatsAppHref(shareTileConsts.SHARE_MESSAGE));
     } else {
       const { title, buttonLabel } = messageTileConsts.MESSAGE_TILE_COPY[kind];
-      await expect(within(slot).getByRole('button', { name: `${title} ${buttonLabel}` })).toBeInTheDocument();
+      await expect(within(slot).getByRole('button', { name: helpTileAccessibleName(title, buttonLabel) })).toBeInTheDocument();
     }
     await expect(args.items).toHaveLength(12);
 

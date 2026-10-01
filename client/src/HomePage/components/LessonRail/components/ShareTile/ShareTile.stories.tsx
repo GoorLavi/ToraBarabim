@@ -3,6 +3,7 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { whatsAppHref } from '~/helpers';
 
+import { helpTileAccessibleName } from '../../helpers';
 import * as consts from './consts';
 import { ShareTile } from './ShareTile';
 
@@ -29,7 +30,7 @@ type Story = StoryObj<typeof ShareTile>;
 // markup and the hydrated page agree.
 export const Normal: Story = {
   play: async ({ canvasElement, args }) => {
-    const link = within(canvasElement).getByRole('link', { name: `${consts.TILE_TITLE} ${consts.TILE_BUTTON_LABEL}` });
+    const link = within(canvasElement).getByRole('link', { name: helpTileAccessibleName(consts.TILE_TITLE, consts.TILE_BUTTON_LABEL) });
 
     await expect(link).toHaveAttribute('href', whatsAppHref(consts.SHARE_MESSAGE));
     await expect(link).toHaveAttribute('target', '_blank');

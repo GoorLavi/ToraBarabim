@@ -2,6 +2,7 @@ import { RailItemShell } from '~/HomePage/components/RailItemShell/RailItemShell
 import { WHATSAPP_ICON_PATH } from '~/consts';
 import { whatsAppHref } from '~/helpers';
 
+import { helpTileAccessibleName } from '../../helpers';
 import { HelpTileContent } from '../HelpTileContent/HelpTileContent';
 import * as consts from './consts';
 import type { ShareTileProps } from './models';
@@ -18,7 +19,7 @@ export const ShareTile = ({ onPress }: ShareTileProps) => (
           target="_blank"
           rel="noopener noreferrer"
           className={rootClassName}
-          aria-label={`${consts.TILE_TITLE} ${consts.TILE_BUTTON_LABEL}`}
+          aria-label={helpTileAccessibleName(consts.TILE_TITLE, consts.TILE_BUTTON_LABEL)}
           onClick={onPress}
         >
           {content}

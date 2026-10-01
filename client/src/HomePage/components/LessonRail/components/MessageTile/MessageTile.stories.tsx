@@ -2,6 +2,7 @@ import type { VisitorMessageType } from '@torabarabim/common';
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
+import { helpTileAccessibleName } from '../../helpers';
 import * as consts from './consts';
 import { MessageTile } from './MessageTile';
 
@@ -29,7 +30,7 @@ const pressStory = (kind: VisitorMessageType, tileWidth: keyof typeof WIDTH_BY_N
   parameters: { tileWidth },
   play: async ({ canvasElement, args }) => {
     const { title, buttonLabel } = consts.MESSAGE_TILE_COPY[kind];
-    const tile = within(canvasElement).getByRole('button', { name: `${title} ${buttonLabel}` });
+    const tile = within(canvasElement).getByRole('button', { name: helpTileAccessibleName(title, buttonLabel) });
 
     await userEvent.click(tile);
 

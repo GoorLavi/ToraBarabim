@@ -33,3 +33,10 @@ export const railSlots = (
   }
   return slots;
 };
+
+// A help tile's accessible name is its title and its button label read as
+// one string. A title that ends in its own punctuation (a question) joins
+// cleanly; one that does not would run into the label as a single sentence
+// with a different meaning, so it gets a full stop first.
+export const helpTileAccessibleName = (title: string, buttonLabel: string): string =>
+  /[.?!]$/.test(title) ? `${title} ${buttonLabel}` : `${title}. ${buttonLabel}`;
