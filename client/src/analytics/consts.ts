@@ -32,6 +32,8 @@ export const MIXPANEL_EVENTS = {
   courseDeleted: 'Course Deleted',
   courseRegistrationClosed: 'Course Registration Closed',
   posterScan: 'Poster Scan',
+  helpTileClick: 'Help Tile Click',
+  visitorMessageSent: 'Visitor Message Sent',
 } as const;
 
 // A `LessonCard` can sit in any of these lists; `homeRail` is the only one

@@ -43,17 +43,17 @@ export const TabGridPhoneNonSuper: Story = {
     }),
 };
 
-// A super admin's sixth tab fills the same 3 column grid exactly (`ceil(6 /
-// 2)` is also 3): the scenario the admin panel's tab overflow was first
-// found in (plan section 3.4).
+// A super admin has seven tabs (messages joined the admins tab): `ceil(7 /
+// 2)` is 4 columns, one cell short of full, the same two-row grid the
+// admin panel's tab overflow was first fixed with (plan section 3.4).
 export const TabGridPhoneSuper: Story = {
   parameters: { apiMocks: { handlers: { session: http.get('/v1/admin/me', jsonResolver(superAdmin)) } } },
   play: async ({ canvasElement }) =>
     atFrameSize(375, 700, async () => {
       const nav = await within(canvasElement).findByRole('navigation', { name: consts.NAV_LABEL });
-      await expect(within(nav).findAllByRole('link')).resolves.toHaveLength(6);
+      await expect(within(nav).findAllByRole('link')).resolves.toHaveLength(7);
       await waitFor(() => expect(getComputedStyle(nav).display).toEqual('grid'));
-      await waitFor(() => expect(getComputedStyle(nav).gridTemplateColumns.trim().split(/\s+/)).toHaveLength(3));
+      await waitFor(() => expect(getComputedStyle(nav).gridTemplateColumns.trim().split(/\s+/)).toHaveLength(4));
     }),
 };
 
@@ -66,4 +66,23 @@ export const TabRowDesktop: Story = {
       const nav = await within(canvasElement).findByRole('navigation', { name: consts.NAV_LABEL });
       expect(getComputedStyle(nav).display).toEqual('flex');
     }),
+};
+
+// The messages tab is for the super admin alone: the server refuses everyone
+// else regardless (0020), and the tab is not shown to them.
+export const MessagesTabShownToSuperAdmin: Story = {
+  parameters: { apiMocks: { handlers: { session: http.get('/v1/admin/me', jsonResolver(superAdmin)) } } },
+  play: async ({ canvasElement }) => {
+    const nav = await within(canvasElement).findByRole('navigation', { name: consts.NAV_LABEL });
+    await expect(within(nav).findByRole('link', { name: consts.MESSAGES_TAB_LABEL })).resolves.toHaveAttribute('href', ADMIN_ROUTES.messages);
+  },
+};
+
+export const MessagesTabHiddenFromNonSuperAdmin: Story = {
+  parameters: { apiMocks: { handlers: { session: http.get('/v1/admin/me', jsonResolver(nonSuperAdmin)) } } },
+  play: async ({ canvasElement }) => {
+    const nav = await within(canvasElement).findByRole('navigation', { name: consts.NAV_LABEL });
+    await expect(within(nav).findAllByRole('link')).resolves.toHaveLength(5);
+    await expect(within(nav).queryByRole('link', { name: consts.MESSAGES_TAB_LABEL })).toBeNull();
+  },
 };

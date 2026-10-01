@@ -1,4 +1,4 @@
-import type { DedicationGroup, HomeResponse } from '@torabarabim/common';
+import type { DedicationGroup, HomeResponse, VisitorMessageType } from '@torabarabim/common';
 
 import type { HomeApiError } from '~/HomePage/api';
 
@@ -20,4 +20,34 @@ export interface HomeRailsProps {
   // drilled by one level rather than read again here. `undefined` when the
   // pool has no `success` dedications.
   dedicationGroup: DedicationGroup | undefined;
+}
+
+// What a visitor has typed so far into one type's form. Strings as typed:
+// trimming and normalising happen when the message is built for the wire.
+export interface VisitorMessageDraft {
+  name: string;
+  phone: string;
+  message: string;
+}
+
+export type VisitorMessageSendStatus = 'idle' | 'sending' | 'sent' | 'failed';
+
+// The window that is open, and the tile that opened it. The element is only
+// held to return focus to it on close, and only if it is still in the page.
+export interface OpenHelpWindow {
+  kind: VisitorMessageType;
+  opener: HTMLElement;
+}
+
+// Everything the window and its tiles need, owned in one place above both:
+// each type keeps its own draft and its own send state, so a draft survives
+// closing the window and a refetch that moves the tile underneath it.
+export interface HelpWindowState {
+  openKind: VisitorMessageType | undefined;
+  drafts: Record<VisitorMessageType, VisitorMessageDraft>;
+  sendStatuses: Record<VisitorMessageType, VisitorMessageSendStatus>;
+  open: (kind: VisitorMessageType, opener: HTMLElement) => void;
+  close: () => void;
+  changeDraft: (kind: VisitorMessageType, draft: VisitorMessageDraft) => void;
+  send: (kind: VisitorMessageType) => void;
 }

@@ -6,6 +6,7 @@ export const COURSES_TAB_LABEL = 'קורסים';
 export const RABBIS_TAB_LABEL = 'רבנים';
 export const PLACES_TAB_LABEL = 'מקומות';
 export const DEDICATIONS_TAB_LABEL = 'הקדשות';
+export const MESSAGES_TAB_LABEL = 'הודעות';
 export const ADMINS_TAB_LABEL = 'מנהלים';
 export const LOGOUT_LABEL = 'יציאה';
 export const ADMIN_NAME_FALLBACK = 'מנהל המערכת';

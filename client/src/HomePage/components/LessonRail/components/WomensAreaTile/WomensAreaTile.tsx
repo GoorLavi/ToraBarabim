@@ -3,6 +3,7 @@ import styled from 'styled-components';
 
 import { CandlesEmblem } from '~/HomePage/components/CandlesEmblem/CandlesEmblem';
 import { Chevron } from '~/HomePage/components/Chevron/Chevron';
+import { RailItemShell } from '~/HomePage/components/RailItemShell/RailItemShell';
 import { WOMEN_PAGE_PATH } from '~/hooks/consts';
 
 import * as consts from './consts';
@@ -16,19 +17,30 @@ import * as styles from './styles';
 // land at the same total height without depending on either card's own
 // content (styles.ts).
 export const WomensAreaTile = styled(({ className, lessonCount }: WomensAreaTileProps) => (
-  <Link to={WOMEN_PAGE_PATH} className={className} aria-label={consts.tileAriaLabel(lessonCount)}>
-    <div className="plum">
-      {/* The `size` attribute is only ever a fallback before CSS applies:
-          `.emblem` in styles.ts sizes it for real, as a live percentage of
-          the tile's own width. */}
-      <CandlesEmblem {...{ variant: 'onPlum', size: consts.EMBLEM_SIZE_FLOOR }} className="emblem" />
-      <p className="count" dir="ltr">
-        {lessonCount}
-      </p>
-      <p className="countWord">{consts.tileCountWord(lessonCount)}</p>
-      <p className="line">{consts.TILE_LINE}</p>
-    </div>
-
+  <RailItemShell
+    {...{
+      className,
+      variant: 'surface' as const,
+      renderRoot: (rootClassName, content) => (
+        <Link to={WOMEN_PAGE_PATH} className={rootClassName} aria-label={consts.tileAriaLabel(lessonCount)}>
+          {content}
+        </Link>
+      ),
+      topArea: (
+        <div className="plum">
+          {/* The `size` attribute is only ever a fallback before CSS applies:
+              `.emblem` in styles.ts sizes it for real, as a live percentage of
+              the tile's own width. */}
+          <CandlesEmblem {...{ variant: 'onPlum', size: consts.EMBLEM_SIZE_FLOOR }} className="emblem" />
+          <p className="count" dir="ltr">
+            {lessonCount}
+          </p>
+          <p className="countWord">{consts.tileCountWord(lessonCount)}</p>
+          <p className="line">{consts.TILE_LINE}</p>
+        </div>
+      ),
+    }}
+  >
     <div className="white">
       <h3 className="heading">{consts.TILE_HEADING}</h3>
       <span className="seeAll">
@@ -36,7 +48,7 @@ export const WomensAreaTile = styled(({ className, lessonCount }: WomensAreaTile
         <span className="label">{consts.TILE_LINK_LABEL}</span>
       </span>
     </div>
-  </Link>
+  </RailItemShell>
 ))`
   ${styles.WomensAreaTile}
 `;

@@ -19,11 +19,18 @@ const BASE_TAB_ITEMS: PanelTabNavItem[] = [
   { to: ADMIN_ROUTES.dedications, label: consts.DEDICATIONS_TAB_LABEL },
 ];
 
+// Only a super admin sees these, and the server refuses everyone else
+// regardless (0020): the tab is a convenience, not the boundary.
+const SUPER_ADMIN_TAB_ITEMS: PanelTabNavItem[] = [
+  { to: ADMIN_ROUTES.messages, label: consts.MESSAGES_TAB_LABEL },
+  { to: ADMIN_ROUTES.admins, label: consts.ADMINS_TAB_LABEL },
+];
+
 export const AdminShell = styled(({ className }: AdminShellProps) => {
   const session = useAdminSession();
   const logout = useAdminLogout();
 
-  const tabItems = session.data?.isSuper ? [...BASE_TAB_ITEMS, { to: ADMIN_ROUTES.admins, label: consts.ADMINS_TAB_LABEL }] : BASE_TAB_ITEMS;
+  const tabItems = session.data?.isSuper ? [...BASE_TAB_ITEMS, ...SUPER_ADMIN_TAB_ITEMS] : BASE_TAB_ITEMS;
 
   return (
     <div className={className}>

@@ -15,6 +15,7 @@ import { LessonFormPage } from './LessonFormPage/LessonFormPage';
 import { LessonsListPage } from './LessonsListPage/LessonsListPage';
 import { LessonViewPage } from '~/AdminPanel/LessonViewPage/LessonViewPage';
 import { LoginPage } from './LoginPage/LoginPage';
+import { MessagesListPage } from './MessagesListPage/MessagesListPage';
 import { PlaceFormPage } from './PlaceFormPage/PlaceFormPage';
 import { PlacesListPage } from './PlacesListPage/PlacesListPage';
 import { PlaceViewPage } from './PlaceViewPage/PlaceViewPage';
@@ -53,6 +54,7 @@ export const AdminPanel = () => (
         <Route path="dedications/:id" element={<DedicationViewPage />} />
         <Route path="dedications/:id/edit" element={<DedicationFormPage />} />
         <Route element={<RequireSuperAdmin />}>
+          <Route path="messages" element={<MessagesListPage />} />
           <Route path="admins" element={<AdminsListPage />} />
           <Route path="admins/new" element={<AdminFormPage />} />
         </Route>

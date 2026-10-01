@@ -1,3 +1,5 @@
+import type { VisitorMessageType } from '@torabarabim/common';
+
 import type { LessonFilters } from './models';
 
 // One request covers the target day plus enough days ahead to find a day
@@ -32,3 +34,10 @@ export const RAIL_CONTEXT_LINE = 'שיעורים בכל הארץ בשבועיי�
 // states elsewhere; the human chose the shipped code over the doc, and the
 // doc is being corrected separately.
 export const POSTER_ASPECT_RATIO = 3 / 4;
+
+// A message tile and the window it opens carry the same title word for
+// word, so it is written once here for both to read.
+export const VISITOR_MESSAGE_TITLES: Record<VisitorMessageType, string> = {
+  'rabbi-request': 'מכירים רב או רבנית שעוד לא מופיעים באתר?',
+  volunteer: 'שותפים בזיכוי הרבים',
+};

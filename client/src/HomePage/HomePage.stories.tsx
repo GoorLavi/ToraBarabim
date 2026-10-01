@@ -159,3 +159,26 @@ export const OneTypeAbsent: Story = {
 export const TwoTypesAbsent: Story = {
   parameters: { apiMocks: { handlers: { home: homeHandler(dedicationHomeResponse([DEDICATION_GROUP_SUCCESS])) } } },
 };
+
+// The help tiles in the real page: one kind per row, each at the slot the
+// payload names, and `ContactCta` still where it was. The women's-area tile
+// sits in a row of its own, since a row never carries both.
+export const WithHelpTiles: Story = {
+  parameters: {
+    apiMocks: {
+      handlers: {
+        home: homeHandler({
+          rows: [
+            { ...dedicationRow('area', 'שיעורים באזור שלך'), helpTile: { kind: 'rabbi-request', index: 2 } },
+            { ...dedicationRow('today', 'הערב'), womensAreaTileIndex: 2 },
+            { ...dedicationRow('weekly', 'שיעור שבועי'), helpTile: { kind: 'volunteer', index: 3 } },
+            { ...dedicationRow('bothAudiences', 'שיעורים לכולם'), helpTile: { kind: 'share', index: 2 } },
+          ],
+          womensAreaLessonCount: 12,
+          rabbis: [RABBI_1, RABBI_2],
+          dedications: [],
+        }),
+      },
+    },
+  },
+};

@@ -1,4 +1,4 @@
-import type { CloseReason, DedicationType, LessonAudience, LessonOccurrence } from '@torabarabim/common';
+import type { CloseReason, DedicationType, HomeLessonRowId, LessonAudience, LessonOccurrence, VisitorMessageType } from '@torabarabim/common';
 import type { ReactNode } from 'react';
 
 import type { DateFilterOption } from '~/hooks/models';
@@ -218,6 +218,23 @@ export interface PosterScanProps {
   posterSource: PosterSource;
 }
 
+// Named for what a visitor pressed, not for the wire's `HelpTileKind`: the
+// request tile's wire value is a hyphenated word, the event's is a plain
+// label, and this stays readable on a dashboard.
+export type HelpTileEventKind = 'rabbiRequest' | 'volunteer' | 'share';
+
+// Carries which tile in which row and where in it, never what a visitor
+// typed: the form's name, phone and message never leave the page.
+export interface HelpTileClickProps {
+  tile: HelpTileEventKind;
+  rowId: HomeLessonRowId;
+  position: number;
+}
+
+export interface VisitorMessageSentProps {
+  type: VisitorMessageType;
+}
+
 export interface SuperProperties {
   viewport: Viewport;
   appSurface: AppSurface;
@@ -266,4 +283,6 @@ export type AnalyticsEventProps = {
   [MIXPANEL_EVENTS.courseDeleted]: CourseDeletedProps;
   [MIXPANEL_EVENTS.courseRegistrationClosed]: CourseRegistrationClosedProps;
   [MIXPANEL_EVENTS.posterScan]: PosterScanProps;
+  [MIXPANEL_EVENTS.helpTileClick]: HelpTileClickProps;
+  [MIXPANEL_EVENTS.visitorMessageSent]: VisitorMessageSentProps;
 };
