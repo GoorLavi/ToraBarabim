@@ -492,15 +492,18 @@ export const previewAdminDedication = (body: DedicationPreviewRequest): Promise<
 
 // GET /v1/admin/visitor-messages (super admin only)
 // 200 with VisitorMessageListResponse, newest first, including an empty
-// items array. `unfilteredTotal` counts every message under every filter, so
-// "none under this filter" can be told from "none at all".
+// items array. Paged by keyset cursor: send the previous response's
+// `nextCursor` back as `before` for the next, older page; it is opaque and
+// holds a `|`, so it is URL-encoded by `searchParams`. `nextCursor` is null
+// when nothing older remains. `unfilteredTotal` counts every message under
+// every filter, so "none under this filter" can be told from "none at all".
 // 400 for an invalid query, 401 without a session, 403 super_admin_required
 // for any other admin.
 export const fetchAdminVisitorMessages = (filters: AdminVisitorMessageFilters): Promise<VisitorMessageListResponse> => {
   const target = url('/v1/admin/visitor-messages');
   target.searchParams.set('status', filters.status);
-  target.searchParams.set('page', String(filters.page ?? 1));
-  target.searchParams.set('pageSize', String(filters.pageSize ?? 50));
+  if (filters.before !== undefined) target.searchParams.set('before', filters.before);
+  if (filters.pageSize !== undefined) target.searchParams.set('pageSize', String(filters.pageSize));
   return request(target.toString());
 };
 

@@ -40,16 +40,9 @@ export const WomensAreaTile = css(
       background: ${theme.colors.primary};
       text-align: center;
 
-      /* The plum area's own remaining fallbacks, strictly ordered: the gap
-         between every item in the column tightens first (159px), then the
-         bottom line is dropped (150px, on the line below). The emblem no
-         longer needs a fallback of its own: floored at a live percentage
-         (below), it already lands at the floor right around the narrowest
-         width the rail now ships at. The count itself is never part of
-         either. */
-      @container plum (max-width: 159px) {
-        gap: ${theme.spacing.sm};
-      }
+      /* The one fallback is dropping the bottom line at 150px (below). The
+         emblem already sits at its floor at the narrowest width the rail
+         ships at, so there is no gap step. The count is never dropped. */
 
       > .emblem {
         flex-shrink: 0;

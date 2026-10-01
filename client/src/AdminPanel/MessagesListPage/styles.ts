@@ -103,11 +103,11 @@ export const MessagesListPage = css(
       line-height: ${theme.typography.body.phone.lineHeight};
     }
 
-    &.error > p {
+    &.error > .message {
       color: ${theme.colors.danger};
     }
 
-    &.error > button {
+    &.error > .retry {
       min-block-size: 48px;
       padding-inline: ${theme.spacing.lg};
       border-radius: ${theme.radii.pill};

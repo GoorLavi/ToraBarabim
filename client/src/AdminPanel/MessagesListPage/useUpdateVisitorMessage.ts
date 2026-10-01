@@ -19,13 +19,13 @@ export const useUpdateVisitorMessage = (
 
   return useMutation({
     mutationFn: (body: UpdateVisitorMessageRequest) => updateAdminVisitorMessage(id, body),
-    onSuccess: (updated) => {
+    onSuccess: (updated, sent) => {
       // The card stays in the list it is in: written into every cached
       // filter, never refetched, so a message just handled does not leave
       // the "not handled" list under the reader's hand.
       queryClient.setQueriesData<InfiniteData<VisitorMessageListResponse>>(
         { queryKey: ADMIN_QUERY_KEYS.visitorMessagesAll() },
-        (current) => current && replaceMessage(current, updated),
+        (current) => current && replaceMessage(current, updated, sent),
       );
       // The filters nobody is looking at are marked stale instead, so opening
       // one fetches it fresh and the change shows up where it now belongs.

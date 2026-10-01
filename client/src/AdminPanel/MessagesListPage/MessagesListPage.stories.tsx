@@ -69,19 +69,32 @@ const patchBodies: UpdateVisitorMessageRequest[] = [];
 
 const PAGE_SIZE_FOR_LOAD_MORE = 2;
 
+// The server's cursor is opaque and holds a `|`; the mock builds one the same
+// shape, so a story also proves it survives the trip through a query string.
+const cursorFor = (item: AdminVisitorMessage): string => `${item.createdAt}|${item.id}`;
+
+// The `before` of every list request a story's handler received, in order
+// (`null` for the first page), so a `play` can assert the cursor travelled.
+const requestedCursors: (string | null)[] = [];
+
 const listResolver =
-  (items: AdminVisitorMessage[], options: { pageSize?: number; total?: number } = {}): MockResolver =>
+  (items: AdminVisitorMessage[], options: { pageSize?: number } = {}): MockResolver =>
   ({ request }) => {
     const query = queryOf(request);
     const status = query.get('status') ?? 'all';
+    const before = query.get('before');
+    requestedCursors.push(before);
+
     const filtered = items.filter((item) => status === 'all' || item.status === status);
-    const page = Number(query.get('page') ?? '1');
     const pageSize = options.pageSize ?? Number(query.get('pageSize') ?? '50');
+    const start = before === null ? 0 : filtered.findIndex((item) => cursorFor(item) === before) + 1;
+    const pageItems = filtered.slice(start, start + pageSize);
+    const lastItem = pageItems.at(-1);
+    const hasOlder = start + pageSize < filtered.length;
     const body: VisitorMessageListResponse = {
-      items: filtered.slice((page - 1) * pageSize, page * pageSize),
-      page,
+      items: pageItems,
       pageSize,
-      total: options.total ?? filtered.length,
+      nextCursor: lastItem && hasOlder ? cursorFor(lastItem) : null,
       unfilteredTotal: items.length,
     };
     return respondWithJson(body);
@@ -138,6 +151,7 @@ const meta: Meta<typeof MessagesListPage> = {
   decorators: [withRoute, panelShellDecorator],
   beforeEach: () => {
     patchBodies.length = 0;
+    requestedCursors.length = 0;
   },
 };
 
@@ -279,8 +293,9 @@ export const Undo: Story = {
   },
 };
 
-// The server's page holds two of the three messages: "load more" fetches the
-// next page and the button goes away once everything is in.
+// The server's page holds two of the three messages and hands back a cursor:
+// "load more" sends exactly that cursor back as `before`, fetches the older
+// page, and the button goes away once the server says nothing older remains.
 export const LoadMore: Story = {
   parameters: {
     apiMocks: {
@@ -294,11 +309,18 @@ export const LoadMore: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    const unhandledMessages = mixedMessages.filter((item) => item.status === 'unhandled');
     await expect(findCards(canvasElement)).resolves.toHaveLength(PAGE_SIZE_FOR_LOAD_MORE);
+    await expect(requestedCursors).toEqual([null]);
 
     await userEvent.click(canvas.getByRole('button', { name: consts.LOAD_MORE_LABEL }));
 
-    await waitFor(() => expect(canvas.getAllByRole('article')).toHaveLength(3));
+    await waitFor(() => expect(canvas.getAllByRole('article')).toHaveLength(unhandledMessages.length));
+    // The second request carries the first response's `nextCursor`, the last
+    // card of the first page.
+    const lastOfFirstPage = unhandledMessages[PAGE_SIZE_FOR_LOAD_MORE - 1];
+    if (!lastOfFirstPage) throw new globalThis.Error('MessagesListPage story: the fixture has no second page');
+    await expect(requestedCursors).toEqual([null, cursorFor(lastOfFirstPage)]);
     await expect(canvas.queryByRole('button', { name: consts.LOAD_MORE_LABEL })).toBeNull();
   },
 };

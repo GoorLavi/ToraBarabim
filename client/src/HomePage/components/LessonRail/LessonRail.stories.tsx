@@ -140,7 +140,8 @@ const helpTileStory = (kind: HelpTileKind, index: number = HELP_TILE_SLOT): Stor
       const { title, buttonLabel } = messageTileConsts.MESSAGE_TILE_COPY[kind];
       await expect(within(slot).getByRole('button', { name: helpTileAccessibleName(title, buttonLabel) })).toBeInTheDocument();
     }
-    await expect(args.items).toHaveLength(12);
+    // One slot more than the lesson cards: the tile is spliced in, never swapped for one.
+    await expect(getSlots(canvasElement)).toHaveLength(args.items.length + 1);
 
     for (const width of RAIL_WIDTHS) {
       await atFrameSize(width, undefined, async () => expectTileNotTallerThanCard(canvasElement, index));
@@ -170,12 +171,12 @@ export const WomensAreaRowHasNoHelpTile: Story = {
 // The share tile is white with the card's own border and shadow, in a real
 // row beside a lesson card: the same look as the card, never a tint.
 export const ShareTileSurfaceBordered: Story = {
-  args: { items: manyItems, helpTile: { kind: 'share', index: 1 } },
+  args: { items: manyItems, helpTile: { kind: 'share', index: 2 } },
   play: async ({ canvasElement }) => {
     for (const width of [375, 1280]) {
       await atFrameSize(width, undefined, async () => {
-        const [firstSlot, shareSlot] = getSlots(canvasElement);
-        const card = firstSlot?.querySelector('a');
+        const [, neighbourSlot, shareSlot] = getSlots(canvasElement);
+        const card = neighbourSlot?.querySelector('a');
         const tile = shareSlot?.querySelector('a');
         if (!card || !tile) throw new Error('LessonRail story: the card or the share tile is missing');
 

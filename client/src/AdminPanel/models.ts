@@ -32,7 +32,8 @@ export interface AdminDedicationFilters {
 // `all`, while the screen's own default is `unhandled`.
 export interface AdminVisitorMessageFilters {
   status: VisitorMessageStatusFilter;
-  page?: number;
+  // The previous page's `nextCursor`; absent for the first page.
+  before?: string;
   pageSize?: number;
 }
 

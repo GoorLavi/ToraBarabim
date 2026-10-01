@@ -8,6 +8,7 @@ import { TYPE_LABELS } from '../../consts';
 import { useUpdateVisitorMessage } from '../../useUpdateVisitorMessage';
 import { HandlingNote } from './components/HandlingNote/HandlingNote';
 import * as consts from './consts';
+import { formatReceivedAt } from './helpers';
 import type { MessageCardProps } from './models';
 import * as styles from './styles';
 
@@ -31,7 +32,7 @@ export const MessageCard = styled(({ className, message }: MessageCardProps) => 
           <a className="phone" dir="ltr" href={`tel:+${phoneToInternational(message.phone)}`}>
             {phoneDisplay(message.phone)}
           </a>
-          <span className="received">{consts.formatReceivedAt(message.createdAt)}</span>
+          <span className="received">{formatReceivedAt(message.createdAt)}</span>
         </div>
 
         <p className="message" dir="auto">

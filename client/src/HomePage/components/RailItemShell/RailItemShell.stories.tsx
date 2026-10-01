@@ -21,13 +21,15 @@ const ShellDemo = ({ look, hasTopArea }: ShellDemoProps) => (
   <div style={{ display: 'flex', gap: '8px', blockSize: ROW_HEIGHT }}>
     <div data-testid="slot" style={{ inlineSize: ITEM_WIDTH }}>
       <RailItemShell
-        {...look}
-        topArea={hasTopArea ? <div style={{ blockSize: '100%', background: 'rgba(107, 36, 54, 0.4)' }} /> : undefined}
-        renderRoot={(rootClassName, content) => (
-          <div className={rootClassName} data-testid="shell">
-            {content}
-          </div>
-        )}
+        {...{
+          ...look,
+          topArea: hasTopArea ? <div style={{ blockSize: '100%', background: 'rgba(107, 36, 54, 0.4)' }} /> : undefined,
+          renderRoot: (rootClassName, content) => (
+            <div className={rootClassName} data-testid="shell">
+              {content}
+            </div>
+          ),
+        }}
       >
         <div style={{ padding: '12px' }}>Content</div>
       </RailItemShell>

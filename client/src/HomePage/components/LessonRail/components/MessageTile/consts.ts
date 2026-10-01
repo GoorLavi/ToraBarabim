@@ -1,6 +1,6 @@
 import type { VisitorMessageType } from '@torabarabim/common';
 
-import { VISITOR_MESSAGE_TITLES } from '~/HomePage/consts';
+import { VISITOR_MESSAGE_TITLES } from '~/HomePage/components/consts';
 
 import type { RailItemTint } from '~/HomePage/components/RailItemShell/models';
 

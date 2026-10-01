@@ -1,8 +1,10 @@
 import { css } from 'styled-components';
 
+import { PrimaryButton } from '~/components/PrimaryButton/styles';
+
 import { MESSAGE_FIELD_ROWS } from './consts';
 
-export const VisitorMessageForm = css(
+const fieldsAndFeedback = css(
   ({ theme }) => `
   display: flex;
   flex-direction: column;
@@ -75,32 +77,21 @@ export const VisitorMessageForm = css(
     font-size: ${theme.typography.secondary.phone.fontSize};
     line-height: ${theme.typography.secondary.phone.lineHeight};
   }
+`,
+);
+
+// The submit button is the site's primary button, so it composes that exported
+// block instead of restating it: the fill, the hover and the 48px target stay
+// one definition. Only the sending state is this form's own.
+export const VisitorMessageForm = css`
+  ${fieldsAndFeedback}
 
   > .submit {
-    min-block-size: 48px;
-    padding-block: 11px;
-    padding-inline: ${theme.spacing.xl};
-    border-radius: ${theme.radii.md};
-    background: ${theme.colors.primary};
-    color: ${theme.colors.textOnPrimary};
-    font-weight: ${theme.typography.fontWeight.semiBold};
-    font-size: ${theme.typography.body.phone.fontSize};
-    line-height: ${theme.typography.body.phone.lineHeight};
-
-    &:hover,
-    &:active {
-      background: ${theme.colors.primaryStrong};
-    }
-
-    &:focus-visible {
-      outline: 2px solid ${theme.colors.primary};
-      outline-offset: 2px;
-    }
+    ${PrimaryButton}
 
     &[aria-disabled='true'] {
       opacity: 0.7;
       cursor: progress;
     }
   }
-`,
-);
+`;

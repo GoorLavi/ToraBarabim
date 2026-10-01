@@ -23,12 +23,9 @@ export const useAdminVisitorMessagesList = (status: VisitorMessageStatusFilter):
   const filters = { status, pageSize: MAX_ADMIN_PAGE_SIZE };
   const query = useInfiniteQuery({
     queryKey: ADMIN_QUERY_KEYS.visitorMessages(filters),
-    queryFn: ({ pageParam }) => fetchAdminVisitorMessages({ ...filters, page: pageParam }),
-    initialPageParam: 1,
-    getNextPageParam: (lastPage, allPages) => {
-      const fetchedCount = allPages.reduce((sum, page) => sum + page.items.length, 0);
-      return fetchedCount < lastPage.total ? lastPage.page + 1 : undefined;
-    },
+    queryFn: ({ pageParam }) => fetchAdminVisitorMessages({ ...filters, before: pageParam }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
   });
 
   if (query.isPending) return { status: 'pending' };

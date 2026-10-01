@@ -2,11 +2,11 @@ import type { CreateVisitorMessageRequest, HomeResponse, LessonOccurrence, Visit
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { VISITOR_MESSAGE_TITLES } from '~/HomePage/consts';
+import { VISITOR_MESSAGE_TITLES } from '~/HomePage/components/consts';
 import { rabbiFixture } from '~/rabbiFixture';
 import { atFrameSize } from '~/storyMocks';
 
-import { http, loadingResolver, respondWithJson } from '../../../../../../.storybook/apiMocks';
+import { http, respondWithJson } from '../../../../../../.storybook/apiMocks';
 import { HomeRails } from '../../HomeRails';
 import type { HomeRowsQueryState } from '../../models';
 import * as formConsts from './components/VisitorMessageForm/consts';
@@ -52,7 +52,7 @@ const stageQuery = (kind: VisitorMessageType): HomeRowsQueryState => {
 const meta: Meta<typeof HelpWindow> = {
   title: 'HomePage/HomeRails/HelpWindow',
   component: HelpWindow,
-  render: (_args, { parameters }) => <HomeRails query={stageQuery(parameters.kind as VisitorMessageType)} dedicationGroup={undefined} />,
+  render: (_args, { parameters }) => <HomeRails {...{ query: stageQuery(parameters.kind as VisitorMessageType), dedicationGroup: undefined }} />,
 };
 
 export default meta;
@@ -62,15 +62,17 @@ type Story = StoryObj<typeof HelpWindow>;
 // was sent and that a refused submit sent nothing.
 const postedBodies: CreateVisitorMessageRequest[] = [];
 
-const recordingResolver = (respond: () => Response) => async ({ request }: { request: Request }) => {
+const recordingResolver = (respond: () => Response | Promise<Response>) => async ({ request }: { request: Request }) => {
   postedBodies.push((await request.json()) as CreateVisitorMessageRequest);
   return respond();
 };
 
 const storedResolver = recordingResolver(() => new Response(null, { status: 204 }));
+// Records the body, then never answers: a request that stays in flight.
+const pendingResolver = recordingResolver(() => new Promise<Response>(() => {}));
 const failingResolver = recordingResolver(() => respondWithJson({ error: 'internal_error', message: 'שגיאה' }, 500));
 
-const postHandler = (resolver: ReturnType<typeof recordingResolver> | typeof loadingResolver = storedResolver) => ({
+const postHandler = (resolver: ReturnType<typeof recordingResolver> = storedResolver) => ({
   send: http.post('/v1/visitor-messages', resolver),
 });
 
@@ -99,6 +101,25 @@ const submit = (dialog: HTMLElement): Promise<void> =>
 // Words that would make a promise or mention money: the window carries
 // neither, anywhere.
 const FORBIDDEN_COPY = /נחזור|ניצור קשר|נפנה|ניצור איתך|₪|עלות|מחיר|תשלום|ש"ח/;
+
+// A failure line belongs to the press that caused it: closing the window and
+// opening it again shows the draft, without the stale line.
+const failureClearedOnReopenStory = (kind: VisitorMessageType): Story => ({
+  parameters: { kind, apiMocks: { handlers: postHandler(failingResolver) } },
+  play: async ({ canvasElement }) => {
+    const dialog = await openWindow(canvasElement, kind);
+    await fillValidForm(dialog);
+    await submit(dialog);
+    await within(dialog).findByRole('alert');
+
+    await userEvent.click(within(dialog).getAllByRole('button', { name: consts.CLOSE_LABEL })[0] as HTMLElement);
+    await waitFor(() => expect(within(document.body).queryByRole('dialog')).toBeNull());
+
+    const reopened = await openWindow(canvasElement, kind);
+    await expect(within(reopened).queryByRole('alert')).toBeNull();
+    await expect(field(reopened, formConsts.FIELD_LABELS.name)).toHaveValue(VALID_NAME);
+  },
+});
 
 const idleStory = (kind: VisitorMessageType): Story => ({
   parameters: { kind, apiMocks: { handlers: postHandler() } },
@@ -143,12 +164,19 @@ const validationStory = (kind: VisitorMessageType): Story => ({
 });
 
 const sendingStory = (kind: VisitorMessageType): Story => ({
-  parameters: { kind, apiMocks: { handlers: postHandler(loadingResolver) } },
+  parameters: { kind, apiMocks: { handlers: postHandler(pendingResolver) } },
   play: async ({ canvasElement }) => {
+    postedBodies.length = 0;
     const dialog = await openWindow(canvasElement, kind);
     await fillValidForm(dialog);
 
     await userEvent.dblClick(within(dialog).getByRole('button', { name: formConsts.SUBMIT_LABEL }));
+
+    // Two presses, one request: the guard holds even though the second press
+    // can land before the pending state has rendered.
+    await waitFor(() => expect(postedBodies).toHaveLength(1));
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    await expect(postedBodies).toHaveLength(1);
 
     const form = dialog.querySelector('form');
     await waitFor(() => expect(form).toHaveAttribute('aria-busy', 'true'));
@@ -219,6 +247,7 @@ export const RabbiRequestValidationErrors: Story = validationStory('rabbi-reques
 export const RabbiRequestSending: Story = sendingStory('rabbi-request');
 export const RabbiRequestSuccess: Story = successStory('rabbi-request');
 export const RabbiRequestFailure: Story = failureStory('rabbi-request');
+export const RabbiRequestFailureClearedOnReopen: Story = failureClearedOnReopenStory('rabbi-request');
 export const RabbiRequestReopensEmptyAfterSuccess: Story = reopensEmptyStory('rabbi-request');
 
 export const VolunteerIdle: Story = idleStory('volunteer');
@@ -226,6 +255,7 @@ export const VolunteerValidationErrors: Story = validationStory('volunteer');
 export const VolunteerSending: Story = sendingStory('volunteer');
 export const VolunteerSuccess: Story = successStory('volunteer');
 export const VolunteerFailure: Story = failureStory('volunteer');
+export const VolunteerFailureClearedOnReopen: Story = failureClearedOnReopenStory('volunteer');
 export const VolunteerReopensEmptyAfterSuccess: Story = reopensEmptyStory('volunteer');
 
 // The smallest phone the site serves, with the keyboard-less height of an

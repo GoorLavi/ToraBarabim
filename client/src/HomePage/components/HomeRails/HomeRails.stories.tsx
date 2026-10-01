@@ -6,7 +6,7 @@ import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 import { courseFixture } from '~/courseFixture';
 import { DEDICATION_GROUP_SUCCESS } from '~/dedicationFixture';
 import { whatsAppHref } from '~/helpers';
-import { VISITOR_MESSAGE_TITLES } from '~/HomePage/consts';
+import { VISITOR_MESSAGE_TITLES } from '~/HomePage/components/consts';
 import { rabbiFixture } from '~/rabbiFixture';
 
 import { http } from '../../../../.storybook/apiMocks';
@@ -214,7 +214,7 @@ const ReshuffleStage = () => {
       <button type="button" onClick={() => setTileRowId('today')}>
         {RESHUFFLE_BUTTON_LABEL}
       </button>
-      <HomeRails query={queryWithRows(reshuffleRows(tileRowId))} dedicationGroup={undefined} />
+      <HomeRails {...{ query: queryWithRows(reshuffleRows(tileRowId)), dedicationGroup: undefined }} />
     </>
   );
 };

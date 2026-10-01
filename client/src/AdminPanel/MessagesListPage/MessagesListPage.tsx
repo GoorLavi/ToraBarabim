@@ -50,8 +50,8 @@ export const MessagesListPage = styled(({ className }: MessagesListPageProps) =>
 
       {state.status === 'error' && (
         <div className="state error" role="alert">
-          <p>{adminErrorMessage(state.error)}</p>
-          <button type="button" onClick={state.retry}>
+          <p className="message">{adminErrorMessage(state.error)}</p>
+          <button type="button" className="retry" onClick={state.retry}>
             {consts.RETRY_LABEL}
           </button>
         </div>

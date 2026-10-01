@@ -29,10 +29,14 @@ export const useHelpWindow = (): HelpWindowState => {
     const { kind, opener } = openWindow;
 
     // A sent message's thank-you is the end of that draft: reopening starts
-    // clean. Any other close keeps the draft for the next press.
+    // clean. A failed send keeps its draft but not its failure line, which
+    // would otherwise greet the next opening about a press it does not
+    // remember. A send still in flight is left to finish.
     if (sends[kind].status === 'sent') {
       sends[kind].reset();
       changeDraft(kind, EMPTY_VISITOR_MESSAGE_DRAFT);
+    } else if (sends[kind].status === 'failed') {
+      sends[kind].reset();
     }
 
     // The tile may have moved to another row while the window was open, in

@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import styled from 'styled-components';
 
 import { ResponsiveSheet } from '~/components/ResponsiveSheet/ResponsiveSheet';
-import { VISITOR_MESSAGE_TITLES } from '~/HomePage/consts';
+import { VISITOR_MESSAGE_TITLES } from '~/HomePage/components/consts';
 
 import { VisitorMessageForm } from './components/VisitorMessageForm/VisitorMessageForm';
 import * as consts from './consts';

@@ -4,7 +4,7 @@ import type { VisitorMessageDraft } from '../../models';
 import type { HelpWindowCopy } from './models';
 
 // The window's title is the opening tile's own (VISITOR_MESSAGE_TITLES in
-// HomePage/consts.ts), so only what follows it is written here.
+// HomePage/components/consts.ts), so only what follows it is written here.
 export const HELP_WINDOW_COPY: Record<VisitorMessageType, HelpWindowCopy> = {
   'rabbi-request': {
     paragraphs: [
