@@ -1,4 +1,4 @@
-import { desc, eq, isNotNull, isNull, sql, type SQL } from 'drizzle-orm';
+import { and, desc, eq, isNotNull, isNull, sql, type SQL } from 'drizzle-orm';
 import type { PgUpdateSetSource } from 'drizzle-orm/pg-core';
 import { nanoid } from 'nanoid';
 
@@ -7,11 +7,13 @@ import { visitorMessages } from '../../db/schema';
 import telegram from '../../telegram/telegram';
 import { formatVisitorMessageAlert } from './alert';
 import { VisitorMessageNotFoundError } from './errors';
+import { formatCursor } from './models';
 import type {
   CreateVisitorMessageInput,
   SubmitVisitorMessageResult,
   UpdateVisitorMessageInput,
   VisitorMessageAlertOutcome,
+  VisitorMessageCursor,
   VisitorMessageListQuery,
   VisitorMessageListResult,
   VisitorMessageRecord,
@@ -45,26 +47,36 @@ export const submit = async (input: CreateVisitorMessageInput): Promise<SubmitVi
   return { id: row.id, type: row.type, alert: await sendAlert(row) };
 };
 
-export const list = async (query: VisitorMessageListQuery): Promise<VisitorMessageListResult> => {
-  const condition = statusCondition(query.status);
+// The cursor carries milliseconds (a JS Date), so both the ordering and the
+// comparison use `created_at` truncated to the millisecond: at full
+// microsecond precision a row sharing the cursor's millisecond could be
+// skipped. Ties inside a millisecond fall to the id.
+const createdAtMillis = sql`date_trunc('milliseconds', ${visitorMessages.createdAt})`;
 
-  const [rows, totalRows, unfilteredRows] = await Promise.all([
+const olderThanCondition = (cursor: VisitorMessageCursor | undefined): SQL | undefined =>
+  cursor ? sql`(${createdAtMillis}, ${visitorMessages.id}) < (${cursor.createdAt.toISOString()}::timestamptz, ${cursor.id})` : undefined;
+
+// Keyset paging: the next page is whatever sorts after the cursor, so a
+// message arriving, or a card leaving the filter, between two requests
+// never duplicates or skips a card. One extra row is read to know whether
+// an older page exists.
+export const list = async (query: VisitorMessageListQuery): Promise<VisitorMessageListResult> => {
+  const [rows, unfilteredRows] = await Promise.all([
     db
       .select()
       .from(visitorMessages)
-      .where(condition)
-      .orderBy(desc(visitorMessages.createdAt), desc(visitorMessages.id))
-      .limit(query.pageSize)
-      .offset((query.page - 1) * query.pageSize),
-    db.select({ count: sql<number>`count(*)::int` }).from(visitorMessages).where(condition),
+      .where(and(statusCondition(query.status), olderThanCondition(query.before)))
+      .orderBy(desc(createdAtMillis), desc(visitorMessages.id))
+      .limit(query.pageSize + 1),
     db.select({ count: sql<number>`count(*)::int` }).from(visitorMessages),
   ]);
 
+  const items = rows.slice(0, query.pageSize);
+  const lastItem = items.at(-1);
   return {
-    items: rows,
-    page: query.page,
+    items,
     pageSize: query.pageSize,
-    total: totalRows[0]?.count ?? 0,
+    nextCursor: rows.length > query.pageSize && lastItem ? formatCursor(lastItem) : null,
     unfilteredTotal: unfilteredRows[0]?.count ?? 0,
   };
 };

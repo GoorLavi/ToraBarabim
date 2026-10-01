@@ -271,11 +271,15 @@ describe('visitor messages API', () => {
     }
   });
 
+  // The newest messages in any database: dated ahead of now, so real rows
+  // in a developer database sort behind them and cannot fall into a page.
+  const newestFirstDate = (rank: number): Date => new Date(Date.now() + 3_600_000 + rank * 1000);
+
   // Test 9.
   test('the list is newest first, filters by status, answers an empty filter with 200, and counts every message in unfilteredTotal', async () => {
-    const oldest = await insertMessage({ createdAt: new Date('2026-01-01T10:00:00Z') });
-    const middleHandled = await insertMessage({ createdAt: new Date('2026-01-02T10:00:00Z'), handledAt: new Date('2026-01-03T10:00:00Z') });
-    const newest = await insertMessage({ createdAt: new Date('2026-01-04T10:00:00Z') });
+    const oldest = await insertMessage({ createdAt: newestFirstDate(1) });
+    const middleHandled = await insertMessage({ createdAt: newestFirstDate(2), handledAt: new Date() });
+    const newest = await insertMessage({ createdAt: newestFirstDate(3) });
     const mine = new Set([oldest, middleHandled, newest]);
     const idsOf = (response: VisitorMessageListResponse): string[] => response.items.map((item) => item.id).filter((id) => mine.has(id));
 
@@ -293,12 +297,60 @@ describe('visitor messages API', () => {
     assert.deepEqual(idsOf(handled.body), [middleHandled]);
     assert.ok(handled.body.items.every((item) => item.status === 'handled'));
 
-    await db.update(visitorMessages).set({ handledAt: null }).where(eq(visitorMessages.id, middleHandled));
-    const noMatches = await listMessages('?status=handled');
-    assert.equal(noMatches.statusCode, 200);
-    assert.deepEqual(noMatches.body.items, [], 'expected no handled messages in the table besides this test\'s own');
-    assert.equal(noMatches.body.total, 0);
-    assert.equal(noMatches.body.unfilteredTotal, all.body.unfilteredTotal);
+    // A page older than every message is the empty result of a filter: 200
+    // with an empty list, never a 404, whatever else the table holds.
+    const beyondTheOldest = encodeURIComponent('1970-01-01T00:00:00.000Z|none');
+    const empty = await listMessages(`?status=handled&before=${beyondTheOldest}`);
+    assert.equal(empty.statusCode, 200);
+    assert.deepEqual(empty.body.items, []);
+    assert.equal(empty.body.nextCursor, null);
+    assert.equal(empty.body.unfilteredTotal, all.body.unfilteredTotal);
+  });
+
+  // Test 9a.
+  test('a message inserted between two pages is neither duplicated nor skipped', async () => {
+    const [oldest, older, newer, newest] = [
+      await insertMessage({ createdAt: newestFirstDate(1) }),
+      await insertMessage({ createdAt: newestFirstDate(2) }),
+      await insertMessage({ createdAt: newestFirstDate(3) }),
+      await insertMessage({ createdAt: newestFirstDate(4) }),
+    ];
+
+    const first = await listMessages('?pageSize=2');
+    assert.deepEqual(first.body.items.map((item) => item.id), [newest, newer]);
+    assert.ok(first.body.nextCursor);
+
+    await insertMessage({ createdAt: newestFirstDate(10) });
+
+    const second = await listMessages(`?pageSize=2&before=${encodeURIComponent(first.body.nextCursor)}`);
+    assert.deepEqual(second.body.items.map((item) => item.id), [older, oldest]);
+  });
+
+  // Test 9b.
+  test('marking a page-one card handled under the unhandled filter does not skip the next page\'s first card', async () => {
+    const [oldest, older, newer, newest] = [
+      await insertMessage({ createdAt: newestFirstDate(1) }),
+      await insertMessage({ createdAt: newestFirstDate(2) }),
+      await insertMessage({ createdAt: newestFirstDate(3) }),
+      await insertMessage({ createdAt: newestFirstDate(4) }),
+    ];
+
+    const first = await listMessages('?status=unhandled&pageSize=2');
+    assert.deepEqual(first.body.items.map((item) => item.id), [newest, newer]);
+    assert.ok(first.body.nextCursor);
+
+    assert.equal((await patchMessage(newest, { handled: true })).statusCode, 200);
+
+    const second = await listMessages(`?status=unhandled&pageSize=2&before=${encodeURIComponent(first.body.nextCursor)}`);
+    assert.deepEqual(second.body.items.map((item) => item.id), [older, oldest]);
+  });
+
+  // Test 9c.
+  test('a malformed cursor is a 400', async () => {
+    for (const before of ['garbage', 'not-a-date|id', '2026-01-01T00:00:00.000Z|']) {
+      const res = await app.inject({ method: 'GET', url: `/v1/admin/visitor-messages?before=${encodeURIComponent(before)}`, headers: { cookie: superCookie } });
+      assert.equal(res.statusCode, 400, `cursor ${before}`);
+    }
   });
 
   // Test 10.

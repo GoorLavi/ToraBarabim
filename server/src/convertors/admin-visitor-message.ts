@@ -20,8 +20,7 @@ export const toAdminVisitorMessage = (record: VisitorMessageRecord): AdminVisito
 
 export const toVisitorMessageListResponse = (result: VisitorMessageListResult): VisitorMessageListResponse => ({
   items: result.items.map(toAdminVisitorMessage),
-  page: result.page,
   pageSize: result.pageSize,
-  total: result.total,
+  nextCursor: result.nextCursor,
   unfilteredTotal: result.unfilteredTotal,
 });

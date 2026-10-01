@@ -4,6 +4,7 @@ import { ZodError } from 'zod';
 import { toAdminVisitorMessage, toVisitorMessageListResponse } from '../../../convertors/admin-visitor-message';
 import { requireAdminAuth, requireSuperAdmin } from '../../../plugins/admin-guard';
 import { VisitorMessageNotFoundError } from '../../../service/visitor-message/errors';
+import { toPayloadFreeLogFields } from '../../../service/visitor-message/log-fields';
 import {
   updateVisitorMessageSchema,
   visitorMessageIdParamSchema,
@@ -27,7 +28,7 @@ const handleError = (reply: FastifyReply, error: unknown, routeLabel: string): F
     return reply.status(404).send({ error: 'not_found', message: VISITOR_MESSAGE_NOT_FOUND_MESSAGE });
   }
 
-  reply.request.log.error({ err: error }, `unhandled error in ${routeLabel}`);
+  reply.request.log.error(toPayloadFreeLogFields(error), `unhandled error in ${routeLabel}`);
   return reply.status(500).send({ error: 'internal_error', message: GENERIC_ERROR_MESSAGE });
 };
 

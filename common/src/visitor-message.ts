@@ -29,10 +29,12 @@ export type AdminVisitorMessage =
 
 export interface VisitorMessageListResponse {
   items: AdminVisitorMessage[];
-  page: number;
   pageSize: number;
-  // Under the current status filter.
-  total: number;
+  // Opaque: pass it back as `before` to read the next, older page. Null when
+  // there is no older message under the current filter. Keyset rather than
+  // offset paging, so a message arriving or a card being marked handled
+  // between two pages never duplicates or skips a card.
+  nextCursor: string | null;
   // Every message under every filter: tells "none at all" from "none under
   // this filter" for the empty states.
   unfilteredTotal: number;

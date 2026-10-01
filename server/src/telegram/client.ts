@@ -35,6 +35,8 @@ export const createTelegramClient = (credentials: TelegramCredentials | undefine
       throw new Error(`Telegram sendMessage failed with status ${response.status}: ${description}`);
     }
 
+    // Unread, the body would hold the socket until it is garbage collected.
+    await response.body?.cancel();
     return 'sent';
   },
 });

@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyReply } from 'fastify';
 import { ZodError } from 'zod';
 
+import { toPayloadFreeLogFields } from '../../service/visitor-message/log-fields';
 import { createVisitorMessageSchema } from '../../service/visitor-message/models';
 import * as visitorMessageService from '../../service/visitor-message/visitor-message';
 
@@ -12,7 +13,7 @@ const handleError = (reply: FastifyReply, error: unknown): FastifyReply => {
     return reply.status(400).send({ error: 'invalid_request', message: INVALID_REQUEST_MESSAGE, details: error.flatten() });
   }
 
-  reply.request.log.error({ err: error }, 'unhandled error in POST /v1/visitor-messages');
+  reply.request.log.error(toPayloadFreeLogFields(error), 'unhandled error in POST /v1/visitor-messages');
   return reply.status(500).send({ error: 'internal_error', message: GENERIC_ERROR_MESSAGE });
 };
 
