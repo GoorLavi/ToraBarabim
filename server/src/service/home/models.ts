@@ -1,4 +1,4 @@
-import type { CityWithLessonCount, HomeLessonRowId, LessonAudience, LessonTopic, LessonVenue, Rabbi } from '@torabarabim/common';
+import type { CityWithLessonCount, HelpTileKind, HomeLessonRowId, LessonAudience, LessonTopic, LessonVenue, Rabbi } from '@torabarabim/common';
 
 import type { rabbis } from '../../db/schema';
 import type { AddressCityRow } from '../shared/address';
@@ -36,6 +36,10 @@ export interface LessonHomeRowResult {
   // `getHome`'s placement cadence. Present on at most one row, and only
   // ever a lesson row: the tile never lands inside the course row.
   womensAreaTileIndex?: number;
+  // The help tile and its 0-based slot in `items`; see `placeHelpTiles`.
+  // Never set on a row that carries `womensAreaTileIndex`, and never on the
+  // course row.
+  helpTile?: { kind: HelpTileKind; index: number };
 }
 
 export interface CourseHomeRowResult {

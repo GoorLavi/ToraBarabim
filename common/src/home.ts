@@ -2,11 +2,16 @@ import type { CourseSummary } from './course';
 import type { DedicationGroup } from './dedication';
 import type { LessonOccurrence } from './lesson-occurrence';
 import type { Rabbi } from './rabbi';
+import type { VisitorMessageType } from './visitor-message';
 
 // A rabbi's prominence tier drives sort order within a home row and across
 // the "לפי רב" avatar row and the public rabbi directory; it never appears
 // on `Rabbi` or on any occurrence the client receives.
 export type RabbiProminence = 'local' | 'known' | 'sought';
+
+// What a help tile asks of the visitor: a message of one of the two types,
+// or a share of the site, which opens no window.
+export type HelpTileKind = VisitorMessageType | 'share';
 
 export type HomeLessonRowId = 'area' | 'today' | 'bothAudiences' | 'weekly';
 
@@ -27,6 +32,13 @@ export type HomeRow =
       // goes). Never set on a `kind: 'courses'` row: the tile only ever
       // lands inside a lesson row.
       womensAreaTileIndex?: number;
+      // The help tile this row carries and the 0-based index in `items`
+      // where it renders (at least 2, and `items.length` means after the
+      // last card). Chosen at random per request by the server; the client
+      // splices it in as given and never randomises (0012, 0023). Never set
+      // on a row that carries `womensAreaTileIndex`, and never on a
+      // `kind: 'courses'` row.
+      helpTile?: { kind: HelpTileKind; index: number };
     }
   | { kind: 'courses'; id: 'courses'; title: string; items: CourseSummary[] };
 

@@ -24,7 +24,7 @@ import { nanoid } from 'nanoid';
 import { toHomeResponse } from '../src/convertors/home';
 import { db } from '../src/db/client';
 import { cities, lessonExceptions, lessons, places } from '../src/db/schema';
-import { HOME_RABBI_ROW_CAP } from '../src/service/home/consts';
+import { HELP_TILE_KINDS, HELP_TILE_MIN_INDEX, HOME_RABBI_ROW_CAP } from '../src/service/home/consts';
 import * as homeService from '../src/service/home/home';
 import { selectAreaPreview } from '../src/service/lesson/area-preview';
 import { addDays, nextDateOnWeekday, todayInIsrael } from '../src/service/lesson/israel-time';
@@ -734,6 +734,25 @@ describe('public API', () => {
         assert.deepEqual(rowsWithTile, [expectedRowIndex]);
       }
     }
+
+    // Help tiles are placed at random on every request, so only the
+    // invariants are asserted: where one may sit, never which.
+    const placedKinds: string[] = [];
+    for (const row of body.rows) {
+      if (row.kind === 'courses') {
+        assert.equal('helpTile' in row, false, 'expected the course row to never carry a help tile');
+        continue;
+      }
+      if (!row.helpTile) continue;
+      placedKinds.push(row.helpTile.kind);
+      assert.ok(HELP_TILE_KINDS.some((kind) => kind === row.helpTile?.kind), `unexpected help tile kind ${row.helpTile.kind}`);
+      assert.ok(
+        Number.isInteger(row.helpTile.index) && row.helpTile.index >= HELP_TILE_MIN_INDEX && row.helpTile.index <= row.items.length,
+        `expected row ${row.id}'s help tile index ${row.helpTile.index} to be within [${HELP_TILE_MIN_INDEX}, ${row.items.length}]`,
+      );
+      assert.equal(row.womensAreaTileIndex, undefined, `expected row ${row.id} not to carry both a help tile and the women's-area tile`);
+    }
+    assert.equal(new Set(placedKinds).size, placedKinds.length, 'expected each help tile kind at most once per page');
   });
 
   // The "לפי רב" avatar row: sorted by tier (sought before known before
