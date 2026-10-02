@@ -43,7 +43,7 @@ export const AdminShell = styled(({ className }: AdminShellProps) => {
             <span className="badge">{consts.ADMIN_BADGE_LABEL}</span>
           </div>
 
-          <PanelTabNav {...{ ariaLabel: consts.NAV_LABEL, items: tabItems }} />
+          <PanelTabNav {...{ ariaLabel: consts.NAV_LABEL, items: tabItems, narrowColumns: consts.NARROW_TAB_COLUMNS }} />
 
           <div className="account">
             <span className="name" dir="auto">

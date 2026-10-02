@@ -39,9 +39,13 @@ export const HelpWindow = css(
         block-size: 20px;
       }
 
+      /* Two tones: the button sits on the plum header and, once that has
+         scrolled away, on the white form, and a ring of either colour alone
+         disappears on one of them. */
       &:focus-visible {
-        outline: 2px solid ${theme.colors.textOnPrimary};
+        outline: 2px solid ${theme.colors.primary};
         outline-offset: 2px;
+        box-shadow: 0 0 0 2px ${theme.colors.textOnPrimary};
       }
     }
 

@@ -2,10 +2,12 @@ import { css } from 'styled-components';
 
 import { CARD_WIDE_THRESHOLD } from '~/consts';
 
+import { DROP_LINE_BELOW, TIGHTEN_BELOW } from './consts';
+
 // Every size here steps against the tile's own width (the rail item shell is
 // the container), never the viewport: the same rule the lesson card follows.
-// Thresholds 160 and 150 are the fallbacks for the narrowest tile (136 at a
-// 320 screen), strictly ordered: the gaps and the icon tighten first, then
+// The fallbacks for the narrowest tile (136 at a 320 screen) are strictly
+// ordered, thresholds in consts.ts: the gaps and the icon tighten first, then
 // the short line goes. The title and the pill are never dropped.
 export const HelpTileContent = css(
   ({ theme }) => `
@@ -61,7 +63,7 @@ export const HelpTileContent = css(
         }
       }
 
-      @container (max-inline-size: 159px) {
+      @container (inline-size < ${TIGHTEN_BELOW}) {
         inline-size: 40px;
         block-size: 40px;
         margin-block-end: ${theme.spacing.sm};
@@ -99,7 +101,7 @@ export const HelpTileContent = css(
         line-height: ${theme.typography.secondary.phone.lineHeight};
       }
 
-      @container (max-inline-size: 149px) {
+      @container (inline-size < ${DROP_LINE_BELOW}) {
         display: none;
       }
     }

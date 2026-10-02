@@ -30,10 +30,12 @@ export const MESSAGE_TILE_TINTS: Record<VisitorMessageType, RailItemTint> = {
   volunteer: 'accentSoft',
 };
 
-// Feather Icons' "user-plus" (MIT licensed) and "heart", redrawn as single
-// paths at this codebase's own stroke width, viewBox 0 0 24 24.
+// Feather Icons' "user-plus" (MIT licensed) and Lucide's "hand-heart" (ISC
+// licensed), each joined into one path, viewBox 0 0 24 24, drawn at the
+// tile's stroke width of 1.8. A hand holding a heart says "offer your help",
+// where a bare heart reads as "save to favourites".
 export const MESSAGE_TILE_ICON_PATHS: Record<VisitorMessageType, string> = {
   'rabbi-request': 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM20 8v6M23 11h-6',
   volunteer:
-    'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z',
+    'M11 14h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 16M7 20l1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9M2 15l6 6M19.5 8.5c.7-.7 1.5-1.6 1.5-2.7A2.73 2.73 0 0 0 16 4a2.78 2.78 0 0 0-5 1.8c0 1.2.8 2 1.5 2.8L16 12z',
 };

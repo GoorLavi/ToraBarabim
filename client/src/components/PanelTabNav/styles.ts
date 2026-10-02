@@ -4,15 +4,21 @@ import { css } from 'styled-components';
 // here unchanged above `md`: a flex row of pill tabs, wrapped onto its own
 // full-width line below the header. Below `md` it is now a fixed two-row
 // grid (helpers.ts, `gridColumns`) instead of that wrap, which is what
-// let five admin tabs overflow their own row before.
+// let five admin tabs overflow their own row before. Rows are as many as the
+// columns need, each 48 tall, so a strip that drops to fewer columns on the
+// narrowest phones grows a row instead of spilling out of its band.
 export const PanelTabNav = css(
   ({ theme }) => `
   display: grid;
   grid-template-columns: repeat(var(--panel-tab-columns), 1fr);
-  grid-template-rows: repeat(2, 48px);
+  grid-auto-rows: 48px;
   gap: ${theme.spacing.sm};
   order: 3;
   flex-basis: 100%;
+
+  @media (width < ${theme.layout.panelTabFourColumnWidth}) {
+    grid-template-columns: repeat(var(--panel-tab-narrow-columns), 1fr);
+  }
 
   @media (min-width: ${theme.breakpoints.md}) {
     display: flex;

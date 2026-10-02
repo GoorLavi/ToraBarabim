@@ -14,10 +14,6 @@ const fieldsAndFeedback = css(
     display: flex;
     flex-direction: column;
     gap: ${theme.spacing.sm};
-    /* Keeps a field clear of the sheet's own edge when focus scrolls it into
-       view above a phone keyboard. */
-    scroll-margin-block: ${theme.spacing.xxl};
-
     > .label {
       color: ${theme.colors.text};
       font-weight: ${theme.typography.fontWeight.semiBold};
@@ -28,6 +24,11 @@ const fieldsAndFeedback = css(
     /* Seventeen pixels, the body size: smaller would make iOS zoom the page
        when the field takes focus. */
     > .control {
+      /* Focus scrolls the control, not the field around it, so the margins
+         live here. The start margin clears the pinned close button (12 above
+         it, its 48px, 12 below), so a focused field never lands under it. */
+      scroll-margin-block-start: calc(48px + 2 * ${theme.spacing.md});
+      scroll-margin-block-end: ${theme.spacing.xxl};
       inline-size: 100%;
       min-block-size: 48px;
       padding-block: ${theme.spacing.sm};

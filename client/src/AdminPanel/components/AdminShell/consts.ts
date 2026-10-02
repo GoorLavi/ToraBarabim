@@ -12,3 +12,7 @@ export const LOGOUT_LABEL = 'יציאה';
 export const ADMIN_NAME_FALLBACK = 'מנהל המערכת';
 
 export const LOGOUT_ERROR_MESSAGE = 'היציאה נכשלה, נסה שוב';
+
+// The tab strip's column count on phones narrower than the theme's
+// panelTabFourColumnWidth: the seven super admin tabs fall to 3, 3 and 1.
+export const NARROW_TAB_COLUMNS = 3;

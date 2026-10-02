@@ -86,3 +86,29 @@ export const MessagesTabHiddenFromNonSuperAdmin: Story = {
     await expect(within(nav).queryByRole('link', { name: consts.MESSAGES_TAB_LABEL })).toBeNull();
   },
 };
+
+// Seven tabs at four a row need more than the header band leaves on the
+// narrowest phone, so below the theme's panelTabFourColumnWidth the strip
+// falls to three columns (3, 3, 1) and every tab stays inside the plum band.
+export const TabGridNarrowestPhoneSuper: Story = {
+  parameters: { apiMocks: { handlers: { session: http.get('/v1/admin/me', jsonResolver(superAdmin)) } } },
+  play: async ({ canvasElement }) =>
+    atFrameSize(320, 700, async () => {
+      const nav = await within(canvasElement).findByRole('navigation', { name: consts.NAV_LABEL });
+      const tabs = await within(nav).findAllByRole('link');
+      await expect(tabs).toHaveLength(7);
+      await waitFor(() => expect(getComputedStyle(nav).gridTemplateColumns.trim().split(/\s+/)).toHaveLength(3));
+
+      await expect(nav.scrollWidth).toBeLessThanOrEqual(nav.clientWidth);
+      const band = canvasElement.querySelector('.bar');
+      if (!band) throw new Error('AdminShell story: the header .bar was not found');
+      const bandStyle = getComputedStyle(band);
+      const contentLeft = band.getBoundingClientRect().left + parseFloat(bandStyle.paddingLeft);
+      const contentRight = band.getBoundingClientRect().right - parseFloat(bandStyle.paddingRight);
+      for (const tab of tabs) {
+        const rect = tab.getBoundingClientRect();
+        await expect(rect.left).toBeGreaterThanOrEqual(contentLeft - 0.5);
+        await expect(rect.right).toBeLessThanOrEqual(contentRight + 0.5);
+      }
+    }),
+};

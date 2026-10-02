@@ -288,6 +288,29 @@ const phoneStory = (kind: VisitorMessageType): Story => ({
 export const RabbiRequestPhone320: Story = phoneStory('rabbi-request');
 export const VolunteerPhone320: Story = phoneStory('volunteer');
 
+// A short phone with the keyboard up leaves 330px: focusing the phone field
+// scrolls it into view, and it must land below the pinned close button, not
+// under it.
+const shortPhoneStory = (kind: VisitorMessageType): Story => ({
+  parameters: { kind, apiMocks: { handlers: postHandler() } },
+  play: ({ canvasElement }) =>
+    atFrameSize(320, 330, async () => {
+      const dialog = await openWindow(canvasElement, kind);
+      await waitFor(() => expect(dialog.getBoundingClientRect().bottom).toBeLessThanOrEqual(window.innerHeight + 1));
+      const closeButton = within(dialog).getAllByRole('button', { name: consts.CLOSE_LABEL })[0];
+      if (!closeButton) throw new Error('HelpWindow story: the close button is missing');
+
+      field(dialog, formConsts.FIELD_LABELS.phone).focus();
+
+      await waitFor(() =>
+        expect(field(dialog, formConsts.FIELD_LABELS.phone).getBoundingClientRect().top).toBeGreaterThanOrEqual(closeButton.getBoundingClientRect().bottom - 1),
+      );
+    }),
+});
+
+export const RabbiRequestShortPhone320: Story = shortPhoneStory('rabbi-request');
+export const VolunteerShortPhone320: Story = shortPhoneStory('volunteer');
+
 // Centred and fully rounded from `md` up, like the dedication window.
 const desktopStory = (kind: VisitorMessageType): Story => ({
   parameters: { kind, apiMocks: { handlers: postHandler() } },

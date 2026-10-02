@@ -171,6 +171,7 @@ export const LAYOUT: ThemeLayout = {
   contentMaxWidth: '1280px',
   fourColumnWidth: '1200px',
   xwideRailWidth: '1600px',
+  panelTabFourColumnWidth: '360px',
 };
 
 // The stacking scale every header layer and its overlays share (design-

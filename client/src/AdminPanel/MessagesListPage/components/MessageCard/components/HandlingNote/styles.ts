@@ -90,6 +90,9 @@ export const HandlingNote = css(
   > .trigger {
     min-block-size: 48px;
     padding-inline: ${theme.spacing.sm};
+    border-radius: ${theme.radii.sm};
+    /* Cancels its own padding so the label lines up with the text column. */
+    margin-inline-start: calc(-1 * ${theme.spacing.sm});
     color: ${theme.colors.primary};
     font-weight: ${theme.typography.fontWeight.semiBold};
     font-size: ${theme.typography.secondary.phone.fontSize};
