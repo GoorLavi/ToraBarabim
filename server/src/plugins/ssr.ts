@@ -41,7 +41,7 @@ const SERVER_BUILD_PATH = path.join(__dirname, '../../../client/build/server/ind
 // and matching it here would serve the stale build-time file this same
 // server directory no longer even contains instead of ever reaching that
 // route.
-const STATIC_ASSET_PATTERN = /^\/(?:assets\/.+|favicon\.svg|robots\.txt|outage\.html)$/;
+const STATIC_ASSET_PATTERN = /^\/(?:assets\/.+|favicon\.svg|favicon\.ico|apple-touch-icon\.png|robots\.txt|outage\.html)$/;
 
 // Fastify's own default parser key, mirrored here because `text/plain` is
 // the only non-JSON content type that reaches a handler with a body at all.
