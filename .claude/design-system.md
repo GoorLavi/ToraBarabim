@@ -158,14 +158,14 @@ Figma file referenced by 0014.
 
 The mark needs **two cuts, not one asset scaled down**: a hand-tuned 16px favicon cut
 (single beam, drawn on whole pixels of a 16px grid) for `favicon.svg` and the ICO's 16px
-frame, and the general shape above for every larger size, the ICO's 32 and 48 frames
-and the touch icon included. The icon files put the mark on the argaman tile
-(`#6B2436`): radius 22% for `favicon.svg` and the ICO frames, and a full-bleed square
-for the touch icon, because iOS applies its own mask. The general cut sits at 68% of
-the tile, inset 16% on every side. At 16px the mark is 10x10 with a 3px margin on every side,
-because an 11px mark cannot centre the 2px door on a 16px grid. The mark never appears
-without the wordmark below header size: alone,
-it reads as an institution's crest rather than a listings site.
+frame, and the general shape above for every larger size, the ICO's 32 and 48 frames and
+the touch icon included. The icon files put the mark on the argaman tile (`#6B2436`):
+radius 22% for `favicon.svg` and the ICO frames, and a full-bleed square for the touch
+icon, because iOS applies its own mask. The general cut sits at 68% of the tile, inset
+16% on every side. At 16px the mark is 10x10 with a 3px margin on every side, because an
+11px mark cannot centre the 2px door on a 16px grid. The mark never appears without the
+wordmark below header size: alone, it reads as an institution's crest rather than a
+listings site.
 
 ### Audience wording
 A lesson's audience is one of exactly three values, written exactly this way:

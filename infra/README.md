@@ -433,11 +433,11 @@ to, because a `SameSite=Lax` cookie set by a cross-site response is discarded by
 browser.
 
 The invalidation matters for the named, non-hashed files this bucket also serves
-(everything outside `/assets/*`): their CloudFront behavior caches on ordinary HTTP rules, so
-without it a stale one can keep answering for a while. Hashed assets under `/assets/*`
-never need it, a filename is never reused. The document itself (the home page, a lesson,
-a rabbi) is not part of this sync at all: it is rendered by the server on every request
-and cached at the edge for at most 60 seconds (`TorabarabimSite`'s
+(everything outside `/assets/*`): their CloudFront behavior caches on ordinary HTTP
+rules, so without it a stale one can keep answering for a while. Hashed assets under
+`/assets/*` never need it, a filename is never reused. The document itself (the home
+page, a lesson, a rabbi) is not part of this sync at all: it is rendered by the server
+on every request and cached at the edge for at most 60 seconds (`TorabarabimSite`'s
 `DocumentCachePolicy`), never sourced from this bucket.
 
 The site is now live at the `SiteUrl` output.
