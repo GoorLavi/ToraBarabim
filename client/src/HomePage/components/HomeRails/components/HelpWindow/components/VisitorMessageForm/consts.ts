@@ -12,13 +12,13 @@ export const FIELD_ORDER: readonly VisitorMessageField[] = ['name', 'phone', 'me
 
 export const FIELD_LABELS: Record<VisitorMessageField, string> = {
   name: 'שם',
-  phone: 'מספר טלפון',
+  phone: 'מספר נייד',
   message: 'הודעה',
 };
 
 export const FIELD_ERRORS: Record<VisitorMessageField, string> = {
   name: 'יש למלא שם',
-  phone: 'יש למלא מספר טלפון תקין',
+  phone: 'יש למלא מספר נייד תקין',
   message: 'יש לכתוב הודעה',
 };
 

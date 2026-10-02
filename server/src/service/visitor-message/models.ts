@@ -9,7 +9,7 @@ import { HANDLING_NOTE_MAX_LENGTH, MESSAGE_MAX_LENGTH, NAME_MAX_LENGTH } from '.
 
 const INVALID_REQUEST_MESSAGE = 'הבקשה אינה תקינה';
 const NAME_MESSAGE = 'יש למלא שם';
-const PHONE_MESSAGE = 'יש למלא מספר טלפון תקין';
+const PHONE_MESSAGE = 'יש למלא מספר נייד תקין';
 const MESSAGE_MESSAGE = 'יש לכתוב הודעה';
 
 // `contactPhoneSchema` stays the one rule for what an Israeli mobile is and
@@ -37,9 +37,9 @@ export const visitorMessageIdParamSchema = z.object({
   id: z.string().trim().min(1),
 });
 
-const INVALID_CURSOR_MESSAGE = 'סמן העימוד אינו תקין';
+const INVALID_CURSOR_MESSAGE = 'הבקשה להמשך הרשימה אינה תקינה';
 const NOTE_TOO_LONG_MESSAGE = 'ההערה ארוכה מדי';
-const EMPTY_UPDATE_MESSAGE = 'יש לשלוח לפחות שדה אחד לעדכון';
+const EMPTY_UPDATE_MESSAGE = 'לא נשלח שום שינוי לעדכון';
 
 export interface VisitorMessageCursor {
   createdAt: Date;
