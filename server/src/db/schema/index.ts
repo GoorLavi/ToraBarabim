@@ -9,3 +9,4 @@ export * from './lesson-imports';
 export * from './lessons';
 export * from './places';
 export * from './rabbis';
+export * from './visitor-messages';

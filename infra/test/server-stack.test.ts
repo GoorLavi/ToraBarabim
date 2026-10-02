@@ -1,3 +1,4 @@
+import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 
 import { App } from 'aws-cdk-lib';
@@ -37,5 +38,20 @@ describe('NoHealthyTaskAlarm', () => {
       TreatMissingData: 'breaching',
       Threshold: NO_HEALTHY_TASK_THRESHOLD,
     });
+  });
+});
+
+describe('Server container secrets', () => {
+  test('TELEGRAM_CREDENTIALS comes from the SSM parameter, so the visitor-message alert cannot be switched off by a lost wiring', () => {
+    const template = buildServerStackTemplate();
+
+    const taskDefinitions = template.findResources('AWS::ECS::TaskDefinition');
+    const serverContainer = Object.values(taskDefinitions)
+      .flatMap((resource) => resource.Properties.ContainerDefinitions as Array<{ Name: string; Secrets?: Array<{ Name: string; ValueFrom: unknown }> }>)
+      .find((container) => container.Name === 'Server');
+    const secret = serverContainer?.Secrets?.find((candidate) => candidate.Name === 'TELEGRAM_CREDENTIALS');
+
+    assert.ok(secret, 'expected the Server container to carry a TELEGRAM_CREDENTIALS secret');
+    assert.match(JSON.stringify(secret.ValueFrom), /:ssm:.*:parameter/, 'expected TELEGRAM_CREDENTIALS to be sourced from an SSM parameter ARN');
   });
 });

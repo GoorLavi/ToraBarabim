@@ -9,6 +9,7 @@ import { registerAdminPlaceAccountRoutes } from './place-accounts';
 import { registerAdminPlaceRoutes } from './places';
 import { registerAdminRabbiAccountRoutes } from './rabbi-accounts';
 import { registerAdminRabbiRoutes } from './rabbis';
+import { registerAdminVisitorMessageRoutes } from './visitor-messages';
 
 // Registers the admin CRUD route groups (auth is registered separately by
 // index.ts, unchanged from slice 2).
@@ -22,4 +23,5 @@ export const registerAdminRoutes = async (app: FastifyInstance): Promise<void> =
   await registerAdminLessonExceptionRoutes(app);
   await registerAdminDedicationRoutes(app);
   await registerAdminCourseRoutes(app);
+  await registerAdminVisitorMessageRoutes(app);
 };

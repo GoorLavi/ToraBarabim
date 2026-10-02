@@ -17,6 +17,7 @@ import { registerPlaceRoutes } from './api/places';
 import { registerRabbiRoutes } from './api/rabbi';
 import { registerRabbiAuthRoutes } from './api/rabbi/auth';
 import { registerRabbiDirectoryRoutes } from './api/rabbis';
+import { registerVisitorMessageRoutes } from './api/visitor-messages';
 import { registerWomenAreaRoutes } from './api/women';
 import { loadConfig } from './config';
 import { registerCookies } from './plugins/cookies';
@@ -61,6 +62,7 @@ const start = async (): Promise<void> => {
   await registerRabbiDirectoryRoutes(app);
   await registerWomenAreaRoutes(app);
   await registerCourseRoutes(app);
+  await registerVisitorMessageRoutes(app);
   await registerAdminAuthRoutes(app);
   await registerAdminRoutes(app);
   await registerPanelAuthRoutes(app);
@@ -77,6 +79,7 @@ const start = async (): Promise<void> => {
   // reading as "the API, then the app that renders around it".
   await registerSsr(app);
   registerErrorHandler(app);
+  if (!config.telegram) app.log.info('TELEGRAM_CREDENTIALS is not set: visitor message alerts are off, messages are still saved');
 
   try {
     await app.listen({ port: config.port, host: config.host });

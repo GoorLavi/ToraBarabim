@@ -18,6 +18,7 @@ import { registerPlaceRoutes } from '../src/api/places';
 import { registerRabbiRoutes } from '../src/api/rabbi';
 import { registerRabbiAuthRoutes } from '../src/api/rabbi/auth';
 import { registerRabbiDirectoryRoutes } from '../src/api/rabbis';
+import { registerVisitorMessageRoutes } from '../src/api/visitor-messages';
 import { registerWomenAreaRoutes } from '../src/api/women';
 import { loadConfig } from '../src/config';
 import { db } from '../src/db/client';
@@ -187,6 +188,23 @@ export const buildCourseTestApp = async (): Promise<FastifyInstance> => {
   await registerPlaceRoutes(app);
   await registerWomenAreaRoutes(app);
   await registerCourseRoutes(app);
+  registerErrorHandler(app);
+  return app;
+};
+
+// A sixth app, for `visitor-messages.test.ts` only: cookies, empty body, the
+// admin login door and admin routes (the messages panel's two routes sit
+// behind it), and the public message route. No SSR catch-all and no other
+// public route: this suite never needs them.
+export const buildVisitorMessageTestApp = async (): Promise<FastifyInstance> => {
+  const config = loadConfig(process.env);
+
+  const app = Fastify({ logger: false });
+  await registerCookies(app, config.sessionSecret);
+  registerEmptyBodySupport(app);
+  await registerAdminAuthRoutes(app);
+  await registerAdminRoutes(app);
+  await registerVisitorMessageRoutes(app);
   registerErrorHandler(app);
   return app;
 };

@@ -3,7 +3,6 @@ import { css } from 'styled-components';
 import { RAIL_CARD_WIDTH_MD, RAIL_CARD_WIDTH_SM, RAIL_CARD_WIDTH_WIDE, RAIL_CARD_WIDTH_XWIDE, RAIL_COLUMNS_PHONE } from '~/components/Rail/consts';
 import { railCardWidth, railEdgeOffset } from '~/components/Rail/helpers';
 import { CARD_WIDE_THRESHOLD } from '~/consts';
-import { POSTER_ASPECT_RATIO } from '~/HomePage/consts';
 import type { Theme } from '~/theme/models';
 
 import { EMBLEM_SIZE_FLOOR, EMBLEM_WIDTH_FACTOR } from './consts';
@@ -22,117 +21,85 @@ const emblemInlineSize = (cardWidth: string): string => `max(${EMBLEM_SIZE_FLOOR
 
 export const WomensAreaTile = css(
   ({ theme }) => `
-  container-type: inline-size;
-  display: flex;
-  flex-direction: column;
-  /* Fills its own \`<li>\` exactly like a card does: the rail's row stretches
-     every item to the tallest one (a wrapped meta line, most often), and
-     without this the tile would stop at its own natural height instead,
-     landing short of its row-mates by however much the row grew. */
-  block-size: 100%;
-  overflow: hidden;
-  border: 1px solid ${theme.colors.border};
-  border-radius: ${theme.radii.lg};
-  background: ${theme.colors.surface};
-  box-shadow: ${theme.shadows.card};
-  color: inherit;
-  text-decoration: none;
-
-  &:focus-visible {
-    outline: 2px solid ${theme.colors.primary};
-    outline-offset: 2px;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      border-color: ${theme.colors.primary};
-    }
-  }
-
-  > .plum {
-    container-type: inline-size;
-    container-name: plum;
-    /* Equal to a lesson card's own poster area, always, never more: fixed
-       by the same 3:4 ratio (POSTER_ASPECT_RATIO, HomePage/consts.ts), the
-       same pattern the card's own poster now follows. Never distorted:
-       the row's stretch lands in \`.white\` below, not here. */
-    flex-shrink: 0;
-    aspect-ratio: ${POSTER_ASPECT_RATIO};
+  /* The shell's top area is the card's poster area exactly (3:4, never
+     distorted: the row's stretch lands in the white area below, not here).
+     The plum area fills it. */
+  > .topArea {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: ${theme.spacing.md};
-    padding-inline: ${theme.spacing.md};
-    background: ${theme.colors.primary};
-    text-align: center;
 
-    /* The plum area's own remaining fallbacks, strictly ordered: the gap
-       between every item in the column tightens first (159px), then the
-       bottom line is dropped (150px, on the line below). The emblem no
-       longer needs a fallback of its own: floored at a live percentage
-       (below), it already lands at the floor right around the narrowest
-       width the rail now ships at. The count itself is never part of
-       either. */
-    @container plum (max-width: 159px) {
-      gap: ${theme.spacing.sm};
-    }
+    > .plum {
+      container-type: inline-size;
+      container-name: plum;
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: ${theme.spacing.md};
+      padding-inline: ${theme.spacing.md};
+      background: ${theme.colors.primary};
+      text-align: center;
 
-    > .emblem {
-      flex-shrink: 0;
-      /* 44 percent of the CARD's own width (consts.ts, EMBLEM_WIDTH_FACTOR). */
-      inline-size: ${emblemInlineSizePhone(theme)};
-      /* The height follows the width rather than repeating the same
-         calculation: a second, independent height formula could drift
-         from the width one, and the ratio already gives a square for free.
-         The auto height is what lets the ratio apply at all, since the
-         component's own height attribute would otherwise pin it. */
-      block-size: auto;
-      aspect-ratio: 1;
+      /* The one fallback is dropping the bottom line at 150px (below). The
+         emblem already sits at its floor at the narrowest width the rail
+         ships at, so there is no gap step. The count is never dropped. */
 
-      /* Fixed, matching Rail/styles.ts's own ladder: one card width
-         constant per tier from \`sm\` up, so the emblem tracks the card
-         exactly at every step. */
-      @media (min-width: ${theme.breakpoints.sm}) {
-        inline-size: ${emblemInlineSize(RAIL_CARD_WIDTH_SM)};
+      > .emblem {
+        flex-shrink: 0;
+        /* 44 percent of the CARD's own width (consts.ts, EMBLEM_WIDTH_FACTOR). */
+        inline-size: ${emblemInlineSizePhone(theme)};
+        /* The height follows the width rather than repeating the same
+           calculation: a second, independent height formula could drift
+           from the width one, and the ratio already gives a square for free.
+           The auto height is what lets the ratio apply at all, since the
+           component's own height attribute would otherwise pin it. */
+        block-size: auto;
+        aspect-ratio: 1;
+
+        /* Fixed, matching Rail/styles.ts's own ladder: one card width
+           constant per tier from \`sm\` up, so the emblem tracks the card
+           exactly at every step. */
+        @media (min-width: ${theme.breakpoints.sm}) {
+          inline-size: ${emblemInlineSize(RAIL_CARD_WIDTH_SM)};
+        }
+
+        @media (min-width: ${theme.breakpoints.md}) {
+          inline-size: ${emblemInlineSize(RAIL_CARD_WIDTH_MD)};
+        }
+
+        @media (min-width: ${theme.layout.fourColumnWidth}) {
+          inline-size: ${emblemInlineSize(RAIL_CARD_WIDTH_WIDE)};
+        }
+
+        @media (min-width: ${theme.layout.xwideRailWidth}) {
+          inline-size: ${emblemInlineSize(RAIL_CARD_WIDTH_XWIDE)};
+        }
       }
 
-      @media (min-width: ${theme.breakpoints.md}) {
-        inline-size: ${emblemInlineSize(RAIL_CARD_WIDTH_MD)};
+      > .count {
+        flex-shrink: 0;
+        color: ${theme.colors.accentOnDark};
+        font-weight: ${theme.typography.tileCount.fontWeight};
+        font-size: ${theme.typography.tileCount.phone.fontSize};
+        line-height: ${theme.typography.tileCount.phone.lineHeight};
       }
 
-      @media (min-width: ${theme.layout.fourColumnWidth}) {
-        inline-size: ${emblemInlineSize(RAIL_CARD_WIDTH_WIDE)};
+      > .countWord {
+        flex-shrink: 0;
+        color: ${theme.colors.textOnPrimaryMuted};
+        font-size: ${theme.typography.secondaryCompact.phone.fontSize};
+        line-height: ${theme.typography.secondaryCompact.phone.lineHeight};
       }
 
-      @media (min-width: ${theme.layout.xwideRailWidth}) {
-        inline-size: ${emblemInlineSize(RAIL_CARD_WIDTH_XWIDE)};
-      }
-    }
+      > .line {
+        color: ${theme.colors.textOnPrimaryMuted};
+        font-size: ${theme.typography.secondary.phone.fontSize};
+        line-height: ${theme.typography.secondary.phone.lineHeight};
+        text-wrap: balance;
 
-    > .count {
-      flex-shrink: 0;
-      color: ${theme.colors.accentOnDark};
-      font-weight: ${theme.typography.tileCount.fontWeight};
-      font-size: ${theme.typography.tileCount.phone.fontSize};
-      line-height: ${theme.typography.tileCount.phone.lineHeight};
-    }
-
-    > .countWord {
-      flex-shrink: 0;
-      color: ${theme.colors.textOnPrimaryMuted};
-      font-size: ${theme.typography.secondaryCompact.phone.fontSize};
-      line-height: ${theme.typography.secondaryCompact.phone.lineHeight};
-    }
-
-    > .line {
-      color: ${theme.colors.textOnPrimaryMuted};
-      font-size: ${theme.typography.secondary.phone.fontSize};
-      line-height: ${theme.typography.secondary.phone.lineHeight};
-      text-wrap: balance;
-
-      @container plum (max-width: 150px) {
-        display: none;
+        @container plum (max-width: 150px) {
+          display: none;
+        }
       }
     }
   }

@@ -671,7 +671,7 @@ admin-panel requests blocked by CORS.
 | --- | --- | --- | --- |
 | `CorsOrigins` | `TorabarabimServer` | no | Comma-separated list. Must be exactly the `SiteUrl` output on `TorabarabimSite`: the CloudFront address today, `https://torahbarabim.com` once the domain is attached |
 | `AlertEmail` | `TorabarabimServer` | no | Receives an SNS confirmation email; must be confirmed before alerts arrive |
-| `TelegramBotTokenParamName` | `TorabarabimServer` | no, but the SSM parameter it names is | Defaults to `/torabarabim/telegram-bot-token`; the parameter itself must exist as a SecureString before the Lambda's first invocation, see "Alerting: email and Telegram" above |
+| `TelegramBotTokenParamName` | `TorabarabimServer` | no, but the SSM parameter it names is | Defaults to `/torabarabim/telegram-bot-token`; the parameter itself must exist as a SecureString before the Lambda's first invocation and before the server task starts (the task reads it whole as `TELEGRAM_CREDENTIALS` for the visitor-message alert, and ECS fails the task start if it is missing), see "Alerting: email and Telegram" above |
 | `StorageBucketName` | `TorabarabimServer` | no | Placeholder until step 5, then the `PhotoBucketName` output |
 | `StoragePublicBaseUrl` | `TorabarabimServer` | no | Placeholder until step 5, then the `PhotoBucketPublicBaseUrl` output |
 | `HostedZoneId` | `TorabarabimCertificate`, `TorabarabimSite` | no | Domain mode only. The zone id Route 53 created when `torahbarabim.com` was registered |

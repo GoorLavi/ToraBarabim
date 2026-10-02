@@ -24,7 +24,7 @@ import {
   WOMENS_AREA_TILE_MIN_LESSONS,
   WOMENS_AREA_TILE_ROW_CADENCE,
 } from './consts';
-import { placeCourseRow } from './home-rows';
+import { placeCourseRow, placeHelpTiles } from './home-rows';
 import type { HomeResult, HomeRowResult, LessonHomeRowResult, LoadedWindow, ResolvedHomeOccurrence, WomenAreaResult, WomensSet } from './models';
 
 const MINUTES_PER_DAY = 24 * 60;
@@ -234,7 +234,7 @@ const loadWindow = async (now: Date): Promise<LoadedWindow> => {
   return { from, resolved, cityByCode, rabbiRows, rabbiIdsWithLessons };
 };
 
-export const getHome = async (now: Date): Promise<HomeResult> => {
+export const getHome = async (now: Date, random: () => number = Math.random): Promise<HomeResult> => {
   // Independent of each other, so they run together rather than adding a
   // second sequential round trip to the response.
   const [{ from: today, resolved: allResolved, cityByCode, rabbiRows, rabbiIdsWithLessons }, dedicationGroups, courseItems] = await Promise.all([
@@ -314,7 +314,7 @@ export const getHome = async (now: Date): Promise<HomeResult> => {
     }
   }
 
-  const rows: HomeRowResult[] = placeCourseRow(lessonRows, courseItems);
+  const rows: HomeRowResult[] = placeCourseRow(placeHelpTiles(lessonRows, random), courseItems);
 
   return { rows, womensAreaLessonCount, rabbis: homeRabbis, dedicationGroups };
 };

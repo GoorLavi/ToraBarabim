@@ -17,6 +17,7 @@ import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import * as servicediscovery from 'aws-cdk-lib/aws-servicediscovery';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import * as snsSubscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
 
 import { CONTAINER_PORT, DOCKER_BUILD_CONTEXT_EXCLUDES, NO_HEALTHY_TASK_THRESHOLD } from './consts';
@@ -177,10 +178,22 @@ export class ServerStack extends Stack {
       STORAGE_PUBLIC_BASE_URL: storagePublicBaseUrl.valueAsString,
       MAX_UPLOAD_BYTES: '5000000',
     };
+    // The visitor-message alert posts to the same Telegram chat as the alarm
+    // notifier, so the task reads the same SSM parameter, whole, as the JSON
+    // `{"botToken","chatId"}` the server's TELEGRAM_CREDENTIALS expects. The
+    // server treats the variable as optional, but ECS does not: a task whose
+    // secret cannot be resolved fails to start, so the parameter must exist
+    // before this deploy. `simpleName: false` because the name is a token
+    // here and the allowed pattern guarantees a leading "/".
+    const telegramCredentialsParameter = ssm.StringParameter.fromSecureStringParameterAttributes(this, 'TelegramCredentialsParameter', {
+      parameterName: telegramBotTokenParamName.valueAsString,
+      simpleName: false,
+    });
     const sharedSecrets = {
       DATABASE_URL: ecs.Secret.fromSecretsManager(databaseUrlSecret, 'url'),
       SESSION_SECRET: ecs.Secret.fromSecretsManager(sessionSecret, 'value'),
       IMPORT_AGENT_KEY: ecs.Secret.fromSecretsManager(importAgentKey, 'value'),
+      TELEGRAM_CREDENTIALS: ecs.Secret.fromSsmParameter(telegramCredentialsParameter),
     };
 
     const runtimeImage = ecs.ContainerImage.fromAsset(REPO_ROOT, {

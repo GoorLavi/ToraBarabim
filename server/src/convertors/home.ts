@@ -23,7 +23,14 @@ const toLessonOccurrence = (record: ResolvedHomeOccurrence): LessonOccurrence =>
 
 const toHomeRow = (row: HomeRowResult): HomeRow =>
   row.kind === 'lessons'
-    ? { kind: 'lessons', id: row.id, title: row.title, items: row.items.map(toLessonOccurrence), womensAreaTileIndex: row.womensAreaTileIndex }
+    ? {
+        kind: 'lessons',
+        id: row.id,
+        title: row.title,
+        items: row.items.map(toLessonOccurrence),
+        womensAreaTileIndex: row.womensAreaTileIndex,
+        helpTile: row.helpTile,
+      }
     : { kind: 'courses', id: row.id, title: row.title, items: row.items.map(toCourseSummary) };
 
 const toDedicationGroup = (group: DedicationGroupResult): DedicationGroup => ({

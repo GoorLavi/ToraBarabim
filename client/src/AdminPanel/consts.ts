@@ -2,7 +2,15 @@ import type { AdminDedicationState, DedicationHonorific, DedicationPreviewReques
 
 import { MAX_PHOTO_UPLOAD_BYTES } from '~/components/PhotoPicker/consts';
 
-import type { AdminCourseFilters, AdminDedicationFilters, AdminLessonFilters, AdminPlaceFilters, AdminRabbiFilters, AdminUserFilters } from './models';
+import type {
+  AdminCourseFilters,
+  AdminDedicationFilters,
+  AdminLessonFilters,
+  AdminPlaceFilters,
+  AdminRabbiFilters,
+  AdminUserFilters,
+  AdminVisitorMessageFilters,
+} from './models';
 
 // Mirrors `server/src/service/admin-shared/consts.ts`'s `MAX_ADMIN_PAGE_SIZE`.
 // Used as the page size for "fetch the whole list once and join in memory"
@@ -124,6 +132,9 @@ export const ADMIN_QUERY_KEYS = {
   dedications: (filters: AdminDedicationFilters) => ['admin', 'dedications', 'search', filters] as const,
   dedicationsAll: () => ['admin', 'dedications'] as const,
   dedication: (id: string) => ['admin', 'dedications', id] as const,
+  visitorMessages: (filters: AdminVisitorMessageFilters) => ['admin', 'visitor-messages', 'search', filters] as const,
+  // The root every visitor-message cache write reaches for, like `dedicationsAll`.
+  visitorMessagesAll: () => ['admin', 'visitor-messages'] as const,
   // `fields` is the live draft, debounced (DedicationFormPage/useDedicationPreview.ts):
   // a distinct set of field values is its own cache entry, so a response can
   // never land against a key a later keystroke has already moved past.
@@ -148,6 +159,7 @@ export const ADMIN_ROUTES = {
   placeNew: '/admin/places/new',
   placeView: (id: string) => `/admin/places/${id}`,
   placeEdit: (id: string) => `/admin/places/${id}/edit`,
+  messages: '/admin/messages',
   admins: '/admin/admins',
   adminNew: '/admin/admins/new',
   dedications: '/admin/dedications',

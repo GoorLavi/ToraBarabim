@@ -1,5 +1,12 @@
 import { z } from 'zod';
 
+import type { TelegramCredentials } from './telegram/models';
+
+const telegramCredentialsSchema = z.object({
+  botToken: z.string().min(1),
+  chatId: z.string().min(1),
+}) satisfies z.ZodType<TelegramCredentials>;
+
 const envSchema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   HOST: z.string().min(1).default('0.0.0.0'),
@@ -28,6 +35,35 @@ const envSchema = z.object({
   // this is set (fail closed, feature off). A present-but-short key fails
   // boot rather than accepting a weak credential silently.
   IMPORT_AGENT_KEY: z.string().min(32).optional(),
+  // JSON `{"botToken","chatId"}`, the same shape as the alarm notifier's SSM
+  // parameter. Fail-open: absent or blank means the visitor-message alert is
+  // off (the form still works and every message is still saved), because
+  // Telegram is a convenience and the save is what matters. A present but
+  // malformed value fails boot instead, since a typo would otherwise switch
+  // alerts off silently. The error names the variable and the missing keys,
+  // never the value, which carries the bot token.
+  TELEGRAM_CREDENTIALS: z
+    .string()
+    .optional()
+    .transform((raw, ctx): TelegramCredentials | undefined => {
+      if (raw === undefined || raw.trim() === '') return undefined;
+
+      let json: unknown;
+      try {
+        json = JSON.parse(raw);
+      } catch {
+        ctx.addIssue({ code: 'custom', message: 'TELEGRAM_CREDENTIALS must be JSON like {"botToken":"...","chatId":"..."}' });
+        return z.NEVER;
+      }
+
+      const result = telegramCredentialsSchema.safeParse(json);
+      if (!result.success) {
+        const badKeys = [...new Set(result.error.issues.map((issue) => String(issue.path[0] ?? 'value')))];
+        ctx.addIssue({ code: 'custom', message: `TELEGRAM_CREDENTIALS needs a non-empty botToken and chatId, problem with: ${badKeys.join(', ')}` });
+        return z.NEVER;
+      }
+      return result.data;
+    }),
 }).refine(
   (data) => !data.STORAGE_ENDPOINT || (data.STORAGE_ACCESS_KEY_ID && data.STORAGE_SECRET_ACCESS_KEY),
   {
@@ -52,6 +88,7 @@ export interface Config {
   storagePublicBaseUrl: string;
   maxUploadBytes: number;
   importAgentKey: string | undefined;
+  telegram: TelegramCredentials | undefined;
 }
 
 export const loadConfig = (env: NodeJS.ProcessEnv): Config => {
@@ -78,5 +115,6 @@ export const loadConfig = (env: NodeJS.ProcessEnv): Config => {
     storagePublicBaseUrl: parsed.data.STORAGE_PUBLIC_BASE_URL,
     maxUploadBytes: parsed.data.MAX_UPLOAD_BYTES,
     importAgentKey: parsed.data.IMPORT_AGENT_KEY,
+    telegram: parsed.data.TELEGRAM_CREDENTIALS,
   };
 };

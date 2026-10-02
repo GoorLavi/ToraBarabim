@@ -18,4 +18,5 @@ export * from './lesson-occurrence';
 export * from './panel-auth';
 export * from './place-portal';
 export * from './rabbi-portal';
+export * from './visitor-message';
 export * from './women-area';

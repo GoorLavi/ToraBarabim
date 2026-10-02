@@ -11,6 +11,7 @@ import type {
   LessonTopic,
   RabbiHonorific,
   RabbiProminence,
+  VisitorMessageType,
 } from '@torabarabim/common';
 import { pgEnum } from 'drizzle-orm/pg-core';
 
@@ -75,6 +76,8 @@ export const DEDICATION_TYPES = ['memorial', 'healing', 'success'] as const sati
 
 export const DEDICATION_HONORIFICS = ['zl', 'ah', 'hyd'] as const satisfies readonly DedicationHonorific[];
 
+export const VISITOR_MESSAGE_TYPES = ['rabbi-request', 'volunteer'] as const satisfies readonly VisitorMessageType[];
+
 export const HONORED_GENDERS = ['male', 'female'] as const satisfies readonly HonoredGender[];
 
 // Not mirrored from `common`: an account's role is a server-side auth
@@ -104,6 +107,13 @@ const rabbiHonorificExhaustivenessCheck: Record<RabbiHonorific, true> = {
   rabbanit: true,
 };
 void rabbiHonorificExhaustivenessCheck;
+
+// Same mechanism again, for the visitor message type.
+const visitorMessageTypeExhaustivenessCheck: Record<VisitorMessageType, true> = {
+  'rabbi-request': true,
+  volunteer: true,
+};
+void visitorMessageTypeExhaustivenessCheck;
 
 // Same mechanism again, for the three dedication enums.
 const dedicationTypeExhaustivenessCheck: Record<DedicationType, true> = {
@@ -136,6 +146,7 @@ export const rabbiHonorificEnum = pgEnum('rabbi_honorific', RABBI_HONORIFICS);
 export const dedicationTypeEnum = pgEnum('dedication_type', DEDICATION_TYPES);
 export const dedicationHonorificEnum = pgEnum('dedication_honorific', DEDICATION_HONORIFICS);
 export const honoredGenderEnum = pgEnum('honored_gender', HONORED_GENDERS);
+export const visitorMessageTypeEnum = pgEnum('visitor_message_type', VISITOR_MESSAGE_TYPES);
 export const adminRoleEnum = pgEnum('admin_role', ADMIN_ROLES);
 export const lessonProvenanceEnum = pgEnum('lesson_provenance', LESSON_PROVENANCES);
 export const lessonImportLinkDecisionEnum = pgEnum('lesson_import_link_decision', LESSON_IMPORT_LINK_DECISIONS);

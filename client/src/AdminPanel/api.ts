@@ -6,6 +6,7 @@ import type {
   AdminUser,
   AdminUserListItem,
   AdminUserListResponse,
+  AdminVisitorMessage,
   CourseListResponse,
   CourseResponse,
   CreateAdminUserRequest,
@@ -44,10 +45,20 @@ import type {
   UpdatePlaceRequest,
   UpdateRabbiAccountRequest,
   UpdateRabbiRequest,
+  UpdateVisitorMessageRequest,
+  VisitorMessageListResponse,
 } from '@torabarabim/common';
 
 import { MAX_ADMIN_PAGE_SIZE } from './consts';
-import type { AdminCourseFilters, AdminDedicationFilters, AdminLessonFilters, AdminPlaceFilters, AdminRabbiFilters, AdminUserFilters } from './models';
+import type {
+  AdminCourseFilters,
+  AdminDedicationFilters,
+  AdminLessonFilters,
+  AdminPlaceFilters,
+  AdminRabbiFilters,
+  AdminUserFilters,
+  AdminVisitorMessageFilters,
+} from './models';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
@@ -478,3 +489,29 @@ export const takedownAdminDedication = (id: string, body: TakedownDedicationRequ
 // GET with query parameters (server/src/api/admin/dedications/index.ts).
 export const previewAdminDedication = (body: DedicationPreviewRequest): Promise<DedicationPreviewResponse> =>
   request(url('/v1/admin/dedications/preview').toString(), { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(body) });
+
+// GET /v1/admin/visitor-messages (super admin only)
+// 200 with VisitorMessageListResponse, newest first, including an empty
+// items array. Paged by keyset cursor: send the previous response's
+// `nextCursor` back as `before` for the next, older page; it is opaque and
+// holds a `|`, so it is URL-encoded by `searchParams`. `nextCursor` is null
+// when nothing older remains. `unfilteredTotal` counts every message under
+// every filter, so "none under this filter" can be told from "none at all".
+// 400 for an invalid query, 401 without a session, 403 super_admin_required
+// for any other admin.
+export const fetchAdminVisitorMessages = (filters: AdminVisitorMessageFilters): Promise<VisitorMessageListResponse> => {
+  const target = url('/v1/admin/visitor-messages');
+  target.searchParams.set('status', filters.status);
+  if (filters.before !== undefined) target.searchParams.set('before', filters.before);
+  if (filters.pageSize !== undefined) target.searchParams.set('pageSize', String(filters.pageSize));
+  return request(target.toString());
+};
+
+// PATCH /v1/admin/visitor-messages/:id (super admin only)
+// 200 with the updated AdminVisitorMessage. Only the keys present are
+// written, so a handled toggle and a note save never overwrite each other.
+// 400 invalid_request for an empty body, a non-boolean `handled`, or a note
+// over its limit (the field named in `details`). 401, 403 super_admin_required,
+// 404 not_found if the message does not exist.
+export const updateAdminVisitorMessage = (id: string, body: UpdateVisitorMessageRequest): Promise<AdminVisitorMessage> =>
+  request(url(`/v1/admin/visitor-messages/${id}`).toString(), { method: 'PATCH', headers: JSON_HEADERS, body: JSON.stringify(body) });

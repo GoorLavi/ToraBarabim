@@ -171,6 +171,13 @@ export interface ThemeLayout {
   // rails"), a layout width of the same kind as fourColumnWidth and not on
   // the sm/md/lg/xl scale for the same reason.
   xwideRailWidth: string;
+  // 360: the narrowest viewport at which the admin panel's seven tabs still
+  // fit four to a row inside the header band (the longest label, with its
+  // padding, needs about 66px a column). Below it a tab strip that opts in
+  // drops to fewer columns rather than spilling out of the band. A property
+  // of the tab labels, not of a device class, so it lives here and not on the
+  // sm/md/lg/xl scale.
+  panelTabFourColumnWidth: string;
 }
 
 export interface ThemeZIndex {

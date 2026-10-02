@@ -1,3 +1,5 @@
+import type { HelpTileKind } from '@torabarabim/common';
+
 // The length of the home window in days, counting today as day one.
 export const HOME_WINDOW_DAYS = 14;
 
@@ -33,3 +35,20 @@ export const WOMENS_AREA_TILE_ROW_CADENCE = 3;
 
 // 0-based index of the first candidate row (the second row).
 export const WOMENS_AREA_TILE_FIRST_CANDIDATE_ROW = 1;
+
+// The help tiles a page can carry, each at most once. `satisfies` catches a
+// member renamed or removed in `common`; the check below catches one added.
+export const HELP_TILE_KINDS = ['rabbi-request', 'volunteer', 'share'] as const satisfies readonly HelpTileKind[];
+
+const helpTileKindExhaustivenessCheck: Record<HelpTileKind, true> = {
+  'rabbi-request': true,
+  volunteer: true,
+  share: true,
+};
+void helpTileKindExhaustivenessCheck;
+
+// A help tile never takes slot 0 or slot 1: on a phone at rest slot 1 is
+// still half visible, so a tile there would read as the row's second
+// lesson. The owner's rule; the largest index is the row's own length,
+// which means after the last card.
+export const HELP_TILE_MIN_INDEX = 2;

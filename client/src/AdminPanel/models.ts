@@ -1,4 +1,4 @@
-import type { Rabbi } from '@torabarabim/common';
+import type { Rabbi, VisitorMessageStatusFilter } from '@torabarabim/common';
 
 // Server-side filters, sent as query params on GET /v1/admin/lessons.
 export interface AdminLessonFilters {
@@ -24,6 +24,16 @@ export interface AdminUserFilters {
 // Server-side filters, sent as query params on GET /v1/admin/dedications.
 export interface AdminDedicationFilters {
   page?: number;
+  pageSize?: number;
+}
+
+// Server-side filters, sent as query params on GET /v1/admin/visitor-messages.
+// `status` is always explicit on the wire: the server reads an absent one as
+// `all`, while the screen's own default is `unhandled`.
+export interface AdminVisitorMessageFilters {
+  status: VisitorMessageStatusFilter;
+  // The previous page's `nextCursor`; absent for the first page.
+  before?: string;
   pageSize?: number;
 }
 

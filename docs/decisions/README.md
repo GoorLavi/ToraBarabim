@@ -105,3 +105,5 @@ The real alternatives and why each lost. If there was no alternative, say so.
 | [0035](0035-storybook-mocks-fetch-with-an-in-house-layer-not-msw.md) | Storybook mocks `fetch` with an in-house layer, not msw | accepted |
 | [0036](0036-the-site-invites-dedications-by-contact-only.md) | The site invites dedications by contact only, and is not a donation platform | accepted |
 | [0037](0037-viewers-in-china-and-russia-are-blocked-at-the-edge-never-the-united-states.md) | Viewers in China and Russia are blocked at the edge, and the United States never is | accepted |
+| [0038](0038-vetted-volunteers-get-admin-accounts.md) | Vetted volunteers get plain admin accounts, with no change log yet | accepted |
+| [0039](0039-a-public-message-form-stores-phones-and-alerts-telegram.md) | A public message form stores visitors' phones and alerts Telegram, fail-open | accepted |

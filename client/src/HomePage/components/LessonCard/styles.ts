@@ -1,54 +1,24 @@
 import { css } from 'styled-components';
 
 import { CARD_WIDE_THRESHOLD } from '~/consts';
-import { POSTER_ASPECT_RATIO } from '~/HomePage/consts';
 
 import { CANCELLED_LABEL_BOTTOM_THRESHOLD } from './consts';
 
 export const LessonCard = css(
   ({ theme }) => `
-  container-type: inline-size;
-  display: flex;
-  flex-direction: column;
-  /* Fills its own \`<li>\`: the rail and the grid both stretch every item in
-     a row to the tallest one (a wrapped title, most often), and without
-     this a shorter card would stop at its own natural height instead,
-     leaving the row's bottom edge ragged. */
-  block-size: 100%;
-  overflow: hidden;
-  border: 1px solid ${theme.colors.border};
-  border-radius: ${theme.radii.lg};
-  background: ${theme.colors.surface};
-  box-shadow: ${theme.shadows.card};
-  color: inherit;
-  text-decoration: none;
-  transition: border-color 150ms ease;
-
-  &:focus-visible {
-    outline: 2px solid ${theme.colors.primary};
-    outline-offset: 2px;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      border-color: ${theme.colors.primary};
-    }
-  }
-
   /* Only the portrait dims: the cancelled label and the rest of the card's
      text stay at full strength, since a faded cancellation notice reads as
      the opposite of what it is for. */
-  &.cancelled > .poster > .image {
+  &.cancelled > .topArea > .image {
     opacity: 0.7;
   }
 
-  > .poster {
+  /* The shell's top area never distorts: the row's stretch lands in the
+     body below, so a real portrait never gets cropped or stretched off its
+     ratio. */
+  > .topArea {
     position: relative;
     overflow: hidden;
-    aspect-ratio: ${POSTER_ASPECT_RATIO};
-    /* Never distorted: the row's stretch lands in \`.body\` below, not here,
-       so a real portrait never gets cropped or stretched off its ratio. */
-    flex-shrink: 0;
     /* What fills the slot while the image loads. Every card has an image
        now, so this is a load-time surface, not a fallback state of its own. */
     background: ${theme.colors.primarySoft};
@@ -123,9 +93,9 @@ export const LessonCard = css(
   }
 
   > .body {
-    /* Absorbs the row's own stretch (the poster above never does, see
-       \`.poster\`): real content, already top-aligned by default, simply
-       gets more room below it rather than the poster distorting. */
+    /* Absorbs the row's own stretch (the top area above never does): real
+       content, already top-aligned by default, simply gets more room below
+       it rather than the poster distorting. */
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;

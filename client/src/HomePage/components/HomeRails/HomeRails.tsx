@@ -9,15 +9,44 @@ import { CourseRail } from '~/components/CourseRail/CourseRail';
 import { DedicationBand } from '../DedicationBand/DedicationBand';
 import { LessonRail } from '../LessonRail/LessonRail';
 import { WomensAreaBand } from '../WomensAreaBand/WomensAreaBand';
+import { HelpWindow } from './components/HelpWindow/HelpWindow';
 import { RailSkeleton } from './components/RailSkeleton/RailSkeleton';
 import * as consts from './consts';
 import { dedicationBandSlot, indexAfterNthLessonRow, shouldShowBetweenRailsDedication } from './helpers';
 import type { HomeRailsProps } from './models';
 import * as styles from './styles';
+import { useHelpWindow } from './useHelpWindow';
 
 export const HomeRails = styled(({ className, query, dedicationGroup }: HomeRailsProps) => {
+  const helpWindow = useHelpWindow();
+
+  const { openKind } = helpWindow;
+
+  // The window is a portal, so where it sits in this tree is irrelevant, but
+  // it is rendered whichever state the rails are in: a refetch that fails or
+  // comes back empty while a visitor is typing replaces the rails, and the
+  // window and its draft must not vanish with them. Pending is left out: a
+  // window can only have been opened from a tile, so there is data by then.
+  const withHelpWindow = (content: ReactNode): ReactNode => (
+    <>
+      {content}
+      {openKind && (
+        <HelpWindow
+          {...{
+            kind: openKind,
+            draft: helpWindow.drafts[openKind],
+            status: helpWindow.sendStatuses[openKind],
+            onDraftChange: (draft) => helpWindow.changeDraft(openKind, draft),
+            onSubmit: () => helpWindow.send(openKind),
+            onDismiss: helpWindow.close,
+          }}
+        />
+      )}
+    </>
+  );
+
   if (query.isError) {
-    return (
+    return withHelpWindow(
       <div className={classNames(className, 'error')} role="alert">
         <p className="headline">{consts.ERROR_HEADLINE}</p>
         <p className="hint">{consts.ERROR_HINT}</p>
@@ -31,7 +60,7 @@ export const HomeRails = styled(({ className, query, dedicationGroup }: HomeRail
         >
           {consts.RETRY_LABEL}
         </button>
-      </div>
+      </div>,
     );
   }
 
@@ -51,10 +80,10 @@ export const HomeRails = styled(({ className, query, dedicationGroup }: HomeRail
   if (!query.data) return null;
 
   if (query.data.rows.length === 0) {
-    return (
+    return withHelpWindow(
       <div className={classNames(className, 'empty')}>
         <p className="headline">{consts.EMPTY_HEADLINE}</p>
-      </div>
+      </div>,
     );
   }
 
@@ -64,7 +93,15 @@ export const HomeRails = styled(({ className, query, dedicationGroup }: HomeRail
     row.kind === 'lessons' ? (
       <LessonRail
         key={row.id}
-        {...{ title: row.title, items: row.items, womensAreaTileIndex: row.womensAreaTileIndex, womensAreaLessonCount }}
+        {...{
+          rowId: row.id,
+          title: row.title,
+          items: row.items,
+          womensAreaTileIndex: row.womensAreaTileIndex,
+          womensAreaLessonCount,
+          helpTile: row.helpTile,
+          onOpenHelpTile: helpWindow.open,
+        }}
       />
     ) : (
       <CourseRail key={row.id} {...{ title: row.title, items: row.items, surface: 'general' as const, clickSurface: 'homeRail' as const }} />
@@ -98,7 +135,7 @@ export const HomeRails = styled(({ className, query, dedicationGroup }: HomeRail
     );
   }
 
-  return <div className={className}>{rails}</div>;
+  return withHelpWindow(<div className={className}>{rails}</div>);
 })`
   ${styles.HomeRails}
 `;

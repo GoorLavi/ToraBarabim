@@ -3,6 +3,7 @@ import type { CourseFieldsRequest, CourseResponse, CourseTopic, LessonVenueInput
 import type { SelectedCity } from '~/components/CitySelect/models';
 import * as placePickerConsts from '~/components/PlacePicker/consts';
 import type { LessonVenueFormState } from '~/components/PlacePicker/models';
+import { isIsraeliMobilePhone, normalizeIsraeliMobilePhone } from '~/helpers';
 
 import * as consts from './consts';
 import type { CourseFormErrors, CourseFormState, CourseTopicFormValue } from './models';
@@ -71,21 +72,6 @@ export const courseToFormState = (course: CourseResponse): CourseFormState => ({
   priceShekels: course.priceShekels !== undefined ? String(course.priceShekels) : '',
 });
 
-// The server's own contact-number shape (`^05\d{8}$`, `client/src/helpers.ts`'s
-// own comment on `phoneToInternational`): a local Israeli mobile number,
-// hand-mirrored here so a malformed number never reaches the request.
-const ISRAELI_MOBILE_PHONE_PATTERN = /^05\d{8}$/;
-
-// Strips spaces, dashes, and a leading international prefix the way the
-// server does before validating, so "050-123-4567" and "+972501234567" both
-// pass and both land on the wire in the same canonical local form.
-export const normalizeIsraeliMobilePhone = (raw: string): string => {
-  const stripped = raw.trim().replace(/[\s-]/g, '');
-  if (stripped.startsWith('+972')) return `0${stripped.slice(4)}`;
-  if (stripped.startsWith('972')) return `0${stripped.slice(3)}`;
-  return stripped;
-};
-
 export const validateCourseForm = (form: CourseFormState, isCreating: boolean): CourseFormErrors => {
   const errors: CourseFormErrors = {};
 
@@ -130,7 +116,7 @@ export const validateCourseForm = (form: CourseFormState, isCreating: boolean): 
 
   if (!form.audience) errors.audience = consts.REQUIRED_AUDIENCE_ERROR;
 
-  if (!ISRAELI_MOBILE_PHONE_PATTERN.test(normalizeIsraeliMobilePhone(form.contactPhone))) errors.contactPhone = consts.REQUIRED_CONTACT_PHONE_ERROR;
+  if (!isIsraeliMobilePhone(form.contactPhone)) errors.contactPhone = consts.REQUIRED_CONTACT_PHONE_ERROR;
 
   if (form.priceShekels.trim()) {
     const price = Number(form.priceShekels);

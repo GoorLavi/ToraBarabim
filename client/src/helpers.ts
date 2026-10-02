@@ -156,13 +156,14 @@ export const addressLine = (street: string, floor: string | undefined): string =
 // reaches the URL.
 const navigationQuery = (place: Pick<ResolvedAddress, 'street' | 'city'>): string => `${place.street.trim()}, ${place.city.trim()}`;
 
-// A WhatsApp deep link prefilled with a caller's own message, to a number
-// the caller passes explicitly (this site's own support line, or a
-// course's contact number, converted first through `phoneToInternational`
-// below). `wa.me` wants the international number with no leading `+` or
+// A WhatsApp deep link prefilled with a caller's own message. With a number
+// (this site's own support line, or a course's contact number, converted
+// first through `phoneToInternational` below) it opens that chat; without
+// one it opens WhatsApp's own contact picker, which is what sharing the
+// site needs. `wa.me` wants the international number with no leading `+` or
 // separators, which `SITE_CONTACT_PHONE_INTERNATIONAL` already is.
-export const whatsAppHref = (message: string, phoneInternational: string): string =>
-  `https://wa.me/${phoneInternational}?text=${encodeURIComponent(message)}`;
+export const whatsAppHref = (message: string, phoneInternational?: string): string =>
+  `https://wa.me/${phoneInternational ?? ''}?text=${encodeURIComponent(message)}`;
 
 const ISRAEL_COUNTRY_CODE = '972';
 
@@ -172,6 +173,23 @@ const ISRAEL_COUNTRY_CODE = '972';
 // anything that needs the international form, `wa.me` and a `tel:` link
 // alike.
 export const phoneToInternational = (localPhone: string): string => `${ISRAEL_COUNTRY_CODE}${localPhone.slice(1)}`;
+
+// The server's own contact-number shape (`contactPhoneSchema`,
+// server/src/service/shared/models.ts: `^05\d{8}$`), hand-mirrored here so a
+// malformed number never reaches a request.
+const ISRAELI_MOBILE_PHONE_PATTERN = /^05\d{8}$/;
+
+// Strips spaces, dashes, and a leading international prefix the way the
+// server does before validating, so "050-123-4567" and "+972501234567" both
+// pass and both land on the wire in the same canonical local form.
+export const normalizeIsraeliMobilePhone = (raw: string): string => {
+  const stripped = raw.trim().replace(/[\s-]/g, '');
+  if (stripped.startsWith('+972')) return `0${stripped.slice(4)}`;
+  if (stripped.startsWith('972')) return `0${stripped.slice(3)}`;
+  return stripped;
+};
+
+export const isIsraeliMobilePhone = (raw: string): boolean => ISRAELI_MOBILE_PHONE_PATTERN.test(normalizeIsraeliMobilePhone(raw));
 
 // "050-123-4567", the way an Israeli reader expects a mobile number, for
 // display and for a call button's accessible name.

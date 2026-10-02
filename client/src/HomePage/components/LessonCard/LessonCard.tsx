@@ -6,6 +6,7 @@ import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { lessonClickProps } from '~/analytics/helpers';
 import { trackEvent } from '~/analytics/mixpanel';
 import { useActiveFilters } from '~/analytics/useActiveFilters';
+import { RailItemShell } from '~/HomePage/components/RailItemShell/RailItemShell';
 import { todayInIsrael } from '~/HomePage/helpers';
 import { AUDIENCE_LABELS, META_LINE_SEPARATOR, SUBSTITUTE_PREFIX_BY_HONORIFIC } from '~/consts';
 import { lessonPath, rabbiDisplayName } from '~/helpers';
@@ -33,27 +34,38 @@ export const LessonCard = styled(({ className, lesson, surface, clickContext }: 
   };
 
   return (
-    <Link
-      to={lessonPath(lesson)}
-      aria-label={cardAriaLabel(lesson)}
-      className={classNames(className, { cancelled: lesson.status === 'cancelled' })}
-      onClick={handleClick}
+    <RailItemShell
+      {...{
+        className,
+        variant: 'surface' as const,
+        renderRoot: (rootClassName, content) => (
+          <Link
+            to={lessonPath(lesson)}
+            aria-label={cardAriaLabel(lesson)}
+            className={classNames(rootClassName, { cancelled: lesson.status === 'cancelled' })}
+            onClick={handleClick}
+          >
+            {content}
+          </Link>
+        ),
+        topArea: (
+          <>
+            <img className="image" src={teachingRabbi.photoUrl ?? fallbackPosterFor(lesson.lessonId)} alt="" />
+            {lesson.status === 'cancelled' && (
+              <span className="cancelledLabel" role="status">
+                {consts.CANCELLED_LABEL}
+              </span>
+            )}
+            <div className="medallion">
+              <span className="weekday">{consts.cardWeekday(lesson.date)}</span>
+              <span className="time" dir="ltr">
+                {lesson.startTime}
+              </span>
+            </div>
+          </>
+        ),
+      }}
     >
-      <div className="poster">
-        <img className="image" src={teachingRabbi.photoUrl ?? fallbackPosterFor(lesson.lessonId)} alt="" />
-        {lesson.status === 'cancelled' && (
-          <span className="cancelledLabel" role="status">
-            {consts.CANCELLED_LABEL}
-          </span>
-        )}
-        <div className="medallion">
-          <span className="weekday">{consts.cardWeekday(lesson.date)}</span>
-          <span className="time" dir="ltr">
-            {lesson.startTime}
-          </span>
-        </div>
-      </div>
-
       <div className="body">
         <h3 className="title" dir="auto">
           {rabbiDisplayName(teachingRabbi)}
@@ -75,7 +87,7 @@ export const LessonCard = styled(({ className, lesson, surface, clickContext }: 
           </p>
         )}
       </div>
-    </Link>
+    </RailItemShell>
   );
 })`
   ${styles.LessonCard}
