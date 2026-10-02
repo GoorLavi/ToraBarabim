@@ -41,12 +41,6 @@ const SERVER_BUILD_PATH = path.join(__dirname, '../../../client/build/server/ind
 // and matching it here would serve the stale build-time file this same
 // server directory no longer even contains instead of ever reaching that
 // route.
-// One exception to "never reaches this server": `/favicon.ico` and
-// `/apple-touch-icon.png` do, through CloudFront's default behavior, until
-// their `site-stack.ts` behaviors are deployed by hand (0011). The plugin's
-// own per-file routes answer them, registered at boot for every file in the
-// build, so listing them here only keeps this list equal to that one. Delete
-// this paragraph once the deploy has happened.
 const STATIC_ASSET_PATTERN = /^\/(?:assets\/.+|favicon\.svg|favicon\.ico|apple-touch-icon\.png|robots\.txt|outage\.html)$/;
 
 // Fastify's own default parser key, mirrored here because `text/plain` is

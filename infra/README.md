@@ -432,13 +432,13 @@ address alike, with no value to keep in sync. An earlier version of this step ba
 to, because a `SameSite=Lax` cookie set by a cross-site response is discarded by the
 browser.
 
-The invalidation matters for the handful of named, non-hashed files this bucket also
-serves (`robots.txt`, `sitemap.xml`, `favicon.svg`, `outage.html`): their CloudFront
-behavior caches on ordinary HTTP rules, so without it a stale one can keep answering for
-a while. Hashed assets under `/assets/*` never need it, a filename is never reused. The
-document itself (the home page, a lesson, a rabbi) is not part of this sync at all: it
-is rendered by the server on every request and cached at the edge for at most 60 seconds
-(`TorabarabimSite`'s `DocumentCachePolicy`), never sourced from this bucket.
+The invalidation matters for the named, non-hashed files this bucket also serves
+(everything outside `/assets/*`): their CloudFront behavior caches on ordinary HTTP rules, so
+without it a stale one can keep answering for a while. Hashed assets under `/assets/*`
+never need it, a filename is never reused. The document itself (the home page, a lesson,
+a rabbi) is not part of this sync at all: it is rendered by the server on every request
+and cached at the edge for at most 60 seconds (`TorabarabimSite`'s
+`DocumentCachePolicy`), never sourced from this bucket.
 
 The site is now live at the `SiteUrl` output.
 

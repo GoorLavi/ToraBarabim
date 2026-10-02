@@ -157,9 +157,12 @@ radius 10; base `2,85,96,10`. Full spec, sizing, and safe-area guidance live in 
 Figma file referenced by 0014.
 
 The mark needs **two cuts, not one asset scaled down**: a hand-tuned 16px favicon cut
-(single beam, grid-snapped) for favicon and app-icon sizes, and the general shape above
-for the header size and up. At 16px the mark occupies 11px inside the icon tile, not a
-smaller fraction. The mark never appears without the wordmark below header size: alone,
+(single beam, drawn on whole pixels of a 16px grid) for `favicon.svg` and the ICO's 16px
+frame, and the general shape above for every larger size, the ICO's 32 and 48 frames
+and the touch icon included. The icon files put the mark on the argaman tile
+(`#6B2436`, radius 22%). At 16px the mark is 10x10 with a 3px margin on every side,
+because an 11px mark cannot centre the 2px door on a 16px grid. The mark never appears
+without the wordmark below header size: alone,
 it reads as an institution's crest rather than a listings site.
 
 ### Audience wording
