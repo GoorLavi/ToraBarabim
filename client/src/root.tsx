@@ -51,7 +51,11 @@ export function Layout({ children }: { children: ReactNode }) {
       <head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        {/* The ICO is for Bing, which ignores SVG icons. sizes="32x32" is
+            deliberate: with sizes="any" Chrome prefers the ICO to the SVG. */}
+        <link rel="icon" href="/favicon.ico" sizes="32x32" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         {/*
           Assistant, weights 400/600/700 only (design-system.md, Type): the
           family's thin weights fail this audience, so the `wght` range below

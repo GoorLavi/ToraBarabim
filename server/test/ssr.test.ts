@@ -124,6 +124,16 @@ describe('SSR rendering seam', () => {
       assert.ok(locCount > 1, `expected more than one <loc> in the sitemap, got ${locCount}`);
     });
 
+    // Regression test for Bing showing a generic globe: both paths used to
+    // answer the app's HTML 404 because no such file was shipped.
+    test('favicon.ico and apple-touch-icon.png are served as images, not the app\'s HTML 404', async () => {
+      for (const url of ['/favicon.ico', '/apple-touch-icon.png']) {
+        const res = await app.inject({ method: 'GET', url });
+        assert.equal(res.statusCode, 200, `expected ${url} to be served, got ${res.statusCode}`);
+        assert.match(res.headers['content-type'] as string, /^image\//, `expected ${url} to be an image`);
+      }
+    });
+
     test('robots.txt is still served statically and disallows the admin and rabbi panels', async () => {
       const res = await app.inject({ method: 'GET', url: '/robots.txt' });
       assert.equal(res.statusCode, 200);
