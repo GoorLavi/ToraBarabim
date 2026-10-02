@@ -4,8 +4,9 @@ import { ZodError } from 'zod';
 
 import { loadConfig } from '../../../config';
 import { requireAdminAuth } from '../../../plugins/admin-guard';
+import { loginRateLimit } from '../../../plugins/login-rate-limit';
 import * as authService from '../../../service/admin-auth/auth';
-import { LOGIN_RATE_LIMIT_MAX, LOGIN_RATE_LIMIT_WINDOW_MS, SESSION_COOKIE_NAME } from '../../../service/admin-auth/consts';
+import { SESSION_COOKIE_NAME } from '../../../service/admin-auth/consts';
 import { AccountDeactivatedError, InvalidCredentialsError } from '../../../service/admin-auth/errors';
 import { loginRequestSchema } from '../../../service/admin-auth/models';
 
@@ -65,10 +66,7 @@ export const registerAdminAuthRoutes = async (app: FastifyInstance): Promise<voi
     '/v1/admin/login',
     {
       config: {
-        rateLimit: {
-          max: LOGIN_RATE_LIMIT_MAX,
-          timeWindow: LOGIN_RATE_LIMIT_WINDOW_MS,
-        },
+        rateLimit: loginRateLimit,
       },
     },
     async (request, reply) => {
