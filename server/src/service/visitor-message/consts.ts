@@ -17,3 +17,11 @@ export const VISITOR_MESSAGE_TYPE_LABELS_HE = {
   'rabbi-request': 'בקשה להוספת רב או רבנית',
   volunteer: 'התנדבות',
 } as const satisfies Record<VisitorMessageType, string>;
+
+export const INVALID_REQUEST_MESSAGE = 'הבקשה אינה תקינה';
+export const NAME_MESSAGE = 'יש למלא שם';
+export const PHONE_MESSAGE = 'יש למלא מספר פלאפון תקין';
+export const MESSAGE_MESSAGE = 'יש לכתוב הודעה';
+export const INVALID_CURSOR_MESSAGE = 'הבקשה להמשך הרשימה אינה תקינה';
+export const NOTE_TOO_LONG_MESSAGE = 'ההערה ארוכה מדי';
+export const EMPTY_UPDATE_MESSAGE = 'לא נשלח שום שינוי לעדכון';

@@ -57,6 +57,11 @@ handled or not, and carries a free-text note on how it was handled.
   alarm notifier; deleting or renaming it now takes the site down at the next deploy.
 - The tiles can move under a visitor's eyes after a refetch; the open window and its
   draft survive that, the tile underneath does not.
+- The three message routes log a failed database write as error names plus the
+  Postgres code and constraint only, never the message or the parameters, because
+  those carry the visitor's name, phone and text. An unexpected 500 there is harder
+  to diagnose from the logs than elsewhere; that is accepted so the payload never
+  reaches CloudWatch.
 
 ## Rejected
 

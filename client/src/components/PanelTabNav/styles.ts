@@ -10,14 +10,14 @@ import { css } from 'styled-components';
 export const PanelTabNav = css(
   ({ theme }) => `
   display: grid;
-  grid-template-columns: repeat(var(--panel-tab-columns), 1fr);
+  grid-template-columns: repeat(var(--panel-tab-narrow-columns), 1fr);
   grid-auto-rows: 48px;
   gap: ${theme.spacing.sm};
   order: 3;
   flex-basis: 100%;
 
-  @media (width < ${theme.layout.panelTabFourColumnWidth}) {
-    grid-template-columns: repeat(var(--panel-tab-narrow-columns), 1fr);
+  @media (min-width: ${theme.layout.panelTabFourColumnWidth}) {
+    grid-template-columns: repeat(var(--panel-tab-columns), 1fr);
   }
 
   @media (min-width: ${theme.breakpoints.md}) {

@@ -2,6 +2,7 @@ import { css } from 'styled-components';
 
 import { PrimaryButton } from '~/components/PrimaryButton/styles';
 
+import { closeButtonClearance } from '../../consts';
 import { MESSAGE_FIELD_ROWS } from './consts';
 
 const fieldsAndFeedback = css(
@@ -25,9 +26,9 @@ const fieldsAndFeedback = css(
        when the field takes focus. */
     > .control {
       /* Focus scrolls the control, not the field around it, so the margins
-         live here. The start margin clears the pinned close button (12 above
-         it, its 48px, 12 below), so a focused field never lands under it. */
-      scroll-margin-block-start: calc(48px + 2 * ${theme.spacing.md});
+         live here. The start margin clears the pinned close button, so a
+         focused field never lands under it. */
+      scroll-margin-block-start: ${closeButtonClearance(theme.spacing.md)};
       scroll-margin-block-end: ${theme.spacing.xxl};
       inline-size: 100%;
       min-block-size: 48px;

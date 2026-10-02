@@ -112,7 +112,9 @@ const failureClearedOnReopenStory = (kind: VisitorMessageType): Story => ({
     await submit(dialog);
     await within(dialog).findByRole('alert');
 
-    await userEvent.click(within(dialog).getAllByRole('button', { name: consts.CLOSE_LABEL })[0] as HTMLElement);
+    const closeButton = within(dialog).getAllByRole('button', { name: consts.CLOSE_LABEL })[0];
+    if (!closeButton) throw new Error('HelpWindow story: the close button is missing');
+    await userEvent.click(closeButton);
     await waitFor(() => expect(within(document.body).queryByRole('dialog')).toBeNull());
 
     const reopened = await openWindow(canvasElement, kind);

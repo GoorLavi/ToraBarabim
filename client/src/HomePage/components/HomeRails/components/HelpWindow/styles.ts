@@ -1,5 +1,7 @@
 import { css } from 'styled-components';
 
+import { CLOSE_BUTTON_SIZE_PX, closeButtonClearance } from './consts';
+
 // Styles `ResponsiveSheet`'s own public `.panel` slot directly, the way
 // `DedicationWindow` does, rather than growing a prop on the sheet. The
 // whole panel is one scroll region: the header scrolls away with the rest
@@ -22,10 +24,10 @@ export const HelpWindow = css(
       display: flex;
       align-items: center;
       justify-content: center;
-      inline-size: 48px;
-      block-size: 48px;
+      inline-size: ${CLOSE_BUTTON_SIZE_PX}px;
+      block-size: ${CLOSE_BUTTON_SIZE_PX}px;
       margin-inline-end: ${theme.spacing.md};
-      margin-block-end: -48px;
+      margin-block-end: -${CLOSE_BUTTON_SIZE_PX}px;
       /* A solid fill with a hairline, not the translucent white the
          dedication window uses: once the header has scrolled away this sits
          on the white form, where a translucent fill disappears. */
@@ -55,7 +57,7 @@ export const HelpWindow = css(
          side, so even a four-line title never runs under it. */
       padding-block: ${theme.spacing.xl};
       padding-inline-start: ${theme.spacing.lg};
-      padding-inline-end: calc(48px + 2 * ${theme.spacing.md});
+      padding-inline-end: ${closeButtonClearance(theme.spacing.md)};
       background: ${theme.colors.primaryStrong};
 
       > .title {

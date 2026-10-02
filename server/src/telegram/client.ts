@@ -36,7 +36,9 @@ export const createTelegramClient = (credentials: TelegramCredentials | undefine
     }
 
     // Unread, the body would hold the socket until it is garbage collected.
-    await response.body?.cancel();
+    // The alert has been delivered by now, so a failed cancel is not a failed
+    // send: it is swallowed here on purpose, and it cannot carry the URL.
+    await response.body?.cancel().catch(() => undefined);
     return 'sent';
   },
 });

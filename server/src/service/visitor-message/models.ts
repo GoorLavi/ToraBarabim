@@ -5,12 +5,18 @@ import type { visitorMessages } from '../../db/schema';
 import { VISITOR_MESSAGE_TYPES } from '../../db/schema/enums';
 import { DEFAULT_ADMIN_PAGE_SIZE, MAX_ADMIN_PAGE_SIZE } from '../admin-shared/consts';
 import { contactPhoneSchema } from '../shared/models';
-import { HANDLING_NOTE_MAX_LENGTH, MESSAGE_MAX_LENGTH, NAME_MAX_LENGTH } from './consts';
-
-const INVALID_REQUEST_MESSAGE = 'הבקשה אינה תקינה';
-const NAME_MESSAGE = 'יש למלא שם';
-const PHONE_MESSAGE = 'יש למלא מספר פלאפון תקין';
-const MESSAGE_MESSAGE = 'יש לכתוב הודעה';
+import {
+  EMPTY_UPDATE_MESSAGE,
+  HANDLING_NOTE_MAX_LENGTH,
+  INVALID_CURSOR_MESSAGE,
+  INVALID_REQUEST_MESSAGE,
+  MESSAGE_MAX_LENGTH,
+  MESSAGE_MESSAGE,
+  NAME_MAX_LENGTH,
+  NAME_MESSAGE,
+  NOTE_TOO_LONG_MESSAGE,
+  PHONE_MESSAGE,
+} from './consts';
 
 // `contactPhoneSchema` stays the one rule for what an Israeli mobile is and
 // how it is normalised; only its wording is replaced, because the visitor
@@ -36,10 +42,6 @@ export type CreateVisitorMessageInput = z.infer<typeof createVisitorMessageSchem
 export const visitorMessageIdParamSchema = z.object({
   id: z.string().trim().min(1),
 });
-
-const INVALID_CURSOR_MESSAGE = 'הבקשה להמשך הרשימה אינה תקינה';
-const NOTE_TOO_LONG_MESSAGE = 'ההערה ארוכה מדי';
-const EMPTY_UPDATE_MESSAGE = 'לא נשלח שום שינוי לעדכון';
 
 export interface VisitorMessageCursor {
   createdAt: Date;

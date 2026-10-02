@@ -479,6 +479,11 @@ reads it, and this width is a property of the columns, not of a class of device.
 1280 stays exactly what it is, the content cap, and **nothing about the card changes
 there any more.**
 
+`theme.layout.panelTabFourColumnWidth` (360px) is the same kind of value: the narrowest
+viewport at which the admin panel's seven tabs still fit four to a row inside the header
+band; below it the strip drops to three columns. A property of the tab labels, not of a
+device class, so it is a layout constant and not a breakpoint.
+
 **The band holds at 860px from `md` 768 to 1200, and that is the one exception to the
 1280 cap above.** It is scoped to a single range and ratified here rather than left as
 drift. Without the hold the cell is the band divided by three throughout the three-column
