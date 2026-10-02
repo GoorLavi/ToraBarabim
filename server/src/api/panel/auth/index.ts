@@ -3,8 +3,9 @@ import type { FastifyInstance, FastifyReply } from 'fastify';
 import { ZodError } from 'zod';
 
 import { loadConfig } from '../../../config';
+import { loginRateLimit } from '../../../plugins/login-rate-limit';
 import * as authService from '../../../service/admin-auth/auth';
-import { LOGIN_RATE_LIMIT_MAX, LOGIN_RATE_LIMIT_WINDOW_MS, PLACE_SESSION_COOKIE_NAME, RABBI_SESSION_COOKIE_NAME } from '../../../service/admin-auth/consts';
+import { PLACE_SESSION_COOKIE_NAME, RABBI_SESSION_COOKIE_NAME } from '../../../service/admin-auth/consts';
 import { AccountDeactivatedError, InvalidCredentialsError } from '../../../service/admin-auth/errors';
 import { resolveLandingPath } from '../../../service/admin-auth/landing-path';
 import { panelLoginRequestSchema } from '../../../service/admin-auth/models';
@@ -52,10 +53,7 @@ export const registerPanelAuthRoutes = async (app: FastifyInstance): Promise<voi
     '/v1/panel/login',
     {
       config: {
-        rateLimit: {
-          max: LOGIN_RATE_LIMIT_MAX,
-          timeWindow: LOGIN_RATE_LIMIT_WINDOW_MS,
-        },
+        rateLimit: loginRateLimit,
       },
     },
     async (request, reply) => {
