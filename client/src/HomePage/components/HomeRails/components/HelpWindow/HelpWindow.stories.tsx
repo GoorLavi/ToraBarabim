@@ -310,6 +310,52 @@ const shortPhoneStory = (kind: VisitorMessageType): Story => ({
     }),
 });
 
+// The form scrolled to the bottom, then focus returns to the phone field
+// (Shift+Tab from below): the browser counts the field as already visible and
+// would not scroll it, leaving it under the pinned close button.
+const scrolledBackPhoneStory = (kind: VisitorMessageType): Story => ({
+  parameters: { kind, apiMocks: { handlers: postHandler() } },
+  play: ({ canvasElement }) =>
+    atFrameSize(375, 360, async () => {
+      const dialog = await openWindow(canvasElement, kind);
+      await waitFor(() => expect(dialog.getBoundingClientRect().bottom).toBeLessThanOrEqual(window.innerHeight + 1));
+      const closeButton = within(dialog).getAllByRole('button', { name: consts.CLOSE_LABEL })[0];
+      if (!closeButton) throw new Error('HelpWindow story: the close button is missing');
+
+      dialog.scrollTo({ top: dialog.scrollHeight });
+      await waitFor(() => expect(dialog.scrollTop + dialog.clientHeight).toBeGreaterThanOrEqual(dialog.scrollHeight - 1));
+      // From the message field, a real Shift+Tab back to the phone field, the
+      // way a keyboard user arrives there.
+      field(dialog, formConsts.FIELD_LABELS.message).focus();
+      await userEvent.tab({ shift: true });
+
+      await expect(field(dialog, formConsts.FIELD_LABELS.phone)).toHaveFocus();
+      await waitFor(() =>
+        expect(field(dialog, formConsts.FIELD_LABELS.phone).getBoundingClientRect().top).toBeGreaterThanOrEqual(closeButton.getBoundingClientRect().bottom - 1),
+      );
+    }),
+});
+
+// The message field is the tall one at the bottom of the form: focusing it on
+// the smallest phone must bring all of it into view, not just its caret line.
+const messageFieldInViewStory = (kind: VisitorMessageType): Story => ({
+  parameters: { kind, apiMocks: { handlers: postHandler() } },
+  play: ({ canvasElement }) =>
+    atFrameSize(320, 568, async () => {
+      const dialog = await openWindow(canvasElement, kind);
+      await waitFor(() => expect(dialog.getBoundingClientRect().bottom).toBeLessThanOrEqual(window.innerHeight + 1));
+
+      field(dialog, formConsts.FIELD_LABELS.message).focus();
+
+      await waitFor(() => expect(field(dialog, formConsts.FIELD_LABELS.message).getBoundingClientRect().bottom).toBeLessThanOrEqual(window.innerHeight));
+    }),
+});
+
+export const RabbiRequestScrolledBackToPhoneField375: Story = scrolledBackPhoneStory('rabbi-request');
+export const VolunteerScrolledBackToPhoneField375: Story = scrolledBackPhoneStory('volunteer');
+export const RabbiRequestMessageFieldInView320: Story = messageFieldInViewStory('rabbi-request');
+export const VolunteerMessageFieldInView320: Story = messageFieldInViewStory('volunteer');
+
 export const RabbiRequestShortPhone320: Story = shortPhoneStory('rabbi-request');
 export const VolunteerShortPhone320: Story = shortPhoneStory('volunteer');
 

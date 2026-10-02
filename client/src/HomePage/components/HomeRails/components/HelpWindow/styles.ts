@@ -11,6 +11,12 @@ export const HelpWindow = css(
   > .panel {
     padding: 0;
     gap: 0;
+    /* Where a field lands when it is scrolled into view: clear of the pinned
+       close button above, and off the sheet's edge below. It is set on the
+       scroll container because a control's own scroll margin is ignored when
+       the browser already counts the control as visible. */
+    scroll-padding-block-start: ${closeButtonClearance(theme.spacing.md)};
+    scroll-padding-block-end: ${theme.spacing.md};
 
     > .close {
       /* Pinned to the top inline-end while the panel scrolls. It takes no

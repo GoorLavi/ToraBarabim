@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import type { FocusEvent } from 'react';
 import styled from 'styled-components';
 
 import { ResponsiveSheet } from '~/components/ResponsiveSheet/ResponsiveSheet';
@@ -27,6 +28,15 @@ export const HelpWindow = styled(({ className, kind, draft, status, onDraftChang
   useEffect(() => {
     if (status === 'sent') thankYouRef.current?.focus();
   }, [status]);
+
+  // Focus alone does not bring a field clear of the pinned close button or
+  // above the phone keyboard: the browser scrolls only as much as the caret
+  // line needs, or not at all for a field it already counts as visible. So a
+  // field that takes focus is scrolled into the panel's scroll padding.
+  const scrollFocusedFieldIntoView = (event: FocusEvent<HTMLElement>): void => {
+    const { target } = event;
+    if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) target.scrollIntoView({ block: 'nearest' });
+  };
 
   return (
     <ResponsiveSheet {...{ className, ariaLabel: title, onDismiss }}>
@@ -57,7 +67,7 @@ export const HelpWindow = styled(({ className, kind, draft, status, onDraftChang
           </button>
         </div>
       ) : (
-        <div className="body">
+        <div className="body" onFocus={scrollFocusedFieldIntoView}>
           <div className="explanation">
             {copy.paragraphs.map((paragraph) => (
               <p key={paragraph} className="paragraph">

@@ -2,7 +2,6 @@ import { css } from 'styled-components';
 
 import { PrimaryButton } from '~/components/PrimaryButton/styles';
 
-import { closeButtonClearance } from '../../consts';
 import { MESSAGE_FIELD_ROWS } from './consts';
 
 const fieldsAndFeedback = css(
@@ -15,6 +14,7 @@ const fieldsAndFeedback = css(
     display: flex;
     flex-direction: column;
     gap: ${theme.spacing.sm};
+
     > .label {
       color: ${theme.colors.text};
       font-weight: ${theme.typography.fontWeight.semiBold};
@@ -25,11 +25,6 @@ const fieldsAndFeedback = css(
     /* Seventeen pixels, the body size: smaller would make iOS zoom the page
        when the field takes focus. */
     > .control {
-      /* Focus scrolls the control, not the field around it, so the margins
-         live here. The start margin clears the pinned close button, so a
-         focused field never lands under it. */
-      scroll-margin-block-start: ${closeButtonClearance(theme.spacing.md)};
-      scroll-margin-block-end: ${theme.spacing.xxl};
       inline-size: 100%;
       min-block-size: 48px;
       padding-block: ${theme.spacing.sm};
