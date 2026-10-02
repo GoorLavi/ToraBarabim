@@ -96,9 +96,12 @@ detail.
 - **Filters combine as AND, and an absent filter is not a filter.** An empty string, a
   missing parameter, and an empty array all mean "do not narrow by this". They never
   mean "match nothing".
-- **Paging is stable and explicit.** Every list response carries the page, the page
-  size, and the total. The default and maximum page size live in `consts.ts`, never as
-  literals in a handler.
+- **Paging is stable and explicit.** A list paged by offset carries the page, the page
+  size, and the total. A list that changes between loads (newest first, with rows
+  arriving or leaving a filter while someone reads it) is paged by keyset instead: it
+  carries the page size and a `nextCursor`, so a later page never repeats or skips a
+  row, and it carries no page number and no per-filter total. The default and maximum
+  page size live in `consts.ts`, never as literals in a handler.
 - **Ordering is always specified.** A list with no explicit sort returns rows in
   whatever order the store felt like, which changes under you as data grows.
 - **Dates are handled in one place.** Store and compare in UTC; the client renders in
