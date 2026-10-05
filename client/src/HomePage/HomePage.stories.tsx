@@ -63,7 +63,7 @@ type LessonHomeRow = Extract<HomeRow, { kind: 'lessons' }>;
 const row = (overrides: Partial<Omit<LessonHomeRow, 'kind'>>): LessonHomeRow => ({
   kind: 'lessons',
   id: 'today',
-  title: 'היום באזור שלכם',
+  title: 'שיעורים היום',
   items: [
     lesson({ lessonId: 'l1' }),
     lesson({ lessonId: 'l2', startTime: '06:00', rabbi: RABBI_2, title: 'שיעור דף יומי', topic: 'gemara' }),
@@ -80,7 +80,7 @@ const homeResponse = (overrides: Partial<HomeResponse>): HomeResponse => ({
     row({}),
     row({
       id: 'weekly',
-      title: 'שיעורים קבועים השבוע',
+      title: 'שיעורים קבועים כל שבוע',
       items: [lesson({ lessonId: 'l4', rabbi: RABBI_3, date: '2026-09-24' })],
     }),
   ],
@@ -129,7 +129,7 @@ export const WithCourseRow: Story = {
             rows: [
               row({}),
               { kind: 'courses', id: 'courses', title: 'קורסים', items: [courseFixture({ name: 'יסודות האמונה' })] },
-              row({ id: 'weekly', title: 'שיעורים קבועים השבוע', items: [lesson({ lessonId: 'l4', rabbi: RABBI_3, date: '2026-09-24' })] }),
+              row({ id: 'weekly', title: 'שיעורים קבועים כל שבוע', items: [lesson({ lessonId: 'l4', rabbi: RABBI_3, date: '2026-09-24' })] }),
             ],
           }),
         ),
@@ -138,22 +138,27 @@ export const WithCourseRow: Story = {
   },
 };
 
-// Three real rails and a positive `womensAreaLessonCount`: with fewer rails
-// than the success and healing slots (HomeRails/consts.ts), both bands clamp
-// to after the last rail.
-const dedicationRow = (id: LessonHomeRow['id'], title: string): LessonHomeRow => ({
+const ROW_RABBIS = [RABBI_1, RABBI_2, RABBI_3];
+
+// Two rabbis per rail, alternating, picked from the row id so neighbouring
+// rails do not share a pair.
+const rabbiFor = (rowId: string, cardIndex: number) => {
+  const start = [...rowId].reduce((sum, char) => sum + char.charCodeAt(0), 0) % ROW_RABBIS.length;
+  return ROW_RABBIS[(start + (cardIndex % 2)) % ROW_RABBIS.length] ?? RABBI_1;
+};
+
+const dedicationRow = (id: LessonHomeRow['id'], title: string, cardCount = 3): LessonHomeRow => ({
   kind: 'lessons',
   id,
   title,
-  items: [
-    lesson({ lessonId: `${id}-1`, title }),
-    lesson({ lessonId: `${id}-2`, title }),
-    lesson({ lessonId: `${id}-3`, title }),
-  ],
+  items: Array.from({ length: cardCount }, (_, index) => lesson({ lessonId: `${id}-${index + 1}`, title, rabbi: rabbiFor(id, index) })),
 });
 
+// Three real rails and a positive `womensAreaLessonCount`: with fewer rails
+// than the success and healing slots (HomeRails/consts.ts), both bands clamp
+// to after the last rail.
 const dedicationHomeResponse = (dedications: HomeResponse['dedications']): HomeResponse => ({
-  rows: [dedicationRow('area:sharon', 'שיעורים באזור שלך'), dedicationRow('today', 'הערב'), dedicationRow('weekly', 'שיעור שבועי')],
+  rows: [dedicationRow('area:sharon', 'שיעורים באזור השרון'), dedicationRow('today', 'שיעורים היום'), dedicationRow('weekly', 'שיעורים קבועים כל שבוע')],
   womensAreaLessonCount: 12,
   rabbis: [RABBI_1, RABBI_2],
   cities: CITIES,
@@ -194,10 +199,10 @@ export const WithHelpTiles: Story = {
       handlers: {
         home: homeHandler({
           rows: [
-            { ...dedicationRow('area:sharon', 'שיעורים באזור שלך'), helpTile: { kind: 'rabbi-request', index: 2 } },
-            { ...dedicationRow('today', 'הערב'), womensAreaTileIndex: 2 },
-            { ...dedicationRow('weekly', 'שיעור שבועי'), helpTile: { kind: 'volunteer', index: 3 } },
-            { ...dedicationRow('bothAudiences', 'שיעורים לכולם'), helpTile: { kind: 'share', index: 2 } },
+            { ...dedicationRow('area:sharon', 'שיעורים באזור השרון'), helpTile: { kind: 'rabbi-request', index: 2 } },
+            { ...dedicationRow('today', 'שיעורים היום'), womensAreaTileIndex: 2 },
+            { ...dedicationRow('weekly', 'שיעורים קבועים כל שבוע'), helpTile: { kind: 'volunteer', index: 3 } },
+            { ...dedicationRow('bothAudiences', 'שיעורים לגברים ולנשים'), helpTile: { kind: 'share', index: 2 } },
           ],
           womensAreaLessonCount: 12,
           rabbis: [RABBI_1, RABBI_2],
@@ -212,9 +217,9 @@ export const WithHelpTiles: Story = {
 const TEN_ROW_TITLES: Array<[LessonHomeRow['id'], string]> = [
   ['today', 'שיעורים היום'],
   ['area:haifa', 'שיעורים באזור חיפה והקריות'],
-  ['bothAudiences', 'שיעורים לכולם'],
+  ['bothAudiences', 'שיעורים לגברים ולנשים'],
   ['area:sharon', 'שיעורים באזור השרון'],
-  ['weekly', 'שיעורים קבועים השבוע'],
+  ['weekly', 'שיעורים קבועים כל שבוע'],
   ['area:center', 'שיעורים באזור המרכז'],
   ['morning', 'שיעורי בוקר'],
   ['area:jerusalem', 'שיעורים באזור ירושלים'],
@@ -222,7 +227,11 @@ const TEN_ROW_TITLES: Array<[LessonHomeRow['id'], string]> = [
   ['area:south', 'שיעורים באזור הדרום'],
 ];
 
-const TEN_ROWS: HomeRow[] = TEN_ROW_TITLES.map(([id, title]) => dedicationRow(id, title));
+// Rail 6 carries the women's-area tile, so it has the four cards the server
+// requires for a tile slot.
+const TEN_ROWS: HomeRow[] = TEN_ROW_TITLES.map(([id, title]) =>
+  id === 'area:center' ? { ...dedicationRow(id, title, 4), womensAreaTileIndex: 3 } : dedicationRow(id, title),
+);
 
 // The fullest page the server can send: ten rails with the success band
 // after rail 6 and the healing band after rail 8, then the city grid with
@@ -259,6 +268,15 @@ const StoryRoute = ({ search, children }: { search: string; children: ReactNode 
   return location.search === search ? children : null;
 };
 
+const TEL_AVIV_VENUE: LessonOccurrence['venue'] = {
+  kind: 'address',
+  name: 'בית הכנסת הגדול',
+  street: 'רחוב אלנבי 110',
+  city: 'תל אביב-יפו',
+  citySlug: 'תל-אביב-יפו',
+  area: 'telAviv',
+};
+
 const SELECTED_CITY_SEARCH = '?cityId=5000&cityName=%D7%AA%D7%9C+%D7%90%D7%91%D7%99%D7%91-%D7%99%D7%A4%D7%95';
 
 const withSelectedCity: Decorator = (Story) => (
@@ -280,7 +298,7 @@ export const FilteredWithSelectedCity: Story = {
           '/v1/lessons',
           () =>
             respondWithJson({
-              items: [lesson({ lessonId: 'f1' }), lesson({ lessonId: 'f2', startTime: '06:00', rabbi: RABBI_2, title: 'שיעור דף יומי', topic: 'gemara' })],
+              items: [lesson({ lessonId: 'f1', venue: TEL_AVIV_VENUE }), lesson({ lessonId: 'f2', startTime: '06:00', rabbi: RABBI_2, title: 'שיעור דף יומי', topic: 'gemara', venue: TEL_AVIV_VENUE })],
               page: 1,
               pageSize: 50,
               total: 2,

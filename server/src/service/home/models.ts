@@ -7,8 +7,8 @@ import type { DedicationGroupResult } from '../dedication/models';
 
 // Kept distinct from the wire `LessonOccurrence`: it carries the sort-only
 // `rabbiProminenceRank` and `shuffleKey`, and the raw `cityCode` the
-// women's-set step needs to dedupe cities, none of which the convertor may
-// let reach the client.
+// women's-set step and the city grid group by, none of which the convertor
+// may let reach the client.
 export interface ResolvedHomeOccurrence {
   lessonId: string;
   date: string;

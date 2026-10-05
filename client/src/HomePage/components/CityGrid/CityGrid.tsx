@@ -23,7 +23,7 @@ export const CityGrid = styled(({ className, cities, isLoading, isError, selecte
     <section className={className}>
       <div className="heading">
         <div className="titles">
-          <h2>{consts.HEADING}</h2>
+          <h2 className="title">{consts.HEADING}</h2>
           <p className="subtitle">{consts.SUBTITLE}</p>
         </div>
         <TextLink
@@ -51,7 +51,7 @@ export const CityGrid = styled(({ className, cities, isLoading, isError, selecte
       {!isError && !isLoading && hasCities && (
         <ul className="grid">
           {cities.map((city) => (
-            <li key={city.id}>
+            <li key={city.id} className="cell">
               <CityChip
                 {...{
                   city,

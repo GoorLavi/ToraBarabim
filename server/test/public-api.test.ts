@@ -23,7 +23,7 @@ import { nanoid } from 'nanoid';
 
 import { toHomeResponse } from '../src/convertors/home';
 import { db } from '../src/db/client';
-import { cities, lessonExceptions, lessons, places } from '../src/db/schema';
+import { cities, lessonExceptions, lessons, places, rabbis } from '../src/db/schema';
 import {
   HELP_TILE_KINDS,
   HELP_TILE_MIN_INDEX,
@@ -728,9 +728,10 @@ describe('public API', () => {
   // rabbanit, every row keeps at least 3 lesson items after the scope
   // filter, and the tile's count matches `GET /v1/women`'s own count.
   // Placement: exactly one row carries `womensAreaTileIndex` (value 3) when
-  // the women's set is non-empty, none when it is empty; the row is the
-  // second row when it has at least four lessons, otherwise the next row
-  // that does (see `WOMENS_AREA_TILE_*` in `service/home/consts.ts`).
+  // the women's set is non-empty and a row has room, none otherwise; the row
+  // is the first with at least four lessons from the sixth lesson row on,
+  // else the first such row from the second (see `WOMENS_AREA_TILE_*` in
+  // `service/home/consts.ts`).
   test("GET /v1/home returns every row correctly shaped, excludes rabbanit-taught lessons, and places one women's-area tile where it can", async () => {
     const [homeRes, womenRes] = await Promise.all([
       app.inject({ method: 'GET', url: '/v1/home' }),
@@ -898,19 +899,29 @@ describe('public API', () => {
       placeId = `test-place-${nanoid(8)}`;
       await db.insert(places).values({ id: placeId, slug: placeId, name: `מקום בדיקה ${nanoid(8)}`, street: 'רחוב הבדיקה 1', cityCode: city.code });
 
+      // One teacher each: the home rows keep at most two lessons per teacher,
+      // so lessons sharing a rabbi would make the 09:00 lesson's presence
+      // depend on the order the row happens to put them in.
+      const teachers = await db.select({ id: rabbis.id }).from(rabbis).where(eq(rabbis.honorific, 'rav')).orderBy(rabbis.id).limit(START_TIMES.length);
+      if (teachers.length < START_TIMES.length) throw new Error(`expected ${START_TIMES.length} seeded rabbis, found ${teachers.length}`);
+
       for (const startTime of START_TIMES) lessonIdByStartTime.set(startTime, `test-lesson-${nanoid(8)}`);
       await db.insert(lessons).values(
-        [...lessonIdByStartTime].map(([startTime, id]) => ({
-          id,
-          rabbiId: SEEDED_RABBI_ID,
-          placeId,
-          cityCode: city.code,
-          audience: 'men' as const,
-          recurrenceKind: 'once' as const,
-          recurrenceDate: FIXED_DAY,
-          startTime,
-          durationMinutes: 60,
-        })),
+        [...lessonIdByStartTime].map(([startTime, id], index) => {
+          const teacher = teachers[index];
+          if (!teacher) throw new Error(`expected a seeded rabbi for the ${startTime} lesson`);
+          return {
+            id,
+            rabbiId: teacher.id,
+            placeId,
+            cityCode: city.code,
+            audience: 'men' as const,
+            recurrenceKind: 'once' as const,
+            recurrenceDate: FIXED_DAY,
+            startTime,
+            durationMinutes: 60,
+          };
+        }),
       );
     });
 

@@ -16,6 +16,9 @@ export type RabbiProminence = 'local' | 'known' | 'sought';
 // or a share of the site, which opens no window.
 export type HelpTileKind = VisitorMessageType | 'share';
 
+// A theme a visitor can browse by: every topic but the catch-all.
+export type HomeTopic = Exclude<LessonTopic, 'other'>;
+
 // `area:<area>` and `topic:<topic>` carry their axis in the id so every row id
 // on a page is unique. `topic:other` is never sent: "other" is not a theme a
 // visitor browses by.
@@ -26,7 +29,7 @@ export type HomeLessonRowId =
   | 'morning'
   | 'midday'
   | `area:${Area}`
-  | `topic:${Exclude<LessonTopic, 'other'>}`;
+  | `topic:${HomeTopic}`;
 
 // A union on `kind`, exactly 0012's shape: the client renders `rows` in the
 // order given and decides nothing about placement. The one `kind: 'courses'`

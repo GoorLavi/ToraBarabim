@@ -1,4 +1,4 @@
-import type { HelpTileKind, LessonTopic } from '@torabarabim/common';
+import type { HelpTileKind, HomeTopic } from '@torabarabim/common';
 
 // The length of the home window in days, counting today as day one.
 export const HOME_WINDOW_DAYS = 14;
@@ -10,8 +10,8 @@ export const COURSE_ROW_TITLE = 'קורסים';
 export const MAX_ITEMS_PER_ROW = 12;
 export const MIN_ITEMS_PER_ROW = 3;
 
-// Area rows kept after ranking. Seven of the eight areas used to be invisible
-// on the home page; five is what the page's rail budget leaves room for.
+// Area rows kept after ranking: the share of MAX_HOME_LESSON_ROWS that areas
+// may take, so the time and topic rows still get places on a full page.
 export const MAX_AREA_ROWS = 5;
 
 // One teacher can hold most of an area's lessons, and a row of one man's
@@ -38,7 +38,7 @@ export const WEEKLY_ROW_TITLE = 'שיעורים קבועים כל שבוע';
 
 // `other` has no row, so it has no title: the type keeps a new topic from
 // shipping without one.
-export const TOPIC_ROW_TITLES: Record<Exclude<LessonTopic, 'other'>, string> = {
+export const TOPIC_ROW_TITLES: Record<HomeTopic, string> = {
   gemara: 'שיעורי גמרא',
   halacha: 'שיעורי הלכה',
   parasha: 'שיעורים בפרשת השבוע',

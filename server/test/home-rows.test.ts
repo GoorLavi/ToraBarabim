@@ -258,11 +258,11 @@ describe('buildRow and the per-rabbi cap', () => {
     const row = buildRow('today', 'שיעורים היום', [...locals, ...sought]);
 
     assert.ok(row);
+    const expectedSought = Array.from({ length: MAX_LESSONS_PER_RABBI_PER_ROW }, (_, index) => `sought-${index}`);
     assert.deepEqual(
       row.items.map((item) => item.lessonId),
-      ['sought-0', 'sought-1', 'local-0', 'local-1', 'local-2', 'local-3'],
+      [...expectedSought, 'local-0', 'local-1', 'local-2', 'local-3'],
     );
-    assert.equal(MAX_LESSONS_PER_RABBI_PER_ROW, 2);
   });
 
   test('a substitute counts toward the substitute, not the lesson owner', () => {

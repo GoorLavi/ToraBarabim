@@ -1,4 +1,4 @@
-import type { Area, LessonTopic, Rabbi } from '@torabarabim/common';
+import type { Area, HomeTopic, LessonTopic, Rabbi } from '@torabarabim/common';
 import { and, gte, inArray, lte } from 'drizzle-orm';
 
 import { AREAS, LESSON_TOPICS } from '../../db/schema/enums';
@@ -37,17 +37,6 @@ import {
   timeBandOf,
 } from './home-rows';
 import type { HomeResult, HomeRowResult, LessonHomeRowResult, LoadedWindow, ResolvedHomeOccurrence, WomenAreaResult, WomensSet } from './models';
-
-const MINUTES_PER_DAY = 24 * 60;
-
-const addMinutes = (startTime: string, minutes: number): string => {
-  const [hoursText, minutesText] = startTime.split(':');
-  const total = Number(hoursText) * 60 + Number(minutesText) + minutes;
-  const wrapped = ((total % MINUTES_PER_DAY) + MINUTES_PER_DAY) % MINUTES_PER_DAY;
-  const hours = Math.floor(wrapped / 60);
-  const mins = wrapped % 60;
-  return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
-};
 
 // A small deterministic hash of the lesson id, used only as a stable
 // secondary sort key within a prominence tier: it must not depend on the
@@ -115,9 +104,8 @@ const countByKey = <Key>(occurrences: ResolvedHomeOccurrence[], keyOf: (occurren
 const rankByCount = <Key>(candidates: readonly Key[], counts: Map<Key, number>): Key[] =>
   candidates.filter((key) => (counts.get(key) ?? 0) > 0).sort((a, b) => (counts.get(b) ?? 0) - (counts.get(a) ?? 0));
 
-type RankedTopic = Exclude<LessonTopic, 'other'>;
-const isRankedTopic = (topic: LessonTopic): topic is RankedTopic => topic !== 'other';
-const RANKED_TOPICS: readonly RankedTopic[] = LESSON_TOPICS.filter(isRankedTopic);
+const isHomeTopic = (topic: LessonTopic): topic is HomeTopic => topic !== 'other';
+const HOME_TOPICS: readonly HomeTopic[] = LESSON_TOPICS.filter(isHomeTopic);
 
 const buildFixedRows = (resolved: ResolvedHomeOccurrence[], today: string): LessonHomeRowResult[] =>
   [
@@ -138,7 +126,7 @@ const buildAreaRows = (resolved: ResolvedHomeOccurrence[]): LessonHomeRowResult[
     .slice(0, MAX_AREA_ROWS);
 
 const buildTopicRows = (resolved: ResolvedHomeOccurrence[]): LessonHomeRowResult[] =>
-  rankByCount<RankedTopic>(RANKED_TOPICS, countByKey<RankedTopic>(resolved, (o) => (o.topic && isRankedTopic(o.topic) ? o.topic : undefined)))
+  rankByCount<HomeTopic>(HOME_TOPICS, countByKey<HomeTopic>(resolved, (o) => (o.topic && isHomeTopic(o.topic) ? o.topic : undefined)))
     .map((topic) => buildRow(`topic:${topic}`, TOPIC_ROW_TITLES[topic], resolved.filter((o) => o.topic === topic)))
     .filter((row): row is LessonHomeRowResult => row !== undefined);
 

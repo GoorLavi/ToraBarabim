@@ -13,7 +13,7 @@ import * as formConsts from './components/VisitorMessageForm/consts';
 import * as consts from './consts';
 import { HelpWindow } from './HelpWindow';
 
-const lesson = (id: string): LessonOccurrence => ({
+const lesson = (id: string, rabbiName: string): LessonOccurrence => ({
   lessonId: id,
   date: '2026-10-05',
   startTime: '20:00',
@@ -22,7 +22,7 @@ const lesson = (id: string): LessonOccurrence => ({
   title: 'עיונים בפרשת השבוע',
   topic: 'parasha',
   audience: 'mixed',
-  rabbi: rabbiFixture({ id: `rabbi-${id}`, name: 'יעקב מזרחי' }),
+  rabbi: rabbiFixture({ id: `rabbi-${rabbiName}`, name: rabbiName }),
   venue: { kind: 'address', name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'נתניה', citySlug: 'נתניה', area: 'sharon' },
 });
 
@@ -37,8 +37,8 @@ const stageQuery = (kind: VisitorMessageType): HomeRowsQueryState => {
       {
         kind: 'lessons',
         id: 'today',
-        title: 'הערב',
-        items: [lesson('a'), lesson('b'), lesson('c'), lesson('d')],
+        title: 'שיעורים היום',
+        items: [lesson('a', 'יעקב מזרחי'), lesson('b', 'אליהו בן דוד'), lesson('c', 'יעקב מזרחי'), lesson('d', 'אליהו בן דוד')],
         helpTile: { kind, index: HELP_TILE_INDEX },
       },
     ],

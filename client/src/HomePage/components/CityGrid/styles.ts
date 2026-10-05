@@ -18,7 +18,7 @@ export const CityGrid = css(
       gap: ${theme.spacing.xs};
       min-inline-size: 0;
 
-      > h2 {
+      > .title {
         font-size: ${theme.typography.sectionHeading.phone.fontSize};
         line-height: ${theme.typography.sectionHeading.phone.lineHeight};
         font-weight: ${theme.typography.sectionHeading.fontWeight};
@@ -46,10 +46,10 @@ export const CityGrid = css(
     color: ${theme.colors.textSecondary};
     font-size: ${theme.typography.body.phone.fontSize};
     line-height: ${theme.typography.body.phone.lineHeight};
-  }
 
-  > .state.error {
-    color: ${theme.colors.danger};
+    &.error {
+      color: ${theme.colors.danger};
+    }
   }
 
   > .grid {
@@ -61,7 +61,7 @@ export const CityGrid = css(
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
-    > li {
+    > .cell {
       display: flex;
     }
   }
