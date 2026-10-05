@@ -1,8 +1,10 @@
+import { useEffect } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { ADMIN_ROUTES } from '~/AdminPanel/consts';
 import { useAdminSession } from '~/AdminPanel/useAdminSession';
+import { markBrowserInternal } from '~/analytics/mixpanel';
 
 import * as consts from './consts';
 import type { RequireAdminSessionProps } from './models';
@@ -14,6 +16,10 @@ import * as styles from './styles';
 export const RequireAdminSession = styled(({ className }: RequireAdminSessionProps) => {
   const session = useAdminSession();
   const location = useLocation();
+
+  useEffect(() => {
+    if (session.data) markBrowserInternal();
+  }, [session.data]);
 
   if (session.isPending) {
     return (
