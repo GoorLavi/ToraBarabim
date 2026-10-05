@@ -755,6 +755,20 @@ middle of a plum field reads worse than no panel at all (ratified 2026-09-07 and
 extended to the rabbi page when it was designed). Each of the three is a real gap, not
 an oversight, and each needs a fallback of its own.
 
+### Home rows (2026-10-05)
+
+Up to ten lesson rails, interleaved so two area rails or two topic rails never touch:
+today, area, topic, both audiences, area, topic, weekly, and so on, with morning and
+midday rails among the fixed ones. Topic rails exist only for topics with enough
+lessons. At most two cards per teaching rabbi in a rail. The women's band sits after
+rail 2, the single women's tile in rail 6 (or rail 2 on a short page), the success band
+after rail 6 and the healing band after rail 8, both falling to after the last rail on a
+short page. The city grid is the shared `CityChip` with `{n} שיעורים`, twelve cities by
+count, and one quiet `בשבועיים הקרובים` line in `textSecondary` under `לפי עיר`. Why, and
+what it costs: [0040](../docs/decisions/0040-the-home-page-carries-up-to-ten-interleaved-rows.md).
+Code: `server/src/service/home/`, `client/src/HomePage/components/HomeRails/` and
+`CityGrid/`.
+
 ## Open (not decided yet)
 
 - **Who maintains the list of cities.** The city an admin picks must come from a fixed
@@ -787,8 +801,6 @@ an oversight, and each needs a fallback of its own.
 Decided against, so not open and not to be reopened casually:
 
 - **Dark mode.** One theme set, done properly, first.
-- **A topic browse axis on the home page.** The admin entering lessons does not
-  necessarily know the topic. Worth adding once the data supports it.
 - **A public add-a-lesson form.** Only an admin or a rabbi adds a lesson, and an admin
   adds it to a specific rabbi. So the home page carries no add-a-lesson link and no admin
   door. A visitor who wants a lesson or a teacher listed has two doors, and both only

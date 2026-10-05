@@ -1,11 +1,13 @@
-import type { LessonOccurrence } from '@torabarabim/common';
+import type { CityWithLessonCount } from '@torabarabim/common';
 
 import type { SelectedCity } from '~/hooks/models';
 
 export interface CityGridProps {
   className?: string;
-  items: LessonOccurrence[] | undefined;
+  cities: CityWithLessonCount[] | undefined;
   isLoading: boolean;
   isError: boolean;
+  selectedCityId: string | undefined;
   onSelectCity: (city: SelectedCity) => void;
+  onClearCity: () => void;
 }

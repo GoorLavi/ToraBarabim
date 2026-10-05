@@ -1,4 +1,4 @@
-# 0040: A past lesson date keeps its page and leaves the index
+# 0051: A past lesson date keeps its page and leaves the index
 
 - **Status:** accepted
 - **Date:** 2026-10-05

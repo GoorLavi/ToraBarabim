@@ -36,12 +36,12 @@ export const LessonsTable = styled(({ className, rows }: LessonsTableProps) => (
     </div>
 
     {rows.map((row) => (
-      <div key={row.lesson.id} className="row" role="row">
+      <div key={row.id} className="row" role="row">
         <span className="lesson" role="cell">
           <span className="primary" dir="auto">
-            {lessonPrimaryLabel(row.lesson, row.rabbi)}
+            {lessonPrimaryLabel(row, row.rabbi)}
           </span>
-          {lessonHasOwnTitle(row.lesson) && row.rabbi && (
+          {lessonHasOwnTitle(row) && (
             <span className="secondary" dir="auto">
               {rabbiDisplayName(row.rabbi)}
             </span>
@@ -49,18 +49,18 @@ export const LessonsTable = styled(({ className, rows }: LessonsTableProps) => (
         </span>
         <span className="when" role="cell">
           <span className="whenText" dir="auto">
-            {lessonDayTimeLabel(row.lesson)}
+            {lessonDayTimeLabel(row)}
           </span>
-          <span className="tag">{row.lesson.recurrence.kind === 'weekly' ? parentConsts.RECURRING_TAG_LABEL : parentConsts.ONE_TIME_TAG_LABEL}</span>
+          <span className="tag">{row.recurrence.kind === 'weekly' ? parentConsts.RECURRING_TAG_LABEL : parentConsts.ONE_TIME_TAG_LABEL}</span>
         </span>
         <span className="city" role="cell" dir="auto">
-          {venuePanelCityName(row.lesson.venue)}
+          {venuePanelCityName(row.venue)}
         </span>
         <span className="audience" role="cell" dir="auto">
-          {AUDIENCE_LABELS[row.lesson.audience]}
+          {AUDIENCE_LABELS[row.audience]}
         </span>
         <span className="actions" role="cell">
-          <Link className="edit" to={ADMIN_ROUTES.lessonView(row.lesson.id)}>
+          <Link className="edit" to={ADMIN_ROUTES.lessonView(row.id)}>
             {DETAILS_LABEL}
           </Link>
         </span>

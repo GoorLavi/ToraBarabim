@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { after, afterEach, before, describe, test } from 'node:test';
 
 import type { AgentImportApplyResult, AgentImportPlanResponse, LessonImportFile, LessonImportRow } from '@torabarabim/common';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { nanoid } from 'nanoid';
 
@@ -11,10 +11,12 @@ import { adminUsers, cities, lessonExceptions, lessonImportDismissedKeys, lesson
 import { SESSION_COOKIE_NAME, RABBI_SESSION_COOKIE_NAME } from '../src/service/admin-auth/consts';
 import * as adminRabbiAccountService from '../src/service/admin-rabbi-account/admin-rabbi-account';
 import * as adminUserService from '../src/service/admin-user/admin-user';
-import { addressKeyOf, cleanCityText, nameKeyOf, resolveBuiltInCityAlias, resolveWeekday, resolveWeekdayNote } from '../src/service/lesson-import/clean';
+import * as adminPlaceService from '../src/service/admin-place/admin-place';
+import { addressKeyOf, cleanCityText, isSynagogueName, nameKeyOf, placeMatchKeyOf, resolveBuiltInCityAlias, resolveWeekday, resolveWeekdayNote, synagogueDisplayName, weeklyImportKey } from '../src/service/lesson-import/clean';
 import { BUILT_IN_AUDIENCE_ALIASES, IMPORT_ADVISORY_LOCK_KEY } from '../src/service/lesson-import/consts';
 import { sha256Of } from '../src/service/lesson-import/digest';
 import { lessonImportFileSchema } from '../src/service/lesson-import/models';
+import { addDays, todayInIsrael, weekdayOf } from '../src/service/lesson/israel-time';
 import { stripLeadingHonorific } from '../src/service/shared/name';
 import { assertDatabaseReachable, buildAgentImportTestApp, rawClient } from './app-harness';
 
@@ -102,6 +104,15 @@ describe('agent import', () => {
   // sorted `GET /v1/rabbis` assertion; cleaning up per test on top of that
   // is isolation hygiene between this file's own tests, not a race fix.
   afterEach(async () => {
+    // A test that fails before it tracks the lessons an apply created must
+    // not leave them behind to block the place and rabbi deletes below.
+    if (cleanupRabbiIds.size > 0) {
+      const strayLessonIds = (await db.select({ id: lessons.id }).from(lessons).where(inArray(lessons.rabbiId, [...cleanupRabbiIds]))).map((lesson) => lesson.id);
+      if (strayLessonIds.length > 0) {
+        await db.delete(lessonExceptions).where(inArray(lessonExceptions.lessonId, strayLessonIds));
+        await db.delete(lessons).where(inArray(lessons.id, strayLessonIds));
+      }
+    }
     for (const id of cleanupLessonIds) await db.delete(lessons).where(eq(lessons.id, id));
     cleanupLessonIds.clear();
     // Deleted after lessons: a place-backed lesson's `place_id` FK would
@@ -435,8 +446,8 @@ describe('agent import', () => {
   });
 
   // Finding 5 from the review, and the owner's rule: never two lessons of
-  // one rabbi on the same day at the same place. Two rows in one file that
-  // land on the same import key both name that slot; the second is
+  // one rabbi on the same day at the same start time. Two rows in one file
+  // that land on the same import key both name that slot; the second is
   // skipped, never a second insert that would only fail the unique index,
   // and the key still counts as present (not a candidate for deletion).
   test('two rows with the same import key in one file: the second is skipped as duplicate_in_file', async () => {
@@ -463,13 +474,12 @@ describe('agent import', () => {
     for (const row2 of createdLessons) cleanupLessonIds.add(row2.id);
   });
 
-  // Finding 4 from the review: the winner of a same-import-key collision
-  // must not depend on file order, or a site that reorders its own rows
-  // would flip which lesson survives every week. Applied once in one
-  // order, then again in the reversed order: the earliest start time still
-  // wins both times, so the second apply is a no-op (0 added, 0 updated),
-  // not a flip to the other row's time.
-  test('the duplicate-in-file tie-break is independent of row order: reversed order keeps the same lesson', async () => {
+  // Owner decision (2026-10-05, replaces the earlier "one lesson per rabbi,
+  // day and place" rule): a lesson is a rabbi, a day and an exact start
+  // time, and the place merges nothing. The same place at two times is two
+  // lessons, and the order of the file's rows changes nothing: the second
+  // plan, in the reversed order, finds both lessons already there.
+  test('the same place at two times is two lessons, and reversing the row order changes nothing', async () => {
     const rabbiName = `רב סדר ${uniqueSuffix()}`;
     const rabbiId = await createRabbi(rabbiName);
     const nameKey = nameKeyOf(rabbiName);
@@ -483,16 +493,14 @@ describe('agent import', () => {
 
     const firstFile = buildFile([earlyRow, lateRow]);
     const firstPlan = (await postPlan(firstFile)).json() as AgentImportPlanResponse;
-    assert.equal(firstPlan.additions[0]?.startTime, '19:00');
+    assert.equal(firstPlan.counts.added, 2);
+    assert.deepEqual(firstPlan.additions.map((item) => item.startTime).sort(), ['19:00', '20:30']);
     const firstApply = (await postApply({ file: firstFile, digest: firstPlan.digest })).json() as AgentImportApplyResult;
-    assert.equal(firstApply.counts.added, 1);
+    assert.equal(firstApply.counts.added, 2);
     const createdLessons = await db.select().from(lessons).where(eq(lessons.rabbiId, rabbiId));
-    assert.equal(createdLessons.length, 1);
-    assert.equal(createdLessons[0]?.startTime, '19:00');
+    assert.deepEqual(createdLessons.map((lesson) => lesson.startTime).sort(), ['19:00', '20:30']);
     for (const row2 of createdLessons) cleanupLessonIds.add(row2.id);
 
-    // Same two rows, reversed order: the earliest start time must still
-    // win, so this is a no-op against the lesson already created above.
     const secondFile = buildFile([lateRow, earlyRow]);
     const secondPlan = (await postPlan(secondFile)).json() as AgentImportPlanResponse;
     assert.equal(secondPlan.counts.added, 0);
@@ -501,8 +509,7 @@ describe('agent import', () => {
     assert.equal(secondApply.counts.updated, 0);
 
     const lessonsAfter = await db.select().from(lessons).where(eq(lessons.rabbiId, rabbiId));
-    assert.equal(lessonsAfter.length, 1);
-    assert.equal(lessonsAfter[0]?.startTime, '19:00');
+    assert.equal(lessonsAfter.length, 2);
   });
 
   test('a new pair with exactly one same-named rabbi links automatically at apply, is reported, and is not asked again', async () => {
@@ -552,14 +559,14 @@ describe('agent import', () => {
     const questionNameKey = nameKeyOf(questionRabbiName);
     cleanupNameKeys.add(questionNameKey);
     const questionRows = [0, 1, 2].map((n) =>
-      baseRow({ rabbiName: questionRabbiName, sources: [questionSource], place: `מקום שאלה ${n} ${uniqueSuffix()}` }),
+      baseRow({ rabbiName: questionRabbiName, sources: [questionSource], place: `מקום שאלה ${n} ${uniqueSuffix()}`, startTime: `18:0${n}` }),
     );
 
     const linkRabbiName = `רב מקושר ${uniqueSuffix()}`;
     const linkSource = `many-rows-link-${uniqueSuffix()}.example.com`;
     const linkRabbiId = await createRabbi(linkRabbiName); // exactly one candidate: auto-links
     cleanupNameKeys.add(nameKeyOf(linkRabbiName));
-    const linkRows = [0, 1, 2].map((n) => baseRow({ rabbiName: linkRabbiName, sources: [linkSource], place: `מקום קישור ${n} ${uniqueSuffix()}` }));
+    const linkRows = [0, 1, 2].map((n) => baseRow({ rabbiName: linkRabbiName, sources: [linkSource], place: `מקום קישור ${n} ${uniqueSuffix()}`, startTime: `19:0${n}` }));
 
     const file = buildFile([...questionRows, ...linkRows]);
     const planBody = (await postPlan(file)).json() as AgentImportPlanResponse;
@@ -972,11 +979,11 @@ describe('agent import', () => {
     // the SHARP_DROP_RATIO stop), so only the genuinely missing lesson is
     // deleted, not withheld.
     const keeperPlace = `מקום נשאר ${uniqueSuffix()}`;
-    const { id: keeperId } = await insertExistingImportedLesson({ rabbiId, place: keeperPlace, weekday: 0, source });
+    const { id: keeperId } = await insertExistingImportedLesson({ rabbiId, place: keeperPlace, weekday: 0, startTime: '21:00', source });
     cleanupLessonIds.add(keeperId);
 
     // Next run: the source reports the keeper row, but not the vanished one.
-    const keeperRow = baseRow({ rabbiName, sources: [source], place: keeperPlace });
+    const keeperRow = baseRow({ rabbiName, sources: [source], place: keeperPlace, startTime: '21:00' });
     const emptyRunFile = buildFile([keeperRow]);
     const secondPlan = (await postPlan(emptyRunFile)).json() as AgentImportPlanResponse;
     assert.equal(secondPlan.deletions.length, 1);
@@ -1119,8 +1126,8 @@ describe('agent import', () => {
 
     const planBody = (await postPlan(file)).json() as AgentImportPlanResponse;
     const withheld = planBody.withheldIfUnacked.find((item) => item.lessonId === mergedLessonId);
-    assert.ok(withheld);
-    assert.deepEqual(withheld?.causingSources, [sourceX]);
+    assert.ok(withheld && withheld.reason !== 'duplicate');
+    assert.deepEqual(withheld.causingSources, [sourceX]);
 
     // Acking only sourceY (not a causing source) must not release it.
     const applyWrongAck = (await postApply({ file, digest: planBody.digest, acks: [sourceY] })).json() as AgentImportApplyResult;
@@ -1269,7 +1276,7 @@ describe('agent import', () => {
     const deleteRes = await app.inject({ method: 'DELETE', url: `/v1/admin/lessons/${lessonId}`, headers: { cookie } });
     assert.equal(deleteRes.statusCode, 204);
 
-    const importKey = `${rabbiId}|w0|${addressKeyOf(place)}`;
+    const importKey = weeklyImportKey(rabbiId, 0, row.startTime);
     cleanupImportKeys.add(importKey);
     const dismissed = await db.select().from(lessonImportDismissedKeys).where(eq(lessonImportDismissedKeys.importKey, importKey));
     assert.equal(dismissed.length, 1);
@@ -1299,7 +1306,7 @@ describe('agent import', () => {
     const deleteRes = await app.inject({ method: 'DELETE', url: `/v1/rabbi/lessons/${lessonId}`, headers: { cookie } });
     assert.equal(deleteRes.statusCode, 204);
 
-    const importKey = `${rabbiId}|w0|${addressKeyOf(place)}`;
+    const importKey = weeklyImportKey(rabbiId, 0, row.startTime);
     cleanupImportKeys.add(importKey);
     const dismissed = await db.select().from(lessonImportDismissedKeys).where(eq(lessonImportDismissedKeys.importKey, importKey));
     assert.equal(dismissed.length, 1);
@@ -1411,7 +1418,7 @@ describe('agent import', () => {
     const rabbiIdA = await createRabbi(`רב ריצה א ${uniqueSuffix()}`);
     const keeperPlace = `מקום נשאר-ריצה ${uniqueSuffix()}`;
     await insertExistingImportedLesson({ rabbiId: rabbiIdA, place: keeperPlace, weekday: 1, source: sourceA });
-    const { id: deletedLessonId } = await insertExistingImportedLesson({ rabbiId: rabbiIdA, place: `מקום נעלם-ריצה ${uniqueSuffix()}`, weekday: 1, source: sourceA });
+    const { id: deletedLessonId } = await insertExistingImportedLesson({ rabbiId: rabbiIdA, place: `מקום נעלם-ריצה ${uniqueSuffix()}`, weekday: 1, startTime: '18:10', source: sourceA });
     const keeperNameKey = nameKeyOf('שם קבוע ריצה');
     cleanupNameKeys.add(keeperNameKey);
     await db.insert(lessonImportRabbiLinks).values({ nameKey: keeperNameKey, source: sourceA, rabbiId: rabbiIdA, decision: 'linked', origin: 'owner' });
@@ -1426,8 +1433,8 @@ describe('agent import', () => {
     const rabbiIdB = await createRabbi(`רב ריצה ב ${uniqueSuffix()}`);
     const keeperPlaceB = `מקום נשאר-ריצה-ב ${uniqueSuffix()}`;
     await insertExistingImportedLesson({ rabbiId: rabbiIdB, place: keeperPlaceB, weekday: 2, source: sourceB });
-    const { id: withheldLessonId } = await insertExistingImportedLesson({ rabbiId: rabbiIdB, place: `מקום מוחזק-ריצה-1 ${uniqueSuffix()}`, weekday: 2, source: sourceB });
-    const { id: withheldLessonId2 } = await insertExistingImportedLesson({ rabbiId: rabbiIdB, place: `מקום מוחזק-ריצה-2 ${uniqueSuffix()}`, weekday: 2, source: sourceB });
+    const { id: withheldLessonId } = await insertExistingImportedLesson({ rabbiId: rabbiIdB, place: `מקום מוחזק-ריצה-1 ${uniqueSuffix()}`, weekday: 2, startTime: '18:11', source: sourceB });
+    const { id: withheldLessonId2 } = await insertExistingImportedLesson({ rabbiId: rabbiIdB, place: `מקום מוחזק-ריצה-2 ${uniqueSuffix()}`, weekday: 2, startTime: '18:12', source: sourceB });
     const keeperNameKeyB = nameKeyOf('שם קבוע ריצה ב');
     cleanupNameKeys.add(keeperNameKeyB);
     await db.insert(lessonImportRabbiLinks).values({ nameKey: keeperNameKeyB, source: sourceB, rabbiId: rabbiIdB, decision: 'linked', origin: 'owner' });
@@ -1509,6 +1516,605 @@ describe('agent import', () => {
     for (const r of created) cleanupLessonIds.add(r.id);
   });
 
+
+  describe('a lesson is its rabbi, its day and its start time', () => {
+    const WEEKDAY_NAMES = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+
+    // Letters and digits only, so a place name built from it survives
+    // `toSlug` unchanged and its display form is predictable.
+    const placeSuffix = (): string => nanoid(8).replace(/[^a-z0-9]/gi, 'x');
+
+    const setUpRabbi = async (label: string) => {
+      const source = `${label}-${uniqueSuffix()}.example.com`;
+      const rabbiName = `רב ${label} ${uniqueSuffix()}`;
+      const rabbiId = await createRabbi(rabbiName);
+      const nameKey = nameKeyOf(rabbiName);
+      cleanupNameKeys.add(nameKey);
+      await db.insert(lessonImportRabbiLinks).values({ nameKey, source, rabbiId, decision: 'linked', origin: 'owner' });
+      return { source, rabbiName, rabbiId };
+    };
+
+    const nextDateOnWeekday = (weekday: number): string => {
+      let date = addDays(todayInIsrael(new Date()), 7);
+      while (weekdayOf(date) !== weekday) date = addDays(date, 1);
+      return date;
+    };
+
+    const pastDateOnWeekday = (weekday: number): string => {
+      let date = addDays(todayInIsrael(new Date()), -14);
+      while (weekdayOf(date) !== weekday) date = addDays(date, -1);
+      return date;
+    };
+
+    const onceRow = (date: string, overrides: Partial<LessonImportRow> = {}): LessonImportRow =>
+      baseRow({ date, weekday: WEEKDAY_NAMES[weekdayOf(date)] as string, recurrence: 'משתנה', ...overrides });
+
+    const insertLesson = async (options: {
+      rabbiId: string;
+      provenance: 'manual' | 'imported' | 'imported_edited';
+      place?: string;
+      placeId?: string;
+      weekday?: number;
+      date?: string;
+      startTime: string;
+      source?: string;
+      importKey?: string;
+    }): Promise<string> => {
+      const id = `test-lesson-${uniqueSuffix()}`;
+      const isOnce = options.date !== undefined;
+      const weekday = options.weekday ?? 0;
+      const isImported = options.provenance !== 'manual';
+      const venue = options.placeId
+        ? { placeId: options.placeId, addressName: null, addressStreet: null }
+        : { placeId: null, addressName: options.place ?? 'מקום קיים', addressStreet: 'רחוב קיים 1' };
+      const oldFormKey = `${options.rabbiId}|${isOnce ? `d${options.date}` : `w${weekday}`}|${addressKeyOf(options.place ?? 'מקום קיים')}`;
+      await db.insert(lessons).values({
+        id,
+        rabbiId: options.rabbiId,
+        ...venue,
+        cityCode: await jerusalemCode(),
+        audience: 'men',
+        recurrenceKind: isOnce ? 'once' : 'weekly',
+        recurrenceWeekdays: isOnce ? null : [weekday],
+        recurrenceDate: options.date ?? null,
+        startTime: options.startTime,
+        durationMinutes: 60,
+        provenance: options.provenance,
+        importKey: isImported ? (options.importKey ?? oldFormKey) : null,
+        importSources: isImported ? [options.source ?? 'unused-source.example.com'] : null,
+      });
+      cleanupLessonIds.add(id);
+      return id;
+    };
+
+    const lessonsOf = (rabbiId: string) => db.select().from(lessons).where(eq(lessons.rabbiId, rabbiId));
+
+    const trackLessonsOf = async (rabbiId: string): Promise<void> => {
+      for (const lesson of await lessonsOf(rabbiId)) cleanupLessonIds.add(lesson.id);
+    };
+
+    const trackPlacesNamed = async (name: string): Promise<typeof places.$inferSelect[]> => {
+      const rows = await db.select().from(places).where(eq(places.name, name));
+      for (const row of rows) cleanupPlaceIds.add(row.id);
+      return rows;
+    };
+
+    const planThenApply = async (file: LessonImportFile, extra: Record<string, unknown> = {}) => {
+      const plan = (await postPlan(file)).json() as AgentImportPlanResponse;
+      const res = await postApply({ file, digest: plan.digest, ...extra });
+      assert.equal(res.statusCode, 200);
+      return { plan, applied: res.json() as AgentImportApplyResult };
+    };
+
+    const createPlace = async (name: string, cityCode?: number): Promise<string> => {
+      const record = await adminPlaceService.create({ name, street: 'רחוב המקום 3', cityCode: cityCode ?? (await jerusalemCode()) });
+      cleanupPlaceIds.add(record.id);
+      return record.id;
+    };
+
+    test('a row that names a hand lesson by another spelling at the same time is skipped, nothing added', async () => {
+      const { source, rabbiName, rabbiId } = await setUpRabbi('safra');
+      const handId = await insertLesson({ rabbiId, provenance: 'manual', place: 'פסגת זאב בית הכנסת ספרא', weekday: 0, startTime: '19:17' });
+
+      const row = baseRow({ rabbiName, sources: [source], place: 'בהכנ"ס "ספרא"', startTime: '19:17' });
+      const file = buildFile([row]);
+      const { plan, applied } = await planThenApply(file);
+      assert.equal(plan.counts.added, 0);
+      assert.ok(plan.skipped.some((item) => item.reason === 'matches_existing_lesson'));
+      assert.equal(applied.counts.added, 0);
+
+      const after = await lessonsOf(rabbiId);
+      assert.equal(after.length, 1);
+      assert.equal(after[0]?.id, handId);
+      assert.equal(after[0]?.addressName, 'פסגת זאב בית הכנסת ספרא');
+      assert.equal(after[0]?.provenance, 'manual');
+    });
+
+    for (const [spellingA, spellingB, time] of [
+      ['היזידים', 'היזדים', '19:23'],
+      ['מוסאיוף', 'מוסיוף', '20:41'],
+    ] as const) {
+      test(`an imported lesson whose place is spelled ${spellingA} then ${spellingB} is updated in place and stays quiet afterwards`, async () => {
+        const { source, rabbiName, rabbiId } = await setUpRabbi('spelling');
+        const suffix = placeSuffix();
+        const lessonId = await insertLesson({ rabbiId, provenance: 'imported', place: `בית הכנסת ${spellingA} ${suffix}`, weekday: 0, startTime: time, source });
+
+        const row = baseRow({ rabbiName, sources: [source], place: `בית הכנסת ${spellingB} ${suffix}`, startTime: time });
+        const file = buildFile([row]);
+        const { plan, applied } = await planThenApply(file);
+        assert.equal(plan.counts.added, 0);
+        assert.equal(plan.counts.updated, 1);
+        assert.equal(plan.updates[0]?.lessonId, lessonId);
+        assert.equal(applied.counts.updated, 1);
+
+        const after = await lessonsOf(rabbiId);
+        assert.equal(after.length, 1);
+        assert.equal(after[0]?.id, lessonId);
+        assert.equal(after[0]?.importKey, weeklyImportKey(rabbiId, 0, time));
+
+        const rePlan = (await postPlan(file)).json() as AgentImportPlanResponse;
+        assert.equal(rePlan.counts.added, 0);
+        assert.equal(rePlan.counts.updated, 0);
+        assert.equal(rePlan.counts.deleted, 0);
+      });
+    }
+
+    for (const [name, provenance, time] of [
+      ['בורכוב', 'manual', '19:31'],
+      ['בורכוב', 'imported', '19:32'],
+      ['חסדי שמואל', 'manual', '19:33'],
+      ['חסדי שמואל', 'imported', '19:34'],
+    ] as const) {
+      test(`${name}: a row spelled בהכנ"ס at the time of a ${provenance} lesson is never an addition`, async () => {
+        const { source, rabbiName, rabbiId } = await setUpRabbi('burchov');
+        const suffix = placeSuffix();
+        const lessonId = await insertLesson({ rabbiId, provenance, place: `בית הכנסת ${name} ${suffix}`, weekday: 0, startTime: time, source });
+
+        const row = baseRow({ rabbiName, sources: [source], place: `בהכנ"ס "${name} ${suffix}"`, startTime: time });
+        const { plan } = await planThenApply(buildFile([row]));
+        assert.equal(plan.counts.added, 0);
+        if (provenance === 'imported') {
+          assert.equal(plan.counts.updated, 1);
+        } else {
+          assert.equal(plan.counts.updated, 0);
+          assert.ok(plan.skipped.some((item) => item.reason === 'matches_existing_lesson'));
+        }
+        const after = await lessonsOf(rabbiId);
+        assert.deepEqual(after.map((lesson) => lesson.id), [lessonId]);
+      });
+    }
+
+    test('there is no time tolerance: five minutes apart is a new lesson, and so is another rabbi at the same time', async () => {
+      const first = await setUpRabbi('tolerance');
+      const second = await setUpRabbi('tolerance-other');
+      await insertLesson({ rabbiId: first.rabbiId, provenance: 'manual', place: 'מקום קבוע', weekday: 0, startTime: '21:00' });
+      await insertLesson({ rabbiId: second.rabbiId, provenance: 'manual', place: 'מקום קבוע', weekday: 0, startTime: '21:03' });
+
+      const fiveApart = buildFile([baseRow({ rabbiName: first.rabbiName, sources: [first.source], place: 'מקום קבוע', startTime: '21:05' })]);
+      assert.equal(((await postPlan(fiveApart)).json() as AgentImportPlanResponse).counts.added, 1);
+
+      const otherRabbi = buildFile([baseRow({ rabbiName: second.rabbiName, sources: [second.source], place: 'מקום קבוע', startTime: '21:00' })]);
+      assert.equal(((await postPlan(otherRabbi)).json() as AgentImportPlanResponse).counts.added, 1);
+    });
+
+    test('an imported_edited lesson matched by time is skipped and left untouched', async () => {
+      const { source, rabbiName, rabbiId } = await setUpRabbi('edited');
+      const lessonId = await insertLesson({ rabbiId, provenance: 'imported_edited', place: 'מקום אחרי עריכה', weekday: 0, startTime: '19:44', source });
+      const before = (await lessonsOf(rabbiId))[0];
+
+      const file = buildFile([baseRow({ rabbiName, sources: [source], place: 'מקום מקורי אחר', startTime: '19:44' })]);
+      const { plan } = await planThenApply(file);
+      assert.equal(plan.counts.added, 0);
+      assert.equal(plan.counts.updated, 0);
+      assert.ok(plan.skipped.some((item) => item.reason === 'matches_existing_lesson'));
+      assert.deepEqual(await lessonsOf(rabbiId), [before]);
+      assert.equal(before?.id, lessonId);
+    });
+
+    test('a twin of a hand lesson waits for the owner: a source ack leaves it, its own id deletes it', async () => {
+      const { source, rabbiName, rabbiId } = await setUpRabbi('twin');
+      const handId = await insertLesson({ rabbiId, provenance: 'manual', place: 'פסגת זאב בית הכנסת תאומים', weekday: 0, startTime: '19:51' });
+      const twinId = await insertLesson({ rabbiId, provenance: 'imported', place: 'בהכנ"ס "תאומים"', weekday: 0, startTime: '19:51', source });
+
+      const file = buildFile([baseRow({ rabbiName, sources: [source], place: 'בהכנ"ס "תאומים"', startTime: '19:51' })]);
+      const plan = (await postPlan(file)).json() as AgentImportPlanResponse;
+      assert.equal(plan.counts.added, 0);
+      assert.equal(plan.deletions.length, 0);
+      assert.equal(plan.withheldIfUnacked.length, 1);
+      const withheld = plan.withheldIfUnacked[0];
+      assert.equal(withheld?.lessonId, twinId);
+      assert.equal(withheld?.reason, 'duplicate');
+      assert.ok(withheld?.reason === 'duplicate' && withheld.keptLesson.lessonId === handId);
+      assert.ok(withheld?.reason === 'duplicate' && withheld.keptLesson.provenance === 'manual');
+
+      const sourceAck = await postApply({ file, digest: plan.digest, acks: [source] });
+      assert.equal(sourceAck.statusCode, 200);
+      assert.equal((sourceAck.json() as AgentImportApplyResult).deleted.length, 0);
+      assert.equal((await lessonsOf(rabbiId)).length, 2);
+
+      const lessonAck = await postApply({ file, digest: plan.digest, ackLessonIds: [twinId] });
+      assert.equal(lessonAck.statusCode, 200);
+      assert.deepEqual((lessonAck.json() as AgentImportApplyResult).deleted.map((item) => item.lessonId), [twinId]);
+      assert.deepEqual((await lessonsOf(rabbiId)).map((lesson) => lesson.id), [handId]);
+    });
+
+    test('a question row protects a lesson at the same time under a different place text', async () => {
+      const rabbiName = `דו משמעי-זמן ${uniqueSuffix()}`;
+      const rabbiIdA = await createRabbi(rabbiName);
+      await createRabbi(rabbiName);
+      cleanupNameKeys.add(nameKeyOf(rabbiName));
+      const source = `question-time-${uniqueSuffix()}.example.com`;
+      const lessonId = await insertLesson({ rabbiId: rabbiIdA, provenance: 'imported', place: 'מקום ישן לגמרי', weekday: 0, startTime: '19:57', source });
+
+      const file = buildFile([baseRow({ rabbiName, sources: [source], place: 'מקום חדש לגמרי', startTime: '19:57' })]);
+      const { plan } = await planThenApply(file);
+      assert.equal(plan.questions.length, 1);
+      assert.equal(plan.deletions.length, 0);
+      assert.equal(plan.withheldIfUnacked.length, 0);
+      assert.equal((await db.select().from(lessons).where(eq(lessons.id, lessonId))).length, 1);
+    });
+
+    test('two sites reporting one lesson give one addition with the sorted union of their sources', async () => {
+      const rabbiName = `רב שני-אתרים ${uniqueSuffix()}`;
+      const rabbiId = await createRabbi(rabbiName);
+      const nameKey = nameKeyOf(rabbiName);
+      cleanupNameKeys.add(nameKey);
+      const sourceB = `two-sites-b-${uniqueSuffix()}.example.com`;
+      const sourceA = `two-sites-a-${uniqueSuffix()}.example.com`;
+      for (const source of [sourceA, sourceB]) await db.insert(lessonImportRabbiLinks).values({ nameKey, source, rabbiId, decision: 'linked', origin: 'owner' });
+
+      // Two non-synagogue texts, so the lesson stays on the address arm and
+      // the stored name shows which row won: it must not depend on row order.
+      const rowA = baseRow({ rabbiName, sources: [sourceA], place: 'מקום אלף', startTime: '20:07' });
+      const rowB = baseRow({ rabbiName, sources: [sourceB], place: 'מקום בית', startTime: '20:07' });
+      const buildTwoSiteFile = (rows: LessonImportRow[]): LessonImportFile => {
+        const file = buildFile(rows);
+        file.sources = [sourceA, sourceB].map((domain) => ({ domain, name: domain, url: `https://${domain}/`, format: 'html', status: 'ok' as const, rowCount: 1 }));
+        return file;
+      };
+
+      const forward = buildTwoSiteFile([rowA, rowB]);
+      const { plan, applied } = await planThenApply(forward);
+      assert.equal(plan.counts.added, 1);
+      assert.equal(applied.counts.added, 1);
+      const created = await lessonsOf(rabbiId);
+      assert.equal(created.length, 1);
+      assert.deepEqual(created[0]?.importSources, [sourceA, sourceB].sort());
+      assert.equal(created[0]?.placeId, null);
+      assert.ok(created[0]?.addressName === 'מקום אלף' || created[0]?.addressName === 'מקום בית');
+      await trackLessonsOf(rabbiId);
+
+      const reversed = (await postPlan(buildTwoSiteFile([rowB, rowA]))).json() as AgentImportPlanResponse;
+      assert.equal(reversed.counts.added, 0);
+      assert.equal(reversed.counts.updated, 0);
+    });
+
+    test('a lesson hand-deleted is remembered by its time: another spelling of the place is still hand_deleted', async () => {
+      const { source, rabbiName, rabbiId } = await setUpRabbi('remember');
+      const first = buildFile([baseRow({ rabbiName, sources: [source], place: 'בהכנ"ס "זכרון"', startTime: '20:11' })]);
+      await planThenApply(first);
+      const lessonId = (await lessonsOf(rabbiId))[0]?.id as string;
+
+      const cookie = await loginAsNewAdmin();
+      const deleteRes = await app.inject({ method: 'DELETE', url: `/v1/admin/lessons/${lessonId}`, headers: { cookie } });
+      assert.equal(deleteRes.statusCode, 204);
+      const dismissedKey = weeklyImportKey(rabbiId, 0, '20:11');
+      cleanupImportKeys.add(dismissedKey);
+      assert.equal((await db.select().from(lessonImportDismissedKeys).where(eq(lessonImportDismissedKeys.importKey, dismissedKey))).length, 1);
+
+      const laterSpelling = buildFile([baseRow({ rabbiName, sources: [source], place: 'בית הכנסת זכרון', startTime: '20:11' })]);
+      const rePlan = (await postPlan(laterSpelling)).json() as AgentImportPlanResponse;
+      assert.equal(rePlan.counts.added, 0);
+      assert.ok(rePlan.skipped.some((item) => item.reason === 'hand_deleted'));
+    });
+
+    test('an old-form dismissed key still blocks the same place under another spelling', async () => {
+      const { source, rabbiName, rabbiId } = await setUpRabbi('old-dismissed');
+      const suffix = placeSuffix();
+      const oldKey = `${rabbiId}|w0|${addressKeyOf(`בהכנ"ס "בורכוב ${suffix}"`)}`;
+      cleanupImportKeys.add(oldKey);
+      await db.insert(lessonImportDismissedKeys).values({ importKey: oldKey });
+
+      const file = buildFile([baseRow({ rabbiName, sources: [source], place: `בית הכנסת בורכוב ${suffix}`, startTime: '20:13' })]);
+      const plan = (await postPlan(file)).json() as AgentImportPlanResponse;
+      assert.equal(plan.counts.added, 0);
+      assert.ok(plan.skipped.some((item) => item.reason === 'hand_deleted'));
+    });
+
+    describe('attaching to an existing place', () => {
+      test('a row names a registered place by name and city, whatever its street: the lesson goes on the place', async () => {
+        const { source, rabbiName, rabbiId } = await setUpRabbi('attach');
+        const name = `מכון מאיר ${placeSuffix()}`;
+        const placeId = await createPlace(name);
+
+        const file = buildFile([baseRow({ rabbiName, sources: [source], place: name, street: 'רחוב אחר לגמרי 9', startTime: '20:17' })]);
+        const { applied } = await planThenApply(file);
+        assert.equal(applied.counts.added, 1);
+        assert.equal(applied.counts.placesCreated, 0);
+        const [lesson] = await lessonsOf(rabbiId);
+        assert.equal(lesson?.placeId, placeId);
+        assert.equal(lesson?.addressName, null);
+        assert.equal(lesson?.cityCode, await jerusalemCode());
+        await trackLessonsOf(rabbiId);
+
+        const rePlan = (await postPlan(file)).json() as AgentImportPlanResponse;
+        assert.equal(rePlan.counts.added, 0);
+        assert.equal(rePlan.counts.updated, 0);
+      });
+
+      test('a synagogue spelled בהכנ"ס attaches to a place spelled בית הכנסת', async () => {
+        const { source, rabbiName, rabbiId } = await setUpRabbi('attach-shul');
+        const suffix = placeSuffix();
+        const placeId = await createPlace(`בית הכנסת ישורון ${suffix}`);
+
+        const file = buildFile([baseRow({ rabbiName, sources: [source], place: `בהכנ"ס "ישורון ${suffix}"`, startTime: '20:19' })]);
+        const { plan, applied } = await planThenApply(file);
+        assert.equal(plan.newPlaces.length, 0);
+        assert.equal(applied.counts.added, 1);
+        const [lesson] = await lessonsOf(rabbiId);
+        assert.equal(lesson?.placeId, placeId);
+        await trackLessonsOf(rabbiId);
+      });
+
+      test('a place of the same name in another city is not attached', async () => {
+        const { source, rabbiName, rabbiId } = await setUpRabbi('attach-city');
+        const name = `מכון הערים ${placeSuffix()}`;
+        const otherCity = (await db.select({ code: cities.code }).from(cities).where(eq(cities.nameHe, 'תל אביב - יפו')).limit(1))[0];
+        assert.ok(otherCity);
+        await createPlace(name, otherCity.code);
+
+        const file = buildFile([baseRow({ rabbiName, sources: [source], place: name, startTime: '20:21' })]);
+        const { applied } = await planThenApply(file);
+        assert.equal(applied.counts.added, 1);
+        const [lesson] = await lessonsOf(rabbiId);
+        assert.equal(lesson?.placeId, null);
+        assert.equal(lesson?.addressName, name);
+        await trackLessonsOf(rabbiId);
+      });
+    });
+
+    describe('a weekly lesson and a one-off at the same time are one lesson, and the weekly wins', () => {
+      test('a weekly imported lesson covers a future one-off row: nothing is written and the weekly stays', async () => {
+        const { source, rabbiName, rabbiId } = await setUpRabbi('weekly-covers');
+        const weeklyId = await insertLesson({ rabbiId, provenance: 'imported', place: 'מקום שבועי', weekday: 0, startTime: '19:19', source });
+
+        const file = buildFile([onceRow(nextDateOnWeekday(0), { rabbiName, sources: [source], place: 'מקום שבועי', startTime: '19:19' })]);
+        const { plan } = await planThenApply(file);
+        assert.equal(plan.counts.added, 0);
+        assert.equal(plan.counts.updated, 0);
+        assert.equal(plan.deletions.length, 0);
+        assert.equal(plan.withheldIfUnacked.length, 0);
+        const after = await lessonsOf(rabbiId);
+        assert.deepEqual(after.map((lesson) => [lesson.id, lesson.recurrenceKind]), [[weeklyId, 'weekly']]);
+      });
+
+      test('an imported once lesson plus a weekly row: the same lesson becomes weekly', async () => {
+        const { source, rabbiName, rabbiId } = await setUpRabbi('once-to-weekly');
+        const lessonId = await insertLesson({ rabbiId, provenance: 'imported', place: 'מקום חד פעמי', date: nextDateOnWeekday(0), startTime: '19:29', source });
+
+        const file = buildFile([baseRow({ rabbiName, sources: [source], place: 'מקום חד פעמי', startTime: '19:29' })]);
+        const { plan } = await planThenApply(file);
+        assert.equal(plan.counts.added, 0);
+        assert.equal(plan.counts.updated, 1);
+        const [lesson] = await lessonsOf(rabbiId);
+        assert.equal(lesson?.id, lessonId);
+        assert.equal(lesson?.recurrenceKind, 'weekly');
+        assert.deepEqual(lesson?.recurrenceWeekdays, [0]);
+        assert.equal(lesson?.recurrenceDate, null);
+        assert.equal(lesson?.importKey, weeklyImportKey(rabbiId, 0, '19:29'));
+      });
+
+      test('a hand one-off in the future blocks the weekly row; one in the past does not', async () => {
+        const future = await setUpRabbi('hand-once-future');
+        await insertLesson({ rabbiId: future.rabbiId, provenance: 'manual', place: 'מקום ידני', date: nextDateOnWeekday(0), startTime: '19:37' });
+        const blocked = (await postPlan(buildFile([baseRow({ rabbiName: future.rabbiName, sources: [future.source], place: 'מקום אחר', startTime: '19:37' })]))).json() as AgentImportPlanResponse;
+        assert.equal(blocked.counts.added, 0);
+        assert.ok(blocked.skipped.some((item) => item.reason === 'matches_existing_lesson'));
+
+        const past = await setUpRabbi('hand-once-past');
+        await insertLesson({ rabbiId: past.rabbiId, provenance: 'manual', place: 'מקום ידני', date: pastDateOnWeekday(0), startTime: '19:37' });
+        const free = (await postPlan(buildFile([baseRow({ rabbiName: past.rabbiName, sources: [past.source], place: 'מקום אחר', startTime: '19:37' })]))).json() as AgentImportPlanResponse;
+        assert.equal(free.counts.added, 1);
+      });
+
+      for (const [label, rowKind] of [
+        ['a weekly row', 'weekly'],
+        ['a one-off row on the hand lesson\'s date', 'once'],
+      ] as const) {
+        test(`${label} beside an imported weekly and a future hand one-off at that time: the weekly is retained, never proposed as a duplicate`, async () => {
+          const { source, rabbiName, rabbiId } = await setUpRabbi('weekly-vs-hand-once');
+          const handDate = nextDateOnWeekday(0);
+          const weeklyId = await insertLesson({ rabbiId, provenance: 'imported', place: 'מקום שבועי ישן', weekday: 0, startTime: '19:03', source });
+          await insertLesson({ rabbiId, provenance: 'manual', place: 'מקום ידני חד פעמי', date: handDate, startTime: '19:03' });
+
+          const row =
+            rowKind === 'weekly'
+              ? baseRow({ rabbiName, sources: [source], place: 'מקום חדש', startTime: '19:03' })
+              : onceRow(handDate, { rabbiName, sources: [source], place: 'מקום חדש', startTime: '19:03' });
+          const plan = (await postPlan(buildFile([row]))).json() as AgentImportPlanResponse;
+          assert.equal(plan.counts.added, 0);
+          assert.ok(plan.skipped.some((item) => item.reason === 'matches_existing_lesson'));
+          assert.equal(plan.deletions.length, 0);
+          assert.equal(plan.withheldIfUnacked.length, 0);
+          assert.ok((await lessonsOf(rabbiId)).some((lesson) => lesson.id === weeklyId));
+        });
+      }
+
+      test('one file with a weekly row and a one-off in the same slot gives one weekly addition', async () => {
+        const { source, rabbiName, rabbiId } = await setUpRabbi('same-file-weekly');
+        const file = buildFile([
+          onceRow(nextDateOnWeekday(0), { rabbiName, sources: [source], place: 'מקום אחד', startTime: '19:39' }),
+          baseRow({ rabbiName, sources: [source], place: 'מקום אחד', startTime: '19:39' }),
+        ]);
+        const { plan } = await planThenApply(file);
+        assert.equal(plan.counts.added, 1);
+        assert.ok(plan.skipped.some((item) => item.reason === 'duplicate_in_file'));
+        const created = await lessonsOf(rabbiId);
+        assert.equal(created.length, 1);
+        assert.equal(created[0]?.recurrenceKind, 'weekly');
+        await trackLessonsOf(rabbiId);
+      });
+    });
+
+    test('no chain merge: P 20:00, Q 20:00 and Q 21:00 are two lessons, and one place at two times is two', async () => {
+      const { source, rabbiName, rabbiId } = await setUpRabbi('chain');
+      const file = buildFile([
+        baseRow({ rabbiName, sources: [source], place: 'מקום פי', startTime: '20:00' }),
+        baseRow({ rabbiName, sources: [source], place: 'מקום קיו', startTime: '20:00' }),
+        baseRow({ rabbiName, sources: [source], place: 'מקום קיו', startTime: '21:00' }),
+      ]);
+      const { plan, applied } = await planThenApply(file);
+      assert.equal(plan.counts.added, 2);
+      assert.equal(applied.counts.added, 2);
+      const created = await lessonsOf(rabbiId);
+      assert.deepEqual(created.map((lesson) => lesson.startTime).sort(), ['20:00', '21:00']);
+      assert.equal(created.find((lesson) => lesson.startTime === '21:00')?.addressName, 'מקום קיו');
+      await trackLessonsOf(rabbiId);
+    });
+
+    test('updating a lesson to the stored key a twin already holds never trips the unique index: the key holder is the one updated', async () => {
+      const { source, rabbiName, rabbiId } = await setUpRabbi('key-holder');
+      const oldId = await insertLesson({ rabbiId, provenance: 'imported', place: 'מקום ישן', weekday: 0, startTime: '19:41', source });
+      const holderId = await insertLesson({ rabbiId, provenance: 'imported', place: 'מקום מחזיק', weekday: 0, startTime: '19:41', source, importKey: weeklyImportKey(rabbiId, 0, '19:41') });
+
+      const file = buildFile([baseRow({ rabbiName, sources: [source], place: 'מקום חדש', startTime: '19:41' })]);
+      const { plan } = await planThenApply(file);
+      assert.equal(plan.updates[0]?.lessonId, holderId);
+      const withheld = plan.withheldIfUnacked.find((item) => item.lessonId === oldId);
+      assert.equal(withheld?.reason, 'duplicate');
+      assert.equal((await lessonsOf(rabbiId)).length, 2);
+    });
+
+    describe('creating synagogues', () => {
+      test('a synagogue no place knows is created, active, with no account, and the lesson goes on it', async () => {
+        const { source, rabbiName, rabbiId } = await setUpRabbi('create');
+        const suffix = placeSuffix();
+        const file = buildFile([baseRow({ rabbiName, sources: [source], place: `בהכנ"ס "אור ${suffix}"`, startTime: '19:47' })]);
+
+        const plan = (await postPlan(file)).json() as AgentImportPlanResponse;
+        assert.equal(plan.counts.placesCreated, 1);
+        assert.equal(plan.newPlaces.length, 1);
+        assert.equal(plan.newPlaces[0]?.name, `בית הכנסת אור ${suffix}`);
+
+        const applyRes = await postApply({ file, digest: plan.digest });
+        assert.equal(applyRes.statusCode, 200);
+        const applied = applyRes.json() as AgentImportApplyResult;
+        assert.equal(applied.counts.placesCreated, 1);
+        const created = await trackPlacesNamed(`בית הכנסת אור ${suffix}`);
+        assert.equal(created.length, 1);
+        const place = created[0];
+        assert.ok(place);
+        assert.equal(place.isActive, true);
+        assert.equal(place.cityCode, await jerusalemCode());
+        assert.deepEqual(applied.newPlaces.map((item) => item.placeId), [place.id]);
+        assert.equal((await db.select().from(adminUsers).where(eq(adminUsers.placeId, place.id))).length, 0);
+
+        const [lesson] = await lessonsOf(rabbiId);
+        assert.equal(lesson?.placeId, place.id);
+        assert.equal(lesson?.addressName, null);
+        assert.equal(lesson?.cityCode, place.cityCode);
+        await trackLessonsOf(rabbiId);
+
+        const rePlan = (await postPlan(file)).json() as AgentImportPlanResponse;
+        assert.equal(rePlan.counts.added, 0);
+        assert.equal(rePlan.counts.updated, 0);
+        assert.equal(rePlan.newPlaces.length, 0);
+      });
+
+      test('two lessons naming one new synagogue in two spellings share one created place', async () => {
+        const { source, rabbiName, rabbiId } = await setUpRabbi('create-shared');
+        const suffix = placeSuffix();
+        const file = buildFile([
+          baseRow({ rabbiName, sources: [source], place: `בהכנ"ס "שותף ${suffix}"`, startTime: '19:48' }),
+          baseRow({ rabbiName, sources: [source], place: `בית כנסת שותף ${suffix}`, street: 'רחוב שני 2', startTime: '19:49' }),
+        ]);
+        const { plan } = await planThenApply(file);
+        assert.equal(plan.newPlaces.length, 1);
+        const created = await trackPlacesNamed(`בית הכנסת שותף ${suffix}`);
+        assert.equal(created.length, 1);
+        const lessonRows = await lessonsOf(rabbiId);
+        assert.equal(lessonRows.length, 2);
+        assert.ok(lessonRows.every((lesson) => lesson.placeId === created[0]?.id));
+        await trackLessonsOf(rabbiId);
+      });
+
+      test('a house is never created as a place, and a row with no street never creates one', async () => {
+        const { source, rabbiName, rabbiId } = await setUpRabbi('create-never');
+        const suffix = placeSuffix();
+        const houseName = `בית משפחת כהן ${suffix}`;
+        const noStreet = baseRow({ rabbiName, sources: [source], place: `בהכנ"ס "ללא רחוב ${suffix}"`, startTime: '19:53', street: undefined });
+        const file = buildFile([baseRow({ rabbiName, sources: [source], place: houseName, startTime: '19:52' }), noStreet]);
+        const { plan } = await planThenApply(file);
+        assert.equal(plan.newPlaces.length, 0);
+        assert.ok(plan.skipped.some((item) => item.reason === 'missing_street'));
+        assert.equal((await db.select().from(places).where(eq(places.name, houseName))).length, 0);
+        const [lesson] = await lessonsOf(rabbiId);
+        assert.equal(lesson?.placeId, null);
+        assert.equal(lesson?.addressName, houseName);
+        await trackLessonsOf(rabbiId);
+      });
+
+      test('a deactivated place with that name stops creation: the lesson keeps its address', async () => {
+        const { source, rabbiName, rabbiId } = await setUpRabbi('create-inactive');
+        const suffix = placeSuffix();
+        const placeId = `test-place-${uniqueSuffix()}`;
+        await db.insert(places).values({ id: placeId, slug: `test-${uniqueSuffix()}`, name: `בית הכנסת אור ${suffix}`, street: 'רחוב ישן 1', cityCode: await jerusalemCode(), isActive: false });
+        cleanupPlaceIds.add(placeId);
+
+        const file = buildFile([baseRow({ rabbiName, sources: [source], place: `בהכנ"ס "אור ${suffix}"`, startTime: '19:54' })]);
+        const { plan } = await planThenApply(file);
+        assert.equal(plan.newPlaces.length, 0);
+        const [lesson] = await lessonsOf(rabbiId);
+        assert.equal(lesson?.placeId, null);
+        assert.equal((await db.select().from(places).where(eq(places.name, `בית הכנסת אור ${suffix}`))).length, 1);
+        await trackLessonsOf(rabbiId);
+      });
+
+      test('a place created by hand between the plan and the apply gives 409 plan_changed', async () => {
+        const { source, rabbiName, rabbiId } = await setUpRabbi('create-race');
+        const suffix = placeSuffix();
+        const file = buildFile([baseRow({ rabbiName, sources: [source], place: `בהכנ"ס "מרוץ ${suffix}"`, startTime: '19:55' })]);
+        const plan = (await postPlan(file)).json() as AgentImportPlanResponse;
+        assert.equal(plan.newPlaces.length, 1);
+
+        await createPlace(`בית הכנסת מרוץ ${suffix}`);
+        const res = await postApply({ file, digest: plan.digest });
+        assert.equal(res.statusCode, 409);
+        assert.equal((res.json() as { error: string }).error, 'plan_changed');
+        assert.equal((await lessonsOf(rabbiId)).length, 0);
+      });
+
+      test('a created place outlives its lesson: the import never deletes or deactivates a place', async () => {
+        const { source, rabbiName, rabbiId } = await setUpRabbi('create-outlives');
+        const suffix = placeSuffix();
+        const shulName = `בית הכנסת נשאר ${suffix}`;
+        const keeper = baseRow({ rabbiName, sources: [source], place: 'מקום נשאר תמיד', startTime: '20:41' });
+        const first = buildFile([baseRow({ rabbiName, sources: [source], place: `בהכנ"ס "נשאר ${suffix}"`, startTime: '19:56' }), keeper]);
+        await planThenApply(first);
+        await trackLessonsOf(rabbiId);
+        const [createdPlace] = await trackPlacesNamed(shulName);
+        assert.ok(createdPlace);
+
+        const second = buildFile([keeper]);
+        const { plan, applied } = await planThenApply(second);
+        assert.equal(plan.deletions.length, 1);
+        assert.equal(applied.deleted.length, 1);
+        assert.equal((await lessonsOf(rabbiId)).length, 1);
+        const [placeAfter] = await db.select().from(places).where(eq(places.id, createdPlace.id));
+        assert.equal(placeAfter?.isActive, true);
+      });
+    });
+
+    test('an addition beside a hand lesson at the same place at another time carries the hint', async () => {
+      const { source, rabbiName, rabbiId } = await setUpRabbi('hint');
+      const handId = await insertLesson({ rabbiId, provenance: 'manual', place: 'בית הכנסת רמז', weekday: 0, startTime: '19:58' });
+      const file = buildFile([baseRow({ rabbiName, sources: [source], place: 'בהכנ"ס "רמז"', startTime: '20:58' })]);
+      const plan = (await postPlan(file)).json() as AgentImportPlanResponse;
+      assert.equal(plan.counts.added, 1);
+      assert.equal(plan.additions[0]?.samePlaceLessonId, handId);
+    });
+  });
+
   describe('pure helpers', () => {
     // A real pair, not `addressKeyOf(x) === toSlug(x)` (circular: addressKeyOf
     // is toSlug, so that only proves a function equals itself). Two
@@ -1555,6 +2161,31 @@ describe('agent import', () => {
     test('nameKeyOf keys "הרב אברהם כהן" the same as "אברהם   כהן"', () => {
       assert.equal(nameKeyOf('הרב אברהם כהן'), nameKeyOf('אברהם   כהן'));
       assert.equal(nameKeyOf('הרב אברהם כהן'), stripLeadingHonorific('הרב אברהם כהן'));
+    });
+
+    test('placeMatchKeyOf keys every spelling of a synagogue the same, is idempotent, and leaves a beit midrash alone', () => {
+      const key = placeMatchKeyOf('בית הכנסת ספרא');
+      for (const variant of ['בהכנ"ס ספרא', 'בהכנ"ס "ספרא"', 'ביהכנ"ס ספרא', 'בית כנסת ספרא', 'ביה"כ ספרא']) {
+        assert.equal(placeMatchKeyOf(variant), key, variant);
+      }
+      assert.equal(placeMatchKeyOf(key), key);
+      assert.notEqual(placeMatchKeyOf('בית מדרש ספרא'), key);
+    });
+
+    test('isSynagogueName is true for a synagogue and false for a beit midrash, a yeshiva, a kollel or a home', () => {
+      assert.equal(isSynagogueName('בהכנ"ס "ספרא"'), true);
+      assert.equal(isSynagogueName('בית הכנסת חב"ד'), true);
+      for (const name of ['בית מדרש ספרא', 'ישיבת ספרא', 'כולל ספרא', 'בית משפחת כהן', 'מכון מאיר']) assert.equal(isSynagogueName(name), false, name);
+    });
+
+    test('synagogueDisplayName normalises the word, drops wrapping quotes and parentheses, and keeps an abbreviation', () => {
+      assert.equal(synagogueDisplayName('בהכנ"ס "ספרא"'), 'בית הכנסת ספרא');
+      assert.equal(synagogueDisplayName('בית כנסת חב"ד'), 'בית הכנסת חב"ד');
+      assert.equal(synagogueDisplayName('בית הכנסת אור (פסגת זאב)'), 'בית הכנסת אור פסגת זאב');
+    });
+
+    test('weeklyImportKey is the rabbi, the weekday and the start time, with no place in it', () => {
+      assert.equal(weeklyImportKey('r1', 3, '19:17'), 'r1|w3|t19:17');
     });
   });
 });

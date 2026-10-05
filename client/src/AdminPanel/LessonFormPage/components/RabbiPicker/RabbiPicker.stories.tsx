@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
+import type { AdminRabbiListItem } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { expect, fn, userEvent, within } from 'storybook/test';
@@ -21,8 +22,8 @@ type RabbisScenario = 'loaded' | 'loading' | 'error';
 
 let rabbisScenario: RabbisScenario = 'loaded';
 
-const avraham = rabbiFixture({ id: 'rabbi-1', name: 'אברהם כהן' });
-const moshe = rabbiFixture({ id: 'rabbi-2', name: 'משה לוי' });
+const avraham: AdminRabbiListItem = { ...rabbiFixture({ id: 'rabbi-1', name: 'אברהם כהן' }), prominence: 'known', lessonCount: 0 };
+const moshe: AdminRabbiListItem = { ...rabbiFixture({ id: 'rabbi-2', name: 'משה לוי' }), prominence: 'known', lessonCount: 0 };
 
 installMockFetch((url) => {
   if (url.pathname === '/v1/admin/rabbis') {

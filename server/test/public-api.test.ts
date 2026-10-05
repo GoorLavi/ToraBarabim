@@ -25,7 +25,19 @@ import { nanoid } from 'nanoid';
 import { toHomeResponse } from '../src/convertors/home';
 import { db } from '../src/db/client';
 import { cities, lessonExceptions, lessons, places, rabbis } from '../src/db/schema';
-import { HELP_TILE_KINDS, HELP_TILE_MIN_INDEX, HOME_RABBI_ROW_CAP } from '../src/service/home/consts';
+import {
+  HELP_TILE_KINDS,
+  HELP_TILE_MIN_INDEX,
+  HOME_CITY_GRID_CAP,
+  HOME_RABBI_ROW_CAP,
+  MAX_AREA_ROWS,
+  MAX_HOME_LESSON_ROWS,
+  MAX_LESSONS_PER_RABBI_PER_ROW,
+  WOMENS_AREA_TILE_FALLBACK_FIRST_ROW,
+  WOMENS_AREA_TILE_FIRST_CANDIDATE_ROW,
+  WOMENS_AREA_TILE_INDEX,
+  WOMENS_AREA_TILE_MIN_LESSONS,
+} from '../src/service/home/consts';
 import * as homeService from '../src/service/home/home';
 import { addDays, nextDateOnWeekday, todayInIsrael } from '../src/service/lesson/israel-time';
 import * as lessonService from '../src/service/lesson/lesson';
@@ -719,10 +731,11 @@ describe('public API', () => {
   // rabbanit, every row keeps at least 3 lesson items after the scope
   // filter, and the tile's count matches `GET /v1/women`'s own count.
   // Placement: exactly one row carries `womensAreaTileIndex` (value 3) when
-  // the women's set is non-empty, none when it is empty; the row is the
-  // second row when it has at least four lessons, otherwise the next row
-  // that does (see `WOMENS_AREA_TILE_*` in `service/home/consts.ts`).
-  test("GET /v1/home returns every row correctly shaped, excludes rabbanit-taught lessons, and places at most one women's-area tile", async () => {
+  // the women's set is non-empty and a row has room, none otherwise; the row
+  // is the first with at least four lessons from the sixth lesson row on,
+  // else the first such row from the second (see `WOMENS_AREA_TILE_*` in
+  // `service/home/consts.ts`).
+  test("GET /v1/home returns every row correctly shaped, excludes rabbanit-taught lessons, and places one women's-area tile where it can", async () => {
     const [homeRes, womenRes] = await Promise.all([
       app.inject({ method: 'GET', url: '/v1/home' }),
       app.inject({ method: 'GET', url: '/v1/women' }),
@@ -753,8 +766,8 @@ describe('public API', () => {
 
       if (row.womensAreaTileIndex !== undefined) {
         rowsWithTile.push(rowIndex);
-        assert.equal(row.womensAreaTileIndex, 3);
-        assert.ok(row.items.length >= 4, `expected row ${row.id} to have at least 4 lessons to carry the tile`);
+        assert.equal(row.womensAreaTileIndex, WOMENS_AREA_TILE_INDEX);
+        assert.ok(row.items.length >= WOMENS_AREA_TILE_MIN_LESSONS, `expected row ${row.id} to have at least ${WOMENS_AREA_TILE_MIN_LESSONS} lessons to carry the tile`);
       }
     });
 
@@ -765,9 +778,12 @@ describe('public API', () => {
     if (body.womensAreaLessonCount === 0) {
       assert.equal(rowsWithTile.length, 0, "expected no row to carry the tile when the women's set is empty");
     } else {
-      // The candidate row is the second row (index 1); if it has fewer
-      // than four lessons, the tile moves to the next row that does.
-      const expectedRowIndex = lessonRows.findIndex((row, index) => index >= 1 && row.items.length >= 4);
+      // The scan starts at the sixth lesson row and falls back to the
+      // second one, so the page carries exactly one tile whenever any
+      // row from the second on has room for it.
+      const hasRoom = (from: number) => lessonRows.findIndex((row, index) => index >= from && row.items.length >= WOMENS_AREA_TILE_MIN_LESSONS);
+      const fromCandidate = hasRoom(WOMENS_AREA_TILE_FIRST_CANDIDATE_ROW);
+      const expectedRowIndex = fromCandidate !== -1 ? fromCandidate : hasRoom(WOMENS_AREA_TILE_FALLBACK_FIRST_ROW);
       if (expectedRowIndex === -1) {
         assert.equal(rowsWithTile.length, 0, 'no row has enough lessons to carry the tile');
       } else {
@@ -793,6 +809,49 @@ describe('public API', () => {
       assert.equal(row.womensAreaTileIndex, undefined, `expected row ${row.id} not to carry both a help tile and the women's-area tile`);
     }
     assert.equal(new Set(placedKinds).size, placedKinds.length, 'expected each help tile kind at most once per page');
+  });
+
+  test('GET /v1/home composes varied rows: unique ids, a bounded count, no stacked families, the rabbi cap, and a ranked city grid', async () => {
+    const res = await app.inject({ method: 'GET', url: '/v1/home' });
+    assert.equal(res.statusCode, 200);
+    const body = res.json() as HomeResponse;
+    const lessonRows = body.rows.filter((row) => row.kind === 'lessons');
+
+    assert.ok(lessonRows.length <= MAX_HOME_LESSON_ROWS, `expected at most ${MAX_HOME_LESSON_ROWS} lesson rows, got ${lessonRows.length}`);
+    const ids: string[] = body.rows.map((row) => row.id);
+    assert.equal(new Set(ids).size, ids.length, `expected unique row ids, got ${ids.join(',')}`);
+    assert.ok(ids.filter((id) => id.startsWith('area:')).length <= MAX_AREA_ROWS);
+    assert.ok(!ids.includes('topic:other'), 'expected no topic:other row');
+
+    lessonRows.forEach((row, index) => {
+      const lessonIds = row.items.map((item) => item.lessonId);
+      assert.equal(new Set(lessonIds).size, lessonIds.length, `expected each lesson once in row ${row.id}`);
+
+      const lessonsByTeacher = new Map<string, number>();
+      for (const item of row.items) {
+        const teacherId = item.substituteRabbi?.id ?? item.rabbi.id;
+        lessonsByTeacher.set(teacherId, (lessonsByTeacher.get(teacherId) ?? 0) + 1);
+      }
+      for (const [teacherId, count] of lessonsByTeacher) {
+        assert.ok(count <= MAX_LESSONS_PER_RABBI_PER_ROW, `expected at most ${MAX_LESSONS_PER_RABBI_PER_ROW} lessons by ${teacherId} in row ${row.id}, got ${count}`);
+      }
+
+      const previous = lessonRows[index - 1];
+      if (!previous) return;
+      for (const prefix of ['area:', 'topic:']) {
+        assert.ok(!(row.id.startsWith(prefix) && previous.id.startsWith(prefix)), `expected no two ${prefix} rows side by side, got ${previous.id} then ${row.id}`);
+      }
+    });
+
+    const tileRowCount = lessonRows.filter((row) => row.womensAreaTileIndex !== undefined).length;
+    assert.ok(tileRowCount <= 1, `expected at most one women's-area tile, got ${tileRowCount}`);
+
+    assert.ok(body.cities.length <= HOME_CITY_GRID_CAP);
+    body.cities.forEach((city, index) => {
+      assert.ok(city.lessonCount > 0, `expected city ${city.name} to have a positive count`);
+      const previous = body.cities[index - 1];
+      if (previous) assert.ok(previous.lessonCount >= city.lessonCount, `expected cities in descending order, got ${previous.name} then ${city.name}`);
+    });
   });
 
   // The "לפי רב" avatar row: sorted by tier (sought before known before
@@ -843,19 +902,29 @@ describe('public API', () => {
       placeId = `test-place-${nanoid(8)}`;
       await db.insert(places).values({ id: placeId, slug: placeId, name: `מקום בדיקה ${nanoid(8)}`, street: 'רחוב הבדיקה 1', cityCode: city.code });
 
+      // One teacher each: the home rows keep at most two lessons per teacher,
+      // so lessons sharing a rabbi would make the 09:00 lesson's presence
+      // depend on the order the row happens to put them in.
+      const teachers = await db.select({ id: rabbis.id }).from(rabbis).where(eq(rabbis.honorific, 'rav')).orderBy(rabbis.id).limit(START_TIMES.length);
+      if (teachers.length < START_TIMES.length) throw new Error(`expected ${START_TIMES.length} seeded rabbis, found ${teachers.length}`);
+
       for (const startTime of START_TIMES) lessonIdByStartTime.set(startTime, `test-lesson-${nanoid(8)}`);
       await db.insert(lessons).values(
-        [...lessonIdByStartTime].map(([startTime, id]) => ({
-          id,
-          rabbiId: SEEDED_RABBI_ID,
-          placeId,
-          cityCode: city.code,
-          audience: 'men' as const,
-          recurrenceKind: 'once' as const,
-          recurrenceDate: FIXED_DAY,
-          startTime,
-          durationMinutes: 60,
-        })),
+        [...lessonIdByStartTime].map(([startTime, id], index) => {
+          const teacher = teachers[index];
+          if (!teacher) throw new Error(`expected a seeded rabbi for the ${startTime} lesson`);
+          return {
+            id,
+            rabbiId: teacher.id,
+            placeId,
+            cityCode: city.code,
+            audience: 'men' as const,
+            recurrenceKind: 'once' as const,
+            recurrenceDate: FIXED_DAY,
+            startTime,
+            durationMinutes: 60,
+          };
+        }),
       );
     });
 

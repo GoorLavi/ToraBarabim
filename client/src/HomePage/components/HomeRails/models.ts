@@ -16,10 +16,11 @@ export interface HomeRowsQueryState {
 export interface HomeRailsProps {
   className?: string;
   query: HomeRowsQueryState;
-  // The `success` group, fixed to this placement (HomePage.tsx), prop-
-  // drilled by one level rather than read again here. `undefined` when the
-  // pool has no `success` dedications.
-  dedicationGroup: DedicationGroup | undefined;
+  // The `success` and `healing` groups, each fixed to its own slot here
+  // (consts.ts), prop-drilled by one level rather than read again. Each is
+  // `undefined` when the pool has no dedications of that type.
+  successGroup: DedicationGroup | undefined;
+  healingGroup: DedicationGroup | undefined;
 }
 
 // What a visitor has typed so far into one type's form. Strings as typed:

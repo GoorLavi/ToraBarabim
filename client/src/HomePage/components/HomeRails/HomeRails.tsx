@@ -12,12 +12,12 @@ import { LessonRail } from '../LessonRail/LessonRail';
 import { WomensAreaBand } from '../WomensAreaBand/WomensAreaBand';
 import { HelpWindow } from './components/HelpWindow/HelpWindow';
 import * as consts from './consts';
-import { dedicationBandSlot, indexAfterNthLessonRow, shouldShowBetweenRailsDedication } from './helpers';
+import { indexAfterNthLessonRow } from './helpers';
 import type { HomeRailsProps } from './models';
 import * as styles from './styles';
 import { useHelpWindow } from './useHelpWindow';
 
-export const HomeRails = styled(({ className, query, dedicationGroup }: HomeRailsProps) => {
+export const HomeRails = styled(({ className, query, successGroup, healingGroup }: HomeRailsProps) => {
   const helpWindow = useHelpWindow();
 
   const { openKind } = helpWindow;
@@ -109,29 +109,37 @@ export const HomeRails = styled(({ className, query, dedicationGroup }: HomeRail
   );
 
   const lessonRowCount = rows.filter((row) => row.kind === 'lessons').length;
-  // With no lesson rows at all (the course row alone), neither band has a
-  // real "after the Nth lesson row" slot to sit in, so showing one would
+  // With no lesson rows at all (the course row alone), the women's band has
+  // no real "after the Nth lesson row" slot to sit in, so showing it would
   // land it oddly right after the course row instead (plan addendum).
   const showWomensAreaBand = womensAreaLessonCount > 0 && lessonRowCount > 0;
-  const showBetweenRailsDedication = shouldShowBetweenRailsDedication(
-    lessonRowCount,
-    dedicationGroup !== undefined && dedicationGroup.items.length > 0,
-  );
 
-  // Computed once against the original `rows` (never against `rails` after
-  // a splice moves everything after it), and reused for both bands so the
-  // dedication band's own placement stays relative to it (helpers.ts).
-  const womensAreaBandIndex = indexAfterNthLessonRow(rows, consts.WOMENS_AREA_BAND_SLOT);
-
-  if (showWomensAreaBand) {
-    rails.splice(womensAreaBandIndex, 0, <WomensAreaBand key="womens-area-band" {...{ lessonCount: womensAreaLessonCount }} />);
+  // Every index is computed against the original `rows`, then the bands are
+  // spliced from the highest slot down, so an earlier splice never shifts a
+  // later one. Slots only ever clamp to the end, never past it, so on a thin
+  // page two bands can share an index: splicing healing first leaves success
+  // ahead of it, and success before women's keeps women's ahead of both.
+  if (healingGroup && healingGroup.items.length > 0) {
+    rails.splice(
+      indexAfterNthLessonRow(rows, consts.HEALING_BAND_SLOT),
+      0,
+      <DedicationBand key="healing-band" {...{ group: healingGroup, variant: 'onPage' as const }} />,
+    );
   }
 
-  if (showBetweenRailsDedication) {
+  if (successGroup && successGroup.items.length > 0) {
     rails.splice(
-      dedicationBandSlot(womensAreaBandIndex, showWomensAreaBand),
+      indexAfterNthLessonRow(rows, consts.SUCCESS_BAND_SLOT),
       0,
-      <DedicationBand key="dedication-band" {...{ group: dedicationGroup, variant: 'onPage' as const }} />,
+      <DedicationBand key="success-band" {...{ group: successGroup, variant: 'onPage' as const }} />,
+    );
+  }
+
+  if (showWomensAreaBand) {
+    rails.splice(
+      indexAfterNthLessonRow(rows, consts.WOMENS_AREA_BAND_SLOT),
+      0,
+      <WomensAreaBand key="womens-area-band" {...{ lessonCount: womensAreaLessonCount }} />,
     );
   }
 

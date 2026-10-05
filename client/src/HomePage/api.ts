@@ -1,4 +1,4 @@
-import type { City, HomeResponse, LessonSearchResponse } from '@torabarabim/common';
+import type { HomeResponse, LessonSearchResponse } from '@torabarabim/common';
 
 import type { LessonFilters } from './models';
 
@@ -37,30 +37,6 @@ export const fetchLessons = async (filters: LessonFilters): Promise<LessonSearch
   }
 
   return (await response.json()) as LessonSearchResponse;
-};
-
-// GET /v1/cities
-// 200 on success, including an empty result set (an empty or missing `q`
-// resolves to no results server-side, never a 404: root CLAUDE.md, HTTP
-// Status Codes).
-// 400 for an invalid query.
-// 5xx for a server or upstream failure.
-export const fetchCities = async (q: string): Promise<{ items: City[] }> => {
-  const url = new URL('/v1/cities', window.location.origin);
-  url.searchParams.set('q', q);
-
-  let response: Response;
-  try {
-    response = await fetch(url);
-  } catch (error) {
-    throw new HomeApiError(0, `failed to reach ${url.toString()}: ${String(error)}`);
-  }
-
-  if (!response.ok) {
-    throw new HomeApiError(response.status, `GET ${url.toString()} returned ${response.status}`);
-  }
-
-  return (await response.json()) as { items: City[] };
 };
 
 // GET /v1/home, no query parameters.

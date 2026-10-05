@@ -28,7 +28,8 @@ export const DeleteRabbiButton = styled(({ className, rabbiId, honorific, onDele
   const remove = useMutation({
     mutationFn: () => deleteAdminRabbi(rabbiId, true),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['admin', 'rabbis'] });
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.rabbisAll() });
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.lessonsAll() });
       onDeleted();
     },
   });
