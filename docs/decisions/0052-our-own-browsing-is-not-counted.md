@@ -1,4 +1,4 @@
-# 0051: Our own browsing is not counted
+# 0052: Our own browsing is not counted
 
 - **Status:** accepted
 - **Date:** 2026-10-05
