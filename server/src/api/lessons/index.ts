@@ -1,7 +1,7 @@
 import type { FastifyInstance, FastifyReply } from 'fastify';
 import { ZodError } from 'zod';
 
-import { toLessonOccurrence, toLessonSearchResponse } from '../../convertors/lesson';
+import { toLessonOccurrenceDetail, toLessonSearchResponse } from '../../convertors/lesson';
 import { InvalidDateRangeError, LessonNotFoundError, LessonOccurrenceNotFoundError } from '../../service/lesson/errors';
 import * as lessonService from '../../service/lesson/lesson';
 import { lessonOccurrenceParamsSchema, lessonSearchQuerySchema } from '../../service/lesson/models';
@@ -53,8 +53,8 @@ export const registerLessonRoutes = async (app: FastifyInstance): Promise<void> 
   app.get('/v1/lessons/:lessonId/occurrences/:date', async (request, reply) => {
     try {
       const { lessonId, date } = lessonOccurrenceParamsSchema.parse(request.params);
-      const occurrence = await lessonService.getOccurrence(lessonId, date);
-      return reply.send(toLessonOccurrence(occurrence));
+      const occurrence = await lessonService.getOccurrence(lessonId, date, new Date());
+      return reply.send(toLessonOccurrenceDetail(occurrence));
     } catch (error) {
       return handleError(reply, error, 'GET /v1/lessons/:lessonId/occurrences/:date');
     }

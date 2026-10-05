@@ -63,9 +63,9 @@ export const lessonCountLabel = (count: number): string => (count === 1 ? 'שי�
 export const cityCountLabel = (count: number): string => (count === 1 ? 'עיר אחת' : `${count} ערים`);
 
 // Read by AreaLink (the city page's own title block and CityEmptyState) and
-// by AreaLessonsPreview's own heading link, which renders the label directly
-// without AreaLink since that line needs heading semantics, not a Secondary
-// link.
+// by the lesson page's area rail, whose heading link (RailHeading) renders the
+// label directly without AreaLink since that line needs heading semantics, not
+// a Secondary link.
 export const areaLinkLabel = (areaName: string): string => `לכל השיעורים באזור ${areaName}`;
 
 // The fixed page size "load more" pages through (CityPage, WomenPage): one

@@ -18,14 +18,8 @@ import { GRID_CARD_WIDTH_DESKTOP } from './consts';
 // non-fractional track size and justify-content: start, an unfilled
 // trailing track is invisible either way, since there is nothing to
 // stretch into the space it would otherwise collapse.
-//
-// maxColumns caps the column count for a caller whose own column is
-// narrower than the sitewide band (the lesson page's area preview): since
-// auto-fill has no native "at most N columns", the cap is expressed as a
-// ceiling on the container's own width, exactly wide enough for maxColumns
-// tracks and no more.
-export const LessonsGrid = css<{ maxColumns?: number }>(
-  ({ theme, maxColumns }) => `
+export const LessonsGrid = css(
+  ({ theme }) => `
   list-style: none;
   margin: 0;
   padding: 0;
@@ -36,12 +30,6 @@ export const LessonsGrid = css<{ maxColumns?: number }>(
   @media (min-width: ${theme.breakpoints.md}) {
     grid-template-columns: repeat(auto-fill, ${GRID_CARD_WIDTH_DESKTOP});
     justify-content: start;
-
-    ${
-      maxColumns
-        ? `max-inline-size: calc(${maxColumns} * ${GRID_CARD_WIDTH_DESKTOP} + ${maxColumns - 1} * ${theme.spacing.lg});`
-        : ''
-    }
   }
 
   > .cell {

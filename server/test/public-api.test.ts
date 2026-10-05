@@ -7,6 +7,7 @@ import type {
   DedicationType,
   HomeResponse,
   LessonOccurrence,
+  LessonOccurrenceDetail,
   LessonSearchResponse,
   Place,
   PlaceListResponse,
@@ -38,9 +39,11 @@ import {
   WOMENS_AREA_TILE_MIN_LESSONS,
 } from '../src/service/home/consts';
 import * as homeService from '../src/service/home/home';
-import { selectAreaPreview } from '../src/service/lesson/area-preview';
 import { addDays, nextDateOnWeekday, todayInIsrael } from '../src/service/lesson/israel-time';
+import * as lessonService from '../src/service/lesson/lesson';
+import { selectAreaPreview, selectRabbiUpcoming } from '../src/service/lesson/lesson-rows';
 import type { ResolvedLessonOccurrence } from '../src/service/lesson/models';
+import { MAX_ITEMS_PER_ROW } from '../src/service/shared/consts';
 import { rabbiNameSchema, stripLeadingHonorific } from '../src/service/shared/name';
 import { PROMINENCE_RANK } from '../src/service/shared/rabbi-order';
 import { toSlug } from '../src/service/shared/slug';
@@ -966,6 +969,201 @@ describe('public API', () => {
     });
   });
 
+  // Fixtures for the lesson page's timing and its rabbi row. The clock is a
+  // Saturday in 2030 (Israel is UTC+2 in January), so no seeded lesson shares
+  // the day; each fixture rabbi is private to one group of tests, because a
+  // weekly fixture recurs on every date and would otherwise leak into a
+  // neighbouring row.
+  describe('the lesson page timing and rabbi row', () => {
+    const FIXED_DAY = '2030-01-12';
+    const NEXT_DAY = addDays(FIXED_DAY, 1);
+    const LAST_WINDOW_DAY = addDays(FIXED_DAY, 13);
+    const SATURDAY = 6;
+    const ALL_WEEKDAYS = [0, 1, 2, 3, 4, 5, 6] as const;
+    const at = (isoDay: string, israelTime: string): number => new Date(`${isoDay}T${israelTime}:00+02:00`).getTime();
+
+    const rabbiIds: string[] = [];
+    const lessonIds: string[] = [];
+    let cityCode = 0;
+
+    const createRabbi = async (honorific: 'rav' | 'rabbanit'): Promise<string> => {
+      const id = `test-rabbi-${nanoid(8)}`;
+      await db.insert(rabbis).values({ id, name: `רב בדיקה ${nanoid(8)}`, honorific });
+      rabbiIds.push(id);
+      return id;
+    };
+
+    interface LessonFixture {
+      rabbiId: string;
+      startTime: string;
+      recurrence: { kind: 'once'; date: string } | { kind: 'weekly'; weekdays: readonly number[] };
+      audience?: 'men' | 'women';
+    }
+
+    const createLesson = async ({ rabbiId, startTime, recurrence, audience = 'men' }: LessonFixture): Promise<string> => {
+      const id = `test-lesson-${nanoid(8)}`;
+      await db.insert(lessons).values({
+        id,
+        rabbiId,
+        addressName: 'בית מדרש בדיקה',
+        addressStreet: 'רחוב הבדיקה 1',
+        cityCode,
+        audience,
+        recurrenceKind: recurrence.kind,
+        ...(recurrence.kind === 'once' ? { recurrenceDate: recurrence.date } : { recurrenceWeekdays: [...recurrence.weekdays] }),
+        startTime,
+        durationMinutes: 60,
+      });
+      lessonIds.push(id);
+      return id;
+    };
+
+    before(async () => {
+      const [city] = await db.select({ code: cities.code }).from(cities).where(eq(cities.nameHe, SEEDED_CITY_NAME)).limit(1);
+      if (!city) throw new Error('expected the seeded city to exist');
+      cityCode = city.code;
+    });
+
+    after(async () => {
+      await db.delete(lessonExceptions).where(inArray(lessonExceptions.lessonId, lessonIds));
+      await db.delete(lessons).where(inArray(lessons.id, lessonIds));
+      await db.delete(rabbis).where(inArray(rabbis.id, rabbiIds));
+    });
+
+    afterEach(() => {
+      mock.timers.reset();
+    });
+
+    describe('GET /v1/lessons/:lessonId/occurrences/:date timing', () => {
+      let nineOClockId = '';
+      let lateEveningId = '';
+      let movedId = '';
+
+      before(async () => {
+        const rabbiId = await createRabbi('rav');
+        nineOClockId = await createLesson({ rabbiId, startTime: '09:00', recurrence: { kind: 'once', date: FIXED_DAY } });
+        lateEveningId = await createLesson({ rabbiId, startTime: '23:45', recurrence: { kind: 'once', date: FIXED_DAY } });
+        movedId = await createLesson({ rabbiId, startTime: '09:00', recurrence: { kind: 'weekly', weekdays: [SATURDAY] } });
+        await db.insert(lessonExceptions).values({ lessonId: movedId, date: FIXED_DAY, kind: 'modified', startTime: '11:00' });
+      });
+
+      const timingOf = async (lessonId: string, date: string, now: number): Promise<string> => {
+        mock.timers.enable({ apis: ['Date'], now });
+        const res = await app.inject({ method: 'GET', url: `/v1/lessons/${lessonId}/occurrences/${date}` });
+        mock.timers.reset();
+        assert.equal(res.statusCode, 200);
+        return (res.json() as LessonOccurrenceDetail).timing;
+      };
+
+      test('a lesson is upcoming until 30 minutes after its start, boundary included, then started', async () => {
+        assert.equal(await timingOf(nineOClockId, FIXED_DAY, at(FIXED_DAY, '09:20')), 'upcoming');
+        assert.equal(await timingOf(nineOClockId, FIXED_DAY, at(FIXED_DAY, '09:30')), 'startedPastGrace');
+        assert.equal(await timingOf(nineOClockId, FIXED_DAY, at(FIXED_DAY, '10:00')), 'startedPastGrace');
+      });
+
+      test('a lesson has taken place from midnight, and a 23:45 lesson is still upcoming at 23:59', async () => {
+        assert.equal(await timingOf(nineOClockId, FIXED_DAY, at(NEXT_DAY, '00:00')), 'tookPlace');
+        assert.equal(await timingOf(lateEveningId, FIXED_DAY, at(FIXED_DAY, '23:59')), 'upcoming');
+        assert.equal(await timingOf(lateEveningId, FIXED_DAY, at(NEXT_DAY, '00:00')), 'tookPlace');
+      });
+
+      test('a date before today has taken place however early the clock is', async () => {
+        assert.equal(await timingOf(movedId, addDays(FIXED_DAY, -7), at(FIXED_DAY, '00:00')), 'tookPlace');
+      });
+
+      test('a moved start time decides, not the lesson own start time', async () => {
+        assert.equal(await timingOf(movedId, FIXED_DAY, at(FIXED_DAY, '10:00')), 'upcoming');
+        assert.equal(await timingOf(movedId, FIXED_DAY, at(FIXED_DAY, '11:30')), 'startedPastGrace');
+      });
+    });
+
+    describe('searchRabbiUpcoming', () => {
+      const NOW = new Date(at(FIXED_DAY, '10:00'));
+      let rabbiId = '';
+      let goneTodayId = '';
+      let cancelledNextId = '';
+      let sundayId = '';
+      let dailyIds: string[] = [];
+      let dayThirteenId = '';
+
+      before(async () => {
+        rabbiId = await createRabbi('rav');
+        goneTodayId = await createLesson({ rabbiId, startTime: '09:00', recurrence: { kind: 'once', date: FIXED_DAY } });
+        cancelledNextId = await createLesson({ rabbiId, startTime: '18:00', recurrence: { kind: 'weekly', weekdays: [SATURDAY] } });
+        await db.insert(lessonExceptions).values({ lessonId: cancelledNextId, date: FIXED_DAY, kind: 'cancelled' });
+        sundayId = await createLesson({ rabbiId, startTime: '20:00', recurrence: { kind: 'weekly', weekdays: [0] } });
+        dailyIds = await Promise.all(
+          ['06:00', '06:10', '06:20', '06:30'].map((startTime) => createLesson({ rabbiId, startTime, recurrence: { kind: 'weekly', weekdays: ALL_WEEKDAYS } })),
+        );
+        dayThirteenId = await createLesson({ rabbiId, startTime: '19:00', recurrence: { kind: 'once', date: LAST_WINDOW_DAY } });
+      });
+
+      const rowFor = (viewed: { lessonId: string; date: string }): Promise<ResolvedLessonOccurrence[]> =>
+        lessonService.searchRabbiUpcoming({ rabbi: { id: rabbiId, honorific: 'rav' }, ...viewed }, NOW);
+
+      test('a cancelled next date shows as a cancelled card, then the lesson next scheduled date', async () => {
+        const row = await rowFor({ lessonId: cancelledNextId, date: addDays(FIXED_DAY, -7) });
+        assert.deepEqual(
+          row.slice(0, 2).map((item) => [item.lessonId, item.date, item.status]),
+          [[cancelledNextId, FIXED_DAY, 'cancelled'], [cancelledNextId, addDays(FIXED_DAY, 7), 'scheduled']],
+        );
+      });
+
+      test('a lesson with two dates in the window shows once', async () => {
+        const cards = (await rowFor({ lessonId: goneTodayId, date: FIXED_DAY })).filter((item) => item.lessonId === sundayId);
+        assert.deepEqual(cards.map((item) => item.date), [NEXT_DAY]);
+      });
+
+      test('a lesson that left the lists today is absent', async () => {
+        const row = await rowFor({ lessonId: dailyIds[0] ?? '', date: NEXT_DAY });
+        assert.ok(!row.some((item) => item.lessonId === goneTodayId));
+      });
+
+      test('four daily lessons do not push a later one-time lesson out of the row', async () => {
+        const row = await rowFor({ lessonId: goneTodayId, date: FIXED_DAY });
+        assert.ok(row.some((item) => item.lessonId === dayThirteenId && item.date === LAST_WINDOW_DAY));
+        for (const dailyId of dailyIds) assert.equal(row.filter((item) => item.lessonId === dailyId).length, 1);
+      });
+
+      test('the viewed date is absent, and the viewed lesson next date comes first', async () => {
+        const [viewedLessonId] = dailyIds;
+        assert.ok(viewedLessonId);
+        const row = await rowFor({ lessonId: viewedLessonId, date: NEXT_DAY });
+        assert.ok(!row.some((item) => item.lessonId === viewedLessonId && item.date === NEXT_DAY));
+        assert.equal(row[0]?.lessonId, viewedLessonId);
+        assert.equal(row[0]?.date, addDays(FIXED_DAY, 2));
+      });
+
+      test('thirteen distinct lessons give a row of twelve', async () => {
+        const crowdedRabbiId = await createRabbi('rav');
+        await Promise.all(
+          Array.from({ length: MAX_ITEMS_PER_ROW + 1 }, (_, index) =>
+            createLesson({ rabbiId: crowdedRabbiId, startTime: '20:00', recurrence: { kind: 'once', date: addDays(FIXED_DAY, index) } }),
+          ),
+        );
+        const row = await lessonService.searchRabbiUpcoming({ rabbi: { id: crowdedRabbiId, honorific: 'rav' }, lessonId: 'none', date: FIXED_DAY }, NOW);
+        assert.equal(row.length, MAX_ITEMS_PER_ROW);
+      });
+    });
+
+    describe('a rabbanit row', () => {
+      test('is not empty: her women lesson is found under her own scope', async () => {
+        const rabbanitId = await createRabbi('rabbanit');
+        const lessonId = await createLesson({
+          rabbiId: rabbanitId,
+          startTime: '20:00',
+          recurrence: { kind: 'once', date: addDays(FIXED_DAY, 2) },
+          audience: 'women',
+        });
+        const row = await lessonService.searchRabbiUpcoming(
+          { rabbi: { id: rabbanitId, honorific: 'rabbanit' }, lessonId: 'none', date: FIXED_DAY },
+          new Date(at(FIXED_DAY, '10:00')),
+        );
+        assert.deepEqual(row.map((item) => item.lessonId), [lessonId]);
+      });
+    });
+  });
+
   describe('GET /v1/home dedications', () => {
     test('`dedications` is a sibling of `rows`, and no row item ever carries a dedication', async () => {
       const res = await app.inject({ method: 'GET', url: '/v1/home' });
@@ -1364,12 +1562,14 @@ describe('public API', () => {
     });
   });
 
-  // A pure function, exercised directly rather than through a write route:
-  // the lesson page's area preview relies on it to never link to the page
-  // it is already on, and to never render one lesson two or three times in
-  // a thin area. See `service/lesson/area-preview.ts`.
-  describe('selectAreaPreview', () => {
-    const buildOccurrence = (lessonId: string, date: string): ResolvedLessonOccurrence => ({
+  // Pure functions, exercised directly: the lesson page's area row and rabbi
+  // row both pick from a full sorted list. See `service/lesson/lesson-rows.ts`.
+  describe('the lesson page row selectors', () => {
+    const buildOccurrence = (
+      lessonId: string,
+      date: string,
+      overrides: Partial<ResolvedLessonOccurrence> = {},
+    ): ResolvedLessonOccurrence => ({
       lessonId,
       date,
       startTime: '20:00',
@@ -1378,48 +1578,94 @@ describe('public API', () => {
       audience: 'men',
       rabbi: { id: `rabbi-of-${lessonId}`, name: 'שם הרב', honorific: 'rav', slug: `slug-${lessonId}` },
       venue: { kind: 'address', name: 'בית מדרש', street: 'רחוב הרצל', city: 'עיר', citySlug: 'ir', area: 'center' },
+      ...overrides,
     });
 
-    test('excludes every occurrence of the excluded lesson', () => {
-      const items = [buildOccurrence('lesson-a', '2026-01-01'), buildOccurrence('lesson-b', '2026-01-02')];
-      const result = selectAreaPreview(items, 'lesson-a', 10);
-      assert.ok(!result.some((item) => item.lessonId === 'lesson-a'));
-      assert.equal(result.length, 1);
+    describe('selectAreaPreview', () => {
+      test('leaves out every lesson of the excluded rabbi', () => {
+        const items = [buildOccurrence('lesson-a', '2030-01-01'), buildOccurrence('lesson-b', '2030-01-02')];
+        const result = selectAreaPreview(items, 'rabbi-of-lesson-a', MAX_ITEMS_PER_ROW);
+        assert.deepEqual(result.map((item) => item.lessonId), ['lesson-b']);
+      });
+
+      test('leaves out a second lesson of the same excluded rabbi', () => {
+        const sameRabbi = { id: 'rabbi-x', name: 'שם הרב', honorific: 'rav' as const, slug: 'slug-x' };
+        const items = [
+          buildOccurrence('lesson-a', '2030-01-01', { rabbi: sameRabbi }),
+          buildOccurrence('lesson-b', '2030-01-02', { rabbi: sameRabbi }),
+          buildOccurrence('lesson-c', '2030-01-03'),
+        ];
+        assert.deepEqual(selectAreaPreview(items, 'rabbi-x', MAX_ITEMS_PER_ROW).map((item) => item.lessonId), ['lesson-c']);
+      });
+
+      test('keeps only the first occurrence of a repeated lesson, in the incoming order', () => {
+        const items = [
+          buildOccurrence('lesson-b', '2030-01-02'),
+          buildOccurrence('lesson-c', '2030-01-03'),
+          buildOccurrence('lesson-b', '2030-01-09'),
+        ];
+        const result = selectAreaPreview(items, 'rabbi-none', MAX_ITEMS_PER_ROW);
+        assert.deepEqual(result.map((item) => `${item.lessonId}:${item.date}`), ['lesson-b:2030-01-02', 'lesson-c:2030-01-03']);
+      });
+
+      test('shows a cancelled first occurrence as is', () => {
+        const items = [buildOccurrence('lesson-b', '2030-01-02', { status: 'cancelled' }), buildOccurrence('lesson-b', '2030-01-09')];
+        const result = selectAreaPreview(items, 'rabbi-none', MAX_ITEMS_PER_ROW);
+        assert.deepEqual(result.map((item) => item.status), ['cancelled']);
+      });
+
+      test('caps at the limit', () => {
+        const items = Array.from({ length: MAX_ITEMS_PER_ROW + 1 }, (_, index) => buildOccurrence(`lesson-${index}`, '2030-01-02'));
+        assert.equal(selectAreaPreview(items, 'rabbi-none', MAX_ITEMS_PER_ROW).length, MAX_ITEMS_PER_ROW);
+      });
+
+      test('returns [] when nothing qualifies', () => {
+        assert.deepEqual(selectAreaPreview([buildOccurrence('lesson-a', '2030-01-01')], 'rabbi-of-lesson-a', MAX_ITEMS_PER_ROW), []);
+      });
     });
 
-    // A 7-day search window can hold several occurrences of one
-    // weekly-or-daily lesson; without de-duplication a thin area would
-    // render the same lesson two or three times.
-    test('keeps only the first occurrence of a repeated lesson', () => {
-      const items = [
-        buildOccurrence('lesson-b', '2026-01-02'),
-        buildOccurrence('lesson-b', '2026-01-09'),
-        buildOccurrence('lesson-c', '2026-01-03'),
-      ];
-      const result = selectAreaPreview(items, 'lesson-a', 10);
-      assert.equal(result.filter((item) => item.lessonId === 'lesson-b').length, 1);
-      assert.equal(result.find((item) => item.lessonId === 'lesson-b')?.date, '2026-01-02');
-    });
+    describe('selectRabbiUpcoming', () => {
+      const viewed = { lessonId: 'lesson-viewed', date: '2030-01-05' };
+      const keys = (items: ResolvedLessonOccurrence[]): string[] => items.map((item) => `${item.lessonId}:${item.date}`);
 
-    test('preserves the incoming order', () => {
-      const items = [buildOccurrence('lesson-c', '2026-01-03'), buildOccurrence('lesson-b', '2026-01-02')];
-      const result = selectAreaPreview(items, 'lesson-a', 10);
-      assert.deepEqual(result.map((item) => item.lessonId), ['lesson-c', 'lesson-b']);
-    });
+      test('drops the viewed date and shows the viewed lesson next date first', () => {
+        const items = [
+          buildOccurrence('lesson-other', '2030-01-05'),
+          buildOccurrence('lesson-viewed', '2030-01-05'),
+          buildOccurrence('lesson-viewed', '2030-01-12'),
+        ];
+        assert.deepEqual(keys(selectRabbiUpcoming(items, viewed, MAX_ITEMS_PER_ROW)), ['lesson-viewed:2030-01-12', 'lesson-other:2030-01-05']);
+      });
 
-    test('caps at the limit', () => {
-      const items = [
-        buildOccurrence('lesson-a', '2026-01-01'),
-        buildOccurrence('lesson-b', '2026-01-02'),
-        buildOccurrence('lesson-c', '2026-01-03'),
-      ];
-      const result = selectAreaPreview(items, 'lesson-x', 2);
-      assert.equal(result.length, 2);
-    });
+      test('shows a lesson once, by its soonest date', () => {
+        const items = [buildOccurrence('lesson-a', '2030-01-06'), buildOccurrence('lesson-a', '2030-01-13')];
+        assert.deepEqual(keys(selectRabbiUpcoming(items, viewed, MAX_ITEMS_PER_ROW)), ['lesson-a:2030-01-06']);
+      });
 
-    test('returns [] when nothing qualifies', () => {
-      const items = [buildOccurrence('lesson-a', '2026-01-01')];
-      assert.deepEqual(selectAreaPreview(items, 'lesson-a', 10), []);
+      test('a cancelled soonest date is followed by the soonest scheduled one, and no more', () => {
+        const items = [
+          buildOccurrence('lesson-a', '2030-01-06', { status: 'cancelled' }),
+          buildOccurrence('lesson-a', '2030-01-07', { status: 'cancelled' }),
+          buildOccurrence('lesson-a', '2030-01-13'),
+          buildOccurrence('lesson-a', '2030-01-20'),
+        ];
+        assert.deepEqual(keys(selectRabbiUpcoming(items, viewed, MAX_ITEMS_PER_ROW)), ['lesson-a:2030-01-06', 'lesson-a:2030-01-13']);
+      });
+
+      test('a lesson cancelled throughout shows one cancelled card', () => {
+        const items = [
+          buildOccurrence('lesson-a', '2030-01-06', { status: 'cancelled' }),
+          buildOccurrence('lesson-a', '2030-01-07', { status: 'cancelled' }),
+        ];
+        assert.deepEqual(keys(selectRabbiUpcoming(items, viewed, MAX_ITEMS_PER_ROW)), ['lesson-a:2030-01-06']);
+      });
+
+      test('caps at the limit after the viewed lesson is placed first', () => {
+        const others = Array.from({ length: MAX_ITEMS_PER_ROW }, (_, index) => buildOccurrence(`lesson-${index}`, '2030-01-06'));
+        const result = selectRabbiUpcoming([...others, buildOccurrence('lesson-viewed', '2030-01-12')], viewed, MAX_ITEMS_PER_ROW);
+        assert.equal(result.length, MAX_ITEMS_PER_ROW);
+        assert.equal(result[0]?.lessonId, 'lesson-viewed');
+      });
     });
   });
 

@@ -6,4 +6,3 @@ export const ABOUT_RABBI_HEADING: Record<RabbiHonorific, string> = {
   rav: 'על מגיד השיעור',
   rabbanit: 'על הרבנית',
 };
-export const LESSON_NOTE_HEADING = 'הערה לשיעור';

@@ -6,6 +6,8 @@ export interface RailProps {
   // Scroll` event, so a caller's own row title doubles as the event's own
   // label rather than a second name travelling alongside it.
   title: string;
+  // Makes the title a link (RailHeading); omitted, it stays plain text.
+  titleTo?: string;
   prevLabel: string;
   nextLabel: string;
   // The row's own `<li>` items, built by the caller: this shell has no

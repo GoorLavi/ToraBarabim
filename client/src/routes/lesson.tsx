@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query';
-import type { LessonOccurrence } from '@torabarabim/common';
+import type { LessonOccurrenceDetail } from '@torabarabim/common';
 import type { HeadersFunction, LoaderFunctionArgs, MetaFunction } from 'react-router';
 import { isRouteErrorResponse, useRouteError } from 'react-router';
 
@@ -11,23 +11,30 @@ import { lessonPath } from '~/helpers';
 import * as lessonPageConsts from '~/LessonPage/consts';
 import { teachingRabbiOf } from '~/LessonPage/helpers';
 import { LessonPage } from '~/LessonPage/LessonPage';
-import type { AreaPreview } from '~/LessonPage/models';
+import type { AreaPreview, DeferredLessons } from '~/LessonPage/models';
 
 import { SITE_ORIGIN } from '../../consts';
 import * as consts from './consts';
-import { loadAreaLessonsPreview, loadLessonOccurrence, loadVenuePhoto, resolveAreaPreviewMeta } from './lesson.server';
+import {
+  loadAreaLessonsPreview,
+  loadLessonOccurrence,
+  loadRabbiUpcomingLessons,
+  loadVenuePhoto,
+  resolveAreaPreviewMeta,
+} from './lesson.server';
 import { DEFAULT_OG_IMAGE_META, SITE_WIDE_META_BASE } from './meta';
 
 interface LessonRouteData {
-  occurrence: LessonOccurrence;
-  // `areaName`, `areaSlug`, and `limit` are resolved synchronously from
-  // `occurrence.venue.area` and the server's own constant, so the heading and
-  // the skeleton can paint before any query resolves. Only `lessons` is a
-  // promise, never awaited here: the ticket is a 404 or a 500 without
-  // `occurrence`, but the area preview's lessons are a below-the-fold nicety
-  // that must never hold up the shell. The route component resolves it
-  // inside a `Suspense` boundary.
+  occurrence: LessonOccurrenceDetail;
+  // `areaName` and `areaSlug` are resolved synchronously from
+  // `occurrence.venue.area`, so the heading and the skeleton can paint before
+  // any query resolves. Only `lessons` is a promise, never awaited here: the
+  // ticket is a 404 or a 500 without `occurrence`, but both rows below it
+  // (this one and `rabbiLessons`) are below-the-fold niceties that must never
+  // hold up the shell. The route component resolves each inside its own
+  // `Suspense` boundary.
   areaPreview: AreaPreview;
+  rabbiLessons: Promise<DeferredLessons>;
   // Read by `meta` only, for the event JSON-LD's `location.image`; never by
   // the component itself, so it is not seeded into the hydrated query below.
   venuePhotoUrl: string | undefined;
@@ -39,14 +46,18 @@ export const loader = async ({ params }: LoaderFunctionArgs): Promise<LessonRout
     throw new Response('השיעור לא נמצא', { status: 404, headers: consts.UNCACHEABLE_ERROR_HEADERS });
   }
 
-  const occurrence = await loadLessonOccurrence(lessonId, date);
-  const venuePhotoUrl = await loadVenuePhoto(occurrence);
+  const now = new Date();
+  const occurrence = await loadLessonOccurrence(lessonId, date, now);
+  // Both deferred reads start before the photo lookup is awaited, so neither
+  // waits behind it.
   const areaPreview: AreaPreview = {
     ...resolveAreaPreviewMeta(occurrence),
-    lessons: loadAreaLessonsPreview(occurrence),
+    lessons: loadAreaLessonsPreview(occurrence, now),
   };
+  const rabbiLessons = loadRabbiUpcomingLessons(occurrence, now);
+  const venuePhotoUrl = await loadVenuePhoto(occurrence);
 
-  return { occurrence, areaPreview, venuePhotoUrl };
+  return { occurrence, areaPreview, rabbiLessons, venuePhotoUrl };
 };
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
@@ -58,6 +69,13 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
   const title = consts.lessonPageTitle(occurrence, teachingRabbi);
   const description = consts.lessonPageDescription(occurrence, teachingRabbi);
 
+  // A date that already took place stays reachable (a crawler or a shared
+  // link still lands on it) but leaves the index and drops its Event block,
+  // which would otherwise advertise a scheduled event that is over. `follow`
+  // stays at its default so the rabbi row's links to coming dates are
+  // followed.
+  const hasTakenPlace = occurrence.timing === 'tookPlace';
+
   return [
     { title },
     { name: 'description', content: description },
@@ -68,7 +86,9 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     { property: 'og:url', content: url },
     ...SITE_WIDE_META_BASE,
     ...DEFAULT_OG_IMAGE_META,
-    { 'script:ld+json': consts.lessonEventJsonLd(occurrence, teachingRabbi, venuePhotoUrl) },
+    ...(hasTakenPlace
+      ? [{ name: 'robots', content: 'noindex' }]
+      : [{ 'script:ld+json': consts.lessonEventJsonLd(occurrence, teachingRabbi, venuePhotoUrl) }]),
   ];
 };
 
@@ -79,7 +99,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 export const headers: HeadersFunction = ({ errorHeaders }) => errorHeaders ?? consts.PUBLIC_CACHE_HEADERS;
 
 export default function LessonRoute({ loaderData }: { loaderData: LessonRouteData }) {
-  const { occurrence, areaPreview } = loaderData;
+  const { occurrence, areaPreview, rabbiLessons } = loaderData;
 
   // Seeds the same key `useLessonOccurrence` reads (LessonPage/useLessonOccurrence.ts),
   // so the ticket's first paint already has the loader's data and never
@@ -92,7 +112,7 @@ export default function LessonRoute({ loaderData }: { loaderData: LessonRouteDat
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <LessonPage {...{ areaPreview }} />
+      <LessonPage {...{ areaPreview, rabbiLessons }} />
     </HydrationBoundary>
   );
 }

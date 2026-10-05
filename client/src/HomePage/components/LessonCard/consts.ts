@@ -5,7 +5,7 @@ import posterDeskQuill from '~/assets/lessonFallbackPosters/lesson-fallback-04-d
 import posterLeatherCover from '~/assets/lessonFallbackPosters/lesson-fallback-05-leather-cover.webp';
 import posterBeitMidrashShtender from '~/assets/lessonFallbackPosters/lesson-fallback-06-beit-midrash-shtender.webp';
 
-export const CANCELLED_LABEL = 'מבוטל השבוע';
+export const CANCELLED_LABEL = 'השיעור בוטל';
 // The prefix before the substituted rabbi's name; the honorific-aware part
 // that follows comes from `SUBSTITUTE_PREFIX_BY_HONORIFIC` (~/consts.ts).
 export const SUBSTITUTE_LABEL = 'הפעם';

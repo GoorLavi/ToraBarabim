@@ -51,7 +51,7 @@ const isMarkedInternal = (): boolean => {
   }
 };
 
-// The mark outlives the admin session on purpose (decision 0051): an admin
+// The mark outlives the admin session on purpose (decision 0052): an admin
 // who signs out and browses the public site is still not a seeker.
 export const markBrowserInternal = (): void => {
   disableTracking();

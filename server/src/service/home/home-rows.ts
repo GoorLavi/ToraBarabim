@@ -4,13 +4,13 @@ import type { CourseSummaryRecord } from '../course/models';
 import { compareIsoDates } from '../lesson/israel-time';
 import type { AddressCityRow } from '../shared/address';
 import { toCitySummary } from '../shared/city-summary';
+import { MAX_ITEMS_PER_ROW } from '../shared/consts';
 import {
   COURSE_ROW_TITLE,
   HELP_TILE_KINDS,
   HELP_TILE_MIN_INDEX,
   HOME_CITY_GRID_CAP,
   MAX_HOME_LESSON_ROWS,
-  MAX_ITEMS_PER_ROW,
   MAX_LESSONS_PER_RABBI_PER_ROW,
   MIDDAY_ENDS_AT,
   MIN_ITEMS_PER_ROW,

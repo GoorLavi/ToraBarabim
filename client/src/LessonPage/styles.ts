@@ -22,6 +22,23 @@ export const LessonPage = css(
     padding-block: ${theme.spacing.xl};
   }
 
+  /* The two rails sit further apart than the page's other sections: each
+     is a full-width row with its own heading, and at 24 they read as one. */
+  > .rails {
+    display: flex;
+    flex-direction: column;
+    gap: ${theme.spacing.xxl};
+
+    @media (min-width: ${theme.breakpoints.md}) {
+      gap: ${theme.spacing.xxxl};
+    }
+
+    /* Both rails absent (each read failed): no empty band holding a gap. */
+    &:empty {
+      display: none;
+    }
+  }
+
   > .otherLessons {
     align-self: flex-start;
     min-block-size: 48px;
