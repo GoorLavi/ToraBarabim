@@ -43,4 +43,5 @@ export const toHomeResponse = (result: HomeResult): HomeResponse => ({
   womensAreaLessonCount: result.womensAreaLessonCount,
   rabbis: result.rabbis.map(toRabbiSummary),
   dedications: result.dedicationGroups.map(toDedicationGroup),
+  cities: result.cities,
 });

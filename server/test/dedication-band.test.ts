@@ -5,7 +5,7 @@ import type { HomeLessonRowId, HomeRow } from '@torabarabim/common';
 
 import { isPressGesture, isTrackOverflowing, stepByUnitPitch, wrapTrackPosition } from '../../client/src/HomePage/components/DedicationBand/helpers';
 import { WOMENS_AREA_BAND_SLOT } from '../../client/src/HomePage/components/HomeRails/consts';
-import { dedicationBandSlot, indexAfterNthLessonRow, shouldShowBetweenRailsDedication } from '../../client/src/HomePage/components/HomeRails/helpers';
+import { indexAfterNthLessonRow } from '../../client/src/HomePage/components/HomeRails/helpers';
 
 // Pure logic, so this suite needs neither a database nor a built client,
 // the same shape as rabbi-order.test.ts and dedication-text.test.ts.
@@ -129,48 +129,17 @@ describe('isPressGesture (press versus drag)', () => {
   });
 });
 
-describe('shouldShowBetweenRailsDedication and dedicationBandSlot (placement)', () => {
-  test('below three rails, the between-rails band is skipped entirely, even with dedications to show', () => {
-    assert.equal(shouldShowBetweenRailsDedication(0, true), false);
-    assert.equal(shouldShowBetweenRailsDedication(1, true), false);
-    assert.equal(shouldShowBetweenRailsDedication(2, true), false);
-  });
-
-  test('at three rails or more, with dedications to show, the band renders', () => {
-    assert.equal(shouldShowBetweenRailsDedication(3, true), true);
-    assert.equal(shouldShowBetweenRailsDedication(6, true), true);
-  });
-
-  test('with no dedications to show, the band never renders, whatever the rail count', () => {
-    assert.equal(shouldShowBetweenRailsDedication(10, false), false);
-  });
-
-  // `dedicationBandSlot` no longer clamps to `WOMENS_AREA_BAND_SLOT` itself
-  // (plan section 10.7): that clamp, and the "count lesson rows, skip the
-  // course row" rule it now needs, moved to `indexAfterNthLessonRow` below,
-  // called first at the real call site (HomeRails.tsx). What is left here
-  // is only "one slot further once the tile is shown", given whatever
-  // index the caller already computed.
-  test('the slot is the given women\'s-area band index itself when the tile is absent', () => {
-    assert.equal(dedicationBandSlot(5, false), 5);
-  });
-
-  test('the slot moves one further, immediately after the tile, when it is present', () => {
-    assert.equal(dedicationBandSlot(5, true), 6);
-  });
-});
-
 describe('indexAfterNthLessonRow (plan section 10.7: the course row is never counted)', () => {
   const lessonRow = (id: HomeLessonRowId): HomeRow => ({ kind: 'lessons', id, title: id, items: [] });
   const courseRow = (): HomeRow => ({ kind: 'courses', id: 'courses', title: 'קורסים', items: [] });
 
   test('with fewer than n lesson rows, the index clamps to the end of the list', () => {
-    const rows = [lessonRow('area'), lessonRow('today')];
+    const rows = [lessonRow('area:center'), lessonRow('today')];
     assert.equal(indexAfterNthLessonRow(rows, WOMENS_AREA_BAND_SLOT), rows.length);
   });
 
   test('with exactly n lesson rows and no course row, the index lands right after the last one', () => {
-    const rows = [lessonRow('area'), lessonRow('today')];
+    const rows = [lessonRow('area:center'), lessonRow('today')];
     assert.equal(indexAfterNthLessonRow(rows, 2), 2);
   });
 
@@ -179,7 +148,7 @@ describe('indexAfterNthLessonRow (plan section 10.7: the course row is never cou
   // row sits between the two counted lesson rows, so it must not shift the
   // result forward.
   test('a course row between two lesson rows is skipped, not counted as one of them', () => {
-    const rows = [lessonRow('area'), courseRow(), lessonRow('today'), lessonRow('weekly')];
+    const rows = [lessonRow('area:center'), courseRow(), lessonRow('today'), lessonRow('weekly')];
     assert.equal(indexAfterNthLessonRow(rows, WOMENS_AREA_BAND_SLOT), 3);
   });
 });

@@ -1,5 +1,8 @@
+import type { Area } from './area';
+import type { CityWithLessonCount } from './city-directory';
 import type { CourseSummary } from './course';
 import type { DedicationGroup } from './dedication';
+import type { LessonTopic } from './lesson';
 import type { LessonOccurrence } from './lesson-occurrence';
 import type { Rabbi } from './rabbi';
 import type { VisitorMessageType } from './visitor-message';
@@ -13,7 +16,20 @@ export type RabbiProminence = 'local' | 'known' | 'sought';
 // or a share of the site, which opens no window.
 export type HelpTileKind = VisitorMessageType | 'share';
 
-export type HomeLessonRowId = 'area' | 'today' | 'bothAudiences' | 'weekly';
+// A theme a visitor can browse by: every topic but the catch-all.
+export type HomeTopic = Exclude<LessonTopic, 'other'>;
+
+// `area:<area>` and `topic:<topic>` carry their axis in the id so every row id
+// on a page is unique. `topic:other` is never sent: "other" is not a theme a
+// visitor browses by.
+export type HomeLessonRowId =
+  | 'today'
+  | 'bothAudiences'
+  | 'weekly'
+  | 'morning'
+  | 'midday'
+  | `area:${Area}`
+  | `topic:${HomeTopic}`;
 
 // A union on `kind`, exactly 0012's shape: the client renders `rows` in the
 // order given and decides nothing about placement. The one `kind: 'courses'`
@@ -60,4 +76,9 @@ export interface HomeResponse {
   // smuggled into a row's `items`
   // (docs/decisions/0012-the-home-page-is-composed-by-the-server.md).
   dedications: DedicationGroup[];
+  // The city grid: general scope, distinct lessons with at least one
+  // scheduled occurrence in the home window, grouped by the lesson's own
+  // city, sorted by count then name and capped server-side. Always an array;
+  // empty means the client renders no grid.
+  cities: CityWithLessonCount[];
 }

@@ -1,6 +1,6 @@
 # 0012: The home page is composed by the server
 
-- **Status:** accepted
+- **Status:** accepted; its "four rows" paragraph superseded by [0040](0040-the-home-page-carries-up-to-ten-interleaved-rows.md)
 - **Date:** 2026-08-19
 - **Decided by:** project owner
 
