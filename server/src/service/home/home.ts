@@ -6,7 +6,7 @@ import { db } from '../../db/client';
 import { cities, lessonExceptions, lessons, places, rabbis } from '../../db/schema';
 import * as courseService from '../course/course';
 import * as dedicationService from '../dedication/dedication';
-import { applyException, expandLesson, resolveRecord, toExceptionDomain, toLessonDomain, type ResolvedOccurrence } from '../lesson/occurrence';
+import { applyException, expandLesson, hasLeftPublicListsAt, resolveRecord, toExceptionDomain, toLessonDomain, type ResolvedOccurrence } from '../lesson/occurrence';
 import { addDays, todayInIsrael } from '../lesson/israel-time';
 import { isLessonInScope, isRabbiInDirectoryScope } from '../shared/audience-scope';
 import { AREA_NAMES_HE } from '../shared/consts';
@@ -200,10 +200,12 @@ const loadWindow = async (now: Date): Promise<LoadedWindow> => {
   // Cancelled occurrences are dropped here, unlike `GET /v1/lessons`: a
   // home rail is a browse surface answering "what is on", not a schedule,
   // so there is nothing useful to show for a lesson that will not happen.
+  const hasLeftPublicLists = hasLeftPublicListsAt(now);
   const resolved = [...lessonDomainById.values()]
     .flatMap((lesson) => expandLesson(lesson, from, to))
     .map((raw) => applyException(raw, exceptionByKey.get(`${raw.lesson.id}:${raw.date}`)))
     .filter((occurrence) => occurrence.status === 'scheduled')
+    .filter((occurrence) => !hasLeftPublicLists(occurrence))
     .map((occurrence) => resolveHomeRecord(occurrence, rabbiRowById, rabbiById, cityByCode, placeById));
 
   return { from, resolved, cityByCode, rabbiRows, rabbiIdsWithLessons };

@@ -26,3 +26,8 @@ export const AREA_PREVIEW_LIMIT = 4;
 // can never quietly exceed the ceiling the API enforces everywhere else,
 // since this call bypasses the Zod query schema.
 export const AREA_PREVIEW_FETCH_SIZE = Math.min(AREA_PREVIEW_LIMIT * DEFAULT_RANGE_DAYS, MAX_PAGE_SIZE);
+
+// The owner's rule: an occurrence dated today leaves every public list this
+// long after its start time, whatever its duration. Read by `lesson.search`
+// and the home composition through `hasLeftPublicListsAt`.
+export const PUBLIC_LIST_GRACE_MINUTES_AFTER_START = 30;

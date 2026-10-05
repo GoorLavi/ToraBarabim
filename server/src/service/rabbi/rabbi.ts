@@ -4,6 +4,7 @@ import { db } from '../../db/client';
 import { cities, lessons, rabbis } from '../../db/schema';
 import * as courseService from '../course/course';
 import { isRabbiInDirectoryScope } from '../shared/audience-scope';
+import { rabbiNameMatcher } from '../shared/rabbi-name-match';
 import { compareRabbiOrder } from '../shared/rabbi-order';
 import { toRabbiSummary } from '../shared/rabbi-summary';
 import { toSlug } from '../shared/slug';
@@ -88,7 +89,8 @@ const matchesQuery = (name: string, query: string): boolean => {
 
 export const list = async (query: RabbiListQuery): Promise<RabbiListResult> => {
   const [rows, rabbiIdsWithLessons] = await Promise.all([db.select().from(rabbis), loadRabbiIdsWithLessons()]);
-  const scoped = rows.filter((row) => isRabbiInDirectoryScope(query.scope, row.honorific) && (!query.q || matchesQuery(row.name, query.q)));
+  const matchesNameQuery = query.q ? rabbiNameMatcher(query.q, matchesQuery) : undefined;
+  const scoped = rows.filter((row) => isRabbiInDirectoryScope(query.scope, row.honorific) && (matchesNameQuery?.(row) ?? true));
   const sorted = [...scoped].sort((a, b) =>
     compareRabbiOrder(
       { id: a.id, name: a.name, prominence: a.prominence, hasLessons: rabbiIdsWithLessons.has(a.id) },
