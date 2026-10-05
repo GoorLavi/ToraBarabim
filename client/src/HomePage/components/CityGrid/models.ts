@@ -9,4 +9,5 @@ export interface CityGridProps {
   isError: boolean;
   selectedCityId: string | undefined;
   onSelectCity: (city: SelectedCity) => void;
+  onClearCity: () => void;
 }

@@ -99,6 +99,7 @@ export const HomePage = styled(({ className }: HomePageProps) => {
             isError: homeRowsQuery.isError,
             selectedCityId: city?.id,
             onSelectCity: selectCity,
+            onClearCity: clearCity,
           }}
         />
 

@@ -14,7 +14,7 @@ import * as styles from './styles';
 // site never puts a heading over an empty rail (design-system.md, "Every
 // data screen has three states"). The server sends the busiest cities with
 // the lesson count the chip shows, so a chip selects its city directly.
-export const CityGrid = styled(({ className, cities, isLoading, isError, selectedCityId, onSelectCity }: CityGridProps) => {
+export const CityGrid = styled(({ className, cities, isLoading, isError, selectedCityId, onSelectCity, onClearCity }: CityGridProps) => {
   const hasCities = cities !== undefined && cities.length > 0;
 
   if (!isLoading && !isError && !hasCities) return null;
@@ -58,6 +58,10 @@ export const CityGrid = styled(({ className, cities, isLoading, isError, selecte
                   lessonCount: city.lessonCount,
                   selected: city.id === selectedCityId,
                   onSelect: () => {
+                    if (city.id === selectedCityId) {
+                      onClearCity();
+                      return;
+                    }
                     onSelectCity({ id: city.id, name: city.name });
                     trackEvent(MIXPANEL_EVENTS.filterCity, { cityId: city.id, cityName: city.name, source: 'homeCityGrid' });
                   },

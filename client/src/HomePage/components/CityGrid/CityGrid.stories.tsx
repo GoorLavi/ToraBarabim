@@ -28,7 +28,7 @@ const CITIES: CityWithLessonCount[] = [
 const meta: Meta<typeof CityGrid> = {
   title: 'HomePage/CityGrid',
   component: CityGrid,
-  args: { cities: CITIES, isLoading: false, isError: false, selectedCityId: undefined, onSelectCity: fn() },
+  args: { cities: CITIES, isLoading: false, isError: false, selectedCityId: undefined, onSelectCity: fn(), onClearCity: fn() },
 };
 
 export default meta;
@@ -46,11 +46,17 @@ export const Populated: Story = {
 
 export const Selected: Story = {
   args: { selectedCityId: '4000' },
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
+    const selectedChip = await canvas.findByRole('button', { name: /חיפה/ });
 
-    expect(await canvas.findByRole('button', { name: /חיפה/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(selectedChip).toHaveAttribute('aria-pressed', 'true');
     expect(canvas.getByRole('button', { name: /ירושלים/ })).toHaveAttribute('aria-pressed', 'false');
+
+    await userEvent.click(selectedChip);
+
+    expect(args.onClearCity).toHaveBeenCalledTimes(1);
+    expect(args.onSelectCity).not.toHaveBeenCalled();
   },
 };
 
