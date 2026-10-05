@@ -159,13 +159,15 @@ export interface LessonVenueColumnsOptions {
 // `place_floor`/`city_code`. `cityCode` is denormalized onto the row even
 // for a place-backed lesson: the owner's call, because it is the only SQL
 // narrowing on the public search's hot path and a join would make every one
-// of that search's city/area filters non-sargable. That is a real gap the
-// compiler cannot close: nothing stops a future writer from setting these
-// columns by hand with a stale or unrelated `cityCode`, and no CHECK can
+// of that search's city/area filters non-sargable. A place moving city is
+// carried to its lessons by the `places_city_code_sync_lessons` trigger
+// (migration 0017), not by any service. What remains a gap the compiler
+// cannot close: nothing stops a future writer from setting these columns on
+// a lesson by hand with a stale or unrelated `cityCode`, and no CHECK can
 // catch it, since a CHECK cannot read another table. `invariants.test.ts`'s
-// T13 (`lessons.city_code <> places.city_code` is always 0) is the only net
-// under that gap; every writer below must go through this function and none
-// may set these columns any other way.
+// T13 (`lessons.city_code <> places.city_code` is always 0) is the net
+// under that gap; every lesson writer must go through this function and
+// none may set these columns any other way.
 export const lessonVenueColumns = async (venue: LessonVenueInputSchema, options: LessonVenueColumnsOptions = {}): Promise<LessonVenueColumns> => {
   if (venue.kind === 'address') {
     return { placeId: null, cityCode: venue.cityCode, addressName: venue.name, addressStreet: venue.street, addressFloor: venue.floor ?? null };
