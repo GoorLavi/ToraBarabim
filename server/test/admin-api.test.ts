@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { after, afterEach, before, describe, test } from 'node:test';
 
 import type { AdminDedication, AdminOccurrenceListResponse, AdminPlaceResponse, CreateDedicationRequest, DedicationType, HomeResponse } from '@torabarabim/common';
-import { eq } from 'drizzle-orm';
+import { eq, ne } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { nanoid } from 'nanoid';
 
@@ -291,6 +291,26 @@ describe('admin API', () => {
 
     const body = res.json() as { error: string };
     assert.equal(body.error, 'unknown_city');
+  });
+
+  // The defect: moving a place to another city left its lessons'
+  // denormalized `city_code` behind, so city and area search placed them
+  // in the old city. Migration 0017's trigger is what carries them now.
+  test('moving a place to another city carries its lessons with it', async () => {
+    const cookie = await loginAsNewAdmin();
+    const fromCityCode = await jerusalemCode();
+    const otherCities = await db.select({ code: cities.code }).from(cities).where(ne(cities.code, fromCityCode)).limit(1);
+    const toCityCode = otherCities[0]?.code;
+    if (toCityCode === undefined) throw new Error('expected a seeded city other than the default one');
+
+    const placeId = await createPlace(fromCityCode);
+    const { lessonId } = await seedDailyPlaceBackedLesson(placeId, fromCityCode);
+
+    const res = await app.inject({ method: 'PATCH', url: `/v1/admin/places/${placeId}`, headers: { cookie }, payload: { cityCode: toCityCode } });
+    assert.equal(res.statusCode, 200);
+
+    const rows = await db.select({ cityCode: lessons.cityCode }).from(lessons).where(eq(lessons.id, lessonId));
+    assert.equal(rows[0]?.cityCode, toCityCode);
   });
 });
 

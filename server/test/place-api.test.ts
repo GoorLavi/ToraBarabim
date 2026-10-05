@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { after, afterEach, before, describe, test } from 'node:test';
 
 import type { PlaceLessonResponse, PlaceSessionUser, RabbiDirectoryResponse } from '@torabarabim/common';
-import { eq } from 'drizzle-orm';
+import { eq, ne } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { nanoid } from 'nanoid';
 
@@ -328,6 +328,30 @@ describe('place API: write path', () => {
     const womenBody = womenRes.json() as RabbiDirectoryResponse;
     assert.equal(womenBody.total, 1);
     assert.ok(womenBody.items.some((item) => item.id === rabbanitId));
+  });
+
+  // The same defect as the admin route's, through the place's own door:
+  // migration 0017's trigger must carry the lesson whoever moves the place.
+  test('a place moving itself to another city carries its lessons with it', async () => {
+    const rabbiId = await createRabbi();
+    const { placeId, email, password } = await createPlaceAccount();
+    const cookie = await loginAsPlace(email, password);
+    const fromCityCode = await jerusalemCode();
+    const otherCities = await db.select({ code: cities.code }).from(cities).where(ne(cities.code, fromCityCode)).limit(1);
+    const toCityCode = otherCities[0]?.code;
+    if (toCityCode === undefined) throw new Error('expected a seeded city other than the default one');
+
+    const created = await app.inject({ method: 'POST', url: '/v1/place/lessons', headers: { cookie }, payload: lessonPayload(rabbiId) });
+    assert.equal(created.statusCode, 201);
+    const lessonId = (created.json() as PlaceLessonResponse).id;
+    cleanupLessonIds.add(lessonId);
+
+    const res = await app.inject({ method: 'PATCH', url: '/v1/place/profile', headers: { cookie }, payload: { cityCode: toCityCode } });
+    assert.equal(res.statusCode, 200);
+
+    const rows = await db.select({ placeId: lessons.placeId, cityCode: lessons.cityCode }).from(lessons).where(eq(lessons.id, lessonId));
+    assert.equal(rows[0]?.placeId, placeId);
+    assert.equal(rows[0]?.cityCode, toCityCode);
   });
 });
 
