@@ -1,4 +1,4 @@
-import type { HelpTileKind } from '@torabarabim/common';
+import type { HelpTileKind, LessonTopic } from '@torabarabim/common';
 
 // The length of the home window in days, counting today as day one.
 export const HOME_WINDOW_DAYS = 14;
@@ -9,6 +9,44 @@ export const COURSE_ROW_TITLE = 'קורסים';
 
 export const MAX_ITEMS_PER_ROW = 12;
 export const MIN_ITEMS_PER_ROW = 3;
+
+// Area rows kept after ranking. Seven of the eight areas used to be invisible
+// on the home page; five is what the page's rail budget leaves room for.
+export const MAX_AREA_ROWS = 5;
+
+// One teacher can hold most of an area's lessons, and a row of one man's
+// cards reads as a profile page rather than a listing.
+export const MAX_LESSONS_PER_RABBI_PER_ROW = 2;
+
+// Counts lesson rows only: the course row, the bands and the tiles are
+// spliced in around them and are not part of the budget.
+export const MAX_HOME_LESSON_ROWS = 10;
+
+// The time-of-day rows read the occurrence's own `startTime` as "HH:MM",
+// which compares correctly as a string because it is zero padded. Morning is
+// everything before MORNING_ENDS_AT; midday runs up to MIDDAY_ENDS_AT.
+export const MORNING_ENDS_AT = '12:00';
+export const MIDDAY_ENDS_AT = '16:00';
+
+export const HOME_CITY_GRID_CAP = 12;
+
+export const MORNING_ROW_TITLE = 'שיעורי בוקר';
+export const MIDDAY_ROW_TITLE = 'שיעורי צהריים';
+export const TODAY_ROW_TITLE = 'שיעורים היום';
+export const BOTH_AUDIENCES_ROW_TITLE = 'שיעורים לגברים ולנשים';
+export const WEEKLY_ROW_TITLE = 'שיעורים קבועים כל שבוע';
+
+// `other` has no row, so it has no title: the type keeps a new topic from
+// shipping without one.
+export const TOPIC_ROW_TITLES: Record<Exclude<LessonTopic, 'other'>, string> = {
+  gemara: 'שיעורי גמרא',
+  halacha: 'שיעורי הלכה',
+  parasha: 'שיעורים בפרשת השבוע',
+  mussar: 'שיעורי מוסר',
+  chassidut: 'שיעורי חסידות',
+  tanach: 'שיעורי תנ״ך',
+  machshava: 'שיעורי אמונה ומחשבה',
+};
 
 // The "לפי רב" avatar row's cap. At the widest supported layout exactly
 // twelve avatars fill the rail edge to edge, so any cap of twelve or less
@@ -27,14 +65,12 @@ export const WOMENS_AREA_TILE_INDEX = 3;
 // separate on purpose.
 export const WOMENS_AREA_TILE_MIN_LESSONS = 4;
 
-// Cadence: at most one tile per this many rows, starting from the row at
-// WOMENS_AREA_TILE_FIRST_CANDIDATE_ROW (0-based) below. If that candidate
-// row is too short, the tile moves to the next row that qualifies, and the
-// next candidate is counted this many rows on from the row actually used.
-export const WOMENS_AREA_TILE_ROW_CADENCE = 3;
-
-// 0-based index of the first candidate row (the second row).
-export const WOMENS_AREA_TILE_FIRST_CANDIDATE_ROW = 1;
+// 0-based index of the row where the scan for the tile starts (around the
+// sixth rail). If no row from there has WOMENS_AREA_TILE_MIN_LESSONS items,
+// the scan restarts from WOMENS_AREA_TILE_FALLBACK_FIRST_ROW, so a short page
+// still carries the tile rather than silently losing it.
+export const WOMENS_AREA_TILE_FIRST_CANDIDATE_ROW = 5;
+export const WOMENS_AREA_TILE_FALLBACK_FIRST_ROW = 1;
 
 // The help tiles a page can carry, each at most once. `satisfies` catches a
 // member renamed or removed in `common`; the check below catches one added.

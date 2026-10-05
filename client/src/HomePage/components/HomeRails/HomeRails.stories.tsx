@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 
 import { courseFixture } from '~/courseFixture';
-import { DEDICATION_GROUP_SUCCESS } from '~/dedicationFixture';
+import { DEDICATION_GROUP_HEALING, DEDICATION_GROUP_SUCCESS } from '~/dedicationFixture';
 import { whatsAppHref } from '~/helpers';
 import { VISITOR_MESSAGE_TITLES } from '~/HomePage/components/consts';
 import { rabbiFixture } from '~/rabbiFixture';
@@ -14,6 +14,19 @@ import * as shareTileConsts from '../LessonRail/components/ShareTile/consts';
 import * as formConsts from './components/HelpWindow/components/VisitorMessageForm/consts';
 import { HomeRails } from './HomeRails';
 import type { HomeRowsQueryState } from './models';
+
+const SUCCESS_FORMULA = /להצלחת/;
+const HEALING_FORMULA = /לרפואה/;
+
+// A band crawls its dedications, so a formula can appear more than once; the
+// first is the one that marks where the band sits.
+const firstText = async (canvas: ReturnType<typeof within>, pattern: RegExp): Promise<HTMLElement> => {
+  const [first] = await canvas.findAllByText(pattern);
+  if (!first) throw new Error(`HomeRails story: no text matches ${String(pattern)}`);
+  return first;
+};
+
+const isFollowing = (anchor: Element, other: Element): boolean => Boolean(anchor.compareDocumentPosition(other) & Node.DOCUMENT_POSITION_FOLLOWING);
 
 const lessonItem = (id: string, title: string): LessonOccurrence => ({
   lessonId: id,
@@ -45,7 +58,7 @@ const courseRow = (): HomeRow => ({
 const queryWithRows = (rows: HomeRow[]): HomeRowsQueryState => ({
   isPending: false,
   isError: false,
-  data: { rows, womensAreaLessonCount: 12, rabbis: [], dedications: [] },
+  data: { rows, womensAreaLessonCount: 12, rabbis: [], cities: [], dedications: [] },
   error: null,
   refetch: () => {},
 });
@@ -58,32 +71,79 @@ const meta: Meta<typeof HomeRails> = {
 export default meta;
 type Story = StoryObj<typeof HomeRails>;
 
-// Three real rails: the between-rails band renders, right after the
-// women's-area tile.
-export const WithBetweenRailsDedication: Story = {
+// Both bands sit after the last rail when there are fewer rails than their
+// slots (6 and 8), the success band first.
+export const ThreeRailsBandsAfterLast: Story = {
   args: {
-    query: queryWithRows([homeRow('area', 'שיעורים באזור שלך'), homeRow('today', 'הערב'), homeRow('weekly', 'שיעור שבועי')]),
-    dedicationGroup: DEDICATION_GROUP_SUCCESS,
+    query: queryWithRows([homeRow('area:sharon', 'שיעורים באזור השרון'), homeRow('today', 'הערב'), homeRow('weekly', 'שיעור שבועי')]),
+    successGroup: DEDICATION_GROUP_SUCCESS,
+    healingGroup: DEDICATION_GROUP_HEALING,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const successText = await firstText(canvas, SUCCESS_FORMULA);
+    const healingText = await firstText(canvas, HEALING_FORMULA);
+
+    expect(isFollowing(rowSection(canvasElement, 'שיעור שבועי'), successText)).toBe(true);
+    expect(isFollowing(successText, healingText)).toBe(true);
   },
 };
 
-// Below three lesson rails, the constraint "after at least two lesson rows"
-// has no slot that is not also the very end of the list, so the
-// between-rails band is skipped entirely, fail closed (design-system.md,
-// dedication Placement).
-export const TwoRailsNoBetweenRailsDedication: Story = {
+// Four rails, still under both slots: same clamp, with the women's band
+// after rail 2 as ever.
+export const FourRailsBandsAfterLast: Story = {
   args: {
-    query: queryWithRows([homeRow('area', 'שיעורים באזור שלך'), homeRow('today', 'הערב')]),
-    dedicationGroup: DEDICATION_GROUP_SUCCESS,
+    query: queryWithRows([
+      homeRow('today', 'שיעורים היום'),
+      homeRow('area:haifa', 'שיעורים באזור חיפה והקריות'),
+      homeRow('bothAudiences', 'שיעורים לכולם'),
+      homeRow('weekly', 'שיעורים קבועים השבוע'),
+    ]),
+    successGroup: DEDICATION_GROUP_SUCCESS,
+    healingGroup: DEDICATION_GROUP_HEALING,
   },
 };
 
-// Three rails, but the pool has no `success` dedications: no between-rails
-// band, same as the two-rail case, but for a different reason.
-export const NoSuccessDedications: Story = {
+const TEN_RAIL_TITLES: Array<[HomeLessonRowId, string]> = [
+  ['today', 'שיעורים היום'],
+  ['area:haifa', 'שיעורים באזור חיפה והקריות'],
+  ['bothAudiences', 'שיעורים לכולם'],
+  ['area:sharon', 'שיעורים באזור השרון'],
+  ['weekly', 'שיעורים קבועים השבוע'],
+  ['area:center', 'שיעורים באזור המרכז'],
+  ['morning', 'שיעורי בוקר'],
+  ['area:jerusalem', 'שיעורים באזור ירושלים'],
+  ['midday', 'שיעורי צהריים'],
+  ['area:south', 'שיעורים באזור הדרום'],
+];
+
+// The full page the server can now send: ten rails, the women's band after
+// rail 2, the success band after rail 6, the healing band after rail 8, and
+// the longest area title wrapping rather than truncating.
+export const TenRailsWithBothBands: Story = {
   args: {
-    query: queryWithRows([homeRow('area', 'שיעורים באזור שלך'), homeRow('today', 'הערב'), homeRow('weekly', 'שיעור שבועי')]),
-    dedicationGroup: undefined,
+    query: queryWithRows(TEN_RAIL_TITLES.map(([id, title]) => homeRow(id, title))),
+    successGroup: DEDICATION_GROUP_SUCCESS,
+    healingGroup: DEDICATION_GROUP_HEALING,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const successText = await firstText(canvas, SUCCESS_FORMULA);
+    const healingText = await firstText(canvas, HEALING_FORMULA);
+
+    expect(isFollowing(rowSection(canvasElement, 'שיעורים באזור המרכז'), successText)).toBe(true);
+    expect(isFollowing(successText, rowSection(canvasElement, 'שיעורי בוקר'))).toBe(true);
+    expect(isFollowing(rowSection(canvasElement, 'שיעורים באזור ירושלים'), healingText)).toBe(true);
+    expect(isFollowing(healingText, rowSection(canvasElement, 'שיעורי צהריים'))).toBe(true);
+  },
+};
+
+// Three rails, but the pool has no dedications of either type: no band.
+export const NoBandDedications: Story = {
+  args: {
+    query: queryWithRows([homeRow('area:sharon', 'שיעורים באזור השרון'), homeRow('today', 'הערב'), homeRow('weekly', 'שיעור שבועי')]),
+    successGroup: undefined,
+    healingGroup: undefined,
   },
 };
 
@@ -94,12 +154,12 @@ export const NoSuccessDedications: Story = {
 export const WithCourseRow: Story = {
   args: {
     query: queryWithRows([
-      homeRow('area', 'שיעורים באזור שלך'),
+      homeRow('area:sharon', 'שיעורים באזור שלך'),
       courseRow(),
       homeRow('today', 'הערב'),
       homeRow('weekly', 'שיעור שבועי'),
     ]),
-    dedicationGroup: DEDICATION_GROUP_SUCCESS,
+    successGroup: DEDICATION_GROUP_SUCCESS, healingGroup: DEDICATION_GROUP_HEALING,
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -137,11 +197,11 @@ const dialogNamed = (kind: 'rabbi-request' | 'volunteer'): Promise<HTMLElement> 
 export const HelpTilesInRails: Story = {
   args: {
     query: queryWithRows([
-      helpRow('area', 'שיעורים באזור שלך', { kind: 'rabbi-request', index: 2 }),
+      helpRow('area:sharon', 'שיעורים באזור שלך', { kind: 'rabbi-request', index: 2 }),
       helpRow('today', 'הערב', { kind: 'volunteer', index: 3 }),
       helpRow('weekly', 'שיעור שבועי', { kind: 'share', index: 2 }),
     ]),
-    dedicationGroup: DEDICATION_GROUP_SUCCESS,
+    successGroup: DEDICATION_GROUP_SUCCESS, healingGroup: DEDICATION_GROUP_HEALING,
   },
   play: async ({ canvasElement }) => {
     const requestSection = rowSection(canvasElement, 'שיעורים באזור שלך');
@@ -169,8 +229,8 @@ const postStored = { send: http.post('/v1/visitor-messages', () => new Response(
 // back to the tile.
 export const DraftKept: Story = {
   args: {
-    query: queryWithRows([helpRow('area', 'שיעורים באזור שלך', { kind: 'rabbi-request', index: 2 }), homeRow('today', 'הערב'), homeRow('weekly', 'שיעור שבועי')]),
-    dedicationGroup: undefined,
+    query: queryWithRows([helpRow('area:sharon', 'שיעורים באזור שלך', { kind: 'rabbi-request', index: 2 }), homeRow('today', 'הערב'), homeRow('weekly', 'שיעור שבועי')]),
+    successGroup: undefined, healingGroup: undefined,
   },
   parameters: { apiMocks: { handlers: postStored } },
   play: async ({ canvasElement }) => {
@@ -197,8 +257,8 @@ export const DraftKept: Story = {
 
 const RESHUFFLE_BUTTON_LABEL = 'story: place the tile in another row';
 
-const reshuffleRows = (tileRowId: 'area' | 'today'): HomeRow[] => [
-  tileRowId === 'area' ? helpRow('area', 'שיעורים באזור שלך', { kind: 'rabbi-request', index: 2 }) : homeRow('area', 'שיעורים באזור שלך'),
+const reshuffleRows = (tileRowId: 'area:sharon' | 'today'): HomeRow[] => [
+  tileRowId === 'area:sharon' ? helpRow('area:sharon', 'שיעורים באזור שלך', { kind: 'rabbi-request', index: 2 }) : homeRow('area:sharon', 'שיעורים באזור שלך'),
   tileRowId === 'today' ? helpRow('today', 'הערב', { kind: 'rabbi-request', index: 3 }) : homeRow('today', 'הערב'),
   homeRow('weekly', 'שיעור שבועי'),
 ];
@@ -207,14 +267,14 @@ const reshuffleRows = (tileRowId: 'area' | 'today'): HomeRow[] => [
 // another row while a visitor is typing. The window and the draft live above
 // the tile, so they survive; only the tile underneath moves.
 const ReshuffleStage = () => {
-  const [tileRowId, setTileRowId] = useState<'area' | 'today'>('area');
+  const [tileRowId, setTileRowId] = useState<'area:sharon' | 'today'>('area:sharon');
 
   return (
     <>
       <button type="button" onClick={() => setTileRowId('today')}>
         {RESHUFFLE_BUTTON_LABEL}
       </button>
-      <HomeRails {...{ query: queryWithRows(reshuffleRows(tileRowId)), dedicationGroup: undefined }} />
+      <HomeRails {...{ query: queryWithRows(reshuffleRows(tileRowId)), successGroup: undefined, healingGroup: undefined }} />
     </>
   );
 };

@@ -130,6 +130,10 @@ new goes into them. They keep their old names, which is how you can tell.
 Current work that is not part of the map yet, so nobody mistakes it for archive or
 tidies it away:
 
+- **`01 בית · שורות נוספות · לאישור`** (`449:488`), beside `01 בית`: the home page with up
+  to ten interleaved rails, the single women's-area tile in rail 6, the success band after
+  rail 6 and the healing band after rail 8, and the city grid with lesson counts. Phone 10-rail and 4-rail frames, a desktop
+  frame, and a city-grid states board; the `assets` frame (`449:489`) goes with the page.
 - **`01 בית · הקדשות · לאישור`** (`323:488`), beside `01 בית`: the home page with the
   dedication bands drawn at their measured heights, four phone frames and no desktop
   yet. It waits on the owner, and on the width decision above.

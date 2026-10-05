@@ -44,6 +44,7 @@ const stageQuery = (kind: VisitorMessageType): HomeRowsQueryState => {
     ],
     womensAreaLessonCount: 0,
     rabbis: [],
+    cities: [],
     dedications: [],
   };
   return { isPending: false, isError: false, data, error: null, refetch: () => {} };
@@ -52,7 +53,7 @@ const stageQuery = (kind: VisitorMessageType): HomeRowsQueryState => {
 const meta: Meta<typeof HelpWindow> = {
   title: 'HomePage/HomeRails/HelpWindow',
   component: HelpWindow,
-  render: (_args, { parameters }) => <HomeRails {...{ query: stageQuery(parameters.kind as VisitorMessageType), dedicationGroup: undefined }} />,
+  render: (_args, { parameters }) => <HomeRails {...{ query: stageQuery(parameters.kind as VisitorMessageType), successGroup: undefined, healingGroup: undefined }} />,
 };
 
 export default meta;

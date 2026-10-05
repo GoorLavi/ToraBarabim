@@ -3,11 +3,10 @@ import type { CitySearchResult, CitySuggestionsResponse } from '@torabarabim/com
 // Carries the HTTP status so a caller can map it to Hebrew copy without
 // parsing `message`, mirroring HomePage/api.ts's HomeApiError.
 //
-// A deliberate small duplicate of `HomePage/api.ts`'s `fetchCities` and
-// `components/CitySelect/api.ts`'s own copy of the same call: this feature
-// is a sibling of both, not their ancestor, so importing across them would
-// break the folder-ownership tree (client/CLAUDE.md, Component Tree). Lift
-// into a shared module if a fourth caller appears.
+// A deliberate small duplicate of `components/CitySelect/api.ts`'s copy of
+// the same call: this feature is its sibling, not its ancestor, so importing
+// across them would break the folder-ownership tree (client/CLAUDE.md,
+// Component Tree). Lift into a shared module if a third caller appears.
 export class CityPickerApiError extends Error {
   constructor(public readonly status: number, message: string) {
     super(message);

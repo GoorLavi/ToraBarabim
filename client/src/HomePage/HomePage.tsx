@@ -12,7 +12,7 @@ import { HomeRails } from './components/HomeRails/HomeRails';
 import { LessonsSection } from './components/LessonsSection/LessonsSection';
 import { RabbiRow } from './components/RabbiRow/RabbiRow';
 import { HOME_QUERY_KEYS, LESSON_WINDOW_DAYS, LESSON_WINDOW_PAGE_SIZE } from './consts';
-import { addDays, contextLine, flattenHomeRows, resolveHomeMode, resolveTargetDate } from './helpers';
+import { addDays, contextLine, resolveHomeMode, resolveTargetDate } from './helpers';
 import type { HomePageProps, LessonFilters } from './models';
 import * as styles from './styles';
 import { useHomeRows } from './useHomeRows';
@@ -40,18 +40,15 @@ export const HomePage = styled(({ className }: HomePageProps) => {
   const homeRowsQuery = useHomeRows();
   const lessonsQuery = useLessonSearch(filters, mode === 'filtered');
 
-  // Fixed, one type per band, never drawn: `success` between the rails,
-  // `healing` between the rails block and `RabbiRow`, `memorial` at the
-  // foot. A missing or empty group renders nothing, handled inside
-  // `DedicationBand` itself.
+  // Fixed, one type per band, never drawn: `success` and `healing` inside
+  // the rails in rail mode (HomeRails/consts.ts), `healing` after the results
+  // in filtered mode, `memorial` at the foot. A missing or empty group
+  // renders nothing, handled inside `DedicationBand` itself.
   const dedications = homeRowsQuery.data?.dedications;
   const successGroup = dedications?.find((group) => group.type === 'success');
   const healingGroup = dedications?.find((group) => group.type === 'healing');
   const memorialGroup = dedications?.find((group) => group.type === 'memorial');
 
-  const browseItems = mode === 'rail' ? flattenHomeRows(homeRowsQuery.data) : lessonsQuery.data?.items;
-  const isBrowseLoading = mode === 'rail' ? homeRowsQuery.isPending : lessonsQuery.isPending;
-  const isBrowseError = mode === 'rail' ? homeRowsQuery.isError : lessonsQuery.isError;
   const browseContextLine = contextLine(mode);
 
   // The way back out of the dateless empty state (design-system.md, "Every
@@ -77,7 +74,7 @@ export const HomePage = styled(({ className }: HomePageProps) => {
           )}
 
           {mode === 'rail' ? (
-            <HomeRails {...{ query: homeRowsQuery, dedicationGroup: successGroup }} />
+            <HomeRails {...{ query: homeRowsQuery, successGroup, healingGroup }} />
           ) : (
             <LessonsSection
               query={lessonsQuery}
@@ -91,11 +88,19 @@ export const HomePage = styled(({ className }: HomePageProps) => {
           )}
         </div>
 
-        <DedicationBand {...{ group: healingGroup, variant: 'onPage' as const }} />
+        {mode === 'filtered' && <DedicationBand {...{ group: healingGroup, variant: 'onPage' as const }} />}
 
         <RabbiRow {...{ rabbis: homeRowsQuery.data?.rabbis, isLoading: homeRowsQuery.isPending, isError: homeRowsQuery.isError }} />
 
-        <CityGrid items={browseItems} isLoading={isBrowseLoading} isError={isBrowseError} onSelectCity={selectCity} />
+        <CityGrid
+          {...{
+            cities: homeRowsQuery.data?.cities,
+            isLoading: homeRowsQuery.isPending,
+            isError: homeRowsQuery.isError,
+            selectedCityId: city?.id,
+            onSelectCity: selectCity,
+          }}
+        />
 
         <ContactCta />
       </div>
