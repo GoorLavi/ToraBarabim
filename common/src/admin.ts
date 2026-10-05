@@ -38,6 +38,7 @@ export type UpdateRabbiRequest = Partial<Omit<CreateRabbiRequest, 'title' | 'bio
   bio?: string | null;
 };
 export type RabbiResponse = Rabbi & { prominence: RabbiProminence };
+export type AdminRabbiListItem = RabbiResponse & { lessonCount: number };
 
 export type CreateLessonRequest = Omit<Lesson, 'id'>;
 // A partial update could mix a 'weekly' recurrenceKind with a leftover
@@ -83,7 +84,7 @@ export interface DeleteImpactPreview {
 }
 
 export interface RabbiListResponse {
-  items: RabbiResponse[];
+  items: AdminRabbiListItem[];
   page: number;
   pageSize: number;
   total: number;
