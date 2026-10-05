@@ -1,47 +1,31 @@
-import { useMutation } from '@tanstack/react-query';
 import classNames from 'classnames';
 import styled from 'styled-components';
 
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
-import { fetchCities } from '~/HomePage/api';
+import { CityChip } from '~/components/CityChip/CityChip';
 import { TextLink } from '~/HomePage/components/TextLink/TextLink';
 
 import * as consts from './consts';
-import { uniqueCityNames } from './helpers';
 import type { CityGridProps } from './models';
 import * as styles from './styles';
 
-// A city button carries only a display name, derived from the lessons
-// already fetched (helpers.ts); the numeric id `GET /v1/lessons` needs for
-// its `city` filter is resolved through the real city search on click,
-// rather than inventing one.
-//
 // A row with nothing in it renders nothing at all, heading included: this
 // site never puts a heading over an empty rail (design-system.md, "Every
-// data screen has three states").
-export const CityGrid = styled(({ className, items, isLoading, isError, onSelectCity }: CityGridProps) => {
-  const resolveCity = useMutation({ mutationFn: (name: string) => fetchCities(name) });
+// data screen has three states"). The server sends the busiest cities with
+// the lesson count the chip shows, so a chip selects its city directly.
+export const CityGrid = styled(({ className, cities, isLoading, isError, selectedCityId, onSelectCity, onClearCity }: CityGridProps) => {
+  const hasCities = cities !== undefined && cities.length > 0;
 
-  const selectByName = (name: string): void => {
-    resolveCity.mutate(name, {
-      onSuccess: (result) => {
-        const match = result.items.find((city) => city.name === name) ?? result.items[0];
-        if (!match) return;
-        onSelectCity({ id: match.id, name: match.name });
-        trackEvent(MIXPANEL_EVENTS.filterCity, { cityId: match.id, cityName: match.name, source: 'homeCityGrid' });
-      },
-    });
-  };
-
-  const cityNames = items ? uniqueCityNames(items) : [];
-
-  if (!isLoading && !isError && cityNames.length === 0) return null;
+  if (!isLoading && !isError && !hasCities) return null;
 
   return (
     <section className={className}>
       <div className="heading">
-        <h2>{consts.HEADING}</h2>
+        <div className="titles">
+          <h2 className="title">{consts.HEADING}</h2>
+          <p className="subtitle">{consts.SUBTITLE}</p>
+        </div>
         <TextLink
           className="seeAll"
           to="/cities"
@@ -64,13 +48,25 @@ export const CityGrid = styled(({ className, items, isLoading, isError, onSelect
         </p>
       )}
 
-      {!isError && !isLoading && (
+      {!isError && !isLoading && hasCities && (
         <ul className="grid">
-          {cityNames.map((name) => (
-            <li key={name}>
-              <button type="button" disabled={resolveCity.isPending} onClick={() => selectByName(name)} dir="auto">
-                {name}
-              </button>
+          {cities.map((city) => (
+            <li key={city.id} className="cell">
+              <CityChip
+                {...{
+                  city,
+                  lessonCount: city.lessonCount,
+                  selected: city.id === selectedCityId,
+                  onSelect: () => {
+                    if (city.id === selectedCityId) {
+                      onClearCity();
+                      return;
+                    }
+                    onSelectCity({ id: city.id, name: city.name });
+                    trackEvent(MIXPANEL_EVENTS.filterCity, { cityId: city.id, cityName: city.name, source: 'homeCityGrid' });
+                  },
+                }}
+              />
             </li>
           ))}
         </ul>

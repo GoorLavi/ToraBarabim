@@ -1,42 +1,42 @@
-import type { Area, Rabbi } from '@torabarabim/common';
+import type { Area, HomeTopic, LessonTopic, Rabbi } from '@torabarabim/common';
 import { and, gte, inArray, lte } from 'drizzle-orm';
 
-import { AREAS } from '../../db/schema/enums';
+import { AREAS, LESSON_TOPICS } from '../../db/schema/enums';
 import { db } from '../../db/client';
 import { cities, lessonExceptions, lessons, places, rabbis } from '../../db/schema';
 import * as courseService from '../course/course';
 import * as dedicationService from '../dedication/dedication';
 import { applyException, expandLesson, hasLeftPublicListsAt, resolveRecord, toExceptionDomain, toLessonDomain, type ResolvedOccurrence } from '../lesson/occurrence';
-import { addDays, compareIsoDates, todayInIsrael } from '../lesson/israel-time';
+import { addDays, todayInIsrael } from '../lesson/israel-time';
 import { isLessonInScope, isRabbiInDirectoryScope } from '../shared/audience-scope';
 import { AREA_NAMES_HE } from '../shared/consts';
-import { toCitySummary } from '../shared/city-summary';
 import type { AddressCityRow, AddressPlaceRow } from '../shared/address';
 import { compareRabbiOrder, PROMINENCE_RANK } from '../shared/rabbi-order';
 import { toRabbiSummary as toRabbi } from '../shared/rabbi-summary';
 import {
+  BOTH_AUDIENCES_ROW_TITLE,
   HOME_RABBI_ROW_CAP,
   HOME_WINDOW_DAYS,
-  MAX_ITEMS_PER_ROW,
-  MIN_ITEMS_PER_ROW,
-  WOMENS_AREA_TILE_FIRST_CANDIDATE_ROW,
-  WOMENS_AREA_TILE_INDEX,
-  WOMENS_AREA_TILE_MIN_LESSONS,
-  WOMENS_AREA_TILE_ROW_CADENCE,
+  MAX_AREA_ROWS,
+  MIDDAY_ROW_TITLE,
+  MORNING_ROW_TITLE,
+  TODAY_ROW_TITLE,
+  TOPIC_ROW_TITLES,
+  WEEKLY_ROW_TITLE,
 } from './consts';
-import { placeCourseRow, placeHelpTiles } from './home-rows';
+import {
+  buildRow,
+  countLessonsByCity,
+  countOccurrencesByCity,
+  hebrewCollator,
+  interleaveRows,
+  placeCourseRow,
+  placeHelpTiles,
+  placeWomensAreaTile,
+  rankCitiesForGrid,
+  timeBandOf,
+} from './home-rows';
 import type { HomeResult, HomeRowResult, LessonHomeRowResult, LoadedWindow, ResolvedHomeOccurrence, WomenAreaResult, WomensSet } from './models';
-
-const MINUTES_PER_DAY = 24 * 60;
-
-const addMinutes = (startTime: string, minutes: number): string => {
-  const [hoursText, minutesText] = startTime.split(':');
-  const total = Number(hoursText) * 60 + Number(minutesText) + minutes;
-  const wrapped = ((total % MINUTES_PER_DAY) + MINUTES_PER_DAY) % MINUTES_PER_DAY;
-  const hours = Math.floor(wrapped / 60);
-  const mins = wrapped % 60;
-  return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
-};
 
 // A small deterministic hash of the lesson id, used only as a stable
 // secondary sort key within a prominence tier: it must not depend on the
@@ -90,72 +90,45 @@ const resolveHomeRecord = (
   };
 };
 
-const pickNearestPerLesson = (occurrences: ResolvedHomeOccurrence[]): ResolvedHomeOccurrence[] => {
-  const nearestByLessonId = new Map<string, ResolvedHomeOccurrence>();
+const countByKey = <Key>(occurrences: ResolvedHomeOccurrence[], keyOf: (occurrence: ResolvedHomeOccurrence) => Key | undefined): Map<Key, number> => {
+  const counts = new Map<Key, number>();
   for (const occurrence of occurrences) {
-    const existing = nearestByLessonId.get(occurrence.lessonId);
-    if (!existing || compareIsoDates(occurrence.date, existing.date) < 0) {
-      nearestByLessonId.set(occurrence.lessonId, occurrence);
-    }
+    const key = keyOf(occurrence);
+    if (key !== undefined) counts.set(key, (counts.get(key) ?? 0) + 1);
   }
-  return [...nearestByLessonId.values()];
+  return counts;
 };
 
-const orderRow = (occurrences: ResolvedHomeOccurrence[]): ResolvedHomeOccurrence[] =>
-  [...occurrences].sort((a, b) => {
-    const byProminence = a.rabbiProminenceRank - b.rabbiProminenceRank;
-    if (byProminence !== 0) return byProminence;
-    return a.shuffleKey - b.shuffleKey;
-  });
+// Highest raw occurrence count first. `candidates` is in its declared order
+// and the sort is stable, so a tie keeps the earlier candidate.
+const rankByCount = <Key>(candidates: readonly Key[], counts: Map<Key, number>): Key[] =>
+  candidates.filter((key) => (counts.get(key) ?? 0) > 0).sort((a, b) => (counts.get(b) ?? 0) - (counts.get(a) ?? 0));
 
-const buildRow = (
-  id: LessonHomeRowResult['id'],
-  title: string,
-  matches: ResolvedHomeOccurrence[],
-): LessonHomeRowResult | undefined => {
-  const items = orderRow(pickNearestPerLesson(matches)).slice(0, MAX_ITEMS_PER_ROW);
-  return items.length >= MIN_ITEMS_PER_ROW ? { kind: 'lessons', id, title, items } : undefined;
-};
+const isHomeTopic = (topic: LessonTopic): topic is HomeTopic => topic !== 'other';
+const HOME_TOPICS: readonly HomeTopic[] = LESSON_TOPICS.filter(isHomeTopic);
 
-// The four rows filter on different, overlapping axes (area, day, audience,
-// recurrence), so the same lesson easily qualifies for two or three of
-// them. A lesson already shown in an earlier row is excluded from every
-// later one, so a reader scrolling down never sees the same card twice; a
-// row that drops below MIN_ITEMS_PER_ROW after that exclusion is dropped
-// entirely by `buildRow`, never sent half-empty.
-const buildRowExcluding = (
-  usedLessonIds: Set<string>,
-  id: LessonHomeRowResult['id'],
-  title: string,
-  matches: ResolvedHomeOccurrence[],
-): LessonHomeRowResult | undefined => {
-  const eligible = matches.filter((occurrence) => !usedLessonIds.has(occurrence.lessonId));
-  const row = buildRow(id, title, eligible);
-  row?.items.forEach((item) => usedLessonIds.add(item.lessonId));
-  return row;
-};
+const buildFixedRows = (resolved: ResolvedHomeOccurrence[], today: string): LessonHomeRowResult[] =>
+  [
+    buildRow('today', TODAY_ROW_TITLE, resolved.filter((o) => o.date === today)),
+    buildRow('bothAudiences', BOTH_AUDIENCES_ROW_TITLE, resolved.filter((o) => o.audience === 'mixed')),
+    buildRow('weekly', WEEKLY_ROW_TITLE, resolved.filter((o) => o.recurrenceKind === 'weekly')),
+    buildRow('morning', MORNING_ROW_TITLE, resolved.filter((o) => timeBandOf(o.startTime) === 'morning')),
+    buildRow('midday', MIDDAY_ROW_TITLE, resolved.filter((o) => timeBandOf(o.startTime) === 'midday')),
+  ].filter((row): row is LessonHomeRowResult => row !== undefined);
 
-// Iterates `AREAS` in its declared order and only replaces on a strictly
-// greater count, so a tie deterministically picks the earlier area.
-const chooseArea = (occurrences: ResolvedHomeOccurrence[]): Area | undefined => {
-  const countByArea = new Map<Area, number>();
-  for (const occurrence of occurrences) {
-    countByArea.set(occurrence.venue.area, (countByArea.get(occurrence.venue.area) ?? 0) + 1);
-  }
+// An area ranked high by raw count can still drop below the minimum after the
+// per-rabbi cap, so rows are built first and the limit is applied to the
+// survivors.
+const buildAreaRows = (resolved: ResolvedHomeOccurrence[]): LessonHomeRowResult[] =>
+  rankByCount<Area>(AREAS, countByKey(resolved, (o) => o.venue.area))
+    .map((area) => buildRow(`area:${area}`, `שיעורים באזור ${AREA_NAMES_HE[area]}`, resolved.filter((o) => o.venue.area === area)))
+    .filter((row): row is LessonHomeRowResult => row !== undefined)
+    .slice(0, MAX_AREA_ROWS);
 
-  let chosen: Area | undefined;
-  let bestCount = 0;
-  for (const area of AREAS) {
-    const count = countByArea.get(area) ?? 0;
-    if (count > bestCount) {
-      bestCount = count;
-      chosen = area;
-    }
-  }
-  return chosen;
-};
-
-const collator = new Intl.Collator('he');
+const buildTopicRows = (resolved: ResolvedHomeOccurrence[]): LessonHomeRowResult[] =>
+  rankByCount<HomeTopic>(HOME_TOPICS, countByKey<HomeTopic>(resolved, (o) => (o.topic && isHomeTopic(o.topic) ? o.topic : undefined)))
+    .map((topic) => buildRow(`topic:${topic}`, TOPIC_ROW_TITLES[topic], resolved.filter((o) => o.topic === topic)))
+    .filter((row): row is LessonHomeRowResult => row !== undefined);
 
 // `lessonCount` matches the rest of the site's "{n} שיעורים בשבועיים
 // הקרובים" copy: occurrences in the 14-day window, not distinct lessons. A
@@ -168,24 +141,14 @@ const buildWomensSet = (resolved: ResolvedHomeOccurrence[], cityByCode: Map<numb
 
   const teacherById = new Map(inScope.map((occurrence) => [occurrence.rabbi.id, occurrence.rabbi] as const));
 
-  const countByCityCode = new Map<number, number>();
-  for (const occurrence of inScope) {
-    countByCityCode.set(occurrence.cityCode, (countByCityCode.get(occurrence.cityCode) ?? 0) + 1);
-  }
-  const citiesWithLessonCount = [...countByCityCode.entries()].map(([code, lessonCount]) => {
-    const cityRow = cityByCode.get(code);
-    if (!cityRow) {
-      throw new Error(`data inconsistency: a lesson references unknown city code ${code}`);
-    }
-    return { ...toCitySummary(cityRow), lessonCount };
-  });
+  const citiesWithLessonCount = countOccurrencesByCity(inScope, cityByCode);
 
   return {
     lessonCount: inScope.length,
-    teachers: [...teacherById.values()].sort((a, b) => collator.compare(a.name, b.name)),
+    teachers: [...teacherById.values()].sort((a, b) => hebrewCollator.compare(a.name, b.name)),
     // Alphabetical, matching the city directory and area page's own
     // ordering of `CityWithLessonCount` (`service/city/city.ts`).
-    cities: citiesWithLessonCount.sort((a, b) => collator.compare(a.name, b.name)),
+    cities: citiesWithLessonCount.sort((a, b) => hebrewCollator.compare(a.name, b.name)),
   };
 };
 
@@ -267,58 +230,17 @@ export const getHome = async (now: Date, random: () => number = Math.random): Pr
     isLessonInScope('general', { audience: occurrence.audience, teacherHonorific: occurrence.rabbi.honorific }),
   );
 
-  const area = chooseArea(resolved);
-  const usedLessonIds = new Set<string>();
-
-  const lessonRows = [
-    area
-      ? buildRowExcluding(
-          usedLessonIds,
-          'area',
-          `שיעורים באזור ${AREA_NAMES_HE[area]}`,
-          resolved.filter((o) => o.venue.area === area),
-        )
-      : undefined,
-    buildRowExcluding(usedLessonIds, 'today', 'שיעורים היום', resolved.filter((o) => o.date === today)),
-    buildRowExcluding(
-      usedLessonIds,
-      'bothAudiences',
-      'שיעורים לגברים ולנשים',
-      resolved.filter((o) => o.audience === 'mixed'),
-    ),
-    buildRowExcluding(
-      usedLessonIds,
-      'weekly',
-      'שיעורים קבועים כל שבוע',
-      resolved.filter((o) => o.recurrenceKind === 'weekly'),
-    ),
-  ].filter((row): row is LessonHomeRowResult => row !== undefined);
-
-  // Places at most one tile: starting from the candidate row, scan forward
-  // for the first row with enough lessons for the tile's slot. If none
-  // qualifies, no tile is placed. A second candidate (cadence rows on from
-  // wherever the tile actually landed) never applies today, since the home
-  // page never has more rows than the first candidate's own cadence, but
-  // the loop is written to keep working if that changes. Runs before the
-  // course row is spliced in below: the tile only ever lands in a lesson
-  // row, and this loop's indices are always into `lessonRows` alone.
-  if (womensAreaLessonCount > 0) {
-    let candidateRow = WOMENS_AREA_TILE_FIRST_CANDIDATE_ROW;
-    while (candidateRow < lessonRows.length) {
-      const placedAt = lessonRows.findIndex(
-        (row, index) => index >= candidateRow && row.items.length >= WOMENS_AREA_TILE_MIN_LESSONS,
-      );
-      const row = placedAt === -1 ? undefined : lessonRows[placedAt];
-      if (!row) break;
-
-      lessonRows[placedAt] = { ...row, womensAreaTileIndex: WOMENS_AREA_TILE_INDEX };
-      candidateRow = placedAt + WOMENS_AREA_TILE_ROW_CADENCE;
-    }
-  }
+  const interleaved = interleaveRows({
+    fixed: buildFixedRows(resolved, today),
+    areas: buildAreaRows(resolved),
+    topics: buildTopicRows(resolved),
+  });
+  const lessonRows = womensAreaLessonCount > 0 ? placeWomensAreaTile(interleaved) : interleaved;
 
   const rows: HomeRowResult[] = placeCourseRow(placeHelpTiles(lessonRows, random), courseItems);
+  const cities = rankCitiesForGrid(countLessonsByCity(resolved, cityByCode));
 
-  return { rows, womensAreaLessonCount, rabbis: homeRabbis, dedicationGroups };
+  return { rows, womensAreaLessonCount, rabbis: homeRabbis, dedicationGroups, cities };
 };
 
 export const getWomenArea = async (now: Date): Promise<WomenAreaResult> => {
@@ -329,7 +251,7 @@ export const getWomenArea = async (now: Date): Promise<WomenAreaResult> => {
     const rabbaniyot = rabbiRows
       .filter((row) => isRabbiInDirectoryScope('women', row.honorific))
       .map((row) => toRabbi(row))
-      .sort((a, b) => collator.compare(a.name, b.name));
+      .sort((a, b) => hebrewCollator.compare(a.name, b.name));
     return { kind: 'empty', rabbaniyot, courses };
   }
 

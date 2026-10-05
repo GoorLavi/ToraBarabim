@@ -1,4 +1,4 @@
-import type { LessonResponse, RabbiResponse } from '@torabarabim/common';
+import type { AdminRabbiListItem, LessonResponse, RabbiResponse } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Route, Routes } from 'react-router-dom';
 import { expect, userEvent, within } from 'storybook/test';
@@ -25,11 +25,11 @@ const lesson: LessonResponse = {
 
 // The picker's eager, query-less rabbi search fires on mount regardless of
 // whether its popover is open.
-const rabbisForPicker: RabbiResponse[] = [
-  rabbi,
-  { ...rabbiFixture({ id: 'rabbi-1', name: 'אברהם כהן' }), prominence: 'known' },
-  { ...rabbiFixture({ id: 'rabbi-2', name: 'משה לוי' }), prominence: 'local' },
-  { ...rabbiFixture({ id: 'rabbi-3', name: 'נתן צבי אשכנזי הכהן' }), prominence: 'sought' },
+const rabbisForPicker: AdminRabbiListItem[] = [
+  { ...rabbi, lessonCount: 4 },
+  { ...rabbiFixture({ id: 'rabbi-1', name: 'אברהם כהן' }), prominence: 'known', lessonCount: 0 },
+  { ...rabbiFixture({ id: 'rabbi-2', name: 'משה לוי' }), prominence: 'local', lessonCount: 0 },
+  { ...rabbiFixture({ id: 'rabbi-3', name: 'נתן צבי אשכנזי הכהן' }), prominence: 'sought', lessonCount: 0 },
 ];
 
 // Only the requests the edit-mode form actually fires on mount are
@@ -42,7 +42,7 @@ const editModeHandlers = {
   lesson: http.get('/v1/admin/lessons/:id', jsonResolver(lesson)),
   rabbi: http.get('/v1/admin/rabbis/:id', jsonResolver(rabbi)),
   rabbis: http.get('/v1/admin/rabbis', jsonResolver({ items: rabbisForPicker, page: 1, pageSize: 50, total: rabbisForPicker.length })),
-  rabbiLessonCount: http.get('/v1/admin/lessons', jsonResolver({ items: [lesson], page: 1, pageSize: 1, total: 4 })),
+  rabbiLessonCount: http.get('/v1/admin/lessons', jsonResolver({ items: [{ ...lesson, rabbi }], page: 1, pageSize: 1, total: 4 })),
   places: http.get('/v1/places', jsonResolver({ items: [] })),
   similarPlaces: http.get('/v1/places/similar', jsonResolver({ items: [] })),
 };

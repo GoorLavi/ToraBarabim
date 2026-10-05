@@ -1,25 +1,19 @@
-import type { LessonResponse, RabbiResponse } from '@torabarabim/common';
+import type { AdminLessonListItem, LessonResponse, Rabbi } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Route, Routes } from 'react-router-dom';
+import { expect, within } from 'storybook/test';
 
 import { rabbiFixture } from '~/rabbiFixture';
 
 import { errorResolver, http, jsonResolver, loadingResolver } from '../../../.storybook/apiMocks';
 import { LessonsListPage } from './LessonsListPage';
 
-const rabbiResponse = (overrides: Partial<RabbiResponse>): RabbiResponse => ({
-  ...rabbiFixture({ id: 'rabbi-1', name: 'אברהם כהן' }),
-  prominence: 'known',
-  ...overrides,
-});
+const avrahamCohen = rabbiFixture({ id: 'rabbi-1', name: 'אברהם כהן' });
+const mosheLevi = rabbiFixture({ id: 'rabbi-2', name: 'משה לוי' });
+const natanAshkenazi = rabbiFixture({ id: 'rabbi-3', name: 'נתן צבי אשכנזי הכהן' });
 
-const rabbisList: RabbiResponse[] = [
-  rabbiResponse({ id: 'rabbi-1', name: 'אברהם כהן' }),
-  rabbiResponse({ id: 'rabbi-2', name: 'משה לוי' }),
-  rabbiResponse({ id: 'rabbi-3', name: 'נתן צבי אשכנזי הכהן' }),
-];
-
-const lesson = (overrides: Partial<LessonResponse>): LessonResponse => ({
+const lesson = (overrides: Partial<LessonResponse>, rabbi: Rabbi = avrahamCohen): AdminLessonListItem => ({
+  rabbi,
   id: 'l1',
   title: 'עיונים בפרשת השבוע',
   rabbiId: 'rabbi-1',
@@ -33,7 +27,7 @@ const lesson = (overrides: Partial<LessonResponse>): LessonResponse => ({
   ...overrides,
 });
 
-const populatedLessons: LessonResponse[] = [
+const populatedLessons: AdminLessonListItem[] = [
   lesson({ id: 'l1' }),
   lesson({
     id: 'l2',
@@ -44,7 +38,7 @@ const populatedLessons: LessonResponse[] = [
     recurrence: { kind: 'weekly', weekdays: [0, 1, 2, 3, 4] },
     startTime: '06:00',
     venue: { kind: 'address', name: 'בית מדרש הרב קוק', street: 'הרצל 8', cityCode: 5000, cityName: 'ירושלים' },
-  }),
+  }, mosheLevi),
   lesson({
     id: 'l3',
     title: undefined,
@@ -54,16 +48,15 @@ const populatedLessons: LessonResponse[] = [
     recurrence: { kind: 'once', date: '2026-10-15' },
     startTime: '19:30',
     venue: { kind: 'address', name: 'אולם קהילתי', street: 'רחוב בן גוריון 3', cityCode: 5000, cityName: 'ירושלים' },
-  }),
+  }, natanAshkenazi),
 ];
 
-const rabbi1Lessons: LessonResponse[] = [
+const rabbi1Lessons: AdminLessonListItem[] = [
   lesson({ id: 'r1-a', rabbiId: 'rabbi-1' }),
   lesson({ id: 'r1-b', rabbiId: 'rabbi-1', title: 'שיעור הלכה יומי', startTime: '07:00', recurrence: { kind: 'weekly', weekdays: [0, 1, 2, 3, 4] } }),
 ];
 
-const rabbisHandler = http.get('/v1/admin/rabbis', jsonResolver({ items: rabbisList, page: 1, pageSize: 50, total: rabbisList.length }));
-const lessonsHandler = (items: LessonResponse[]) =>
+const lessonsHandler = (items: AdminLessonListItem[]) =>
   http.get('/v1/admin/lessons', jsonResolver({ items, page: 1, pageSize: 50, total: items.length }));
 
 // See RabbiPage.stories.tsx for why this uses `Routes`'s `location` override
@@ -77,7 +70,7 @@ const withSearch = (search: string) => (Story: React.ComponentType) => (
 const meta: Meta<typeof LessonsListPage> = {
   title: 'AdminPanel/LessonsListPage',
   component: LessonsListPage,
-  parameters: { apiMocks: { handlers: { rabbis: rabbisHandler, lessons: lessonsHandler(populatedLessons) } } },
+  parameters: { apiMocks: { handlers: { lessons: lessonsHandler(populatedLessons) } } },
 };
 
 export default meta;
@@ -105,3 +98,31 @@ export const CityFilterNoMatches: Story = {
 export const SystemEmpty: Story = { decorators: [withSearch('')], parameters: { apiMocks: { handlers: { lessons: lessonsHandler([]) } } } };
 export const Loading: Story = { decorators: [withSearch('')], parameters: { apiMocks: { handlers: { lessons: http.get('/v1/admin/lessons', loadingResolver) } } } };
 export const ServerError: Story = { decorators: [withSearch('')], parameters: { apiMocks: { handlers: { lessons: http.get('/v1/admin/lessons', errorResolver()) } } } };
+
+// The defect this page shipped with: the rabbi came from a separate, capped
+// rabbi list, so a rabbi outside that page rendered as an unknown rabbi. No
+// rabbis route is mocked here at all, so the names below can only have come
+// from the lesson items themselves.
+const rabbiOutsideAnyList = rabbiFixture({ id: 'rabbi-beyond-first-page', name: 'יצחק אלבז' });
+const rabbanitOutsideAnyList = rabbiFixture({ id: 'rabbanit-beyond-first-page', name: 'רבקה שטרן', honorific: 'rabbanit' });
+
+export const RabbiComesFromTheLessonItself: Story = {
+  decorators: [withSearch('')],
+  parameters: {
+    apiMocks: {
+      handlers: {
+        lessons: lessonsHandler([
+          lesson({ id: 'beyond-untitled', title: undefined, topic: undefined, rabbiId: rabbiOutsideAnyList.id }, rabbiOutsideAnyList),
+          lesson({ id: 'beyond-titled', title: 'שיעור הלכה שבועי', rabbiId: rabbanitOutsideAnyList.id, audience: 'women' }, rabbanitOutsideAnyList),
+        ]),
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect((await canvas.findAllByText('הרב יצחק אלבז')).length).toBeGreaterThan(0);
+    await expect((await canvas.findAllByText('שיעור הלכה שבועי')).length).toBeGreaterThan(0);
+    await expect((await canvas.findAllByText('הרבנית רבקה שטרן')).length).toBeGreaterThan(0);
+    expect(canvas.queryByText('רב לא ידוע')).not.toBeInTheDocument();
+  },
+};

@@ -7,8 +7,8 @@ import type { DedicationGroupResult } from '../dedication/models';
 
 // Kept distinct from the wire `LessonOccurrence`: it carries the sort-only
 // `rabbiProminenceRank` and `shuffleKey`, and the raw `cityCode` the
-// women's-set step needs to dedupe cities, none of which the convertor may
-// let reach the client.
+// women's-set step and the city grid group by, none of which the convertor
+// may let reach the client.
 export interface ResolvedHomeOccurrence {
   lessonId: string;
   date: string;
@@ -33,8 +33,8 @@ export interface LessonHomeRowResult {
   title: string;
   items: ResolvedHomeOccurrence[];
   // The 0-based index in `items` where the women's-area tile renders; see
-  // `getHome`'s placement cadence. Present on at most one row, and only
-  // ever a lesson row: the tile never lands inside the course row.
+  // `placeWomensAreaTile`. Present on at most one row, and only ever a
+  // lesson row: the tile never lands inside the course row.
   womensAreaTileIndex?: number;
   // The help tile and its 0-based slot in `items`; see `placeHelpTiles`.
   // Never set on a row that carries `womensAreaTileIndex`, and never on the
@@ -66,7 +66,19 @@ export interface HomeResult {
   // off this result directly, so the response can never disagree with the
   // `HomeResult` it was built from.
   dedicationGroups: DedicationGroupResult[];
+  // Already wire-shaped (`CityWithLessonCount` carries no internal column),
+  // so the convertor passes it through.
+  cities: CityWithLessonCount[];
 }
+
+// The three row families `interleaveRows` takes from, each already ranked.
+export interface RowFamilies {
+  fixed: LessonHomeRowResult[];
+  areas: LessonHomeRowResult[];
+  topics: LessonHomeRowResult[];
+}
+
+export type TimeBand = 'morning' | 'midday';
 
 // What `buildWomensSet` returns: the women's lesson stats alone. `courses`
 // is a separate load (`courseService.listForWomenArea`), not part of this

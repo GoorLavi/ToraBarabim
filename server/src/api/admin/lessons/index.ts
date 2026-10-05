@@ -1,7 +1,7 @@
 import type { FastifyInstance, FastifyReply } from 'fastify';
 import { ZodError } from 'zod';
 
-import { toLessonListResponse, toLessonResponse, toOccurrenceListResponse } from '../../../convertors/admin-lesson';
+import { toAdminLessonListResponse, toLessonResponse, toOccurrenceListResponse } from '../../../convertors/admin-lesson';
 import { requireAdminAuth } from '../../../plugins/admin-guard';
 import * as adminLessonService from '../../../service/admin-lesson/admin-lesson';
 import { LessonNotFoundError, ReferencedPlaceNotFoundError, ReferencedRabbiNotFoundError, UnknownCityError } from '../../../service/admin-lesson/errors';
@@ -45,7 +45,7 @@ export const registerAdminLessonRoutes = async (app: FastifyInstance): Promise<v
     try {
       const query = lessonListQuerySchema.parse(request.query);
       const result = await adminLessonService.list(query);
-      return reply.send(toLessonListResponse(result));
+      return reply.send(toAdminLessonListResponse(result));
     } catch (error) {
       return handleError(reply, error, 'GET /v1/admin/lessons');
     }

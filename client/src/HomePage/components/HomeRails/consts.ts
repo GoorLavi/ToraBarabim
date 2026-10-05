@@ -12,9 +12,11 @@ export const RETRY_LABEL = 'נסו שוב';
 // site itself has nothing yet.
 export const EMPTY_HEADLINE = 'אין כרגע שיעורים באתר';
 
-// After the second lesson row, before the third: one rail in three, never
-// after every rail (design review). The one `kind: 'courses'` row is never
-// counted towards this (plan section 10.7, helpers.ts's `indexAfterNthLessonRow`).
-// With fewer than three lesson rows this clamps to the end of the list,
-// still inside the rails block and still before `לפי רב`.
+// The slots, counted in lesson rows (the one `kind: 'courses'` row is never
+// counted, helpers.ts's `indexAfterNthLessonRow`). Each band sits after its
+// Nth lesson row, or after the last row when there are fewer, so on a thin
+// page the bands stay inside the rails block, before the rabbi row, in the
+// order women's, success, healing.
 export const WOMENS_AREA_BAND_SLOT = 2;
+export const SUCCESS_BAND_SLOT = 6;
+export const HEALING_BAND_SLOT = 8;

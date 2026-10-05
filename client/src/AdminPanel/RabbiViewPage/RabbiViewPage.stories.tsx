@@ -1,4 +1,4 @@
-import type { LessonResponse, RabbiResponse } from '@torabarabim/common';
+import type { AdminLessonListItem, LessonResponse, RabbiResponse } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Route, Routes } from 'react-router-dom';
 
@@ -21,7 +21,8 @@ const rabbiResponse = (overrides: Partial<RabbiResponse>): RabbiResponse => ({
   ...overrides,
 });
 
-const lesson = (overrides: Partial<LessonResponse>): LessonResponse => ({
+const lesson = (overrides: Partial<LessonResponse>): AdminLessonListItem => ({
+  rabbi: rabbiFixture({ id: overrides.rabbiId ?? 'story-populated', name: 'יעקב מזרחי' }),
   id: 'l1',
   title: 'עיונים בפרשת השבוע',
   rabbiId: 'story-populated',
@@ -35,12 +36,12 @@ const lesson = (overrides: Partial<LessonResponse>): LessonResponse => ({
   ...overrides,
 });
 
-const manyLessons: LessonResponse[] = Array.from({ length: 5 }, (_, index) =>
+const manyLessons: AdminLessonListItem[] = Array.from({ length: 5 }, (_, index) =>
   lesson({ id: `many-${index}`, rabbiId: 'story-manylessons', recurrence: { kind: 'weekly', weekdays: [(index % 6) as 0 | 1 | 2 | 3 | 4 | 5 | 6] } }),
 );
 
 const rabbiHandler = (rabbi: RabbiResponse) => http.get('/v1/admin/rabbis/:id', jsonResolver(rabbi));
-const lessonsHandler = (items: LessonResponse[], total = items.length) =>
+const lessonsHandler = (items: AdminLessonListItem[], total = items.length) =>
   http.get('/v1/admin/lessons', jsonResolver({ items, page: 1, pageSize: 5, total }));
 
 // See RabbiPage.stories.tsx for why this uses `Routes`'s `location` override
