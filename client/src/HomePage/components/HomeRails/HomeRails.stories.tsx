@@ -7,6 +7,7 @@ import { courseFixture } from '~/courseFixture';
 import { DEDICATION_GROUP_HEALING, DEDICATION_GROUP_SUCCESS } from '~/dedicationFixture';
 import { whatsAppHref } from '~/helpers';
 import { VISITOR_MESSAGE_TITLES } from '~/HomePage/components/consts';
+import { homeRowCardTitle, homeRowCardVenue } from '~/HomePage/homeRowFixture';
 import { rabbiFixture } from '~/rabbiFixture';
 
 import { http } from '../../../../.storybook/apiMocks';
@@ -39,27 +40,31 @@ const rabbiNameFor = (rowId: string, cardIndex: number): string => {
   return name;
 };
 
-const lessonItem = (id: string, title: string, rabbiName: string): LessonOccurrence => ({
-  lessonId: id,
-  date: '2026-09-22',
-  startTime: '20:00',
-  endTime: '21:00',
-  status: 'scheduled',
-  title,
-  topic: 'other',
-  audience: 'mixed',
-  rabbi: rabbiFixture({ id: `rabbi-${rabbiName}`, name: rabbiName }),
-  venue: { kind: 'address', name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'נתניה', citySlug: 'נתניה', area: 'sharon' },
-});
+const lessonItem = (id: string, rowId: string, cardIndex: number): LessonOccurrence => {
+  const rabbiName = rabbiNameFor(rowId, cardIndex);
 
-const lessonItems = (id: HomeLessonRowId, title: string, count = 3): LessonOccurrence[] =>
-  Array.from({ length: count }, (_, index) => lessonItem(`${id}-${index + 1}`, title, rabbiNameFor(id, index)));
+  return {
+    lessonId: id,
+    date: '2026-09-22',
+    startTime: '20:00',
+    endTime: '21:00',
+    status: 'scheduled',
+    title: homeRowCardTitle(rowId, cardIndex),
+    topic: 'other',
+    audience: 'mixed',
+    rabbi: rabbiFixture({ id: `rabbi-${rabbiName}`, name: rabbiName }),
+    venue: homeRowCardVenue(rowId, cardIndex),
+  };
+};
+
+const lessonItems = (id: HomeLessonRowId, count = 3): LessonOccurrence[] =>
+  Array.from({ length: count }, (_, index) => lessonItem(`${id}-${index + 1}`, id, index));
 
 const homeRow = (id: HomeLessonRowId, title: string): HomeRow => ({
   kind: 'lessons',
   id,
   title,
-  items: lessonItems(id, title),
+  items: lessonItems(id),
 });
 
 // The row that carries the women's-area tile: four cards so the tile has a
@@ -68,7 +73,7 @@ const womensTileRow = (id: HomeLessonRowId, title: string): HomeRow => ({
   kind: 'lessons',
   id,
   title,
-  items: lessonItems(id, title, 4),
+  items: lessonItems(id, 4),
   womensAreaTileIndex: 3,
 });
 
@@ -203,7 +208,7 @@ const helpRow = (id: HomeLessonRowId, title: string, helpTile: { kind: HelpTileK
   kind: 'lessons',
   id,
   title,
-  items: lessonItems(id, title),
+  items: lessonItems(id),
   helpTile,
 });
 

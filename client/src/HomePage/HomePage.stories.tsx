@@ -11,6 +11,7 @@ import { rabbiFixture } from '~/rabbiFixture';
 
 import { errorResolver, http, jsonResolver, loadingResolver, respondWithJson } from '../../.storybook/apiMocks';
 import { HomePage } from './HomePage';
+import { homeRowCardTitle, homeRowCardVenue } from './homeRowFixture';
 
 // A minimal, valid SVG portrait so the photo story never touches the network.
 const PLACEHOLDER_PHOTO =
@@ -151,7 +152,9 @@ const dedicationRow = (id: LessonHomeRow['id'], title: string, cardCount = 3): L
   kind: 'lessons',
   id,
   title,
-  items: Array.from({ length: cardCount }, (_, index) => lesson({ lessonId: `${id}-${index + 1}`, title, rabbi: rabbiFor(id, index) })),
+  items: Array.from({ length: cardCount }, (_, index) =>
+    lesson({ lessonId: `${id}-${index + 1}`, title: homeRowCardTitle(id, index), rabbi: rabbiFor(id, index), venue: homeRowCardVenue(id, index) }),
+  ),
 });
 
 // Three real rails and a positive `womensAreaLessonCount`: with fewer rails
