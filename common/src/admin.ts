@@ -38,6 +38,7 @@ export type UpdateRabbiRequest = Partial<Omit<CreateRabbiRequest, 'title' | 'bio
   bio?: string | null;
 };
 export type RabbiResponse = Rabbi & { prominence: RabbiProminence };
+export type AdminRabbiListItem = RabbiResponse & { lessonCount: number };
 
 export type CreateLessonRequest = Omit<Lesson, 'id'>;
 // A partial update could mix a 'weekly' recurrenceKind with a leftover
@@ -81,9 +82,6 @@ export interface DeleteImpactPreview {
   exceptionCount: number;
   courseCount: number;
 }
-
-// Counted on the server across all of the rabbi's lessons.
-export type AdminRabbiListItem = RabbiResponse & { lessonCount: number };
 
 export interface RabbiListResponse {
   items: AdminRabbiListItem[];

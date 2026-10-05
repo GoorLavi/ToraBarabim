@@ -1,9 +1,14 @@
-import type { AdminRabbiListItem } from '@torabarabim/common';
+import type { Rabbi } from '@torabarabim/common';
 
 import type { AdminApiError } from '~/AdminPanel/api';
 
 export interface RabbisListPageProps {
   className?: string;
+}
+
+export interface AdminRabbiRow {
+  rabbi: Rabbi;
+  lessonCount: number;
 }
 
 // `appliedSearch` is the term the rows actually answer, which the debounce
@@ -14,4 +19,4 @@ export interface RabbisListPageProps {
 export type AdminRabbisListState =
   | { status: 'pending' }
   | { status: 'error'; error: AdminApiError; retry: () => void }
-  | { status: 'success'; rows: AdminRabbiListItem[]; total: number; appliedSearch: string };
+  | { status: 'success'; rows: AdminRabbiRow[]; total: number; appliedSearch: string };

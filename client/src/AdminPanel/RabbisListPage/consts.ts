@@ -1,9 +1,9 @@
 export const SEARCH_PARAM = 'q';
 
-// The list re-reads both the rabbis and the lessons on every change, so the
-// search term waits for typing to settle before it reaches the query. Same
-// window as `CityPicker/useCitySearchResults.ts`, the oldest of the four
-// debounced searches this app now has.
+// The list re-reads the rabbis on every change, so the search term waits
+// for typing to settle before it reaches the query. Same window as
+// `CityPicker/useCitySearchResults.ts`, the oldest of the four debounced
+// searches this app now has.
 export const SEARCH_DEBOUNCE_MS = 250;
 
 export const HEADING = 'רבנים';
@@ -12,9 +12,8 @@ export const SORT_LABEL = 'מיון: לפי שם';
 export const SEARCH_PLACEHOLDER = 'חיפוש רב לפי שם';
 export const SEARCH_LABEL = 'חיפוש רבנים';
 
-// `GET /v1/admin/rabbis` returns no lesson count and no city (a rabbi has
-// no city of their own on the wire; see the report for this slice), so the
-// subheading only states what the list response actually carries.
+// A rabbi has no city of their own on the wire, so the subheading only
+// states what the list response actually carries.
 export const totalCountLabel = (total: number): string => (total === 1 ? 'רב אחד במערכת' : `${total} רבנים במערכת`);
 
 export const NEW_LESSON_LABEL = 'שיעור חדש';

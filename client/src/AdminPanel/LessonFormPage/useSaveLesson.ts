@@ -3,7 +3,6 @@ import type { UseMutationResult } from '@tanstack/react-query';
 import type { LessonResponse } from '@torabarabim/common';
 
 import { AdminApiError, createAdminLesson, updateAdminLesson } from '~/AdminPanel/api';
-import { ADMIN_QUERY_KEYS } from '~/AdminPanel/consts';
 
 import { buildLessonPayload } from './helpers';
 import type { LessonFormState } from './models';
@@ -24,8 +23,10 @@ export const useSaveLesson = (): UseMutationResult<LessonResponse, AdminApiError
       return existingLessonId ? updateAdminLesson(existingLessonId, payload) : createAdminLesson(payload);
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.lessonsAll() });
-      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.rabbisAll() });
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'lessons'] });
+      // The rabbi list carries each rabbi's lesson count, and a save can
+      // add a lesson or move one to another rabbi.
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'rabbis', 'search'] });
     },
   });
 };

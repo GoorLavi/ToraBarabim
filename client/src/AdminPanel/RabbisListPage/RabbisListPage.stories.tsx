@@ -25,10 +25,10 @@ let rabbiRequestCount = 0;
 // Which story of this file, if any, is on screen. `.storybook/preview.tsx`
 // chains every story file's mock onto one `window.fetch`, so without this
 // the answers below would also be given for other screens in the same
-// session, and a visit to the loading or error story would leave `scenario`
-// set for whatever is opened next. A token rather than a boolean, because a
-// story that mounts before the previous one unmounts would otherwise have
-// its own flag cleared by that unmount.
+// session: a visit to the loading or error story would leave `scenario` set
+// for whatever is opened next. A token rather than a boolean,
+// because a story that mounts before the previous one unmounts would
+// otherwise have its own flag cleared by that unmount.
 let activeStoryToken: symbol | null = null;
 
 const MATCHES_NOTHING = 'זזז';
@@ -36,22 +36,23 @@ const MATCHES_NOTHING = 'זזז';
 const rabbi = (overrides: Partial<AdminRabbiListItem> & Pick<AdminRabbiListItem, 'id' | 'name'>): AdminRabbiListItem => ({
   ...rabbiFixture(overrides),
   prominence: 'known',
-  lessonCount: 0,
+  lessonCount: 1,
   ...overrides,
 });
 
-// The last four are `LessonFormPage.stories.tsx`'s rabbis, carried here for
-// the reason that file already gives at its own list: both hit the same
+// The last four are `LessonsListPage.stories.tsx`'s and
+// `LessonFormPage.stories.tsx`'s rabbis, carried here for the reason both of
+// those files already give at their own lists: all three hit the same
 // unfiltered `/v1/admin/rabbis?page=1&pageSize=50` request, and whichever
-// file's mock loaded last answers for both. This file's own three are
+// file's mock loaded last answers for all of them. This file's own three are
 // named so that no name repeats across the combined list, or a query by name
 // would match two cards once one of the other files is the answering mock.
 // Most carry a photo and one does not, because that is the mix the real
 // product has (docs/product.md): a list where every card fell back would
 // leave the fallback as the only state the design gate ever sees.
 const rabbis: AdminRabbiListItem[] = [
-  rabbi({ id: 'r1', name: 'אליהו בן שמעון', title: 'ראש ישיבה', lessonCount: 7 }),
-  rabbi({ id: 'r2', name: 'שרה גולדברג', honorific: 'rabbanit', title: 'רבנית הקהילה' }),
+  rabbi({ id: 'r1', name: 'אליהו בן שמעון', title: 'ראש ישיבה', lessonCount: 73 }),
+  rabbi({ id: 'r2', name: 'שרה גולדברג', honorific: 'rabbanit', title: 'רבנית הקהילה', lessonCount: 0 }),
   rabbi({ id: 'r3', name: 'יוסף חיים אזולאי', photoUrl: undefined }),
   rabbi({ id: 'rabbi-1', name: 'אברהם כהן' }),
   rabbi({ id: 'rabbi-2', name: 'משה לוי' }),
@@ -59,7 +60,7 @@ const rabbis: AdminRabbiListItem[] = [
   rabbi({ id: 'story-edit-rabbi', name: 'יעקב מזרחי', title: 'ראש ישיבה' }),
 ];
 
-// Same body shape as the other files that answer this route, so that
+// Same body shape as the other two files that answer this route, so that
 // whichever mock wins the chain hands every screen the same thing.
 const listBody = (items: AdminRabbiListItem[]) => ({ items, total: items.length, page: 1, pageSize: MAX_ADMIN_PAGE_SIZE });
 
@@ -134,13 +135,14 @@ export const Loaded: Story = {
   },
 };
 
-// The count is the server's `lessonCount` on the rabbi item. No lessons route
-// is mocked in this file, so a count read from anywhere else would show as
-// zero ("no lessons yet") instead of seven.
-export const LessonCountComesFromTheRabbi: Story = {
+// The count used to be tallied in the browser from the first page of
+// lessons only, so a rabbi whose lessons fell past it read "no lessons yet".
+// It is the server's now, and a count above a page of lessons must reach the
+// card as sent.
+export const ShowsTheCountTheServerSends: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.findByText(consts.lessonCountLabel(7))).resolves.toBeInTheDocument();
+    await expect(canvas.findByText(consts.lessonCountLabel(73))).resolves.toBeInTheDocument();
   },
 };
 

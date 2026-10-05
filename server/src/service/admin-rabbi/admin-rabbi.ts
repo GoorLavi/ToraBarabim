@@ -11,6 +11,7 @@ import { PhotoTooLargeError, RabbiDeleteConfirmationRequiredError, RabbiNotFound
 import type {
   CreateRabbiInput,
   DeleteRabbiPreviewResult,
+  RabbiListItemRecord,
   RabbiListQuery,
   RabbiListResult,
   RabbiRecord,
@@ -42,18 +43,22 @@ export const list = async (query: RabbiListQuery): Promise<RabbiListResult> => {
     db.select({ count: sql<number>`count(*)::int` }).from(rabbis).where(condition),
   ]);
 
-  const rabbiIds = rows.map((row) => row.id);
-  const countRows = rabbiIds.length
-    ? await db
-        .select({ rabbiId: lessons.rabbiId, count: sql<number>`count(*)::int` })
-        .from(lessons)
-        .where(inArray(lessons.rabbiId, rabbiIds))
-        .groupBy(lessons.rabbiId)
-    : [];
-  const lessonCountByRabbiId = new Map(countRows.map((row) => [row.rabbiId, row.count] as const));
+  const countByRabbiId = await countLessonsByRabbiId(rows.map((row) => row.id));
+  const items = rows.map((row) => ({ ...toRecord(row), lessonCount: countByRabbiId.get(row.id) ?? 0 }));
 
-  const items = rows.map((row) => ({ ...toRecord(row), lessonCount: lessonCountByRabbiId.get(row.id) ?? 0 }));
   return { items, page: query.page, pageSize: query.pageSize, total: totalRows[0]?.count ?? 0 };
+};
+
+const countLessonsByRabbiId = async (rabbiIds: string[]): Promise<Map<string, number>> => {
+  if (!rabbiIds.length) return new Map();
+
+  const rows = await db
+    .select({ rabbiId: lessons.rabbiId, count: sql<number>`count(*)::int` })
+    .from(lessons)
+    .where(inArray(lessons.rabbiId, rabbiIds))
+    .groupBy(lessons.rabbiId);
+
+  return new Map(rows.map((row) => [row.rabbiId, row.count] as const));
 };
 
 export const getById = async (id: string): Promise<RabbiRecord> => {

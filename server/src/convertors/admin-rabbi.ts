@@ -1,6 +1,6 @@
-import type { DeleteImpactPreview, RabbiListResponse, RabbiResponse } from '@torabarabim/common';
+import type { AdminRabbiListItem, DeleteImpactPreview, RabbiListResponse, RabbiResponse } from '@torabarabim/common';
 
-import type { DeleteRabbiPreviewResult, RabbiListResult, RabbiRecord } from '../service/admin-rabbi/models';
+import type { DeleteRabbiPreviewResult, RabbiListItemRecord, RabbiListResult, RabbiRecord } from '../service/admin-rabbi/models';
 
 export const toRabbiResponse = (record: RabbiRecord): RabbiResponse => ({
   id: record.id,
@@ -13,8 +13,13 @@ export const toRabbiResponse = (record: RabbiRecord): RabbiResponse => ({
   prominence: record.prominence,
 });
 
+const toRabbiListItem = (record: RabbiListItemRecord): AdminRabbiListItem => ({
+  ...toRabbiResponse(record),
+  lessonCount: record.lessonCount,
+});
+
 export const toRabbiListResponse = (result: RabbiListResult): RabbiListResponse => ({
-  items: result.items.map((item) => ({ ...toRabbiResponse(item), lessonCount: item.lessonCount })),
+  items: result.items.map(toRabbiListItem),
   page: result.page,
   pageSize: result.pageSize,
   total: result.total,
