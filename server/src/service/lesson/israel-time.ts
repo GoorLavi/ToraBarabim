@@ -13,6 +13,30 @@ const israelDateFormatter = new Intl.DateTimeFormat('en-CA', {
 
 export const todayInIsrael = (now: Date): string => israelDateFormatter.format(now);
 
+// `hourCycle: 'h23'` keeps midnight as hour 0; the default 24-hour cycle in
+// some locales prints it as 24.
+const israelClockFormatter = new Intl.DateTimeFormat('en-GB', {
+  timeZone: ISRAEL_TIME_ZONE,
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
+
+export const minutesSinceMidnightInIsrael = (now: Date): number => {
+  const parts = israelClockFormatter.formatToParts(now);
+  const hours = Number(parts.find((part) => part.type === 'hour')?.value);
+  const minutes = Number(parts.find((part) => part.type === 'minute')?.value);
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+    throw new Error(`expected an hour and a minute from the Israel clock, got '${israelClockFormatter.format(now)}'`);
+  }
+  return hours * 60 + minutes;
+};
+
+export const minutesSinceMidnightOf = (time: string): number => {
+  const [hoursText, minutesText] = time.split(':');
+  return Number(hoursText) * 60 + Number(minutesText);
+};
+
 // Done in UTC, never the host machine's own timezone, since we only ever
 // add whole days to a date-only string, never a clock time.
 export const addDays = (isoDate: string, days: number): string => {

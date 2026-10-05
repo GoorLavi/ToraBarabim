@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { after, afterEach, before, describe, test } from 'node:test';
+import { after, afterEach, before, describe, mock, test } from 'node:test';
 
 import type {
   CitySearchResult,
@@ -17,7 +17,7 @@ import type {
   RabbiProminence,
   WomenAreaResponse,
 } from '@torabarabim/common';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { nanoid } from 'nanoid';
 
@@ -781,6 +781,83 @@ describe('public API', () => {
     // Without this the loop above would assert nothing at all the moment
     // the seed ids change, and pass in silence.
     assert.ok(checkedCount >= MIN_SEEDED_RABBIS_IN_ROW, `expected at least ${MIN_SEEDED_RABBIS_IN_ROW} seeded rabbis in the row, saw ${checkedCount}`);
+  });
+
+  // The clock is held fixed on a Saturday in 2030 (Israel is UTC+2 in January,
+  // so 08:00Z is 10:00 there): far from any real run date and from DST, and a
+  // day on which no seeded weekly lesson falls, so the home rows below are
+  // not crowded by other lessons. The routes read `new Date()` at the edge, so
+  // mocking the Date API is enough to reach them through the real HTTP route.
+  describe('a lesson dated today leaves the public lists 30 minutes after it starts', () => {
+    const FIXED_DAY = '2030-01-12';
+    const at = (israelTime: string): number => new Date(`${FIXED_DAY}T${israelTime}:00+02:00`).getTime();
+    const START_TIMES = ['09:00', '09:30', '09:31', '18:00'] as const;
+
+    const lessonIdByStartTime = new Map<string, string>();
+    let placeId = '';
+
+    before(async () => {
+      const [city] = await db.select({ code: cities.code }).from(cities).where(eq(cities.nameHe, SEEDED_CITY_NAME)).limit(1);
+      if (!city) throw new Error('expected the seeded city to exist');
+
+      placeId = `test-place-${nanoid(8)}`;
+      await db.insert(places).values({ id: placeId, slug: placeId, name: `מקום בדיקה ${nanoid(8)}`, street: 'רחוב הבדיקה 1', cityCode: city.code });
+
+      for (const startTime of START_TIMES) lessonIdByStartTime.set(startTime, `test-lesson-${nanoid(8)}`);
+      await db.insert(lessons).values(
+        [...lessonIdByStartTime].map(([startTime, id]) => ({
+          id,
+          rabbiId: SEEDED_RABBI_ID,
+          placeId,
+          cityCode: city.code,
+          audience: 'men' as const,
+          recurrenceKind: 'once' as const,
+          recurrenceDate: FIXED_DAY,
+          startTime,
+          durationMinutes: 60,
+        })),
+      );
+    });
+
+    after(async () => {
+      await db.delete(lessons).where(inArray(lessons.id, [...lessonIdByStartTime.values()]));
+      await db.delete(places).where(eq(places.id, placeId));
+    });
+
+    afterEach(() => {
+      mock.timers.reset();
+    });
+
+    const startTimesIn = (ids: string[]): string[] =>
+      START_TIMES.filter((startTime) => ids.includes(lessonIdByStartTime.get(startTime) ?? ''));
+
+    test('GET /v1/lessons drops a lesson 30 minutes after its start, boundary included, and total matches', async () => {
+      mock.timers.enable({ apis: ['Date'], now: at('10:00') });
+
+      const res = await app.inject({ method: 'GET', url: `/v1/lessons?placeId=${placeId}&from=${FIXED_DAY}&to=${FIXED_DAY}` });
+      assert.equal(res.statusCode, 200);
+
+      const body = res.json() as LessonSearchResponse;
+      assert.deepEqual(startTimesIn(body.items.map((item) => item.lessonId)), ['09:31', '18:00']);
+      assert.equal(body.total, 2);
+    });
+
+    test('the home rows drop the 09:00 lesson at 10:00 and still lists it at 09:20', async () => {
+      const lessonIdsInRows = async (now: number): Promise<string[]> => {
+        mock.timers.enable({ apis: ['Date'], now });
+        const res = await app.inject({ method: 'GET', url: '/v1/home' });
+        mock.timers.reset();
+        assert.equal(res.statusCode, 200);
+        const body = res.json() as HomeResponse;
+        return body.rows.flatMap((row) => (row.kind === 'lessons' ? row.items.map((item) => item.lessonId) : []));
+      };
+
+      const nineOClockLessonId = lessonIdByStartTime.get('09:00');
+      assert.ok(nineOClockLessonId);
+
+      assert.ok((await lessonIdsInRows(at('09:20'))).includes(nineOClockLessonId), 'expected the 09:00 lesson to be listed at 09:20');
+      assert.ok(!(await lessonIdsInRows(at('10:00'))).includes(nineOClockLessonId), 'expected the 09:00 lesson to be gone at 10:00');
+    });
   });
 
   describe('GET /v1/home dedications', () => {

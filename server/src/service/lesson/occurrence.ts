@@ -2,7 +2,8 @@ import type { LessonAudience, LessonException, LessonTopic, Rabbi, Recurrence, W
 
 import type { lessonExceptions, lessons } from '../../db/schema';
 import { toVenue, type AddressCityRow, type AddressPlaceRow, type VenueRef } from '../shared/address';
-import { addDays, compareIsoDates, weekdayOf } from './israel-time';
+import { PUBLIC_LIST_GRACE_MINUTES_AFTER_START } from './consts';
+import { addDays, compareIsoDates, minutesSinceMidnightInIsrael, minutesSinceMidnightOf, todayInIsrael, weekdayOf } from './israel-time';
 import type { ResolvedLessonOccurrence } from './models';
 
 // The domain shape a `lessons` row expands into. Distinct from the wire
@@ -154,6 +155,15 @@ export const addMinutes = (startTime: string, minutes: number): string => {
   const hours = Math.floor(wrapped / 60);
   const mins = wrapped % 60;
   return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+};
+
+// Plain minute counts on purpose, not `addMinutes`: that one wraps past
+// midnight, which would hide a 23:45 lesson from 00:00 of its own day.
+export const hasLeftPublicListsAt = (now: Date): ((occurrence: { date: string; startTime: string }) => boolean) => {
+  const today = todayInIsrael(now);
+  const nowMinutes = minutesSinceMidnightInIsrael(now);
+  return ({ date, startTime }) =>
+    date === today && nowMinutes >= minutesSinceMidnightOf(startTime) + PUBLIC_LIST_GRACE_MINUTES_AFTER_START;
 };
 
 const STATUS_ORDER = { scheduled: 0, cancelled: 1 } as const;
