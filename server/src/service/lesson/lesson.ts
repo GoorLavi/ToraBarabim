@@ -4,6 +4,7 @@ import { and, eq, gte, inArray, lte } from 'drizzle-orm';
 import { db } from '../../db/client';
 import { cities, lessonExceptions, lessons, places, rabbis } from '../../db/schema';
 import { isLessonInScope, matchesAudienceFilter } from '../shared/audience-scope';
+import { rabbiNameMatcher } from '../shared/rabbi-name-match';
 import { toRabbiSummary as toRabbi } from '../shared/rabbi-summary';
 import { DEFAULT_PAGE } from '../shared/consts';
 import { selectAreaPreview } from './area-preview';
@@ -82,7 +83,7 @@ export const search = async (rawQuery: LessonSearchQuery, now: Date): Promise<Le
   // cities are already loaded whole above, so matching a rabbi or a city
   // happens against those in-memory rows.
   const q = query.q || undefined;
-  const matchingRabbiIds = q ? new Set(rabbiRows.filter((row) => includesQuery(row.name, q)).map((row) => row.id)) : undefined;
+  const matchingRabbiIds = q ? new Set(rabbiRows.filter(rabbiNameMatcher(q, includesQuery)).map((row) => row.id)) : undefined;
   const matchingCityCodes = q ? cityRows.filter((row) => includesQuery(row.nameHe, q)).map((row) => row.code) : undefined;
 
   // `audience` is applied in memory below, via `matchesAudienceFilter`,

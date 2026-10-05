@@ -31,6 +31,13 @@ export interface AudienceScopedLesson {
   teacherHonorific: RabbiHonorific;
 }
 
+export type RabbiNameQuery = { kind: 'honorific'; honorific: RabbiHonorific } | { kind: 'name'; needle: string };
+
+export interface RabbiNameFields {
+  name: string;
+  honorific: RabbiHonorific;
+}
+
 export interface AudienceScopeContext {
   // Whether the search query text matched this lesson's own rabbi by name
   // (not her venue, not a city). Unset outside a search (the home rails,
