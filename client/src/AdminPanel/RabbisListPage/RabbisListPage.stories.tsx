@@ -1,4 +1,4 @@
-import type { RabbiResponse } from '@torabarabim/common';
+import type { AdminRabbiListItem } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -25,34 +25,32 @@ let rabbiRequestCount = 0;
 // Which story of this file, if any, is on screen. `.storybook/preview.tsx`
 // chains every story file's mock onto one `window.fetch`, so without this
 // the answers below would also be given for other screens in the same
-// session: `/v1/admin/lessons` is answered empty here, which is true of this
-// page (it only counts them) and would empty out `LessonsListPage` and
-// `RabbiViewPage`, and a visit to the loading or error story would leave
-// `scenario` set for whatever is opened next. A token rather than a boolean,
-// because a story that mounts before the previous one unmounts would
-// otherwise have its own flag cleared by that unmount.
+// session, and a visit to the loading or error story would leave `scenario`
+// set for whatever is opened next. A token rather than a boolean, because a
+// story that mounts before the previous one unmounts would otherwise have
+// its own flag cleared by that unmount.
 let activeStoryToken: symbol | null = null;
 
 const MATCHES_NOTHING = 'זזז';
 
-const rabbi = (overrides: Partial<RabbiResponse> & Pick<RabbiResponse, 'id' | 'name'>): RabbiResponse => ({
+const rabbi = (overrides: Partial<AdminRabbiListItem> & Pick<AdminRabbiListItem, 'id' | 'name'>): AdminRabbiListItem => ({
   ...rabbiFixture(overrides),
   prominence: 'known',
+  lessonCount: 0,
   ...overrides,
 });
 
-// The last four are `LessonsListPage.stories.tsx`'s and
-// `LessonFormPage.stories.tsx`'s rabbis, carried here for the reason both of
-// those files already give at their own lists: all three hit the same
+// The last four are `LessonFormPage.stories.tsx`'s rabbis, carried here for
+// the reason that file already gives at its own list: both hit the same
 // unfiltered `/v1/admin/rabbis?page=1&pageSize=50` request, and whichever
-// file's mock loaded last answers for all of them. This file's own three are
+// file's mock loaded last answers for both. This file's own three are
 // named so that no name repeats across the combined list, or a query by name
 // would match two cards once one of the other files is the answering mock.
 // Most carry a photo and one does not, because that is the mix the real
 // product has (docs/product.md): a list where every card fell back would
 // leave the fallback as the only state the design gate ever sees.
-const rabbis: RabbiResponse[] = [
-  rabbi({ id: 'r1', name: 'אליהו בן שמעון', title: 'ראש ישיבה' }),
+const rabbis: AdminRabbiListItem[] = [
+  rabbi({ id: 'r1', name: 'אליהו בן שמעון', title: 'ראש ישיבה', lessonCount: 7 }),
   rabbi({ id: 'r2', name: 'שרה גולדברג', honorific: 'rabbanit', title: 'רבנית הקהילה' }),
   rabbi({ id: 'r3', name: 'יוסף חיים אזולאי', photoUrl: undefined }),
   rabbi({ id: 'rabbi-1', name: 'אברהם כהן' }),
@@ -61,9 +59,9 @@ const rabbis: RabbiResponse[] = [
   rabbi({ id: 'story-edit-rabbi', name: 'יעקב מזרחי', title: 'ראש ישיבה' }),
 ];
 
-// Same body shape as the other two files that answer this route, so that
+// Same body shape as the other files that answer this route, so that
 // whichever mock wins the chain hands every screen the same thing.
-const listBody = (items: RabbiResponse[]) => ({ items, total: items.length, page: 1, pageSize: MAX_ADMIN_PAGE_SIZE });
+const listBody = (items: AdminRabbiListItem[]) => ({ items, total: items.length, page: 1, pageSize: MAX_ADMIN_PAGE_SIZE });
 
 installMockFetch((url) => {
   if (activeStoryToken === null) return null;
@@ -75,13 +73,12 @@ installMockFetch((url) => {
     if (url.searchParams.get('q') === MATCHES_NOTHING) return jsonResponse(200, listBody([]));
     return jsonResponse(200, listBody(rabbis));
   }
-  if (url.pathname === '/v1/admin/lessons') return jsonResponse(200, { items: [], total: 0, page: 1, pageSize: MAX_ADMIN_PAGE_SIZE });
   return null;
 });
 
 // Claims the mock for this file and mounts a query client of its own,
 // isolated from the shared one in `.storybook/preview.tsx`: every story here
-// asks the same two query keys, so a warm cache from the story before would
+// asks the same query key, so a warm cache from the story before would
 // serve them without a fetch and the request count this file asserts on
 // would be counting the order stories happened to run in. `retry: false` for
 // the reason that same file already gives for its own client.
@@ -134,6 +131,16 @@ export const Loaded: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.findByText('הרב אליהו בן שמעון')).resolves.toBeInTheDocument();
     await expect(canvas.findByText('הרבנית שרה גולדברג')).resolves.toBeInTheDocument();
+  },
+};
+
+// The count is the server's `lessonCount` on the rabbi item. No lessons route
+// is mocked in this file, so a count read from anywhere else would show as
+// zero ("no lessons yet") instead of seven.
+export const LessonCountComesFromTheRabbi: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.findByText(consts.lessonCountLabel(7))).resolves.toBeInTheDocument();
   },
 };
 

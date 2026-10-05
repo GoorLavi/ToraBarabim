@@ -1,5 +1,6 @@
 import type {
   AdminDedication,
+  AdminLessonListResponse,
   AdminOccurrenceListResponse,
   AdminPlaceListResponse,
   AdminPlaceResponse,
@@ -219,8 +220,8 @@ export const resetRabbiPassword = (rabbiId: string): Promise<ResetRabbiPasswordR
   request(url(`/v1/admin/rabbis/${rabbiId}/account/reset-password`).toString(), { method: 'POST' });
 
 // GET /v1/admin/lessons
-// 200 with LessonListResponse, including an empty items array.
-export const fetchAdminLessons = (filters: AdminLessonFilters): Promise<LessonListResponse> => {
+// 200 with AdminLessonListResponse, including an empty items array.
+export const fetchAdminLessons = (filters: AdminLessonFilters): Promise<AdminLessonListResponse> => {
   const target = url('/v1/admin/lessons');
   if (filters.cityId) target.searchParams.set('cityId', filters.cityId);
   if (filters.rabbiId) target.searchParams.set('rabbiId', filters.rabbiId);

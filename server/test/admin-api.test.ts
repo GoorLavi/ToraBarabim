@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { after, afterEach, before, describe, test } from 'node:test';
 
-import type { AdminDedication, AdminOccurrenceListResponse, AdminPlaceResponse, CreateDedicationRequest, DedicationType, HomeResponse } from '@torabarabim/common';
+import type { AdminDedication, AdminLessonListResponse, AdminOccurrenceListResponse, AdminPlaceResponse, CreateDedicationRequest, DedicationType, HomeResponse, RabbiListResponse } from '@torabarabim/common';
 import { eq, ne } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { nanoid } from 'nanoid';
@@ -131,6 +131,59 @@ describe('admin API', () => {
     cleanupLessonIds.add(lessonId);
     return { lessonId, rabbiId };
   };
+
+  // The defect: the client joined lessons onto a capped rabbis page, so a
+  // lesson whose rabbi fell outside it showed "unknown rabbi". The server
+  // now sends each lesson's rabbi itself.
+  test('every lesson in the admin list carries its own rabbi', async () => {
+    const cookie = await loginAsNewAdmin();
+    const first = await seedDailyLesson();
+    const second = await seedDailyLesson();
+    const third = await seedDailyLesson();
+    await db.update(rabbis).set({ name: 'רבנית בדיקה', honorific: 'rabbanit' }).where(eq(rabbis.id, first.rabbiId));
+    await db.update(lessons).set({ audience: 'women' }).where(eq(lessons.id, first.lessonId));
+
+    const res = await app.inject({ method: 'GET', url: '/v1/admin/lessons?pageSize=50', headers: { cookie } });
+    assert.equal(res.statusCode, 200);
+
+    const body = res.json() as AdminLessonListResponse;
+    for (const item of body.items) assert.equal(item.rabbi.id, item.rabbiId);
+
+    for (const seeded of [first, second, third]) {
+      assert.ok(body.items.some((item) => item.id === seeded.lessonId && item.rabbi.id === seeded.rabbiId), `lesson ${seeded.lessonId} is missing or carries the wrong rabbi`);
+    }
+    const firstItem = body.items.find((item) => item.id === first.lessonId);
+    assert.equal(firstItem?.rabbi.name, 'רבנית בדיקה');
+    assert.equal(firstItem?.rabbi.honorific, 'rabbanit');
+  });
+
+  test('the admin rabbi list counts each rabbi\'s real lessons', async () => {
+    const cookie = await loginAsNewAdmin();
+    const withTwo = await seedDailyLesson();
+    const cityCode = await jerusalemCode();
+    const secondLessonId = `test-lesson-${uniqueSuffix()}`;
+    await db.insert(lessons).values({
+      id: secondLessonId,
+      rabbiId: withTwo.rabbiId,
+      addressName: 'בית כנסת הבדיקה',
+      addressStreet: 'רחוב הבדיקה 2',
+      cityCode,
+      audience: 'men',
+      recurrenceKind: 'once',
+      recurrenceDate: '2030-01-01',
+      startTime: '20:00',
+      durationMinutes: 45,
+    });
+    cleanupLessonIds.add(secondLessonId);
+    const withNone = await createRabbi();
+
+    const res = await app.inject({ method: 'GET', url: '/v1/admin/rabbis?pageSize=50', headers: { cookie } });
+    assert.equal(res.statusCode, 200);
+
+    const body = res.json() as RabbiListResponse;
+    assert.equal(body.items.find((item) => item.id === withTwo.rabbiId)?.lessonCount, 2);
+    assert.equal(body.items.find((item) => item.id === withNone)?.lessonCount, 0);
+  });
 
   test('an unauthenticated request is a 401, not an empty list', async () => {
     const res = await app.inject({ method: 'GET', url: '/v1/admin/lessons/does-not-exist/occurrences' });

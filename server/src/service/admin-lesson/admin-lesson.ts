@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
 import { db } from '../../db/client';
@@ -25,7 +25,20 @@ export const list = async (query: LessonListQuery): Promise<LessonListResult> =>
     db.select({ count: sql<number>`count(*)::int` }).from(lessons).where(whereClause),
   ]);
 
-  return { items: rows.map(toLessonWriteRecord), page: query.page, pageSize: query.pageSize, total: totalRows[0]?.count ?? 0 };
+  // One query for the page's rabbis, joined in memory. `lessons.rabbi_id` is a
+  // non-null foreign key, so a miss means a broken invariant: fail loudly
+  // rather than send a lesson without its rabbi.
+  const rabbiIds = [...new Set(rows.map((row) => row.rabbiId))];
+  const rabbiRows = rabbiIds.length ? await db.select().from(rabbis).where(inArray(rabbis.id, rabbiIds)) : [];
+  const rabbiById = new Map(rabbiRows.map((row) => [row.id, toRabbi(row)] as const));
+
+  const items = rows.map((row) => {
+    const rabbi = rabbiById.get(row.rabbiId);
+    if (!rabbi) throw new Error(`lesson '${row.id}' references rabbi '${row.rabbiId}', which does not exist`);
+    return { ...toLessonWriteRecord(row), rabbi };
+  });
+
+  return { items, page: query.page, pageSize: query.pageSize, total: totalRows[0]?.count ?? 0 };
 };
 
 export const getById = async (id: string): Promise<LessonRecord> => {

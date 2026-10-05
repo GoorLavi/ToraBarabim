@@ -42,7 +42,18 @@ export const list = async (query: RabbiListQuery): Promise<RabbiListResult> => {
     db.select({ count: sql<number>`count(*)::int` }).from(rabbis).where(condition),
   ]);
 
-  return { items: rows.map(toRecord), page: query.page, pageSize: query.pageSize, total: totalRows[0]?.count ?? 0 };
+  const rabbiIds = rows.map((row) => row.id);
+  const countRows = rabbiIds.length
+    ? await db
+        .select({ rabbiId: lessons.rabbiId, count: sql<number>`count(*)::int` })
+        .from(lessons)
+        .where(inArray(lessons.rabbiId, rabbiIds))
+        .groupBy(lessons.rabbiId)
+    : [];
+  const lessonCountByRabbiId = new Map(countRows.map((row) => [row.rabbiId, row.count] as const));
+
+  const items = rows.map((row) => ({ ...toRecord(row), lessonCount: lessonCountByRabbiId.get(row.id) ?? 0 }));
+  return { items, page: query.page, pageSize: query.pageSize, total: totalRows[0]?.count ?? 0 };
 };
 
 export const getById = async (id: string): Promise<RabbiRecord> => {

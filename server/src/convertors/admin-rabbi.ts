@@ -14,7 +14,7 @@ export const toRabbiResponse = (record: RabbiRecord): RabbiResponse => ({
 });
 
 export const toRabbiListResponse = (result: RabbiListResult): RabbiListResponse => ({
-  items: result.items.map(toRabbiResponse),
+  items: result.items.map((item) => ({ ...toRabbiResponse(item), lessonCount: item.lessonCount })),
   page: result.page,
   pageSize: result.pageSize,
   total: result.total,

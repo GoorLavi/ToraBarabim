@@ -66,8 +66,10 @@ export interface RabbiRecord {
   prominence: RabbiProminence;
 }
 
+export type RabbiListItem = RabbiRecord & { lessonCount: number };
+
 export interface RabbiListResult {
-  items: RabbiRecord[];
+  items: RabbiListItem[];
   page: number;
   pageSize: number;
   total: number;

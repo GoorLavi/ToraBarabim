@@ -16,12 +16,12 @@ import * as styles from './styles';
 export const LessonsCardList = styled(({ className, rows }: LessonsCardListProps) => (
   <ul className={className}>
     {rows.map((row) => (
-      <li key={row.lesson.id} className="card">
+      <li key={row.id} className="card">
         <div className="lesson">
           <span className="primary" dir="auto">
-            {lessonPrimaryLabel(row.lesson, row.rabbi)}
+            {lessonPrimaryLabel(row, row.rabbi)}
           </span>
-          {lessonHasOwnTitle(row.lesson) && row.rabbi && (
+          {lessonHasOwnTitle(row) && (
             <span className="secondary" dir="auto">
               {rabbiDisplayName(row.rabbi)}
             </span>
@@ -29,18 +29,18 @@ export const LessonsCardList = styled(({ className, rows }: LessonsCardListProps
         </div>
 
         <div className="meta" dir="auto">
-          {lessonDayTimeLabel(row.lesson)}
+          {lessonDayTimeLabel(row)}
         </div>
 
         <div className="tags">
-          <span className="tag">{row.lesson.recurrence.kind === 'weekly' ? parentConsts.RECURRING_TAG_LABEL : parentConsts.ONE_TIME_TAG_LABEL}</span>
-          <span className="tag audience">{AUDIENCE_LABELS[row.lesson.audience]}</span>
+          <span className="tag">{row.recurrence.kind === 'weekly' ? parentConsts.RECURRING_TAG_LABEL : parentConsts.ONE_TIME_TAG_LABEL}</span>
+          <span className="tag audience">{AUDIENCE_LABELS[row.audience]}</span>
           <span className="tag city" dir="auto">
-            {venuePanelCityName(row.lesson.venue)}
+            {venuePanelCityName(row.venue)}
           </span>
         </div>
 
-        <Link className="edit" to={ADMIN_ROUTES.lessonView(row.lesson.id)}>
+        <Link className="edit" to={ADMIN_ROUTES.lessonView(row.id)}>
           {DETAILS_LABEL}
         </Link>
       </li>

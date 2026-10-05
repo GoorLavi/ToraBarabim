@@ -86,8 +86,8 @@ export const RabbisListPage = styled(({ className }: RabbisListPageProps) => {
 
       {state.status === 'success' && state.rows.length > 0 && (
         <div className="list">
-          {state.rows.map((row) => (
-            <RabbiCard key={row.rabbi.id} row={row} />
+          {state.rows.map((rabbi) => (
+            <RabbiCard key={rabbi.id} {...{ rabbi }} />
           ))}
         </div>
       )}

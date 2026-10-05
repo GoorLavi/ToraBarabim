@@ -1,6 +1,6 @@
-import type { AdminLessonRow } from '~/AdminPanel/LessonsListPage/models';
+import type { AdminLessonListItem } from '@torabarabim/common';
 
 export interface LessonsCardListProps {
   className?: string;
-  rows: AdminLessonRow[];
+  rows: AdminLessonListItem[];
 }

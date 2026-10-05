@@ -188,9 +188,8 @@ export const recurrenceWhenLabel = (lesson: Pick<Lesson, 'recurrence'>): string 
 
 // Matches the public `LessonCard`'s rule: the lesson's own title leads, and
 // the rabbi's composed display name is what fills in when there is none.
-// Takes the lesson and its rabbi separately, rather than a joined row type
-// owned by one caller, since `LessonsListPage` and `RabbiViewPage` (the
-// two callers) each join a lesson to its rabbi differently.
+// Takes the rabbi separately and possibly undefined: `LessonViewPage` loads
+// the rabbi in its own query, which may not have arrived yet.
 export const lessonPrimaryLabel = (lesson: Pick<Lesson, 'title'>, rabbi: Pick<Rabbi, 'name' | 'honorific'> | undefined): string =>
   lesson.title ?? (rabbi ? rabbiDisplayName(rabbi) : consts.UNTITLED_RABBI_FALLBACK);
 export const lessonHasOwnTitle = (lesson: Pick<Lesson, 'title'>): boolean => Boolean(lesson.title);

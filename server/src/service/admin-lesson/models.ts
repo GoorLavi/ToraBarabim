@@ -1,4 +1,4 @@
-import type { LessonProvenance, LessonVenuePanel } from '@torabarabim/common';
+import type { LessonProvenance, LessonVenuePanel, Rabbi } from '@torabarabim/common';
 import { z } from 'zod';
 
 import { LESSON_AUDIENCES, LESSON_TOPICS } from '../../db/schema/enums';
@@ -61,8 +61,10 @@ export interface LessonRecord {
   provenance: LessonProvenance;
 }
 
+export type LessonListItem = LessonRecord & { rabbi: Rabbi };
+
 export interface LessonListResult {
-  items: LessonRecord[];
+  items: LessonListItem[];
   page: number;
   pageSize: number;
   total: number;

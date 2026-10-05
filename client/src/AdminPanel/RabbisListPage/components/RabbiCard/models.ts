@@ -1,6 +1,6 @@
-import type { AdminRabbiRow } from '~/AdminPanel/RabbisListPage/models';
+import type { AdminRabbiListItem } from '@torabarabim/common';
 
 export interface RabbiCardProps {
   className?: string;
-  row: AdminRabbiRow;
+  rabbi: AdminRabbiListItem;
 }

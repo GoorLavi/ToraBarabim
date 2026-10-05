@@ -82,8 +82,11 @@ export interface DeleteImpactPreview {
   courseCount: number;
 }
 
+// Counted on the server across all of the rabbi's lessons.
+export type AdminRabbiListItem = RabbiResponse & { lessonCount: number };
+
 export interface RabbiListResponse {
-  items: RabbiResponse[];
+  items: AdminRabbiListItem[];
   page: number;
   pageSize: number;
   total: number;
@@ -91,6 +94,16 @@ export interface RabbiListResponse {
 
 export interface LessonListResponse {
   items: LessonResponse[];
+  page: number;
+  pageSize: number;
+  total: number;
+}
+
+// `LessonListResponse` stays as is: the rabbi and place portals share it.
+export type AdminLessonListItem = LessonResponse & { rabbi: Rabbi };
+
+export interface AdminLessonListResponse {
+  items: AdminLessonListItem[];
   page: number;
   pageSize: number;
   total: number;

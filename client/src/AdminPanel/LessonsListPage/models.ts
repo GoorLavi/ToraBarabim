@@ -1,4 +1,4 @@
-import type { LessonResponse, Rabbi, RabbiHonorific } from '@torabarabim/common';
+import type { RabbiHonorific } from '@torabarabim/common';
 
 import type { SelectedCity } from '~/components/CitySelect/models';
 
@@ -25,9 +25,4 @@ export interface LessonListUrlFilters {
   rabbi: RabbiFilterValue | undefined;
   recurrence: RecurrenceFilter;
   search: string;
-}
-
-export interface AdminLessonRow {
-  lesson: LessonResponse;
-  rabbi: Rabbi | undefined;
 }

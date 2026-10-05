@@ -13,28 +13,28 @@ import * as styles from './styles';
 // `LessonCard`: a plain, undecorated fill, never initials or a silhouette.
 // A photo that fails to load (a stale or broken URL) falls back the same
 // way as no photo at all, rather than the browser's broken-image glyph.
-export const RabbiCard = styled(({ className, row }: RabbiCardProps) => {
+export const RabbiCard = styled(({ className, rabbi }: RabbiCardProps) => {
   const [hasLoadFailed, setHasLoadFailed] = useState(false);
 
   return (
     <article className={className}>
-      {row.rabbi.photoUrl && !hasLoadFailed ? (
-        <img className="photo" src={row.rabbi.photoUrl} alt="" onError={() => setHasLoadFailed(true)} />
+      {rabbi.photoUrl && !hasLoadFailed ? (
+        <img className="photo" src={rabbi.photoUrl} alt="" onError={() => setHasLoadFailed(true)} />
       ) : (
         <div className="photo placeholder" aria-hidden="true" />
       )}
 
       <div className="body">
         <h3 className="name" dir="auto">
-          {rabbiDisplayName(row.rabbi)}
+          {rabbiDisplayName(rabbi)}
         </h3>
-        <p className="count">{row.lessonCount === 0 ? parentConsts.NO_LESSONS_YET_LABEL : parentConsts.lessonCountLabel(row.lessonCount)}</p>
+        <p className="count">{rabbi.lessonCount === 0 ? parentConsts.NO_LESSONS_YET_LABEL : parentConsts.lessonCountLabel(rabbi.lessonCount)}</p>
 
         <div className="actions">
-          <Link className="edit" to={ADMIN_ROUTES.rabbiView(row.rabbi.id)}>
+          <Link className="edit" to={ADMIN_ROUTES.rabbiView(rabbi.id)}>
             {DETAILS_LABEL}
           </Link>
-          <Link className="newLesson" to={lessonNewForRabbi(row.rabbi.id)}>
+          <Link className="newLesson" to={lessonNewForRabbi(rabbi.id)}>
             {parentConsts.NEW_LESSON_LABEL}
           </Link>
         </div>

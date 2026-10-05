@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { RabbiResponse } from '@torabarabim/common';
 
 import { AdminApiError, createAdminRabbi, updateAdminRabbi, uploadAdminRabbiPhoto } from '~/AdminPanel/api';
+import { ADMIN_QUERY_KEYS } from '~/AdminPanel/consts';
 import { nullableTextField } from '~/AdminPanel/helpers';
 
 import type { RabbiFormState, SaveRabbiStep } from './models';
@@ -79,8 +80,9 @@ export const useSaveRabbi = (): SaveRabbiResult => {
     }
 
     setIsSaving(false);
-    void queryClient.invalidateQueries({ queryKey: ['admin', 'rabbis'] });
-    if (rabbiId) void queryClient.invalidateQueries({ queryKey: ['admin', 'rabbis', rabbiId] });
+    void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.rabbisAll() });
+    void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.lessonsAll() });
+    if (rabbiId) void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.rabbi(rabbiId) });
     return rabbi;
   };
 
