@@ -270,6 +270,43 @@ describe('public API', () => {
       });
     });
 
+    // A stored name is bare, so a leading honorific in `q` is recognised and
+    // stripped, matching the rabbis page's own search.
+    describe('a leading honorific in q', () => {
+      const searchLessons = async (q: string): Promise<LessonSearchResponse> => {
+        const res = await app.inject({ method: 'GET', url: `/v1/lessons?q=${encodeURIComponent(q)}&${searchWindowQuery()}` });
+        assert.equal(res.statusCode, 200);
+        return res.json() as LessonSearchResponse;
+      };
+
+      test('"הרב" plus a rav name returns that rav\'s lessons', async () => {
+        const body = await searchLessons(`הרב ${SEEDED_RABBI_NAME}`);
+        assert.ok(body.items.some((item) => item.rabbi.id === SEEDED_RABBI_ID));
+      });
+
+      test('"רב" without the ה returns them too', async () => {
+        const body = await searchLessons(`רב ${SEEDED_RABBI_NAME}`);
+        assert.ok(body.items.some((item) => item.rabbi.id === SEEDED_RABBI_ID));
+      });
+
+      test('"הרבנית" plus a rabbanit surname returns her lessons in the default scope', async () => {
+        const body = await searchLessons(`הרבנית ${SEEDED_RABBANIT_SURNAME}`);
+        assert.ok(body.items.some((item) => item.rabbi.id === SEEDED_RABBANIT_ID));
+      });
+
+      test('"הרב" plus a rabbanit surname returns her lessons: a mismatched honorific is lenient', async () => {
+        const body = await searchLessons(`הרב ${SEEDED_RABBANIT_SURNAME}`);
+        assert.ok(body.items.some((item) => item.rabbi.id === SEEDED_RABBANIT_ID));
+      });
+
+      test('"הרבנית" alone returns rabbaniyot\'s lessons and no rav\'s', async () => {
+        const body = await searchLessons('הרבנית');
+        // The raw `q` still matches venues and cities, so this holds only while no fixture venue or city name contains "הרבנית".
+        assert.ok(body.items.some((item) => item.rabbi.id === SEEDED_RABBANIT_ID));
+        assert.ok(body.items.every((item) => item.rabbi.honorific === 'rabbanit'));
+      });
+    });
+
     // Test 4: `scope=women` includes every teacher, audience women or mixed
     // only, and combines with every other filter as AND.
     describe('scope=women', () => {
@@ -1110,6 +1147,13 @@ describe('public API', () => {
       const rabbanit = womenBody.items.find((item) => item.id === SEEDED_RABBANIT_ID);
       assert.ok(rabbanit);
       assert.equal(rabbanit.name, SEEDED_RABBANIT_NAME);
+    });
+
+    test('q with a leading honorific finds the rav by his bare name', async () => {
+      const res = await app.inject({ method: 'GET', url: `/v1/rabbis?q=${encodeURIComponent(`הרב ${SEEDED_RABBI_NAME}`)}&pageSize=50` });
+      assert.equal(res.statusCode, 200);
+      const body = res.json() as RabbiDirectoryResponse;
+      assert.ok(body.items.some((item) => item.id === SEEDED_RABBI_ID));
     });
 
     // Ordering rule 1: prominence tier, sought first. rabbi-1 and rabbi-6

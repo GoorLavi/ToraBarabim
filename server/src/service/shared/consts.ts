@@ -1,6 +1,16 @@
-import type { Area, AudienceFilter, AudienceScope } from '@torabarabim/common';
+import type { Area, AudienceFilter, AudienceScope, RabbiHonorific } from '@torabarabim/common';
 
 import { toSlug } from './slug';
+
+// Hand-mirrored from `LEADING_HONORIFIC_PATTERNS` in `client/src/RabbisPage/helpers.ts`; keep the two in step.
+// Each word counts only as a whole word, so "רב" never matches inside "רבנית" or "רבינוביץ".
+// This is for search queries, unlike `LEADING_HONORIFIC` in `./name.ts`, which governs stored names.
+export const LEADING_HONORIFIC_QUERY_PATTERNS: [pattern: RegExp, honorific: RabbiHonorific][] = [
+  [/^הרבנית(?=\s|$)/, 'rabbanit'],
+  [/^רבנית(?=\s|$)/, 'rabbanit'],
+  [/^הרב(?=\s|$)/, 'rav'],
+  [/^רב(?=\s|$)/, 'rav'],
+];
 
 // Pagination defaults shared by every public list endpoint (lessons, rabbis).
 export const DEFAULT_PAGE = 1;
