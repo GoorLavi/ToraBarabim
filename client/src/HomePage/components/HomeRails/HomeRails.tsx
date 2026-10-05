@@ -5,12 +5,12 @@ import styled from 'styled-components';
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
 import { CourseRail } from '~/components/CourseRail/CourseRail';
+import { RailSkeleton } from '~/components/RailSkeleton/RailSkeleton';
 
 import { DedicationBand } from '../DedicationBand/DedicationBand';
 import { LessonRail } from '../LessonRail/LessonRail';
 import { WomensAreaBand } from '../WomensAreaBand/WomensAreaBand';
 import { HelpWindow } from './components/HelpWindow/HelpWindow';
-import { RailSkeleton } from './components/RailSkeleton/RailSkeleton';
 import * as consts from './consts';
 import { dedicationBandSlot, indexAfterNthLessonRow, shouldShowBetweenRailsDedication } from './helpers';
 import type { HomeRailsProps } from './models';

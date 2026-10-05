@@ -11,3 +11,5 @@ export const rowDateLabel = (isoDate: string): string => {
   const date = new Date(`${isoDate}T00:00:00Z`);
   return `${weekdayFormatter.format(date)}, ${dayMonthFormatter.format(date)}`;
 };
+
+export const CANCELLED_TAG_LABEL = 'מבוטל';

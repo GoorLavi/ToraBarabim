@@ -25,5 +25,5 @@ export const AREA_BLOCK_GAP = '28px';
 
 // Two placeholder area blocks, per the measured loading frame (96:2). Stable
 // keys rather than the array index, matching the shipped skeleton convention
-// (HomePage/components/HomeRails/components/RailSkeleton).
+// (components/RailSkeleton).
 export const AREA_SKELETON_KEYS = ['area-1', 'area-2'] as const;

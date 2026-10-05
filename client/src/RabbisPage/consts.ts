@@ -57,5 +57,5 @@ export const CLEAR_SEARCH_LABEL = 'ניקוי החיפוש';
 
 // Six placeholder rows, per the measured loading frame (94:73). Stable keys
 // rather than the array index, matching the shipped skeleton convention
-// (HomePage/components/HomeRails/components/RailSkeleton).
+// (components/RailSkeleton).
 export const ROW_SKELETON_KEYS = ['row-1', 'row-2', 'row-3', 'row-4', 'row-5', 'row-6'] as const;

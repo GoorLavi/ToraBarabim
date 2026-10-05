@@ -1,11 +1,13 @@
 import type { LessonOccurrence, RabbiDetailResponse } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { expect, within } from 'storybook/test';
 import { Route, Routes } from 'react-router-dom';
 
 import { courseFixture } from '~/courseFixture';
 import { rabbiFixture } from '~/rabbiFixture';
 
 import { errorResolver, http, jsonResolver, loadingResolver, queryOf, respondWithJson } from '../../.storybook/apiMocks';
+import { CANCELLED_TAG_LABEL } from './components/LessonRow/consts';
 import { RabbiPage } from './RabbiPage';
 
 const rabbiDetail = (overrides: Partial<RabbiDetailResponse>): RabbiDetailResponse => ({
@@ -119,6 +121,28 @@ export const Populated: Story = {
     },
   },
 };
+
+// A cancelled date stays in the list with its start time struck.
+export const CancelledLesson: Story = {
+  decorators: [withRoute('story-cancelled')],
+  parameters: {
+    apiMocks: {
+      handlers: {
+        rabbi: rabbiHandler(rabbiDetail({ id: 'story-cancelled' })),
+        lessons: lessonsHandler([
+          lesson({ lessonId: 'l1', date: '2026-09-10', startTime: '20:30', status: 'cancelled', cancellationReason: 'מבוטל השבוע' }),
+          ...populatedLessons.slice(1),
+        ]),
+      },
+    },
+  },
+  // The strike is not the only signal: a word says it too, on the cancelled
+  // row only.
+  play: async ({ canvasElement }) => {
+    await expect(await within(canvasElement).findAllByText(CANCELLED_TAG_LABEL)).toHaveLength(1);
+  },
+};
+
 export const NoPhoto: Story = {
   decorators: [withRoute('story-nophoto')],
   parameters: { apiMocks: { handlers: { rabbi: rabbiHandler(rabbiDetail({ id: 'story-nophoto', photoUrl: undefined, title: undefined })) } } },

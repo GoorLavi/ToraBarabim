@@ -7,7 +7,6 @@ export const HOME_WINDOW_DAYS = 14;
 // card in the row, open or closed alike.
 export const COURSE_ROW_TITLE = 'קורסים';
 
-export const MAX_ITEMS_PER_ROW = 12;
 export const MIN_ITEMS_PER_ROW = 3;
 
 // The "לפי רב" avatar row's cap. At the widest supported layout exactly

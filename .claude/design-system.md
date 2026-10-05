@@ -120,10 +120,31 @@ the person is never left looking at nothing.
 widen along. That screen names the constraint and offers the way back instead: an action
 that clears the filter and returns to the rows.
 
-**The rows themselves have no empty state.** A row with nothing in it is never sent, so
-there is never a heading over an empty rail. The only empty case is a page with no rows
-at all, which with no filter applied means the site itself is empty, and it is written
-as exactly that.
+**The rows themselves have no empty state.** A rail is never sent empty, so a page made
+of rows (the home page) never shows a heading over an empty rail. The only empty case
+there is a page with no rows at all, which with no filter applied means the site itself
+is empty, and it is written as exactly that.
+
+**A section that answers a question the page itself raises is different**, such as the
+lesson page's rabbi row and area row. When its read succeeds and returns nothing, it
+keeps its heading, as a link where it has one, and shows a `StateCard` empty card in
+place of the rail, so the reader learns that nothing is upcoming and still has a way on.
+When its read fails, the whole section is absent: the page never says "nothing" when the
+truth is "we could not find out".
+
+### A time that will not happen is struck through
+That covers a cancelled occurrence on every surface that shows its time (the lesson
+ticket, the lesson card's medallion, the rabbi page's lesson row, the panels), and the
+lesson ticket once its occurrence took place: the date is before today. A lesson that
+started today and may still be running is not struck: its ticket stays exactly as
+upcoming.
+
+The strike is `line-through` in the time's own color at the default thickness, and it
+never adds a color. On a `primary` field the time is `textOnPrimary`, and the ticket's
+gold steps aside to it. On a light surface the struck time steps to `textSecondary`.
+Only the time is struck, never the day numeral: the date is the fact the notice refers
+to and must stay easy to read. The strike is never the only signal. A banner or a label
+always says it in words, because a screen reader does not announce a strike.
 
 ### Feel
 Warm and trustworthy, quietly modern. Generous type, calm color, plenty of breathing

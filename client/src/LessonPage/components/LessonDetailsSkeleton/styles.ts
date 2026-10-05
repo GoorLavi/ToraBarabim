@@ -1,11 +1,13 @@
 import { css } from 'styled-components';
 
+import { RUNNING_TEXT_MAX_INLINE_SIZE } from '~/LessonPage/consts';
+
 export const LessonDetailsSkeleton = css(
   ({ theme }) => `
   display: flex;
   flex-direction: column;
   gap: ${theme.spacing.md};
-  max-inline-size: 640px;
+  max-inline-size: ${RUNNING_TEXT_MAX_INLINE_SIZE};
 
   > .bar {
     display: block;

@@ -1,18 +1,19 @@
 import { useRef } from 'react';
 import styled from 'styled-components';
 
+import { RailHeading } from '~/components/RailHeading/RailHeading';
+
 import { scrollRailBy } from './helpers';
 import type { RailProps } from './models';
 import * as styles from './styles';
 import { useRailScrollTracking } from './useRailScrollTracking';
 import { useScrollEdges } from './useScrollEdges';
 
-// The shared shell behind every horizontally scrolling row on the home
-// page: the heading, the arrow pair, the scroll container and its edge
-// tracking (design-system.md, "Horizontal rails"). A caller supplies its
-// own `<li>` items as `children` and never reaches into this component to
-// change what a rail carries.
-export const Rail = styled(({ className, title, prevLabel, nextLabel, children }: RailProps) => {
+// The shared shell behind every horizontally scrolling row: the heading, the
+// arrow pair, the scroll container and its edge tracking (design-system.md,
+// "Horizontal rails"). A caller supplies its own `<li>` items as `children`
+// and never reaches into this component to change what a rail carries.
+export const Rail = styled(({ className, title, titleTo, prevLabel, nextLabel, children }: RailProps) => {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const { atStart, atEnd } = useScrollEdges(scrollerRef);
   useRailScrollTracking(scrollerRef, title);
@@ -23,9 +24,7 @@ export const Rail = styled(({ className, title, prevLabel, nextLabel, children }
 
   return (
     <section className={className}>
-      <h2 className="heading" dir="auto">
-        {title}
-      </h2>
+      <RailHeading {...{ title, titleTo }} />
 
       <div className="scrollerWrap">
         <button type="button" className="arrow prev" disabled={atStart} onClick={() => scroll('prev')} aria-label={prevLabel}>

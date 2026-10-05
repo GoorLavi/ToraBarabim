@@ -29,7 +29,7 @@ Every design belongs to one of four, split by who opens it and when.
 | `03 עיר` | A city's lessons |
 | `04 רב` | A rabbi's page, including no photo, a sparse record, loading, empty, error |
 | `05 כל הרבנים` | The rabbis index |
-| `06 שיעור` | The lesson ticket page as shipped, its details, and the area preview with its loading, empty and failed states. The ticket's own states are on `99 כרטיס השיעור · כל המצבים` |
+| `06 שיעור` | The lesson ticket page as shipped, its details, and the area preview with its loading, empty and failed states; the past-lesson states (took place, started, the rabbi's lessons row in every state) and the area preview as a rail. The ticket's own states are on `99 כרטיס השיעור · כל המצבים` |
 | `07 אזור הנשים` | `/women`, all six states |
 | `08 רשימת רבניות` | `/women/rabbaniyot` |
 | `09 צור קשר` | Contact, at 390 and 320 and desktop. It loads nothing, so it has no loading, empty or error state |
@@ -40,7 +40,7 @@ Every design belongs to one of four, split by who opens it and when.
 | `14 אזור` | An area's lessons |
 | `15 קורסים` | Courses: the card in every state, the home row with one, two and three-plus courses and a closed course, the course page in every state at 390, 320 and 1280, the photo viewer, and the rabbi, place and women's area pages with a course rail |
 | `99 Components` | The 29 shared components. Only `07` and `08` are built from instances of them; see the widths section below for why |
-| `99 כרטיס השיעור · כל המצבים` | Every lesson card state, side by side |
+| `99 כרטיס השיעור · כל המצבים` | Every lesson card state, side by side, including the past and started states and the cancelled start time struck through |
 
 ## The admin file, page by page
 

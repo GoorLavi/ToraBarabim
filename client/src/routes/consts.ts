@@ -1,4 +1,4 @@
-import type { CityDirectoryResponse, LessonOccurrence, PlaceListResponse, Rabbi, RabbiDirectoryResponse } from '@torabarabim/common';
+import type { CityDirectoryResponse, LessonOccurrenceDetail, PlaceListResponse, Rabbi, RabbiDirectoryResponse } from '@torabarabim/common';
 
 import type { JsonLdObject } from './models';
 
@@ -109,12 +109,12 @@ export const rabbisItemListJsonLd = (directory: RabbiDirectoryResponse): JsonLdO
 // itself. Shares the ticket's own kicker fallback (title, else topic) so
 // the two never describe the same lesson differently; a lesson with
 // neither falls back to a generic subject rather than an empty one.
-const lessonSubjectLabel = (occurrence: LessonOccurrence): string => kickerLabel(occurrence) ?? 'שיעור תורה';
+const lessonSubjectLabel = (occurrence: LessonOccurrenceDetail): string => kickerLabel(occurrence) ?? 'שיעור תורה';
 
-export const lessonPageTitle = (occurrence: LessonOccurrence, teachingRabbi: Rabbi): string =>
+export const lessonPageTitle = (occurrence: LessonOccurrenceDetail, teachingRabbi: Rabbi): string =>
   `${lessonSubjectLabel(occurrence)} עם ${rabbiDisplayName(teachingRabbi)} | ${SITE_NAME}`;
 
-export const lessonPageDescription = (occurrence: LessonOccurrence, teachingRabbi: Rabbi): string => {
+export const lessonPageDescription = (occurrence: LessonOccurrenceDetail, teachingRabbi: Rabbi): string => {
   const subject = lessonSubjectLabel(occurrence);
   const teacherName = rabbiDisplayName(teachingRabbi);
   if (occurrence.status === 'cancelled') {
@@ -157,7 +157,7 @@ const israelDateTime = (isoDate: string, clockTime: string): string => `${isoDat
 // Console credits with hosting the lesson; a free-text address has no page
 // to point at, so it is named without one.
 export const lessonEventJsonLd = (
-  occurrence: LessonOccurrence,
+  occurrence: LessonOccurrenceDetail,
   teachingRabbi: Rabbi,
   venuePhotoUrl: string | undefined,
 ): JsonLdObject => {

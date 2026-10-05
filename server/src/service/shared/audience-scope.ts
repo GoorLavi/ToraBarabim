@@ -23,6 +23,11 @@ export const isLessonInScope = (
   return context.teacherNameMatched === true;
 };
 
+// The scope a rabbi's own surfaces read under: a rav's lessons sit in the
+// general scope, a rabbanit's in the women's scope (0026).
+export const audienceScopeOfRabbi = (honorific: RabbiHonorific): AudienceScope =>
+  honorific === 'rabbanit' ? 'women' : 'general';
+
 // The public rabbi directory's scope: `general` lists ravs only, `women`
 // lists rabbaniyot only.
 export const isRabbiInDirectoryScope = (scope: AudienceScope, honorific: RabbiHonorific): boolean =>

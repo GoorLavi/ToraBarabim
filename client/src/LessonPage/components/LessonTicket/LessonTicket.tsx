@@ -14,7 +14,17 @@ import * as pageConsts from '~/LessonPage/consts';
 import { teachingRabbiOf } from '~/LessonPage/helpers';
 
 import * as consts from './consts';
-import { computeDurationMinutes, dayNumberLabel, durationLabel, endTimeLabel, kickerLabel, monthLabel, roleLabel, weekdayLabel } from './helpers';
+import {
+  computeDurationMinutes,
+  dayNumberLabel,
+  durationLabel,
+  endTimeLabel,
+  kickerLabel,
+  monthLabel,
+  roleLabel,
+  roleTenseOf,
+  weekdayLabel,
+} from './helpers';
 import type { LessonTicketProps } from './models';
 import * as styles from './styles';
 
@@ -42,7 +52,11 @@ export const LessonTicket = styled(({ className, occurrence }: LessonTicketProps
   const duration = computeDurationMinutes(occurrence.startTime, occurrence.endTime);
   const wazeUrl = wazeHref(occurrence.venue);
   const googleMapsUrl = googleMapsHref(occurrence.venue);
-  const showNavRow = !isCancelled && Boolean(wazeUrl) && Boolean(googleMapsUrl);
+  const { timing } = occurrence;
+  const hasTakenPlace = timing === 'tookPlace';
+  const noticeTiming = !isCancelled && timing !== 'upcoming' ? timing : null;
+  const hasBanner = isCancelled || noticeTiming !== null;
+  const showNavRow = !isCancelled && !hasTakenPlace && Boolean(wazeUrl) && Boolean(googleMapsUrl);
   const rabbiName = rabbiDisplayName(teachingRabbi);
 
   const handleNavigationClick = (provider: 'waze' | 'googleMaps'): void => {
@@ -50,7 +64,7 @@ export const LessonTicket = styled(({ className, occurrence }: LessonTicketProps
   };
 
   return (
-    <div className={classNames(className, { cancelled: isCancelled, noPoster: isNoPoster })}>
+    <div className={classNames(className, { struckTime: isCancelled || hasTakenPlace, hasBanner, noPoster: isNoPoster })}>
       {isCancelled && (
         <p className="cancelledBanner" role="status">
           <span className="heading" dir="auto">
@@ -58,6 +72,14 @@ export const LessonTicket = styled(({ className, occurrence }: LessonTicketProps
           </span>
           <span className="reason" dir="auto">
             {occurrence.cancellationReason ?? pageConsts.NO_REASON_GIVEN_LABEL}
+          </span>
+        </p>
+      )}
+
+      {noticeTiming && (
+        <p className="notice" role="status">
+          <span className="heading" dir="auto">
+            {pageConsts.PAST_NOTICE_LABEL[noticeTiming]}
           </span>
         </p>
       )}
@@ -144,7 +166,7 @@ export const LessonTicket = styled(({ className, occurrence }: LessonTicketProps
           <div className="teacherRow">
             <div className="teacher">
               <span className="role" dir="auto">
-                {roleLabel(teachingRabbi.honorific)}
+                {roleLabel(teachingRabbi.honorific, roleTenseOf(occurrence))}
               </span>
 
               {isSubstitute && (

@@ -107,3 +107,4 @@ The real alternatives and why each lost. If there was no alternative, say so.
 | [0037](0037-viewers-in-china-and-russia-are-blocked-at-the-edge-never-the-united-states.md) | Viewers in China and Russia are blocked at the edge, and the United States never is | accepted |
 | [0038](0038-vetted-volunteers-get-admin-accounts.md) | Vetted volunteers get plain admin accounts, with no change log yet | accepted |
 | [0039](0039-a-public-message-form-stores-phones-and-alerts-telegram.md) | A public message form stores visitors' phones and alerts Telegram, fail-open | accepted |
+| [0040](0040-a-past-lesson-date-keeps-its-page-and-leaves-the-index.md) | A past lesson date keeps its page and leaves the index | accepted |

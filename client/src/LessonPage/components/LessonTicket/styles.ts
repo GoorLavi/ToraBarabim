@@ -12,6 +12,7 @@ import {
   PERFORATION_THICKNESS,
   POSTER_WIDTH_DESKTOP,
   POSTER_WIDTH_PHONE,
+  STATUS_BANNER_BLOCK_PADDING,
   STUB_DIVIDER_LENGTH_DESKTOP,
   STUB_WHEN_ROW_GAP_DESKTOP,
   SUBSTITUTE_LINK_BLOCK_PADDING,
@@ -57,8 +58,13 @@ export const TicketShell = css(
     }
   }
 
-  > .cancelledBanner {
-    padding: ${theme.spacing.md} ${theme.spacing.lg};
+  /* The cancellation banner and the past-or-started notice are the same
+     white band above the ticket: one at a time, the cancellation winning
+     (LessonTicket.tsx). */
+  > .cancelledBanner,
+  > .notice {
+    padding-block: ${STATUS_BANNER_BLOCK_PADDING};
+    padding-inline: ${theme.spacing.xl};
     background: ${theme.colors.surface};
     display: flex;
     flex-direction: column;
@@ -66,10 +72,15 @@ export const TicketShell = css(
 
     > .heading {
       display: block;
-      color: ${theme.colors.danger};
       font-weight: ${theme.typography.sectionHeading.fontWeight};
       font-size: ${theme.typography.sectionHeading.phone.fontSize};
       line-height: ${theme.typography.sectionHeading.phone.lineHeight};
+    }
+  }
+
+  > .cancelledBanner {
+    > .heading {
+      color: ${theme.colors.danger};
     }
 
     > .reason {
@@ -80,24 +91,32 @@ export const TicketShell = css(
     }
   }
 
-  /* A cancelled ticket no longer dims its own text: the white banner above
-     already carries the message, and 'textOnPrimaryMuted' at the old 0.55
-     opacity falls under the 3:1 contrast floor on a screen whose whole job
-     is to be screenshotted (design review). Gold still steps aside to white,
-     since gold is reserved for a live start time. */
-  &.cancelled > .ticketRow > .stub {
-    /* The top notch on desktop sits directly beneath the cancellation
-       banner, so the hole it fakes has to read as a hole through to the
-       banner's own white, not through to the page background behind the
-       rest of the card. */
-    > .notch.start {
-      @media (min-width: ${theme.breakpoints.lg}) {
-        background: ${theme.colors.surface};
-      }
-    }
+  > .notice > .heading {
+    color: ${theme.colors.text};
 
-    > .whenRow > .timeCol > .time {
-      color: ${theme.colors.textOnPrimary};
+    @media (min-width: ${theme.breakpoints.md}) {
+      font-size: ${theme.typography.sectionHeading.desktop.fontSize};
+      line-height: ${theme.typography.sectionHeading.desktop.lineHeight};
+    }
+  }
+
+  /* A struck start time (cancelled, or a date that already took place) no
+     longer dims its own text: the white banner above already carries the
+     message, and 'textOnPrimaryMuted' at the old 0.55 opacity falls under
+     the 3:1 contrast floor on a screen whose whole job is to be
+     screenshotted (design review). Gold steps aside to white, since gold is
+     reserved for a live start time. The line takes the time's own colour. */
+  &.struckTime > .ticketRow > .stub > .whenRow > .timeCol > .time {
+    color: ${theme.colors.textOnPrimary};
+    text-decoration: line-through;
+  }
+
+  /* The top notch on desktop sits directly beneath a banner, so the hole it
+     fakes has to read as a hole through to the banner's own white, not
+     through to the page background behind the rest of the card. */
+  &.hasBanner > .ticketRow > .stub > .notch.start {
+    @media (min-width: ${theme.breakpoints.lg}) {
+      background: ${theme.colors.surface};
     }
   }
 
@@ -541,6 +560,9 @@ export const TicketShell = css(
         font-weight: ${theme.typography.tagAndCaption.fontWeight};
         font-size: ${theme.typography.tagAndCaption.phone.fontSize};
         line-height: ${theme.typography.tagAndCaption.phone.lineHeight};
+        /* A long label ("הייתה אמורה להעביר את השיעור") splits evenly beside
+           the poster instead of leaving one word on the second line. */
+        text-wrap: balance;
 
         @media (min-width: ${theme.breakpoints.lg}) {
           margin-block-end: ${theme.spacing.xs};

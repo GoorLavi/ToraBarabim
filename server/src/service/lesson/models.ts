@@ -1,4 +1,4 @@
-import type { LessonAudience, LessonTopic, LessonVenue, Rabbi } from '@torabarabim/common';
+import type { LessonAudience, LessonTopic, LessonVenue, OccurrenceTiming, Rabbi } from '@torabarabim/common';
 import { z } from 'zod';
 
 import { AREAS, LESSON_TOPICS } from '../../db/schema/enums';
@@ -48,7 +48,11 @@ export const lessonOccurrenceParamsSchema = z.object({
 
 export type LessonOccurrenceParams = z.infer<typeof lessonOccurrenceParamsSchema>;
 
-export interface ResolvedLessonSearchQuery extends LessonSearchQuery {
+// A search without its paging: what `findOccurrences` reads, so a caller that
+// wants every occurrence of a window never has to invent a page size.
+export type OccurrenceQuery = Omit<LessonSearchQuery, 'page' | 'pageSize'>;
+
+export interface ResolvedOccurrenceQuery extends OccurrenceQuery {
   from: string;
   to: string;
 }
@@ -70,6 +74,12 @@ export interface ResolvedLessonOccurrence {
   substituteRabbi?: Rabbi;
   cancellationReason?: string;
   note?: string;
+}
+
+// What `getOccurrence` returns: the resolved occurrence plus where it stands
+// against the clock.
+export interface ResolvedLessonOccurrenceDetail extends ResolvedLessonOccurrence {
+  timing: OccurrenceTiming;
 }
 
 // The resolved rabbi/place record behind a `rabbiId`/`placeId` filter that

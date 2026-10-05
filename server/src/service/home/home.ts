@@ -9,7 +9,7 @@ import * as dedicationService from '../dedication/dedication';
 import { applyException, expandLesson, hasLeftPublicListsAt, resolveRecord, toExceptionDomain, toLessonDomain, type ResolvedOccurrence } from '../lesson/occurrence';
 import { addDays, compareIsoDates, todayInIsrael } from '../lesson/israel-time';
 import { isLessonInScope, isRabbiInDirectoryScope } from '../shared/audience-scope';
-import { AREA_NAMES_HE } from '../shared/consts';
+import { AREA_NAMES_HE, MAX_ITEMS_PER_ROW } from '../shared/consts';
 import { toCitySummary } from '../shared/city-summary';
 import type { AddressCityRow, AddressPlaceRow } from '../shared/address';
 import { compareRabbiOrder, PROMINENCE_RANK } from '../shared/rabbi-order';
@@ -17,7 +17,6 @@ import { toRabbiSummary as toRabbi } from '../shared/rabbi-summary';
 import {
   HOME_RABBI_ROW_CAP,
   HOME_WINDOW_DAYS,
-  MAX_ITEMS_PER_ROW,
   MIN_ITEMS_PER_ROW,
   WOMENS_AREA_TILE_FIRST_CANDIDATE_ROW,
   WOMENS_AREA_TILE_INDEX,
