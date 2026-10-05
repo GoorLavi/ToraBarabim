@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { posterSourceFrom } from './helpers';
+import { isAutomatedBrowser, posterSourceFrom } from './helpers';
 
 describe('posterSourceFrom', () => {
   it('maps the recruiting poster QR value to listers', () => {
@@ -29,5 +29,19 @@ describe('posterSourceFrom', () => {
 
   it('returns undefined for a value that names an Object.prototype member', () => {
     expect(posterSourceFrom('?utm_source=constructor')).toBeUndefined();
+  });
+});
+
+describe('isAutomatedBrowser', () => {
+  it('catches the Claude desktop browser pane, which reports webdriver false', () => {
+    const userAgent =
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Claude/2.19675.0 Chrome/152.0.7977.130 Safari/537.36';
+    expect(isAutomatedBrowser({ userAgent, webdriver: false })).toBe(true);
+  });
+
+  it('counts an ordinary Chrome', () => {
+    const userAgent =
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36';
+    expect(isAutomatedBrowser({ userAgent, webdriver: false })).toBe(false);
   });
 });

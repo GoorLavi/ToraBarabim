@@ -118,8 +118,12 @@ export const EMPTY_ACTIVE_FILTERS: ActiveFilters = {
 // Automation that runs a real browser and so gets past Mixpanel's own
 // crawler list, which matches named bots like Googlebot only: headless
 // Chrome announces itself in the user agent, and a generic bot, crawl or
-// spider word covers the rest.
-export const AUTOMATED_USER_AGENT_PATTERN = /bot|crawl|spider|headless/i;
+// spider word covers the rest. The Claude desktop app's browser pane, which
+// agents drive, reports `webdriver` false and is caught only by the
+// `Claude/<version>` token it adds to an otherwise ordinary Chrome agent.
+export const AUTOMATED_USER_AGENT_PATTERN = /bot|crawl|spider|headless|\bClaude\//i;
+
+export const INTERNAL_BROWSER_STORAGE_KEY = 'torabarabim:internalBrowser';
 
 export const POSTER_SOURCE_PARAM = 'utm_source';
 
