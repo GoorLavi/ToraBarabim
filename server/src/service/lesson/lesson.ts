@@ -11,7 +11,7 @@ import { AREA_PREVIEW_FETCH_SIZE, AREA_PREVIEW_LIMIT, DEFAULT_RANGE_DAYS, MAX_RA
 import { InvalidDateRangeError, LessonNotFoundError, LessonOccurrenceNotFoundError } from './errors';
 import { addDays, compareIsoDates, daysBetween, todayInIsrael } from './israel-time';
 import type { LessonSearchQuery, LessonSearchResult, ResolvedLessonOccurrence, ResolvedLessonSearchQuery } from './models';
-import { applyException, compareOccurrences, expandLesson, resolveRecord, toExceptionDomain, toLessonDomain } from './occurrence';
+import { applyException, compareOccurrences, expandLesson, hasLeftPublicListsAt, resolveRecord, toExceptionDomain, toLessonDomain } from './occurrence';
 
 // Hebrew has no case, but lower-casing also lets a stray Latin fragment (a
 // transliterated name) match; a plain substring, never a fuzzy or scored match.
@@ -167,6 +167,12 @@ export const search = async (rawQuery: LessonSearchQuery, now: Date): Promise<Le
   if (query.status !== undefined) {
     occurrences = occurrences.filter((occurrence) => occurrence.status === query.status);
   }
+
+  // A lesson already past its grace period is no longer "coming up". It
+  // sits here, after `applyException`, so a moved start time decides, and
+  // before `total` so counts and pages stay correct.
+  const hasLeftPublicLists = hasLeftPublicListsAt(now);
+  occurrences = occurrences.filter((occurrence) => !hasLeftPublicLists(occurrence));
 
   occurrences = occurrences.sort(compareOccurrences);
 
