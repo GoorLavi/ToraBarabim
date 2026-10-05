@@ -109,3 +109,4 @@ The real alternatives and why each lost. If there was no alternative, say so.
 | [0039](0039-a-public-message-form-stores-phones-and-alerts-telegram.md) | A public message form stores visitors' phones and alerts Telegram, fail-open | accepted |
 | [0040](0040-the-home-page-carries-up-to-ten-interleaved-rows.md) | The home page carries up to ten interleaved rows | accepted |
 | [0041](0041-the-home-city-grid-and-the-cities-page-count-differently.md) | The home city grid and the cities page count lessons differently, for now | accepted |
+| [0050](0050-the-import-knows-a-lesson-by-rabbi-day-and-start-time.md) | The import knows a lesson by rabbi, day and start time, and attaches it to a place | proposed, supersedes in part [0030](0030-weekly-agent-imports-scraped-lessons.md) |

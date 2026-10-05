@@ -1,5 +1,6 @@
 import type {
   AgentImportApplyResult,
+  AgentImportCreatedPlace,
   AgentImportDecisionRequest,
   AgentImportDecisionResponse,
   AgentImportNewLink,
@@ -17,7 +18,8 @@ import postgres from 'postgres';
 
 import { db } from '../../db/client';
 import { cities, lessonExceptions, lessonImportDismissedKeys, lessonImportRabbiLinks, lessonImportRules, lessonImportRuns, lessons, places, rabbis } from '../../db/schema';
-import { lessonVenueColumns } from '../shared/lesson-write';
+import { lessonVenueColumns, type LessonVenueColumns, placeVenueColumnsFor } from '../shared/lesson-write';
+import { insertPlaces } from '../shared/place-write';
 import { rabbiNameSchema } from '../shared/name';
 import { toRabbiSummary } from '../shared/rabbi-summary';
 import { cleanCityText, nameKeyOf } from './clean';
@@ -40,6 +42,7 @@ import type {
   LessonImportFileInput,
   LearnedRules,
   LinkRecord,
+  PlaceSnapshot,
   PlanContext,
   RabbiInfo,
   ResolvedWrite,
@@ -136,7 +139,7 @@ const loadExistingLessons = async (executor: DbExecutor): Promise<ExistingLesson
           ? { addressName: row.addressName, addressStreet: row.addressStreet }
           : undefined;
     if (!address) throw new Error(`data inconsistency: lesson '${row.id}' has neither a place nor an address`);
-    const { placeId: _placeId, placeName: _placeName, placeStreet: _placeStreet, ...rest } = row;
+    const { placeName: _placeName, placeStreet: _placeStreet, ...rest } = row;
     return {
       ...rest,
       ...address,
@@ -148,6 +151,11 @@ const loadExistingLessons = async (executor: DbExecutor): Promise<ExistingLesson
     };
   });
 };
+
+// Every place, active or not: a deactivated synagogue must still stop the
+// import from creating a second one of the same name.
+const loadPlaces = async (executor: DbExecutor): Promise<PlaceSnapshot[]> =>
+  executor.select({ id: places.id, name: places.name, cityCode: places.cityCode, isActive: places.isActive }).from(places);
 
 const loadCitiesByRabbi = async (executor: DbExecutor, rabbiIds?: string[]): Promise<Map<string, string[]>> => {
   // A raw `sql`... = any(${ids})`` interpolates the JS array as a
@@ -198,12 +206,13 @@ const loadRabbiCandidates = async (
 };
 
 const buildPlan = async (file: LessonImportFileInput, executor: DbExecutor): Promise<PlanContext> => {
-  const [rules, links, dismissedKeys, cityByName, existingLessons, rabbiInfo] = await Promise.all([
+  const [rules, links, dismissedKeys, cityByName, existingLessons, placeSnapshots, rabbiInfo] = await Promise.all([
     loadRules(executor),
     loadLinks(executor),
     loadDismissedKeys(executor),
     loadCityLookup(executor),
     loadExistingLessons(executor),
+    loadPlaces(executor),
     loadRabbiCandidates(executor),
   ]);
 
@@ -214,6 +223,7 @@ const buildPlan = async (file: LessonImportFileInput, executor: DbExecutor): Pro
     rabbiCandidatesByNameKey: rabbiInfo.byNameKey,
     rabbiById: rabbiInfo.byId,
     existingLessons,
+    places: placeSnapshots,
     dismissedKeys,
     resolveCityCode: (name) => cityByName.get(name),
     now: new Date(),
@@ -235,6 +245,7 @@ export const plan = async (file: LessonImportFileInput): Promise<AgentImportPlan
     newLinks: planResult.newLinks,
     withheldIfUnacked: planResult.withheldIfUnacked,
     skipped: planResult.skipped,
+    newPlaces: planResult.newPlaces,
   };
 };
 
@@ -360,11 +371,28 @@ export const decide = async (request: AgentImportDecisionRequest): Promise<Agent
   }
 };
 
-// Always the address arm: the import never produces a place reference,
-// since nothing in the collected data names a registered place. Still
-// routed through `lessonVenueColumns`, the one producer of these columns,
-// rather than setting them by hand here.
-const writeValuesFor = async (write: ResolvedWrite) => {
+// What a write needs resolved before its columns can be built: the ids of
+// the places this run just created, and the venue columns of every place any
+// write points at.
+interface WriteVenueContext {
+  createdPlaceIdByKey: Map<string, string>;
+  placeColumnsById: Map<string, Extract<LessonVenueColumns, { placeId: string }>>;
+}
+
+// Fail-closed: a place that is gone or deactivated between the plan and this
+// write means the plan no longer describes the database, so the whole apply
+// stops as `plan_changed` instead of writing a lesson onto a place that is
+// not there.
+const venueColumnsFor = async (write: ResolvedWrite, context: WriteVenueContext): Promise<LessonVenueColumns> => {
+  const { venue, row } = write;
+  if (venue.kind === 'address') return lessonVenueColumns({ kind: 'address', name: row.place, street: row.street, cityCode: row.cityCode });
+  const placeId = venue.kind === 'place' ? venue.placeId : context.createdPlaceIdByKey.get(venue.placeKey);
+  const columns = placeId ? context.placeColumnsById.get(placeId) : undefined;
+  if (!columns) throw new PlanChangedError();
+  return columns;
+};
+
+const writeValuesFor = async (write: ResolvedWrite, context: WriteVenueContext) => {
   // `NormalizedRow.audience` is optional pre-resolution (an unstated row
   // audience is resolved only once the rabbi's honorific is known, in
   // `planCore`); every `ResolvedWrite` is built after that resolution, so
@@ -373,7 +401,7 @@ const writeValuesFor = async (write: ResolvedWrite) => {
   return {
     title: write.row.title ?? null,
     rabbiId: write.rabbiId,
-    ...(await lessonVenueColumns({ kind: 'address', name: write.row.place, street: write.row.street, cityCode: write.row.cityCode })),
+    ...(await venueColumnsFor(write, context)),
     topic: write.row.topic ?? null,
     audience: write.row.audience,
     recurrenceKind: write.row.recurrence.kind,
@@ -408,6 +436,7 @@ const writeValuesFor = async (write: ResolvedWrite) => {
 // moment earlier.
 export const apply = async (request: ApplyRequestInput, log: FastifyBaseLogger): Promise<AgentImportApplyResult> => {
   const acks = new Set(request.acks ?? []);
+  const ackedLessonIds = new Set(request.ackLessonIds ?? []);
 
   return db.transaction(async (tx) => {
     const lockResult = await tx.execute(sql`select pg_try_advisory_xact_lock(${IMPORT_ADVISORY_LOCK_KEY}) as locked`);
@@ -423,23 +452,42 @@ export const apply = async (request: ApplyRequestInput, log: FastifyBaseLogger):
     // at a time, each guarded by `provenance = 'imported'`.
     const newRows = planResult.resolvedWrites.filter((write) => !write.existingLessonId);
     const updatedRows = planResult.resolvedWrites.filter((write) => write.existingLessonId);
+
+    // The synagogues this run creates are inserted first, inside this same
+    // transaction, so a rolled-back apply leaves no orphan place behind. The
+    // import only ever adds places: no code path here deletes or deactivates
+    // one.
+    const createdPlaceIds = await insertPlaces(
+      planResult.newPlaces.map((place) => ({ name: place.name, street: place.street, cityCode: place.cityCode })),
+      tx,
+    );
+    const createdPlaces: AgentImportCreatedPlace[] = planResult.newPlaces.map((place, index) => ({ ...place, placeId: createdPlaceIds[index] as string }));
+    const createdPlaceIdByKey = new Map(createdPlaces.map((place) => [place.placeKey, place.placeId] as const));
+    const referencedPlaceIds = new Set(createdPlaceIds);
+    for (const write of planResult.resolvedWrites) if (write.venue.kind === 'place') referencedPlaceIds.add(write.venue.placeId);
+    const venueContext: WriteVenueContext = { createdPlaceIdByKey, placeColumnsById: await placeVenueColumnsFor([...referencedPlaceIds], tx) };
+
     if (newRows.length) {
-      const newValues = await Promise.all(newRows.map(async (write) => ({ id: nanoid(), ...(await writeValuesFor(write)) })));
+      const newValues = await Promise.all(newRows.map(async (write) => ({ id: nanoid(), ...(await writeValuesFor(write, venueContext)) })));
       await tx.insert(lessons).values(newValues);
     }
     let actuallyUpdatedCount = 0;
     for (const write of updatedRows) {
       const updated = await tx
         .update(lessons)
-        .set(await writeValuesFor(write))
+        .set(await writeValuesFor(write, venueContext))
         .where(and(eq(lessons.id, write.existingLessonId as string), eq(lessons.provenance, 'imported')))
         .returning({ id: lessons.id });
       if (updated[0]) actuallyUpdatedCount += 1;
       else log.warn({ lessonId: write.existingLessonId }, 'agent import: lesson no longer imported, update skipped mid-apply');
     }
 
-    const ackedWithheld = planResult.withheldIfUnacked.filter((item) => item.causingSources.every((source) => acks.has(source)));
-    const stillWithheld = planResult.withheldIfUnacked.filter((item) => !item.causingSources.every((source) => acks.has(source)));
+    // A duplicate is released only by its own lesson id, never by a source
+    // ack: acking a source approves the run's size, not this one lesson.
+    const isReleased = (item: (typeof planResult.withheldIfUnacked)[number]): boolean =>
+      item.reason === 'duplicate' ? ackedLessonIds.has(item.lessonId) : item.causingSources.every((source) => acks.has(source));
+    const ackedWithheld = planResult.withheldIfUnacked.filter(isReleased);
+    const stillWithheld = planResult.withheldIfUnacked.filter((item) => !isReleased(item));
     const deletionTargets = [...planResult.deletions, ...ackedWithheld];
     const deletionTargetIds = deletionTargets.map((item) => item.lessonId).filter((id): id is string => id !== undefined);
 
@@ -481,7 +529,7 @@ export const apply = async (request: ApplyRequestInput, log: FastifyBaseLogger):
         .onConflictDoNothing();
     }
 
-    const counts = { ...planResult.counts, updated: actuallyUpdatedCount, deleted: deletedSummaries.length };
+    const counts = { ...planResult.counts, updated: actuallyUpdatedCount, deleted: deletedSummaries.length, placesCreated: createdPlaces.length };
 
     await tx.insert(lessonImportRuns).values({
       week: request.file.week,
@@ -492,6 +540,6 @@ export const apply = async (request: ApplyRequestInput, log: FastifyBaseLogger):
       newLinks: planResult.newLinks,
     });
 
-    return { counts, newLinks: planResult.newLinks, withheld: stillWithheld, deleted: deletedSummaries };
+    return { counts, newLinks: planResult.newLinks, withheld: stillWithheld, deleted: deletedSummaries, newPlaces: createdPlaces };
   });
 };

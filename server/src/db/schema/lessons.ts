@@ -47,10 +47,13 @@ export const lessons = pgTable(
     // `importSources` are only ever set on an 'imported' or
     // 'imported_edited' row; see `lessons_provenance_shape` below.
     provenance: lessonProvenanceEnum('provenance').notNull().default('manual'),
-    // `${rabbiId}|w${weekday}|${addressKey}` for a weekly row or
-    // `${rabbiId}|d${isoDate}|${addressKey}` for a one-off, computed by the
-    // import planner. Identifies "the same lesson" across weekly import
-    // runs so a run can update in place instead of creating a duplicate.
+    // `${rabbiId}|w${weekday}|t${HH:mm}` for a weekly row or
+    // `${rabbiId}|d${isoDate}|t${HH:mm}` for a one-off, computed by the
+    // import planner. Keys written before the start time became part of a
+    // lesson's identity end in the place slug instead
+    // (`${rabbiId}|w${weekday}|${placeSlug}`); both forms stay valid strings,
+    // and the planner reads a lesson's identity from its columns, never from
+    // this key. Lets a run update in place instead of creating a duplicate.
     importKey: text('import_key'),
     // The source domains (e.g. 'ayal-taarog.org.il') that reported this
     // lesson as of its last import, used to decide whether a lesson is

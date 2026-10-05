@@ -7,6 +7,7 @@ import { db } from '../../db/client';
 import { cities, places } from '../../db/schema';
 import storage from '../../storage/storage';
 import { validatePlacePhoto } from '../place/photo';
+import { insertPlaces } from '../shared/place-write';
 import { toSlug } from '../shared/slug';
 import { PlaceNotFoundError, UnknownCityError } from './errors';
 import type { AdminPlaceListResult, AdminPlaceRecord, CreatePlaceInput, PlaceListQuery, UpdatePlaceInput } from './models';
@@ -77,13 +78,9 @@ export const getById = async (id: string): Promise<AdminPlaceRecord> => {
 export const create = async (input: CreatePlaceInput): Promise<AdminPlaceRecord> => {
   await verifyCityExists(input.cityCode);
 
-  const id = nanoid();
-  const [row] = await db
-    .insert(places)
-    .values({ id, slug: toSlug(input.name) || id, name: input.name, street: input.street, floor: input.floor ?? null, cityCode: input.cityCode })
-    .returning({ id: places.id });
-  if (!row) throw new Error('insert into places returned no row');
-  return getById(row.id);
+  const [id] = await insertPlaces([input]);
+  if (!id) throw new Error(`expected one id from insertPlaces for '${input.name}'`);
+  return getById(id);
 };
 
 // A place edits its own profile in full, name and address included, and so
