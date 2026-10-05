@@ -1,4 +1,4 @@
-import type { RabbiResponse } from '@torabarabim/common';
+import type { AdminRabbiListItem } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -25,19 +25,18 @@ let rabbiRequestCount = 0;
 // Which story of this file, if any, is on screen. `.storybook/preview.tsx`
 // chains every story file's mock onto one `window.fetch`, so without this
 // the answers below would also be given for other screens in the same
-// session: `/v1/admin/lessons` is answered empty here, which is true of this
-// page (it only counts them) and would empty out `LessonsListPage` and
-// `RabbiViewPage`, and a visit to the loading or error story would leave
-// `scenario` set for whatever is opened next. A token rather than a boolean,
+// session: a visit to the loading or error story would leave `scenario` set
+// for whatever is opened next. A token rather than a boolean,
 // because a story that mounts before the previous one unmounts would
 // otherwise have its own flag cleared by that unmount.
 let activeStoryToken: symbol | null = null;
 
 const MATCHES_NOTHING = 'זזז';
 
-const rabbi = (overrides: Partial<RabbiResponse> & Pick<RabbiResponse, 'id' | 'name'>): RabbiResponse => ({
+const rabbi = (overrides: Partial<AdminRabbiListItem> & Pick<AdminRabbiListItem, 'id' | 'name'>): AdminRabbiListItem => ({
   ...rabbiFixture(overrides),
   prominence: 'known',
+  lessonCount: 1,
   ...overrides,
 });
 
@@ -51,9 +50,9 @@ const rabbi = (overrides: Partial<RabbiResponse> & Pick<RabbiResponse, 'id' | 'n
 // Most carry a photo and one does not, because that is the mix the real
 // product has (docs/product.md): a list where every card fell back would
 // leave the fallback as the only state the design gate ever sees.
-const rabbis: RabbiResponse[] = [
-  rabbi({ id: 'r1', name: 'אליהו בן שמעון', title: 'ראש ישיבה' }),
-  rabbi({ id: 'r2', name: 'שרה גולדברג', honorific: 'rabbanit', title: 'רבנית הקהילה' }),
+const rabbis: AdminRabbiListItem[] = [
+  rabbi({ id: 'r1', name: 'אליהו בן שמעון', title: 'ראש ישיבה', lessonCount: 73 }),
+  rabbi({ id: 'r2', name: 'שרה גולדברג', honorific: 'rabbanit', title: 'רבנית הקהילה', lessonCount: 0 }),
   rabbi({ id: 'r3', name: 'יוסף חיים אזולאי', photoUrl: undefined }),
   rabbi({ id: 'rabbi-1', name: 'אברהם כהן' }),
   rabbi({ id: 'rabbi-2', name: 'משה לוי' }),
@@ -63,7 +62,7 @@ const rabbis: RabbiResponse[] = [
 
 // Same body shape as the other two files that answer this route, so that
 // whichever mock wins the chain hands every screen the same thing.
-const listBody = (items: RabbiResponse[]) => ({ items, total: items.length, page: 1, pageSize: MAX_ADMIN_PAGE_SIZE });
+const listBody = (items: AdminRabbiListItem[]) => ({ items, total: items.length, page: 1, pageSize: MAX_ADMIN_PAGE_SIZE });
 
 installMockFetch((url) => {
   if (activeStoryToken === null) return null;
@@ -75,13 +74,12 @@ installMockFetch((url) => {
     if (url.searchParams.get('q') === MATCHES_NOTHING) return jsonResponse(200, listBody([]));
     return jsonResponse(200, listBody(rabbis));
   }
-  if (url.pathname === '/v1/admin/lessons') return jsonResponse(200, { items: [], total: 0, page: 1, pageSize: MAX_ADMIN_PAGE_SIZE });
   return null;
 });
 
 // Claims the mock for this file and mounts a query client of its own,
 // isolated from the shared one in `.storybook/preview.tsx`: every story here
-// asks the same two query keys, so a warm cache from the story before would
+// asks the same query key, so a warm cache from the story before would
 // serve them without a fetch and the request count this file asserts on
 // would be counting the order stories happened to run in. `retry: false` for
 // the reason that same file already gives for its own client.
@@ -134,6 +132,17 @@ export const Loaded: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.findByText('הרב אליהו בן שמעון')).resolves.toBeInTheDocument();
     await expect(canvas.findByText('הרבנית שרה גולדברג')).resolves.toBeInTheDocument();
+  },
+};
+
+// The count used to be tallied in the browser from the first page of
+// lessons only, so a rabbi whose lessons fell past it read "no lessons yet".
+// It is the server's now, and a count above a page of lessons must reach the
+// card as sent.
+export const ShowsTheCountTheServerSends: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.findByText(consts.lessonCountLabel(73))).resolves.toBeInTheDocument();
   },
 };
 

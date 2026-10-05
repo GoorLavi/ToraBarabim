@@ -1,7 +1,15 @@
 import assert from 'node:assert/strict';
 import { after, afterEach, before, describe, test } from 'node:test';
 
-import type { AdminDedication, AdminOccurrenceListResponse, AdminPlaceResponse, CreateDedicationRequest, DedicationType, HomeResponse } from '@torabarabim/common';
+import type {
+  AdminDedication,
+  AdminOccurrenceListResponse,
+  AdminPlaceResponse,
+  CreateDedicationRequest,
+  DedicationType,
+  HomeResponse,
+  RabbiListResponse,
+} from '@torabarabim/common';
 import { eq, ne } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { nanoid } from 'nanoid';
@@ -11,6 +19,7 @@ import { adminUsers, cities, dedications, lessonExceptions, lessons, places, rab
 import { addDays, todayInIsrael } from '../src/service/lesson/israel-time';
 import { addMinutes } from '../src/service/lesson/occurrence';
 import { SESSION_COOKIE_NAME } from '../src/service/admin-auth/consts';
+import { MAX_ADMIN_PAGE_SIZE } from '../src/service/admin-shared/consts';
 import * as adminUserService from '../src/service/admin-user/admin-user';
 import { assertDatabaseReachable, buildAdminTestApp, rawClient } from './app-harness';
 
@@ -247,6 +256,51 @@ describe('admin API', () => {
     const renamedBody = afterRename.json() as AdminOccurrenceListResponse;
     assert.equal(renamedBody.items[0]?.venue.name, 'בית מדרש חדש');
     assert.equal(renamedBody.items[0]?.venue.street, 'רחוב חדש 2');
+  });
+
+  // The defect: the panel counted each rabbi's lessons from the first page
+  // of the lesson list, so a rabbi whose lessons all fell past it read "no
+  // lessons yet". The count is the list's own now, and must not stop at a
+  // page.
+  test("the rabbi list carries each rabbi's full lesson count, past a page of lessons", async () => {
+    const cookie = await loginAsNewAdmin();
+    const cityCode = await jerusalemCode();
+    const sharedName = `רב ספירה ${uniqueSuffix()}`;
+    const busyRabbiId = `test-rabbi-${uniqueSuffix()}`;
+    const idleRabbiId = `test-rabbi-${uniqueSuffix()}`;
+    await db.insert(rabbis).values([
+      { id: busyRabbiId, name: `${sharedName} א`, honorific: 'rav' },
+      { id: idleRabbiId, name: `${sharedName} ב`, honorific: 'rav' },
+    ]);
+    cleanupRabbiIds.add(busyRabbiId);
+    cleanupRabbiIds.add(idleRabbiId);
+
+    const busyLessonCount = MAX_ADMIN_PAGE_SIZE + 1;
+    const lessonRows = Array.from({ length: busyLessonCount }, () => ({
+      id: `test-lesson-${uniqueSuffix()}`,
+      rabbiId: busyRabbiId,
+      addressName: 'בית כנסת הבדיקה',
+      addressStreet: 'רחוב הבדיקה 1',
+      cityCode,
+      audience: 'men' as const,
+      recurrenceKind: 'weekly' as const,
+      recurrenceWeekdays: [0],
+      startTime: '19:00',
+      durationMinutes: 60,
+    }));
+    await db.insert(lessons).values(lessonRows);
+    for (const row of lessonRows) cleanupLessonIds.add(row.id);
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/v1/admin/rabbis?q=${encodeURIComponent(sharedName)}&pageSize=${MAX_ADMIN_PAGE_SIZE}`,
+      headers: { cookie },
+    });
+    assert.equal(res.statusCode, 200);
+    const body = res.json() as RabbiListResponse;
+    const countById = new Map(body.items.map((item) => [item.id, item.lessonCount] as const));
+    assert.equal(countById.get(busyRabbiId), busyLessonCount);
+    assert.equal(countById.get(idleRabbiId), 0);
   });
 
   test('creating a place returns the row it was given, and that row is retrievable through the admin API', async () => {

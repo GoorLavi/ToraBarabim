@@ -24,6 +24,9 @@ export const useSaveLesson = (): UseMutationResult<LessonResponse, AdminApiError
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'lessons'] });
+      // The rabbi list carries each rabbi's lesson count, and a save can
+      // add a lesson or move one to another rabbi.
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'rabbis', 'search'] });
     },
   });
 };
