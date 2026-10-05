@@ -79,7 +79,7 @@ The real alternatives and why each lost. If there was no alternative, say so.
 | [0009](0009-scraped-lessons-stay-out.md) | Scraped lessons do not reach the site yet | superseded by [0030](0030-weekly-agent-imports-scraped-lessons.md) |
 | [0010](0010-production-shape-traded-for-cost.md) | The production shape, and what was traded for cost | accepted |
 | [0011](0011-deploys-are-automatic-migrations-are-not.md) | Deploys run themselves, migrations wait for a human | accepted |
-| [0012](0012-the-home-page-is-composed-by-the-server.md) | The home page is composed by the server | accepted |
+| [0012](0012-the-home-page-is-composed-by-the-server.md) | The home page is composed by the server | accepted; the four-rows paragraph superseded by [0040](0040-the-home-page-carries-up-to-ten-interleaved-rows.md) |
 | [0013](0013-rabbis-carry-a-manually-set-prominence.md) | Rabbis carry a manually set prominence | accepted |
 | [0014](0014-the-logo-is-a-fixed-mark-not-a-theme-token.md) | The logo is a fixed mark, not a theme token | accepted |
 | [0015](0015-rabbis-manage-their-own-listings.md) | Rabbis manage their own listings | accepted |
@@ -107,3 +107,5 @@ The real alternatives and why each lost. If there was no alternative, say so.
 | [0037](0037-viewers-in-china-and-russia-are-blocked-at-the-edge-never-the-united-states.md) | Viewers in China and Russia are blocked at the edge, and the United States never is | accepted |
 | [0038](0038-vetted-volunteers-get-admin-accounts.md) | Vetted volunteers get plain admin accounts, with no change log yet | accepted |
 | [0039](0039-a-public-message-form-stores-phones-and-alerts-telegram.md) | A public message form stores visitors' phones and alerts Telegram, fail-open | accepted |
+| [0040](0040-the-home-page-carries-up-to-ten-interleaved-rows.md) | The home page carries up to ten interleaved rows | accepted |
+| [0041](0041-the-home-city-grid-and-the-cities-page-count-differently.md) | The home city grid and the cities page count lessons differently, for now | accepted |
