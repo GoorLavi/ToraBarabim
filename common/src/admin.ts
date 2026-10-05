@@ -97,6 +97,16 @@ export interface LessonListResponse {
   total: number;
 }
 
+// `LessonListResponse` stays as is: the rabbi and place portals share it.
+export type AdminLessonListItem = LessonResponse & { rabbi: Rabbi };
+
+export interface AdminLessonListResponse {
+  items: AdminLessonListItem[];
+  page: number;
+  pageSize: number;
+  total: number;
+}
+
 export interface LessonExceptionListResponse {
   items: LessonExceptionResponse[];
 }

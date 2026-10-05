@@ -1,4 +1,4 @@
-import type { AdminOccurrenceListResponse, LessonListResponse, LessonResponse } from '@torabarabim/common';
+import type { AdminLessonListResponse, AdminOccurrenceListResponse, LessonResponse } from '@torabarabim/common';
 
 import type { AdminOccurrenceListResult, LessonListResult, LessonRecord } from '../service/admin-lesson/models';
 import { toLessonOccurrence } from './lesson';
@@ -17,8 +17,8 @@ export const toLessonResponse = (record: LessonRecord): LessonResponse => ({
   provenance: record.provenance,
 });
 
-export const toLessonListResponse = (result: LessonListResult): LessonListResponse => ({
-  items: result.items.map(toLessonResponse),
+export const toAdminLessonListResponse = (result: LessonListResult): AdminLessonListResponse => ({
+  items: result.items.map((item) => ({ ...toLessonResponse(item), rabbi: item.rabbi })),
   page: result.page,
   pageSize: result.pageSize,
   total: result.total,

@@ -113,6 +113,11 @@ export const PROMINENCE_LABELS: Record<RabbiProminence, string> = {
 
 export const ADMIN_QUERY_KEYS = {
   session: () => ['admin', 'session'] as const,
+  // The roots a rabbi or lesson write reaches for: the lesson list carries each
+  // lesson's rabbi and the rabbi list carries each rabbi's lesson count, so a
+  // write to either invalidates both.
+  rabbisAll: () => ['admin', 'rabbis'] as const,
+  lessonsAll: () => ['admin', 'lessons'] as const,
   rabbis: (filters: AdminRabbiFilters) => ['admin', 'rabbis', 'search', filters] as const,
   rabbi: (id: string) => ['admin', 'rabbis', id] as const,
   rabbiDeletePreview: (id: string) => ['admin', 'rabbis', id, 'delete-preview'] as const,

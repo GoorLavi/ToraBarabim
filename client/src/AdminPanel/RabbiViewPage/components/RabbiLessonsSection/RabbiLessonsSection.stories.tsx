@@ -1,4 +1,4 @@
-import type { LessonResponse } from '@torabarabim/common';
+import type { AdminLessonListItem, LessonResponse } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { rabbiFixture } from '~/rabbiFixture';
@@ -6,7 +6,8 @@ import { rabbiFixture } from '~/rabbiFixture';
 import { errorResolver, http, jsonResolver, loadingResolver } from '../../../../../.storybook/apiMocks';
 import { RabbiLessonsSection } from './RabbiLessonsSection';
 
-const lesson = (overrides: Partial<LessonResponse>): LessonResponse => ({
+const lesson = (overrides: Partial<LessonResponse>): AdminLessonListItem => ({
+  rabbi: rabbiFixture({ id: 'story-rabbi', name: 'יעקב מזרחי' }),
   id: 'lesson-1',
   title: 'הלכות שבת',
   rabbiId: 'story-rabbi',
@@ -20,7 +21,7 @@ const lesson = (overrides: Partial<LessonResponse>): LessonResponse => ({
   ...overrides,
 });
 
-const populatedLessons: LessonResponse[] = [
+const populatedLessons: AdminLessonListItem[] = [
   lesson({ id: 'l1', title: 'עיונים בפרשת השבוע', recurrence: { kind: 'weekly', weekdays: [5] }, startTime: '19:00' }),
   lesson({
     id: 'l2',
@@ -38,7 +39,7 @@ const populatedLessons: LessonResponse[] = [
   lesson({ id: 'l3', title: undefined, topic: undefined, recurrence: { kind: 'once', date: '2026-10-01' }, startTime: '21:00' }),
 ];
 
-const lessonsHandler = (items: LessonResponse[]) =>
+const lessonsHandler = (items: AdminLessonListItem[]) =>
   http.get('/v1/admin/lessons', jsonResolver({ items, page: 1, pageSize: 5, total: items.length }));
 
 // This section owns its own loading/empty/error states independently of

@@ -1,10 +1,10 @@
-import type { Lesson, LessonListResponse, RabbiListResponse } from '@torabarabim/common';
+import type { AdminLessonListItem, Lesson } from '@torabarabim/common';
 
 import { ADMIN_ROUTES } from '~/AdminPanel/consts';
 import { recurrenceWhenLabel } from '~/AdminPanel/helpers';
 import { venuePanelCityName } from '~/helpers';
 
-import type { AdminLessonRow, RabbiFilterValue, RecurrenceFilter } from './models';
+import type { RabbiFilterValue, RecurrenceFilter } from './models';
 import * as consts from './consts';
 
 // One line for a row's day and start time, joined the same way as
@@ -12,13 +12,6 @@ import * as consts from './consts';
 // and `LessonsTable`, the two children that each render it beside their own
 // recurrence tag.
 export const lessonDayTimeLabel = (lesson: Pick<Lesson, 'recurrence' | 'startTime'>): string => `${recurrenceWhenLabel(lesson)} · ${lesson.startTime}`;
-
-// The venue lives on the lesson itself now, so joining a row is just
-// attaching its rabbi; there is no separate place record to look up.
-export const joinLessonRows = (lessons: LessonListResponse['items'], rabbis: RabbiListResponse['items']): AdminLessonRow[] => {
-  const rabbiMap = new Map(rabbis.map((rabbi) => [rabbi.id, rabbi]));
-  return lessons.map((lesson) => ({ lesson, rabbi: rabbiMap.get(lesson.rabbiId) }));
-};
 
 // Ranks a lesson by how soon its next occurrence is, counting today as 0.
 // A one-time lesson whose date has already passed sorts last: it is not
@@ -34,20 +27,20 @@ export const soonestOffsetDays = (lesson: Pick<Lesson, 'recurrence'>, today: Dat
   return Math.min(...offsets);
 };
 
-export const sortRowsBySoonest = (rows: AdminLessonRow[]): AdminLessonRow[] => {
+export const sortRowsBySoonest = (rows: AdminLessonListItem[]): AdminLessonListItem[] => {
   const today = new Date(new Date().toISOString().slice(0, 10) + 'T00:00:00Z');
-  return [...rows].sort((a, b) => soonestOffsetDays(a.lesson, today) - soonestOffsetDays(b.lesson, today));
+  return [...rows].sort((a, b) => soonestOffsetDays(a, today) - soonestOffsetDays(b, today));
 };
 
-const rowMatchesRecurrence = (row: AdminLessonRow, filter: RecurrenceFilter): boolean => {
+const rowMatchesRecurrence = (row: AdminLessonListItem, filter: RecurrenceFilter): boolean => {
   if (filter === 'all') return true;
-  return row.lesson.recurrence.kind === filter;
+  return row.recurrence.kind === filter;
 };
 
-const rowMatchesSearch = (row: AdminLessonRow, search: string): boolean => {
+const rowMatchesSearch = (row: AdminLessonListItem, search: string): boolean => {
   const query = search.trim().toLowerCase();
   if (!query) return true;
-  const haystack = [row.lesson.title, row.rabbi?.name, row.lesson.venue.name, row.lesson.venue.street, venuePanelCityName(row.lesson.venue)]
+  const haystack = [row.title, row.rabbi.name, row.venue.name, row.venue.street, venuePanelCityName(row.venue)]
     .filter(Boolean)
     .join(' ')
     .toLowerCase();
@@ -57,7 +50,7 @@ const rowMatchesSearch = (row: AdminLessonRow, search: string): boolean => {
 // The server's `GET /v1/admin/lessons` has no text-search or recurrence
 // filter param today (see this slice's report), so both are applied here,
 // client-side, over whatever page is already loaded.
-export const filterRows = (rows: AdminLessonRow[], recurrence: RecurrenceFilter, search: string): AdminLessonRow[] =>
+export const filterRows = (rows: AdminLessonListItem[], recurrence: RecurrenceFilter, search: string): AdminLessonListItem[] =>
   rows.filter((row) => rowMatchesRecurrence(row, recurrence) && rowMatchesSearch(row, search));
 
 // The one place this screen's filtered URL is built from a rabbi record
