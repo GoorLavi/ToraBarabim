@@ -121,6 +121,16 @@ export const Cancelled: Story = {
       cancellationReason: 'השיעור מבוטל השבוע עקב אירוע משפחתי אצל הרב',
     },
   },
+  // The start time is struck and the weekday beside it is not, so the card
+  // still says which day was cancelled.
+  play: async ({ canvasElement }) => {
+    const time = canvasElement.querySelector('.medallion > .time');
+    const weekday = canvasElement.querySelector('.medallion > .weekday');
+    if (!time || !weekday) throw new Error('Cancelled story: the medallion time or weekday was not found');
+
+    await expect(getComputedStyle(time).textDecorationLine).toContain('line-through');
+    await expect(getComputedStyle(weekday).textDecorationLine).not.toContain('line-through');
+  },
 };
 
 // The hard case for the cancellation label: it sits over a photograph that

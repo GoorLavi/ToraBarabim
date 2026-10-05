@@ -21,6 +21,10 @@ export const PERFORATION_THICKNESS = '1px';
 // is already on the scale.
 export const PANEL_BLOCK_PADDING_PHONE = '20px';
 
+// The cancellation banner and the past-or-started notice: 20 block at every
+// width, unlike the panels above, which grow on desktop.
+export const STATUS_BANNER_BLOCK_PADDING = PANEL_BLOCK_PADDING_PHONE;
+
 // The stub's single-column layout at `lg`: a short rule between the date and
 // the time, in place of the two-column layout's full-height vertical hairline.
 export const STUB_DIVIDER_LENGTH_DESKTOP = '56px';

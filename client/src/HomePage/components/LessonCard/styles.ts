@@ -13,6 +13,12 @@ export const LessonCard = css(
     opacity: 0.7;
   }
 
+  /* A cancelled lesson's start time is struck in its own colour, never the
+     date: the weekday stays readable so the card still says which day. */
+  &.cancelled > .topArea > .medallion > .time {
+    text-decoration: line-through;
+  }
+
   /* The shell's top area never distorts: the row's stretch lands in the
      body below, so a real portrait never gets cropped or stretched off its
      ratio. */

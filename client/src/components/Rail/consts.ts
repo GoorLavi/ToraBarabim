@@ -27,3 +27,8 @@ export const RAIL_SCROLL_SETTLE_MS = 200;
 // Below this many pixels of net travel, a gesture is treated as noise
 // (a tap that barely moved the row) rather than a real scroll.
 export const RAIL_SCROLL_MIN_DELTA = 24;
+
+// The arrows' accessible names on a row of lessons, shared by the home page's
+// rails and the lesson page's.
+export const LESSONS_PREV_LABEL = 'לשיעורים הקודמים';
+export const LESSONS_NEXT_LABEL = 'לשיעורים הבאים';

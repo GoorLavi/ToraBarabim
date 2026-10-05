@@ -1,6 +1,6 @@
-import type { LessonOccurrence, LessonSearchResponse } from '@torabarabim/common';
+import type { LessonOccurrence, LessonOccurrenceDetail, LessonSearchResponse } from '@torabarabim/common';
 
-import type { LessonSearchResult, ResolvedLessonOccurrence } from '../service/lesson/models';
+import type { LessonSearchResult, ResolvedLessonOccurrence, ResolvedLessonOccurrenceDetail } from '../service/lesson/models';
 
 export const toLessonOccurrence = (record: ResolvedLessonOccurrence): LessonOccurrence => ({
   lessonId: record.lessonId,
@@ -16,6 +16,11 @@ export const toLessonOccurrence = (record: ResolvedLessonOccurrence): LessonOccu
   substituteRabbi: record.substituteRabbi,
   cancellationReason: record.cancellationReason,
   note: record.note,
+});
+
+export const toLessonOccurrenceDetail = (record: ResolvedLessonOccurrenceDetail): LessonOccurrenceDetail => ({
+  ...toLessonOccurrence(record),
+  timing: record.timing,
 });
 
 export const toLessonSearchResponse = (result: LessonSearchResult): LessonSearchResponse => ({

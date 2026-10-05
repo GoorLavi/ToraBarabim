@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import type { LessonDetailsSkeletonProps } from './models';
 import * as styles from './styles';
 
-// Stands in for `LessonDetails` while the occurrence is loading: three
+// Stands in for the note and the bio while the occurrence is loading: three
 // static bars, never known to be bio or note or both until the data arrives
 // (design spec, "Loading").
 export const LessonDetailsSkeleton = styled(({ className }: LessonDetailsSkeletonProps) => (

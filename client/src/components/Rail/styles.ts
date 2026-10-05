@@ -10,19 +10,6 @@ export const Rail = css(
   display: flex;
   flex-direction: column;
 
-  > .heading {
-    font-size: ${theme.typography.sectionHeading.phone.fontSize};
-    line-height: ${theme.typography.sectionHeading.phone.lineHeight};
-    font-weight: ${theme.typography.sectionHeading.fontWeight};
-    color: ${theme.colors.text};
-    text-align: start;
-
-    @media (min-width: ${theme.breakpoints.md}) {
-      font-size: ${theme.typography.sectionHeading.desktop.fontSize};
-      line-height: ${theme.typography.sectionHeading.desktop.lineHeight};
-    }
-  }
-
   > .scrollerWrap {
     position: relative;
     margin-block-start: ${theme.spacing.lg};

@@ -1,4 +1,4 @@
-import type { LessonAudience, LessonException, LessonTopic, Rabbi, Recurrence, Weekday } from '@torabarabim/common';
+import type { LessonAudience, LessonException, LessonTopic, OccurrenceTiming, Rabbi, Recurrence, Weekday } from '@torabarabim/common';
 
 import type { lessonExceptions, lessons } from '../../db/schema';
 import { toVenue, type AddressCityRow, type AddressPlaceRow, type VenueRef } from '../shared/address';
@@ -164,6 +164,18 @@ export const hasLeftPublicListsAt = (now: Date): ((occurrence: { date: string; s
   const nowMinutes = minutesSinceMidnightInIsrael(now);
   return ({ date, startTime }) =>
     date === today && nowMinutes >= minutesSinceMidnightOf(startTime) + PUBLIC_LIST_GRACE_MINUTES_AFTER_START;
+};
+
+// A date before today has taken place whatever its start time; today's
+// occurrence is `startedPastGrace` only under the same rule that removes it
+// from the public lists, so the two can never disagree about "gone".
+export const occurrenceTimingAt = (now: Date): ((occurrence: { date: string; startTime: string }) => OccurrenceTiming) => {
+  const today = todayInIsrael(now);
+  const hasLeftPublicLists = hasLeftPublicListsAt(now);
+  return (occurrence) => {
+    if (compareIsoDates(occurrence.date, today) < 0) return 'tookPlace';
+    return hasLeftPublicLists(occurrence) ? 'startedPastGrace' : 'upcoming';
+  };
 };
 
 const STATUS_ORDER = { scheduled: 0, cancelled: 1 } as const;

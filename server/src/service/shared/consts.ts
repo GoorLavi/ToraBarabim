@@ -17,6 +17,10 @@ export const DEFAULT_PAGE = 1;
 export const DEFAULT_PAGE_SIZE = 20;
 export const MAX_PAGE_SIZE = 50;
 
+// The most cards any horizontal row of lessons carries: the home rows and the
+// lesson page's rabbi and area rows.
+export const MAX_ITEMS_PER_ROW = 12;
+
 // Literal tuples for the query schemas that accept these, mirroring the
 // `satisfies` + exhaustiveness pattern in `db/schema/enums.ts`. Neither
 // value is stored, so neither gets a Postgres enum.

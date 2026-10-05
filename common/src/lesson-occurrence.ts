@@ -39,6 +39,18 @@ export interface LessonOccurrence {
   note?: string;
 }
 
+// Where a single occurrence stands against the clock, decided by the server
+// in Israel time so the browser never computes "past". `startedPastGrace` is
+// true only from 30 minutes after the start (the public-list grace), so the
+// first half hour of a lesson that has begun is still `upcoming`.
+export type OccurrenceTiming = 'upcoming' | 'startedPastGrace' | 'tookPlace';
+
+// What the single-occurrence route returns: the occurrence plus its timing.
+// List responses carry plain `LessonOccurrence` and do not grow.
+export interface LessonOccurrenceDetail extends LessonOccurrence {
+  timing: OccurrenceTiming;
+}
+
 export interface LessonSearchResponse {
   items: LessonOccurrence[];
   page: number;

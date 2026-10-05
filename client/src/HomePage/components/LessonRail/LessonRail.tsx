@@ -2,6 +2,7 @@ import type { HelpTileKind } from '@torabarabim/common';
 
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
+import { LESSONS_NEXT_LABEL, LESSONS_PREV_LABEL } from '~/components/Rail/consts';
 import { Rail } from '~/components/Rail/Rail';
 import { LessonCard } from '~/HomePage/components/LessonCard/LessonCard';
 
@@ -32,7 +33,7 @@ export const LessonRail = ({
   };
 
   return (
-    <Rail {...{ className, title, prevLabel: consts.PREV_LABEL, nextLabel: consts.NEXT_LABEL }}>
+    <Rail {...{ className, title, prevLabel: LESSONS_PREV_LABEL, nextLabel: LESSONS_NEXT_LABEL }}>
       {slots.map((slot, index) => {
         if (slot.kind === 'lesson') {
           return (

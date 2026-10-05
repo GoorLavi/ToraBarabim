@@ -1,4 +1,4 @@
-import type { LessonOccurrence, Rabbi } from '@torabarabim/common';
+import type { LessonOccurrenceDetail, Rabbi } from '@torabarabim/common';
 
 import type { LessonPageApiError } from './api';
 import * as consts from './consts';
@@ -22,5 +22,5 @@ export const lessonErrorCopy = (error: LessonPageApiError | null): LessonErrorCo
 };
 
 // The substitute teaches this occurrence when one is assigned; otherwise
-// it is the lesson's own rabbi. Shared by `LessonTicket` and `LessonDetails`.
-export const teachingRabbiOf = (occurrence: LessonOccurrence): Rabbi => occurrence.substituteRabbi ?? occurrence.rabbi;
+// it is the lesson's own rabbi. Shared by `LessonTicket`, `LessonNote` and `RabbiBio`.
+export const teachingRabbiOf = (occurrence: LessonOccurrenceDetail): Rabbi => occurrence.substituteRabbi ?? occurrence.rabbi;
