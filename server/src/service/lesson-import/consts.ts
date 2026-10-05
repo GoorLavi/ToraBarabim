@@ -12,6 +12,14 @@ export const SHARP_DROP_RATIO = 0.5;
 
 export const MAX_ROWS = 2000;
 
+// The one list of ways the sources write "בית הכנסת", in the form `toSlug`
+// gives them (quotes dropped, other punctuation a hyphen). Each is matched
+// on whole hyphen-separated words, never inside a longer word, and each
+// reads as the canonical `SYNAGOGUE_SLUG`.
+export const SYNAGOGUE_SLUG = 'בית-הכנסת';
+export const SYNAGOGUE_NAME_VARIANTS: readonly string[] = ['בהכנס', 'ביכנס', 'בינכס', 'ביהכ', 'ביהכנס', 'בית-כנסת'];
+export const SYNAGOGUE_DISPLAY_NAME = 'בית הכנסת';
+
 // Section 6: "duration from the end time, else 60".
 export const DEFAULT_LESSON_DURATION_MINUTES = 60;
 

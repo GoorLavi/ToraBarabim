@@ -2,6 +2,9 @@ import { readFile } from 'node:fs/promises';
 
 import type {
   AgentImportApplyResult,
+  AgentImportCreatedPlace,
+  AgentImportNewPlace,
+  AgentImportWithheldDeletion,
   AgentImportDecisionRequest,
   AgentImportDecisionResponse,
   AgentImportPlanResponse,
@@ -16,6 +19,25 @@ import { isoWeekOf } from './israel-week';
 
 const printJson = (value: unknown): void => {
   process.stdout.write(`${JSON.stringify(value, null, 2)}\n`);
+};
+
+const dayOfSummary = (summary: { weekday?: number; date?: string }): string => summary.date ?? `weekday ${summary.weekday ?? '?'}`;
+
+// The proof the owner reads before approving a duplicate's deletion: the
+// twin beside the lesson it duplicates, both ids and both place texts. On
+// stderr so the JSON on stdout stays machine-readable.
+const printDuplicatePairs = (withheld: AgentImportWithheldDeletion[]): void => {
+  for (const item of withheld) {
+    if (item.reason !== 'duplicate') continue;
+    const kept = item.keptLesson;
+    process.stderr.write(
+      `duplicate: ${item.rabbiName}, ${dayOfSummary(item)} ${item.startTime}: lesson ${item.lessonId} at "${item.place}" duplicates lesson ${kept.lessonId} at "${kept.place}" (${kept.provenance}). Approve with --ack-lesson ${item.lessonId}\n`,
+    );
+  }
+};
+
+const printNewPlaces = (newPlaces: (AgentImportNewPlace | AgentImportCreatedPlace)[]): void => {
+  for (const place of newPlaces) process.stderr.write(`new place: "${place.name}", ${place.street}, city code ${place.cityCode}\n`);
 };
 
 const readFileArg = (args: string[], usage: string): string => {
@@ -42,6 +64,8 @@ const run = async (): Promise<void> => {
     const file = await readLessonImportFile(readFileArg(args, 'usage: importer plan <file>'));
     const result = await postJson<AgentImportPlanResponse>(config, '/v1/agent/imports/plan', file);
     printJson(result);
+    printDuplicatePairs(result.withheldIfUnacked);
+    printNewPlaces(result.newPlaces);
     process.exitCode = result.questions.length > 0 || result.withheldIfUnacked.length > 0 ? EXIT_NEEDS_ATTENTION : 0;
     return;
   }
@@ -64,19 +88,24 @@ const run = async (): Promise<void> => {
   }
 
   if (command === 'apply') {
-    const filePath = readFileArg(args, 'usage: importer apply <file> --digest <digest> [--ack <domain>]...');
+    const applyUsage = 'usage: importer apply <file> --digest <digest> [--ack <domain>]... [--ack-lesson <lesson id>]...';
+    const filePath = readFileArg(args, applyUsage);
     const digestIndex = args.indexOf('--digest');
     const digest = digestIndex >= 0 ? args[digestIndex + 1] : undefined;
-    if (!digest) throw new Error('usage: importer apply <file> --digest <digest> [--ack <domain>]...');
+    if (!digest) throw new Error(applyUsage);
 
     const acks: string[] = [];
+    const ackLessonIds: string[] = [];
     for (let i = 0; i < args.length; i += 1) {
       if (args[i] === '--ack' && args[i + 1]) acks.push(args[i + 1] as string);
+      if (args[i] === '--ack-lesson' && args[i + 1]) ackLessonIds.push(args[i + 1] as string);
     }
 
     const file = await readLessonImportFile(filePath);
-    const result = await postJson<AgentImportApplyResult>(config, '/v1/agent/imports/apply', { file, digest, acks });
+    const result = await postJson<AgentImportApplyResult>(config, '/v1/agent/imports/apply', { file, digest, acks, ackLessonIds });
     printJson(result);
+    printDuplicatePairs(result.withheld);
+    printNewPlaces(result.newPlaces);
     process.exitCode = result.withheld.length > 0 ? EXIT_NEEDS_ATTENTION : 0;
     return;
   }

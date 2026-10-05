@@ -1,5 +1,5 @@
 import type { LessonAudience, LessonProvenance, LessonTopic, LessonVenuePanel, Recurrence, Weekday } from '@torabarabim/common';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 
 import { db, type Tx } from '../../db/client';
 import { cities, lessons, places } from '../../db/schema';
@@ -144,16 +144,29 @@ export type LessonVenueColumns =
 
 export interface LessonVenueColumnsOptions {
   // Only a create/update needs this: it names the placeId it could not
-  // resolve, so the caller can map it to its own 400. The import never
-  // produces a place reference in the first place (see its own call
-  // site), and the seed's place is always inserted first, so neither ever
-  // needs it.
+  // resolve, so the caller can map it to its own 400. The seed's place is
+  // always inserted first, so it never needs it, and the import resolves
+  // its places through `placeVenueColumnsFor` and maps a miss itself.
   onPlaceNotFound?: (placeId: string) => Error;
   // Passed by a caller that must see its own uncommitted writes, e.g. the
   // seed, which inserts a place and a lesson referencing it in the same
   // transaction: the place would not exist yet from `db`'s own connection.
   executor?: Tx | typeof db;
 }
+
+type PlaceVenueColumns = Extract<LessonVenueColumns, { placeId: string }>;
+
+// The place arm of `lessonVenueColumns` for many places in one query,
+// keyed by place id. A place that is missing or deactivated is simply not in
+// the map: the caller decides what that means for its own write.
+export const placeVenueColumnsFor = async (placeIds: string[], executor: Tx | typeof db = db): Promise<Map<string, PlaceVenueColumns>> => {
+  if (placeIds.length === 0) return new Map();
+  const rows = await executor
+    .select({ id: places.id, cityCode: places.cityCode })
+    .from(places)
+    .where(and(inArray(places.id, placeIds), eq(places.isActive, true)));
+  return new Map(rows.map((row) => [row.id, { placeId: row.id, cityCode: row.cityCode, addressName: null, addressStreet: null, addressFloor: null }] as const));
+};
 
 // The one producer of `lessons.place_id`/`place_name`/`place_street`/
 // `place_floor`/`city_code`. `cityCode` is denormalized onto the row even
@@ -173,18 +186,12 @@ export const lessonVenueColumns = async (venue: LessonVenueInputSchema, options:
     return { placeId: null, cityCode: venue.cityCode, addressName: venue.name, addressStreet: venue.street, addressFloor: venue.floor ?? null };
   }
 
-  const executor = options.executor ?? db;
-  const rows = await executor
-    .select({ cityCode: places.cityCode })
-    .from(places)
-    .where(and(eq(places.id, venue.placeId), eq(places.isActive, true)))
-    .limit(1);
-  const row = rows[0];
-  if (!row) {
+  const columns = (await placeVenueColumnsFor([venue.placeId], options.executor)).get(venue.placeId);
+  if (!columns) {
     if (!options.onPlaceNotFound) throw new Error(`data inconsistency: expected an active place '${venue.placeId}' to exist`);
     throw options.onPlaceNotFound(venue.placeId);
   }
-  return { placeId: venue.placeId, cityCode: row.cityCode, addressName: null, addressStreet: null, addressFloor: null };
+  return columns;
 };
 
 export interface LessonColumnsInput {
