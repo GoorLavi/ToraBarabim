@@ -32,9 +32,14 @@ export const lessonErrorCopy = (error: LessonPageApiError | null): LessonErrorCo
 export const teachingRabbiOf = (occurrence: Pick<LessonOccurrence, 'rabbi' | 'substituteRabbi'>): Rabbi => occurrence.substituteRabbi ?? occurrence.rabbi;
 
 // "יום שלישי, 27 באוגוסט, בשעה 20:30": the one phrase for when an occurrence
-// is, read by the share text, the calendar sheet and the report window.
-export const occurrenceWhenLabel = (occurrence: Pick<LessonOccurrence, 'date' | 'startTime'>): string =>
-  `${weekdayLabel(occurrence.date)}, ${dayNumberLabel(occurrence.date)} ${monthLabel(occurrence.date)}, ${consts.AT_TIME_PREFIX} ${occurrence.startTime}`;
+// is, read by the share text, the calendar sheet and the report window. The
+// day with its month and the hour with its time are joined by a no-break
+// space, so a narrow row wraps between the three phrases and never inside one.
+export const occurrenceWhenLabel = (occurrence: Pick<LessonOccurrence, 'date' | 'startTime'>): string => {
+  const day = `${dayNumberLabel(occurrence.date)}${consts.NO_BREAK_SPACE}${monthLabel(occurrence.date)}`;
+  const time = `${consts.AT_TIME_PREFIX}${consts.NO_BREAK_SPACE}${occurrence.startTime}`;
+  return `${weekdayLabel(occurrence.date)}, ${day}, ${time}`;
+};
 
 const weekdaysLabel = (weekdays: Weekday[]): string => {
   const [only, ...others] = weekdays;

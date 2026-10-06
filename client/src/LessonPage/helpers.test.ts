@@ -42,14 +42,14 @@ describe('weeklyScheduleLabel', () => {
 
 describe('occurrenceWhenLabel', () => {
   it('names the weekday, day, month and time', () => {
-    expect(occurrenceWhenLabel({ date: '2026-10-13', startTime: '20:30' })).toBe('יום שלישי, 13 באוקטובר, בשעה 20:30');
+    expect(occurrenceWhenLabel({ date: '2026-10-13', startTime: '20:30' })).toBe('יום שלישי, 13\u00A0באוקטובר, בשעה\u00A020:30');
   });
 });
 
 describe('lessonShareText', () => {
   it('opens a one-time lesson with a right-to-left mark, then the date, then the venue and city', () => {
     const lines = lessonShareText(detailOf()).split('\n');
-    expect(lines).toEqual([`${RLM}שיעור עם הרב אייל עמרמי`, 'יום שלישי, 13 באוקטובר, בשעה 20:30', `${RLM}בית הכנסת הגדול, פתח תקווה`]);
+    expect(lines).toEqual([`${RLM}שיעור עם הרב אייל עמרמי`, 'יום שלישי, 13\u00A0באוקטובר, בשעה\u00A020:30', `${RLM}בית הכנסת הגדול, פתח תקווה`]);
   });
 
   it('never carries the link: native share adds it, a copy is the link alone', () => {
@@ -109,7 +109,7 @@ describe('lessonReportContextLines', () => {
   it('is the lesson, when, and where, one to a line', () => {
     expect(lessonReportContextLines(detailOf({ title: 'דף יומי' }))).toEqual([
       'דף יומי עם הרב אייל עמרמי',
-      'יום שלישי, 13 באוקטובר, בשעה 20:30',
+      'יום שלישי, 13\u00A0באוקטובר, בשעה\u00A020:30',
       'בית הכנסת הגדול, פתח תקווה',
     ]);
   });

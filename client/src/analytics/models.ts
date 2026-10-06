@@ -248,10 +248,17 @@ export interface ShareClickProps {
 
 // `static` adds one date, `subscribe` follows the lesson's feed. `target` is
 // what the click opened: an `.ics` file, a Google Calendar link or the
-// `webcal://` feed.
+// `webcal://` feed. `calendar` is the calendar the person said they use.
 export interface CalendarAddClickProps {
   kind: 'static' | 'subscribe';
+  calendar: 'google' | 'device';
   target: 'ics' | 'google' | 'webcal';
+}
+
+// The calendar sheet opening, so a sheet opened and abandoned is visible
+// against the clicks that follow it.
+export interface CalendarSheetOpenProps {
+  kind: 'once' | 'weekly';
 }
 export interface InstallEventContext {
   platformPath: InstallPlatformPath;
@@ -322,6 +329,7 @@ export type AnalyticsEventProps = {
   [MIXPANEL_EVENTS.visitorMessageSent]: VisitorMessageSentProps;
   [MIXPANEL_EVENTS.shareClick]: ShareClickProps;
   [MIXPANEL_EVENTS.calendarAddClick]: CalendarAddClickProps;
+  [MIXPANEL_EVENTS.calendarSheetOpen]: CalendarSheetOpenProps;
   [MIXPANEL_EVENTS.installCardShown]: InstallCardShownProps;
   [MIXPANEL_EVENTS.installCardDismissed]: InstallCardDismissedProps;
   [MIXPANEL_EVENTS.installAccepted]: InstallAcceptedProps;

@@ -29,7 +29,7 @@ Every design belongs to one of four, split by who opens it and when.
 | `03 עיר` | A city's lessons |
 | `04 רב` | A rabbi's page, including no photo, a sparse record, loading, empty, error; share in the hero, with and without a photo (2026-10-06) |
 | `05 כל הרבנים` | The rabbis index |
-| `06 שיעור` | The lesson ticket page as shipped, its details, and the area preview with its loading, empty and failed states; the past-lesson states (took place, started, the rabbi's lessons row in every state) and the area preview as a rail; the share and add-to-calendar row, the add-to-calendar sheet, the report link, and the desktop copied and copy-failed details (2026-10-06, with a notes frame of the state rules). The ticket's own states are on `99 כרטיס השיעור · כל המצבים` |
+| `06 שיעור` | The lesson ticket page as shipped, its details, and the area preview with its loading, empty and failed states; the past-lesson states (took place, started, the rabbi's lessons row in every state) and the area preview as a rail; the share and add-to-calendar row, the add-to-calendar sheet, the report link, and the desktop copied and copy-failed details (2026-10-06, with a notes frame of the state rules, `500:11024`); add-to-calendar on iPhone and desktop, the which-calendar step and the weekly lesson's second step at 390, 320 and 1280 (`510:1824`, `510:2031`, `510:2228`, `510:10842`, `510:11001`, `510:11166`, `510:11370`), with the shipped two-choice sheet `500:10698` now standing only for Android. The ticket's own states are on `99 כרטיס השיעור · כל המצבים` |
 | `07 אזור הנשים` | `/women`, all six states |
 | `08 רשימת רבניות` | `/women/rabbaniyot` |
 | `09 צור קשר` | Contact, at 390 and 320 and desktop. It loads nothing, so it has no loading, empty or error state |
@@ -40,7 +40,7 @@ Every design belongs to one of four, split by who opens it and when.
 | `14 אזור` | An area's lessons |
 | `15 קורסים` | Courses: the card in every state, the home row with one, two and three-plus courses and a closed course, the course page in every state at 390, 320 and 1280, the photo viewer, and the rabbi, place and women's area pages with a course rail |
 | `16 הוספה למסך הבית` | Adding the site to the home screen: the install card (Chromium, iOS and the desktop corner card, at 390 and 320), the iOS steps with the share button at the bottom and at the top, the browser-menu steps, the in-app explanation with its copied and copy-failed states, the footer link, the card above the course page's contact bar, the offline page at 390 and 1440, and the behaviour notes |
-| `99 Components` | The 34 shared components. Only `07` and `08` are built from instances of them; see the widths section below for why |
+| `99 Components` | The 35 shared components, the Google Calendar mark (`510:1808`) among them. Only `07` and `08` are built from instances of them; see the widths section below for why |
 | `99 כרטיס השיעור · כל המצבים` | Every lesson card state, side by side, including the past and started states and the cancelled start time struck through |
 
 ## The admin file, page by page
@@ -71,7 +71,7 @@ ships. Read it as history until someone redraws it.
 
 ## Components are in the site file, not the components file
 
-The name says otherwise, so this is worth stating: the 34 components live on
+The name says otherwise, so this is worth stating: the 35 components live on
 `99 Components` **inside the site file**, because instances can only reference
 components in the same file unless that file is published as a library, and publishing
 is a manual step the owner has to repeat after every change. They move to

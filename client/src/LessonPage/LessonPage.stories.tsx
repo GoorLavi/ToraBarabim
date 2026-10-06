@@ -212,7 +212,7 @@ export const ReportOpensWithTheLesson: Story = {
 };
 
 // A one-time lesson ahead: share and calendar are both there, and the
-// calendar button adds it straight away, with no sheet to ask.
+// calendar button opens a sheet that asks only which calendar.
 export const OneTimeUpcoming: Story = {
   decorators: [withRoute('lesson-once-ahead', '2026-09-08')],
   parameters: {
