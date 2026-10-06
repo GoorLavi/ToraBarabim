@@ -30,7 +30,7 @@ export const ContactBar = styled(({ className, courseId, courseName, contactPhon
   };
 
   return (
-    <div className={className}>
+    <div className={className} data-fixed-bottom-bar>
       <ContactActions
         {...{
           className: 'phoneActions',

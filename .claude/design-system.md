@@ -188,6 +188,17 @@ icon, because iOS applies its own mask. The general cut sits at 68% of the tile,
 wordmark below header size: alone, it reads as an institution's crest rather than a
 listings site.
 
+**The installed site's icons add one cut, and only one icon uses it.** `icon-192` and
+`icon-512` (manifest purpose `any`) are the general cut on the argaman tile at radius 22%,
+transparent outside the corners. `icon-maskable-512` is the **maskable cut**: full bleed,
+the mark at 58% of the tile, so its farthest corner stays inside the 80% safe circle
+Android crops to. **The touch icon is full bleed on the general cut, never the maskable
+cut.** iOS masks it itself and only rounds the corners, so the smaller mark would buy
+nothing and read undersized beside other apps. It was generated on the maskable cut once
+and caught at the design gate. The iOS splash screens put the mark above the `תורה ברבים`
+wordmark, centred on the plain argaman field: one master at 430 x 932 points, scaled to
+each device. The masters live in the language file, on `01 לוגו וסמל`.
+
 ### Audience wording
 A lesson's audience is one of exactly three values, written exactly this way:
 
@@ -474,12 +485,15 @@ Separation is carried mainly by `color.border` and by `surface` against `bg`, no
 shadow.
 
 ### Z-index
-Three layers, low to high: `zIndex.popover` (20) for a popover anchored inside the
+Four layers, low to high: `zIndex.popover` (20) for a popover anchored inside the
 header (the date picker's calendar, the city picker, both from `sm` up), `zIndex.header`
-(30) for the sticky header band at `lg` and up and for the pinned bar (and its expand
-panel) below `lg`, and `zIndex.sheetScrim` (100) for the scrim and panel behind any
-`ResponsiveSheet`. A sheet always sits above every popover, which always sits above the
-header.
+(30) for the sticky header band at `lg` and up, for the pinned bar (and its expand
+panel) below `lg`, and for the course page's fixed contact bar, `zIndex.floatingSheet`
+(50) for a `ResponsiveSheet` in its non-modal mode, the install card: it has no scrim,
+sits above the header and the fixed contact bar, and stays below every modal sheet, so
+a sheet the person opens is never hidden behind it, and `zIndex.sheetScrim` (100) for
+the scrim and panel behind any modal `ResponsiveSheet`. A modal sheet always sits above
+the floating card, which always sits above every popover and the header.
 
 A handful of raw z-index values remain outside this scale, in `AdminPanel`,
 `RabbiPanel/LoginPage`, and `components/CitySelect`: migrating those to the token is a
@@ -509,6 +523,12 @@ there any more.**
 viewport at which the admin panel's seven tabs still fit four to a row inside the header
 band; below it the strip drops to three columns. A property of the tab labels, not of a
 device class, so it is a layout constant and not a breakpoint.
+
+`theme.layout.fixedBottomBarBlockSize` (73px) is the same kind of value: the block size of
+the course page's fixed contact bar below `lg`, a 48px action row, `md` padding above and
+below, and a 1px top border. The bar takes its height from it, and the install card reads
+it to sit directly above the bar, so the two cannot drift. It is a property of that bar,
+not a spacing token.
 
 **The band holds at 860px from `md` 768 to 1200, and that is the one exception to the
 1280 cap above.** It is scoped to a single range and ratified here rather than left as
@@ -768,6 +788,48 @@ count, and one quiet `בשבועיים הקרובים` line in `textSecondary` u
 what it costs: [0040](../docs/decisions/0040-the-home-page-carries-up-to-ten-interleaved-rows.md).
 Code: `server/src/service/home/`, `client/src/HomePage/components/HomeRails/` and
 `CityGrid/`.
+
+### The installed site (2026-10-06)
+
+The site can be added to the home screen. Figma: the site file's `16 הוספה למסך הבית`;
+the icons and splash screens are under "The logo" above.
+
+- **Browser colour.** The manifest's `theme_color` and `background_color` are both
+  `color.primary`, so Android's launch screen and its status bar are one argaman field,
+  and the site-wide `<meta name="theme-color">` is `color.primary` too. The iOS status
+  bar is `black`: `black-translucent` would run the page under the clock and needs
+  safe-area work on every header, and was left out. The app's name under the icon is
+  `תורה ברבים`.
+- **The install card is a non-modal `ResponsiveSheet`**: no scrim, no focus trap, the
+  page behind stays live. On a phone it is a full-width bottom sheet with a hairline on
+  every edge but the bottom; from `md` it is a 400px card in the inline-end corner, 24
+  from both edges. Where a fixed bottom bar is on screen it sits directly above it, never
+  over it. The card opens by itself; the same flow opened from the footer link is the
+  ordinary modal sheet, because the person asked for it.
+- **Its anatomy.** The offer is a 48px `primary` tile with the mark on dark beside a
+  `Card title` headline and a `Secondary` line in `textSecondary`, then the filled
+  primary button and `לא עכשיו` as a text button with no outline, so declining reads
+  lighter than accepting. Instruction steps are a 32px numeral on a `primarySoft` pill,
+  the step at `Body`, and a 48px tile on `bg` with a `border` hairline at the inline end
+  that draws the control to look for, its glyph in `primary`. The tile's frame says "a
+  button on your screen", so the glyph takes the site's colour rather than the
+  platform's. When the step names the control inside the sentence (the share button at
+  the top of the screen), the glyph sits inline at 20px and the step has no tile. The
+  home-screen preview is a `primarySoft` block. Closing the steps is a quiet button with
+  a `primary` outline; closing the in-app explanation is a text button. When the browser
+  refuses the clipboard, the copy button stays and a block on `bg` below it says
+  `אפשר ללחוץ לחיצה ארוכה על הקישור ולהעתיק אותו.` above the page's own link, set left to
+  right, selectable as one piece and free to wrap anywhere.
+- **Pull to refresh**, because an installed app has no browser to do it: a 40px `surface`
+  disc with `shadow.raised`, centred below the top safe area, that follows the finger and
+  arrives by moving, not by fading (it parks `xl` above the edge and is fully opaque from a
+  quarter of the threshold). Its arc fills in `textSecondary` and the ring closes in
+  `primary` at the threshold, then keeps turning in `primary` while the page reloads;
+  reduced motion keeps the arc and drops the turn. It sits on `zIndex.floatingSheet` and
+  exists only on public pages in standalone mode, never in a panel.
+- **The offline page** stands alone: no script, stylesheet, web font or image, because it
+  shows exactly when nothing else can load. System fonts, and the colours, radii and
+  shadow mirrored by hand from the theme, with a comment naming the source.
 
 ## Open (not decided yet)
 

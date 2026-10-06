@@ -39,6 +39,7 @@ Every design belongs to one of four, split by who opens it and when.
 | `13 כל המקומות` | The places directory, including search with and without results |
 | `14 אזור` | An area's lessons |
 | `15 קורסים` | Courses: the card in every state, the home row with one, two and three-plus courses and a closed course, the course page in every state at 390, 320 and 1280, the photo viewer, and the rabbi, place and women's area pages with a course rail |
+| `16 הוספה למסך הבית` | Adding the site to the home screen: the install card (Chromium, iOS and the desktop corner card, at 390 and 320), the iOS steps with the share button at the bottom and at the top, the browser-menu steps, the in-app explanation with its copied and copy-failed states, the footer link, the card above the course page's contact bar, the offline page at 390 and 1440, and the behaviour notes |
 | `99 Components` | The 29 shared components. Only `07` and `08` are built from instances of them; see the widths section below for why |
 | `99 כרטיס השיעור · כל המצבים` | Every lesson card state, side by side, including the past and started states and the cancelled start time struck through |
 
@@ -62,7 +63,7 @@ ships. Read it as history until someone redraws it.
 
 | Page | Holds |
 |---|---|
-| `01 לוגו וסמל` | The mark, the lockup, and the checks at header and icon sizes |
+| `01 לוגו וסמל` | The mark, the lockup, and the checks at header and icon sizes. Below them, the installed site's icons (any 192 and 512, maskable 512, the iOS touch icon), the maskable safe zone under every mask, the manifest colours and status bar, mock home screens, and the iOS splash master with the Android launch preview. The committed SVG masters are exported from here |
 | `02 תמונות שיתוף` | The share images, square and wide, each on a dark and a light background |
 | `03 טוקנים` | The token board. Behind the code; see Known gaps |
 | `04 פוסטרים חלופיים` | The six lesson-card fallback photos, one frame (`62:3`). Found unlisted on 2026-09-29 |
@@ -88,7 +89,7 @@ nothing on the page shows.
 | Drawn at | Pages |
 |---|---|
 | 375 / 1280, the library's own widths | `07 אזור הנשים`, `08 רשימת רבניות` |
-| 390 / 1440 | `01` to `05`, `09`, `10` (`03` adds a 768 frame, `09` a 320 one) |
+| 390 / 1440 | `01` to `05`, `09`, `10`, `16` (`03` adds a 768 frame, `09` and `16` 320 ones) |
 | 390 / 1280 | `06 שיעור` |
 | 390, phone only | `11` to `14` |
 

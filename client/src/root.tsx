@@ -6,6 +6,8 @@ import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router';
 import styled, { ThemeProvider } from 'styled-components';
 
 import { Analytics } from '~/analytics/Analytics';
+import { APPLE_TOUCH_ICON_PATH, MANIFEST_PATH, SPLASH_SCREENS } from '~/pwa/consts';
+import { splashImagePath, splashMediaQuery } from '~/pwa/helpers';
 import { DEFAULT_OG_IMAGE_META, SITE_WIDE_META_BASE } from '~/routes/meta';
 import { GlobalStyle } from '~/styles/GlobalStyle';
 import { ARGAMAN_VE_ZAHAV_THEME } from '~/theme/themes';
@@ -56,7 +58,23 @@ export function Layout({ children }: { children: ReactNode }) {
             the ICO to the SVG. */}
         <link rel="icon" href="/favicon.ico" sizes="32x32" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" href={APPLE_TOUCH_ICON_PATH} />
+        <link rel="manifest" href={MANIFEST_PATH} />
+        <meta name="theme-color" content={ARGAMAN_VE_ZAHAV_THEME.colors.primary} />
+        {/* Both capable tags: iOS reads the apple-prefixed one, and Chrome
+            logs a deprecation warning when only that one is present. */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+        <meta name="apple-mobile-web-app-title" content={SITE_NAME} />
+        {SPLASH_SCREENS.map((screen) => (
+          <link
+            key={splashImagePath(screen)}
+            rel="apple-touch-startup-image"
+            href={splashImagePath(screen)}
+            media={splashMediaQuery(screen)}
+          />
+        ))}
         {/*
           Assistant, weights 400/600/700 only (design-system.md, Type): the
           family's thin weights fail this audience, so the `wght` range below

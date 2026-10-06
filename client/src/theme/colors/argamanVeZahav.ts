@@ -1,4 +1,4 @@
-import type { ThemeColors } from '../models';
+import type { ThemeColors } from '../models.ts';
 
 // The default theme: ceremonial and dignified, deep plum and gold on a warm
 // neutral, closest to a book binding or a parochet (design-system.md).

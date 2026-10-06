@@ -131,3 +131,101 @@ export const TabWrapsBothWays: Story = {
     await expect(button).toHaveFocus();
   },
 };
+
+// The non-modal mode is a card over a page that stays live: nothing dims,
+// nothing traps focus, and the page behind keeps answering clicks.
+export const NonModalLeavesThePageLive: Story = {
+  args: { isNonModal: true },
+  render: (args) => (
+    <>
+      <button type="button" onClick={fn()}>
+        כפתור בעמוד
+      </button>
+      <ResponsiveSheet {...args}>
+        <button type="button">כפתור בכרטיס</button>
+      </ResponsiveSheet>
+    </>
+  ),
+  play: async ({ args }) => {
+    const body = within(document.body);
+    const region = await body.findByRole('region', { name: ARIA_LABEL });
+
+    await expect(body.queryByRole('dialog')).not.toBeInTheDocument();
+    await expect(region).not.toHaveAttribute('aria-modal');
+    await expect(region).not.toHaveFocus();
+    await expect(window.getComputedStyle(region.parentElement as HTMLElement).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+
+    // A tap on the page behind is neither blocked nor a dismissal.
+    await userEvent.click(body.getByRole('button', { name: 'כפתור בעמוד' }));
+    await expect(args.onDismiss).not.toHaveBeenCalled();
+  },
+};
+
+// Escape works from wherever focus is on the page, since the card never
+// takes focus for itself.
+export const NonModalEscapeClosesFromThePage: Story = {
+  args: { isNonModal: true },
+  render: (args) => (
+    <>
+      <button type="button">כפתור בעמוד</button>
+      <ResponsiveSheet {...args}>
+        <button type="button">כפתור בכרטיס</button>
+      </ResponsiveSheet>
+    </>
+  ),
+  play: async ({ args }) => {
+    const body = within(document.body);
+    await body.findByRole('region', { name: ARIA_LABEL });
+    body.getByRole('button', { name: 'כפתור בעמוד' }).focus();
+    await userEvent.keyboard('{Escape}');
+    await expect(args.onDismiss).toHaveBeenCalledTimes(1);
+  },
+};
+
+// A popover that claimed the Escape key first (preventDefault in the capture
+// phase, the contract useDismissPopover relies on) closes alone.
+export const NonModalEscapeClaimedByAPopoverIsLeftAlone: Story = {
+  args: { isNonModal: true },
+  render: (args) => (
+    <>
+      <button
+        type="button"
+        onKeyDownCapture={(event) => {
+          if (event.key === 'Escape') event.preventDefault();
+        }}
+      >
+        פופאובר בעמוד
+      </button>
+      <ResponsiveSheet {...args}>
+        <button type="button">כפתור בכרטיס</button>
+      </ResponsiveSheet>
+    </>
+  ),
+  play: async ({ args }) => {
+    const body = within(document.body);
+    await body.findByRole('region', { name: ARIA_LABEL });
+    body.getByRole('button', { name: 'פופאובר בעמוד' }).focus();
+    await userEvent.keyboard('{Escape}');
+    await expect(args.onDismiss).not.toHaveBeenCalled();
+  },
+};
+
+// Escape pressed while typing belongs to the field, not to the card.
+export const NonModalEscapeInATextFieldIsLeftAlone: Story = {
+  args: { isNonModal: true },
+  render: (args) => (
+    <>
+      <input type="text" aria-label="שדה בעמוד" />
+      <ResponsiveSheet {...args}>
+        <button type="button">כפתור בכרטיס</button>
+      </ResponsiveSheet>
+    </>
+  ),
+  play: async ({ args }) => {
+    const body = within(document.body);
+    await body.findByRole('region', { name: ARIA_LABEL });
+    body.getByRole('textbox', { name: 'שדה בעמוד' }).focus();
+    await userEvent.keyboard('{Escape}');
+    await expect(args.onDismiss).not.toHaveBeenCalled();
+  },
+};

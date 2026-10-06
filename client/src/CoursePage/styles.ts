@@ -5,12 +5,6 @@ import { css } from 'styled-components';
 // a few pixels off costs nothing but a slightly early or late stick.
 const HEADER_HEIGHT_APPROXIMATION_PX = 88;
 
-// Clears the fixed `ContactBar`/`ClosedPanel` bottom bar below `lg`, so the
-// page's own last section is never hidden behind it: the bar's own content
-// block-size (48px action row plus its padding) rounded up with headroom,
-// not a spacing-scale value.
-const FIXED_BAR_CLEARANCE_PX = 96;
-
 // Single column below `lg` (1024), the fixed `ContactBar` bottom bar the
 // only phone-specific chrome; two columns from `lg` up, the site's own
 // content band (design brief A, items 1 to 4).
@@ -21,7 +15,10 @@ export const CoursePage = css(
   margin-inline: auto;
   padding-inline: ${theme.spacing.lg};
   padding-block-start: ${theme.spacing.lg};
-  padding-block-end: ${FIXED_BAR_CLEARANCE_PX}px;
+  /* Clears the fixed contact bar below lg, so the last section is never
+     hidden behind it: the bar's own block size plus one xl of breathing
+     room between that section and the bar. */
+  padding-block-end: calc(${theme.layout.fixedBottomBarBlockSize} + ${theme.spacing.xl});
   display: flex;
   flex-direction: column;
   gap: ${theme.spacing.xl};
