@@ -49,6 +49,31 @@ export const InAppExplanation = css(
     color: ${theme.colors.primary};
   }
 
+  /* Shown only when the browser refused the clipboard: the link as plain
+     text the person can select and copy by hand. */
+  > .manualCopy {
+    display: flex;
+    flex-direction: column;
+    gap: ${theme.spacing.xs};
+    padding: ${theme.spacing.md};
+    border-radius: ${theme.radii.md};
+    background: ${theme.colors.bg};
+
+    > .manualCopyHint {
+      color: ${theme.colors.textSecondary};
+      font-size: ${theme.typography.secondary.phone.fontSize};
+      line-height: ${theme.typography.secondary.phone.lineHeight};
+    }
+
+    > .pageLink {
+      color: ${theme.colors.text};
+      font-size: ${theme.typography.secondary.phone.fontSize};
+      line-height: ${theme.typography.secondary.phone.lineHeight};
+      overflow-wrap: anywhere;
+      user-select: all;
+    }
+  }
+
   > .close {
     border-color: transparent;
     background: transparent;

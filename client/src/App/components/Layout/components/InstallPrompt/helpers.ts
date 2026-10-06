@@ -1,4 +1,5 @@
 import type { InstallPlatformPath } from '~/analytics/consts';
+import { isTextEntryElement } from '~/components/helpers';
 
 import {
   ANDROID_USER_AGENT_PATTERN,
@@ -12,9 +13,10 @@ import {
   MAX_INSTALL_DISMISSALS,
   OPEN_OVERLAY_SELECTOR,
   SAFARI_TOKEN_PATTERN,
-  TEXT_ENTRY_INPUT_TYPES_EXCLUDED,
 } from './consts';
-import type { InstallEnvironment, InstallPromptState, ShareButtonPlacement } from './models';
+import type { InstallAcceptedProps, InstallCardDismissedProps } from '~/analytics/models';
+
+import type { InstallEnvironment, InstallPromptState, OpenInstallFlow, ShareButtonPlacement } from './models';
 
 type DeviceSignals = Pick<InstallEnvironment, 'userAgent' | 'maxTouchPoints'>;
 
@@ -80,15 +82,6 @@ export const afterDismissal = (state: InstallPromptState): InstallPromptState =>
 
 export const afterInstall = (state: InstallPromptState): InstallPromptState => ({ ...state, isInstalled: true });
 
-// Text the person can type into. A checkbox or a button holding focus is not
-// typing, and the card may open past it.
-export const isTextEntryElement = (element: Pick<HTMLElement, 'tagName' | 'isContentEditable'> & { type?: string }): boolean => {
-  if (element.isContentEditable) return true;
-  if (element.tagName === 'TEXTAREA') return true;
-  if (element.tagName !== 'INPUT') return false;
-  return !TEXT_ENTRY_INPUT_TYPES_EXCLUDED.has(element.type ?? 'text');
-};
-
 // The busy rule: the card waits while a sheet, dialog or popover is open or a
 // text field has focus, and opens once that clears.
 export const isUserBusy = (page: Document): boolean => {
@@ -96,3 +89,20 @@ export const isUserBusy = (page: Document): boolean => {
   const focused = page.activeElement;
   return focused instanceof HTMLElement && isTextEntryElement(focused);
 };
+
+// Closing the offer is a dismissal. Closing an instructions step is not: by
+// then the visitor accepted (an automatic card moved on to it, or the footer
+// opened it directly), so what they do with the steps is not ours to report.
+export const dismissalEventPropsOnClose = (flow: OpenInstallFlow): InstallCardDismissedProps | null =>
+  flow.step === 'offer' ? { platformPath: flow.device.path, trigger: flow.trigger, step: 'card' } : null;
+
+// Opening the instructions is the acceptance, from the card's button or from
+// the footer link: the same meaning on both, "the visitor asked to be shown how".
+export const acceptanceEventPropsOnInstructionsOpened = (flow: Pick<OpenInstallFlow, 'device' | 'trigger'>): InstallAcceptedProps => ({
+  platformPath: flow.device.path,
+  trigger: flow.trigger,
+});
+
+// Only the automatic card spends one of the two dismissals. A footer flow is
+// the visitor's own request and never limits what the site offers by itself.
+export const countsTowardDismissalLimit = (flow: Pick<OpenInstallFlow, 'trigger'>): boolean => flow.trigger === 'auto';

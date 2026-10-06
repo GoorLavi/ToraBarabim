@@ -33,6 +33,7 @@ export const OfferCard = css(
       }
 
       > .line {
+        text-wrap: pretty;
         color: ${theme.colors.textSecondary};
         font-size: ${theme.typography.secondary.phone.fontSize};
         line-height: ${theme.typography.secondary.phone.lineHeight};

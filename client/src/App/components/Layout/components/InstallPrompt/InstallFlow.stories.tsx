@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { ReactElement } from 'react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
@@ -34,6 +35,7 @@ type Harness = { hasTextField?: boolean; hasOpenDialog?: boolean };
 const InstallFlowHarness = ({ hasTextField = false, hasOpenDialog = false }: Harness): ReactElement => {
   const { prompt, footerLink } = useInstallState({ autoShowAfterSeconds: STORY_AUTO_SHOW_SECONDS });
   const [isDialogOpen, setIsDialogOpen] = useState(hasOpenDialog);
+  const navigate = useNavigate();
 
   return (
     <>
@@ -41,6 +43,9 @@ const InstallFlowHarness = ({ hasTextField = false, hasOpenDialog = false }: Har
         {hasTextField && <input type="text" aria-label="שדה חיפוש" autoFocus />}
         <button type="button" onClick={() => setIsDialogOpen(false)}>
           סגירת חלון
+        </button>
+        <button type="button" onClick={() => navigate('/lessons')}>
+          מעבר לעמוד אחר
         </button>
         {isDialogOpen && <div role="dialog" aria-label="חלון פתוח" />}
       </main>
@@ -169,6 +174,23 @@ export const DismissingTheNativeDialogCountsOnce: Story = {
 
     await waitFor(() => expect(prompt).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(storedDismissals()).toBe(1));
+  },
+};
+
+// An ignored card leaves with the page it opened on: not counted, and not
+// brought back this session even though the visitor has now seen another page.
+export const AnIgnoredCardClosesOnNavigationAndDoesNotReturn: Story = {
+  ...withBrowser(ANDROID_CHROME, 5),
+  play: async () => {
+    dispatchInstallPrompt('accepted');
+    await body().findByRole('region', { name: PHONE_ARIA }, { timeout: CARD_WAIT_MS });
+
+    await userEvent.click(body().getByRole('button', { name: 'מעבר לעמוד אחר' }));
+
+    await waitFor(() => expect(body().queryByRole('region', { name: PHONE_ARIA })).not.toBeInTheDocument());
+    await new Promise((resolve) => window.setTimeout(resolve, 2500));
+    await expect(body().queryByRole('region', { name: PHONE_ARIA })).not.toBeInTheDocument();
+    await expect(storedDismissals()).toBe(0);
   },
 };
 
@@ -324,7 +346,21 @@ export const DesktopWithoutAPromptOffersNothing: Story = {
 export const StandaloneOffersNothing: Story = {
   beforeEach: () => {
     const originalMatchMedia = window.matchMedia;
-    window.matchMedia = ((query: string) => ({ ...originalMatchMedia.call(window, query), matches: query.includes('standalone') })) as typeof window.matchMedia;
+    // A complete stand-in rather than a spread of the real list, whose members
+    // live on its prototype: only the standalone query answers true.
+    window.matchMedia = (query: string): MediaQueryList => {
+      if (!query.includes('standalone')) return originalMatchMedia.call(window, query);
+      return {
+        matches: true,
+        media: query,
+        onchange: null,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        addListener: () => {},
+        removeListener: () => {},
+        dispatchEvent: () => false,
+      };
+    };
     const restoreDevice = stubDevice(ANDROID_CHROME, 5)();
     return () => {
       window.matchMedia = originalMatchMedia;

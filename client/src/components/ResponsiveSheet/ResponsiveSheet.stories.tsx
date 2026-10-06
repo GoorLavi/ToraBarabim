@@ -209,3 +209,23 @@ export const NonModalEscapeClaimedByAPopoverIsLeftAlone: Story = {
     await expect(args.onDismiss).not.toHaveBeenCalled();
   },
 };
+
+// Escape pressed while typing belongs to the field, not to the card.
+export const NonModalEscapeInATextFieldIsLeftAlone: Story = {
+  args: { isNonModal: true },
+  render: (args) => (
+    <>
+      <input type="text" aria-label="שדה בעמוד" />
+      <ResponsiveSheet {...args}>
+        <button type="button">כפתור בכרטיס</button>
+      </ResponsiveSheet>
+    </>
+  ),
+  play: async ({ args }) => {
+    const body = within(document.body);
+    await body.findByRole('region', { name: ARIA_LABEL });
+    body.getByRole('textbox', { name: 'שדה בעמוד' }).focus();
+    await userEvent.keyboard('{Escape}');
+    await expect(args.onDismiss).not.toHaveBeenCalled();
+  },
+};

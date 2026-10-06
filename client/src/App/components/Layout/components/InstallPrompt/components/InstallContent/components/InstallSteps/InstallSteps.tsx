@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { LogoMark } from '~/components/LogoMark/LogoMark';
 import { QuietButton } from '~/components/QuietButton/QuietButton';
 
-import { InstallIcon } from '../../../InstallIcon/InstallIcon';
+import { InstallIcon } from '~/App/components/Layout/components/InstallIcon/InstallIcon';
 import * as consts from '../../consts';
 import type { InstallStepsProps } from './models';
 import * as styles from './styles';

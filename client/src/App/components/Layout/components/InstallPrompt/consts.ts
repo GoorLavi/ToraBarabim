@@ -38,18 +38,6 @@ export const ANDROID_USER_AGENT_PATTERN = /Android/;
 
 export const IPAD_USER_AGENT_PATTERN = /iPad/;
 
-export const TEXT_ENTRY_INPUT_TYPES_EXCLUDED: ReadonlySet<string> = new Set([
-  'button',
-  'checkbox',
-  'color',
-  'file',
-  'image',
-  'radio',
-  'range',
-  'reset',
-  'submit',
-]);
-
 // What an open sheet, dialog, popover or list box looks like in the DOM: the
 // picker popovers, the pinned header's expand panel and every sheet carry one
 // of these roles. The install card itself is a region, so it never matches.

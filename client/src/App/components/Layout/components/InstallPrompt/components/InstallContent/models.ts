@@ -1,8 +1,8 @@
-import type { InstallDevice, InstallFlow } from '../../models';
-import type { InstallIconName } from '../InstallIcon/models';
+import type { InstallDevice, OpenInstallFlow } from '../../models';
+import type { InstallIconName } from '~/App/components/Layout/components/InstallIcon/models';
 
 export interface InstallContentProps {
-  step: Extract<InstallFlow, { status: 'open' }>['step'];
+  step: OpenInstallFlow['step'];
   device: InstallDevice;
   onAccept: () => void;
   onDismiss: () => void;

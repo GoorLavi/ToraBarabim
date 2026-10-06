@@ -1,16 +1,18 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  acceptanceEventPropsOnInstructionsOpened,
   afterDismissal,
   afterInstall,
   afterShow,
   canShowAutomatically,
+  countsTowardDismissalLimit,
+  dismissalEventPropsOnClose,
   installPathFor,
   isComputerDevice,
-  isTextEntryElement,
   shareButtonPlacementFor,
 } from './helpers';
-import type { InstallEnvironment, InstallPromptState } from './models';
+import type { InstallDevice, InstallEnvironment, InstallPromptState, OpenInstallFlow } from './models';
 
 const IPHONE_SAFARI =
   'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1';
@@ -164,20 +166,46 @@ describe('shareButtonPlacementFor', () => {
   });
 });
 
-describe('isTextEntryElement', () => {
-  const field = (tagName: string, type?: string, isContentEditable = false) => ({ tagName, type, isContentEditable });
+const flowOf = (trigger: OpenInstallFlow['trigger'], step: OpenInstallFlow['step'], path: InstallDevice['path']): OpenInstallFlow => ({
+  status: 'open',
+  trigger,
+  step,
+  device: { path, isComputer: false, shareButtonPlacement: 'bottom' },
+});
 
-  it('counts text inputs, text areas and editable regions as typing', () => {
-    expect(isTextEntryElement(field('INPUT', 'text'))).toBe(true);
-    expect(isTextEntryElement(field('INPUT', 'search'))).toBe(true);
-    expect(isTextEntryElement(field('TEXTAREA'))).toBe(true);
-    expect(isTextEntryElement(field('DIV', undefined, true))).toBe(true);
+describe('install events', () => {
+  it('reports a dismissal when the automatic offer is closed', () => {
+    expect(dismissalEventPropsOnClose(flowOf('auto', 'offer', 'iosSafari'))).toEqual({
+      platformPath: 'iosSafari',
+      trigger: 'auto',
+      step: 'card',
+    });
   });
 
-  it('does not count a checkbox, a button or a link', () => {
-    expect(isTextEntryElement(field('INPUT', 'checkbox'))).toBe(false);
-    expect(isTextEntryElement(field('INPUT', 'submit'))).toBe(false);
-    expect(isTextEntryElement(field('BUTTON'))).toBe(false);
-    expect(isTextEntryElement(field('A'))).toBe(false);
+  it('reports nothing when an automatic card is closed on its instructions', () => {
+    expect(dismissalEventPropsOnClose(flowOf('auto', 'instructions', 'iosSafari'))).toBeNull();
+  });
+
+  it('reports nothing when a footer flow is closed on its instructions, for every instructions path', () => {
+    expect(dismissalEventPropsOnClose(flowOf('footer', 'instructions', 'iosSafari'))).toBeNull();
+    expect(dismissalEventPropsOnClose(flowOf('footer', 'instructions', 'androidGeneric'))).toBeNull();
+    expect(dismissalEventPropsOnClose(flowOf('footer', 'instructions', 'inAppBrowser'))).toBeNull();
+  });
+
+  it('reports an acceptance when the instructions open, from the card and from the footer', () => {
+    expect(acceptanceEventPropsOnInstructionsOpened(flowOf('auto', 'offer', 'iosOtherBrowser'))).toEqual({
+      platformPath: 'iosOtherBrowser',
+      trigger: 'auto',
+    });
+    expect(acceptanceEventPropsOnInstructionsOpened(flowOf('footer', 'instructions', 'inAppBrowser'))).toEqual({
+      platformPath: 'inAppBrowser',
+      trigger: 'footer',
+    });
+  });
+
+  it('spends a dismissal only for the automatic card', () => {
+    expect(countsTowardDismissalLimit(flowOf('auto', 'instructions', 'iosSafari'))).toBe(true);
+    expect(countsTowardDismissalLimit(flowOf('auto', 'offer', 'chromiumPrompt'))).toBe(true);
+    expect(countsTowardDismissalLimit(flowOf('footer', 'instructions', 'iosSafari'))).toBe(false);
   });
 });

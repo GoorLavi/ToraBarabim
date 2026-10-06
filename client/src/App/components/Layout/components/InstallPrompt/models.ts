@@ -1,4 +1,5 @@
 import type { InstallPlatformPath, InstallTrigger } from '~/analytics/consts';
+import type { InstallAcceptedProps, InstallCardDismissedProps } from '~/analytics/models';
 
 export interface InstallEnvironment {
   userAgent: string;
@@ -33,6 +34,8 @@ export interface InstallDevice {
 export type InstallFlow =
   | { status: 'closed' }
   | { status: 'open'; trigger: InstallTrigger; step: 'offer' | 'instructions'; device: InstallDevice };
+
+export type OpenInstallFlow = Extract<InstallFlow, { status: 'open' }>;
 
 export interface InstallPromptProps {
   className?: string;

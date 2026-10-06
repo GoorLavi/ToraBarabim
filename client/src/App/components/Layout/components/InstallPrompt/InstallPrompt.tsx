@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import styled from 'styled-components';
 
 import { ResponsiveSheet } from '~/components/ResponsiveSheet/ResponsiveSheet';
@@ -17,7 +18,7 @@ export const InstallPrompt = styled(({ className, flow, onAccept, onDismiss, onC
   const ariaLabel = device.isComputer ? consts.COMPUTER_SHEET_ARIA_LABEL : consts.SHEET_ARIA_LABEL;
 
   return (
-    <ResponsiveSheet {...{ className, ariaLabel, onDismiss, isNonModal: trigger === 'auto' }}>
+    <ResponsiveSheet {...{ className: classNames(className, { auto: trigger === 'auto' }), ariaLabel, onDismiss, isNonModal: trigger === 'auto' }}>
       <InstallContent {...{ step, device, onAccept, onDismiss, onCopyLink }} />
     </ResponsiveSheet>
   );

@@ -178,10 +178,11 @@ export interface ThemeLayout {
   // of the tab labels, not of a device class, so it lives here and not on the
   // sm/md/lg/xl scale.
   panelTabFourColumnWidth: string;
-  // 73: the fixed contact bar below `lg` on a course page (48px action row,
-  // 12px padding above and below, 1px top border). The bar sets its own
-  // block size from this, and anything that must sit directly above it,
-  // the install card, reads the same value.
+  // The fixed contact bar below `lg` on a course page: its action row at the
+  // 48px tap-target minimum, the `md` spacing above and below the row, and
+  // the 1px top border. The bar sets its own block size from this, and
+  // anything that must sit directly above it (the install card) or clear it
+  // (the course page's last section) reads the same value.
   fixedBottomBarBlockSize: string;
 }
 

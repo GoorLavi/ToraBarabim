@@ -60,4 +60,5 @@ export const IN_APP_BROWSER_NAMES = { first: 'Safari', second: 'Chrome' } as con
 export const IN_APP_HINT = 'בדרך כלל עושים את זה דרך התפריט בפינה העליונה.';
 export const IN_APP_COPY_LABEL = 'העתקת הקישור';
 export const IN_APP_COPIED_LABEL = 'הקישור הועתק';
+export const IN_APP_MANUAL_COPY_HINT = 'אפשר ללחוץ לחיצה ארוכה על הקישור ולהעתיק אותו.';
 export const IN_APP_CLOSE_LABEL = 'הבנתי';

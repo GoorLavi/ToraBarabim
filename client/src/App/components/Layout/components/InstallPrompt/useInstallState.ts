@@ -10,17 +10,21 @@ import { AUTO_SHOW_AFTER_VISIBLE_SECONDS, AUTO_SHOW_TICK_MS, COMPUTER_FOOTER_LIN
 import {
   afterDismissal,
   afterInstall,
+  acceptanceEventPropsOnInstructionsOpened,
   afterShow,
   canShowAutomatically,
+  countsTowardDismissalLimit,
+  dismissalEventPropsOnClose,
   installPathFor,
   isComputerDevice,
   isUserBusy,
   shareButtonPlacementFor,
 } from './helpers';
-import type { BrowserEnvironment, InstallDevice, InstallFlow, InstallPromptState, InstallState, UseInstallStateOptions } from './models';
+import type { BrowserEnvironment, InstallDevice, InstallFlow, InstallPromptState, InstallState, OpenInstallFlow, UseInstallStateOptions } from './models';
 import { readInstallPromptState, writeInstallPromptState } from './storage';
 
 const CLOSED: InstallFlow = { status: 'closed' };
+const MS_PER_SECOND = 1000;
 
 // Owns the whole install flow for the public pages: whether there is
 // anything to offer, when the automatic card opens, what the footer link
@@ -33,7 +37,7 @@ export const useInstallState = ({ autoShowAfterSeconds = AUTO_SHOW_AFTER_VISIBLE
   const [isMarkedInstalled, setIsMarkedInstalled] = useState(false);
   const [flow, setFlow] = useState<InstallFlow>(CLOSED);
   const storedStateRef = useRef<InstallPromptState | null>(null);
-  const visibleSecondsRef = useRef(0);
+  const visibleMsRef = useRef(0);
   const { pathname } = useLocation();
 
   useEffect(() => {
@@ -90,19 +94,29 @@ export const useInstallState = ({ autoShowAfterSeconds = AUTO_SHOW_AFTER_VISIBLE
 
       // The show is written before the card opens, so a browser that cannot
       // write is found out here and the card never appears (fail closed,
-      // storage.ts).
+      // storage.ts, which logs the error itself).
       const shown = afterShow(current);
-      if (!writeInstallPromptState(shown)) return;
+      if (!writeInstallPromptState(shown)) {
+        console.warn('The install prompt show could not be stored, so the automatic card stays closed');
+        return;
+      }
       storedStateRef.current = shown;
 
       trackEvent(MIXPANEL_EVENTS.installCardShown, { platformPath: device.path, trigger: 'auto' });
       setFlow({ status: 'open', trigger: 'auto', step: 'offer', device });
     };
 
+    let lastTickAt = performance.now();
     const timer = window.setInterval(() => {
+      const now = performance.now();
+      const elapsedMs = now - lastTickAt;
+      lastTickAt = now;
+
+      // A hidden tab adds nothing, and the tick it comes back on measures
+      // from the last hidden tick, so time spent away is never counted.
       if (document.visibilityState !== 'visible') return;
-      visibleSecondsRef.current += 1;
-      if (visibleSecondsRef.current < autoShowAfterSeconds) return;
+      visibleMsRef.current += elapsedMs;
+      if (visibleMsRef.current < autoShowAfterSeconds * MS_PER_SECOND) return;
       if (isUserBusy(document)) return;
 
       window.clearInterval(timer);
@@ -139,21 +153,25 @@ export const useInstallState = ({ autoShowAfterSeconds = AUTO_SHOW_AFTER_VISIBLE
       return;
     }
 
-    trackEvent(MIXPANEL_EVENTS.installAccepted, { platformPath: flow.device.path, trigger: flow.trigger });
+    trackEvent(MIXPANEL_EVENTS.installAccepted, acceptanceEventPropsOnInstructionsOpened(flow));
     setFlow({ ...flow, step: 'instructions' });
   };
 
   // "Not now", Escape, a tap on a modal sheet's backdrop and "Got it" all
-  // land here. An automatic card that already went on to the instructions was
-  // accepted, so closing it reports no dismissal.
+  // land here. Closing the offer reports a dismissal; closing an instructions
+  // step never does (helpers.ts).
+  //
+  // An automatic card closed on its iOS instructions still spends one of the
+  // two dismissals, on purpose: Apple never tells a page that the site was
+  // added to the home screen, so without it the card would come back every
+  // session to someone who followed the steps. A footer flow is the visitor's
+  // own request and spends nothing.
   const dismiss = (): void => {
     if (flow.status !== 'open') return;
 
-    const wasAccepted = flow.trigger === 'auto' && flow.step === 'instructions';
-    if (!wasAccepted) {
-      trackEvent(MIXPANEL_EVENTS.installCardDismissed, { platformPath: flow.device.path, trigger: flow.trigger, step: 'card' });
-    }
-    if (flow.trigger === 'auto') recordChange(afterDismissal);
+    const dismissalProps = dismissalEventPropsOnClose(flow);
+    if (dismissalProps) trackEvent(MIXPANEL_EVENTS.installCardDismissed, dismissalProps);
+    if (countsTowardDismissalLimit(flow)) recordChange(afterDismissal);
     setFlow(CLOSED);
   };
 
@@ -166,7 +184,9 @@ export const useInstallState = ({ autoShowAfterSeconds = AUTO_SHOW_AFTER_VISIBLE
       void runNativePrompt(device, 'footer');
       return;
     }
-    setFlow({ status: 'open', trigger: 'footer', step: 'instructions', device });
+    const instructionsFlow: OpenInstallFlow = { status: 'open', trigger: 'footer', step: 'instructions', device };
+    trackEvent(MIXPANEL_EVENTS.installAccepted, acceptanceEventPropsOnInstructionsOpened(instructionsFlow));
+    setFlow(instructionsFlow);
   };
 
   const copyLink = async (): Promise<void> => {

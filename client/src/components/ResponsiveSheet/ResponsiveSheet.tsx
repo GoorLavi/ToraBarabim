@@ -4,7 +4,7 @@ import type { KeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
 import styled from 'styled-components';
 
-import { focusableElementsIn } from '~/components/helpers';
+import { focusableElementsIn, isTextEntryElement } from '~/components/helpers';
 
 import type { ResponsiveSheetProps } from './models';
 import * as styles from './styles';
@@ -45,6 +45,8 @@ export const ResponsiveSheet = styled(({ className, ariaLabel, onDismiss, isNonM
   // exception: Escape has to work from wherever focus is on the page. Listens
   // in the bubble phase and yields to `defaultPrevented`, so a popover that
   // claimed the same Escape in its own capture-phase listener closes alone.
+  // Escape inside a text field belongs to that field (clearing it, leaving
+  // it), so it never reaches the card.
   const latestDismiss = useRef(onDismiss);
   useEffect(() => {
     latestDismiss.current = onDismiss;
@@ -55,6 +57,7 @@ export const ResponsiveSheet = styled(({ className, ariaLabel, onDismiss, isNonM
 
     const handleDocumentKeyDown = (event: globalThis.KeyboardEvent): void => {
       if (event.key !== 'Escape' || event.defaultPrevented) return;
+      if (event.target instanceof HTMLElement && isTextEntryElement(event.target)) return;
       latestDismiss.current();
     };
 

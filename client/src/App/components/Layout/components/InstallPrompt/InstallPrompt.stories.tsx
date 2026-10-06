@@ -175,6 +175,7 @@ export const InAppBrowserExplanation: Story = {
     await userEvent.click(within(dialog).getByRole('button', { name: 'העתקת הקישור' }));
     await expect(args.onCopyLink).toHaveBeenCalledTimes(1);
     await expect(await within(dialog).findByRole('button', { name: 'הקישור הועתק' })).toBeInTheDocument();
+    await expect(within(dialog).queryByText('אפשר ללחוץ לחיצה ארוכה על הקישור ולהעתיק אותו.')).not.toBeInTheDocument();
   },
 };
 
@@ -193,6 +194,11 @@ export const InAppBrowserCopyFails: Story = {
 
       await waitFor(() => expect(errorLog).toHaveBeenCalled());
       await expect(within(dialog).getByRole('button', { name: 'העתקת הקישור' })).toBeInTheDocument();
+      await expect(within(dialog).queryByRole('button', { name: 'הקישור הועתק' })).not.toBeInTheDocument();
+
+      // The link itself is offered as text to press and hold.
+      await expect(await within(dialog).findByText('אפשר ללחוץ לחיצה ארוכה על הקישור ולהעתיק אותו.')).toBeInTheDocument();
+      await expect(within(dialog).getByText(window.location.href)).toBeInTheDocument();
     } finally {
       errorLog.mockRestore();
     }

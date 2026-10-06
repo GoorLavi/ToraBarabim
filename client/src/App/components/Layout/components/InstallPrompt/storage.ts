@@ -26,7 +26,8 @@ export const readInstallPromptState = (): InstallPromptState | null => {
     const history: unknown = JSON.parse(rawHistory);
     if (!isStoredHistory(history)) return null;
     return { dismissalCount: history.dismissalCount, isInstalled: history.isInstalled, wasShownThisSession };
-  } catch {
+  } catch (error) {
+    console.warn(`Could not read the install prompt history from storage (${INSTALL_PROMPT_STORAGE_KEY}), so the automatic card will not open`, error);
     return null;
   }
 };
@@ -41,7 +42,8 @@ export const writeInstallPromptState = (state: InstallPromptState): boolean => {
     window.localStorage.setItem(INSTALL_PROMPT_STORAGE_KEY, JSON.stringify(history));
     window.sessionStorage.setItem(INSTALL_PROMPT_SESSION_KEY, String(state.wasShownThisSession));
     return true;
-  } catch {
+  } catch (error) {
+    console.warn(`Could not write the install prompt history to storage (${INSTALL_PROMPT_STORAGE_KEY})`, error);
     return false;
   }
 };

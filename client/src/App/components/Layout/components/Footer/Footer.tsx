@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { TextLink } from '~/HomePage/components/TextLink/TextLink';
 import { WOMEN_PAGE_PATH } from '~/hooks/consts';
 
-import { InstallIcon } from '../InstallPrompt/components/InstallIcon/InstallIcon';
+import { InstallIcon } from '../InstallIcon/InstallIcon';
 import * as consts from './consts';
 import type { FooterProps } from './models';
 import * as styles from './styles';
@@ -22,10 +22,9 @@ export const Footer = styled(({ className, installLink }: FooterProps) => (
         <TextLink to="/lessons">{consts.LESSONS_LABEL}</TextLink>
         <TextLink to={WOMEN_PAGE_PATH}>{consts.WOMEN_LABEL}</TextLink>
         {installLink && (
-          <button type="button" className="installLink" onClick={installLink.onOpen}>
-            <InstallIcon name="addToHomeScreen" size={18} />
-            <span className="label">{installLink.label}</span>
-          </button>
+          <div className="installRow">
+            <TextLink {...{ icon: <InstallIcon name="addToHomeScreen" size={18} />, onClick: installLink.onOpen }}>{installLink.label}</TextLink>
+          </div>
         )}
       </nav>
     </div>
