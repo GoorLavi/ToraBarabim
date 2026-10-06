@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { AUTO_SHOW_AFTER_VISIBLE_SECONDS, MAX_COUNTED_TICK_MS } from './consts';
+import { AUTO_SHOW_AFTER_VISIBLE_SECONDS, AUTO_SHOW_TICK_MS, MAX_COUNTED_TICK_MS, MS_PER_SECOND } from './consts';
 import {
   acceptanceEventPropsOnInstructionsOpened,
   afterDismissal,
@@ -230,10 +230,10 @@ describe('visibleMsAfterTick', () => {
 
   it('still reaches the threshold on ordinary ticks, and not before', () => {
     let visibleMs = 0;
-    for (let tick = 1; tick < AUTO_SHOW_AFTER_VISIBLE_SECONDS; tick += 1) visibleMs = visibleMsAfterTick(visibleMs, 1000, true);
-    expect(visibleMs).toBeLessThan(AUTO_SHOW_AFTER_VISIBLE_SECONDS * 1000);
+    for (let tick = 1; tick < (AUTO_SHOW_AFTER_VISIBLE_SECONDS * MS_PER_SECOND) / AUTO_SHOW_TICK_MS; tick += 1) visibleMs = visibleMsAfterTick(visibleMs, AUTO_SHOW_TICK_MS, true);
+    expect(visibleMs).toBeLessThan(AUTO_SHOW_AFTER_VISIBLE_SECONDS * MS_PER_SECOND);
 
-    visibleMs = visibleMsAfterTick(visibleMs, 1000, true);
-    expect(visibleMs).toBe(AUTO_SHOW_AFTER_VISIBLE_SECONDS * 1000);
+    visibleMs = visibleMsAfterTick(visibleMs, AUTO_SHOW_TICK_MS, true);
+    expect(visibleMs).toBe(AUTO_SHOW_AFTER_VISIBLE_SECONDS * MS_PER_SECOND);
   });
 });

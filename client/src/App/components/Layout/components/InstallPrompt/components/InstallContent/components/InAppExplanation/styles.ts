@@ -54,7 +54,7 @@ export const InAppExplanation = css(
   /* A live region that is always in the DOM and filled only when the browser
      refused the clipboard, since a region inserted already filled may not be
      announced. Empty, it must take no room, so it cancels the column gap it
-     would otherwise add. */
+     would otherwise add: the root's gap is spacing.md, and the two change together. */
   > .manualCopyRegion {
     &:empty {
       margin-block-start: calc(-1 * ${theme.spacing.md});
