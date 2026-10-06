@@ -51,28 +51,37 @@ export const InAppExplanation = css(
     color: ${theme.colors.primary};
   }
 
-  /* Shown only when the browser refused the clipboard: the link as plain
-     text the person can select and copy by hand. */
-  > .manualCopy {
-    display: flex;
-    flex-direction: column;
-    gap: ${theme.spacing.xs};
-    padding: ${theme.spacing.md};
-    border-radius: ${theme.radii.md};
-    background: ${theme.colors.bg};
-
-    > .manualCopyHint {
-      color: ${theme.colors.textSecondary};
-      font-size: ${theme.typography.secondary.phone.fontSize};
-      line-height: ${theme.typography.secondary.phone.lineHeight};
+  /* A live region that is always in the DOM and filled only when the browser
+     refused the clipboard, since a region inserted already filled may not be
+     announced. Empty, it must take no room, so it cancels the column gap it
+     would otherwise add. */
+  > .manualCopyRegion {
+    &:empty {
+      margin-block-start: calc(-1 * ${theme.spacing.md});
     }
 
-    > .pageLink {
-      color: ${theme.colors.text};
-      font-size: ${theme.typography.secondary.phone.fontSize};
-      line-height: ${theme.typography.secondary.phone.lineHeight};
-      overflow-wrap: anywhere;
-      user-select: all;
+    /* The link as plain text the person can select and copy by hand. */
+    > .manualCopy {
+      display: flex;
+      flex-direction: column;
+      gap: ${theme.spacing.xs};
+      padding: ${theme.spacing.md};
+      border-radius: ${theme.radii.md};
+      background: ${theme.colors.bg};
+
+      > .manualCopyHint {
+        color: ${theme.colors.textSecondary};
+        font-size: ${theme.typography.secondary.phone.fontSize};
+        line-height: ${theme.typography.secondary.phone.lineHeight};
+      }
+
+      > .pageLink {
+        color: ${theme.colors.text};
+        font-size: ${theme.typography.secondary.phone.fontSize};
+        line-height: ${theme.typography.secondary.phone.lineHeight};
+        overflow-wrap: anywhere;
+        user-select: all;
+      }
     }
   }
 

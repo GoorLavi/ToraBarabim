@@ -205,6 +205,30 @@ export const InAppBrowserCopyFails: Story = {
   },
 };
 
+// The manual-copy block is for the failure only: a retry that works hides it.
+export const InAppBrowserCopyFailsThenWorks: Story = {
+  args: {
+    flow: open('footer', 'instructions', device({ path: 'inAppBrowser' })),
+    onCopyLink: fn()
+      .mockImplementationOnce(() => Promise.reject(new Error('clipboard blocked')))
+      .mockImplementation(() => Promise.resolve()),
+  },
+  play: async () => {
+    const errorLog = spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const dialog = await body().findByRole('dialog', { name: PHONE_ARIA });
+      await userEvent.click(within(dialog).getByRole('button', { name: 'העתקת הקישור' }));
+      await within(dialog).findByText('אפשר ללחוץ לחיצה ארוכה על הקישור ולהעתיק אותו.');
+
+      await userEvent.click(within(dialog).getByRole('button', { name: 'העתקת הקישור' }));
+      await within(dialog).findByRole('button', { name: 'הקישור הועתק' });
+      await expect(within(dialog).queryByText('אפשר ללחוץ לחיצה ארוכה על הקישור ולהעתיק אותו.')).not.toBeInTheDocument();
+    } finally {
+      errorLog.mockRestore();
+    }
+  },
+};
+
 export const BrowserMenuInstructions: Story = {
   args: { flow: open('footer', 'instructions', device({ path: 'androidGeneric' })) },
   play: async ({ args }) => {
