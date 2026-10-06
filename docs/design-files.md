@@ -130,6 +130,9 @@ new goes into them. They keep their old names, which is how you can tell.
 Current work that is not part of the map yet, so nobody mistakes it for archive or
 tidies it away:
 
+- **`06 שיעור · שיתוף, יומן ודיווח · לאישור`** (`494:1747`), beside `06 שיעור`: share,
+  add to calendar, and report a mistake on the lesson, rabbi, and place pages, plus a
+  link preview crop study. Waits on the owner.
 - **`01 בית · הקדשות · לאישור`** (`323:488`), beside `01 בית`: the home page with the
   dedication bands drawn at their measured heights, four phone frames and no desktop
   yet. It waits on the owner, and on the width decision above. Since 2026-10-05 `01 בית`
