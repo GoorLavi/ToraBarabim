@@ -127,6 +127,13 @@
       "when": 1791194268589,
       "tag": "0017_sync_lesson_city_with_place",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791279006838,
+      "tag": "0018_faithful_genesis",
+      "breakpoints": true
     }
   ]
 }

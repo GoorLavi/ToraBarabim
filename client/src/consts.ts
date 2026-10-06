@@ -1,4 +1,4 @@
-import type { LessonAudience, LessonTopic, RabbiHonorific } from '@torabarabim/common';
+import type { LessonAudience, LessonTopic, RabbiHonorific, Weekday } from '@torabarabim/common';
 
 import { SITE_NAME, SITE_ORIGIN } from '../consts';
 
@@ -175,3 +175,27 @@ export const COURSE_CARD_META_SEPARATOR = ' ·\u00A0';
 // (`LessonCard`, `CourseCard`) steps its own type scale at this rendered
 // width, via `@container` rather than a viewport media query.
 export const CARD_WIDE_THRESHOLD = '190px';
+
+// The bare flag a shared link carries (`?s`), so a visit that started from a
+// friend's message is recognisable in the page view. Short on purpose: it
+// sits in front of a person in WhatsApp.
+export const SHARED_LINK_FLAG = 's';
+
+// Bare weekday names, without the repeated 'יום', for joining several
+// weekdays into one line (the admin's recurrence label, a lesson's share
+// text). 0 is Sunday.
+export const WEEKDAY_BARE_LABELS: Record<Weekday, string> = {
+  0: 'ראשון',
+  1: 'שני',
+  2: 'שלישי',
+  3: 'רביעי',
+  4: 'חמישי',
+  5: 'שישי',
+  6: 'שבת',
+};
+
+// Right-to-left mark: a line that opens with a Latin word or a digit (a
+// name, a place) would otherwise be set left to right by a chat app or a
+// calendar. Prefixed to each Hebrew line of a share text and an event
+// description.
+export const RIGHT_TO_LEFT_MARK = '\u200F';

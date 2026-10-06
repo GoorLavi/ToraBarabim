@@ -70,18 +70,6 @@ export const WEEKDAY_LABELS: Record<Weekday, string> = {
   6: 'שבת',
 };
 
-// Bare weekday names, without the repeated 'יום', for joining several
-// weekdays into one line (see `weeklyRecurrenceLabel` in `helpers.ts`).
-export const WEEKDAY_BARE_LABELS: Record<Weekday, string> = {
-  0: 'ראשון',
-  1: 'שני',
-  2: 'שלישי',
-  3: 'רביעי',
-  4: 'חמישי',
-  5: 'שישי',
-  6: 'שבת',
-};
-
 export const UNTITLED_RABBI_FALLBACK = 'רב לא ידוע';
 
 // The one construction site for a new-lesson link preselecting its rabbi

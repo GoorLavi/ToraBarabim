@@ -1,8 +1,8 @@
 import type { AdminDedication, CourseResponse, Lesson, Rabbi, Weekday } from '@torabarabim/common';
 
-import { COURSE_STATE_TAG_CLOSED, COURSE_STATE_TAG_FULL, COURSE_STATE_TAG_OPEN } from '~/consts';
+import { COURSE_STATE_TAG_CLOSED, COURSE_STATE_TAG_FULL, COURSE_STATE_TAG_OPEN, WEEKDAY_BARE_LABELS } from '~/consts';
 import { courseErrorMessage, isCourseErrorCode } from '~/courseErrors';
-import { closedVerbWithDateLabel, joinWithMiddleDot, rabbiDisplayName, weeksPhrase } from '~/helpers';
+import { closedVerbWithDateLabel, joinWithConjunction, joinWithMiddleDot, rabbiDisplayName, weeksPhrase } from '~/helpers';
 
 import { AdminApiError } from './api';
 import * as consts from './consts';
@@ -136,18 +136,13 @@ const weekdayRuns = (weekdays: Weekday[]): Weekday[][] => {
   return runs;
 };
 
-const joinWithConjunction = (items: string[]): string => {
-  if (items.length <= 1) return items.join('');
-  return `${items.slice(0, -1).join(', ')} ו${items[items.length - 1]}`;
-};
-
 // A run built by `weekdayRuns` is never empty; this reads its edges
 // without `noUncheckedIndexedAccess` losing track of that.
 const runRangeLabel = (run: Weekday[]): string | undefined => {
   const [firstDay] = run;
   const lastDay = run[run.length - 1];
   if (firstDay === undefined || lastDay === undefined) return undefined;
-  return `${consts.WEEKDAY_BARE_LABELS[firstDay]} עד ${consts.WEEKDAY_BARE_LABELS[lastDay]}`;
+  return `${WEEKDAY_BARE_LABELS[firstDay]} עד ${WEEKDAY_BARE_LABELS[lastDay]}`;
 };
 
 // A recurring lesson's weekdays collapsed onto one line: a single day
@@ -172,7 +167,7 @@ export const weeklyRecurrenceLabel = (weekdays: Weekday[]): string => {
       const rangeLabel = runRangeLabel(run);
       return rangeLabel ? [rangeLabel] : [];
     }
-    return run.map((day) => consts.WEEKDAY_BARE_LABELS[day]);
+    return run.map((day) => WEEKDAY_BARE_LABELS[day]);
   });
   return `כל ${joinWithConjunction(segments)}`;
 };

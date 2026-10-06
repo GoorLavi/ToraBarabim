@@ -1077,6 +1077,62 @@ describe('public API', () => {
       });
     });
 
+    describe('GET /v1/lessons/:lessonId/occurrences/:date schedule and calendarOccurrence', () => {
+      const WEEK_LATER = addDays(FIXED_DAY, 7);
+      const TWO_WEEKS_LATER = addDays(FIXED_DAY, 14);
+      const THREE_WEEKS_LATER = addDays(FIXED_DAY, 21);
+      let movedWeeklyId = '';
+      let cancelledRunId = '';
+      let onceId = '';
+
+      before(async () => {
+        const rabbiId = await createRabbi('rav');
+        movedWeeklyId = await createLesson({ rabbiId, startTime: '09:00', recurrence: { kind: 'weekly', weekdays: [SATURDAY, 0] } });
+        await db.insert(lessonExceptions).values({ lessonId: movedWeeklyId, date: FIXED_DAY, kind: 'modified', startTime: '11:00' });
+        cancelledRunId = await createLesson({ rabbiId, startTime: '18:00', recurrence: { kind: 'weekly', weekdays: [SATURDAY] } });
+        await db.insert(lessonExceptions).values([
+          { lessonId: cancelledRunId, date: FIXED_DAY, kind: 'cancelled' },
+          { lessonId: cancelledRunId, date: WEEK_LATER, kind: 'cancelled' },
+        ]);
+        onceId = await createLesson({ rabbiId, startTime: '09:00', recurrence: { kind: 'once', date: FIXED_DAY } });
+      });
+
+      const detailAt = async (lessonId: string, date: string, now: number): Promise<LessonOccurrenceDetail> => {
+        mock.timers.enable({ apis: ['Date'], now });
+        const res = await app.inject({ method: 'GET', url: `/v1/lessons/${lessonId}/occurrences/${date}` });
+        mock.timers.reset();
+        assert.equal(res.statusCode, 200);
+        return res.json() as LessonOccurrenceDetail;
+      };
+
+      // Case 1.
+      test('the schedule carries the lesson base start time and its weekdays, never a modified date start time', async () => {
+        const detail = await detailAt(movedWeeklyId, FIXED_DAY, at(FIXED_DAY, '08:00'));
+        assert.equal(detail.startTime, '11:00');
+        assert.deepEqual(detail.schedule, { kind: 'weekly', weekdays: [0, SATURDAY], startTime: '09:00' });
+      });
+
+      // Case 2.
+      test('calendarOccurrence is the viewed date when scheduled, else the next scheduled date, skipping consecutive cancellations', async () => {
+        const now = at(FIXED_DAY, '10:00');
+        assert.equal((await detailAt(cancelledRunId, THREE_WEEKS_LATER, now)).calendarOccurrence?.date, THREE_WEEKS_LATER);
+        assert.equal((await detailAt(cancelledRunId, FIXED_DAY, now)).calendarOccurrence?.date, TWO_WEEKS_LATER);
+        assert.equal((await detailAt(cancelledRunId, WEEK_LATER, now)).calendarOccurrence?.date, TWO_WEEKS_LATER);
+        assert.equal((await detailAt(cancelledRunId, addDays(FIXED_DAY, -7), now)).calendarOccurrence?.date, TWO_WEEKS_LATER);
+      });
+
+      // Case 3.
+      test('a one-time lesson has calendarOccurrence only until it has begun past the grace, and null once it took place', async () => {
+        assert.equal((await detailAt(onceId, FIXED_DAY, at(FIXED_DAY, '09:20'))).calendarOccurrence?.date, FIXED_DAY);
+        assert.equal((await detailAt(onceId, FIXED_DAY, at(FIXED_DAY, '10:00'))).calendarOccurrence, null);
+
+        const tookPlace = await detailAt(onceId, FIXED_DAY, at(NEXT_DAY, '08:00'));
+        assert.equal(tookPlace.timing, 'tookPlace');
+        assert.equal(tookPlace.calendarOccurrence, null);
+        assert.deepEqual(tookPlace.schedule, { kind: 'once' });
+      });
+    });
+
     describe('searchRabbiUpcoming', () => {
       const NOW = new Date(at(FIXED_DAY, '10:00'));
       let rabbiId = '';

@@ -1,17 +1,18 @@
-import type { CreateVisitorMessageRequest, HomeResponse, LessonOccurrence, VisitorMessageType } from '@torabarabim/common';
+import type { CreateVisitorMessageRequest, HelpRequestType, HomeResponse, LessonOccurrence } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { VISITOR_MESSAGE_TITLES } from '~/HomePage/components/consts';
+import * as formConsts from '~/components/HelpWindow/components/VisitorMessageForm/consts';
+import * as consts from '~/components/HelpWindow/consts';
+import { HelpWindow } from '~/components/HelpWindow/HelpWindow';
+import { HELP_TILE_WINDOW_COPY, VISITOR_MESSAGE_TITLES } from '~/HomePage/components/consts';
 import { rabbiFixture } from '~/rabbiFixture';
-import { atFrameSize } from '~/storyMocks';
+import { atFrameSize, FORBIDDEN_WINDOW_COPY } from '~/storyMocks';
 
-import { http, respondWithJson } from '../../../../../../.storybook/apiMocks';
-import { HomeRails } from '../../HomeRails';
-import type { HomeRowsQueryState } from '../../models';
-import * as formConsts from './components/VisitorMessageForm/consts';
-import * as consts from './consts';
-import { HelpWindow } from './HelpWindow';
+import { http, respondWithJson } from '../../../../.storybook/apiMocks';
+
+import { HomeRails } from './HomeRails';
+import type { HomeRowsQueryState } from './models';
 
 const lesson = (id: string, rabbiName: string): LessonOccurrence => ({
   lessonId: id,
@@ -31,7 +32,7 @@ const HELP_TILE_INDEX = 2;
 // The window is opened by pressing its tile, the way a visitor opens it, so
 // each story renders the rails around one tile rather than the window alone:
 // the draft, the send state and the focus return all live in `HomeRails`.
-const stageQuery = (kind: VisitorMessageType): HomeRowsQueryState => {
+const stageQuery = (kind: HelpRequestType): HomeRowsQueryState => {
   const data: HomeResponse = {
     rows: [
       {
@@ -53,7 +54,7 @@ const stageQuery = (kind: VisitorMessageType): HomeRowsQueryState => {
 const meta: Meta<typeof HelpWindow> = {
   title: 'HomePage/HomeRails/HelpWindow',
   component: HelpWindow,
-  render: (_args, { parameters }) => <HomeRails {...{ query: stageQuery(parameters.kind as VisitorMessageType), successGroup: undefined, healingGroup: undefined }} />,
+  render: (_args, { parameters }) => <HomeRails {...{ query: stageQuery(parameters.kind as HelpRequestType), successGroup: undefined, healingGroup: undefined }} />,
 };
 
 export default meta;
@@ -81,7 +82,7 @@ const VALID_NAME = 'דוד כהן';
 const VALID_PHONE = '052-123-4567';
 const VALID_MESSAGE = 'הרב משה לוי מוסר שיעור בדף היומי בבית הכנסת "אוהל יעקב" בחיפה.';
 
-const openWindow = async (canvasElement: HTMLElement, kind: VisitorMessageType): Promise<HTMLElement> => {
+const openWindow = async (canvasElement: HTMLElement, kind: HelpRequestType): Promise<HTMLElement> => {
   const tile = await within(canvasElement).findByRole('button', { name: new RegExp(`^${VISITOR_MESSAGE_TITLES[kind]}`) });
   await userEvent.click(tile);
   return within(document.body).findByRole('dialog', { name: VISITOR_MESSAGE_TITLES[kind] });
@@ -99,13 +100,9 @@ const fillValidForm = async (dialog: HTMLElement): Promise<void> => {
 const submit = (dialog: HTMLElement): Promise<void> =>
   userEvent.click(within(dialog).getByRole('button', { name: new RegExp(`^(${formConsts.SUBMIT_LABEL}|${formConsts.SUBMIT_SENDING_LABEL})$`) }));
 
-// Words that would make a promise or mention money: the window carries
-// neither, anywhere.
-const FORBIDDEN_COPY = /נחזור|ניצור קשר|נפנה|ניצור איתך|₪|עלות|מחיר|תשלום|ש"ח/;
-
 // A failure line belongs to the press that caused it: closing the window and
 // opening it again shows the draft, without the stale line.
-const failureClearedOnReopenStory = (kind: VisitorMessageType): Story => ({
+const failureClearedOnReopenStory = (kind: HelpRequestType): Story => ({
   parameters: { kind, apiMocks: { handlers: postHandler(failingResolver) } },
   play: async ({ canvasElement }) => {
     const dialog = await openWindow(canvasElement, kind);
@@ -124,22 +121,22 @@ const failureClearedOnReopenStory = (kind: VisitorMessageType): Story => ({
   },
 });
 
-const idleStory = (kind: VisitorMessageType): Story => ({
+const idleStory = (kind: HelpRequestType): Story => ({
   parameters: { kind, apiMocks: { handlers: postHandler() } },
   play: async ({ canvasElement }) => {
     const dialog = await openWindow(canvasElement, kind);
-    const copy = consts.HELP_WINDOW_COPY[kind];
+    const copy = HELP_TILE_WINDOW_COPY[kind];
 
     for (const paragraph of copy.paragraphs) await expect(within(dialog).getByText(paragraph)).toBeInTheDocument();
     await expect(within(dialog).getByPlaceholderText(copy.messagePlaceholder)).toBeInTheDocument();
     // Focus lands on the title, never on a field: a field would raise the
     // phone keyboard before anything has been read.
     await expect(within(dialog).getByRole('heading', { name: VISITOR_MESSAGE_TITLES[kind] })).toHaveFocus();
-    await expect(dialog.textContent).not.toMatch(FORBIDDEN_COPY);
+    await expect(dialog.textContent).not.toMatch(FORBIDDEN_WINDOW_COPY);
   },
 });
 
-const validationStory = (kind: VisitorMessageType): Story => ({
+const validationStory = (kind: HelpRequestType): Story => ({
   parameters: { kind, apiMocks: { handlers: postHandler() } },
   play: async ({ canvasElement }) => {
     postedBodies.length = 0;
@@ -166,7 +163,7 @@ const validationStory = (kind: VisitorMessageType): Story => ({
   },
 });
 
-const sendingStory = (kind: VisitorMessageType): Story => ({
+const sendingStory = (kind: HelpRequestType): Story => ({
   parameters: { kind, apiMocks: { handlers: postHandler(pendingResolver) } },
   play: async ({ canvasElement }) => {
     postedBodies.length = 0;
@@ -188,7 +185,7 @@ const sendingStory = (kind: VisitorMessageType): Story => ({
   },
 });
 
-const successStory = (kind: VisitorMessageType): Story => ({
+const successStory = (kind: HelpRequestType): Story => ({
   parameters: { kind, apiMocks: { handlers: postHandler() } },
   play: async ({ canvasElement }) => {
     postedBodies.length = 0;
@@ -203,14 +200,14 @@ const successStory = (kind: VisitorMessageType): Story => ({
     // The type is the opening tile's, and the phone goes as typed: the server
     // normalises it.
     await expect(postedBodies).toEqual([{ type: kind, name: VALID_NAME, phone: VALID_PHONE, message: VALID_MESSAGE }]);
-    await expect(dialog.textContent).not.toMatch(FORBIDDEN_COPY);
+    await expect(dialog.textContent).not.toMatch(FORBIDDEN_WINDOW_COPY);
 
   },
 });
 
 // A sent message ends its draft: closing the thank-you and reopening the same
 // tile starts clean, never with the sent text still in the fields.
-const reopensEmptyStory = (kind: VisitorMessageType): Story => ({
+const reopensEmptyStory = (kind: HelpRequestType): Story => ({
   parameters: { kind, apiMocks: { handlers: postHandler() } },
   play: async ({ canvasElement }) => {
     const dialog = await openWindow(canvasElement, kind);
@@ -228,7 +225,7 @@ const reopensEmptyStory = (kind: VisitorMessageType): Story => ({
   },
 });
 
-const failureStory = (kind: VisitorMessageType): Story => ({
+const failureStory = (kind: HelpRequestType): Story => ({
   parameters: { kind, apiMocks: { handlers: postHandler(failingResolver) } },
   play: async ({ canvasElement }) => {
     const dialog = await openWindow(canvasElement, kind);
@@ -264,7 +261,7 @@ export const VolunteerReopensEmptyAfterSuccess: Story = reopensEmptyStory('volun
 // The smallest phone the site serves, with the keyboard-less height of an
 // older device: the panel is one scroll region, so the submit button must be
 // reachable by scrolling and the title must never run under the close button.
-const phoneStory = (kind: VisitorMessageType): Story => ({
+const phoneStory = (kind: HelpRequestType): Story => ({
   parameters: { kind, apiMocks: { handlers: postHandler() } },
   play: ({ canvasElement }) =>
     atFrameSize(320, 568, async () => {
@@ -294,7 +291,7 @@ export const VolunteerPhone320: Story = phoneStory('volunteer');
 // A short phone with the keyboard up leaves 330px: focusing the phone field
 // scrolls it into view, and it must land below the pinned close button, not
 // under it.
-const shortPhoneStory = (kind: VisitorMessageType): Story => ({
+const shortPhoneStory = (kind: HelpRequestType): Story => ({
   parameters: { kind, apiMocks: { handlers: postHandler() } },
   play: ({ canvasElement }) =>
     atFrameSize(320, 330, async () => {
@@ -314,7 +311,7 @@ const shortPhoneStory = (kind: VisitorMessageType): Story => ({
 // The form scrolled to the bottom, then focus returns to the phone field
 // (Shift+Tab from below): the browser counts the field as already visible and
 // would not scroll it, leaving it under the pinned close button.
-const scrolledBackPhoneStory = (kind: VisitorMessageType): Story => ({
+const scrolledBackPhoneStory = (kind: HelpRequestType): Story => ({
   parameters: { kind, apiMocks: { handlers: postHandler() } },
   play: ({ canvasElement }) =>
     atFrameSize(375, 360, async () => {
@@ -339,7 +336,7 @@ const scrolledBackPhoneStory = (kind: VisitorMessageType): Story => ({
 
 // The message field is the tall one at the bottom of the form: focusing it on
 // the smallest phone must bring all of it into view, not just its caret line.
-const messageFieldInViewStory = (kind: VisitorMessageType): Story => ({
+const messageFieldInViewStory = (kind: HelpRequestType): Story => ({
   parameters: { kind, apiMocks: { handlers: postHandler() } },
   play: ({ canvasElement }) =>
     atFrameSize(320, 568, async () => {
@@ -361,7 +358,7 @@ export const RabbiRequestShortPhone320: Story = shortPhoneStory('rabbi-request')
 export const VolunteerShortPhone320: Story = shortPhoneStory('volunteer');
 
 // Centred and fully rounded from `md` up, like the dedication window.
-const desktopStory = (kind: VisitorMessageType): Story => ({
+const desktopStory = (kind: HelpRequestType): Story => ({
   parameters: { kind, apiMocks: { handlers: postHandler() } },
   play: ({ canvasElement }) =>
     atFrameSize(1280, 900, async () => {

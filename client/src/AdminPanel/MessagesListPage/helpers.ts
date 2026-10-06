@@ -1,6 +1,18 @@
 import type { InfiniteData } from '@tanstack/react-query';
 import type { AdminVisitorMessage, UpdateVisitorMessageRequest, VisitorMessageListResponse } from '@torabarabim/common';
 
+// A card's content with its handled state taken off, so the merged copy
+// carries `handledAt` only when it is handled. Every content field, a
+// report's subject included, travels through the spread.
+const withoutHandling = (message: AdminVisitorMessage) => {
+  if (message.status === 'handled') {
+    const { status: _status, handledAt: _handledAt, ...content } = message;
+    return content;
+  }
+  const { status: _status, ...content } = message;
+  return content;
+};
+
 // Folds a PATCH response into the card already in the cache, taking only the
 // fields the request wrote: the handled state when it sent `handled`, the
 // note when it sent `handlingNote`. A response is a snapshot from when the
@@ -14,19 +26,11 @@ export const mergeUpdatedFields = (
 ): AdminVisitorMessage => {
   const handledSource = sent.handled !== undefined ? updated : current;
   const noteSource = sent.handlingNote !== undefined ? updated : current;
-  const base = {
-    id: current.id,
-    type: current.type,
-    name: current.name,
-    phone: current.phone,
-    message: current.message,
-    createdAt: current.createdAt,
-    handlingNote: noteSource.handlingNote,
-  };
+  const merged = { ...withoutHandling(current), handlingNote: noteSource.handlingNote };
 
   return handledSource.status === 'handled'
-    ? { ...base, status: 'handled', handledAt: handledSource.handledAt }
-    : { ...base, status: 'unhandled' };
+    ? { ...merged, status: 'handled', handledAt: handledSource.handledAt }
+    : { ...merged, status: 'unhandled' };
 };
 
 // Swaps one message for its merged copy wherever it sits in the loaded pages,

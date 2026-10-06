@@ -1,4 +1,4 @@
-import type { LessonAudience, LessonException, LessonTopic, OccurrenceTiming, Rabbi, Recurrence, Weekday } from '@torabarabim/common';
+import type { LessonAudience, LessonException, LessonSchedule, LessonTopic, OccurrenceTiming, Rabbi, Recurrence, Weekday } from '@torabarabim/common';
 
 import type { lessonExceptions, lessons } from '../../db/schema';
 import { toVenue, type AddressCityRow, type AddressPlaceRow, type VenueRef } from '../shared/address';
@@ -129,6 +129,13 @@ export const toLessonDomain = (row: LessonRow): Lesson => ({
   durationMinutes: row.durationMinutes,
   notes: row.notes ?? undefined,
 });
+
+// The lesson's own rule and base start time, never an exception's. Weekdays
+// are sorted so a share text built from them never depends on storage order.
+export const scheduleOf = (lesson: Lesson): LessonSchedule =>
+  lesson.recurrence.kind === 'once'
+    ? { kind: 'once' }
+    : { kind: 'weekly', weekdays: [...lesson.recurrence.weekdays].sort((a, b) => a - b), startTime: lesson.startTime };
 
 export const toExceptionDomain = (row: ExceptionRow): LessonException =>
   row.kind === 'cancelled'

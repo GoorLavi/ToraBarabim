@@ -5,12 +5,13 @@ import styled from 'styled-components';
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
 import { CourseRail } from '~/components/CourseRail/CourseRail';
+import { HelpWindow } from '~/components/HelpWindow/HelpWindow';
 import { RailSkeleton } from '~/components/RailSkeleton/RailSkeleton';
+import { HELP_TILE_WINDOW_COPY, VISITOR_MESSAGE_TITLES } from '~/HomePage/components/consts';
 
 import { DedicationBand } from '../DedicationBand/DedicationBand';
 import { LessonRail } from '../LessonRail/LessonRail';
 import { WomensAreaBand } from '../WomensAreaBand/WomensAreaBand';
-import { HelpWindow } from './components/HelpWindow/HelpWindow';
 import * as consts from './consts';
 import { indexAfterNthLessonRow } from './helpers';
 import type { HomeRailsProps } from './models';
@@ -33,7 +34,8 @@ export const HomeRails = styled(({ className, query, successGroup, healingGroup 
       {openKind && (
         <HelpWindow
           {...{
-            kind: openKind,
+            title: VISITOR_MESSAGE_TITLES[openKind],
+            ...HELP_TILE_WINDOW_COPY[openKind],
             draft: helpWindow.drafts[openKind],
             status: helpWindow.sendStatuses[openKind],
             onDraftChange: (draft) => helpWindow.changeDraft(openKind, draft),

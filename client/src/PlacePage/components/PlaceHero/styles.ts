@@ -97,6 +97,10 @@ export const PlaceHero = css(
       line-height: ${theme.typography.secondary.phone.lineHeight};
     }
 
+    > .share {
+      max-inline-size: 100%;
+    }
+
     > .navRow {
       inline-size: 100%;
       display: flex;

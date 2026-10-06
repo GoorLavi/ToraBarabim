@@ -3,7 +3,6 @@ import type { FocusEvent } from 'react';
 import styled from 'styled-components';
 
 import { ResponsiveSheet } from '~/components/ResponsiveSheet/ResponsiveSheet';
-import { VISITOR_MESSAGE_TITLES } from '~/HomePage/components/consts';
 
 import { VisitorMessageForm } from './components/VisitorMessageForm/VisitorMessageForm';
 import * as consts from './consts';
@@ -11,13 +10,11 @@ import type { HelpWindowProps } from './models';
 import * as styles from './styles';
 
 // Built on `ResponsiveSheet` like `DedicationWindow`. It holds no state of
-// its own: the draft and the send status come from `HomeRails`, which stays
+// its own: the draft and the send status come from a caller that stays
 // mounted when this closes.
-export const HelpWindow = styled(({ className, kind, draft, status, onDraftChange, onSubmit, onDismiss }: HelpWindowProps) => {
+export const HelpWindow = styled(({ className, title, paragraphs, messagePlaceholder, context, draft, status, onDraftChange, onSubmit, onDismiss }: HelpWindowProps) => {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const thankYouRef = useRef<HTMLHeadingElement>(null);
-  const title = VISITOR_MESSAGE_TITLES[kind];
-  const copy = consts.HELP_WINDOW_COPY[kind];
 
   // Focus goes to the title on open, never to a field: a field would raise
   // the phone keyboard before the visitor has read anything.
@@ -69,14 +66,16 @@ export const HelpWindow = styled(({ className, kind, draft, status, onDraftChang
       ) : (
         <div className="body" onFocus={scrollFocusedFieldIntoView}>
           <div className="explanation">
-            {copy.paragraphs.map((paragraph) => (
+            {paragraphs.map((paragraph) => (
               <p key={paragraph} className="paragraph">
                 {paragraph}
               </p>
             ))}
           </div>
 
-          <VisitorMessageForm {...{ draft, status, messagePlaceholder: copy.messagePlaceholder, onDraftChange, onSubmit }} />
+          {context}
+
+          <VisitorMessageForm {...{ draft, status, messagePlaceholder, onDraftChange, onSubmit }} />
         </div>
       )}
     </ResponsiveSheet>

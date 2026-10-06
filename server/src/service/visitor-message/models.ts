@@ -1,9 +1,11 @@
-import type { VisitorMessageType } from '@torabarabim/common';
+import type { VisitorMessageSubject, VisitorMessageType } from '@torabarabim/common';
 import { z } from 'zod';
 
 import type { visitorMessages } from '../../db/schema';
-import { VISITOR_MESSAGE_TYPES } from '../../db/schema/enums';
+import { HELP_REQUEST_TYPES } from '../../db/schema/enums';
 import { DEFAULT_ADMIN_PAGE_SIZE, MAX_ADMIN_PAGE_SIZE } from '../admin-shared/consts';
+import { lessonOccurrenceParamsSchema } from '../lesson/models';
+import { placeIdParamSchema } from '../place/models';
 import { contactPhoneSchema } from '../shared/models';
 import {
   EMPTY_UPDATE_MESSAGE,
@@ -16,6 +18,7 @@ import {
   NAME_MESSAGE,
   NOTE_TOO_LONG_MESSAGE,
   PHONE_MESSAGE,
+  SUBJECT_ID_MAX_LENGTH,
 } from './consts';
 
 // `contactPhoneSchema` stays the one rule for what an Israeli mobile is and
@@ -31,12 +34,45 @@ const visitorPhoneSchema = z.string({ error: PHONE_MESSAGE }).transform((raw, ct
   return result.data;
 });
 
-export const createVisitorMessageSchema = z.object({
-  type: z.enum(VISITOR_MESSAGE_TYPES, { error: INVALID_REQUEST_MESSAGE }),
+const contactFields = {
   name: z.string({ error: NAME_MESSAGE }).trim().min(1, NAME_MESSAGE).max(NAME_MAX_LENGTH, NAME_MESSAGE),
   phone: visitorPhoneSchema,
   message: z.string({ error: MESSAGE_MESSAGE }).trim().min(1, MESSAGE_MESSAGE).max(MESSAGE_MAX_LENGTH, MESSAGE_MESSAGE),
+};
+
+const subjectShapeSchema = z.discriminatedUnion('kind', [
+  z.object({
+    kind: z.literal('lesson'),
+    lessonId: lessonOccurrenceParamsSchema.shape.lessonId.max(SUBJECT_ID_MAX_LENGTH),
+    date: lessonOccurrenceParamsSchema.shape.date,
+  }),
+  z.object({ kind: z.literal('place'), placeId: placeIdParamSchema.shape.id.max(SUBJECT_ID_MAX_LENGTH) }),
+]);
+
+// Shape only, no existence check: a report about a lesson deleted a minute
+// ago is still worth keeping. The id and date rules are the public routes'
+// own, with only the id's length cap added; their English messages are
+// replaced by one Hebrew line, the way `visitorPhoneSchema` does for a phone.
+const visitorMessageSubjectSchema = z.unknown().transform((raw, ctx): VisitorMessageSubject => {
+  const result = subjectShapeSchema.safeParse(raw);
+  if (!result.success) {
+    ctx.addIssue({ code: 'custom', message: INVALID_REQUEST_MESSAGE });
+    return z.NEVER;
+  }
+  return result.data;
 });
+
+// `subject: z.undefined().optional()` on the help arm, not `strictObject`: a help
+// request that carries a subject, null included, is a 400, while any other
+// stray key is still ignored as everywhere else.
+export const createVisitorMessageSchema = z.discriminatedUnion(
+  'type',
+  [
+    z.object({ type: z.enum(HELP_REQUEST_TYPES), ...contactFields, subject: z.undefined({ error: INVALID_REQUEST_MESSAGE }).optional() }),
+    z.object({ type: z.literal('report-mistake'), ...contactFields, subject: visitorMessageSubjectSchema }),
+  ],
+  { error: INVALID_REQUEST_MESSAGE },
+);
 export type CreateVisitorMessageInput = z.infer<typeof createVisitorMessageSchema>;
 
 export const visitorMessageIdParamSchema = z.object({

@@ -11,7 +11,7 @@ import { db } from '../src/db/client';
 import { adminUsers, visitorMessages } from '../src/db/schema';
 import { SESSION_COOKIE_NAME } from '../src/service/admin-auth/consts';
 import * as adminUserService from '../src/service/admin-user/admin-user';
-import { ADMIN_MESSAGES_PATH, SITE_ORIGIN, VISITOR_MESSAGE_TYPE_LABELS_HE } from '../src/service/visitor-message/consts';
+import { ADMIN_MESSAGES_PATH, lessonSubjectPath, placeSubjectPath, SITE_ORIGIN, VISITOR_MESSAGE_TYPE_LABELS_HE } from '../src/service/visitor-message/consts';
 import telegram from '../src/telegram/telegram';
 import { createTelegramClient } from '../src/telegram/client';
 import { assertDatabaseReachable, buildVisitorMessageTestApp, rawClient } from './app-harness';
@@ -238,6 +238,15 @@ describe('visitor messages API', () => {
     { label: 'a missing message', body: validBody({ message: undefined }), field: 'message' },
     { label: 'a message over 1000 characters', body: validBody({ message: 'א'.repeat(1001) }), field: 'message' },
     { label: 'an unknown type', body: validBody({ type: 'advertisement' }), field: 'type' },
+    { label: 'a report with no subject', body: validBody({ type: 'report-mistake' }), field: 'subject' },
+    { label: 'a report with a null subject', body: validBody({ type: 'report-mistake', subject: null }), field: 'subject' },
+    { label: 'a rabbi request carrying a subject', body: validBody({ subject: { kind: 'place', placeId: 'some-place' } }), field: 'subject' },
+    { label: 'a rabbi request carrying a null subject', body: validBody({ subject: null }), field: 'subject' },
+    {
+      label: 'a report whose lesson subject has a malformed date',
+      body: validBody({ type: 'report-mistake', subject: { kind: 'lesson', lessonId: 'some-lesson', date: '2026-13-45' } }),
+      field: 'subject',
+    },
   ];
   for (const { label, body, field } of invalidBodies) {
     test(`${label} is a 400 naming ${field}, stores nothing and sends no alert`, async () => {
@@ -253,6 +262,53 @@ describe('visitor messages API', () => {
       assert.equal((telegram.sendMessage as unknown as ReturnType<typeof mock.fn>).mock.callCount(), 0);
     });
   }
+
+  // Case 4.
+  test('a lesson report is stored with all three subject columns, listed with its subject, and alerts with the lesson link; a place report stores no date', async () => {
+    const lessonBody = validBody({
+      type: 'report-mistake',
+      subject: { kind: 'lesson', lessonId: 'lesson-1', date: '2030-01-12' },
+    });
+    const lessonRes = await app.inject({ method: 'POST', url: '/v1/visitor-messages', payload: lessonBody });
+    assert.equal(lessonRes.statusCode, 204);
+
+    const [lessonRow] = await storedRows(lessonBody.name);
+    assert.equal(lessonRow?.type, 'report-mistake');
+    assert.deepEqual(
+      [lessonRow?.subjectKind, lessonRow?.subjectId, lessonRow?.subjectDate],
+      ['lesson', 'lesson-1', '2030-01-12'],
+    );
+
+    const sendMessage = telegram.sendMessage as unknown as ReturnType<typeof mock.fn>;
+    const alertText = String(sendMessage.mock.calls[0]?.arguments[0]);
+    assert.ok(alertText.includes(`${SITE_ORIGIN}${lessonSubjectPath('lesson-1', '2030-01-12')}`));
+    assert.ok(alertText.includes(VISITOR_MESSAGE_TYPE_LABELS_HE['report-mistake']));
+
+    const placeBody = validBody({ type: 'report-mistake', subject: { kind: 'place', placeId: 'place with/odd chars' } });
+    assert.equal((await app.inject({ method: 'POST', url: '/v1/visitor-messages', payload: placeBody })).statusCode, 204);
+    const [placeRow] = await storedRows(placeBody.name);
+    assert.deepEqual([placeRow?.subjectKind, placeRow?.subjectId, placeRow?.subjectDate], ['place', 'place with/odd chars', null]);
+    const placeAlertText = String(sendMessage.mock.calls[1]?.arguments[0]);
+    assert.ok(placeAlertText.includes(`${SITE_ORIGIN}${placeSubjectPath('place with/odd chars')}`), 'the alert link must encode the id');
+
+    const { statusCode, body } = await listMessages();
+    assert.equal(statusCode, 200);
+    const listed = (id: string | undefined) => body.items.find((item) => item.id === id);
+    const listedLesson = listed(lessonRow?.id);
+    const listedPlace = listed(placeRow?.id);
+    assert.ok(listedLesson?.type === 'report-mistake');
+    assert.deepEqual(listedLesson.subject, { kind: 'lesson', lessonId: 'lesson-1', date: '2030-01-12' });
+    assert.ok(listedPlace?.type === 'report-mistake');
+    assert.deepEqual(listedPlace.subject, { kind: 'place', placeId: 'place with/odd chars' });
+  });
+
+  test('a help request lists with no subject key', async () => {
+    const id = await insertMessage({ type: 'volunteer' });
+    const { body } = await listMessages();
+    const item = body.items.find((candidate) => candidate.id === id);
+    assert.ok(item);
+    assert.equal('subject' in item, false);
+  });
 
   // Test 8.
   test('both admin routes are 401 without a session and 403 super_admin_required for a non-super admin', async () => {

@@ -1,14 +1,17 @@
 import type { LessonOccurrence, LessonOccurrenceDetail } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { Route, Routes } from 'react-router-dom';
 
 import { LESSONS_NEXT_LABEL } from '~/components/Rail/consts';
+import * as reportConsts from '~/components/ReportMistake/consts';
+import { SHARE_LABEL } from '~/components/ShareButton/consts';
 import { areaLinkLabel } from '~/consts';
 import { rabbiDisplayName } from '~/helpers';
 import { rabbiFixture } from '~/rabbiFixture';
 
 import { errorResolver, http, jsonResolver, loadingResolver } from '../../.storybook/apiMocks';
+import { ADD_TO_CALENDAR_LABEL } from './components/LessonActions/consts';
 import { GOOGLE_MAPS_ARIA_LABEL, WAZE_ARIA_LABEL } from './components/LessonTicket/consts';
 import { PAST_NOTICE_LABEL, rabbiRailTitle, TEACHING_RABBI_ROLE_LABEL } from './consts';
 import { LessonPage } from './LessonPage';
@@ -55,11 +58,26 @@ const baseLesson: LessonOccurrence = {
   venue: { kind: 'address', name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'נתניה', citySlug: 'נתניה', area: 'sharon' },
 };
 
-const lesson = (overrides: Partial<LessonOccurrenceDetail>): LessonOccurrenceDetail => ({
-  ...baseLesson,
-  timing: 'upcoming',
-  ...overrides,
-});
+const WEEKLY_ON_TUESDAYS: LessonOccurrenceDetail['schedule'] = { kind: 'weekly', weekdays: [2], startTime: '20:30' };
+
+const plusOneWeek = (isoDate: string): string => {
+  const date = new Date(`${isoDate}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + 7);
+  return date.toISOString().slice(0, 10);
+};
+
+// A weekly lesson unless a story says otherwise. Its calendar date is this
+// occurrence when it is scheduled and upcoming, else the same lesson a week
+// on, the way the server resolves it; a one-time lesson passes
+// `calendarOccurrence: null` for a date that is gone.
+const lesson = (overrides: Partial<LessonOccurrenceDetail>): LessonOccurrenceDetail => {
+  const { timing = 'upcoming', schedule = WEEKLY_ON_TUESDAYS, calendarOccurrence, ...fields } = overrides;
+  const occurrence: LessonOccurrence = { ...baseLesson, ...fields };
+  const nextWeek: LessonOccurrence = { ...occurrence, date: plusOneWeek(occurrence.date), status: 'scheduled', cancellationReason: undefined };
+  const isAddable = occurrence.status === 'scheduled' && timing === 'upcoming';
+
+  return { ...occurrence, timing, schedule, calendarOccurrence: calendarOccurrence !== undefined ? calendarOccurrence : isAddable ? occurrence : nextWeek };
+};
 
 // A card in either row: no `timing`, because list responses do not carry one.
 const railLesson = (index: number, overrides: Partial<LessonOccurrence> = {}): LessonOccurrence => ({
@@ -127,6 +145,15 @@ const navigationLinks = (canvas: ReturnType<typeof within>) => [
   canvas.queryByLabelText(GOOGLE_MAPS_ARIA_LABEL),
 ];
 
+// What the actions row offers, read off the page: the share and calendar
+// buttons, and the report line that closes the page.
+const actionButtons = (canvas: ReturnType<typeof within>) => ({
+  share: canvas.queryByRole('button', { name: SHARE_LABEL }),
+  calendar: canvas.queryByRole('button', { name: ADD_TO_CALENDAR_LABEL }),
+});
+
+const reportButton = (canvas: ReturnType<typeof within>) => canvas.findByRole('button', { name: new RegExp(reportConsts.REPORT_PROMPT_ACTION) });
+
 const rabbiRowTitle = rabbiRailTitle(rabbiDisplayName(populatedRabbi));
 const areaRowTitle = areaLinkLabel(AREA_NAME);
 
@@ -160,6 +187,64 @@ export const AreaPreviewPopulated: Story = {
   decorators: [withRoute('lesson-populated', '2026-09-08')],
   parameters: { apiMocks: { handlers: { occurrence: occurrenceHandler(populatedLesson) } } },
   args: readyRows(),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await reportButton(canvas);
+    const { share, calendar } = actionButtons(canvas);
+    await expect(share).toBeVisible();
+    await expect(calendar).toBeVisible();
+  },
+};
+
+// The report line opens a window that names the lesson it is about.
+export const ReportOpensWithTheLesson: Story = {
+  decorators: [withRoute('lesson-populated', '2026-09-08')],
+  parameters: { apiMocks: { handlers: { occurrence: occurrenceHandler(populatedLesson) } } },
+  args: readyRows(),
+  play: async ({ canvasElement }) => {
+    await userEvent.click(await reportButton(within(canvasElement)));
+
+    const dialog = await within(document.body).findByRole('dialog', { name: reportConsts.REPORT_WINDOW_TITLE });
+    await expect(within(dialog).getByText(reportConsts.REPORT_CONTEXT_LABELS.lesson)).toBeInTheDocument();
+    await expect(within(dialog).getByText('עיונים בפרשת השבוע עם הרב יעקב מזרחי')).toBeInTheDocument();
+    await expect(within(dialog).getByText('יום שלישי, 8 בספטמבר, בשעה 20:30')).toBeInTheDocument();
+  },
+};
+
+// A one-time lesson ahead: share and calendar are both there, and the
+// calendar button adds it straight away, with no sheet to ask.
+export const OneTimeUpcoming: Story = {
+  decorators: [withRoute('lesson-once-ahead', '2026-09-08')],
+  parameters: {
+    apiMocks: {
+      handlers: {
+        occurrence: occurrenceHandler(lesson({ lessonId: 'lesson-once-ahead', schedule: { kind: 'once' }, calendarOccurrence: { ...baseLesson, lessonId: 'lesson-once-ahead' }, rabbi: populatedRabbi })),
+      },
+    },
+  },
+  args: readyRows(),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await reportButton(canvas);
+    const { share, calendar } = actionButtons(canvas);
+    await expect(share).toBeVisible();
+    await expect(calendar).toBeVisible();
+  },
+};
+
+// A men-only or women-only lesson keeps its actions: the audience goes into
+// the share text, not into whether the row shows.
+export const WomenOnlyUpcoming: Story = {
+  decorators: [withRoute('lesson-women', '2026-09-08')],
+  parameters: { apiMocks: { handlers: { occurrence: occurrenceHandler(lesson({ lessonId: 'lesson-women', audience: 'women', rabbi: rabbanit })) } } },
+  args: readyRows(rabbanit),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await reportButton(canvas);
+    const { share, calendar } = actionButtons(canvas);
+    await expect(share).toBeVisible();
+    await expect(calendar).toBeVisible();
+  },
 };
 
 // Both rows still loading: the real titles and links already on screen, the
@@ -226,12 +311,55 @@ export const OneTimePast: Story = {
     apiMocks: {
       handlers: {
         occurrence: occurrenceHandler(
-          lesson({ lessonId: 'lesson-once', date: '2026-08-20', timing: 'tookPlace', title: 'שיעור מיוחד לכבוד ראש חודש', rabbi: populatedRabbi }),
+          lesson({
+            lessonId: 'lesson-once',
+            date: '2026-08-20',
+            timing: 'tookPlace',
+            title: 'שיעור מיוחד לכבוד ראש חודש',
+            rabbi: populatedRabbi,
+            schedule: { kind: 'once' },
+            calendarOccurrence: null,
+          }),
         ),
       },
     },
   },
   args: { rabbiLessons: ready(rabbiRail(populatedRabbi, 2)), areaPreview: areaPreview(ready(areaRail(6))) },
+  // Nothing to share or add for a lesson that is over; the report stays.
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await reportButton(canvas);
+    await expect(actionButtons(canvas)).toEqual({ share: null, calendar: null });
+  },
+};
+
+// A one-time lesson cancelled for a date still ahead: no date will happen,
+// so no actions, and the report stays.
+export const OneTimeCancelled: Story = {
+  decorators: [withRoute('lesson-once-cancelled', '2026-09-15')],
+  parameters: {
+    apiMocks: {
+      handlers: {
+        occurrence: occurrenceHandler(
+          lesson({
+            lessonId: 'lesson-once-cancelled',
+            date: '2026-09-15',
+            status: 'cancelled',
+            cancellationReason: 'השיעור מבוטל השבוע עקב אירוע משפחתי אצל הרב',
+            rabbi: populatedRabbi,
+            schedule: { kind: 'once' },
+            calendarOccurrence: null,
+          }),
+        ),
+      },
+    },
+  },
+  args: readyRows(),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await reportButton(canvas);
+    await expect(actionButtons(canvas)).toEqual({ share: null, calendar: null });
+  },
 };
 
 // D: the rabbi has nothing coming up. The heading stays as a link, over an
@@ -344,6 +472,15 @@ export const CancelledUpcoming: Story = {
     },
   },
   args: readyRows(),
+  // The pattern is still true on a weekly lesson's cancelled date: share and
+  // calendar stay, and the calendar adds the next scheduled date.
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await reportButton(canvas);
+    const { share, calendar } = actionButtons(canvas);
+    await expect(share).toBeVisible();
+    await expect(calendar).toBeVisible();
+  },
 };
 
 // A rabbanit's cancelled date keeps the plain future label while it is

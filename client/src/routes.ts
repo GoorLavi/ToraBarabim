@@ -42,4 +42,8 @@ export default [
   // Outside `layout`: it renders no UI, only an XML `Response` (see
   // routes/sitemap.ts).
   route('sitemap.xml', 'routes/sitemap.ts'),
+  // Also resource routes. The feed URL is a contract with every subscriber's
+  // calendar and is never renamed (see routes/lesson-calendar.ts).
+  route('lesson/:lessonId/calendar.ics', 'routes/lesson-calendar.ts'),
+  route('lesson/:lessonId/:date/event.ics', 'routes/lesson-event.ts'),
 ] satisfies RouteConfig;

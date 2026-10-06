@@ -39,6 +39,13 @@ test, in the real Chromium already installed at `PLAYWRIGHT_BROWSERS_PATH`. Neve
   only under the runner. So a story that opens its own popover is already open when you
   look at it, and clicking the trigger yourself closes it again. This costs a wasted
   review pass every time someone rediscovers it.
+- **To assert on calls to a module's export, register the module once in
+  `.storybook/preview.tsx` with `sb.mock(import(...), { spy: true })` and assert on
+  `mocked(fn)`, clearing it in the story's `beforeEach`.** `spyOn` on a namespace
+  import throws "Cannot redefine property", because an ESM namespace is read-only.
+- **A sheet or popover can portal into `document.body`, so find a dialog with
+  `within(document.body)`, never the canvas.** Below `md` the date picker is a sheet,
+  and the runner's default frame is below `md`.
 - **A story that mounts its own `QueryClient` sets `retry: false`,** for the reason
   `.storybook/preview.tsx` already gives at its shared client.
 - **Neither project runs in CI**, by the owner's decision, reaffirmed on 2026-09-30 for
