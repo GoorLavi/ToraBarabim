@@ -1,6 +1,6 @@
-import type { VisitorMessageDraft } from '~/HomePage/components/HomeRails/models';
 import { isIsraeliMobilePhone } from '~/helpers';
 
+import type { VisitorMessageDraft } from '../../models';
 import { FIELD_ERRORS } from './consts';
 import type { VisitorMessageFormErrors } from './models';
 

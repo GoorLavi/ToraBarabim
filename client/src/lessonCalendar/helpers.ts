@@ -26,11 +26,18 @@ const taggedUrl = (path: string, kind: CalendarEventKind): string => {
   return `${SITE_ORIGIN}${path}?${params.toString()}`;
 };
 
+// "{title or שיעור} עם {rabbi}": the lesson as one line, shared by the event's
+// summary, the share text and the report window's context.
+export const lessonHeadline = (occurrence: Pick<LessonOccurrence, 'title'>, teachingRabbiName: string): string =>
+  `${occurrence.title?.trim() || consts.DEFAULT_EVENT_TITLE} עם ${teachingRabbiName}`;
+
+// Empty for a lesson open to both audiences: it adds nothing to its own title.
+export const audienceSuffixOf = (audience: LessonOccurrence['audience']): string =>
+  audience === 'mixed' ? '' : `, ${consts.AUDIENCE_SUMMARY_SUFFIXES[audience]}`;
+
 const summaryOf = (occurrence: LessonOccurrence, teachingRabbiName: string): string => {
-  const title = occurrence.title?.trim() || consts.DEFAULT_EVENT_TITLE;
-  const audienceSuffix = occurrence.audience === 'mixed' ? '' : `, ${consts.AUDIENCE_SUMMARY_SUFFIXES[occurrence.audience]}`;
   const prefix = occurrence.status === 'cancelled' ? consts.CANCELLED_SUMMARY_PREFIX : '';
-  return `${prefix}${title} עם ${teachingRabbiName}${audienceSuffix}`;
+  return `${prefix}${lessonHeadline(occurrence, teachingRabbiName)}${audienceSuffixOf(occurrence.audience)}`;
 };
 
 const descriptionOf = (occurrence: LessonOccurrence, teachingRabbiName: string, lessonUrl: string, siteUrl: string, kind: CalendarEventKind): string => {

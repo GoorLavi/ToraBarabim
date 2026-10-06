@@ -8,8 +8,9 @@ import { CourseRail } from '~/components/CourseRail/CourseRail';
 import { DayGroup } from '~/components/DayGroup/DayGroup';
 import { DayGroupSkeleton } from '~/components/DayGroupSkeleton/DayGroupSkeleton';
 import { QuietButton } from '~/components/QuietButton/QuietButton';
+import { ReportMistake } from '~/components/ReportMistake/ReportMistake';
 import { StateCard } from '~/components/StateCard/StateCard';
-import { dayGroupHeading, groupByDay } from '~/helpers';
+import { addressLine, dayGroupHeading, groupByDay } from '~/helpers';
 
 import { PlaceEmptyLessons } from './components/PlaceEmptyLessons/PlaceEmptyLessons';
 import { PlaceHero } from './components/PlaceHero/PlaceHero';
@@ -149,6 +150,8 @@ export const PlacePage = styled(({ className }: PlacePageProps) => {
               )}
             </>
           )}
+
+          <ReportMistake {...{ subject: { kind: 'place', placeId: place.id }, contextLines: [place.name, `${addressLine(place.street, place.floor)}, ${place.city}`] }} />
         </>
       )}
     </main>

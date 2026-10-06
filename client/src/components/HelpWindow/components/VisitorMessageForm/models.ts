@@ -1,4 +1,4 @@
-import type { VisitorMessageDraft, VisitorMessageSendStatus } from '~/HomePage/components/HomeRails/models';
+import type { VisitorMessageDraft, VisitorMessageSendStatus } from '../../models';
 
 export type VisitorMessageField = 'name' | 'phone' | 'message';
 

@@ -5,17 +5,19 @@ import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
 import { BackLink } from '~/components/BackLink/BackLink';
 import { NotFoundScreen } from '~/components/NotFoundScreen/NotFoundScreen';
+import { ReportMistake } from '~/components/ReportMistake/ReportMistake';
 import { areaLinkLabel } from '~/consts';
 import { areaPath, cityPath, rabbiDisplayName, rabbiPath } from '~/helpers';
 
 import { DeferredLessonRail } from './components/DeferredLessonRail/DeferredLessonRail';
+import { LessonActions } from './components/LessonActions/LessonActions';
 import { LessonDetailsSkeleton } from './components/LessonDetailsSkeleton/LessonDetailsSkeleton';
 import { LessonNote } from './components/LessonNote/LessonNote';
 import { LessonTicket } from './components/LessonTicket/LessonTicket';
 import { LessonTicketSkeleton } from './components/LessonTicket/components/LessonTicketSkeleton/LessonTicketSkeleton';
 import { RabbiBio } from './components/RabbiBio/RabbiBio';
 import * as consts from './consts';
-import { lessonErrorCopy, teachingRabbiOf } from './helpers';
+import { lessonErrorCopy, lessonReportContextLines, teachingRabbiOf } from './helpers';
 import type { LessonPageProps } from './models';
 import * as styles from './styles';
 import { useLessonOccurrence } from './useLessonOccurrence';
@@ -65,6 +67,8 @@ export const LessonPage = styled(({ className, rabbiLessons, areaPreview }: Less
         <>
           <LessonTicket occurrence={occurrence} />
 
+          <LessonActions occurrence={occurrence} />
+
           {occurrence.status === 'cancelled' && (
             <Link className="otherLessons" to={cityPath({ slug: occurrence.venue.citySlug })} dir="auto">
               {consts.otherLessonsInCityLabel(occurrence.venue.city)}
@@ -99,6 +103,8 @@ export const LessonPage = styled(({ className, rabbiLessons, areaPreview }: Less
           </div>
 
           <RabbiBio {...{ teachingRabbi: teachingRabbiOf(occurrence) }} />
+
+          <ReportMistake {...{ subject: { kind: 'lesson', lessonId: occurrence.lessonId, date: occurrence.date }, contextLines: lessonReportContextLines(occurrence) }} />
 
           <BackLink to="/" label={consts.BACK_TO_ALL_LESSONS_LABEL} />
         </>

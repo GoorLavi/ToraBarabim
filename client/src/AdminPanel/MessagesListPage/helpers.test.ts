@@ -43,3 +43,28 @@ describe('mergeUpdatedFields', () => {
     expect(merged.status).toBe('unhandled');
   });
 });
+
+describe('mergeUpdatedFields on a report', () => {
+  const report: AdminVisitorMessage = {
+    ...base,
+    type: 'report-mistake',
+    subject: { kind: 'lesson', lessonId: 'lesson-1', date: '2026-10-13' },
+    handlingNote: null,
+    status: 'unhandled',
+  };
+
+  it('keeps the subject it is about through a toggle', () => {
+    const merged = mergeUpdatedFields(report, { ...report, status: 'handled', handledAt: '2026-10-02T12:00:00.000Z' }, { handled: true });
+
+    expect(merged).toMatchObject({ type: 'report-mistake', subject: { kind: 'lesson', lessonId: 'lesson-1', date: '2026-10-13' }, status: 'handled' });
+  });
+
+  it('drops the handled time when the toggle sends false', () => {
+    const handledReport: AdminVisitorMessage = { ...report, status: 'handled', handledAt: '2026-10-02T12:00:00.000Z' };
+    const merged = mergeUpdatedFields(handledReport, report, { handled: false });
+
+    expect(merged).not.toHaveProperty('handledAt');
+    expect(merged).toMatchObject({ subject: { kind: 'lesson' }, status: 'unhandled' });
+  });
+});
+

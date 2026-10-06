@@ -1,6 +1,7 @@
 import type { AreaSummary, City, CloseReason, CourseTopic, LessonOccurrence, LessonVenue, LessonVenuePanel, Place, Rabbi, ResolvedAddress } from '@torabarabim/common';
 
-import { LESSON_TOPIC_LABELS, RABBI_HONORIFIC_LABELS } from './consts';
+import { SITE_ORIGIN } from '../consts';
+import { LESSON_TOPIC_LABELS, RABBI_HONORIFIC_LABELS, SHARED_LINK_FLAG } from './consts';
 import type { DayGroup } from './models';
 
 // The one place a rabbi's display name is composed, from the bare stored
@@ -50,6 +51,10 @@ export const coursePath = (course: { id: string; slug: string }): string => `/co
 // id React Router matches on and the ISO date of the specific occurrence.
 export const lessonPath = (occurrence: Pick<LessonOccurrence, 'lessonId' | 'date'>): string =>
   `/lesson/${encodeURIComponent(occurrence.lessonId)}/${encodeURIComponent(occurrence.date)}`;
+
+// The link a share button carries for a page: the full address of its path
+// with the bare shared-link flag.
+export const sharedUrlOf = (path: string): string => `${SITE_ORIGIN}${path}?${SHARED_LINK_FLAG}`;
 
 // Shared by the city page, the cities directory and the area page: once
 // someone has chosen where, the only question left is when (design spec,

@@ -14,6 +14,7 @@ export const ShareButton = css(
     display: inline-grid;
     grid-template-columns: auto auto;
     align-items: center;
+    justify-content: center;
     column-gap: ${theme.spacing.sm};
     min-block-size: 48px;
     padding-block: 11px;

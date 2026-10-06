@@ -1,5 +1,6 @@
-import type { DedicationGroup, HomeResponse, VisitorMessageType } from '@torabarabim/common';
+import type { DedicationGroup, HelpRequestType, HomeResponse } from '@torabarabim/common';
 
+import type { VisitorMessageDraft, VisitorMessageSendStatus } from '~/components/HelpWindow/models';
 import type { HomeApiError } from '~/HomePage/api';
 
 // The slice of TanStack Query's `UseQueryResult` this component actually
@@ -23,20 +24,10 @@ export interface HomeRailsProps {
   healingGroup: DedicationGroup | undefined;
 }
 
-// What a visitor has typed so far into one type's form. Strings as typed:
-// trimming and normalising happen when the message is built for the wire.
-export interface VisitorMessageDraft {
-  name: string;
-  phone: string;
-  message: string;
-}
-
-export type VisitorMessageSendStatus = 'idle' | 'sending' | 'sent' | 'failed';
-
 // The window that is open, and the tile that opened it. The element is only
 // held to return focus to it on close, and only if it is still in the page.
 export interface OpenHelpWindow {
-  kind: VisitorMessageType;
+  kind: HelpRequestType;
   opener: HTMLElement;
 }
 
@@ -44,11 +35,11 @@ export interface OpenHelpWindow {
 // each type keeps its own draft and its own send state, so a draft survives
 // closing the window and a refetch that moves the tile underneath it.
 export interface HelpWindowState {
-  openKind: VisitorMessageType | undefined;
-  drafts: Record<VisitorMessageType, VisitorMessageDraft>;
-  sendStatuses: Record<VisitorMessageType, VisitorMessageSendStatus>;
-  open: (kind: VisitorMessageType, opener: HTMLElement) => void;
+  openKind: HelpRequestType | undefined;
+  drafts: Record<HelpRequestType, VisitorMessageDraft>;
+  sendStatuses: Record<HelpRequestType, VisitorMessageSendStatus>;
+  open: (kind: HelpRequestType, opener: HTMLElement) => void;
   close: () => void;
-  changeDraft: (kind: VisitorMessageType, draft: VisitorMessageDraft) => void;
-  send: (kind: VisitorMessageType) => void;
+  changeDraft: (kind: HelpRequestType, draft: VisitorMessageDraft) => void;
+  send: (kind: HelpRequestType) => void;
 }

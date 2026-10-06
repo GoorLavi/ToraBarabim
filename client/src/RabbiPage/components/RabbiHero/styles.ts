@@ -88,6 +88,12 @@ export const RabbiHero = css(
         line-height: ${theme.typography.body.phone.lineHeight};
       }
     }
+
+    /* Wraps with the hero and never stretches to the names block's width. */
+    > .share {
+      margin-block-start: ${theme.spacing.md};
+      max-inline-size: 100%;
+    }
   }
 `,
 );

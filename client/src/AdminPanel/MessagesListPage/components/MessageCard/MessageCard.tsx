@@ -8,7 +8,7 @@ import { TYPE_LABELS } from '../../consts';
 import { useUpdateVisitorMessage } from '../../useUpdateVisitorMessage';
 import { HandlingNote } from './components/HandlingNote/HandlingNote';
 import * as consts from './consts';
-import { formatReceivedAt } from './helpers';
+import { formatReceivedAt, reportSubjectLink } from './helpers';
 import type { MessageCardProps } from './models';
 import * as styles from './styles';
 
@@ -38,6 +38,12 @@ export const MessageCard = styled(({ className, message }: MessageCardProps) => 
         <p className="message" dir="auto">
           {message.message}
         </p>
+
+        {message.type === 'report-mistake' && (
+          <a className="subject" href={reportSubjectLink(message.subject).href} target="_blank" rel="noopener noreferrer">
+            {reportSubjectLink(message.subject).label}
+          </a>
+        )}
 
         <HandlingNote {...{ messageId: message.id, note: message.handlingNote }} />
       </div>

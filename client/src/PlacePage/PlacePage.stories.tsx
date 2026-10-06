@@ -1,7 +1,10 @@
 import type { CityDetailResponse, LessonOccurrence, PlaceDetailResponse } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { expect, within } from 'storybook/test';
 import { Route, Routes } from 'react-router-dom';
 
+import { REPORT_PROMPT_ACTION } from '~/components/ReportMistake/consts';
+import { SHARE_LABEL } from '~/components/ShareButton/consts';
 import { courseFixture } from '~/courseFixture';
 import { rabbiFixture } from '~/rabbiFixture';
 import { installMockFetch, jsonResponse, NEVER_RESOLVES, placeholderPhoto } from '~/storyMocks';
@@ -162,16 +165,33 @@ const meta: Meta<typeof PlacePage> = {
 export default meta;
 type Story = StoryObj<typeof PlacePage>;
 
-export const Populated: Story = { decorators: [withRoute('story-populated')] };
-export const NoPhoto: Story = { decorators: [withRoute('story-nophoto')] };
+// Once the place has loaded the page carries a share button in its hero and
+// the report line at its end, whatever the lessons section is showing.
+const expectShareAndReport = async (canvasElement: HTMLElement): Promise<void> => {
+  const canvas = within(canvasElement);
+  await expect(await canvas.findByRole('button', { name: SHARE_LABEL })).toBeVisible();
+  await expect(await canvas.findByRole('button', { name: new RegExp(REPORT_PROMPT_ACTION) })).toBeVisible();
+};
+
+export const Populated: Story = { decorators: [withRoute('story-populated')], play: ({ canvasElement }) => expectShareAndReport(canvasElement) };
+export const NoPhoto: Story = { decorators: [withRoute('story-nophoto')], play: ({ canvasElement }) => expectShareAndReport(canvasElement) };
 export const WithFloor: Story = { decorators: [withRoute('story-withfloor')] };
 export const EmptyWidenedToCity: Story = { decorators: [withRoute('story-empty-widened')] };
 // The city is empty too, so the page widens a second time, to the area, and
 // finds a real lesson there instead of dead-ending on `כתבו לנו` alone
 // (design gate finding F2).
 export const EmptyCityAlsoEmpty: Story = { decorators: [withRoute('story-empty-also')] };
-export const VeryLongName: Story = { decorators: [withRoute('story-longname')] };
-export const NotFound: Story = { decorators: [withRoute('story-notfound')] };
+export const VeryLongName: Story = { decorators: [withRoute('story-longname')], play: ({ canvasElement }) => expectShareAndReport(canvasElement) };
+// No place, nothing to share or report.
+export const NotFound: Story = {
+  decorators: [withRoute('story-notfound')],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole('heading', { level: 1 });
+    await expect(canvas.queryByRole('button', { name: SHARE_LABEL })).toBeNull();
+    await expect(canvas.queryByRole('button', { name: new RegExp(REPORT_PROMPT_ACTION) })).toBeNull();
+  },
+};
 export const ServerError: Story = { decorators: [withRoute('story-error')] };
 // The head never gets its own skeleton (build brief), so this exercises the
 // one loading state PlacePage does draw: the lesson section's

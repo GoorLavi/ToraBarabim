@@ -1,4 +1,4 @@
-import type { RabbiHonorific } from '@torabarabim/common';
+import type { RabbiHonorific, Weekday } from '@torabarabim/common';
 
 import type { PastNoticeTiming, RoleTense } from './models';
 
@@ -65,3 +65,23 @@ export const rabbiRailTitle = (rabbiName: string): string => `לכל השיעו�
 // The width running text (the note, the bio, and the skeleton standing in for
 // them) caps at, even inside the wider desktop column.
 export const RUNNING_TEXT_MAX_INLINE_SIZE = '640px';
+
+// Right-to-left mark: the first line of a share text can open with a Latin
+// word or a digit in a rabbi's or a lesson's name, and without it a chat app
+// sets the whole message left to right.
+export const RIGHT_TO_LEFT_MARK = '\u200F';
+
+export const AT_TIME_PREFIX = 'בשעה';
+
+export const WEEKDAY_NAMES: Record<Weekday, string> = {
+  0: 'ראשון',
+  1: 'שני',
+  2: 'שלישי',
+  3: 'רביעי',
+  4: 'חמישי',
+  5: 'שישי',
+  6: 'שבת',
+};
+
+// A single Saturday is "כל שבת", never "כל יום שבת".
+export const SATURDAY: Weekday = 6;

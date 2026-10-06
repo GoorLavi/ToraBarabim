@@ -175,3 +175,8 @@ export const COURSE_CARD_META_SEPARATOR = ' ·\u00A0';
 // (`LessonCard`, `CourseCard`) steps its own type scale at this rendered
 // width, via `@container` rather than a viewport media query.
 export const CARD_WIDE_THRESHOLD = '190px';
+
+// The bare flag a shared link carries (`?s`), so a visit that started from a
+// friend's message is recognisable in the page view. Short on purpose: it
+// sits in front of a person in WhatsApp.
+export const SHARED_LINK_FLAG = 's';

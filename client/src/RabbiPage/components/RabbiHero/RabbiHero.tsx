@@ -1,9 +1,11 @@
 import classNames from 'classnames';
 import styled from 'styled-components';
 
-import { rabbiDisplayName } from '~/helpers';
+import { ShareButton } from '~/components/ShareButton/ShareButton';
+import { rabbiDisplayName, rabbiPath, sharedUrlOf } from '~/helpers';
 import { rabbiMetaLabel } from '~/RabbiPage/helpers';
 
+import * as consts from './consts';
 import type { RabbiHeroProps } from './models';
 import * as styles from './styles';
 
@@ -27,6 +29,7 @@ export const RabbiHero = styled(({ className, rabbi }: RabbiHeroProps) => (
         </p>
       )}
       <p className="meta">{rabbiMetaLabel(rabbi)}</p>
+      <ShareButton {...{ className: 'share', text: consts.shareText(rabbiDisplayName(rabbi)), url: sharedUrlOf(rabbiPath(rabbi)), tone: 'plum', surface: 'rabbiPage' }} />
     </div>
   </div>
 ))`
