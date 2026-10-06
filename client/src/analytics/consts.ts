@@ -34,6 +34,9 @@ export const MIXPANEL_EVENTS = {
   posterScan: 'Poster Scan',
   helpTileClick: 'Help Tile Click',
   visitorMessageSent: 'Visitor Message Sent',
+  installCardShown: 'Install Card Shown',
+  installCardDismissed: 'Install Card Dismissed',
+  installAccepted: 'Install Accepted',
 } as const;
 
 // A `LessonCard` can sit in any of these lists; `homeRail` is the only one
@@ -101,6 +104,23 @@ export type NavigationProvider = 'waze' | 'googleMaps';
 export type AppSurface = 'public' | 'rabbiPanel' | 'adminPanel';
 export type Viewport = 'mobile' | 'desktop';
 
+// How a visitor can add the site to their home screen, decided by what the
+// browser can do first and by who it is second (InstallPrompt/helpers.ts).
+// `chromiumPrompt` is the deferred native prompt; the iOS paths are
+// share-menu instructions (Safari and every other iOS browser put the share
+// button in different places); `androidGeneric` and `inAppBrowser` are
+// instructions reachable from the footer only.
+export type InstallPlatformPath = 'chromiumPrompt' | 'iosSafari' | 'iosOtherBrowser' | 'androidGeneric' | 'inAppBrowser';
+
+// What opened the install flow: the automatic card, or the footer link.
+export type InstallTrigger = 'auto' | 'footer';
+
+// `pwaStartUrl` is a landing on the manifest's start_url (`?source=pwa`)
+// that is not in a standalone window, such as an installed shortcut that
+// opened in a browser tab. It is kept apart from `standalone` so the two
+// are never counted as the same thing.
+export type LaunchMode = 'standalone' | 'pwaStartUrl' | 'browser';
+
 // Caps how long a page can hold events fired before the dynamic
 // `mixpanel-browser` import resolves (or before an ad blocker, decision
 // 0025, defeats it). Without a cap a session that never gets a working SDK
@@ -126,6 +146,11 @@ export const AUTOMATED_USER_AGENT_PATTERN = /bot|crawl|spider|headless|\bClaude\
 export const INTERNAL_BROWSER_STORAGE_KEY = 'torabarabim:internalBrowser';
 
 export const POSTER_SOURCE_PARAM = 'utm_source';
+
+// Hand-mirrored from the manifest's start_url (`/?source=pwa`), emitted by the
+// PWA build plugin in client/pwa-source.
+export const PWA_START_URL_SOURCE_PARAM = 'source';
+export const PWA_START_URL_SOURCE_VALUE = 'pwa';
 
 // Hand-mirrored from the QR codes printed on the two posters: the keys are
 // the exact values a scan opens the site with, so changing one here without

@@ -1,7 +1,13 @@
 import type { LessonOccurrence, Rabbi } from '@torabarabim/common';
 
-import { AUTOMATED_USER_AGENT_PATTERN, POSTER_SOURCE_PARAM, POSTER_SOURCES_BY_UTM_VALUE } from './consts';
-import type { AppSurface } from './consts';
+import {
+  AUTOMATED_USER_AGENT_PATTERN,
+  POSTER_SOURCE_PARAM,
+  POSTER_SOURCES_BY_UTM_VALUE,
+  PWA_START_URL_SOURCE_PARAM,
+  PWA_START_URL_SOURCE_VALUE,
+} from './consts';
+import type { AppSurface, LaunchMode } from './consts';
 import type { ActiveFilters, LessonClickContext, LessonClickProps, NavigationClickProps, PosterSource } from './models';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -107,4 +113,9 @@ export const posterSourceFrom = (search: string): PosterSource | undefined => {
   const utmSource = new URLSearchParams(search).get(POSTER_SOURCE_PARAM);
   if (utmSource === null) return undefined;
   return POSTER_SOURCES_BY_UTM_VALUE.get(utmSource);
+};
+
+export const launchModeFrom = (search: string, isStandalone: boolean): LaunchMode => {
+  if (isStandalone) return 'standalone';
+  return new URLSearchParams(search).get(PWA_START_URL_SOURCE_PARAM) === PWA_START_URL_SOURCE_VALUE ? 'pwaStartUrl' : 'browser';
 };
