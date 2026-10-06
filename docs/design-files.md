@@ -154,6 +154,14 @@ tidies it away:
   shell tab. Approved on 2026-10-01; it becomes `07 הודעות` when the change ships. The
   page before it, `07 הודעות · לאישור` (`189:2`), is a superseded first round kept
   until the owner says to delete it.
+- **`הוספה למסך הבית · PWA · לאישור`** (`480:1747`), beside `01 בית`: the install card
+  (Chromium, iOS, desktop corner card), the iOS and browser-menu instructions, the
+  in-app explanation, the footer link, the offline page, the card above the course
+  page's contact bar, and the behaviour notes. Approved by the owner on 2026-10-06.
+- **`01 לוגו וסמל · אייקון ומסך פתיחה (PWA) · לאישור`** (`193:2`), in the language file,
+  beside `01 לוגו וסמל`: the home-screen icons (any and maskable), mock home screens,
+  the iOS splash master, the Android splash preview, and the manifest colours. Approved
+  by the owner on 2026-10-06; the committed SVG masters are exported from it.
 
 Each folds into the numbered structure when its change ships.
 
