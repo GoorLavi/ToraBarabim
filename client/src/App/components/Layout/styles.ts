@@ -9,6 +9,7 @@ export const Layout = css`
   display: flex;
   flex-direction: column;
   min-block-size: 100dvh;
+  background: ${({ theme }) => theme.colors.bg};
 
   > .body {
     flex: 1 0 auto;
