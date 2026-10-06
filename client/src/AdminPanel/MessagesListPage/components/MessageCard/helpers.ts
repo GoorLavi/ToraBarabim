@@ -1,6 +1,6 @@
 import type { VisitorMessageSubject } from '@torabarabim/common';
 
-import { joinWithMiddleDot, lessonPath } from '~/helpers';
+import { joinWithMiddleDot, lessonPath, placeIdPath } from '~/helpers';
 
 import { SUBJECT_LESSON_LINK_LABEL, SUBJECT_PLACE_LINK_LABEL } from './consts';
 
@@ -21,4 +21,4 @@ export const formatReceivedAt = (isoTimestamp: string): string => {
 export const reportSubjectLink = (subject: VisitorMessageSubject): { href: string; label: string } =>
   subject.kind === 'lesson'
     ? { href: lessonPath(subject), label: SUBJECT_LESSON_LINK_LABEL }
-    : { href: `/places/${encodeURIComponent(subject.placeId)}`, label: SUBJECT_PLACE_LINK_LABEL };
+    : { href: placeIdPath({ id: subject.placeId }), label: SUBJECT_PLACE_LINK_LABEL };

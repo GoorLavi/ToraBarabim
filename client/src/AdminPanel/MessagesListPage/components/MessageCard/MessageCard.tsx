@@ -15,6 +15,7 @@ import * as styles from './styles';
 export const MessageCard = styled(({ className, message }: MessageCardProps) => {
   const toggle = useUpdateVisitorMessage(message.id);
   const isHandled = message.status === 'handled';
+  const subjectLink = message.type === 'report-mistake' ? reportSubjectLink(message.subject) : undefined;
 
   return (
     <article className={className}>
@@ -39,9 +40,9 @@ export const MessageCard = styled(({ className, message }: MessageCardProps) => 
           {message.message}
         </p>
 
-        {message.type === 'report-mistake' && (
-          <a className="subject" href={reportSubjectLink(message.subject).href} target="_blank" rel="noopener noreferrer">
-            {reportSubjectLink(message.subject).label}
+        {subjectLink && (
+          <a className="subject" href={subjectLink.href} target="_blank" rel="noopener noreferrer">
+            {subjectLink.label}
           </a>
         )}
 

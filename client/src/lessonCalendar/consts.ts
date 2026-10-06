@@ -26,9 +26,11 @@ export const AUDIENCE_SUMMARY_SUFFIXES = {
 
 export const AUDIENCE_LINE_PREFIX = 'קהל: ';
 export const TOPIC_LINE_PREFIX = 'נושא: ';
-export const LESSON_LINK_LINE_PREFIX = 'פרטים ועדכונים: ';
-export const SITE_LINK_LINE_PREFIX = 'תורה ברבים: ';
+// Each label sits on its own line with its link on the next, never on the
+// same line: a link beside Hebrew text is set the wrong way round.
+export const LESSON_LINK_LABEL = 'פרטים ועדכונים:';
+export const SITE_LINK_LABEL = 'תורה ברבים:';
 
-// Draft, for the editor: only the one-off add carries it, because only that
-// copy of the event goes stale.
-export const STATIC_EVENT_DISCLAIMER = 'שינויים בשיעור לא מתעדכנים ביומן, הקישור למעלה תמיד עדכני.';
+export const STATIC_EVENT_DISCLAIMER = 'אם השיעור ישתנה, האירוע הזה ביומן לא יתעדכן. הפרטים העדכניים תמיד בקישור "פרטים ועדכונים".';
+
+export const headlineLabel = (title: string, teachingRabbiName: string): string => `${title} עם ${teachingRabbiName}`;

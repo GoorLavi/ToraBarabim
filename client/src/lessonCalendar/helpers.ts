@@ -1,6 +1,6 @@
 import type { LessonOccurrence, LessonVenue } from '@torabarabim/common';
 
-import { AUDIENCE_LABELS, LESSON_TOPIC_LABELS } from '~/consts';
+import { AUDIENCE_LABELS, LESSON_TOPIC_LABELS, RIGHT_TO_LEFT_MARK } from '~/consts';
 import { addOneDay, israelDateTime, lessonPath, rabbiDisplayName } from '~/helpers';
 
 import { SITE_ORIGIN } from '../../consts';
@@ -29,7 +29,7 @@ const taggedUrl = (path: string, kind: CalendarEventKind): string => {
 // "{title or שיעור} עם {rabbi}": the lesson as one line, shared by the event's
 // summary, the share text and the report window's context.
 export const lessonHeadline = (occurrence: Pick<LessonOccurrence, 'title'>, teachingRabbiName: string): string =>
-  `${occurrence.title?.trim() || consts.DEFAULT_EVENT_TITLE} עם ${teachingRabbiName}`;
+  consts.headlineLabel(occurrence.title?.trim() || consts.DEFAULT_EVENT_TITLE, teachingRabbiName);
 
 // Empty for a lesson open to both audiences: it adds nothing to its own title.
 export const audienceSuffixOf = (audience: LessonOccurrence['audience']): string =>
@@ -40,17 +40,24 @@ const summaryOf = (occurrence: LessonOccurrence, teachingRabbiName: string): str
   return `${prefix}${lessonHeadline(occurrence, teachingRabbiName)}${audienceSuffixOf(occurrence.audience)}`;
 };
 
+const rtlLine = (line: string): string => `${RIGHT_TO_LEFT_MARK}${line}`;
+
 const descriptionOf = (occurrence: LessonOccurrence, teachingRabbiName: string, lessonUrl: string, siteUrl: string, kind: CalendarEventKind): string => {
   const detailLines = [
     teachingRabbiName,
     occurrence.audience === 'mixed' ? undefined : `${consts.AUDIENCE_LINE_PREFIX}${AUDIENCE_LABELS[occurrence.audience]}`,
     occurrence.topic ? `${consts.TOPIC_LINE_PREFIX}${LESSON_TOPIC_LABELS[occurrence.topic]}` : undefined,
     occurrence.note?.trim(),
-  ].filter((line): line is string => Boolean(line));
+  ]
+    .filter((line): line is string => Boolean(line))
+    .map(rtlLine);
 
-  const linkLines = [`${consts.LESSON_LINK_LINE_PREFIX}${lessonUrl}`, `${consts.SITE_LINK_LINE_PREFIX}${siteUrl}`];
-
-  const blocks = [detailLines, linkLines, ...(kind === 'static' ? [[consts.STATIC_EVENT_DISCLAIMER]] : [])];
+  const blocks = [
+    detailLines,
+    [rtlLine(consts.LESSON_LINK_LABEL), lessonUrl],
+    [rtlLine(consts.SITE_LINK_LABEL), siteUrl],
+    ...(kind === 'static' ? [[rtlLine(consts.STATIC_EVENT_DISCLAIMER)]] : []),
+  ];
   return blocks.map((lines) => lines.join('\n')).join('\n\n');
 };
 

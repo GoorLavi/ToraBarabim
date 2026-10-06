@@ -66,22 +66,11 @@ export const rabbiRailTitle = (rabbiName: string): string => `לכל השיעו�
 // them) caps at, even inside the wider desktop column.
 export const RUNNING_TEXT_MAX_INLINE_SIZE = '640px';
 
-// Right-to-left mark: the first line of a share text can open with a Latin
-// word or a digit in a rabbi's or a lesson's name, and without it a chat app
-// sets the whole message left to right.
-export const RIGHT_TO_LEFT_MARK = '\u200F';
-
 export const AT_TIME_PREFIX = 'בשעה';
-
-export const WEEKDAY_NAMES: Record<Weekday, string> = {
-  0: 'ראשון',
-  1: 'שני',
-  2: 'שלישי',
-  3: 'רביעי',
-  4: 'חמישי',
-  5: 'שישי',
-  6: 'שבת',
-};
 
 // A single Saturday is "כל שבת", never "כל יום שבת".
 export const SATURDAY: Weekday = 6;
+
+export const EVERY_SATURDAY_LABEL = 'כל שבת';
+export const everyWeekdayLabel = (bareWeekdayName: string): string => `כל יום ${bareWeekdayName}`;
+export const onWeekdaysLabel = (joinedBareWeekdayNames: string): string => `בימי ${joinedBareWeekdayNames}`;

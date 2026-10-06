@@ -1,5 +1,7 @@
 import type { Place } from '@torabarabim/common';
 
+import { RIGHT_TO_LEFT_MARK } from '~/consts';
+
 // The photo's fixed box from `lg` up; below that it runs the card's full
 // width at its own 16:9 ratio (styles.ts). Measured for this card (design
 // spec, "Head card"), not a shared token.
@@ -65,4 +67,4 @@ export const GOOGLE_MAPS_ICON_PATHS: ReadonlyArray<{ d: string; fill: string }> 
 export const WAZE_BUTTON_HOVER_COLOR = '#027A8C';
 export const GOOGLE_MAPS_BUTTON_HOVER_COLOR = '#3367D6';
 
-export const shareText = (place: Pick<Place, 'name' | 'city'>): string => `${place.name}, ${place.city}: כל השיעורים`;
+export const shareText = (place: Pick<Place, 'name' | 'city'>): string => `${RIGHT_TO_LEFT_MARK}${place.name}, ${place.city}: כל השיעורים`;

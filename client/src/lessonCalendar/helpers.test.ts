@@ -54,20 +54,33 @@ describe('calendarEventOf summary', () => {
 });
 
 describe('calendarEventOf description', () => {
+  const RLM = '\u200F';
+
   it('carries the disclaimer on the static event only', () => {
-    expect(calendarEventOf(occurrenceOf(), 'static').description).toContain('שינויים בשיעור לא מתעדכנים ביומן');
-    expect(calendarEventOf(occurrenceOf(), 'feed').description).not.toContain('שינויים בשיעור לא מתעדכנים ביומן');
+    expect(calendarEventOf(occurrenceOf(), 'static').description).toContain('האירוע הזה ביומן לא יתעדכן');
+    expect(calendarEventOf(occurrenceOf(), 'feed').description).not.toContain('האירוע הזה ביומן לא יתעדכן');
   });
 
-  it('tags the lesson link and the site link by surface', () => {
+  it('puts each link label on its own line with the tagged link on the next', () => {
     const staticEvent = calendarEventOf(occurrenceOf(), 'static');
     expect(staticEvent.url).toBe('https://torahbarabim.com/lesson/lesson-1/2026-07-14?utm_source=calendar&utm_medium=event');
-    expect(staticEvent.description).toContain(`פרטים ועדכונים: ${staticEvent.url}`);
-    expect(staticEvent.description).toContain('תורה ברבים: https://torahbarabim.com/?utm_source=calendar&utm_medium=event');
+    expect(staticEvent.description).toContain(`${RLM}פרטים ועדכונים:\n${staticEvent.url}`);
+    expect(staticEvent.description).toContain(`${RLM}תורה ברבים:\nhttps://torahbarabim.com/?utm_source=calendar&utm_medium=event`);
 
     const feedEvent = calendarEventOf(occurrenceOf(), 'feed');
     expect(feedEvent.url).toContain('utm_medium=feed');
-    expect(feedEvent.description).toContain('https://torahbarabim.com/?utm_source=calendar&utm_medium=feed');
+    expect(feedEvent.description).toContain('\nhttps://torahbarabim.com/?utm_source=calendar&utm_medium=feed');
+  });
+
+  it('opens every Hebrew line with a right-to-left mark and leaves the links bare', () => {
+    const lines = calendarEventOf(occurrenceOf({ audience: 'women', topic: 'halacha', note: 'כניסה מהחצר' }), 'static')
+      .description.split('\n')
+      .filter((line) => line !== '');
+    for (const line of lines) {
+      if (line.startsWith('https://')) continue;
+      expect(line.startsWith(RLM)).toBe(true);
+    }
+    expect(lines.filter((line) => line.startsWith('https://'))).toHaveLength(2);
   });
 
   it('lists audience, topic and note only when they exist', () => {

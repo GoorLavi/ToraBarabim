@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import styled from 'styled-components';
 
 import { ShareButton } from '~/components/ShareButton/ShareButton';
-import { googleMapsHref, placePath, sharedUrlOf, wazeHref } from '~/helpers';
+import { googleMapsHref, placeIdPath, sharedUrlOf, wazeHref } from '~/helpers';
 
 import * as consts from './consts';
 import { placeMetaLabel, unbreakableStreet } from './helpers';
@@ -76,7 +76,7 @@ export const PlaceHero = styled(({ className, place, lessonCount }: PlaceHeroPro
           </div>
         )}
 
-        <ShareButton {...{ className: 'share', text: consts.shareText(place), url: sharedUrlOf(placePath(place)), tone: 'plum', surface: 'placePage' }} />
+        <ShareButton {...{ className: 'share', text: consts.shareText(place), url: sharedUrlOf(placeIdPath(place)), tone: 'plum', surface: 'placePage' }} />
       </div>
     </div>
   );

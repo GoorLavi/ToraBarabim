@@ -28,6 +28,11 @@ export const directionForValue = (value: string): 'rtl' | 'auto' => (value.trim(
 export const rabbiPath = (rabbi: Pick<Rabbi, 'id' | 'slug'>): string =>
   `/rabbis/${encodeURIComponent(rabbi.id)}/${encodeURIComponent(rabbi.slug)}`;
 
+// A rabbi's path by id alone, which the route resolves and redirects to the
+// slugged address: short enough to share, where the slug is percent-encoded
+// Hebrew a hundred characters long.
+export const rabbiIdPath = (rabbi: Pick<Rabbi, 'id'>): string => `/rabbis/${encodeURIComponent(rabbi.id)}`;
+
 // The one place a city's public path is built. The slug travels on the
 // wire (`City.slug`), so this never calls the server's `toSlug` a second
 // time in the browser.
@@ -40,6 +45,9 @@ export const areaPath = (area: Pick<AreaSummary, 'slug'>): string => `/areas/${e
 // segments percent-encoded, `Place.slug` never empty so there is no bare-id
 // fallback to fall back to.
 export const placePath = (place: Pick<Place, 'id' | 'slug'>): string => `/places/${encodeURIComponent(place.id)}/${encodeURIComponent(place.slug)}`;
+
+// A place's path by id alone, for the same reason as `rabbiIdPath`.
+export const placeIdPath = (place: Pick<Place, 'id'>): string => `/places/${encodeURIComponent(place.id)}`;
 
 // The one place a course's public path is built, mirroring rabbiPath and
 // placePath: both segments percent-encoded. Typed against a minimal shape
@@ -55,6 +63,12 @@ export const lessonPath = (occurrence: Pick<LessonOccurrence, 'lessonId' | 'date
 // The link a share button carries for a page: the full address of its path
 // with the bare shared-link flag.
 export const sharedUrlOf = (path: string): string => `${SITE_ORIGIN}${path}?${SHARED_LINK_FLAG}`;
+
+// "א, ב ו־ג": the Hebrew list join, with a vav before the last item.
+export const joinWithConjunction = (items: string[]): string => {
+  if (items.length <= 1) return items.join('');
+  return `${items.slice(0, -1).join(', ')} ו${items[items.length - 1]}`;
+};
 
 // Shared by the city page, the cities directory and the area page: once
 // someone has chosen where, the only question left is when (design spec,

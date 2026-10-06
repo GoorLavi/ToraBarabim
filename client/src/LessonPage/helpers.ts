@@ -1,11 +1,13 @@
 import type { LessonOccurrence, LessonOccurrenceDetail, LessonSchedule, Rabbi, Weekday } from '@torabarabim/common';
 
-import { lessonPath, rabbiDisplayName, sharedUrlOf } from '~/helpers';
+import { RIGHT_TO_LEFT_MARK, WEEKDAY_BARE_LABELS } from '~/consts';
+import { joinWithConjunction, lessonPath, rabbiDisplayName, sharedUrlOf } from '~/helpers';
 import { audienceSuffixOf, lessonHeadline, venueNameOrStreet } from '~/lessonCalendar/helpers';
 
 import type { LessonPageApiError } from './api';
 import { dayNumberLabel, monthLabel, weekdayLabel } from './components/LessonTicket/helpers';
 import * as consts from './consts';
+import type { LessonActionsAvailability } from './models';
 
 // A 404 is a fact about the lesson, so its screen offers a way out. Every
 // other failure is transient, so its screen offers a retry instead: the two
@@ -34,18 +36,12 @@ export const teachingRabbiOf = (occurrence: Pick<LessonOccurrence, 'rabbi' | 'su
 export const occurrenceWhenLabel = (occurrence: Pick<LessonOccurrence, 'date' | 'startTime'>): string =>
   `${weekdayLabel(occurrence.date)}, ${dayNumberLabel(occurrence.date)} ${monthLabel(occurrence.date)}, ${consts.AT_TIME_PREFIX} ${occurrence.startTime}`;
 
-const joinWithAnd = (names: string[]): string => {
-  const last = names.at(-1);
-  if (names.length < 2 || last === undefined) return names.join('');
-  return `${names.slice(0, -1).join(', ')} ו${last}`;
-};
-
 const weekdaysLabel = (weekdays: Weekday[]): string => {
   const [only, ...others] = weekdays;
   if (only !== undefined && others.length === 0) {
-    return only === consts.SATURDAY ? 'כל שבת' : `כל יום ${consts.WEEKDAY_NAMES[only]}`;
+    return only === consts.SATURDAY ? consts.EVERY_SATURDAY_LABEL : consts.everyWeekdayLabel(WEEKDAY_BARE_LABELS[only]);
   }
-  return `בימי ${joinWithAnd(weekdays.map((weekday) => consts.WEEKDAY_NAMES[weekday]))}`;
+  return consts.onWeekdaysLabel(joinWithConjunction(weekdays.map((weekday) => WEEKDAY_BARE_LABELS[weekday])));
 };
 
 // "כל יום שלישי בשעה 20:30": the pattern, never a date, so a link shared a
@@ -61,9 +57,9 @@ export const weeklyScheduleLabel = (schedule: Extract<LessonSchedule, { kind: 'w
 export const lessonShareText = (occurrence: LessonOccurrenceDetail): string => {
   const { schedule, venue } = occurrence;
   const rabbi = schedule.kind === 'weekly' ? occurrence.rabbi : teachingRabbiOf(occurrence);
-  const headline = `${consts.RIGHT_TO_LEFT_MARK}${lessonHeadline(occurrence, rabbiDisplayName(rabbi))}${audienceSuffixOf(occurrence.audience)}`;
+  const headline = `${RIGHT_TO_LEFT_MARK}${lessonHeadline(occurrence, rabbiDisplayName(rabbi))}${audienceSuffixOf(occurrence.audience)}`;
   const when = schedule.kind === 'weekly' ? weeklyScheduleLabel(schedule) : occurrenceWhenLabel(occurrence);
-  return [headline, when, `${venueNameOrStreet(venue)}, ${venue.city}`].join('\n');
+  return [headline, when, `${RIGHT_TO_LEFT_MARK}${venueNameOrStreet(venue)}, ${venue.city}`].join('\n');
 };
 
 // Points at the date the calendar would add when there is one, so a
@@ -81,7 +77,7 @@ export const lessonReportContextLines = (occurrence: LessonOccurrenceDetail): st
 
 // Derived on every render, never stored: calendar only while there is a date
 // to add, share while there is a pattern to send or a date to send.
-export const lessonActionsOf = (occurrence: LessonOccurrenceDetail): { canShare: boolean; canAddToCalendar: boolean } => {
+export const lessonActionsOf = (occurrence: LessonOccurrenceDetail): LessonActionsAvailability => {
   const canAddToCalendar = occurrence.calendarOccurrence !== null;
   return { canAddToCalendar, canShare: occurrence.schedule.kind === 'weekly' || canAddToCalendar };
 };

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { lessonActionsOf, lessonReportContextLines, lessonShareText, lessonShareUrl, occurrenceWhenLabel, weeklyScheduleLabel } from './helpers';
 
-const RLM = '‏';
+const RLM = '\u200F';
 
 const detailOf = (overrides: Partial<LessonOccurrenceDetail> = {}): LessonOccurrenceDetail => ({
   lessonId: 'lesson-1',
@@ -49,7 +49,7 @@ describe('occurrenceWhenLabel', () => {
 describe('lessonShareText', () => {
   it('opens a one-time lesson with a right-to-left mark, then the date, then the venue and city', () => {
     const lines = lessonShareText(detailOf()).split('\n');
-    expect(lines).toEqual([`${RLM}שיעור עם הרב אייל עמרמי`, 'יום שלישי, 13 באוקטובר, בשעה 20:30', 'בית הכנסת הגדול, פתח תקווה']);
+    expect(lines).toEqual([`${RLM}שיעור עם הרב אייל עמרמי`, 'יום שלישי, 13 באוקטובר, בשעה 20:30', `${RLM}בית הכנסת הגדול, פתח תקווה`]);
   });
 
   it('never carries the link: native share adds it, a copy is the link alone', () => {
@@ -75,8 +75,8 @@ describe('lessonShareText', () => {
 
   it('puts no ב before the venue and stands the street in for a blank hand-typed name', () => {
     const venue = { kind: 'address' as const, name: ' ', street: 'הרצל 5', city: 'פתח תקווה', citySlug: 'petah-tikva', area: 'center' as const };
-    expect(lessonShareText(detailOf({ venue })).split('\n')[2]).toBe('הרצל 5, פתח תקווה');
-    expect(lessonShareText(detailOf()).split('\n')[2]).toBe('בית הכנסת הגדול, פתח תקווה');
+    expect(lessonShareText(detailOf({ venue })).split('\n')[2]).toBe(`${RLM}הרצל 5, פתח תקווה`);
+    expect(lessonShareText(detailOf()).split('\n')[2]).toBe(`${RLM}בית הכנסת הגדול, פתח תקווה`);
   });
 });
 

@@ -1,3 +1,5 @@
+import type { Place } from '@torabarabim/common';
+
 import type { PlacePageApiError } from './api';
 import * as consts from './consts';
 
@@ -14,3 +16,8 @@ export const placeErrorCopy = (error: PlacePageApiError | null): PlaceErrorCopy 
   }
   return { kind: 'error', heading: consts.ERROR_HEADING, body: consts.ERROR_BODY };
 };
+
+// The report window's address line: street, floor and city, only the parts
+// the place has, so a missing street never leaves a leading comma.
+export const placeAddressLine = (place: Pick<Place, 'street' | 'floor' | 'city'>): string =>
+  [place.street, place.floor, place.city].filter(Boolean).join(', ');
