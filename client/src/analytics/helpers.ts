@@ -44,8 +44,9 @@ const isUnderPath = (pathname: string, base: string): boolean => pathname === ba
 // `/places` (the public directories), so this checks the segment boundary
 // rather than a plain `startsWith`, or every public rabbi and place page
 // would misreport as a panel. `/login` is its own surface: one screen signs
-// in rabbis, place accounts and admins alike, so it belongs to no single
-// panel, and counting it as `public` would inflate seeker traffic.
+// in rabbis and place accounts alike (admins use `/admin/login`, under the
+// admin panel), so it belongs to neither panel, and counting it as `public`
+// would inflate seeker traffic.
 export const appSurfaceFor = (pathname: string): AppSurface => {
   if (isUnderPath(pathname, '/admin')) return 'adminPanel';
   if (isUnderPath(pathname, '/rabbi')) return 'rabbiPanel';
