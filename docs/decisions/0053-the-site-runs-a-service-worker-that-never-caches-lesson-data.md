@@ -1,6 +1,6 @@
 # 0053: The site runs a service worker that never caches lesson data
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-10-06
 - **Decided by:** goorlavi
 

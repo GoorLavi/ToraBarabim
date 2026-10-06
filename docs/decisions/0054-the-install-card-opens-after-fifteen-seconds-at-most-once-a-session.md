@@ -1,6 +1,6 @@
 # 0054: The install card opens after fifteen seconds, at most once a session, until dismissed twice
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-10-06
 - **Decided by:** goorlavi
 
