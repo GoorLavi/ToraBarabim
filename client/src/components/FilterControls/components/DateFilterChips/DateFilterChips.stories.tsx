@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, within } from 'storybook/test';
 import styled from 'styled-components';
 
-import { todayInIsrael } from '~/HomePage/helpers';
 import { atFrameSize } from '~/storyMocks';
 
 import { MAX_MONTHS_AHEAD } from './components/HebrewDatePicker/consts';
@@ -10,7 +9,25 @@ import * as pickerHelpers from './components/HebrewDatePicker/helpers';
 import type { YearMonth } from './components/HebrewDatePicker/models';
 import { DateFilterChips } from './DateFilterChips';
 
-const TODAY = todayInIsrael();
+// Pinned, with the clock frozen to it in `beforeEach`, so every story renders
+// the same calendar on any day. In the past on purpose: a broken freeze then
+// fails the forward-bound story instead of passing until the month turns.
+// 09:00 UTC is midday in Israel, so the Israel date is `TODAY` in any browser
+// timezone.
+const TODAY = '2026-03-15';
+const FROZEN_NOW_MS = Date.parse(`${TODAY}T09:00:00Z`);
+
+const freezeClock = (): (() => void) => {
+  const RealDate = globalThis.Date;
+  globalThis.Date = new Proxy(RealDate, {
+    construct: (target, args, newTarget) =>
+      args.length === 0 ? new target(FROZEN_NOW_MS) : Reflect.construct(target, args, newTarget),
+    get: (target, property, receiver) => (property === 'now' ? () => FROZEN_NOW_MS : Reflect.get(target, property, receiver)),
+  });
+  return () => {
+    globalThis.Date = RealDate;
+  };
+};
 
 const noop = (): void => {};
 
@@ -28,6 +45,7 @@ const HeaderBand = styled.div(
 const meta: Meta<typeof DateFilterChips> = {
   title: 'FilterControls/DateFilterChips',
   component: DateFilterChips,
+  beforeEach: freezeClock,
   decorators: [
     (Story) => (
       <HeaderBand>
@@ -53,6 +71,12 @@ const openTrigger = async (canvasElement: HTMLElement): Promise<ReturnType<typeo
   return canvas;
 };
 
+// Looked up from `document.body`, never from the canvas: below `md` the
+// picker is `DateFilterSheet`, which portals out of the story root. Above it
+// the picker is an in-place popover, which `document.body` contains as well.
+const findPicker = async (): Promise<ReturnType<typeof within>> =>
+  within(await within(document.body).findByRole('dialog', { name: 'בחירת תאריך' }));
+
 export const EmptyClosed: Story = {};
 
 export const EmptyOpen: Story = {
@@ -73,9 +97,8 @@ export const ChosenOpen: Story = {
 };
 
 // The first month, starting from the current one, whose calendar genuinely
-// spans all six rows: found once at module load, not hardcoded, so this
-// story never goes stale (matches how LessonsSection.stories.tsx derives
-// its dates from `todayInIsrael` rather than a literal string).
+// spans all six rows: searched rather than written out, so moving `TODAY`
+// never silently breaks the six-row story.
 const findSixRowMonth = (): YearMonth => {
   let month = pickerHelpers.yearMonthFromIso(TODAY);
   for (let offset = 0; offset <= MAX_MONTHS_AHEAD; offset += 1) {
@@ -105,16 +128,18 @@ export const SixRowMonth: Story = {
 
 export const PreviousMonthDisabledAtCurrentMonth: Story = {
   play: async ({ canvasElement }) => {
-    const canvas = await openTrigger(canvasElement);
-    await expect(canvas.getByRole('button', { name: 'לחודש הקודם' })).toBeDisabled();
+    await openTrigger(canvasElement);
+    const picker = await findPicker();
+    await expect(picker.getByRole('button', { name: 'לחודש הקודם' })).toBeDisabled();
   },
 };
 
 export const NextMonthDisabledAtForwardBound: Story = {
   args: { option: 'custom', customDate: FORWARD_BOUND_MONTH_DATE },
   play: async ({ canvasElement }) => {
-    const canvas = await openTrigger(canvasElement);
-    await expect(canvas.getByRole('button', { name: 'לחודש הבא' })).toBeDisabled();
+    await openTrigger(canvasElement);
+    const picker = await findPicker();
+    await expect(picker.getByRole('button', { name: 'לחודש הבא' })).toBeDisabled();
   },
 };
 
@@ -125,7 +150,7 @@ export const PhoneWidthEscapeClosesTheSheet: Story = {
   play: ({ canvasElement }) =>
     atFrameSize(375, undefined, async () => {
       const canvas = await openTrigger(canvasElement);
-      await within(document.body).findByRole('dialog', { name: 'בחירת תאריך' });
+      await findPicker();
 
       await userEvent.keyboard('{Escape}');
 
