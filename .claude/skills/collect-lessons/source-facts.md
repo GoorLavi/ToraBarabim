@@ -107,5 +107,5 @@ From the run of 2026-09-15. An order-of-magnitude change fails the source.
 | musayof.co.il | 95 |
 | tlvgreatsynagogue.org | 5 (1 kept after drops, split into 5 days) |
 | hameir-laarets.org.il | 4 |
-| hl5047.co.il | 6 (run of 2026-10-06) |
 | myofaqim.co.il | 52 (20 lessons, 84 entries on the board, 64 dropped; run of 2026-10-05) |
+| hl5047.co.il | 6 (run of 2026-10-06) |
