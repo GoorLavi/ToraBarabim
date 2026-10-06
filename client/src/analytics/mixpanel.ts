@@ -27,6 +27,10 @@ let isUnavailable = false;
 const queuedEvents: Array<{ name: string; props?: Parameters<Mixpanel['track']>[1] }> = [];
 let pendingSuperProperties: Partial<SuperProperties> = {};
 let pendingPanelUser: PanelUserIdentity | null = null;
+// The SDK restores the last identity from localStorage when it loads, so a
+// reset asked for before then has to be replayed after, or an expired
+// session's account comes back under the next login.
+let isResetPending = false;
 
 // The queue goes with it, so no event sits in memory for the rest of the
 // session with nothing left to drain it. So does a pending identity, or an
@@ -96,6 +100,11 @@ export const initAnalytics = (): void => {
       });
       mixpanelInstance = mixpanel;
 
+      if (isResetPending) {
+        isResetPending = false;
+        mixpanel.reset();
+      }
+
       // Registered before the queue below is flushed, or the first page
       // view of a session, the one most likely to still be queued, would
       // ship with no super properties at all.
@@ -129,19 +138,38 @@ export const registerSuperProperties = (props: Partial<SuperProperties>): void =
 export const identifyPanelUser = (identity: PanelUserIdentity): void => {
   if (typeof window === 'undefined' || !import.meta.env.PROD || isUnavailable) return;
   pendingPanelUser = identity;
-  if (mixpanelInstance) applyPanelUser(mixpanelInstance, identity);
+  if (!mixpanelInstance) return;
+
+  try {
+    applyPanelUser(mixpanelInstance, identity);
+  } catch (error) {
+    // Fails open: this runs in a panel shell's effect, and a throw inside
+    // the SDK must not take the panel down with it. The account simply goes
+    // unidentified for this session.
+    console.warn('Could not identify the panel account in Mixpanel', error);
+  }
 };
 
 export const resetPanelUser = (): void => {
   if (typeof window === 'undefined' || !import.meta.env.PROD || isUnavailable) return;
   pendingPanelUser = null;
-  if (!mixpanelInstance) return;
+  if (!mixpanelInstance) {
+    isResetPending = true;
+    return;
+  }
 
-  mixpanelInstance.reset();
-  // Mixpanel's `reset()` drops the registered super properties along with
-  // the distinct id, so without this every event after a logout would ship
-  // with no `appSurface`, `viewport` or `launchMode`.
-  mixpanelInstance.register(pendingSuperProperties);
+  try {
+    mixpanelInstance.reset();
+    // Mixpanel's `reset()` drops the registered super properties along with
+    // the distinct id, so without this every event after a logout would ship
+    // with no `appSurface`, `viewport` or `launchMode`.
+    mixpanelInstance.register(pendingSuperProperties);
+  } catch (error) {
+    // Fails open: this runs inside the login and logout mutations' success
+    // callbacks, where a throw would turn a login the server already
+    // accepted into an error screen. The identity stays as it was.
+    console.warn('Could not reset the Mixpanel identity', error);
+  }
 };
 
 // `props` stays optional even though most typed events require one: a

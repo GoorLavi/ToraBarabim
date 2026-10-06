@@ -34,8 +34,10 @@ export const RabbiShell = styled(({ className }: RabbiShellProps) => {
   const session = useRabbiSession();
   const logout = useRabbiLogout();
 
+  // Only once both reads are the same account's: the previous account's
+  // profile can still be cached for a moment after a new login on this tab.
   useIdentifyPanelUser(
-    profile.data && session.data
+    profile.data && session.data && profile.data.id === session.data.rabbiId
       ? { role: 'rabbi', accountId: session.data.id, name: rabbiDisplayName(profile.data), rabbiId: session.data.rabbiId }
       : undefined,
   );

@@ -25,8 +25,10 @@ export const PlaceShell = styled(({ className }: PlaceShellProps) => {
   const session = usePlaceSession();
   const logout = usePlaceLogout();
 
+  // Only once both reads are the same account's: the previous account's
+  // profile can still be cached for a moment after a new login on this tab.
   useIdentifyPanelUser(
-    profile.data && session.data
+    profile.data && session.data && profile.data.id === session.data.placeId
       ? { role: 'place', accountId: session.data.id, name: profile.data.name, placeId: session.data.placeId }
       : undefined,
   );

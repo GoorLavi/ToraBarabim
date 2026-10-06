@@ -14,10 +14,8 @@ export const usePanelLogin = (): UseMutationResult<
 > =>
   useMutation({
     mutationFn: login,
-    // The browser can still carry the last account's identity: a session
-    // that expired without a logout, or someone else's login on a shared
-    // computer. Reset first, so the login and everything after it belong to
-    // the account the panel shell is about to identify, not the previous one.
+    // Reset before the event, so a browser still carrying the last account's
+    // identity never has this login attributed to it (decision 0061).
     onSuccess: () => {
       resetPanelUser();
       trackEvent(MIXPANEL_EVENTS.panelLogin);

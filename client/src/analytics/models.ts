@@ -283,21 +283,21 @@ export interface SuperProperties {
   posterSource?: PosterSource;
 }
 
-// Who a signed-in panel account is, as Mixpanel is told. The role decides
-// which id travels, so a rabbi can never be sent with a place id or the
-// reverse. `name` is the display form: a rabbi's carries the honorific.
+// Who a signed-in panel account is, as Mixpanel is told. `name` is the
+// display form, never the account's bare copy: a rabbi's carries the
+// honorific.
 export type PanelUserIdentity =
   | { role: 'rabbi'; accountId: string; name: string; rabbiId: string }
   | { role: 'place'; accountId: string; name: string; placeId: string };
 
 export type AnalyticsEventName = (typeof MIXPANEL_EVENTS)[keyof typeof MIXPANEL_EVENTS];
 
-// The rabbi and admin panels fire events of their own (login/logout, tab
-// clicks, saves, deletes, occurrence actions) that this change does not
-// touch: each keeps the loose shape `trackEvent` always accepted, so a panel
-// call site that passes no props at all (`trackEvent(MIXPANEL_EVENTS.rabbiLogout)`)
-// still compiles unchanged. Typing these is future work for whoever next
-// touches RabbiPanel or AdminPanel analytics.
+// The rabbi and admin panels fire events of their own (`Rabbi Logout`, tab
+// clicks, saves, deletes, occurrence actions) that keep the loose shape
+// `trackEvent` always accepted, so a panel call site that passes no props at
+// all (`trackEvent(MIXPANEL_EVENTS.rabbiLogout)`) still compiles unchanged.
+// Typing these is future work for whoever next touches RabbiPanel or
+// AdminPanel analytics; `Panel Login` and `Place Logout` are already typed.
 type UntypedPanelEventProps = Record<string, unknown> | undefined;
 
 export type AnalyticsEventProps = {
