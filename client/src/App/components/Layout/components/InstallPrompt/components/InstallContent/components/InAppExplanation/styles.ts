@@ -38,6 +38,8 @@ export const InAppExplanation = css(
     }
 
     > .hintText {
+      flex: 1 1 0;
+      min-inline-size: 0;
       color: ${theme.colors.textSecondary};
       font-size: ${theme.typography.secondary.phone.fontSize};
       line-height: ${theme.typography.secondary.phone.lineHeight};
