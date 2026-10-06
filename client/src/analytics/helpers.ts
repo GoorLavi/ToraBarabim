@@ -40,12 +40,17 @@ export const routePattern = (pathname: string, params: Record<string, string | u
 
 const isUnderPath = (pathname: string, base: string): boolean => pathname === base || pathname.startsWith(`${base}/`);
 
-// `/rabbi` (the panel) and `/rabbis` (the public directory) share a prefix,
-// so this checks the segment boundary rather than a plain `startsWith`, or
-// every public rabbi page would misreport as the panel.
+// `/rabbi` and `/place` (the panels) share a prefix with `/rabbis` and
+// `/places` (the public directories), so this checks the segment boundary
+// rather than a plain `startsWith`, or every public rabbi and place page
+// would misreport as a panel. `/login` is its own surface: one screen signs
+// in rabbis, place accounts and admins alike, so it belongs to no single
+// panel, and counting it as `public` would inflate seeker traffic.
 export const appSurfaceFor = (pathname: string): AppSurface => {
   if (isUnderPath(pathname, '/admin')) return 'adminPanel';
   if (isUnderPath(pathname, '/rabbi')) return 'rabbiPanel';
+  if (isUnderPath(pathname, '/place')) return 'placePanel';
+  if (isUnderPath(pathname, '/login')) return 'panelLogin';
   return 'public';
 };
 

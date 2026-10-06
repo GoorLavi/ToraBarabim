@@ -98,7 +98,7 @@ export type SeeAllTarget = 'rabbis' | 'cities' | 'lessons';
 export type SeeAllSurface = 'home';
 export type RabbiClickSurface = 'homeRabbiRow' | 'rabbisPage' | 'cityPage' | 'lessonPage';
 export type NavigationProvider = 'waze' | 'googleMaps';
-export type AppSurface = 'public' | 'rabbiPanel' | 'adminPanel';
+export type AppSurface = 'public' | 'rabbiPanel' | 'placePanel' | 'adminPanel' | 'panelLogin';
 export type Viewport = 'mobile' | 'desktop';
 
 // Caps how long a page can hold events fired before the dynamic
