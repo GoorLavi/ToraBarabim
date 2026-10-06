@@ -7,7 +7,7 @@ import { audienceScopeOfRabbi, isLessonInScope, matchesAudienceFilter } from '..
 import { rabbiNameMatcher } from '../shared/rabbi-name-match';
 import { toRabbiSummary as toRabbi } from '../shared/rabbi-summary';
 import { MAX_ITEMS_PER_ROW } from '../shared/consts';
-import { DEFAULT_RANGE_DAYS, MAX_RANGE_DAYS, UPCOMING_OCCURRENCE_WINDOW_DAYS } from './consts';
+import { CALENDAR_HORIZON_DAYS, DEFAULT_RANGE_DAYS, MAX_RANGE_DAYS, UPCOMING_OCCURRENCE_WINDOW_DAYS } from './consts';
 import { InvalidDateRangeError, LessonNotFoundError, LessonOccurrenceNotFoundError } from './errors';
 import { addDays, compareIsoDates, daysBetween, todayInIsrael } from './israel-time';
 import { selectAreaPreview, selectRabbiUpcoming } from './lesson-rows';
@@ -16,11 +16,24 @@ import type {
   LessonSearchQuery,
   LessonSearchResult,
   OccurrenceQuery,
+  ResolvedCalendarOccurrence,
   ResolvedLessonOccurrence,
   ResolvedLessonOccurrenceDetail,
   ResolvedOccurrenceQuery,
 } from './models';
-import { applyException, compareOccurrences, expandLesson, hasLeftPublicListsAt, occurrenceTimingAt, resolveRecord, toExceptionDomain, toLessonDomain } from './occurrence';
+import {
+  applyException,
+  compareOccurrences,
+  expandLesson,
+  hasLeftPublicListsAt,
+  occurrenceTimingAt,
+  resolveRecord,
+  scheduleOf,
+  toExceptionDomain,
+  toLessonDomain,
+  type Lesson,
+  type ResolvedOccurrence,
+} from './occurrence';
 
 // Hebrew has no case, but lower-casing also lets a stray Latin fragment (a
 // transliterated name) match; a plain substring, never a fuzzy or scored match.
@@ -245,6 +258,41 @@ export const searchRabbiUpcoming = async (
   return selectRabbiUpcoming(occurrences, { lessonId: params.lessonId, date: params.date }, MAX_ITEMS_PER_ROW);
 };
 
+const calendarHorizonEnd = (today: string): string => addDays(today, CALENDAR_HORIZON_DAYS);
+
+const selectLessonExceptions = (lessonId: string, from: string, to: string) =>
+  db
+    .select()
+    .from(lessonExceptions)
+    .where(and(eq(lessonExceptions.lessonId, lessonId), gte(lessonExceptions.date, from), lte(lessonExceptions.date, to)));
+
+// The date a one-off "add to calendar" should add: the viewed occurrence when
+// it is scheduled and not yet gone, else, for a weekly lesson, the first
+// scheduled and upcoming date after it within the calendar horizon. The
+// exceptions of that range are read in one query and the expansion stays in
+// memory.
+const findCalendarOccurrence = async (lesson: Lesson, viewed: ResolvedOccurrence, now: Date): Promise<ResolvedOccurrence | null> => {
+  const timingOf = occurrenceTimingAt(now);
+  const isAddable = (occurrence: ResolvedOccurrence): boolean => occurrence.status === 'scheduled' && timingOf(occurrence) === 'upcoming';
+
+  if (isAddable(viewed)) return viewed;
+  if (lesson.recurrence.kind === 'once') return null;
+
+  const today = todayInIsrael(now);
+  const dayAfterViewed = addDays(viewed.date, 1);
+  const from = compareIsoDates(today, dayAfterViewed) >= 0 ? today : dayAfterViewed;
+  const to = calendarHorizonEnd(today);
+  if (compareIsoDates(from, to) > 0) return null;
+
+  const exceptionRows = await selectLessonExceptions(lesson.id, from, to);
+  const exceptionByDate = new Map(exceptionRows.map((row) => [row.date, toExceptionDomain(row)] as const));
+  return (
+    expandLesson(lesson, from, to)
+      .map((raw) => applyException(raw, exceptionByDate.get(raw.date)))
+      .find(isAddable) ?? null
+  );
+};
+
 // Resolves one lesson's recurrence rule for a single date, with any
 // exception for that date applied. Reuses `expandLesson`/`applyException`
 // so the recurrence rule is only ever expanded in one place; a second
@@ -269,23 +317,84 @@ export const getOccurrence = async (lessonId: string, date: string, now: Date): 
     .limit(1);
 
   const occurrence = applyException(raw, exceptionRow ? toExceptionDomain(exceptionRow) : undefined);
+  const calendarOccurrence = await findCalendarOccurrence(lesson, occurrence, now);
 
-  const rabbiIds = [lesson.rabbiId, occurrence.substituteRabbiId].filter(
-    (id): id is string => id !== undefined,
-  );
+  // Both occurrences are resolved from the same lookups, so the query count
+  // stays fixed whichever date the calendar one turns out to be.
+  const occurrences = calendarOccurrence && calendarOccurrence !== occurrence ? [occurrence, calendarOccurrence] : [occurrence];
+  const rabbiIds = [...new Set([lesson.rabbiId, ...occurrences.map((item) => item.substituteRabbiId)].filter((id): id is string => id !== undefined))];
+  const cityCodes = [...new Set(occurrences.map((item) => item.venue.cityCode))];
+  const placeIds = [...new Set(occurrences.flatMap((item) => (item.venue.kind === 'place' ? [item.venue.placeId] : [])))];
 
   const [rabbiRows, cityRows, placeRows] = await Promise.all([
     db.select().from(rabbis).where(inArray(rabbis.id, rabbiIds)),
     db
       .select({ code: cities.code, nameHe: cities.nameHe, area: cities.area })
       .from(cities)
-      .where(eq(cities.code, occurrence.venue.cityCode)),
-    occurrence.venue.kind === 'place' ? db.select().from(places).where(eq(places.id, occurrence.venue.placeId)) : Promise.resolve([]),
+      .where(inArray(cities.code, cityCodes)),
+    placeIds.length ? db.select().from(places).where(inArray(places.id, placeIds)) : Promise.resolve([]),
   ]);
 
   const rabbiById = new Map(rabbiRows.map((row) => [row.id, toRabbi(row)] as const));
   const cityByCode = new Map(cityRows.map((row) => [row.code, row] as const));
   const placeById = new Map(placeRows.map((row) => [row.id, row] as const));
 
-  return { ...resolveRecord(occurrence, rabbiById, cityByCode, placeById), timing: occurrenceTimingAt(now)(occurrence) };
+  const resolved = resolveRecord(occurrence, rabbiById, cityByCode, placeById);
+  return {
+    ...resolved,
+    timing: occurrenceTimingAt(now)(occurrence),
+    schedule: scheduleOf(lesson),
+    calendarOccurrence:
+      calendarOccurrence === null ? null : calendarOccurrence === occurrence ? resolved : resolveRecord(calendarOccurrence, rabbiById, cityByCode, placeById),
+  };
+};
+
+const laterOf = (a: Date, b: Date | undefined): Date => (b !== undefined && b > a ? b : a);
+
+// One lesson's dates from today across the calendar horizon, cancelled ones
+// kept (the feed marks them rather than dropping them, so a subscriber's
+// calendar learns of the cancellation). Today's date stays even once it has
+// begun. A one-time lesson yields at most its own date. An unknown id throws
+// `LessonNotFoundError`; the calendar route turns that into an empty feed.
+export const getCalendarOccurrences = async (lessonId: string, now: Date): Promise<ResolvedCalendarOccurrence[]> => {
+  const today = todayInIsrael(now);
+  const to = calendarHorizonEnd(today);
+
+  const [[lessonRow], exceptionRows] = await Promise.all([
+    db.select().from(lessons).where(eq(lessons.id, lessonId)).limit(1),
+    selectLessonExceptions(lessonId, today, to),
+  ]);
+  if (!lessonRow) {
+    throw new LessonNotFoundError(lessonId);
+  }
+
+  const lesson = toLessonDomain(lessonRow);
+  const exceptionRowByDate = new Map(exceptionRows.map((row) => [row.date, row] as const));
+  const occurrences = expandLesson(lesson, today, to).map((raw) => {
+    const exceptionRow = exceptionRowByDate.get(raw.date);
+    return {
+      resolved: applyException(raw, exceptionRow ? toExceptionDomain(exceptionRow) : undefined),
+      revisedAt: laterOf(lessonRow.updatedAt, exceptionRow?.updatedAt),
+    };
+  });
+  if (occurrences.length === 0) return [];
+
+  const rabbiIds = [...new Set([lesson.rabbiId, ...occurrences.map(({ resolved }) => resolved.substituteRabbiId)].filter((id): id is string => id !== undefined))];
+  const cityCodes = [...new Set(occurrences.map(({ resolved }) => resolved.venue.cityCode))];
+  const placeIds = [...new Set(occurrences.flatMap(({ resolved }) => (resolved.venue.kind === 'place' ? [resolved.venue.placeId] : [])))];
+
+  const [rabbiRows, cityRows, placeRows] = await Promise.all([
+    db.select().from(rabbis).where(inArray(rabbis.id, rabbiIds)),
+    db
+      .select({ code: cities.code, nameHe: cities.nameHe, area: cities.area })
+      .from(cities)
+      .where(inArray(cities.code, cityCodes)),
+    placeIds.length ? db.select().from(places).where(inArray(places.id, placeIds)) : Promise.resolve([]),
+  ]);
+
+  const rabbiById = new Map(rabbiRows.map((row) => [row.id, toRabbi(row)] as const));
+  const cityByCode = new Map(cityRows.map((row) => [row.code, row] as const));
+  const placeById = new Map(placeRows.map((row) => [row.id, row] as const));
+
+  return occurrences.map(({ resolved, revisedAt }) => ({ ...resolveRecord(resolved, rabbiById, cityByCode, placeById), revisedAt }));
 };

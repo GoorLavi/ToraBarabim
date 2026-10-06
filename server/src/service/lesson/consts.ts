@@ -12,3 +12,10 @@ export const UPCOMING_OCCURRENCE_WINDOW_DAYS = 14;
 // The owner's rule: an occurrence dated today leaves every public list this
 // long after its start time, whatever its duration.
 export const PUBLIC_LIST_GRACE_MINUTES_AFTER_START = 30;
+
+// How far ahead the calendar looks, counted from today: the span of a
+// subscribed lesson feed and the search for the date a one-off "add to
+// calendar" should add. Twelve weeks, so a weekly lesson shows twelve dates
+// plus the same weekday again when today is one of them. Never reuse
+// `UPCOMING_OCCURRENCE_WINDOW_DAYS`: that one is the home page's two weeks.
+export const CALENDAR_HORIZON_DAYS = 84;

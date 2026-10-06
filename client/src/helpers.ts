@@ -112,11 +112,34 @@ const dayMonthFormatter = new Intl.DateTimeFormat('he-IL', { day: 'numeric', mon
 
 const todayInIsrael = (): string => israelDateFormatter.format(new Date());
 
-const addOneDay = (isoDate: string): string => {
+export const addOneDay = (isoDate: string): string => {
   const date = new Date(`${isoDate}T00:00:00Z`);
   date.setUTCDate(date.getUTCDate() + 1);
   return date.toISOString().slice(0, 10);
 };
+
+const JERUSALEM_OFFSET_FORMATTER = new Intl.DateTimeFormat('en-US', {
+  timeZone: ISRAEL_TIME_ZONE,
+  timeZoneName: 'longOffset',
+  hour: 'numeric',
+});
+
+// Israel's clock shifts between +02:00 and +03:00 within the same lesson
+// season, so a fixed offset would misreport roughly half the year. Read off
+// the actual IANA zone for the occurrence's own date rather than hand-coding
+// the transition dates.
+const israelUtcOffset = (isoDate: string): string => {
+  const zoneName = JERUSALEM_OFFSET_FORMATTER.formatToParts(new Date(`${isoDate}T12:00:00Z`)).find(
+    (part) => part.type === 'timeZoneName',
+  )?.value;
+  return zoneName?.replace('GMT', '') || '+00:00';
+};
+
+// An occurrence carries a bare wall-clock time; schema.org's `startDate` and
+// a calendar's UTC instant both need the real offset for that date. Returns
+// an offset-aware ISO string ("2026-07-14T20:30:00+03:00"), which `new Date`
+// reads as the exact instant.
+export const israelDateTime = (isoDate: string, clockTime: string): string => `${isoDate}T${clockTime}:00${israelUtcOffset(isoDate)}`;
 
 // Today and tomorrow name the weekday instead of the date, since the date
 // itself is redundant once "today" already says which day it is; every
