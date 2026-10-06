@@ -1,4 +1,4 @@
-import type { VisitorMessageType } from '@torabarabim/common';
+import type { VisitorMessageSubject, VisitorMessageType } from '@torabarabim/common';
 import { z } from 'zod';
 
 import type { visitorMessages } from '../../db/schema';
@@ -40,10 +40,7 @@ const contactFields = {
   message: z.string({ error: MESSAGE_MESSAGE }).trim().min(1, MESSAGE_MESSAGE).max(MESSAGE_MAX_LENGTH, MESSAGE_MESSAGE),
 };
 
-// Shape only, no existence check: a report about a lesson deleted a minute
-// ago is still worth keeping. The id and date rules are the public routes'
-// own; only the id's length cap is added here.
-const visitorMessageSubjectSchema = z.discriminatedUnion('kind', [
+const subjectShapeSchema = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('lesson'),
     lessonId: lessonOccurrenceParamsSchema.shape.lessonId.max(SUBJECT_ID_MAX_LENGTH),
@@ -52,13 +49,26 @@ const visitorMessageSubjectSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('place'), placeId: placeIdParamSchema.shape.id.max(SUBJECT_ID_MAX_LENGTH) }),
 ]);
 
+// Shape only, no existence check: a report about a lesson deleted a minute
+// ago is still worth keeping. The id and date rules are the public routes'
+// own, with only the id's length cap added; their English messages are
+// replaced by one Hebrew line, the way `visitorPhoneSchema` does for a phone.
+const visitorMessageSubjectSchema = z.unknown().transform((raw, ctx): VisitorMessageSubject => {
+  const result = subjectShapeSchema.safeParse(raw);
+  if (!result.success) {
+    ctx.addIssue({ code: 'custom', message: INVALID_REQUEST_MESSAGE });
+    return z.NEVER;
+  }
+  return result.data;
+});
+
 // `subject: z.undefined().optional()` on the help arm, not `strictObject`: a help
 // request that carries a subject, null included, is a 400, while any other
 // stray key is still ignored as everywhere else.
 export const createVisitorMessageSchema = z.discriminatedUnion(
   'type',
   [
-    z.object({ type: z.enum(HELP_REQUEST_TYPES), ...contactFields, subject: z.undefined().optional() }),
+    z.object({ type: z.enum(HELP_REQUEST_TYPES), ...contactFields, subject: z.undefined({ error: INVALID_REQUEST_MESSAGE }).optional() }),
     z.object({ type: z.literal('report-mistake'), ...contactFields, subject: visitorMessageSubjectSchema }),
   ],
   { error: INVALID_REQUEST_MESSAGE },

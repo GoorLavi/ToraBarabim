@@ -1,4 +1,5 @@
-import { calendarUtcStamp } from '../lessonCalendar/helpers';
+import { calendarUtcStamp } from '~/lessonCalendar/helpers';
+
 import {
   ICS_CONTINUATION_MAX_CONTENT_OCTETS,
   ICS_LINE_BREAK,
@@ -6,11 +7,8 @@ import {
   ICS_PRODUCT_ID,
   ICS_SEQUENCE_EPOCH_MS,
   MS_PER_MINUTE,
-} from './ics.consts';
+} from './consts';
 import type { IcsEntry, IcsFeedHeader } from './models';
-
-// Relative imports only, so server/test can import this file without the
-// client's `~` alias.
 
 // RFC 5545 3.3.11: backslash, semicolon, comma and a line break are the four
 // characters a TEXT value cannot carry bare.

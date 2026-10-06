@@ -28,8 +28,8 @@ export const VISITOR_MESSAGE_TYPE_LABELS_HE = {
 } as const satisfies Record<VisitorMessageType, string>;
 
 export const SUBJECT_ALERT_LABELS_HE = {
-  lesson: 'השיעור שדווח',
-  place: 'המקום שדווח',
+  lesson: 'השיעור שדווח עליו',
+  place: 'המקום שדווח עליו',
 } as const satisfies Record<VisitorMessageSubject['kind'], string>;
 
 export const INVALID_REQUEST_MESSAGE = 'הבקשה אינה תקינה';
