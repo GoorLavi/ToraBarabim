@@ -20,7 +20,10 @@ nagging.
   while the person is busy: a dialog, sheet or picker open, or a text field focused.
 - **At most one automatic show per session. A show counts only when it is dismissed**;
   an ignored card disappears on navigation and may return in a later session. Two
-  dismissals end automatic shows for good, and so does installing.
+  dismissals end automatic shows for good, and so does installing. On iOS, opening the
+  instructions from the card and closing them counts as a dismissal: Apple never says
+  whether the person added the site, and without this the card would return every
+  session.
 - **If its memory cannot be read or written, it never shows** (fail closed): a card that
   cannot remember being dismissed is the worst version.
 - **Never** in an installed or standalone window, in the admin, rabbi or place panels,
@@ -36,7 +39,11 @@ nagging.
   from the icon, through the `launchMode` super property, a floor like every Mixpanel
   number ([0024](0024-visits-are-measured-by-mixpanel-full-tracking-no-consent-banner.md),
   [0025](0025-mixpanel-ad-blocker-undercount-stays-no-proxy-yet.md)).
-- The memory is per browser. Cleared site data or a new device starts over.
+- `Install Accepted` means two different things: on Chrome and Edge the browser
+  confirmed the install; on iOS the person opened the instructions.
+- The memory is per browser. Cleared site data or a new device starts over. Once a
+  browser has installed the site, the card and the footer link stay hidden there even
+  if the icon is later removed.
 - A person who never dismisses the card sees it once in every session until they do.
 - The iOS and Chrome menu labels in the instructions are quoted from memory until checked
   on a real device.
