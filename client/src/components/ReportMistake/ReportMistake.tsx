@@ -51,7 +51,7 @@ export const ReportMistake = styled(({ className, subject, contextLines }: Repor
             title: consts.REPORT_WINDOW_TITLE,
             paragraphs: consts.REPORT_WINDOW_PARAGRAPHS,
             messagePlaceholder: consts.REPORT_MESSAGE_PLACEHOLDERS[subject.kind],
-            context: <ReportContext label={consts.REPORT_CONTEXT_LABELS[subject.kind]} lines={contextLines} />,
+            context: <ReportContext {...{ label: consts.REPORT_CONTEXT_LABELS[subject.kind], lines: contextLines }} />,
             draft,
             status,
             onDraftChange: setDraft,

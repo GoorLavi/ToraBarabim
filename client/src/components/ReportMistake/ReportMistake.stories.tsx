@@ -4,6 +4,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as formConsts from '~/components/HelpWindow/components/VisitorMessageForm/consts';
 import * as windowConsts from '~/components/HelpWindow/consts';
+import { FORBIDDEN_WINDOW_COPY } from '~/storyMocks';
 
 import { http, respondWithJson } from '../../../.storybook/apiMocks';
 import * as consts from './consts';
@@ -53,6 +54,8 @@ export const WindowOpen: Story = {
     const dialog = await windowOf();
     await expect(within(dialog).getByText(consts.REPORT_CONTEXT_LABELS.lesson)).toBeInTheDocument();
     for (const line of LESSON_CONTEXT_LINES) await expect(within(dialog).getByText(line)).toBeInTheDocument();
+    // The window promises nothing, and says nothing about money.
+    await expect(dialog.textContent).not.toMatch(FORBIDDEN_WINDOW_COPY);
   },
 };
 
@@ -66,6 +69,7 @@ export const SendsALessonReport: Story = {
     await userEvent.click(within(dialog).getByRole('button', { name: formConsts.SUBMIT_LABEL }));
 
     await within(dialog).findByRole('heading', { name: windowConsts.THANK_YOU_MESSAGE });
+    await expect(dialog.textContent).not.toMatch(FORBIDDEN_WINDOW_COPY);
     await expect(postedBodies).toEqual([
       { type: 'report-mistake', subject: { kind: 'lesson', lessonId: 'lesson-1', date: '2026-10-13' }, name: 'דוד כהן', phone: '052-123-4567', message: 'השעה השתנתה לשמונה.' },
     ]);

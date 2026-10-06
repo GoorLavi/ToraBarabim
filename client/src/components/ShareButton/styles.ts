@@ -12,10 +12,7 @@ export const ShareButton = css(
 
   > .button {
     display: inline-grid;
-    grid-template-columns: auto auto;
     align-items: center;
-    justify-content: center;
-    column-gap: ${theme.spacing.sm};
     min-block-size: 48px;
     padding-block: 11px;
     padding-inline: ${theme.spacing.xl};
@@ -40,20 +37,22 @@ export const ShareButton = css(
       outline-offset: 2px;
     }
 
-    > .icon {
-      grid-row: 1;
-      grid-column: 1;
-      block-size: 20px;
-      inline-size: 20px;
-    }
-
-    > .label {
-      grid-row: 1;
-      grid-column: 2;
+    > .group {
+      grid-area: 1 / 1;
+      justify-self: center;
+      display: inline-flex;
+      align-items: center;
+      gap: ${theme.spacing.sm};
       white-space: nowrap;
 
       &.hidden {
         visibility: hidden;
+      }
+
+      > .icon {
+        flex: 0 0 auto;
+        block-size: 20px;
+        inline-size: 20px;
       }
     }
   }

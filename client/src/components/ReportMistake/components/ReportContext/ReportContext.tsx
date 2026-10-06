@@ -3,15 +3,29 @@ import styled from 'styled-components';
 import type { ReportContextProps } from './models';
 import * as styles from './styles';
 
-export const ReportContext = styled(({ className, label, lines }: ReportContextProps) => (
-  <div className={className}>
-    <p className="label">{label}</p>
-    {lines.map((line) => (
-      <p key={line} className="line" dir="auto">
-        {line}
-      </p>
-    ))}
-  </div>
-))`
+// The first line is what the report is about and reads as its name; the rest
+// are facts about it.
+export const ReportContext = styled(({ className, label, lines }: ReportContextProps) => {
+  const [subject, ...details] = lines;
+
+  return (
+    <div className={className}>
+      <p className="label">{label}</p>
+      {subject && (
+        <p className="subject" dir="auto">
+          {subject}
+        </p>
+      )}
+      {details.map((line, index) => (
+        // The details are a short, fixed-order list of strings derived from
+        // the page, with no ids and never reordered, so the position is the
+        // only identity they have.
+        <p key={index} className="detail" dir="auto">
+          {line}
+        </p>
+      ))}
+    </div>
+  );
+})`
   ${styles.ReportContext}
 `;

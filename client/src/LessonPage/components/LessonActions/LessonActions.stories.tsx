@@ -2,7 +2,9 @@ import type { LessonOccurrenceDetail } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, within } from 'storybook/test';
 
+import { COPY_FAILED_LINE, SHARE_LABEL } from '~/components/ShareButton/consts';
 import { rabbiFixture } from '~/rabbiFixture';
+import { atFrameSize } from '~/storyMocks';
 
 import * as sheetConsts from './components/CalendarSheet/consts';
 import * as consts from './consts';
@@ -27,8 +29,6 @@ const oneTime: LessonOccurrenceDetail = { ...upcoming, calendarOccurrence: upcom
 
 const weekly: LessonOccurrenceDetail = { ...upcoming, schedule: { kind: 'weekly', weekdays: [2], startTime: '20:30' }, calendarOccurrence: upcoming };
 
-const SHARE_NAME = 'שיתוף';
-
 const meta: Meta<typeof LessonActions> = {
   title: 'LessonPage/LessonActions',
   component: LessonActions,
@@ -41,7 +41,7 @@ export const OneTimeUpcoming: Story = {
   args: { occurrence: oneTime },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('button', { name: SHARE_NAME })).toBeVisible();
+    await expect(canvas.getByRole('button', { name: SHARE_LABEL })).toBeVisible();
     await expect(canvas.getByRole('button', { name: consts.ADD_TO_CALENDAR_LABEL })).toBeVisible();
   },
 };
@@ -78,7 +78,7 @@ export const WeeklyWithNoCalendarDate: Story = {
   args: { occurrence: { ...weekly, status: 'cancelled', calendarOccurrence: null } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('button', { name: SHARE_NAME })).toBeVisible();
+    await expect(canvas.getByRole('button', { name: SHARE_LABEL })).toBeVisible();
     await expect(canvas.queryByRole('button', { name: consts.ADD_TO_CALENDAR_LABEL })).toBeNull();
   },
 };
@@ -92,17 +92,93 @@ export const OneTimeGone: Story = {
   },
 };
 
-// 320 leaves 288 for the row: the two labels no longer fit side by side, so
-// they stack, each the full width.
+// The page's own side gutters (spacing.lg each side): the test frame has none
+// of its own, so the row is measured in a frame that much narrower than the
+// phone it stands for.
+const PAGE_GUTTERS = 32;
+
+const viewportAt = (width: number) =>
+  ({
+    globals: { viewport: { value: `phone${width}`, isRotated: false } },
+    parameters: { viewport: { options: { [`phone${width}`]: { name: `Phone ${width}`, styles: { width: `${width}px`, height: '100%' }, type: 'mobile' } } } },
+  }) as const;
+
+const buttonsOf = (canvasElement: HTMLElement) => {
+  const canvas = within(canvasElement);
+  return {
+    share: canvas.getByRole('button', { name: SHARE_LABEL }).getBoundingClientRect(),
+    calendar: canvas.getByRole('button', { name: consts.ADD_TO_CALENDAR_LABEL }).getBoundingClientRect(),
+  };
+};
+
+// The two buttons share the row side by side at every phone width the site
+// supports, 320 included. Equal halves hold wherever each label fits its
+// half; at 320 the share button's own width (it reserves room for its longer
+// "copied" label) is a little over half of 288, so there it takes what it
+// needs and the calendar button the rest.
+const sideBySideStory = (width: number, isEqualHalves: boolean): Story => ({
+  args: { occurrence: weekly },
+  ...viewportAt(width),
+  play: ({ canvasElement }) =>
+    atFrameSize(width - PAGE_GUTTERS, undefined, async () => {
+      const { share, calendar } = buttonsOf(canvasElement);
+      await expect(Math.abs(share.top - calendar.top)).toBeLessThanOrEqual(1);
+      if (isEqualHalves) await expect(Math.abs(share.width - calendar.width)).toBeLessThanOrEqual(1);
+      await expect(share.height).toBeGreaterThanOrEqual(48);
+      await expect(calendar.height).toBeGreaterThanOrEqual(48);
+    }),
+});
+
+export const SideBySideAt390: Story = sideBySideStory(390, true);
+export const SideBySideAt360: Story = sideBySideStory(360, true);
+export const SideBySideAt320: Story = sideBySideStory(320, false);
+
+// A row too narrow for both labels (a narrow container, or text enlarged
+// well past the default): the buttons stack, each the full width.
 export const NarrowStacks: Story = {
   args: { occurrence: weekly },
-  globals: { viewport: { value: 'narrow', isRotated: false } },
-  parameters: { viewport: { options: { narrow: { name: 'Narrow 320', styles: { width: '320px', height: '100%' }, type: 'mobile' } } } },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const share = canvas.getByRole('button', { name: SHARE_NAME }).getBoundingClientRect();
-    const calendar = canvas.getByRole('button', { name: consts.ADD_TO_CALENDAR_LABEL }).getBoundingClientRect();
-    await expect(calendar.top).toBeGreaterThanOrEqual(share.bottom);
-    await expect(Math.round(share.width)).toBe(Math.round(calendar.width));
-  },
+  ...viewportAt(240),
+  play: ({ canvasElement }) =>
+    atFrameSize(240 - PAGE_GUTTERS, undefined, async () => {
+      const { share, calendar } = buttonsOf(canvasElement);
+      await expect(calendar.top).toBeGreaterThanOrEqual(share.bottom);
+      await expect(Math.round(share.width)).toBe(Math.round(calendar.width));
+    }),
 };
+
+// The copy did not work: the buttons stay where they were, and the line and
+// the link field drop under both, at the row's width, without the page
+// scrolling sideways.
+const copyFailedStory = (width: number): Story => ({
+  args: { occurrence: weekly },
+  ...viewportAt(width),
+  play: ({ canvasElement }) =>
+    atFrameSize(width - PAGE_GUTTERS, undefined, async () => {
+      const restoreClipboard = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
+      const restoreShare = Object.getOwnPropertyDescriptor(navigator, 'share');
+      Object.defineProperty(navigator, 'clipboard', { value: { writeText: () => Promise.reject(new DOMException('blocked', 'NotAllowedError')) }, configurable: true });
+      Object.defineProperty(navigator, 'share', { value: undefined, configurable: true });
+      try {
+        const canvas = within(canvasElement);
+        const before = buttonsOf(canvasElement);
+        await userEvent.click(canvas.getByRole('button', { name: SHARE_LABEL }));
+        const line = await canvas.findByText(COPY_FAILED_LINE);
+        const field = canvas.getByText(/torahbarabim\.com/);
+
+        const after = buttonsOf(canvasElement);
+        await expect(Math.abs(after.share.top - before.share.top)).toBeLessThanOrEqual(1);
+        await expect(Math.abs(after.calendar.top - before.calendar.top)).toBeLessThanOrEqual(1);
+        await expect(line.getBoundingClientRect().top).toBeGreaterThanOrEqual(Math.max(after.share.bottom, after.calendar.bottom));
+        await expect(field.getBoundingClientRect().top).toBeGreaterThanOrEqual(line.getBoundingClientRect().bottom);
+        await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(document.documentElement.clientWidth);
+      } finally {
+        if (restoreClipboard) Object.defineProperty(navigator, 'clipboard', restoreClipboard);
+        else delete (navigator as unknown as Record<string, unknown>).clipboard;
+        if (restoreShare) Object.defineProperty(navigator, 'share', restoreShare);
+        else delete (navigator as unknown as Record<string, unknown>).share;
+      }
+    }),
+});
+
+export const CopyFailedAt390: Story = copyFailedStory(390);
+export const CopyFailedAt320: Story = copyFailedStory(320);

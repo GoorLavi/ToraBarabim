@@ -5,7 +5,7 @@ export const REPORT_PROMPT_ACTION = 'כתבו לנו';
 
 export const REPORT_WINDOW_TITLE = 'מצאתם טעות?';
 export const REPORT_WINDOW_PARAGRAPHS: readonly string[] = [
-  'תודה שאתם עוזרים לנו לדייק את הלוח. כתבו מה לא נכון, ונבדוק. נחזור אליכם בטלפון רק אם נצטרך עוד פרטים.',
+  'תודה שאתם עוזרים לנו לדייק את הלוח. כתבו מה לא נכון, ונבדוק.',
 ];
 
 export const REPORT_CONTEXT_LABELS: Record<VisitorMessageSubject['kind'], string> = {

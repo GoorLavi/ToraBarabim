@@ -9,12 +9,12 @@ import { ShareButton } from '~/components/ShareButton/ShareButton';
 import { lessonActionsOf, lessonShareText, lessonShareUrl, occurrenceWhenLabel } from '../../helpers';
 import { CalendarSheet } from './components/CalendarSheet/CalendarSheet';
 import * as consts from './consts';
-import { addOneEventLink, calendarPlatformOf, subscribeToLessonLink } from './helpers';
+import { addOneEventLink, calendarPlatformOf, opensInNewTab, subscribeToLessonLink } from './helpers';
 import type { CalendarLink, LessonActionsProps } from './models';
 import * as styles from './styles';
 
 const openCalendarLink = (link: CalendarLink): void => {
-  if (link.opensInNewTab) {
+  if (opensInNewTab(link)) {
     window.open(link.href, '_blank', 'noopener,noreferrer');
     return;
   }

@@ -189,3 +189,7 @@ export const isoDateOffsetByDays = (days: number): string => {
   date.setDate(date.getDate() + days);
   return date.toISOString().slice(0, 10);
 };
+
+// Words that would make a promise or mention money: the visitor message
+// window carries neither, anywhere, whoever opens it (decision 0039).
+export const FORBIDDEN_WINDOW_COPY = /נחזור|ניצור קשר|נפנה|ניצור איתך|₪|עלות|מחיר|תשלום|ש"ח/;

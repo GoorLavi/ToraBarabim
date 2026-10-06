@@ -7,7 +7,7 @@ import * as consts from '~/components/HelpWindow/consts';
 import { HelpWindow } from '~/components/HelpWindow/HelpWindow';
 import { HELP_TILE_WINDOW_COPY, VISITOR_MESSAGE_TITLES } from '~/HomePage/components/consts';
 import { rabbiFixture } from '~/rabbiFixture';
-import { atFrameSize } from '~/storyMocks';
+import { atFrameSize, FORBIDDEN_WINDOW_COPY } from '~/storyMocks';
 
 import { http, respondWithJson } from '../../../../.storybook/apiMocks';
 
@@ -100,10 +100,6 @@ const fillValidForm = async (dialog: HTMLElement): Promise<void> => {
 const submit = (dialog: HTMLElement): Promise<void> =>
   userEvent.click(within(dialog).getByRole('button', { name: new RegExp(`^(${formConsts.SUBMIT_LABEL}|${formConsts.SUBMIT_SENDING_LABEL})$`) }));
 
-// Words that would make a promise or mention money: the window carries
-// neither, anywhere.
-const FORBIDDEN_COPY = /נחזור|ניצור קשר|נפנה|ניצור איתך|₪|עלות|מחיר|תשלום|ש"ח/;
-
 // A failure line belongs to the press that caused it: closing the window and
 // opening it again shows the draft, without the stale line.
 const failureClearedOnReopenStory = (kind: HelpRequestType): Story => ({
@@ -136,7 +132,7 @@ const idleStory = (kind: HelpRequestType): Story => ({
     // Focus lands on the title, never on a field: a field would raise the
     // phone keyboard before anything has been read.
     await expect(within(dialog).getByRole('heading', { name: VISITOR_MESSAGE_TITLES[kind] })).toHaveFocus();
-    await expect(dialog.textContent).not.toMatch(FORBIDDEN_COPY);
+    await expect(dialog.textContent).not.toMatch(FORBIDDEN_WINDOW_COPY);
   },
 });
 
@@ -204,7 +200,7 @@ const successStory = (kind: HelpRequestType): Story => ({
     // The type is the opening tile's, and the phone goes as typed: the server
     // normalises it.
     await expect(postedBodies).toEqual([{ type: kind, name: VALID_NAME, phone: VALID_PHONE, message: VALID_MESSAGE }]);
-    await expect(dialog.textContent).not.toMatch(FORBIDDEN_COPY);
+    await expect(dialog.textContent).not.toMatch(FORBIDDEN_WINDOW_COPY);
 
   },
 });

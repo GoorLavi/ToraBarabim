@@ -9,6 +9,7 @@ export const ReportMistake = css(
   > .trigger {
     min-block-size: 48px;
     padding-block: ${theme.spacing.md};
+    padding-inline: 0;
     text-align: start;
     font-size: ${theme.typography.secondary.phone.fontSize};
     line-height: ${theme.typography.secondary.phone.lineHeight};

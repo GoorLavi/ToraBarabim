@@ -65,9 +65,9 @@ export const LessonPage = styled(({ className, rabbiLessons, areaPreview }: Less
 
       {occurrence && (
         <>
-          <LessonTicket occurrence={occurrence} />
+          <LessonTicket {...{ occurrence }} />
 
-          <LessonActions occurrence={occurrence} />
+          <LessonActions {...{ occurrence }} />
 
           {occurrence.status === 'cancelled' && (
             <Link className="otherLessons" to={cityPath({ slug: occurrence.venue.citySlug })} dir="auto">

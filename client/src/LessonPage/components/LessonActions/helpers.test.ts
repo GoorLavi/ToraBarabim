@@ -1,7 +1,7 @@
 import type { LessonOccurrence } from '@torabarabim/common';
 import { describe, expect, it } from 'vitest';
 
-import { addOneEventLink, calendarPlatformOf, subscribeToLessonLink } from './helpers';
+import { addOneEventLink, calendarPlatformOf, opensInNewTab, subscribeToLessonLink } from './helpers';
 
 const ANDROID_CHROME = 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36';
 const IPHONE_SAFARI = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
@@ -29,27 +29,34 @@ describe('calendarPlatformOf', () => {
 
 describe('addOneEventLink', () => {
   it('hands an iPhone or a desktop the event file in place', () => {
-    expect(addOneEventLink(occurrence, 'other')).toEqual({ href: '/lesson/lesson-1/2026-10-13/event.ics', target: 'ics', opensInNewTab: false });
+    expect(addOneEventLink(occurrence, 'other')).toEqual({ href: '/lesson/lesson-1/2026-10-13/event.ics', target: 'ics' });
   });
 
   it('hands Android a prefilled Google Calendar event in a new tab', () => {
     const link = addOneEventLink(occurrence, 'android');
     expect(link.target).toBe('google');
-    expect(link.opensInNewTab).toBe(true);
+    expect(opensInNewTab(link)).toBe(true);
     expect(link.href.startsWith('https://calendar.google.com/calendar/render?action=TEMPLATE&')).toBe(true);
   });
 });
 
 describe('subscribeToLessonLink', () => {
   it('hands an iPhone or a desktop the webcal feed in place', () => {
-    expect(subscribeToLessonLink('lesson-1', 'other')).toEqual({ href: 'webcal://torahbarabim.com/lesson/lesson-1/calendar.ics', target: 'webcal', opensInNewTab: false });
+    expect(subscribeToLessonLink('lesson-1', 'other')).toEqual({ href: 'webcal://torahbarabim.com/lesson/lesson-1/calendar.ics', target: 'webcal' });
   });
 
   it('hands Android Google\'s subscribe link in a new tab', () => {
     expect(subscribeToLessonLink('lesson-1', 'android')).toEqual({
       href: 'https://calendar.google.com/calendar/render?cid=webcal%3A%2F%2Ftorahbarabim.com%2Flesson%2Flesson-1%2Fcalendar.ics',
       target: 'google',
-      opensInNewTab: true,
     });
+  });
+});
+
+describe('opensInNewTab', () => {
+  it('opens only a Google link in a tab of its own', () => {
+    expect(opensInNewTab({ href: 'x', target: 'google' })).toBe(true);
+    expect(opensInNewTab({ href: 'x', target: 'ics' })).toBe(false);
+    expect(opensInNewTab({ href: 'x', target: 'webcal' })).toBe(false);
   });
 });

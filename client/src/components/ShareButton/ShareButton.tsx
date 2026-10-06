@@ -58,19 +58,26 @@ export const ShareButton = styled(({ className, text, url, tone, surface }: Shar
   return (
     <div className={classNames(className, tone)}>
       <button type="button" className="button" onClick={() => void share()}>
-        <svg className="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d={isCopied ? consts.CHECK_ICON_PATH : consts.SHARE_ICON_PATH} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        {/* Both labels share one grid cell, so the button is always as wide
-            as the longer of the two and never jumps on the swap. */}
-        <span className={classNames('label', { hidden: isCopied })}>{consts.SHARE_LABEL}</span>
-        <span className={classNames('label', { hidden: !isCopied })}>{consts.COPIED_LABEL}</span>
+        {/* Two complete groups share one grid cell, so the button is always as
+            wide as the wider of the two and never jumps on the swap. */}
+        <span className={classNames('group', { hidden: isCopied })}>
+          <svg className="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d={consts.SHARE_ICON_PATH} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span className="label">{consts.SHARE_LABEL}</span>
+        </span>
+        <span className={classNames('group', { hidden: !isCopied })}>
+          <svg className="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d={consts.CHECK_ICON_PATH} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span className="label">{consts.COPIED_LABEL}</span>
+        </span>
       </button>
       <p className={classNames('notice', { visuallyHidden: copyStatus !== 'failed' })} role="status">
         {copyStatus === 'copied' && consts.COPIED_LABEL}
         {copyStatus === 'failed' && consts.COPY_FAILED_LINE}
       </p>
-      {copyStatus === 'failed' && <ReadOnlyField className="fallback" value={url} dir="ltr" />}
+      {copyStatus === 'failed' && <ReadOnlyField {...{ className: 'fallback', value: url, dir: 'ltr' }} />}
     </div>
   );
 })`

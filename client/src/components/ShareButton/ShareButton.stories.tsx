@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { primaryFieldDecorator } from '~/storyDecorators';
+import { atFrameSize } from '~/storyMocks';
 
 import * as consts from './consts';
 import { ShareButton } from './ShareButton';
@@ -41,7 +42,21 @@ const resolvingClipboard = () => {
   return { calls, clipboard: { writeText: (value: string) => { calls.push(value); return Promise.resolve(); } } };
 };
 
-export const Light: Story = {};
+// The icon sits one gap from its label, in the idle state and the copied
+// one, whichever of the two labels is the wider.
+const gapBetweenIconAndLabel = (button: HTMLElement): number => {
+  const visibleGroup = [...button.querySelectorAll('.group')].find((group) => getComputedStyle(group).visibility === 'visible');
+  const icon = visibleGroup?.querySelector('.icon')?.getBoundingClientRect();
+  const label = visibleGroup?.querySelector('.label')?.getBoundingClientRect();
+  if (!icon || !label) throw new Error('ShareButton story: the visible icon and label were not found');
+  return Math.round(Math.min(Math.abs(icon.left - label.right), Math.abs(label.left - icon.right)));
+};
+
+export const Light: Story = {
+  play: async ({ canvasElement }) => {
+    await expect(gapBetweenIconAndLabel(within(canvasElement).getByRole('button', { name: consts.SHARE_LABEL }))).toBe(8);
+  },
+};
 
 export const Plum: Story = {
   args: { tone: 'plum', surface: 'rabbiPage' },
@@ -57,7 +72,9 @@ export const Copied: Story = {
     try {
       const canvas = within(canvasElement);
       await userEvent.click(canvas.getByRole('button', { name: consts.SHARE_LABEL }));
-      await expect(await canvas.findByRole('button', { name: consts.COPIED_LABEL })).toBeVisible();
+      const copiedButton = await canvas.findByRole('button', { name: consts.COPIED_LABEL });
+      await expect(copiedButton).toBeVisible();
+      await expect(gapBetweenIconAndLabel(copiedButton)).toBe(8);
       await expect(calls).toEqual([URL]);
       await expect(canvas.getByRole('status')).toHaveTextContent(consts.COPIED_LABEL);
     } finally {
@@ -167,14 +184,17 @@ export const NativeShareFailsAndCopies: Story = {
 export const CopyFailedNarrow: Story = {
   ...CopyFailed,
   args: { url: 'https://torahbarabim.com/lesson/0b7d2c1e-4f5a-4c9e-9a3b-1d2e3f4a5b6c/2026-10-13?s' },
-  decorators: [(Story) => <div style={{ maxInlineSize: '288px' }}><Story /></div>],
-  play: async ({ canvasElement }) => {
-    const restore = stubNavigator({ share: undefined, clipboard: { writeText: () => Promise.reject(new DOMException('blocked', 'NotAllowedError')) } });
-    try {
-      await userEvent.click(within(canvasElement).getByRole('button', { name: consts.SHARE_LABEL }));
-      await within(canvasElement).findByText(consts.COPY_FAILED_LINE);
-    } finally {
-      restore();
-    }
-  },
+  globals: { viewport: { value: 'narrow', isRotated: false } },
+  parameters: { viewport: { options: { narrow: { name: 'Narrow 320', styles: { width: '320px', height: '100%' }, type: 'mobile' } } } },
+  play: ({ canvasElement }) =>
+    atFrameSize(320, undefined, async () => {
+      const restore = stubNavigator({ share: undefined, clipboard: { writeText: () => Promise.reject(new DOMException('blocked', 'NotAllowedError')) } });
+      try {
+        await userEvent.click(within(canvasElement).getByRole('button', { name: consts.SHARE_LABEL }));
+        await within(canvasElement).findByText(consts.COPY_FAILED_LINE);
+        await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(document.documentElement.clientWidth);
+      } finally {
+        restore();
+      }
+    }),
 };
