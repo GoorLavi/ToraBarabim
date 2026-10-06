@@ -29,7 +29,9 @@ let pendingSuperProperties: Partial<SuperProperties> = {};
 let pendingPanelUser: PanelUserIdentity | null = null;
 // The SDK restores the last identity from localStorage when it loads, so a
 // reset asked for before then has to be replayed after, or an expired
-// session's account comes back under the next login.
+// session's account comes back under the next login. Accepted cost: events
+// queued before such a reset (the login page's view among them) flush under
+// the identity that follows it, a narrow race on a slow load.
 let isResetPending = false;
 
 // The queue goes with it, so no event sits in memory for the rest of the
@@ -144,8 +146,9 @@ export const identifyPanelUser = (identity: PanelUserIdentity): void => {
     applyPanelUser(mixpanelInstance, identity);
   } catch (error) {
     // Fails open: this runs in a panel shell's effect, and a throw inside
-    // the SDK must not take the panel down with it. The account simply goes
-    // unidentified for this session.
+    // the SDK must not take the panel down with it. The account may stay
+    // unidentified, or half set, until the next identify (a name change or
+    // the next shell mount) tries again.
     console.warn('Could not identify the panel account in Mixpanel', error);
   }
 };
@@ -167,7 +170,8 @@ export const resetPanelUser = (): void => {
   } catch (error) {
     // Fails open: this runs inside the login and logout mutations' success
     // callbacks, where a throw would turn a login the server already
-    // accepted into an error screen. The identity stays as it was.
+    // accepted into an error screen. The identity may be left as it was or
+    // partly cleared, depending on where the SDK threw.
     console.warn('Could not reset the Mixpanel identity', error);
   }
 };
