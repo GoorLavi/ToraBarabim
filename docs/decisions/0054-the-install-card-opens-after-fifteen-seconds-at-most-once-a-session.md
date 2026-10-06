@@ -1,4 +1,4 @@
-# 0054: The install card opens after a minute, at most once a session, until dismissed twice
+# 0054: The install card opens after fifteen seconds, at most once a session, until dismissed twice
 
 - **Status:** proposed
 - **Date:** 2026-10-06
@@ -16,7 +16,7 @@ nagging.
 - **A compact card at the bottom of the screen** (a corner card on desktop), taking a
   small fraction of the screen, with no dim and no focus trap. It is offered on public
   pages, the course page included, from the first visit.
-- **It opens after 60 seconds of visible time on public pages in a session**, and waits
+- **It opens after 15 seconds of visible time on public pages in a session**, and waits
   while the person is busy: a dialog, sheet or picker open, or a text field focused.
 - **At most one automatic show per session. A show counts only when it is dismissed**;
   an ignored card disappears on navigation and may return in a later session. Two

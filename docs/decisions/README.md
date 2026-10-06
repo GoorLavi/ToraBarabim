@@ -113,4 +113,4 @@ The real alternatives and why each lost. If there was no alternative, say so.
 | [0051](0051-a-past-lesson-date-keeps-its-page-and-leaves-the-index.md) | A past lesson date keeps its page and leaves the index | accepted |
 | [0052](0052-our-own-browsing-is-not-counted.md) | Our own browsing, the agents' browser pane and any admin's browser, is not counted | accepted |
 | [0053](0053-the-site-runs-a-service-worker-that-never-caches-lesson-data.md) | The site runs a service worker that never caches lesson data | proposed |
-| [0054](0054-the-install-card-opens-after-a-minute-at-most-once-a-session.md) | The install card opens after a minute, at most once a session, until dismissed twice | proposed |
+| [0054](0054-the-install-card-opens-after-fifteen-seconds-at-most-once-a-session.md) | The install card opens after fifteen seconds, at most once a session, until dismissed twice | proposed |

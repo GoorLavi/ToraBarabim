@@ -5,7 +5,7 @@ export const MAX_INSTALL_DISMISSALS = 2;
 
 // Visible seconds on public pages before the automatic card may open. Read
 // by the timer hook; defined here so the cadence has one home.
-export const AUTO_SHOW_AFTER_VISIBLE_SECONDS = 60;
+export const AUTO_SHOW_AFTER_VISIBLE_SECONDS = 15;
 
 export const INSTALL_PROMPT_STORAGE_KEY = 'torabarabim:installPrompt';
 export const INSTALL_PROMPT_SESSION_KEY = 'torabarabim:installPromptShownThisSession';
