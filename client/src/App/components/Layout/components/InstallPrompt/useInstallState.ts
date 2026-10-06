@@ -6,7 +6,13 @@ import { trackEvent } from '~/analytics/mixpanel';
 import { getServerSnapshot, getSnapshot, promptInstall, subscribe } from '~/pwa/installPromptStore';
 import { isStandaloneDisplay } from '~/pwa/isStandaloneDisplay';
 
-import { AUTO_SHOW_AFTER_VISIBLE_SECONDS, AUTO_SHOW_TICK_MS, COMPUTER_FOOTER_LINK_LABEL, PHONE_FOOTER_LINK_LABEL } from './consts';
+import {
+  AUTO_SHOW_AFTER_VISIBLE_SECONDS,
+  AUTO_SHOW_TICK_MS,
+  COMPUTER_FOOTER_LINK_LABEL,
+  MS_PER_SECOND,
+  PHONE_FOOTER_LINK_LABEL,
+} from './consts';
 import {
   afterDismissal,
   afterInstall,
@@ -19,12 +25,12 @@ import {
   isComputerDevice,
   isUserBusy,
   shareButtonPlacementFor,
+  visibleMsAfterTick,
 } from './helpers';
 import type { BrowserEnvironment, InstallDevice, InstallFlow, InstallPromptState, InstallState, OpenInstallFlow, UseInstallStateOptions } from './models';
 import { readInstallPromptState, writeInstallPromptState } from './storage';
 
 const CLOSED: InstallFlow = { status: 'closed' };
-const MS_PER_SECOND = 1000;
 
 // Owns the whole install flow for the public pages: whether there is
 // anything to offer, when the automatic card opens, what the footer link
@@ -112,10 +118,10 @@ export const useInstallState = ({ autoShowAfterSeconds = AUTO_SHOW_AFTER_VISIBLE
       const elapsedMs = now - lastTickAt;
       lastTickAt = now;
 
-      // A hidden tab adds nothing, and the tick it comes back on measures
-      // from the last hidden tick, so time spent away is never counted.
-      if (document.visibilityState !== 'visible') return;
-      visibleMsRef.current += elapsedMs;
+      // The step is capped (helpers.ts), so a tick that fires long after the
+      // last one, after the phone was locked or the tab backgrounded, does
+      // not turn that gap into visible time.
+      visibleMsRef.current = visibleMsAfterTick(visibleMsRef.current, elapsedMs, document.visibilityState === 'visible');
       if (visibleMsRef.current < autoShowAfterSeconds * MS_PER_SECOND) return;
       if (isUserBusy(document)) return;
 
@@ -158,8 +164,7 @@ export const useInstallState = ({ autoShowAfterSeconds = AUTO_SHOW_AFTER_VISIBLE
   };
 
   // "Not now", Escape, a tap on a modal sheet's backdrop and "Got it" all
-  // land here. Closing the offer reports a dismissal; closing an instructions
-  // step never does (helpers.ts).
+  // land here.
   //
   // An automatic card closed on its iOS instructions still spends one of the
   // two dismissals, on purpose: Apple never tells a page that the site was

@@ -816,7 +816,10 @@ the icons and splash screens are under "The logo" above.
   platform's. When the step names the control inside the sentence (the share button at
   the top of the screen), the glyph sits inline at 20px and the step has no tile. The
   home-screen preview is a `primarySoft` block. Closing the steps is a quiet button with
-  a `primary` outline; closing the in-app explanation is a text button.
+  a `primary` outline; closing the in-app explanation is a text button. When the browser
+  refuses the clipboard, the copy button stays and a block on `bg` below it says
+  `אפשר ללחוץ לחיצה ארוכה על הקישור ולהעתיק אותו.` above the page's own link, set left to
+  right, selectable as one piece and free to wrap anywhere.
 - **The offline page** stands alone: no script, stylesheet, web font or image, because it
   shows exactly when nothing else can load. System fonts, and the colours, radii and
   shadow mirrored by hand from the theme, with a comment naming the source.

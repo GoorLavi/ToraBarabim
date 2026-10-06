@@ -1,5 +1,4 @@
 import type { InstallPlatformPath, InstallTrigger } from '~/analytics/consts';
-import type { InstallAcceptedProps, InstallCardDismissedProps } from '~/analytics/models';
 
 export interface InstallEnvironment {
   userAgent: string;

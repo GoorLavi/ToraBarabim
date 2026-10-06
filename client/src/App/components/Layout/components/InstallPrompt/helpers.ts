@@ -1,4 +1,5 @@
 import type { InstallPlatformPath } from '~/analytics/consts';
+import type { InstallAcceptedProps, InstallCardDismissedProps } from '~/analytics/models';
 import { isTextEntryElement } from '~/components/helpers';
 
 import {
@@ -10,12 +11,11 @@ import {
   IPAD_USER_AGENT_PATTERN,
   IPADOS_MIN_TOUCH_POINTS,
   MACINTOSH_USER_AGENT_PATTERN,
+  MAX_COUNTED_TICK_MS,
   MAX_INSTALL_DISMISSALS,
   OPEN_OVERLAY_SELECTOR,
   SAFARI_TOKEN_PATTERN,
 } from './consts';
-import type { InstallAcceptedProps, InstallCardDismissedProps } from '~/analytics/models';
-
 import type { InstallEnvironment, InstallPromptState, OpenInstallFlow, ShareButtonPlacement } from './models';
 
 type DeviceSignals = Pick<InstallEnvironment, 'userAgent' | 'maxTouchPoints'>;
@@ -106,3 +106,9 @@ export const acceptanceEventPropsOnInstructionsOpened = (flow: Pick<OpenInstallF
 // Only the automatic card spends one of the two dismissals. A footer flow is
 // the visitor's own request and never limits what the site offers by itself.
 export const countsTowardDismissalLimit = (flow: Pick<OpenInstallFlow, 'trigger'>): boolean => flow.trigger === 'auto';
+
+// Visible time only ever grows by a bounded step: a hidden tab adds nothing,
+// and a tick that arrives long after the last one (the phone was locked, the
+// tab was in the background) adds at most one capped step, never the gap.
+export const visibleMsAfterTick = (previousMs: number, elapsedMs: number, isVisible: boolean): number =>
+  isVisible ? previousMs + Math.min(elapsedMs, MAX_COUNTED_TICK_MS) : previousMs;

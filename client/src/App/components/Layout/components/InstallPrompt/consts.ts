@@ -43,7 +43,12 @@ export const IPAD_USER_AGENT_PATTERN = /iPad/;
 // of these roles. The install card itself is a region, so it never matches.
 export const OPEN_OVERLAY_SELECTOR = '[role="dialog"], [role="alertdialog"], [role="listbox"]';
 
-export const AUTO_SHOW_TICK_MS = 1000;
+export const MS_PER_SECOND = 1000;
+export const AUTO_SHOW_TICK_MS = MS_PER_SECOND;
+// The most one tick may add to the visible time. A locked phone stops timers
+// and a hidden desktop tab runs them about once a minute, so a tick that
+// arrives long after the last one must not count the whole gap.
+export const MAX_COUNTED_TICK_MS = 2 * AUTO_SHOW_TICK_MS;
 
 export const SHEET_ARIA_LABEL = 'הוספת האתר למסך הבית';
 export const COMPUTER_SHEET_ARIA_LABEL = 'הוספת האתר למחשב';

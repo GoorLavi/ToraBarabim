@@ -2,10 +2,10 @@ import classNames from 'classnames';
 import { useState } from 'react';
 import styled from 'styled-components';
 
+import { InstallIcon } from '~/App/components/Layout/components/InstallIcon/InstallIcon';
 import { PrimaryButton } from '~/components/PrimaryButton/PrimaryButton';
 import { QuietButton } from '~/components/QuietButton/QuietButton';
 
-import { InstallIcon } from '~/App/components/Layout/components/InstallIcon/InstallIcon';
 import * as consts from '../../consts';
 import type { InAppExplanationProps } from './models';
 import * as styles from './styles';
@@ -18,7 +18,10 @@ export const InAppExplanation = styled(({ className, onCopyLink, onClose }: InAp
 
   const copyLink = (): void => {
     onCopyLink()
-      .then(() => setIsCopied(true))
+      .then(() => {
+        setIsCopied(true);
+        setLinkToCopyByHand(null);
+      })
       .catch((error: unknown) => {
         console.error('Could not copy the page link from the in-app browser explanation', error);
         setLinkToCopyByHand(window.location.href);
@@ -51,14 +54,16 @@ export const InAppExplanation = styled(({ className, onCopyLink, onClose }: InAp
           onClick: copyLink,
         }}
       />
-      {linkToCopyByHand && (
-        <div className="manualCopy" role="status">
-          <p className="manualCopyHint">{consts.IN_APP_MANUAL_COPY_HINT}</p>
-          <p className="pageLink" dir="ltr">
-            {linkToCopyByHand}
-          </p>
-        </div>
-      )}
+      <div className="manualCopyRegion" role="status">
+        {linkToCopyByHand && (
+          <div className="manualCopy">
+            <p className="manualCopyHint">{consts.IN_APP_MANUAL_COPY_HINT}</p>
+            <p className="pageLink" dir="ltr">
+              {linkToCopyByHand}
+            </p>
+          </div>
+        )}
+      </div>
       <QuietButton {...{ className: 'close', label: consts.IN_APP_CLOSE_LABEL, onClick: onClose }} />
     </div>
   );

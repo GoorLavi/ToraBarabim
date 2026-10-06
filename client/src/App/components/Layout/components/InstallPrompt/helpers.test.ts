@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { AUTO_SHOW_AFTER_VISIBLE_SECONDS, MAX_COUNTED_TICK_MS } from './consts';
 import {
   acceptanceEventPropsOnInstructionsOpened,
   afterDismissal,
@@ -11,6 +12,7 @@ import {
   installPathFor,
   isComputerDevice,
   shareButtonPlacementFor,
+  visibleMsAfterTick,
 } from './helpers';
 import type { InstallDevice, InstallEnvironment, InstallPromptState, OpenInstallFlow } from './models';
 
@@ -207,5 +209,31 @@ describe('install events', () => {
     expect(countsTowardDismissalLimit(flowOf('auto', 'instructions', 'iosSafari'))).toBe(true);
     expect(countsTowardDismissalLimit(flowOf('auto', 'offer', 'chromiumPrompt'))).toBe(true);
     expect(countsTowardDismissalLimit(flowOf('footer', 'instructions', 'iosSafari'))).toBe(false);
+  });
+});
+
+describe('visibleMsAfterTick', () => {
+  const MINUTE_MS = 60_000;
+  const TEN_MINUTES_MS = 10 * MINUTE_MS;
+
+  it('adds an ordinary tick in full while the page is visible', () => {
+    expect(visibleMsAfterTick(5000, 1000, true)).toBe(6000);
+  });
+
+  it('adds nothing while the page is hidden', () => {
+    expect(visibleMsAfterTick(5000, 1000, false)).toBe(5000);
+  });
+
+  it('counts a tick that arrives after a ten minute gap as one capped step, not ten minutes', () => {
+    expect(visibleMsAfterTick(5000, TEN_MINUTES_MS, true)).toBe(5000 + MAX_COUNTED_TICK_MS);
+  });
+
+  it('still reaches the threshold on ordinary ticks, and not before', () => {
+    let visibleMs = 0;
+    for (let tick = 1; tick < AUTO_SHOW_AFTER_VISIBLE_SECONDS; tick += 1) visibleMs = visibleMsAfterTick(visibleMs, 1000, true);
+    expect(visibleMs).toBeLessThan(AUTO_SHOW_AFTER_VISIBLE_SECONDS * 1000);
+
+    visibleMs = visibleMsAfterTick(visibleMs, 1000, true);
+    expect(visibleMs).toBe(AUTO_SHOW_AFTER_VISIBLE_SECONDS * 1000);
   });
 });
