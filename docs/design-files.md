@@ -24,22 +24,22 @@ Every design belongs to one of four, split by who opens it and when.
 
 | Page | Screen |
 |---|---|
-| `01 בית` | Home: ten interleaved rails with the women's, success and healing bands and the single women's tile, the thin four-rail case, and its filtered, empty, loading and error states |
+| `01 בית` | Home: ten interleaved rails with the women's, success and healing bands and the single women's tile, the thin four-rail case, and its filtered, empty, loading and error states. The section `אריחי עזרה · כפי שנפרס, 2026-10-02` (`474:1770`) holds the help tiles and the message window, including the "מצאתם טעות?" window (`501:1766`) |
 | `02 חיפוש` | Search results, no results, loading, desktop, and the rabbanit name match |
 | `03 עיר` | A city's lessons |
-| `04 רב` | A rabbi's page, including no photo, a sparse record, loading, empty, error |
+| `04 רב` | A rabbi's page, including no photo, a sparse record, loading, empty, error; share in the hero, with and without a photo (2026-10-06) |
 | `05 כל הרבנים` | The rabbis index |
-| `06 שיעור` | The lesson ticket page as shipped, its details, and the area preview with its loading, empty and failed states; the past-lesson states (took place, started, the rabbi's lessons row in every state) and the area preview as a rail. The ticket's own states are on `99 כרטיס השיעור · כל המצבים` |
+| `06 שיעור` | The lesson ticket page as shipped, its details, and the area preview with its loading, empty and failed states; the past-lesson states (took place, started, the rabbi's lessons row in every state) and the area preview as a rail; the share and add-to-calendar row, the add-to-calendar sheet, the report link, and the desktop copied and copy-failed details (2026-10-06, with a notes frame of the state rules). The ticket's own states are on `99 כרטיס השיעור · כל המצבים` |
 | `07 אזור הנשים` | `/women`, all six states |
 | `08 רשימת רבניות` | `/women/rabbaniyot` |
 | `09 צור קשר` | Contact, at 390 and 320 and desktop. It loads nothing, so it has no loading, empty or error state |
 | `10 כל הערים` | The cities index, with loading, board empty, error and a long-name stress frame |
 | `11 שיעורים` | The lessons listing. Eight frames, because `renderContent` resolves to that many distinct screens |
-| `12 מקום` | A place's page, including both empty widenings, a detail error, a lessons error and the 404 branch |
+| `12 מקום` | A place's page, including both empty widenings, a detail error, a lessons error and the 404 branch; share in the hero and the report link at the page end, on the default frame (2026-10-06) |
 | `13 כל המקומות` | The places directory, including search with and without results |
 | `14 אזור` | An area's lessons |
 | `15 קורסים` | Courses: the card in every state, the home row with one, two and three-plus courses and a closed course, the course page in every state at 390, 320 and 1280, the photo viewer, and the rabbi, place and women's area pages with a course rail |
-| `99 Components` | The 29 shared components. Only `07` and `08` are built from instances of them; see the widths section below for why |
+| `99 Components` | The 34 shared components. Only `07` and `08` are built from instances of them; see the widths section below for why |
 | `99 כרטיס השיעור · כל המצבים` | Every lesson card state, side by side, including the past and started states and the cancelled start time struck through |
 
 ## The admin file, page by page
@@ -69,7 +69,7 @@ ships. Read it as history until someone redraws it.
 
 ## Components are in the site file, not the components file
 
-The name says otherwise, so this is worth stating: the 29 components live on
+The name says otherwise, so this is worth stating: the 34 components live on
 `99 Components` **inside the site file**, because instances can only reference
 components in the same file unless that file is published as a library, and publishing
 is a manual step the owner has to repeat after every change. They move to
@@ -130,35 +130,23 @@ new goes into them. They keep their old names, which is how you can tell.
 Current work that is not part of the map yet, so nobody mistakes it for archive or
 tidies it away:
 
-- **`06 שיעור · שיתוף, יומן ודיווח · לאישור`** (`494:1747`), beside `06 שיעור`: share,
-  add to calendar, and report a mistake on the lesson, rabbi, and place pages, plus a
-  link preview crop study. Waits on the owner.
-- **`01 בית · הקדשות · לאישור`** (`323:488`), beside `01 בית`: the home page with the
-  dedication bands drawn at their measured heights, four phone frames and no desktop
-  yet. It waits on the owner, and on the width decision above. Since 2026-10-05 `01 בית`
-  already carries the success and healing bands in their shipped slots (after rails 6
-  and 8), so this page folds into those positions rather than adding bands again.
-- **`01 בית · חלון הקדשה · לאישור`** (`331:690`), beside the page above: the one
-  dedication window every band opens, and the bands' invitation line. Phone at 390 and
-  320, desktop at 1280, and the band's rest, hover and focus states. Aligned to the
-  built code on 2026-09-24; it folds into `01 בית` with the dedication page.
+- **`06 שיעור · שיתוף, יומן ודיווח · לאישור`** (`494:1747`), beside `06 שיעור`: approved
+  on 2026-10-06 and merged into `06`, `04`, `12`, `01` and `99`. Kept only until the
+  owner approves deleting it; it also holds the link preview crop study (`495:10149`),
+  which has no home elsewhere.
 - **`הקדשות · אזור בדיקה`** (`123:2`), a page at the end of the site file: the
   dedication masters, the notes for directions F to N with the reasoning for each,
   and an archive section. Those notes are the only place that reasoning is written,
   so deleting the page deletes it.
-- **`01 בית · אריחי עזרה · סבב 2 · לאישור`** (`434:488`), beside `01 בית`: the three
-  help tiles inside lesson rails at 390, 320 and 1280, the row with the women's-area
-  tile, and the message window in its states. Approved by the owner on 2026-10-01; it
-  folds into `01 בית` when the change ships. The page before it, `01 בית · אריחי עזרה ·
-  לאישור` (`419:488`), is a superseded first round (four tiles, a block) kept until the
-  owner says to delete it.
 - **`07 הודעות · סבב 2 · לאישור`** (`197:2`), in the admin file: the messages list at
   390 and 1280 with the handling note in five states, the three empty states, and the
   shell tab. Approved on 2026-10-01; it becomes `07 הודעות` when the change ships. The
   page before it, `07 הודעות · לאישור` (`189:2`), is a superseded first round kept
   until the owner says to delete it.
 
-Each folds into the numbered structure when its change ships.
+Each folds into the numbered structure when its change ships. The home dedication
+pages (`323:488`, `331:690`) and the help tile rounds (`434:488`, `419:488`) were no
+longer in the file on 2026-10-06; the help tiles live in `01 בית`.
 
 ## Known gaps, on purpose
 
