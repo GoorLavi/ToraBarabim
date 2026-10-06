@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { ReactElement, ReactNode } from 'react';
-import { expect, spyOn, userEvent, waitFor, within } from 'storybook/test';
+import { expect, mocked, userEvent, waitFor, within } from 'storybook/test';
 
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
-import * as mixpanel from '~/analytics/mixpanel';
+import { trackEvent } from '~/analytics/mixpanel';
 import {
   DEDICATION_GROUP_HEALING,
   DEDICATION_GROUP_MEMORIAL,
@@ -348,8 +348,10 @@ export const MousePressOpensTheWindow: Story = {
 // exactly once.
 export const PointerPressOnInviteButtonOpensOnce: Story = {
   args: { group: DEDICATION_GROUP_HEALING, variant: 'onPage' },
+  beforeEach: () => {
+    mocked(trackEvent).mockClear();
+  },
   play: async ({ canvasElement }) => {
-    const openSpy = spyOn(mixpanel, 'trackEvent');
     const inviteButton = within(canvasElement).getByRole('button', { name: INVITATION_LABEL });
     const box = inviteButton.getBoundingClientRect();
 
@@ -357,8 +359,8 @@ export const PointerPressOnInviteButtonOpensOnce: Story = {
 
     const dialogs = await within(document.body).findAllByRole('dialog', { name: WINDOW_TITLE });
     expect(dialogs).toHaveLength(1);
-    expect(openSpy).toHaveBeenCalledTimes(1);
-    expect(openSpy).toHaveBeenCalledWith(MIXPANEL_EVENTS.dedicationWindowOpen, { bandType: 'healing' });
+    expect(trackEvent).toHaveBeenCalledTimes(1);
+    expect(trackEvent).toHaveBeenCalledWith(MIXPANEL_EVENTS.dedicationWindowOpen, { bandType: 'healing' });
   },
 };
 
