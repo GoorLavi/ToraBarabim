@@ -1,6 +1,17 @@
-import { css } from 'styled-components';
+import { css, type DefaultTheme } from 'styled-components';
 
 import { RUNNING_TEXT_MAX_INLINE_SIZE } from '../../consts';
+
+const actionButton = ({ theme }: { theme: DefaultTheme }) => `
+  flex: 1 1 0;
+  min-inline-size: max-content;
+  padding-inline: ${theme.spacing.md};
+
+  @media (min-width: ${theme.breakpoints.md}) {
+    flex: 0 0 auto;
+    padding-inline: ${theme.spacing.xl};
+  }
+`;
 
 // Equal halves while both labels fit on one line, a stack the moment one no
 // longer does: each button never shrinks below its own label, and the row
@@ -19,35 +30,31 @@ export const LessonActions = css(
 
   > .share {
     display: contents;
-  }
 
-  > .share > .button,
-  > .calendar {
-    flex: 1 1 0;
-    min-inline-size: max-content;
-    padding-inline: ${theme.spacing.md};
+    > .button {
+      ${actionButton({ theme })}
+    }
 
-    @media (min-width: ${theme.breakpoints.md}) {
-      flex: 0 0 auto;
-      padding-inline: ${theme.spacing.xl};
+    > .notice,
+    > .fallback {
+      order: 1;
+      flex: 0 0 100%;
+      min-inline-size: 0;
+    }
+
+    > .fallback {
+      max-inline-size: ${RUNNING_TEXT_MAX_INLINE_SIZE};
     }
   }
 
-  > .share > .notice,
-  > .share > .fallback {
-    order: 1;
-    flex: 0 0 100%;
-    min-inline-size: 0;
-  }
+  > .calendar {
+    ${actionButton({ theme })}
 
-  > .share > .fallback {
-    max-inline-size: ${RUNNING_TEXT_MAX_INLINE_SIZE};
-  }
-
-  > .calendar > .icon {
-    flex: 0 0 auto;
-    block-size: 20px;
-    inline-size: 20px;
+    > .icon {
+      flex: 0 0 auto;
+      block-size: 20px;
+      inline-size: 20px;
+    }
   }
 `,
 );
