@@ -12,6 +12,7 @@ import { useSelectedCity } from '~/hooks/useSelectedCity';
 import { Footer } from './components/Footer/Footer';
 import { InstallPrompt } from './components/InstallPrompt/InstallPrompt';
 import { useInstallState } from './components/InstallPrompt/useInstallState';
+import { PullToRefresh } from './components/PullToRefresh/PullToRefresh';
 import type { LayoutProps } from './models';
 import * as styles from './styles';
 
@@ -63,6 +64,7 @@ export const Layout = styled(({ className }: LayoutProps) => {
 
         <Footer {...{ className: 'footer', installLink }} />
         <InstallPrompt {...installPrompt} />
+        <PullToRefresh />
       </div>
     </ActiveFiltersProvider>
   );

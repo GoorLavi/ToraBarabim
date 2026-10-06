@@ -1,6 +1,5 @@
 import type { InstallPlatformPath } from '~/analytics/consts';
 import type { InstallAcceptedProps, InstallCardDismissedProps } from '~/analytics/models';
-import { isTextEntryElement } from '~/components/helpers';
 
 import {
   ANDROID_USER_AGENT_PATTERN,
@@ -13,7 +12,6 @@ import {
   MACINTOSH_USER_AGENT_PATTERN,
   MAX_COUNTED_TICK_MS,
   MAX_INSTALL_DISMISSALS,
-  OPEN_OVERLAY_SELECTOR,
   SAFARI_TOKEN_PATTERN,
 } from './consts';
 import type { InstallEnvironment, InstallPromptState, OpenInstallFlow, ShareButtonPlacement } from './models';
@@ -81,14 +79,6 @@ export const afterDismissal = (state: InstallPromptState): InstallPromptState =>
 });
 
 export const afterInstall = (state: InstallPromptState): InstallPromptState => ({ ...state, isInstalled: true });
-
-// The busy rule: the card waits while a sheet, dialog or popover is open or a
-// text field has focus, and opens once that clears.
-export const isUserBusy = (page: Document): boolean => {
-  if (page.querySelector(OPEN_OVERLAY_SELECTOR) !== null) return true;
-  const focused = page.activeElement;
-  return focused instanceof HTMLElement && isTextEntryElement(focused);
-};
 
 // Closing the offer is a dismissal. Closing an instructions step is not: by
 // then the visitor accepted (an automatic card moved on to it, or the footer

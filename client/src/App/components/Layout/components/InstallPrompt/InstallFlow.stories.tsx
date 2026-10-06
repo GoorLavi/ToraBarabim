@@ -6,6 +6,7 @@ import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { startInstallPromptStore } from '~/pwa/installPromptStore';
 import type { BeforeInstallPromptEvent } from '~/pwa/models';
+import { stubStandaloneDisplay } from '~/storyMocks';
 
 import { Footer } from '../Footer/Footer';
 import { INSTALL_PROMPT_SESSION_KEY, INSTALL_PROMPT_STORAGE_KEY } from './consts';
@@ -345,25 +346,10 @@ export const DesktopWithoutAPromptOffersNothing: Story = {
 
 export const StandaloneOffersNothing: Story = {
   beforeEach: () => {
-    const originalMatchMedia = window.matchMedia;
-    // A complete stand-in rather than a spread of the real list, whose members
-    // live on its prototype: only the standalone query answers true.
-    window.matchMedia = (query: string): MediaQueryList => {
-      if (!query.includes('standalone')) return originalMatchMedia.call(window, query);
-      return {
-        matches: true,
-        media: query,
-        onchange: null,
-        addEventListener: () => {},
-        removeEventListener: () => {},
-        addListener: () => {},
-        removeListener: () => {},
-        dispatchEvent: () => false,
-      };
-    };
+    const restoreDisplay = stubStandaloneDisplay();
     const restoreDevice = stubDevice(ANDROID_CHROME, 5)();
     return () => {
-      window.matchMedia = originalMatchMedia;
+      restoreDisplay();
       restoreDevice();
     };
   },

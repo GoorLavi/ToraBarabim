@@ -6,6 +6,7 @@ import { trackEvent } from '~/analytics/mixpanel';
 import { getServerSnapshot, getSnapshot, promptInstall, subscribe } from '~/pwa/installPromptStore';
 import { isStandaloneDisplay } from '~/pwa/isStandaloneDisplay';
 
+import { isUserBusy } from '../../helpers';
 import {
   AUTO_SHOW_AFTER_VISIBLE_SECONDS,
   AUTO_SHOW_TICK_MS,
@@ -23,7 +24,6 @@ import {
   dismissalEventPropsOnClose,
   installPathFor,
   isComputerDevice,
-  isUserBusy,
   shareButtonPlacementFor,
   visibleMsAfterTick,
 } from './helpers';

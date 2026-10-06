@@ -820,6 +820,13 @@ the icons and splash screens are under "The logo" above.
   refuses the clipboard, the copy button stays and a block on `bg` below it says
   `אפשר ללחוץ לחיצה ארוכה על הקישור ולהעתיק אותו.` above the page's own link, set left to
   right, selectable as one piece and free to wrap anywhere.
+- **Pull to refresh**, because an installed app has no browser to do it: a 40px `surface`
+  disc with `shadow.raised`, centred below the top safe area, that follows the finger and
+  arrives by moving, not by fading (it parks `xl` above the edge and is fully opaque from a
+  quarter of the threshold). Its arc fills in `textSecondary` and the ring closes in
+  `primary` at the threshold, then keeps turning in `primary` while the page reloads;
+  reduced motion keeps the arc and drops the turn. It sits on `zIndex.floatingSheet` and
+  exists only on public pages in standalone mode, never in a panel.
 - **The offline page** stands alone: no script, stylesheet, web font or image, because it
   shows exactly when nothing else can load. System fonts, and the colours, radii and
   shadow mirrored by hand from the theme, with a comment naming the source.
