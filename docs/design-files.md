@@ -24,7 +24,7 @@ Every design belongs to one of four, split by who opens it and when.
 
 | Page | Screen |
 |---|---|
-| `01 בית` | Home: ten interleaved rails with the women's, success and healing bands and the single women's tile, the thin four-rail case, and its filtered, empty, loading and error states. The section `אריחי עזרה · כפי שנפרס, 2026-10-02` (`474:1770`) holds the help tiles and the message window, including the "מצאתם טעות?" window (`501:1766`) |
+| `01 בית` | Home: ten interleaved rails with the women's, success and healing bands and the single women's tile, the thin four-rail case, and its filtered, empty, loading and error states; and the help-tiles section (`474:1770`): the three tiles inside lesson rails at 390, 320 and 1280, the row with the women's-area tile, and the message window in its states, as shipped on 2026-10-02, plus the "מצאתם טעות?" window (`501:1766`, 2026-10-06) |
 | `02 חיפוש` | Search results, no results, loading, desktop, and the rabbanit name match |
 | `03 עיר` | A city's lessons |
 | `04 רב` | A rabbi's page, including no photo, a sparse record, loading, empty, error; share in the hero, with and without a photo (2026-10-06) |
@@ -52,6 +52,7 @@ Every design belongs to one of four, split by who opens it and when.
 | `04 פאנל הניהול: מקומות` | The places list, the place record, and the place form with every state of its sign-in section |
 | `05 כניסה משותפת ופאנלים` | The shared rabbi-and-place login, the three place-panel screens, and the four rabbi-panel screens |
 | `06 קורסים` | The courses area in both panels: the rabbi's list, form and read-only closed record, the close, full, duplicate and delete sheets, the photo field in every state, the admin list with its filters (phone and desktop), record and form, and the phone tab grid |
+| `07 הודעות` | The super admin's messages page as shipped on 2026-10-02 (`197:2`): the list at 390 and 1280 with the handling note in its five states, the three empty states, and the shell's tab row. The load-more button and its failure line, and the list's loading and error states, are not drawn; see Known gaps |
 
 `01 מסכי ניהול` is behind the code: desktop 1440 only, with a separate admin sign-in
 that the shared login on `05` has replaced, and none of the mobile-first panel that
@@ -138,15 +139,13 @@ tidies it away:
   dedication masters, the notes for directions F to N with the reasoning for each,
   and an archive section. Those notes are the only place that reasoning is written,
   so deleting the page deletes it.
-- **`07 הודעות · סבב 2 · לאישור`** (`197:2`), in the admin file: the messages list at
-  390 and 1280 with the handling note in five states, the three empty states, and the
-  shell tab. Approved on 2026-10-01; it becomes `07 הודעות` when the change ships. The
-  page before it, `07 הודעות · לאישור` (`189:2`), is a superseded first round kept
-  until the owner says to delete it.
 
-Each folds into the numbered structure when its change ships. The home dedication
-pages (`323:488`, `331:690`) and the help tile rounds (`434:488`, `419:488`) were no
-longer in the file on 2026-10-06; the help tiles live in `01 בית`.
+Each folds into the numbered structure when its change ships. The dedication and
+help-tile approval pages did exactly that: `01 בית` carries the dedications section
+(`470:6317`) and, since 2026-10-05, the help-tiles section (`474:1770`); the admin file
+gained `07 הודעות` (`197:2`); and the approval pages for both (the two dedication
+pages, and two rounds each of the help-tile and messages pages) are gone, the latter
+deleted with the owner's approval on 2026-10-05.
 
 ## Known gaps, on purpose
 
@@ -160,5 +159,10 @@ longer in the file on 2026-10-06; the help tiles live in `01 בית`.
   footer, though the code renders all of them at every width.
 - **`06 שיעור` has no footer on any frame**, phone or desktop, though every page
   renders one (from the 2026-09-23 audit).
+- **`07 הודעות` shows the list, the empty states and the note, not the rest.** The
+  load-more button and its failure line, and the list's loading and error states, ship
+  in code and are not drawn. Its phone tab-grid frame (`197:357`) was drawn before the
+  grid learned to drop to three columns on the narrowest phones (PR #85), so it may be
+  behind the code at 320.
 - **The pinned filter bar has no design.** The code renders the filter fields twice, once
   in flow and once in a bar that sticks on scroll below `lg`. Figma has one header.
