@@ -1,6 +1,6 @@
 # 0055: A lesson goes into a calendar as a copy or as a subscription
 
-- **Status:** accepted
+- **Status:** superseded by [0059](0059-the-calendar-sheet-asks-which-calendar-first.md)
 - **Date:** 2026-10-06
 - **Decided by:** goorlavi
 

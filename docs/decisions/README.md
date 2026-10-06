@@ -114,7 +114,9 @@ The real alternatives and why each lost. If there was no alternative, say so.
 | [0052](0052-our-own-browsing-is-not-counted.md) | Our own browsing, the agents' browser pane and any admin's browser, is not counted | accepted |
 | [0053](0053-the-site-runs-a-service-worker-that-never-caches-lesson-data.md) | The site runs a service worker that never caches lesson data | accepted |
 | [0054](0054-the-install-card-opens-after-fifteen-seconds-at-most-once-a-session.md) | The install card opens after fifteen seconds, at most once a session, until dismissed twice | accepted |
-| [0055](0055-a-lesson-goes-into-a-calendar-as-a-copy-or-a-subscription.md) | A lesson goes into a calendar as a copy, or for a recurring lesson as a subscription to its feed | accepted |
+| [0055](0055-a-lesson-goes-into-a-calendar-as-a-copy-or-a-subscription.md) | A lesson goes into a calendar as a copy, or for a recurring lesson as a subscription to its feed | superseded by [0059](0059-the-calendar-sheet-asks-which-calendar-first.md) |
 | [0056](0056-each-lesson-has-a-public-calendar-feed.md) | Each lesson has a public calendar feed, a resource route outside `/v1`, empty for a deleted lesson | accepted |
 | [0057](0057-the-public-message-form-takes-mistake-reports.md) | The public message form takes mistake reports from the lesson and place pages, with a stored subject | accepted |
 | [0058](0058-a-link-preview-shows-the-real-photo-or-none.md) | A link preview shows the real photo or none, never the logo; shared links carry `?s` | accepted |
+| [0059](0059-the-calendar-sheet-asks-which-calendar-first.md) | On iPhone and desktop the calendar sheet asks Google or the device's calendar first, then one lesson or all | accepted, supersedes [0055](0055-a-lesson-goes-into-a-calendar-as-a-copy-or-a-subscription.md) |
+| [0060](0060-google-calendar-gets-its-full-color-mark.md) | Google Calendar gets its full-color mark, the third brand exception | accepted, refines [0027](0027-full-color-brand-marks-on-navigation-links.md) |
