@@ -1,4 +1,4 @@
-import type { VisitorMessageType } from '@torabarabim/common';
+import type { VisitorMessageSubject, VisitorMessageType } from '@torabarabim/common';
 
 export const NAME_MAX_LENGTH = 80;
 export const MESSAGE_MAX_LENGTH = 1000;
@@ -13,10 +13,24 @@ export const SITE_ORIGIN = 'https://torahbarabim.com';
 // `client/src/AdminPanel/consts.ts`.
 export const ADMIN_MESSAGES_PATH = '/admin/messages';
 
+// Hand-mirrored from `lessonPath` and `placePath` in `client/src/helpers.ts`.
+// The place path omits the slug: `/places/:id` redirects to the full one.
+export const lessonSubjectPath = (lessonId: string, date: string): string =>
+  `/lesson/${encodeURIComponent(lessonId)}/${encodeURIComponent(date)}`;
+export const placeSubjectPath = (placeId: string): string => `/places/${encodeURIComponent(placeId)}`;
+
+export const SUBJECT_ID_MAX_LENGTH = 100;
+
 export const VISITOR_MESSAGE_TYPE_LABELS_HE = {
   'rabbi-request': 'בקשה להוספת רב או רבנית',
   volunteer: 'התנדבות',
+  'report-mistake': 'דיווח על טעות',
 } as const satisfies Record<VisitorMessageType, string>;
+
+export const SUBJECT_ALERT_LABELS_HE = {
+  lesson: 'השיעור שדווח',
+  place: 'המקום שדווח',
+} as const satisfies Record<VisitorMessageSubject['kind'], string>;
 
 export const INVALID_REQUEST_MESSAGE = 'הבקשה אינה תקינה';
 export const NAME_MESSAGE = 'יש למלא שם';

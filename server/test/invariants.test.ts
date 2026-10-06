@@ -6,7 +6,7 @@ import { nanoid } from 'nanoid';
 import postgres from 'postgres';
 
 import { db } from '../src/db/client';
-import { adminUsers, cities, lessons, places } from '../src/db/schema';
+import { adminUsers, cities, lessons, places, visitorMessages } from '../src/db/schema';
 import { isSimilarAddress, type SimilarAddressCandidate } from '../src/service/place/place';
 import { assertDatabaseReachable, rawClient } from './app-harness';
 
@@ -31,6 +31,7 @@ describe('database invariants', () => {
   const cleanupLessonIds = new Set<string>();
   const cleanupAdminUserIds = new Set<string>();
   const cleanupPlaceIds = new Set<string>();
+  const cleanupVisitorMessageIds = new Set<string>();
 
   before(async () => {
     await assertDatabaseReachable();
@@ -43,6 +44,8 @@ describe('database invariants', () => {
     cleanupAdminUserIds.clear();
     for (const id of cleanupPlaceIds) await db.delete(places).where(eq(places.id, id));
     cleanupPlaceIds.clear();
+    for (const id of cleanupVisitorMessageIds) await db.delete(visitorMessages).where(eq(visitorMessages.id, id));
+    cleanupVisitorMessageIds.clear();
   });
 
   after(async () => {
@@ -188,6 +191,60 @@ describe('database invariants', () => {
           return true;
         },
       );
+    });
+  });
+
+  // `visitor_messages_subject_by_type` and `visitor_messages_subject_shape`:
+  // a raw insert that skips the Zod layer must still be unable to store a
+  // report nobody can trace, or a help request that carries a subject.
+  describe('visitor_messages subject shape', () => {
+    const baseMessage = (overrides: Partial<typeof visitorMessages.$inferInsert>): typeof visitorMessages.$inferInsert => {
+      const message = {
+        id: `test-vm-${uniqueSuffix()}`,
+        type: 'volunteer' as const,
+        name: 'test-vm-invariants',
+        phone: '0521234567',
+        message: 'הודעת בדיקה',
+        ...overrides,
+      };
+      cleanupVisitorMessageIds.add(message.id);
+      return message;
+    };
+
+    // Postgres checks CHECK constraints in alphabetical order by name, so a
+    // row that breaks both reports `subject_by_type`.
+    const assertRejectedBy = async (message: typeof visitorMessages.$inferInsert, constraintName: string): Promise<void> => {
+      await assert.rejects(
+        () => db.insert(visitorMessages).values(message),
+        (error: unknown) => {
+          const pgError = asPostgresError(error);
+          assert.equal(pgError?.code, CHECK_VIOLATION);
+          assert.equal(pgError?.constraint_name, constraintName);
+          return true;
+        },
+      );
+    };
+
+    test('a well-formed report and a help request without a subject are accepted', async () => {
+      await db.insert(visitorMessages).values(baseMessage({ type: 'report-mistake', subjectKind: 'lesson', subjectId: 'lesson-1', subjectDate: '2030-01-12' }));
+      await db.insert(visitorMessages).values(baseMessage({ type: 'report-mistake', subjectKind: 'place', subjectId: 'place-1' }));
+      await db.insert(visitorMessages).values(baseMessage({ type: 'rabbi-request' }));
+    });
+
+    test('a report with a null subject is rejected', async () => {
+      await assertRejectedBy(baseMessage({ type: 'report-mistake' }), 'visitor_messages_subject_by_type');
+    });
+
+    test('a report with a null kind but a set id and date is rejected', async () => {
+      await assertRejectedBy(baseMessage({ type: 'report-mistake', subjectKind: null, subjectId: 'lesson-1', subjectDate: '2030-01-12' }), 'visitor_messages_subject_by_type');
+    });
+
+    test('a rabbi request carrying a subject is rejected', async () => {
+      await assertRejectedBy(baseMessage({ type: 'rabbi-request', subjectKind: 'place', subjectId: 'place-1' }), 'visitor_messages_subject_by_type');
+    });
+
+    test('a place subject carrying a date is rejected', async () => {
+      await assertRejectedBy(baseMessage({ type: 'report-mistake', subjectKind: 'place', subjectId: 'place-1', subjectDate: '2030-01-12' }), 'visitor_messages_subject_shape');
     });
   });
 

@@ -293,6 +293,30 @@ const findCalendarOccurrence = async (lesson: Lesson, viewed: ResolvedOccurrence
   );
 };
 
+// The rabbis, cities and places behind a set of occurrences of one lesson,
+// in one round of three queries whatever the set's size: the lesson's rabbi
+// and every substitute, every venue's city, every registered place.
+const loadReferences = async (lesson: Lesson, occurrences: ResolvedOccurrence[]) => {
+  const rabbiIds = [...new Set([lesson.rabbiId, ...occurrences.map((occurrence) => occurrence.substituteRabbiId)].filter((id): id is string => id !== undefined))];
+  const cityCodes = [...new Set(occurrences.map((occurrence) => occurrence.venue.cityCode))];
+  const placeIds = [...new Set(occurrences.flatMap((occurrence) => (occurrence.venue.kind === 'place' ? [occurrence.venue.placeId] : [])))];
+
+  const [rabbiRows, cityRows, placeRows] = await Promise.all([
+    db.select().from(rabbis).where(inArray(rabbis.id, rabbiIds)),
+    db
+      .select({ code: cities.code, nameHe: cities.nameHe, area: cities.area })
+      .from(cities)
+      .where(inArray(cities.code, cityCodes)),
+    placeIds.length ? db.select().from(places).where(inArray(places.id, placeIds)) : Promise.resolve([]),
+  ]);
+
+  return {
+    rabbiById: new Map(rabbiRows.map((row) => [row.id, toRabbi(row)] as const)),
+    cityByCode: new Map(cityRows.map((row) => [row.code, row] as const)),
+    placeById: new Map(placeRows.map((row) => [row.id, row] as const)),
+  };
+};
+
 // Resolves one lesson's recurrence rule for a single date, with any
 // exception for that date applied. Reuses `expandLesson`/`applyException`
 // so the recurrence rule is only ever expanded in one place; a second
@@ -322,22 +346,7 @@ export const getOccurrence = async (lessonId: string, date: string, now: Date): 
   // Both occurrences are resolved from the same lookups, so the query count
   // stays fixed whichever date the calendar one turns out to be.
   const occurrences = calendarOccurrence && calendarOccurrence !== occurrence ? [occurrence, calendarOccurrence] : [occurrence];
-  const rabbiIds = [...new Set([lesson.rabbiId, ...occurrences.map((item) => item.substituteRabbiId)].filter((id): id is string => id !== undefined))];
-  const cityCodes = [...new Set(occurrences.map((item) => item.venue.cityCode))];
-  const placeIds = [...new Set(occurrences.flatMap((item) => (item.venue.kind === 'place' ? [item.venue.placeId] : [])))];
-
-  const [rabbiRows, cityRows, placeRows] = await Promise.all([
-    db.select().from(rabbis).where(inArray(rabbis.id, rabbiIds)),
-    db
-      .select({ code: cities.code, nameHe: cities.nameHe, area: cities.area })
-      .from(cities)
-      .where(inArray(cities.code, cityCodes)),
-    placeIds.length ? db.select().from(places).where(inArray(places.id, placeIds)) : Promise.resolve([]),
-  ]);
-
-  const rabbiById = new Map(rabbiRows.map((row) => [row.id, toRabbi(row)] as const));
-  const cityByCode = new Map(cityRows.map((row) => [row.code, row] as const));
-  const placeById = new Map(placeRows.map((row) => [row.id, row] as const));
+  const { rabbiById, cityByCode, placeById } = await loadReferences(lesson, occurrences);
 
   const resolved = resolveRecord(occurrence, rabbiById, cityByCode, placeById);
   return {
@@ -379,22 +388,10 @@ export const getCalendarOccurrences = async (lessonId: string, now: Date): Promi
   });
   if (occurrences.length === 0) return [];
 
-  const rabbiIds = [...new Set([lesson.rabbiId, ...occurrences.map(({ resolved }) => resolved.substituteRabbiId)].filter((id): id is string => id !== undefined))];
-  const cityCodes = [...new Set(occurrences.map(({ resolved }) => resolved.venue.cityCode))];
-  const placeIds = [...new Set(occurrences.flatMap(({ resolved }) => (resolved.venue.kind === 'place' ? [resolved.venue.placeId] : [])))];
-
-  const [rabbiRows, cityRows, placeRows] = await Promise.all([
-    db.select().from(rabbis).where(inArray(rabbis.id, rabbiIds)),
-    db
-      .select({ code: cities.code, nameHe: cities.nameHe, area: cities.area })
-      .from(cities)
-      .where(inArray(cities.code, cityCodes)),
-    placeIds.length ? db.select().from(places).where(inArray(places.id, placeIds)) : Promise.resolve([]),
-  ]);
-
-  const rabbiById = new Map(rabbiRows.map((row) => [row.id, toRabbi(row)] as const));
-  const cityByCode = new Map(cityRows.map((row) => [row.code, row] as const));
-  const placeById = new Map(placeRows.map((row) => [row.id, row] as const));
+  const { rabbiById, cityByCode, placeById } = await loadReferences(
+    lesson,
+    occurrences.map(({ resolved }) => resolved),
+  );
 
   return occurrences.map(({ resolved, revisedAt }) => ({ ...resolveRecord(resolved, rabbiById, cityByCode, placeById), revisedAt }));
 };
