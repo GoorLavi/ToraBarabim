@@ -44,6 +44,16 @@ export const GlobalStyle = createGlobalStyle(
        page never moves under the indicator. */
     @media (display-mode: standalone) {
       overscroll-behavior-y: none;
+
+      /* iOS 26 paints the area under the status bar of an installed app
+         from the page's background unless a fixed bar sits at the top. The
+         public header is not fixed until the reader scrolls, so the light
+         page colour showed there as a white blur above the plum header.
+         Public pages paint their own light background (Layout), so the
+         canvas behind them can carry the header's colour. */
+      &:has([data-public-layout]) {
+        background-color: ${theme.colors.primary};
+      }
     }
 
     /* 64 matches PinnedHeaderBar's own height below lg, 80 matches the

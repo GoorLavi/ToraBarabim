@@ -39,7 +39,7 @@ export const Layout = styled(({ className }: LayoutProps) => {
 
   return (
     <ActiveFiltersProvider filters={filters}>
-      <div className={className}>
+      <div className={className} data-public-layout>
         <FilterControls
           {...{
             option,
