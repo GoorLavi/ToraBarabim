@@ -34,6 +34,8 @@ export const MIXPANEL_EVENTS = {
   posterScan: 'Poster Scan',
   helpTileClick: 'Help Tile Click',
   visitorMessageSent: 'Visitor Message Sent',
+  shareClick: 'Share Click',
+  calendarAddClick: 'Calendar Add Click',
 } as const;
 
 // A `LessonCard` can sit in any of these lists; `homeRail` is the only one
@@ -88,6 +90,9 @@ export type RetrySurface =
   | 'placePageLessons'
   | 'placesPage'
   | 'coursePage';
+
+// Where a `ShareButton` sits: the three detail pages that carry one.
+export type ShareSurface = 'lessonPage' | 'rabbiPage' | 'placePage';
 
 export type FilterDateSource = 'chip' | 'calendar';
 export type FilterCitySource = 'headerPicker' | 'homeCityGrid';

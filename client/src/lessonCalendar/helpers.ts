@@ -89,5 +89,10 @@ export const lessonCalendarFeedPath = (lessonId: string): string => `/lesson/${e
 // `webcal://` is what makes a phone offer to subscribe instead of download.
 export const lessonCalendarWebcalUrl = (lessonId: string): string => `webcal://${consts.CALENDAR_SITE_HOST}${lessonCalendarFeedPath(lessonId)}`;
 
+// Google Calendar subscribes by a `cid` that is itself the feed's webcal URL,
+// so the whole URL is one encoded query value.
+export const lessonCalendarGoogleSubscribeHref = (lessonId: string): string =>
+  `${consts.GOOGLE_CALENDAR_RENDER_URL}?cid=${encodeURIComponent(lessonCalendarWebcalUrl(lessonId))}`;
+
 export const lessonEventFilePath = (occurrence: Pick<LessonOccurrence, 'lessonId' | 'date'>): string =>
   `/lesson/${encodeURIComponent(occurrence.lessonId)}/${encodeURIComponent(occurrence.date)}/event.ics`;

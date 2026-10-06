@@ -19,3 +19,14 @@ export const PanelShellContent = css(
   }
 `,
 );
+
+// A `primary` field to seat a control that only exists on one (a page
+// hero's share button), so its story judges the on-primary tokens against
+// the fill they were drawn for.
+export const PrimaryField = css(
+  ({ theme }) => `
+  padding: ${theme.spacing.xl} ${theme.spacing.lg};
+  background: ${theme.colors.primary};
+  color: ${theme.colors.textOnPrimary};
+`,
+);

@@ -1,7 +1,7 @@
 import type { LessonOccurrence } from '@torabarabim/common';
 import { describe, expect, it } from 'vitest';
 
-import { calendarEventOf, calendarUtcStamp, googleCalendarHref, lessonCalendarFeedPath, lessonCalendarWebcalUrl, lessonEventFilePath, venueNameOrStreet } from './helpers';
+import { calendarEventOf, calendarUtcStamp, googleCalendarHref, lessonCalendarFeedPath, lessonCalendarGoogleSubscribeHref, lessonCalendarWebcalUrl, lessonEventFilePath, venueNameOrStreet } from './helpers';
 
 const occurrenceOf = (overrides: Partial<LessonOccurrence> = {}): LessonOccurrence => ({
   lessonId: 'lesson-1',
@@ -42,7 +42,7 @@ describe('calendarEventOf summary', () => {
   it('adds the audience only when it is not both', () => {
     expect(calendarEventOf(occurrenceOf({ audience: 'women' }), 'static').summary).toBe('שיעור עם הרב אייל עמרמי, לנשים');
     expect(calendarEventOf(occurrenceOf({ audience: 'men' }), 'static').summary).toBe('שיעור עם הרב אייל עמרמי, לגברים');
-    expect(calendarEventOf(occurrenceOf({ audience: 'mixed' }), 'static').summary).not.toContain('ל');
+    expect(calendarEventOf(occurrenceOf({ audience: 'mixed' }), 'static').summary).toBe('שיעור עם הרב אייל עמרמי');
   });
 
   it('prefixes a cancelled date and marks the event cancelled', () => {
@@ -166,5 +166,16 @@ describe('calendar paths', () => {
     expect(lessonCalendarFeedPath('lesson-1')).toBe('/lesson/lesson-1/calendar.ics');
     expect(lessonCalendarWebcalUrl('lesson-1')).toBe('webcal://torahbarabim.com/lesson/lesson-1/calendar.ics');
     expect(lessonEventFilePath({ lessonId: 'lesson-1', date: '2026-07-14' })).toBe('/lesson/lesson-1/2026-07-14/event.ics');
+  });
+
+  it('builds the Google subscribe link with the whole webcal URL encoded as one cid value', () => {
+    const href = lessonCalendarGoogleSubscribeHref('lesson-1');
+    expect(href).toBe('https://calendar.google.com/calendar/render?cid=webcal%3A%2F%2Ftorahbarabim.com%2Flesson%2Flesson-1%2Fcalendar.ics');
+    expect(new URL(href).searchParams.get('cid')).toBe('webcal://torahbarabim.com/lesson/lesson-1/calendar.ics');
+  });
+
+  it('encodes an id that needs it once in the path and once more in the cid', () => {
+    const href = lessonCalendarGoogleSubscribeHref('a b');
+    expect(new URL(href).searchParams.get('cid')).toBe('webcal://torahbarabim.com/lesson/a%20b/calendar.ics');
   });
 });
