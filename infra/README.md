@@ -622,8 +622,8 @@ container the requests.
    out** (the one with the root `.env`; `cdk` reads it). Read the diff before applying it:
 
    ```bash
-   npm run diff -w infra -- TorabarabimSite --profile torabarabim -c domain=torahbarabim.com
-   npm run deploy -w infra -- TorabarabimSite --profile torabarabim -c domain=torahbarabim.com
+   npm run diff -w infra -- TorabarabimSite --exclusively --profile torabarabim -c domain=torahbarabim.com
+   npm run deploy -w infra -- TorabarabimSite --exclusively --profile torabarabim -c domain=torahbarabim.com
    ```
 
    The diff should show exactly one new cache policy (`ServiceWorkerCachePolicy`) and
