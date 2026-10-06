@@ -19,7 +19,7 @@ import type { PlaceRouteData } from './place-detail.server';
 // from its own panel, so a stale slug and a bare-id link both land here and
 // both get the same permanent redirect to the current canonical URL,
 // mirroring rabbis.$rabbiId/route.tsx.
-export const loader = async ({ params }: LoaderFunctionArgs): Promise<PlaceRouteData> => {
+export const loader = async ({ params, request }: LoaderFunctionArgs): Promise<PlaceRouteData> => {
   const { placeId, slug } = params;
   if (!placeId) {
     throw new Response('המקום לא נמצא', { status: 404, headers: UNCACHEABLE_ERROR_HEADERS });
@@ -27,8 +27,10 @@ export const loader = async ({ params }: LoaderFunctionArgs): Promise<PlaceRoute
 
   const data = await loadPlaceDetail(placeId, new Date());
 
+  // The query string travels with the redirect: a shared link is the bare id
+  // plus `?s`, and the tag must survive onto the canonical URL.
   if (slug !== data.place.slug) {
-    throw redirect(placePath(data.place), { status: 301, headers: PUBLIC_CACHE_HEADERS });
+    throw redirect(`${placePath(data.place)}${new URL(request.url).search}`, { status: 301, headers: PUBLIC_CACHE_HEADERS });
   }
 
   return data;

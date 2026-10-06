@@ -882,6 +882,27 @@ describe('SSR rendering seam', () => {
         expectNoImagePreview(barePage.body);
       });
 
+      // The reviewer's regression guard: reading `occurrence.rabbi.photoUrl`
+      // instead of the teaching rabbi's would pass every case above, because
+      // none of them has a substitute.
+      test("a lesson page takes its image from the substitute who teaches that date, not from the lesson's own rabbi", async () => {
+        const today = todayInIsrael(new Date());
+        const substituteDate = addDays(today, 3);
+        const ordinaryDate = addDays(today, 10);
+        const lessonRabbi = await createRabbi('rav');
+        const substitute = await createRabbi('rav', PHOTO_URL);
+        const lessonId = await createLesson({ rabbiId: lessonRabbi.id, audience: 'men', recurrence: { kind: 'weekly', weekday: weekdayOf(substituteDate) } });
+        await db.insert(lessonExceptions).values({ lessonId, date: substituteDate, kind: 'modified', substituteRabbiId: substitute.id });
+
+        const substitutePage = await calendarApp.inject({ method: 'GET', url: lessonPath({ lessonId, date: substituteDate }) });
+        assert.equal(substitutePage.statusCode, 200);
+        expectPhotoPreview(substitutePage.body);
+
+        const ordinaryPage = await calendarApp.inject({ method: 'GET', url: lessonPath({ lessonId, date: ordinaryDate }) });
+        assert.equal(ordinaryPage.statusCode, 200);
+        expectNoImagePreview(ordinaryPage.body);
+      });
+
       test('a rabbi page carries the rabbi photo, or no image at all with the small card', async () => {
         const withPhoto = await createRabbi('rav', PHOTO_URL);
         const withoutPhoto = await createRabbi('rav');
@@ -905,6 +926,30 @@ describe('SSR rendering seam', () => {
         const page = await calendarApp.inject({ method: 'GET', url: `/places/${encodeURIComponent(place.id)}/${encodeURIComponent(place.slug)}` });
         assert.equal(page.statusCode, 200);
         expectNoImagePreview(page.body);
+      });
+    });
+
+    // Case 13. A shared link is the bare id plus `?s`, so WhatsApp carries no
+    // percent-encoded slug. The 301 to the canonical path used to drop the
+    // query string, losing the share tag (and any utm tags) on arrival.
+    describe('a bare-id link keeps its query string through the canonical redirect', () => {
+      test('/rabbis/<id>?s answers 301 to the canonical slug path plus ?s', async () => {
+        const rabbi = await createRabbi('rav');
+
+        const res = await calendarApp.inject({ method: 'GET', url: `/rabbis/${encodeURIComponent(rabbi.id)}?s` });
+        assert.equal(res.statusCode, 301);
+        assert.equal(res.headers['location'], `/rabbis/${encodeURIComponent(rabbi.id)}/${encodeURIComponent(toSlug(rabbi.name) || rabbi.id)}?s`);
+      });
+
+      test('/places/<id>?s answers 301 to the canonical slug path plus ?s', async () => {
+        const id = `ssr-test-place-${nanoid(8)}`;
+        await db.insert(places).values({ id, slug: id, name: `מקום לבדיקת הפניה ${nanoid(6)}`, street: 'רחוב הבדיקה 1', cityCode });
+        placeIds.push(id);
+        const place = await placeService.getById(id);
+
+        const res = await calendarApp.inject({ method: 'GET', url: `/places/${encodeURIComponent(id)}?s` });
+        assert.equal(res.statusCode, 301);
+        assert.equal(res.headers['location'], `/places/${encodeURIComponent(place.id)}/${encodeURIComponent(place.slug)}?s`);
       });
     });
   });

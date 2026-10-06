@@ -19,4 +19,4 @@ export const CALENDAR_VISITOR_POSITION_FROM_RIGHT = 2;
 // Neutral on purpose: a calendar app, a crawler or a script reads this, not
 // someone who just mistyped a password, so it carries none of the login
 // limit's wording about attempts.
-export const CALENDAR_RATE_LIMITED_MESSAGE = 'יותר מדי בקשות ליומן, אפשר לנסות שוב בעוד רגע';
+export const CALENDAR_RATE_LIMITED_MESSAGE = 'יותר מדי בקשות ליומן. אפשר לנסות שוב בעוד רגע.';

@@ -84,12 +84,14 @@ const CALENDAR_ROUTE_PATHS = ['/lesson/:lessonId/calendar.ics', '/lesson/:lesson
 // for the path's whole default TTL and serve it to every subscriber behind
 // that edge. Applied by an `onSend` hook rather than in the route modules
 // because the 429 never reaches one; the rate-limit hook answers it first.
-// The 429 body is replaced here too, since the app-wide error handler's
-// wording is written for the login form.
 const keepCalendarFailuresUncached = async (_request: FastifyRequest, reply: FastifyReply, payload: unknown): Promise<unknown> => {
-  if (reply.statusCode === 200 || reply.statusCode === 304) return payload;
+  if (reply.statusCode !== 200 && reply.statusCode !== 304) reply.header('cache-control', 'no-store');
+  return payload;
+};
 
-  reply.header('cache-control', 'no-store');
+// The app-wide error handler's 429 wording is written for the login form,
+// so a calendar throttle gets its own neutral text instead.
+const replaceCalendarRateLimitedBody = async (_request: FastifyRequest, reply: FastifyReply, payload: unknown): Promise<unknown> => {
   if (reply.statusCode !== 429) return payload;
 
   reply.type('text/plain; charset=utf-8');
@@ -186,7 +188,7 @@ export const registerSsr = async (app: FastifyInstance): Promise<void> => {
       url,
       exposeHeadRoute: false,
       config: { rateLimit: calendarRateLimit },
-      onSend: keepCalendarFailuresUncached,
+      onSend: [keepCalendarFailuresUncached, replaceCalendarRateLimitedBody],
       handler: handleCatchAll,
     });
   }
