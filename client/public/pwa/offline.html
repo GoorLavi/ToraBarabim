@@ -1,0 +1,169 @@
+<!doctype html>
+<!--
+  Precached by the service worker (client/pwa-source/sw.js) and shown in place
+  of a page that could not be fetched with no network. It is displayed exactly
+  when nothing else can load, so it depends on nothing: no script file, no
+  stylesheet link, no hosted font, no image. Every style is inline and the
+  font stack is system fonts only.
+
+  The colors are mirrored by hand from client/src/theme/colors/argamanVeZahav.ts
+  (bg, surface, primary, primaryStrong, text, textSecondary, border,
+  textOnPrimary, accentOnDark) and the radii and shadow from
+  client/src/theme/tokens.ts and models.ts. A change to those tokens needs the
+  same change here.
+-->
+<html dir="rtl" lang="he">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>תורה ברבים | אין חיבור לאינטרנט</title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: #f7f4f3;
+        color: #201b1d;
+        font-family: -apple-system, 'Segoe UI', Arial, sans-serif;
+      }
+
+      .bar {
+        background: #6b2436;
+        color: #ffffff;
+      }
+
+      .bar .inner {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-sizing: border-box;
+        max-inline-size: 1280px;
+        min-height: 56px;
+        margin-inline: auto;
+        padding-inline: 16px;
+      }
+
+      @media (min-width: 768px) {
+        .bar .inner {
+          padding-inline: 24px;
+        }
+      }
+
+      .bar .mark {
+        flex-shrink: 0;
+      }
+
+      .bar .brand {
+        font-size: 17px;
+        line-height: 26px;
+        font-weight: 700;
+      }
+
+      .stage {
+        flex: 1 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px 16px;
+      }
+
+      .card {
+        box-sizing: border-box;
+        inline-size: 100%;
+        max-inline-size: 420px;
+        padding: 32px 24px 24px;
+        background: #ffffff;
+        border: 1px solid #e6dedf;
+        border-radius: 16px;
+        text-align: center;
+        box-shadow: 0 1px 2px rgba(28, 26, 23, 0.04), 0 1px 3px rgba(28, 26, 23, 0.06);
+      }
+
+      .card .icon {
+        display: block;
+        margin: 0 auto 8px;
+        color: #6b6165;
+      }
+
+      .card .heading {
+        margin: 0 0 8px;
+        font-size: 28px;
+        line-height: 36px;
+        font-weight: 700;
+      }
+
+      .card .line {
+        margin: 0 0 24px;
+        font-size: 17px;
+        line-height: 26px;
+        color: #6b6165;
+      }
+
+      .card .retry {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-block-size: 48px;
+        padding-inline: 24px;
+        border-radius: 12px;
+        background: #6b2436;
+        color: #ffffff;
+        font-size: 17px;
+        line-height: 26px;
+        font-weight: 600;
+        text-decoration: none;
+      }
+
+      .card .retry:hover,
+      .card .retry:active {
+        background: #521827;
+      }
+
+      .card .retry:focus-visible {
+        outline: 2px solid #6b2436;
+        outline-offset: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="bar">
+      <div class="inner">
+      <svg class="mark" width="28" height="28" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <rect x="9" y="8" width="82" height="7" fill="#ffffff" />
+        <rect x="3" y="16" width="94" height="11" fill="#ffffff" />
+        <rect x="14" y="30" width="19" height="50" fill="#ffffff" />
+        <rect x="67" y="30" width="19" height="50" fill="#ffffff" />
+        <rect x="2" y="85" width="96" height="10" fill="#ffffff" />
+        <path d="M50,38 A10,10 0 0 1 60,48 L60,80 L40,80 L40,48 A10,10 0 0 1 50,38 Z" fill="#e0b45e" />
+      </svg>
+      <span class="brand">תורה ברבים</span>
+      </div>
+    </header>
+    <main class="stage">
+      <section class="card">
+        <svg class="icon" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <path d="M3 3l18 18" />
+          <path d="M8.5 16.4a5 5 0 0 1 7 0" />
+          <path d="M5 12.9a10 10 0 0 1 5.2-2.7M19 12.9a10 10 0 0 0-2.7-1.9M2 8.8a15 15 0 0 1 4.2-2.6M22 8.8a15 15 0 0 0-8.4-3.7" />
+          <path d="M12 20h.01" />
+        </svg>
+        <h1 class="heading">אין חיבור לאינטרנט</h1>
+        <p class="line">כדי לראות את זמני השיעורים, צריך חיבור לאינטרנט. אפשר לנסות שוב בעוד רגע.</p>
+        <a class="retry" href="">לנסות שוב</a>
+      </section>
+    </main>
+    <script>
+      // The tab reloads itself the moment the browser reports a connection,
+      // so a person who walked back into coverage does not have to press anything.
+      window.addEventListener('online', function () {
+        window.location.reload();
+      });
+    </script>
+  </body>
+</html>

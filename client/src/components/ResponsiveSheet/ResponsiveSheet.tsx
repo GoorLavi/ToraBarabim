@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import { useEffect, useRef } from 'react';
 import type { KeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
@@ -11,7 +12,7 @@ import * as styles from './styles';
 // Portalled into `document.body`: a transformed ancestor (`PinnedHeaderBar`)
 // would otherwise become the containing block for this `position: fixed`
 // element and clip it to the bar's own box instead of the viewport.
-export const ResponsiveSheet = styled(({ className, ariaLabel, onDismiss, children }: ResponsiveSheetProps) => {
+export const ResponsiveSheet = styled(({ className, ariaLabel, onDismiss, isNonModal = false, children }: ResponsiveSheetProps) => {
   const panelRef = useRef<HTMLDivElement>(null);
 
   // Focus moves onto the panel itself, not its first focusable descendant,
@@ -24,7 +25,7 @@ export const ResponsiveSheet = styled(({ className, ariaLabel, onDismiss, childr
   // somewhere else on purpose (outside the panel and off `<body>`).
   useEffect(() => {
     const panel = panelRef.current;
-    if (!panel) return;
+    if (!panel || isNonModal) return;
 
     // Only when focus is still outside: a descendant's own mount effect
     // (which runs first) may have already claimed it, and that focus is not
@@ -38,11 +39,34 @@ export const ResponsiveSheet = styled(({ className, ariaLabel, onDismiss, childr
       if (!panel.contains(document.activeElement) && document.activeElement !== document.body) return;
       previouslyFocused.focus();
     };
-  }, []);
+  }, [isNonModal]);
+
+  // A non-modal card never holds focus, so a keydown inside the panel is the
+  // exception: Escape has to work from wherever focus is on the page. Listens
+  // in the bubble phase and yields to `defaultPrevented`, so a popover that
+  // claimed the same Escape in its own capture-phase listener closes alone.
+  const latestDismiss = useRef(onDismiss);
+  useEffect(() => {
+    latestDismiss.current = onDismiss;
+  });
+
+  useEffect(() => {
+    if (!isNonModal) return;
+
+    const handleDocumentKeyDown = (event: globalThis.KeyboardEvent): void => {
+      if (event.key !== 'Escape' || event.defaultPrevented) return;
+      latestDismiss.current();
+    };
+
+    document.addEventListener('keydown', handleDocumentKeyDown);
+    return () => document.removeEventListener('keydown', handleDocumentKeyDown);
+  }, [isNonModal]);
 
   // Reacts to `keydown` Tab only, never a focus or pointer event: that is
   // the Safari trap this codebase already shipped and fixed once (a36eaba).
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
+    if (isNonModal) return;
+
     if (event.key === 'Escape') {
       // Never `stopPropagation`, only `defaultPrevented`: a popover nested
       // inside this sheet owns Escape in its own capture-phase listener and
@@ -83,14 +107,14 @@ export const ResponsiveSheet = styled(({ className, ariaLabel, onDismiss, childr
   if (typeof document === 'undefined') return null;
 
   return createPortal(
-    <div className={className} role="presentation" onClick={onDismiss}>
+    <div className={classNames(className, { nonModal: isNonModal })} role="presentation" onClick={isNonModal ? undefined : onDismiss}>
       <div
         className="panel"
-        role="dialog"
-        aria-modal="true"
+        role={isNonModal ? 'region' : 'dialog'}
+        aria-modal={isNonModal ? undefined : 'true'}
         aria-label={ariaLabel}
         ref={panelRef}
-        tabIndex={-1}
+        tabIndex={isNonModal ? undefined : -1}
         onClick={(event) => event.stopPropagation()}
         onKeyDown={handleKeyDown}
       >

@@ -172,6 +172,7 @@ export const LAYOUT: ThemeLayout = {
   fourColumnWidth: '1200px',
   xwideRailWidth: '1600px',
   panelTabFourColumnWidth: '360px',
+  fixedBottomBarBlockSize: '73px',
 };
 
 // The stacking scale every header layer and its overlays share (design-
@@ -181,4 +182,5 @@ export const Z_INDEX: ThemeZIndex = {
   popover: 20,
   header: 30,
   sheetScrim: 100,
+  floatingSheet: 50,
 };

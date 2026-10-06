@@ -36,6 +36,52 @@ export const Footer = css(
       display: flex;
       flex-wrap: wrap;
       gap: ${theme.spacing.lg};
+
+      /* The same shape as a text link beside it, but a button: it opens the
+         install flow in place rather than going to a page. Alone on its own
+         row on a phone; from md up it joins the row behind a divider. */
+      > .installLink {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        flex-basis: 100%;
+        justify-content: flex-start;
+        padding-block: 13px;
+        padding-inline: ${theme.spacing.sm};
+        border-radius: ${theme.radii.sm};
+        color: ${theme.colors.primary};
+        font-weight: ${theme.typography.fontWeight.semiBold};
+        font-size: ${theme.typography.secondary.phone.fontSize};
+        line-height: ${theme.typography.secondary.phone.lineHeight};
+
+        &:focus-visible {
+          outline: 2px solid ${theme.colors.primary};
+          outline-offset: 2px;
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+          &:hover {
+            color: ${theme.colors.primaryStrong};
+
+            > .label {
+              text-decoration: underline;
+            }
+          }
+        }
+
+        &:active {
+          color: ${theme.colors.primaryStrong};
+          background: ${theme.colors.primarySoft};
+        }
+
+        @media (min-width: ${theme.breakpoints.md}) {
+          flex-basis: auto;
+          padding-inline-start: ${theme.spacing.lg};
+          border-inline-start: 1px solid ${theme.colors.border};
+          border-start-start-radius: 0;
+          border-end-start-radius: 0;
+        }
+      }
     }
   }
 `,

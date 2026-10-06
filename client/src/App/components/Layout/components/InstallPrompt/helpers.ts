@@ -6,16 +6,37 @@ import {
   IN_APP_BROWSER_USER_AGENT_PATTERN,
   IOS_OTHER_BROWSER_USER_AGENT_PATTERN,
   IOS_USER_AGENT_PATTERN,
+  IPAD_USER_AGENT_PATTERN,
   IPADOS_MIN_TOUCH_POINTS,
   MACINTOSH_USER_AGENT_PATTERN,
   MAX_INSTALL_DISMISSALS,
+  OPEN_OVERLAY_SELECTOR,
   SAFARI_TOKEN_PATTERN,
+  TEXT_ENTRY_INPUT_TYPES_EXCLUDED,
 } from './consts';
-import type { InstallEnvironment, InstallPromptState } from './models';
+import type { InstallEnvironment, InstallPromptState, ShareButtonPlacement } from './models';
 
-const isIos = ({ userAgent, maxTouchPoints }: InstallEnvironment): boolean =>
-  IOS_USER_AGENT_PATTERN.test(userAgent) ||
-  (MACINTOSH_USER_AGENT_PATTERN.test(userAgent) && maxTouchPoints >= IPADOS_MIN_TOUCH_POINTS);
+type DeviceSignals = Pick<InstallEnvironment, 'userAgent' | 'maxTouchPoints'>;
+
+const isIpadOs = ({ userAgent, maxTouchPoints }: DeviceSignals): boolean =>
+  MACINTOSH_USER_AGENT_PATTERN.test(userAgent) && maxTouchPoints >= IPADOS_MIN_TOUCH_POINTS;
+
+const isIos = (signals: DeviceSignals): boolean => IOS_USER_AGENT_PATTERN.test(signals.userAgent) || isIpadOs(signals);
+
+// A computer is anything that is neither an iOS device nor an Android one.
+// Only a Chromium with a deferred prompt reaches the card there, so this
+// decides one thing: whether the words say "computer" or "home screen".
+export const isComputerDevice = (signals: DeviceSignals): boolean =>
+  !isIos(signals) && !ANDROID_USER_AGENT_PATTERN.test(signals.userAgent);
+
+// iPhone Safari is the only iOS browser that puts the share button at the
+// bottom: on iPad it is in the top bar, and every other iOS browser puts it
+// there too.
+export const shareButtonPlacementFor = (signals: DeviceSignals): ShareButtonPlacement => {
+  if (IOS_OTHER_BROWSER_USER_AGENT_PATTERN.test(signals.userAgent)) return 'top';
+  if (IPAD_USER_AGENT_PATTERN.test(signals.userAgent) || isIpadOs(signals)) return 'top';
+  return 'bottom';
+};
 
 // What the browser can do decides first, who it claims to be second: a
 // deferred prompt means the native flow works whatever the user agent says,
@@ -58,3 +79,20 @@ export const afterDismissal = (state: InstallPromptState): InstallPromptState =>
 });
 
 export const afterInstall = (state: InstallPromptState): InstallPromptState => ({ ...state, isInstalled: true });
+
+// Text the person can type into. A checkbox or a button holding focus is not
+// typing, and the card may open past it.
+export const isTextEntryElement = (element: Pick<HTMLElement, 'tagName' | 'isContentEditable'> & { type?: string }): boolean => {
+  if (element.isContentEditable) return true;
+  if (element.tagName === 'TEXTAREA') return true;
+  if (element.tagName !== 'INPUT') return false;
+  return !TEXT_ENTRY_INPUT_TYPES_EXCLUDED.has(element.type ?? 'text');
+};
+
+// The busy rule: the card waits while a sheet, dialog or popover is open or a
+// text field has focus, and opens once that clears.
+export const isUserBusy = (page: Document): boolean => {
+  if (page.querySelector(OPEN_OVERLAY_SELECTOR) !== null) return true;
+  const focused = page.activeElement;
+  return focused instanceof HTMLElement && isTextEntryElement(focused);
+};

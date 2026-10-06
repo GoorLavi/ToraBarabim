@@ -2,7 +2,8 @@ import type { MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { LogoMark } from './components/LogoMark/LogoMark';
+import { LogoMark } from '~/components/LogoMark/LogoMark';
+
 import * as consts from './consts';
 import type { SiteLogoLinkProps } from './models';
 import * as styles from './styles';

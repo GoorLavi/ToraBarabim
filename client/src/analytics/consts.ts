@@ -147,11 +147,6 @@ export const INTERNAL_BROWSER_STORAGE_KEY = 'torabarabim:internalBrowser';
 
 export const POSTER_SOURCE_PARAM = 'utm_source';
 
-// Hand-mirrored from the manifest's start_url (`/?source=pwa`), emitted by the
-// PWA build plugin in client/pwa-source.
-export const PWA_START_URL_SOURCE_PARAM = 'source';
-export const PWA_START_URL_SOURCE_VALUE = 'pwa';
-
 // Hand-mirrored from the QR codes printed on the two posters: the keys are
 // the exact values a scan opens the site with, so changing one here without
 // reprinting that poster silently drops its attribution. A `Map`, not an

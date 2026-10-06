@@ -178,6 +178,11 @@ export interface ThemeLayout {
   // of the tab labels, not of a device class, so it lives here and not on the
   // sm/md/lg/xl scale.
   panelTabFourColumnWidth: string;
+  // 73: the fixed contact bar below `lg` on a course page (48px action row,
+  // 12px padding above and below, 1px top border). The bar sets its own
+  // block size from this, and anything that must sit directly above it,
+  // the install card, reads the same value.
+  fixedBottomBarBlockSize: string;
 }
 
 export interface ThemeZIndex {
@@ -190,6 +195,10 @@ export interface ThemeZIndex {
   // The scrim and panel behind any `ResponsiveSheet`: above every popover
   // and the header itself, so a sheet always sits on top.
   sheetScrim: number;
+  // A sheet with no scrim (`ResponsiveSheet` in its non-modal mode): above
+  // the header and the fixed bottom bar it sits beside, below a modal sheet
+  // and its scrim, so a sheet the person opens is never hidden by it.
+  floatingSheet: number;
 }
 
 export interface Theme {

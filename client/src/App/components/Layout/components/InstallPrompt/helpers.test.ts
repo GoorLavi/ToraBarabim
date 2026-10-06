@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import { afterDismissal, afterInstall, afterShow, canShowAutomatically, installPathFor } from './helpers';
+import {
+  afterDismissal,
+  afterInstall,
+  afterShow,
+  canShowAutomatically,
+  installPathFor,
+  isComputerDevice,
+  isTextEntryElement,
+  shareButtonPlacementFor,
+} from './helpers';
 import type { InstallEnvironment, InstallPromptState } from './models';
 
 const IPHONE_SAFARI =
@@ -131,5 +140,44 @@ describe('canShowAutomatically', () => {
 
   it('fails closed when the stored state could not be read', () => {
     expect(canShowAutomatically('chromiumPrompt', null)).toBe(false);
+  });
+});
+
+describe('isComputerDevice', () => {
+  it('is true for a desktop browser and false for a phone or a tablet', () => {
+    expect(isComputerDevice({ userAgent: DESKTOP_CHROME, maxTouchPoints: 0 })).toBe(true);
+    expect(isComputerDevice({ userAgent: ANDROID_CHROME, maxTouchPoints: 5 })).toBe(false);
+    expect(isComputerDevice({ userAgent: IPHONE_SAFARI, maxTouchPoints: 5 })).toBe(false);
+    expect(isComputerDevice({ userAgent: IPADOS_SAFARI, maxTouchPoints: 5 })).toBe(false);
+  });
+});
+
+describe('shareButtonPlacementFor', () => {
+  it('puts the share button at the bottom only on iPhone Safari', () => {
+    expect(shareButtonPlacementFor({ userAgent: IPHONE_SAFARI, maxTouchPoints: 5 })).toBe('bottom');
+  });
+
+  it('puts it at the top on iPad and in every other iOS browser', () => {
+    expect(shareButtonPlacementFor({ userAgent: IPADOS_SAFARI, maxTouchPoints: 5 })).toBe('top');
+    expect(shareButtonPlacementFor({ userAgent: IPHONE_CHROME, maxTouchPoints: 5 })).toBe('top');
+    expect(shareButtonPlacementFor({ userAgent: IPHONE_FIREFOX, maxTouchPoints: 5 })).toBe('top');
+  });
+});
+
+describe('isTextEntryElement', () => {
+  const field = (tagName: string, type?: string, isContentEditable = false) => ({ tagName, type, isContentEditable });
+
+  it('counts text inputs, text areas and editable regions as typing', () => {
+    expect(isTextEntryElement(field('INPUT', 'text'))).toBe(true);
+    expect(isTextEntryElement(field('INPUT', 'search'))).toBe(true);
+    expect(isTextEntryElement(field('TEXTAREA'))).toBe(true);
+    expect(isTextEntryElement(field('DIV', undefined, true))).toBe(true);
+  });
+
+  it('does not count a checkbox, a button or a link', () => {
+    expect(isTextEntryElement(field('INPUT', 'checkbox'))).toBe(false);
+    expect(isTextEntryElement(field('INPUT', 'submit'))).toBe(false);
+    expect(isTextEntryElement(field('BUTTON'))).toBe(false);
+    expect(isTextEntryElement(field('A'))).toBe(false);
   });
 });

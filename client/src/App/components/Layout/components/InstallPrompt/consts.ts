@@ -35,3 +35,29 @@ export const IOS_OTHER_BROWSER_USER_AGENT_PATTERN = /CriOS|FxiOS|EdgiOS|OPiOS|Du
 export const SAFARI_TOKEN_PATTERN = /Safari\//;
 
 export const ANDROID_USER_AGENT_PATTERN = /Android/;
+
+export const IPAD_USER_AGENT_PATTERN = /iPad/;
+
+export const TEXT_ENTRY_INPUT_TYPES_EXCLUDED: ReadonlySet<string> = new Set([
+  'button',
+  'checkbox',
+  'color',
+  'file',
+  'image',
+  'radio',
+  'range',
+  'reset',
+  'submit',
+]);
+
+// What an open sheet, dialog, popover or list box looks like in the DOM: the
+// picker popovers, the pinned header's expand panel and every sheet carry one
+// of these roles. The install card itself is a region, so it never matches.
+export const OPEN_OVERLAY_SELECTOR = '[role="dialog"], [role="alertdialog"], [role="listbox"]';
+
+export const AUTO_SHOW_TICK_MS = 1000;
+
+export const SHEET_ARIA_LABEL = 'הוספת האתר למסך הבית';
+export const COMPUTER_SHEET_ARIA_LABEL = 'הוספת האתר למחשב';
+export const PHONE_FOOTER_LINK_LABEL = 'הוספה למסך הבית';
+export const COMPUTER_FOOTER_LINK_LABEL = 'הוספה למחשב';

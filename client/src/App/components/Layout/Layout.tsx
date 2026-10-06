@@ -10,6 +10,8 @@ import { useSearchQuery } from '~/hooks/useSearchQuery';
 import { useSelectedCity } from '~/hooks/useSelectedCity';
 
 import { Footer } from './components/Footer/Footer';
+import { InstallPrompt } from './components/InstallPrompt/InstallPrompt';
+import { useInstallState } from './components/InstallPrompt/useInstallState';
 import type { LayoutProps } from './models';
 import * as styles from './styles';
 
@@ -23,6 +25,8 @@ export const Layout = styled(({ className }: LayoutProps) => {
   const { city, select: selectCity, clear: clearCity } = useSelectedCity();
   const { query, setQuery } = useSearchQuery();
   const { filter: audienceFilter, selectFilter: selectAudienceFilter, clearFilter: clearAudienceFilter } = useAudienceFilter();
+
+  const { prompt: installPrompt, footerLink: installLink } = useInstallState();
 
   // Memoised so every `LessonCard` reading it through `ActiveFiltersContext`
   // does not re-render on every `Layout` render: a fresh object here would
@@ -57,7 +61,8 @@ export const Layout = styled(({ className }: LayoutProps) => {
           <Outlet />
         </div>
 
-        <Footer className="footer" />
+        <Footer {...{ className: 'footer', installLink }} />
+        <InstallPrompt {...installPrompt} />
       </div>
     </ActiveFiltersProvider>
   );

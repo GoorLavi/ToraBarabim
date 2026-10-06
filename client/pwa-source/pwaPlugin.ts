@@ -63,13 +63,10 @@ export const pwaFiles = (): Plugin => {
       }
 
       const offlinePagePath = path.join(publicDir, OFFLINE_PAGE_PUBLIC_PATH);
-      // TODO: promote to this.error once client/public/pwa/offline.html is
-      // committed. Until then a worker that cannot precache its page fails to
-      // install, which is safe but silent, so the build says so.
       if (!existsSync(offlinePagePath)) {
-        this.warn(`Expected ${offlinePagePath}: the worker precaches it, and without it the worker cannot install.`);
+        this.error(`Expected ${offlinePagePath}: the worker precaches it, and without it the worker cannot install.`);
       }
-      const offlinePageHtml = existsSync(offlinePagePath) ? readFileSync(offlinePagePath, 'utf-8') : '';
+      const offlinePageHtml = readFileSync(offlinePagePath, 'utf-8');
 
       const source = readSource('sw.js');
       if (!source.includes(VERSION_PLACEHOLDER)) {
