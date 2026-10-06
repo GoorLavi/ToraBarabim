@@ -24,7 +24,7 @@ Every design belongs to one of four, split by who opens it and when.
 
 | Page | Screen |
 |---|---|
-| `01 בית` | Home: ten interleaved rails with the women's, success and healing bands and the single women's tile, the thin four-rail case, and its filtered, empty, loading and error states |
+| `01 בית` | Home: ten interleaved rails with the women's, success and healing bands and the single women's tile, the thin four-rail case, and its filtered, empty, loading and error states; and the help-tiles section (`474:1770`): the three tiles inside lesson rails at 390, 320 and 1280, the row with the women's-area tile, and the message window in its states, as shipped on 2026-10-02 |
 | `02 חיפוש` | Search results, no results, loading, desktop, and the rabbanit name match |
 | `03 עיר` | A city's lessons |
 | `04 רב` | A rabbi's page, including no photo, a sparse record, loading, empty, error |
@@ -53,6 +53,7 @@ Every design belongs to one of four, split by who opens it and when.
 | `04 פאנל הניהול: מקומות` | The places list, the place record, and the place form with every state of its sign-in section |
 | `05 כניסה משותפת ופאנלים` | The shared rabbi-and-place login, the three place-panel screens, and the four rabbi-panel screens |
 | `06 קורסים` | The courses area in both panels: the rabbi's list, form and read-only closed record, the close, full, duplicate and delete sheets, the photo field in every state, the admin list with its filters (phone and desktop), record and form, and the phone tab grid |
+| `07 הודעות` | The super admin's messages page as shipped on 2026-10-02 (`197:2`): the list at 390 and 1280 with the handling note in its five states, the three empty states, and the shell's tab row. The load-more button and its failure line, and the list's loading and error states, are not drawn; see Known gaps |
 
 `01 מסכי ניהול` is behind the code: desktop 1440 only, with a separate admin sign-in
 that the shared login on `05` has replaced, and none of the mobile-first panel that
@@ -131,32 +132,17 @@ new goes into them. They keep their old names, which is how you can tell.
 Current work that is not part of the map yet, so nobody mistakes it for archive or
 tidies it away:
 
-- **`01 בית · הקדשות · לאישור`** (`323:488`), beside `01 בית`: the home page with the
-  dedication bands drawn at their measured heights, four phone frames and no desktop
-  yet. It waits on the owner, and on the width decision above. Since 2026-10-05 `01 בית`
-  already carries the success and healing bands in their shipped slots (after rails 6
-  and 8), so this page folds into those positions rather than adding bands again.
-- **`01 בית · חלון הקדשה · לאישור`** (`331:690`), beside the page above: the one
-  dedication window every band opens, and the bands' invitation line. Phone at 390 and
-  320, desktop at 1280, and the band's rest, hover and focus states. Aligned to the
-  built code on 2026-09-24; it folds into `01 בית` with the dedication page.
 - **`הקדשות · אזור בדיקה`** (`123:2`), a page at the end of the site file: the
   dedication masters, the notes for directions F to N with the reasoning for each,
   and an archive section. Those notes are the only place that reasoning is written,
   so deleting the page deletes it.
-- **`01 בית · אריחי עזרה · סבב 2 · לאישור`** (`434:488`), beside `01 בית`: the three
-  help tiles inside lesson rails at 390, 320 and 1280, the row with the women's-area
-  tile, and the message window in its states. Approved by the owner on 2026-10-01; it
-  folds into `01 בית` when the change ships. The page before it, `01 בית · אריחי עזרה ·
-  לאישור` (`419:488`), is a superseded first round (four tiles, a block) kept until the
-  owner says to delete it.
-- **`07 הודעות · סבב 2 · לאישור`** (`197:2`), in the admin file: the messages list at
-  390 and 1280 with the handling note in five states, the three empty states, and the
-  shell tab. Approved on 2026-10-01; it becomes `07 הודעות` when the change ships. The
-  page before it, `07 הודעות · לאישור` (`189:2`), is a superseded first round kept
-  until the owner says to delete it.
 
-Each folds into the numbered structure when its change ships.
+Each folds into the numbered structure when its change ships. The dedication and
+help-tile approval pages did exactly that: `01 בית` carries the dedications section
+(`470:6317`) and, since 2026-10-05, the help-tiles section (`474:1770`); the admin file
+gained `07 הודעות` (`197:2`); and the approval pages for both (the two dedication
+pages, and two rounds each of the help-tile and messages pages) are gone, the latter
+deleted with the owner's approval on 2026-10-05.
 
 ## Known gaps, on purpose
 
@@ -170,5 +156,10 @@ Each folds into the numbered structure when its change ships.
   footer, though the code renders all of them at every width.
 - **`06 שיעור` has no footer on any frame**, phone or desktop, though every page
   renders one (from the 2026-09-23 audit).
+- **`07 הודעות` shows the list, the empty states and the note, not the rest.** The
+  load-more button and its failure line, and the list's loading and error states, ship
+  in code and are not drawn. Its phone tab-grid frame (`197:357`) was drawn before the
+  grid learned to drop to three columns on the narrowest phones (PR #85), so it may be
+  behind the code at 320.
 - **The pinned filter bar has no design.** The code renders the filter fields twice, once
   in flow and once in a bar that sticks on scroll below `lg`. Figma has one header.
