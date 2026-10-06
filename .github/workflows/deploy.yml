@@ -281,17 +281,22 @@ jobs:
       - name: Sync the client build to the client bucket
         run: |
           aws s3 sync client-dist "s3://${{ steps.site-outputs.outputs.ClientBucketName }}" \
-            --exclude 'sw.js' --exclude 'manifest.webmanifest' --exclude 'pwa/*'
+            --exclude 'sw.js' --exclude 'manifest.webmanifest' --exclude 'pwa/*' --exclude 'apple-touch-icon.png'
 
-      # The icons, splash images and the offline page are named, not hashed, so
-      # they get a day rather than the default the sync above leaves them with.
-      # Mirrors SHORT_LIVED_FILE_CACHE_CONTROL in server/src/plugins/ssr.ts.
-      # Before the two steps below on purpose: the worker precaches the offline
-      # page and the manifest names the icons, so neither may go live first.
+      # The icons, splash images, offline page and the touch icon are named,
+      # not hashed, so they get a day rather than the default the sync above
+      # leaves them with. Mirrors SHORT_LIVED_FILE_CACHE_CONTROL in
+      # server/src/plugins/ssr.ts, which serves the same files with the same
+      # header. Before the two steps below on purpose: the worker precaches the
+      # offline page and the manifest names the icons, so neither may go live
+      # first. `cp` for the touch icon, not `sync`: a changed icon of the same
+      # size would otherwise be skipped.
       - name: Sync the install icons, splash images and offline page
         run: |
           aws s3 sync client-dist/pwa "s3://${{ steps.site-outputs.outputs.ClientBucketName }}/pwa" \
             --cache-control 'public, max-age=86400'
+          aws s3 cp client-dist/apple-touch-icon.png "s3://${{ steps.site-outputs.outputs.ClientBucketName }}/apple-touch-icon.png" \
+            --cache-control 'public, max-age=86400' --content-type 'image/png'
 
       # `cp`, not `sync`, for the next two: sync decides by size and time,
       # and a worker that changed only its version string keeps its size.
@@ -459,7 +464,7 @@ jobs:
 
       # The invalidation from `deploy-client` takes a minute or two to reach
       # every edge, so each check retries before it fails.
-      - name: Check the headers of the worker, the manifest and the offline page
+      - name: Check the headers of the worker, the manifest, the offline page and the touch icon
         run: |
           SITE_URL="${{ steps.site-outputs.outputs.site-url }}"
           check() {
@@ -482,3 +487,4 @@ jobs:
           check /sw.js 'javascript' 'no-cache'
           check /manifest.webmanifest 'application/manifest+json' 'no-cache'
           check /pwa/offline.html 'text/html' 'max-age=86400'
+          check /apple-touch-icon.png 'image/png' 'max-age=86400'

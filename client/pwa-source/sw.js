@@ -9,7 +9,7 @@
 // schedule as if it were tonight's.
 
 /** @type {ServiceWorkerGlobalScope} */
-// @ts-expect-error `self` is typed as Window in the DOM lib; this file is checked against the WebWorker lib.
+// @ts-expect-error The WebWorker lib types `self` as WorkerGlobalScope, which does not narrow to ServiceWorkerGlobalScope on its own.
 const worker = self;
 
 const BUILD_VERSION = '__BUILD_VERSION__';

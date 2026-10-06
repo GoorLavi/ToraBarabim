@@ -13,41 +13,17 @@ import { chromium } from 'playwright';
 import type { Page } from 'playwright';
 
 import { argamanVeZahavColors } from '../src/theme/colors/argamanVeZahav.ts';
-import { APPLE_TOUCH_ICON_PATH, ICONS_DIRECTORY, SPLASH_DIRECTORY, SPLASH_SCREENS } from '../src/pwa/consts.ts';
+import { SPLASH_SCREENS } from '../src/pwa/consts.ts';
 import { splashImagePath, splashImageSize } from '../src/pwa/helpers.ts';
-
-const ICON_MASTER = 'icon.svg';
-// Full bleed with the mark inside the maskable safe zone. Also the source of
-// the touch icon, which iOS masks itself and so also wants a full-bleed square.
-const MASKABLE_ICON_MASTER = 'icon-maskable.svg';
-// The approved iOS splash frame, 430 x 932 points (iPhone Pro Max portrait),
-// background included. Each device gets it scaled to its own width.
-const SPLASH_MASTER = 'splash.svg';
-
-const TOUCH_ICON_SIZE = 180;
-
-interface IconJob {
-  master: string;
-  outputPath: string;
-  size: number;
-}
-
-const ICON_JOBS: readonly IconJob[] = [
-  { master: ICON_MASTER, outputPath: `${ICONS_DIRECTORY}/icon-192.png`, size: 192 },
-  { master: ICON_MASTER, outputPath: `${ICONS_DIRECTORY}/icon-512.png`, size: 512 },
-  { master: MASKABLE_ICON_MASTER, outputPath: `${ICONS_DIRECTORY}/icon-maskable-512.png`, size: 512 },
-  { master: MASKABLE_ICON_MASTER, outputPath: APPLE_TOUCH_ICON_PATH, size: TOUCH_ICON_SIZE },
-];
+import { ICON_JOBS, MASTER_MIME_TYPES, SPLASH_MASTER } from './consts.ts';
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const mastersDirectory = path.resolve(process.argv[2] ?? path.join(scriptDirectory, 'masters'));
 const publicDirectory = path.resolve(process.argv[3] ?? path.join(scriptDirectory, '../public'));
 
-const MIME_TYPES: Record<string, string> = { '.svg': 'image/svg+xml', '.png': 'image/png' };
-
 const readMasterAsDataUri = (fileName: string): string => {
   const masterPath = path.join(mastersDirectory, fileName);
-  const mimeType = MIME_TYPES[path.extname(fileName)];
+  const mimeType = MASTER_MIME_TYPES[path.extname(fileName)];
   if (mimeType === undefined) throw new Error(`Expected a .svg or .png master, got ${masterPath}`);
 
   let bytes: Buffer;

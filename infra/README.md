@@ -603,7 +603,7 @@ CloudFront serves them from there.
 | `/sw.js` | the service worker, version stamped from a hash of the client bundle | `ServiceWorkerCachePolicy`, 60 seconds | `no-cache`, `text/javascript; charset=utf-8` |
 | `/manifest.webmanifest` | the app's name, colours and icons | `ServiceWorkerCachePolicy`, 60 seconds | `no-cache`, `application/manifest+json` |
 | `/pwa/*` | icons, iOS splash images, the offline page | `CACHING_OPTIMIZED` | `public, max-age=86400` |
-| `/apple-touch-icon.png` | the iOS home screen icon | `CACHING_OPTIMIZED` (unchanged) | none |
+| `/apple-touch-icon.png` | the iOS home screen icon | `CACHING_OPTIMIZED` (unchanged) | `public, max-age=86400` |
 
 The 60 second policy is the point of the two new behaviors. `CACHING_OPTIMIZED` would hold
 a fixed worker, or the kill switch below, away from every visitor for up to a day. A
@@ -636,7 +636,7 @@ container the requests.
    manifest, upload `sw.js`, invalidate `/*`. The order is load bearing: the worker
    precaches the offline page and the manifest names the icons, so neither goes live
    before what it refers to. `deploy-server` follows as before, and
-   `verify-install-files` reads the three headers back from the live site.
+   `verify-install-files` reads the headers back from the live site.
 3. **Never ship the worker or the manifest before the icons.** The pull request carries
    the generated PNGs for that reason, and `server/test/ssr.test.ts` checks that every
    icon in the manifest and every splash image in the document answers.
