@@ -48,3 +48,141 @@ describe('the distribution geographic restriction', () => {
     assert.ok(!BLOCKED_VIEWER_COUNTRIES.includes('IL'), 'IL must never be blocked at the edge');
   });
 });
+
+describe('the lesson calendar behaviors', () => {
+  const CALENDAR_PATH_PATTERNS = ['/lesson/*/calendar.ics', '/lesson/*/*/event.ics'];
+
+  // The behavior points at a cache policy by a logical id, so the policy's
+  // own properties are read through that reference instead of by name.
+  test('both calendar paths have a behavior on the calendar cache policy, with the query string out of the key', () => {
+    const template = buildSiteStackTemplate();
+
+    const calendarPolicies = template.findResources('AWS::CloudFront::CachePolicy', {
+      Properties: {
+        CachePolicyConfig: {
+          DefaultTTL: 3600,
+          MinTTL: 0,
+          MaxTTL: 86400,
+          ParametersInCacheKeyAndForwardedToOrigin: {
+            QueryStringsConfig: { QueryStringBehavior: 'none' },
+            CookiesConfig: { CookieBehavior: 'none' },
+            HeadersConfig: { HeaderBehavior: 'none' },
+          },
+        },
+      },
+    });
+    const calendarPolicyIds = Object.keys(calendarPolicies);
+    assert.equal(calendarPolicyIds.length, 1, 'expected exactly one cache policy shaped like the calendar one');
+
+    const [distribution] = Object.values(template.findResources('AWS::CloudFront::Distribution'));
+    const behaviors = distribution?.Properties.DistributionConfig.CacheBehaviors as Array<{
+      PathPattern: string;
+      CachePolicyId: { Ref: string };
+      ViewerProtocolPolicy: string;
+    }>;
+
+    for (const pathPattern of CALENDAR_PATH_PATTERNS) {
+      const behavior = behaviors.find((candidate) => candidate.PathPattern === pathPattern);
+      assert.ok(behavior, `expected a behavior for ${pathPattern}`);
+      assert.deepEqual(behavior.CachePolicyId, { Ref: calendarPolicyIds[0] }, `expected ${pathPattern} to use the calendar cache policy`);
+      assert.equal(behavior.ViewerProtocolPolicy, 'redirect-to-https');
+    }
+  });
+
+  test('the calendar behaviors forward nothing from the viewer to the origin', () => {
+    const template = buildSiteStackTemplate();
+
+    const forwardNothingPolicies = template.findResources('AWS::CloudFront::OriginRequestPolicy', {
+      Properties: {
+        OriginRequestPolicyConfig: {
+          CookiesConfig: { CookieBehavior: 'none' },
+          HeadersConfig: { HeaderBehavior: 'none' },
+          QueryStringsConfig: { QueryStringBehavior: 'none' },
+        },
+      },
+    });
+    const forwardNothingIds = Object.keys(forwardNothingPolicies);
+    assert.equal(forwardNothingIds.length, 1, 'expected exactly one origin request policy that forwards nothing');
+
+    const [distribution] = Object.values(template.findResources('AWS::CloudFront::Distribution'));
+    const behaviors = distribution?.Properties.DistributionConfig.CacheBehaviors as Array<{
+      PathPattern: string;
+      OriginRequestPolicyId: { Ref: string };
+    }>;
+
+    for (const pathPattern of CALENDAR_PATH_PATTERNS) {
+      const behavior = behaviors.find((candidate) => candidate.PathPattern === pathPattern);
+      assert.ok(behavior, `expected a behavior for ${pathPattern}`);
+      assert.deepEqual(behavior.OriginRequestPolicyId, { Ref: forwardNothingIds[0] });
+    }
+  });
+});
+
+// The id AWS publishes for its managed CACHING_OPTIMIZED policy: a day by
+// default and up to a year, which is right for hashed files and wrong for the
+// two named files a browser must hear about quickly.
+const CACHING_OPTIMIZED_POLICY_ID = '658327ea-f89d-4fab-a63d-7e88639e58f6';
+
+// The longest the edge may hold sw.js or the manifest. A literal here, not the
+// constant the stack reads, so raising the constant fails this test.
+const LONGEST_ACCEPTABLE_WORKER_EDGE_TTL_SECONDS = 60;
+
+interface SynthesizedBehavior {
+  PathPattern: string;
+  TargetOriginId: string;
+  CachePolicyId: string | { Ref: string };
+}
+
+interface SynthesizedOrigin {
+  Id: string;
+  DomainName: unknown;
+}
+
+describe('the service worker, the manifest, and the icons at the edge', () => {
+  const synthesize = () => {
+    const template = buildSiteStackTemplate();
+    const json = template.toJSON() as { Resources: Record<string, { Type: string; Properties: Record<string, unknown> }> };
+    const distribution = Object.values(json.Resources).find((resource) => resource.Type === 'AWS::CloudFront::Distribution');
+    assert.ok(distribution, 'expected the site stack to define a distribution');
+    const config = distribution.Properties['DistributionConfig'] as { CacheBehaviors: SynthesizedBehavior[]; Origins: SynthesizedOrigin[] };
+    return { json, behaviors: config.CacheBehaviors, origins: config.Origins };
+  };
+
+  const findBehavior = (behaviors: SynthesizedBehavior[], pathPattern: string): SynthesizedBehavior => {
+    const behavior = behaviors.find((candidate) => candidate.PathPattern === pathPattern);
+    assert.ok(behavior, `expected a cache behavior for ${pathPattern}`);
+    return behavior;
+  };
+
+  // The client bucket's origin is the only one whose domain is the bucket's
+  // own regional name; the API origin's domain is an execute-api address.
+  const assertServedFromTheClientBucket = (behavior: SynthesizedBehavior, origins: SynthesizedOrigin[]): void => {
+    const origin = origins.find((candidate) => candidate.Id === behavior.TargetOriginId);
+    assert.ok(origin, `expected ${behavior.PathPattern} to name an origin that exists`);
+    assert.match(JSON.stringify(origin.DomainName), /ClientBucket[A-F0-9]+.*RegionalDomainName/, `expected ${behavior.PathPattern} to be served from the client bucket`);
+  };
+
+  for (const pathPattern of ['/sw.js', '/manifest.webmanifest']) {
+    test(`${pathPattern} is served from the client bucket by a policy that caches for at most a minute`, () => {
+      const { json, behaviors, origins } = synthesize();
+      const behavior = findBehavior(behaviors, pathPattern);
+
+      assertServedFromTheClientBucket(behavior, origins);
+      assert.notEqual(behavior.CachePolicyId, CACHING_OPTIMIZED_POLICY_ID, `${pathPattern} must not use CACHING_OPTIMIZED`);
+      assert.ok(typeof behavior.CachePolicyId === 'object', `expected ${pathPattern} to reference a policy this stack defines`);
+
+      const policy = json.Resources[behavior.CachePolicyId.Ref];
+      assert.ok(policy, `expected the policy ${behavior.CachePolicyId.Ref} to exist`);
+      const policyConfig = policy.Properties['CachePolicyConfig'] as { MinTTL: number; DefaultTTL: number; MaxTTL: number };
+      assert.ok(
+        policyConfig.MaxTTL <= LONGEST_ACCEPTABLE_WORKER_EDGE_TTL_SECONDS,
+        `expected MaxTTL of at most ${LONGEST_ACCEPTABLE_WORKER_EDGE_TTL_SECONDS} seconds for ${pathPattern}, got ${policyConfig.MaxTTL}`,
+      );
+    });
+  }
+
+  test('/pwa/* is served from the client bucket, not the container', () => {
+    const { behaviors, origins } = synthesize();
+    assertServedFromTheClientBucket(findBehavior(behaviors, '/pwa/*'), origins);
+  });
+});

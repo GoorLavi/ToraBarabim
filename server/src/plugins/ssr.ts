@@ -6,6 +6,9 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { createRequestHandler } from 'react-router';
 import type { ServerBuild } from 'react-router';
 
+import { calendarRateLimit } from './calendar-rate-limit';
+import { CALENDAR_RATE_LIMITED_MESSAGE } from './consts';
+
 // The client workspace's framework-mode build. Read-only from here: this
 // plugin only ever imports the build output, never client source. Resolved
 // from `__dirname` (this file compiles to CommonJS), which is `dist/plugins`
@@ -22,9 +25,9 @@ const SERVER_BUILD_PATH = path.join(__dirname, '../../../client/build/server/ind
 // Covers the paths CloudFront serves from the S3 bucket instead of this
 // server in production (infra/lib/site-stack.ts's `additionalBehaviors`):
 // the hashed asset directory and the handful of named static files the
-// client build emits (client/vite.config.ts's `seoFiles` plugin, and
-// `client/public`). This fast path exists for local development and as
-// defence in depth (0010); production traffic for these paths never reaches
+// client build emits (client/vite.config.ts's `seoFiles` and `pwaFiles`
+// plugins, and `client/public`). This fast path exists for local development
+// and as defence in depth (0010); production traffic for these paths never reaches
 // this server at all. A broader "anything with a file extension" pattern
 // used to sit here and also matched React Router's own `*.data` single-fetch
 // requests, 404ing them before they ever reached `createRequestHandler`.
@@ -33,15 +36,35 @@ const SERVER_BUILD_PATH = path.join(__dirname, '../../../client/build/server/ind
 // server, which is also why `assets/.+` requires a filename rather than
 // matching CloudFront's `assets/*` exactly: an empty `/assets/` has no real
 // file behind it either way, and the app's own 404 is the better of the two
-// bare ones to serve for it. `@fastify/static` is registered with
-// `wildcard: false` so it does not also claim a catch-all route of its own,
-// which would collide with the one below.
+// bare ones to serve for it, and `pwa/.+` likewise. `@fastify/static` is
+// registered with `wildcard: false` so it does not also claim a catch-all route
+// of its own, which would collide with the one below.
 // `sitemap.xml` is deliberately absent: it is a React Router resource route
 // now (client/src/routes/sitemap.ts), built from the database on request,
 // and matching it here would serve the stale build-time file this same
 // server directory no longer even contains instead of ever reaching that
 // route.
-const STATIC_ASSET_PATTERN = /^\/(?:assets\/.+|favicon\.svg|favicon\.ico|apple-touch-icon\.png|robots\.txt|outage\.html)$/;
+const STATIC_ASSET_PATTERN =
+  /^\/(?:assets\/.+|pwa\/.+|favicon\.svg|favicon\.ico|apple-touch-icon\.png|robots\.txt|outage\.html|sw\.js|manifest\.webmanifest)$/;
+
+// The two files a browser must always revalidate: the worker, because a stale
+// copy is how a fix or the kill switch never reaches a visitor, and the
+// manifest, because it names the icons. Mirrors the `no-cache` the deploy
+// workflow puts on the same two objects in the client bucket.
+const REVALIDATED_FILES = new Set(['sw.js', 'manifest.webmanifest']);
+
+// Icons and splash images are not content-hashed, so unlike `assets/` they
+// cannot be cached for a year. Mirrors the `max-age` the deploy workflow puts
+// on the same objects in the client bucket (.github/workflows/deploy.yml).
+const SHORT_LIVED_FILE_PATTERN = /^(?:pwa\/.+|apple-touch-icon\.png)$/;
+const SHORT_LIVED_FILE_CACHE_CONTROL = 'public, max-age=86400';
+
+// Takes the path relative to the build directory, in URL form.
+const cacheControlFor = (relativePath: string): string | undefined => {
+  if (REVALIDATED_FILES.has(relativePath)) return 'no-cache';
+  if (SHORT_LIVED_FILE_PATTERN.test(relativePath)) return SHORT_LIVED_FILE_CACHE_CONTROL;
+  return undefined;
+};
 
 // Fastify's own default parser key, mirrored here because `text/plain` is
 // the only non-JSON content type that reaches a handler with a body at all.
@@ -69,6 +92,30 @@ export const buildRequestBody = (body: unknown, contentType: string | undefined)
   if (body === undefined) return undefined;
   if (typeof body === 'string' && contentType?.startsWith(TEXT_PLAIN_CONTENT_TYPE)) return { content: body, contentType };
   return { content: JSON.stringify(body), contentType: 'application/json' };
+};
+
+// Exactly the two calendar resource routes (client/src/routes.ts). They get
+// their own Fastify routes, ahead of the catch-all, because the rate limit is
+// a per-route option and the catch-all must stay unlimited for every page.
+const CALENDAR_ROUTE_PATHS = ['/lesson/:lessonId/calendar.ics', '/lesson/:lessonId/:date/event.ics'];
+
+// Any answer other than a success or a revalidation is kept out of the
+// CDN's cache, the 429 included: CloudFront would otherwise hold a throttle
+// for the path's whole default TTL and serve it to every subscriber behind
+// that edge. Applied by an `onSend` hook rather than in the route modules
+// because the 429 never reaches one; the rate-limit hook answers it first.
+const keepCalendarFailuresUncached = async (_request: FastifyRequest, reply: FastifyReply, payload: unknown): Promise<unknown> => {
+  if (reply.statusCode !== 200 && reply.statusCode !== 304) reply.header('cache-control', 'no-store');
+  return payload;
+};
+
+// The app-wide error handler's 429 wording is written for the login form,
+// so a calendar throttle gets its own neutral text instead.
+const replaceCalendarRateLimitedBody = async (_request: FastifyRequest, reply: FastifyReply, payload: unknown): Promise<unknown> => {
+  if (reply.statusCode !== 429) return payload;
+
+  reply.type('text/plain; charset=utf-8');
+  return CALENDAR_RATE_LIMITED_MESSAGE;
 };
 
 // No official Fastify adapter exists for React Router 7 (only Express), so
@@ -122,6 +169,14 @@ export const registerSsr = async (app: FastifyInstance): Promise<void> => {
     // of this container (0010), not here; see the SSR spike report.
     immutable: true,
     maxAge: '1y',
+    // The default above is right only for hashed files. This runs after it is
+    // applied, so it overrides it for the few named files that are not
+    // content-addressed.
+    setHeaders: (reply, filePath) => {
+      const relativePath = path.relative(CLIENT_BUILD_DIR, filePath).split(path.sep).join('/');
+      const cacheControl = cacheControlFor(relativePath);
+      if (cacheControl !== undefined) reply.header('cache-control', cacheControl);
+    },
   });
 
   const getBuild = (): Promise<ServerBuild> => import(SERVER_BUILD_PATH) as Promise<ServerBuild>;
@@ -154,6 +209,17 @@ export const registerSsr = async (app: FastifyInstance): Promise<void> => {
     }
     return reply.send(Readable.fromWeb(response.body as never));
   };
+
+  for (const url of CALENDAR_ROUTE_PATHS) {
+    app.route({
+      method: ['GET', 'HEAD'],
+      url,
+      exposeHeadRoute: false,
+      config: { rateLimit: calendarRateLimit },
+      onSend: [keepCalendarFailuresUncached, replaceCalendarRateLimitedBody],
+      handler: handleCatchAll,
+    });
+  }
 
   // `.all()` registers every method fastify knows on this one wildcard
   // path, which collides twice with routes already registered elsewhere:

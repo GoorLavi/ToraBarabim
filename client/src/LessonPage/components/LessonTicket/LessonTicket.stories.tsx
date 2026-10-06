@@ -27,6 +27,8 @@ const baseOccurrence: LessonOccurrenceDetail = {
   audience: 'mixed',
   rabbi: rabbiFixture({ id: 'rabbi-1', name: 'יעקב מזרחי', title: 'דיין', photoUrl: PLACEHOLDER_PHOTO }),
   venue: { kind: 'address', name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'נתניה', citySlug: 'נתניה', area: 'sharon' },
+  schedule: { kind: 'once' },
+  calendarOccurrence: null,
 };
 
 const meta: Meta<typeof LessonTicket> = {
@@ -53,6 +55,8 @@ export const RequiredOnly: Story = {
       audience: 'men',
       rabbi: rabbiFixture({ id: 'rabbi-4', name: 'שלמה אביטן' }),
       venue: { kind: 'address', name: 'בית מדרש אור החיים', street: 'רחוב טרומפלדור 5', city: 'באר שבע', citySlug: 'באר-שבע', area: 'south' },
+      schedule: { kind: 'once' },
+      calendarOccurrence: null,
     },
   },
 };

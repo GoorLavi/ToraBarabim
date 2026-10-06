@@ -1,9 +1,11 @@
 import { useEffect, useRef } from 'react';
 import { useLocation, useMatches } from 'react-router';
 
+import { isStandaloneDisplay } from '~/pwa/isStandaloneDisplay';
+
 import { MIXPANEL_EVENTS } from './consts';
 import type { AppSurface } from './consts';
-import { appSurfaceFor, posterSourceFrom, routePattern } from './helpers';
+import { appSurfaceFor, launchModeFrom, posterSourceFrom, routePattern } from './helpers';
 import { initAnalytics, registerSuperProperties, trackEvent } from './mixpanel';
 
 // Renders nothing: this only wires Mixpanel into the route tree's lifecycle.
@@ -23,6 +25,7 @@ export const Analytics = (): null => {
   // effect on it would fire `Poster Scan` again on every filter change.
   useEffect(() => {
     initAnalytics();
+    registerSuperProperties({ launchMode: launchModeFrom(location.search, isStandaloneDisplay()) });
 
     const posterSource = posterSourceFrom(location.search);
     if (!posterSource) return;

@@ -1,6 +1,7 @@
 import type { AreaSummary, City, CloseReason, CourseTopic, LessonOccurrence, LessonVenue, LessonVenuePanel, Place, Rabbi, ResolvedAddress } from '@torabarabim/common';
 
-import { LESSON_TOPIC_LABELS, RABBI_HONORIFIC_LABELS } from './consts';
+import { SITE_ORIGIN } from '../consts';
+import { LESSON_TOPIC_LABELS, RABBI_HONORIFIC_LABELS, SHARED_LINK_FLAG } from './consts';
 import type { DayGroup } from './models';
 
 // The one place a rabbi's display name is composed, from the bare stored
@@ -27,6 +28,11 @@ export const directionForValue = (value: string): 'rtl' | 'auto' => (value.trim(
 export const rabbiPath = (rabbi: Pick<Rabbi, 'id' | 'slug'>): string =>
   `/rabbis/${encodeURIComponent(rabbi.id)}/${encodeURIComponent(rabbi.slug)}`;
 
+// A rabbi's path by id alone, which the route resolves and redirects to the
+// slugged address: short enough to share, where the slug is percent-encoded
+// Hebrew a hundred characters long.
+export const rabbiIdPath = (rabbi: Pick<Rabbi, 'id'>): string => `/rabbis/${encodeURIComponent(rabbi.id)}`;
+
 // The one place a city's public path is built. The slug travels on the
 // wire (`City.slug`), so this never calls the server's `toSlug` a second
 // time in the browser.
@@ -40,6 +46,9 @@ export const areaPath = (area: Pick<AreaSummary, 'slug'>): string => `/areas/${e
 // fallback to fall back to.
 export const placePath = (place: Pick<Place, 'id' | 'slug'>): string => `/places/${encodeURIComponent(place.id)}/${encodeURIComponent(place.slug)}`;
 
+// A place's path by id alone, for the same reason as `rabbiIdPath`.
+export const placeIdPath = (place: Pick<Place, 'id'>): string => `/places/${encodeURIComponent(place.id)}`;
+
 // The one place a course's public path is built, mirroring rabbiPath and
 // placePath: both segments percent-encoded. Typed against a minimal shape
 // rather than the wire `CourseSummary`, so any caller with just an id and a
@@ -50,6 +59,16 @@ export const coursePath = (course: { id: string; slug: string }): string => `/co
 // id React Router matches on and the ISO date of the specific occurrence.
 export const lessonPath = (occurrence: Pick<LessonOccurrence, 'lessonId' | 'date'>): string =>
   `/lesson/${encodeURIComponent(occurrence.lessonId)}/${encodeURIComponent(occurrence.date)}`;
+
+// The link a share button carries for a page: the full address of its path
+// with the bare shared-link flag.
+export const sharedUrlOf = (path: string): string => `${SITE_ORIGIN}${path}?${SHARED_LINK_FLAG}`;
+
+// "א, ב ו־ג": the Hebrew list join, with a vav before the last item.
+export const joinWithConjunction = (items: string[]): string => {
+  if (items.length <= 1) return items.join('');
+  return `${items.slice(0, -1).join(', ')} ו${items[items.length - 1]}`;
+};
 
 // Shared by the city page, the cities directory and the area page: once
 // someone has chosen where, the only question left is when (design spec,
@@ -112,11 +131,34 @@ const dayMonthFormatter = new Intl.DateTimeFormat('he-IL', { day: 'numeric', mon
 
 const todayInIsrael = (): string => israelDateFormatter.format(new Date());
 
-const addOneDay = (isoDate: string): string => {
+export const addOneDay = (isoDate: string): string => {
   const date = new Date(`${isoDate}T00:00:00Z`);
   date.setUTCDate(date.getUTCDate() + 1);
   return date.toISOString().slice(0, 10);
 };
+
+const JERUSALEM_OFFSET_FORMATTER = new Intl.DateTimeFormat('en-US', {
+  timeZone: ISRAEL_TIME_ZONE,
+  timeZoneName: 'longOffset',
+  hour: 'numeric',
+});
+
+// Israel's clock shifts between +02:00 and +03:00 within the same lesson
+// season, so a fixed offset would misreport roughly half the year. Read off
+// the actual IANA zone for the occurrence's own date rather than hand-coding
+// the transition dates.
+const israelUtcOffset = (isoDate: string): string => {
+  const zoneName = JERUSALEM_OFFSET_FORMATTER.formatToParts(new Date(`${isoDate}T12:00:00Z`)).find(
+    (part) => part.type === 'timeZoneName',
+  )?.value;
+  return zoneName?.replace('GMT', '') || '+00:00';
+};
+
+// An occurrence carries a bare wall-clock time; schema.org's `startDate` and
+// a calendar's UTC instant both need the real offset for that date. Returns
+// an offset-aware ISO string ("2026-07-14T20:30:00+03:00"), which `new Date`
+// reads as the exact instant.
+export const israelDateTime = (isoDate: string, clockTime: string): string => `${isoDate}T${clockTime}:00${israelUtcOffset(isoDate)}`;
 
 // Today and tomorrow name the weekday instead of the date, since the date
 // itself is redundant once "today" already says which day it is; every

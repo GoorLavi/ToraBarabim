@@ -95,6 +95,19 @@ export const MessageCard = css(
       }
     }
 
+    /* Reaches 48 through its own padding, like the phone link above. */
+    > .subject {
+      align-self: flex-start;
+      display: inline-flex;
+      align-items: center;
+      min-block-size: 48px;
+      color: ${theme.colors.primary};
+      font-weight: ${theme.typography.fontWeight.semiBold};
+      font-size: ${theme.typography.secondary.phone.fontSize};
+      line-height: ${theme.typography.secondary.phone.lineHeight};
+      text-decoration: underline;
+    }
+
     > .message {
       align-self: flex-start;
       max-inline-size: min(100%, 640px);

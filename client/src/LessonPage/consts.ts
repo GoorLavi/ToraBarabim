@@ -1,4 +1,4 @@
-import type { RabbiHonorific } from '@torabarabim/common';
+import type { RabbiHonorific, Weekday } from '@torabarabim/common';
 
 import type { PastNoticeTiming, RoleTense } from './models';
 
@@ -65,3 +65,12 @@ export const rabbiRailTitle = (rabbiName: string): string => `לכל השיעו�
 // The width running text (the note, the bio, and the skeleton standing in for
 // them) caps at, even inside the wider desktop column.
 export const RUNNING_TEXT_MAX_INLINE_SIZE = '640px';
+
+export const AT_TIME_PREFIX = 'בשעה';
+
+// A single Saturday is "כל שבת", never "כל יום שבת".
+export const SATURDAY: Weekday = 6;
+
+export const EVERY_SATURDAY_LABEL = 'כל שבת';
+export const everyWeekdayLabel = (bareWeekdayName: string): string => `כל יום ${bareWeekdayName}`;
+export const onWeekdaysLabel = (joinedBareWeekdayNames: string): string => `בימי ${joinedBareWeekdayNames}`;

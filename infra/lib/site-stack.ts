@@ -9,7 +9,7 @@ import * as targets from 'aws-cdk-lib/aws-route53-targets';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 
-import { BLOCKED_VIEWER_COUNTRIES } from './consts';
+import { BLOCKED_VIEWER_COUNTRIES, SERVICE_WORKER_EDGE_TTL_SECONDS } from './consts';
 
 interface SiteStackProps extends StackProps {
   // Optional. torahbarabim.com is live, but the site shipped without it
@@ -189,6 +189,56 @@ export class SiteStack extends Stack {
       maxTtl: Duration.days(7),
     });
 
+    // Used by the two lesson calendar behaviors below. Mirrors the route's
+    // own `CALENDAR_CACHE_HEADERS` (client/src/routes/consts.ts): the
+    // default TTL is the same hour, so local development and the CDN agree.
+    // The query string is out of the cache key on purpose: the links a
+    // calendar carries are tagged with utm parameters, and keying on them
+    // would give every tag its own copy of the same calendar. Never keyed on
+    // a cookie, for the same reason as the documents above. A failure
+    // response carries its own `no-store` (server/src/plugins/ssr.ts), which
+    // `minTtl: 0` lets take effect.
+    const calendarCachePolicy = new cloudfront.CachePolicy(this, 'CalendarCachePolicy', {
+      comment: 'Lesson calendar feed and event files: cached an hour, never keyed on the query string or a cookie',
+      cookieBehavior: cloudfront.CacheCookieBehavior.none(),
+      headerBehavior: cloudfront.CacheHeaderBehavior.none(),
+      queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
+      enableAcceptEncodingGzip: true,
+      enableAcceptEncodingBrotli: true,
+      minTtl: Duration.seconds(0),
+      defaultTtl: Duration.hours(1),
+      maxTtl: Duration.days(1),
+    });
+    // Nothing reaches the origin: the calendar a path answers depends on the
+    // path alone, so a cookie, a header or a query string forwarded to it
+    // could only change an answer the cache then serves to everyone.
+    const calendarOriginRequestPolicy = new cloudfront.OriginRequestPolicy(this, 'CalendarOriginRequestPolicy', {
+      comment: 'Lesson calendar feed and event files: forwards nothing from the viewer',
+      cookieBehavior: cloudfront.OriginRequestCookieBehavior.none(),
+      headerBehavior: cloudfront.OriginRequestHeaderBehavior.none(),
+      queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.none(),
+    });
+
+    // The worker script and the manifest are named files that change at
+    // deploy time, and a visitor's browser asks for the worker on its own
+    // schedule. A day of edge caching (CACHING_OPTIMIZED) would hold a fixed
+    // worker, or the kill switch, away from every visitor for up to a day, so
+    // these two behaviors cache for exactly one minute: min, default and max
+    // are the same value, which also means the edge ignores the origin's
+    // `no-cache` and the browser still receives it. Used by `/sw.js` and
+    // `/manifest.webmanifest` below.
+    const workerCachePolicy = new cloudfront.CachePolicy(this, 'ServiceWorkerCachePolicy', {
+      comment: 'sw.js and the manifest: edge-cached for one minute, never longer, so a fix or the kill switch reaches visitors',
+      cookieBehavior: cloudfront.CacheCookieBehavior.none(),
+      headerBehavior: cloudfront.CacheHeaderBehavior.none(),
+      queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
+      enableAcceptEncodingGzip: true,
+      enableAcceptEncodingBrotli: true,
+      minTtl: Duration.seconds(SERVICE_WORKER_EDGE_TTL_SECONDS),
+      defaultTtl: Duration.seconds(SERVICE_WORKER_EDGE_TTL_SECONDS),
+      maxTtl: Duration.seconds(SERVICE_WORKER_EDGE_TTL_SECONDS),
+    });
+
     // `domainNames` and `certificate` are left undefined without a domain:
     // CloudFront then serves the distribution on its own generated
     // *.cloudfront.net name using its default certificate, and needs
@@ -286,6 +336,27 @@ export class SiteStack extends Stack {
           cachePolicy: sitemapCachePolicy,
           originRequestPolicy: documentOriginRequestPolicy,
         },
+        // The lesson calendar: a subscribable feed and a one-off event file,
+        // both resource routes answered by the same Fargate service
+        // (client/src/routes/lesson-calendar.ts, lesson-event.ts), shaped
+        // like `/sitemap.xml` above. The feed URL is a contract with every
+        // subscriber's calendar. A subscribed calendar app polls these paths
+        // continuously, so the edge answering from cache is what keeps that
+        // traffic off the one small container (0010). Until this deploys the
+        // paths fall under the default document behavior, which still caches
+        // by the route's own `Cache-Control` but keys on the query string.
+        '/lesson/*/calendar.ics': {
+          origin: apiOrigin,
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          cachePolicy: calendarCachePolicy,
+          originRequestPolicy: calendarOriginRequestPolicy,
+        },
+        '/lesson/*/*/event.ics': {
+          origin: apiOrigin,
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          cachePolicy: calendarCachePolicy,
+          originRequestPolicy: calendarOriginRequestPolicy,
+        },
         // Hashed, content-addressed build output and the handful of named
         // static files the client build emits. All of it lives in the
         // private client bucket and none of it needs the container: this
@@ -314,6 +385,27 @@ export class SiteStack extends Stack {
           cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
         },
         '/robots.txt': {
+          origin: clientOrigin,
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+        },
+        // The installable-site files. Named, not hashed, so neither can take
+        // CACHING_OPTIMIZED (a day by default): see `workerCachePolicy` above.
+        '/sw.js': {
+          origin: clientOrigin,
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          cachePolicy: workerCachePolicy,
+        },
+        '/manifest.webmanifest': {
+          origin: clientOrigin,
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          cachePolicy: workerCachePolicy,
+        },
+        // Icons, splash images and the offline page. Not hashed either, but
+        // they change rarely and the deploy invalidates `/*`, so the usual
+        // policy applies and the objects' own `max-age` (deploy.yml) decides
+        // how long a browser keeps them.
+        '/pwa/*': {
           origin: clientOrigin,
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,

@@ -5,6 +5,7 @@ import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 
 import { courseFixture } from '~/courseFixture';
 import { DEDICATION_GROUP_HEALING, DEDICATION_GROUP_SUCCESS } from '~/dedicationFixture';
+import * as formConsts from '~/components/HelpWindow/components/VisitorMessageForm/consts';
 import { whatsAppHref } from '~/helpers';
 import { VISITOR_MESSAGE_TITLES } from '~/HomePage/components/consts';
 import { homeRowCardTitle, homeRowCardVenue } from '~/HomePage/homeRowFixture';
@@ -12,7 +13,6 @@ import { rabbiFixture } from '~/rabbiFixture';
 
 import { http } from '../../../../.storybook/apiMocks';
 import * as shareTileConsts from '../LessonRail/components/ShareTile/consts';
-import * as formConsts from './components/HelpWindow/components/VisitorMessageForm/consts';
 import { HomeRails } from './HomeRails';
 import type { HomeRowsQueryState } from './models';
 

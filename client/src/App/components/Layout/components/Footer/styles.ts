@@ -36,6 +36,19 @@ export const Footer = css(
       display: flex;
       flex-wrap: wrap;
       gap: ${theme.spacing.lg};
+
+      /* A row of its own on a phone, with the button at its natural width
+         so the hit area is the link and not the row; from md up it joins the
+         row behind a divider. */
+      > .installRow {
+        flex-basis: 100%;
+
+        @media (min-width: ${theme.breakpoints.md}) {
+          flex-basis: auto;
+          padding-inline-start: ${theme.spacing.lg};
+          border-inline-start: 1px solid ${theme.colors.border};
+        }
+      }
     }
   }
 `,

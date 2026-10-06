@@ -11,7 +11,7 @@ import { RabbiPage } from '~/RabbiPage/RabbiPage';
 
 import { SITE_ORIGIN } from '../../../consts';
 import { PUBLIC_CACHE_HEADERS, UNCACHEABLE_ERROR_HEADERS } from '../consts';
-import { DEFAULT_OG_IMAGE_META, SITE_WIDE_META_BASE } from '../meta';
+import { entityImageMeta, SITE_WIDE_META_BASE } from '../meta';
 import * as consts from './consts';
 import { loadRabbiDetail } from './rabbi-detail.server';
 
@@ -20,7 +20,7 @@ import { loadRabbiDetail } from './rabbi-detail.server';
 // no HTTP round trip back to this app's own server. Every other route
 // still fetches client-side through react-query, unchanged. The service
 // call itself lives in the sibling `.server` module (see there for why).
-export const loader = async ({ params }: LoaderFunctionArgs): Promise<RabbiDetailResponse> => {
+export const loader = async ({ params, request }: LoaderFunctionArgs): Promise<RabbiDetailResponse> => {
   const { rabbiId, slug } = params;
   if (!rabbiId) {
     throw new Response('רב לא נמצא', { status: 404, headers: UNCACHEABLE_ERROR_HEADERS });
@@ -35,8 +35,10 @@ export const loader = async ({ params }: LoaderFunctionArgs): Promise<RabbiDetai
   // permanent redirect to the current canonical URL, never a second render
   // path. `headers()` is not consulted for a redirect (React Router returns
   // it before rendering), so the caching decision is made here instead.
+  // The query string travels with the redirect: a shared link is the bare
+  // id plus `?s`, and the tag must survive onto the canonical URL.
   if (slug !== data.slug) {
-    throw redirect(rabbiPath(data), { status: 301, headers: PUBLIC_CACHE_HEADERS });
+    throw redirect(`${rabbiPath(data)}${new URL(request.url).search}`, { status: 301, headers: PUBLIC_CACHE_HEADERS });
   }
 
   return data;
@@ -58,7 +60,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     { property: 'og:description', content: description },
     { property: 'og:url', content: url },
     ...SITE_WIDE_META_BASE,
-    ...DEFAULT_OG_IMAGE_META,
+    ...entityImageMeta(data.photoUrl),
     { 'script:ld+json': consts.personJsonLd(data, url) },
   ];
 };

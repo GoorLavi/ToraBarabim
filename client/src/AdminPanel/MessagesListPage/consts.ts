@@ -17,6 +17,7 @@ export const FILTER_LABELS: Record<VisitorMessageStatusFilter, string> = {
 export const TYPE_LABELS: Record<VisitorMessageType, string> = {
   'rabbi-request': 'בקשה להוספת רב או רבנית',
   volunteer: 'התנדבות',
+  'report-mistake': 'דיווח על טעות',
 };
 
 export const LOADING_MESSAGE = 'טוענים הודעות...';

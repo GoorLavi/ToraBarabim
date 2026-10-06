@@ -10,3 +10,5 @@ export const POSTER_HEIGHT_DESKTOP = '347px';
 // spec, "Name block gaps are 6, not 4"), neither of which is a spacing
 // token (the scale steps 4, 8, 12...).
 export const NAME_BLOCK_GAP_DESKTOP = '6px';
+
+export const shareText = (rabbiName: string): string => `השיעורים של ${rabbiName}: מתי ואיפה`;

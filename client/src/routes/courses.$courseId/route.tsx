@@ -11,7 +11,7 @@ import { coursePath } from '~/helpers';
 
 import { SITE_ORIGIN } from '../../../consts';
 import { PUBLIC_CACHE_HEADERS, UNCACHEABLE_ERROR_HEADERS } from '../consts';
-import { SITE_WIDE_META_BASE } from '../meta';
+import { entityImageMeta, SITE_WIDE_META_BASE } from '../meta';
 import * as consts from './consts';
 import { loadCourseDetail } from './course-detail.server';
 
@@ -51,10 +51,9 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     { property: 'og:description', content: description },
     { property: 'og:url', content: url },
     ...SITE_WIDE_META_BASE,
-    // Unconditional, unlike the place page's own og:image: a course's cover
-    // is required at creation (server: `cover_key NOT NULL`), never absent
-    // the way a place's photo can be.
-    { property: 'og:image', content: data.coverUrl },
+    // A course's cover is required at creation (server: `cover_key NOT NULL`),
+    // so this always takes the image branch.
+    ...entityImageMeta(data.coverUrl),
     { 'script:ld+json': consts.courseJsonLd(data, url) },
     // Registration closed, by the calendar, by hand, or marked full, is
     // permanent (plan 1.7): the page stays reachable by direct link, but is

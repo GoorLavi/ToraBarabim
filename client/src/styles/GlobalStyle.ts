@@ -38,6 +38,14 @@ export const GlobalStyle = createGlobalStyle(
   }
 
   html {
+    /* An installed app has no browser pull-to-refresh and no bounce of its
+       own to keep: switching the overscroll off here is what lets the pull
+       to refresh (PullToRefresh) work with passive touch listeners, since the
+       page never moves under the indicator. */
+    @media (display-mode: standalone) {
+      overscroll-behavior-y: none;
+    }
+
     /* 64 matches PinnedHeaderBar's own height below lg, 80 matches the
        sticky header's height at lg and up, so a focused field or an
        anchor never lands under either bar. */

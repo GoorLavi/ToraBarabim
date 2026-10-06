@@ -21,6 +21,7 @@ import type { Preview } from '@storybook/react-vite';
 import { focusManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
+import { sb } from 'storybook/test';
 import { INITIAL_VIEWPORTS } from 'storybook/viewport';
 import { MemoryRouter } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
@@ -29,6 +30,12 @@ import { GlobalStyle } from '../src/styles/GlobalStyle';
 import { ARGAMAN_VE_ZAHAV_THEME } from '../src/theme/themes';
 import { BREAKPOINTS } from '../src/theme/tokens';
 import { installApiMocks } from './apiMocks';
+
+// An ESM namespace is read-only, so a story cannot `spyOn` an export of the
+// analytics module. `spy: true` swaps each export for a spy that still calls
+// through to the real function, so a story asserts on `trackEvent` calls and
+// no other story's behavior changes.
+sb.mock(import('../src/analytics/mixpanel.ts'), { spy: true });
 
 // A sheet portals into `document.body`, outside the preview's own `dir="rtl"`
 // wrapper below, so it rendered left to right in Storybook until this line:

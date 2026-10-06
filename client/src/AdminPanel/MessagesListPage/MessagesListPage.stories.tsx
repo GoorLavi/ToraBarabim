@@ -1,4 +1,4 @@
-import type { AdminVisitorMessage, UpdateVisitorMessageRequest, VisitorMessageListResponse } from '@torabarabim/common';
+import type { AdminVisitorMessage, HelpRequestType, UpdateVisitorMessageRequest, VisitorMessageListResponse } from '@torabarabim/common';
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
 import { useEffect } from 'react';
 import type { ReactNode } from 'react';
@@ -17,7 +17,9 @@ import * as noteConsts from './components/MessageCard/components/HandlingNote/co
 const LONG_MESSAGE = `${'שלום רב, אני כותב כדי להמליץ על רב שמוסר שיעורים בעיר שלנו כבר שנים רבות. '.repeat(13)}`.trim().slice(0, 1000);
 const UNBROKEN_NAME = 'א'.repeat(80);
 
-const unhandled = (overrides: Partial<Extract<AdminVisitorMessage, { status: 'unhandled' }>>): AdminVisitorMessage => ({
+type HelpRequestMessage = Extract<AdminVisitorMessage, { type: HelpRequestType }>;
+
+const unhandled = (overrides: Partial<Extract<HelpRequestMessage, { status: 'unhandled' }>>): AdminVisitorMessage => ({
   id: 'message-1',
   type: 'rabbi-request',
   name: 'דוד כהן',
@@ -29,7 +31,7 @@ const unhandled = (overrides: Partial<Extract<AdminVisitorMessage, { status: 'un
   ...overrides,
 });
 
-const handled = (overrides: Partial<Extract<AdminVisitorMessage, { status: 'handled' }>>): AdminVisitorMessage => ({
+const handled = (overrides: Partial<Extract<HelpRequestMessage, { status: 'handled' }>>): AdminVisitorMessage => ({
   id: 'message-handled',
   type: 'volunteer',
   name: 'רחל אברמוביץ',
@@ -41,6 +43,30 @@ const handled = (overrides: Partial<Extract<AdminVisitorMessage, { status: 'hand
   handledAt: '2026-09-29T09:00:00.000Z',
   ...overrides,
 });
+
+const lessonReport: AdminVisitorMessage = {
+  id: 'report-lesson',
+  type: 'report-mistake',
+  subject: { kind: 'lesson', lessonId: 'lesson-1', date: '2026-10-13' },
+  name: 'מיכל לוי',
+  phone: '0523334455',
+  message: 'השיעור עבר לשעה 19:30 ולא 20:30 כפי שכתוב באתר.',
+  createdAt: '2026-10-02T08:10:00.000Z',
+  handlingNote: null,
+  status: 'unhandled',
+};
+
+const placeReport: AdminVisitorMessage = {
+  id: 'report-place',
+  type: 'report-mistake',
+  subject: { kind: 'place', placeId: 'place-1' },
+  name: 'אורי שפירא',
+  phone: '0505556677',
+  message: 'הכתובת של בית הכנסת לא נכונה, הוא עבר לרחוב הרצל.',
+  createdAt: '2026-10-02T09:45:00.000Z',
+  handlingNote: null,
+  status: 'unhandled',
+};
 
 const LONG_NOTE = 'שוחחנו עם הגבאי בטלפון.\nהרב מוסר שלושה שיעורים בשבוע, והוא ישלח לנו את הזמנים.\nנוספו שני השיעורים הראשונים, השלישי ממתין לאישור.';
 
@@ -221,6 +247,29 @@ export const Populated: Story = {
     const longCard = cards[2];
     if (!longCard) throw new globalThis.Error('MessagesListPage story: the long-content card is missing');
     await expect(longCard.scrollWidth).toBeLessThanOrEqual(longCard.clientWidth);
+  },
+};
+
+// A report names what it is about and links to it: the lesson by id and date,
+// the place by id alone.
+export const ReportCards: Story = {
+  parameters: { apiMocks: { handlers: handlersFor([lessonReport, placeReport]) } },
+  play: async ({ canvasElement }) => {
+    const [lessonCard, placeCard] = await findCards(canvasElement);
+    if (!lessonCard || !placeCard) throw new globalThis.Error('MessagesListPage story: the two report cards are missing');
+
+    await expect(within(lessonCard).getByText(consts.TYPE_LABELS['report-mistake'])).toBeInTheDocument();
+    await expect(within(lessonCard).getByRole('link', { name: cardConsts.SUBJECT_LESSON_LINK_LABEL })).toHaveAttribute('href', '/lesson/lesson-1/2026-10-13');
+    await expect(within(placeCard).getByRole('link', { name: cardConsts.SUBJECT_PLACE_LINK_LABEL })).toHaveAttribute('href', '/places/place-1');
+  },
+};
+
+// A help request carries no subject, so no card of that kind has the link.
+export const HelpRequestHasNoSubjectLink: Story = {
+  play: async ({ canvasElement }) => {
+    await findCards(canvasElement);
+    await expect(within(canvasElement).queryByRole('link', { name: cardConsts.SUBJECT_LESSON_LINK_LABEL })).toBeNull();
+    await expect(within(canvasElement).queryByRole('link', { name: cardConsts.SUBJECT_PLACE_LINK_LABEL })).toBeNull();
   },
 };
 

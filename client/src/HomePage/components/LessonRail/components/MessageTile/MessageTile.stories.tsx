@@ -1,4 +1,4 @@
-import type { VisitorMessageType } from '@torabarabim/common';
+import type { HelpRequestType } from '@torabarabim/common';
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
@@ -25,7 +25,7 @@ const meta: Meta<typeof MessageTile> = {
 export default meta;
 type Story = StoryObj<typeof MessageTile>;
 
-const pressStory = (kind: VisitorMessageType, tileWidth: keyof typeof WIDTH_BY_NAME): Story => ({
+const pressStory = (kind: HelpRequestType, tileWidth: keyof typeof WIDTH_BY_NAME): Story => ({
   args: { kind },
   parameters: { tileWidth },
   play: async ({ canvasElement, args }) => {

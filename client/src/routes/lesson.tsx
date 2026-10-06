@@ -22,7 +22,7 @@ import {
   loadVenuePhoto,
   resolveAreaPreviewMeta,
 } from './lesson.server';
-import { DEFAULT_OG_IMAGE_META, SITE_WIDE_META_BASE } from './meta';
+import { entityImageMeta, SITE_WIDE_META_BASE } from './meta';
 
 interface LessonRouteData {
   occurrence: LessonOccurrenceDetail;
@@ -85,7 +85,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     { property: 'og:description', content: description },
     { property: 'og:url', content: url },
     ...SITE_WIDE_META_BASE,
-    ...DEFAULT_OG_IMAGE_META,
+    ...entityImageMeta(teachingRabbi.photoUrl),
     ...(hasTakenPlace
       ? [{ name: 'robots', content: 'noindex' }]
       : [{ 'script:ld+json': consts.lessonEventJsonLd(occurrence, teachingRabbi, venuePhotoUrl) }]),

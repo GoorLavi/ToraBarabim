@@ -21,6 +21,8 @@ export const toLessonOccurrence = (record: ResolvedLessonOccurrence): LessonOccu
 export const toLessonOccurrenceDetail = (record: ResolvedLessonOccurrenceDetail): LessonOccurrenceDetail => ({
   ...toLessonOccurrence(record),
   timing: record.timing,
+  schedule: record.schedule,
+  calendarOccurrence: record.calendarOccurrence ? toLessonOccurrence(record.calendarOccurrence) : null,
 });
 
 export const toLessonSearchResponse = (result: LessonSearchResult): LessonSearchResponse => ({

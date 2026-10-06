@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { appSurfaceFor, isAutomatedBrowser, posterSourceFrom } from './helpers';
+import { appSurfaceFor, isAutomatedBrowser, launchModeFrom, posterSourceFrom } from './helpers';
 
 describe('posterSourceFrom', () => {
   it('maps the recruiting poster QR value to listers', () => {
@@ -68,5 +68,27 @@ describe('appSurfaceFor', () => {
 
   it('keeps a path that merely starts with the word login public', () => {
     expect(appSurfaceFor('/loginx')).toBe('public');
+  });
+});
+
+describe('launchModeFrom', () => {
+  it('reports standalone whenever the display mode is standalone', () => {
+    expect(launchModeFrom('', true)).toBe('standalone');
+  });
+
+  it('reports standalone even when the landing URL is the start URL', () => {
+    expect(launchModeFrom('?source=pwa', true)).toBe('standalone');
+  });
+
+  it('reports pwaStartUrl for the start URL opened outside a standalone window', () => {
+    expect(launchModeFrom('?city=jerusalem&source=pwa', false)).toBe('pwaStartUrl');
+  });
+
+  it('reports browser for an ordinary visit', () => {
+    expect(launchModeFrom('', false)).toBe('browser');
+  });
+
+  it('reports browser for a source value that is not the start URL marker', () => {
+    expect(launchModeFrom('?source=newsletter', false)).toBe('browser');
   });
 });

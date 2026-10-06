@@ -8,13 +8,14 @@ import { CourseRail } from '~/components/CourseRail/CourseRail';
 import { DayGroup } from '~/components/DayGroup/DayGroup';
 import { DayGroupSkeleton } from '~/components/DayGroupSkeleton/DayGroupSkeleton';
 import { QuietButton } from '~/components/QuietButton/QuietButton';
+import { ReportMistake } from '~/components/ReportMistake/ReportMistake';
 import { StateCard } from '~/components/StateCard/StateCard';
 import { dayGroupHeading, groupByDay } from '~/helpers';
 
 import { PlaceEmptyLessons } from './components/PlaceEmptyLessons/PlaceEmptyLessons';
 import { PlaceHero } from './components/PlaceHero/PlaceHero';
 import * as consts from './consts';
-import { placeErrorCopy } from './helpers';
+import { placeAddressLine, placeErrorCopy } from './helpers';
 import type { PlacePageProps } from './models';
 import * as styles from './styles';
 import { usePlaceDetail } from './usePlaceDetail';
@@ -149,6 +150,8 @@ export const PlacePage = styled(({ className }: PlacePageProps) => {
               )}
             </>
           )}
+
+          <ReportMistake {...{ subject: { kind: 'place', placeId: place.id }, contextLines: [place.name, placeAddressLine(place)] }} />
         </>
       )}
     </main>

@@ -5,12 +5,14 @@ import type {
   CloseReason,
   DedicationHonorific,
   DedicationType,
+  HelpRequestType,
   HonoredGender,
   LessonAudience,
   LessonProvenance,
   LessonTopic,
   RabbiHonorific,
   RabbiProminence,
+  VisitorMessageSubject,
   VisitorMessageType,
 } from '@torabarabim/common';
 import { pgEnum } from 'drizzle-orm/pg-core';
@@ -76,7 +78,14 @@ export const DEDICATION_TYPES = ['memorial', 'healing', 'success'] as const sati
 
 export const DEDICATION_HONORIFICS = ['zl', 'ah', 'hyd'] as const satisfies readonly DedicationHonorific[];
 
-export const VISITOR_MESSAGE_TYPES = ['rabbi-request', 'volunteer'] as const satisfies readonly VisitorMessageType[];
+export const VISITOR_MESSAGE_TYPES = ['rabbi-request', 'volunteer', 'report-mistake'] as const satisfies readonly VisitorMessageType[];
+
+// The types the home tiles offer, for the create schema's help arm.
+export const HELP_REQUEST_TYPES = ['rabbi-request', 'volunteer'] as const satisfies readonly HelpRequestType[];
+
+// Not a Postgres enum, the `CLOSE_REASONS` pattern: the tuple is read by the
+// `visitor_messages_subject_shape` CHECK, so its literal list cannot drift.
+export const VISITOR_MESSAGE_SUBJECT_KINDS = ['lesson', 'place'] as const satisfies readonly VisitorMessageSubject['kind'][];
 
 export const HONORED_GENDERS = ['male', 'female'] as const satisfies readonly HonoredGender[];
 
@@ -108,12 +117,26 @@ const rabbiHonorificExhaustivenessCheck: Record<RabbiHonorific, true> = {
 };
 void rabbiHonorificExhaustivenessCheck;
 
-// Same mechanism again, for the visitor message type.
+// Same mechanism again, for the visitor message type, the help request type
+// and the subject kind.
 const visitorMessageTypeExhaustivenessCheck: Record<VisitorMessageType, true> = {
   'rabbi-request': true,
   volunteer: true,
+  'report-mistake': true,
 };
 void visitorMessageTypeExhaustivenessCheck;
+
+const helpRequestTypeExhaustivenessCheck: Record<HelpRequestType, true> = {
+  'rabbi-request': true,
+  volunteer: true,
+};
+void helpRequestTypeExhaustivenessCheck;
+
+const visitorMessageSubjectKindExhaustivenessCheck: Record<VisitorMessageSubject['kind'], true> = {
+  lesson: true,
+  place: true,
+};
+void visitorMessageSubjectKindExhaustivenessCheck;
 
 // Same mechanism again, for the three dedication enums.
 const dedicationTypeExhaustivenessCheck: Record<DedicationType, true> = {

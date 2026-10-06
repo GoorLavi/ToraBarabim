@@ -65,6 +65,41 @@ export const ResponsiveSheet = css(
     }
   }
 
+  /* Non-modal: no scrim and no full-screen layer, so the page behind stays
+     live. The layer is only as tall as the panel, pinned to the bottom
+     edge on a phone and to the inline-end corner from md up. The safe-area
+     inset keeps the buttons clear of the home indicator. */
+  &.nonModal {
+    inset: auto;
+    inset-inline: 0;
+    inset-block-end: 0;
+    z-index: ${theme.zIndex.floatingSheet};
+    background: none;
+    animation: none;
+
+    @media (min-width: ${theme.breakpoints.md}) {
+      inset-inline-start: auto;
+      inset-inline-end: ${theme.spacing.xl};
+      inset-block-end: ${theme.spacing.xl};
+      padding: 0;
+    }
+
+    > .panel {
+      max-inline-size: 100%;
+      gap: ${theme.spacing.md};
+      padding: ${theme.spacing.lg};
+      padding-block-end: calc(${theme.spacing.lg} + env(safe-area-inset-bottom, 0px));
+      border: 1px solid ${theme.colors.border};
+      border-block-end: none;
+
+      @media (min-width: ${theme.breakpoints.md}) {
+        inline-size: 400px;
+        padding-block-end: ${theme.spacing.lg};
+        border-block-end: 1px solid ${theme.colors.border};
+      }
+    }
+  }
+
   @keyframes responsiveSheetScrimIn {
     from { opacity: 0; }
     to { opacity: 1; }

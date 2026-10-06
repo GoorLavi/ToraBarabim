@@ -7,6 +7,8 @@ import { courseFixture } from '~/courseFixture';
 import { rabbiFixture } from '~/rabbiFixture';
 
 import { errorResolver, http, jsonResolver, loadingResolver, queryOf, respondWithJson } from '../../.storybook/apiMocks';
+import { SHARE_LABEL } from '~/components/ShareButton/consts';
+
 import { CANCELLED_TAG_LABEL } from './components/LessonRow/consts';
 import { RabbiPage } from './RabbiPage';
 
@@ -39,6 +41,11 @@ const lesson = (overrides: Partial<LessonOccurrence>): LessonOccurrence => ({
   venue: { kind: 'address', name: 'בית הכנסת המרכזי', street: 'רחוב ויצמן 45', city: 'חיפה', citySlug: 'חיפה', area: 'haifa' },
   ...overrides,
 });
+
+// The hero ends with the plum share button, whatever the rabbi has or lacks.
+const expectShareInHero = async (canvasElement: HTMLElement): Promise<void> => {
+  await expect(await within(canvasElement).findByRole('button', { name: SHARE_LABEL })).toBeVisible();
+};
 
 const rabbiHandler = (detail: RabbiDetailResponse) => http.get('/v1/rabbis/:rabbiId', jsonResolver(detail));
 
@@ -120,6 +127,7 @@ export const Populated: Story = {
       },
     },
   },
+  play: ({ canvasElement }) => expectShareInHero(canvasElement),
 };
 
 // A cancelled date stays in the list with its start time struck.
@@ -146,7 +154,9 @@ export const CancelledLesson: Story = {
 export const NoPhoto: Story = {
   decorators: [withRoute('story-nophoto')],
   parameters: { apiMocks: { handlers: { rabbi: rabbiHandler(rabbiDetail({ id: 'story-nophoto', photoUrl: undefined, title: undefined })) } } },
+  play: ({ canvasElement }) => expectShareInHero(canvasElement),
 };
+
 export const VeryLongName: Story = {
   decorators: [withRoute('story-longname')],
   parameters: {
@@ -165,6 +175,7 @@ export const VeryLongName: Story = {
       },
     },
   },
+  play: ({ canvasElement }) => expectShareInHero(canvasElement),
 };
 export const EmptyWidenedToCountry: Story = {
   decorators: [withRoute('story-empty')],

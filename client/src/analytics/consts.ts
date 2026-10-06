@@ -34,6 +34,11 @@ export const MIXPANEL_EVENTS = {
   posterScan: 'Poster Scan',
   helpTileClick: 'Help Tile Click',
   visitorMessageSent: 'Visitor Message Sent',
+  shareClick: 'Share Click',
+  calendarAddClick: 'Calendar Add Click',
+  installCardShown: 'Install Card Shown',
+  installCardDismissed: 'Install Card Dismissed',
+  installAccepted: 'Install Accepted',
 } as const;
 
 // A `LessonCard` can sit in any of these lists; `homeRail` is the only one
@@ -89,6 +94,9 @@ export type RetrySurface =
   | 'placesPage'
   | 'coursePage';
 
+// Where a `ShareButton` sits: the three detail pages that carry one.
+export type ShareSurface = 'lessonPage' | 'rabbiPage' | 'placePage';
+
 export type FilterDateSource = 'chip' | 'calendar';
 export type FilterCitySource = 'headerPicker' | 'homeCityGrid';
 export type SeeAllTarget = 'rabbis' | 'cities' | 'lessons';
@@ -100,6 +108,23 @@ export type RabbiClickSurface = 'homeRabbiRow' | 'rabbisPage' | 'cityPage' | 'le
 export type NavigationProvider = 'waze' | 'googleMaps';
 export type AppSurface = 'public' | 'rabbiPanel' | 'placePanel' | 'adminPanel' | 'panelLogin';
 export type Viewport = 'mobile' | 'desktop';
+
+// How a visitor can add the site to their home screen, decided by what the
+// browser can do first and by who it is second (InstallPrompt/helpers.ts).
+// `chromiumPrompt` is the deferred native prompt; the iOS paths are
+// share-menu instructions (Safari and every other iOS browser put the share
+// button in different places); `androidGeneric` and `inAppBrowser` are
+// instructions reachable from the footer only.
+export type InstallPlatformPath = 'chromiumPrompt' | 'iosSafari' | 'iosOtherBrowser' | 'androidGeneric' | 'inAppBrowser';
+
+// What opened the install flow: the automatic card, or the footer link.
+export type InstallTrigger = 'auto' | 'footer';
+
+// `pwaStartUrl` is a landing on the manifest's start_url (`?source=pwa`)
+// that is not in a standalone window, such as an installed shortcut that
+// opened in a browser tab. It is kept apart from `standalone` so the two
+// are never counted as the same thing.
+export type LaunchMode = 'standalone' | 'pwaStartUrl' | 'browser';
 
 // Caps how long a page can hold events fired before the dynamic
 // `mixpanel-browser` import resolves (or before an ad blocker, decision

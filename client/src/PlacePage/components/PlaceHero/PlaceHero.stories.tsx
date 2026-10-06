@@ -1,5 +1,8 @@
 import type { Place } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { expect, within } from 'storybook/test';
+
+import { SHARE_LABEL } from '~/components/ShareButton/consts';
 
 import { placeholderPhoto } from '~/storyMocks';
 
@@ -30,14 +33,35 @@ const meta: Meta<typeof PlaceHero> = {
 export default meta;
 type Story = StoryObj<typeof PlaceHero>;
 
+// The plum share button is the card's last item: after the navigation row
+// when there is one, straight after the meta line when there is not.
+const expectShareLast = async (canvasElement: HTMLElement): Promise<void> => {
+  const share = within(canvasElement).getByRole('button', { name: SHARE_LABEL });
+  await expect(share).toBeVisible();
+  const content = canvasElement.querySelector('.content');
+  await expect(content?.lastElementChild).toContainElement(share);
+};
+
 export const WithPhoto: Story = {
   args: { place: place({ photoUrl: PLACEHOLDER_PHOTO }), lessonCount: 3 },
+  play: ({ canvasElement }) => expectShareLast(canvasElement),
+};
+
+// A street the map apps cannot use hides the navigation row; the share
+// button still closes the card.
+export const NoNavigationRow: Story = {
+  args: { place: place({ street: '' }), lessonCount: 3 },
+  play: async ({ canvasElement }) => {
+    await expect(canvasElement.querySelector('.navRow')).toBeNull();
+    await expectShareLast(canvasElement);
+  },
 };
 
 // The card's structural "no data yet" case: with no photo the band does not
 // exist at all, no placeholder and no reserved space (build brief).
 export const NoPhoto: Story = {
   args: { place: place({}), lessonCount: 3 },
+  play: ({ canvasElement }) => expectShareLast(canvasElement),
 };
 
 export const WithFloor: Story = {
@@ -64,4 +88,5 @@ export const LongName: Story = {
     }),
     lessonCount: 12,
   },
+  play: ({ canvasElement }) => expectShareLast(canvasElement),
 };
