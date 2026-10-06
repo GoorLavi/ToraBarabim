@@ -13,8 +13,7 @@ export const SITE_ORIGIN = 'https://torahbarabim.com';
 // `client/src/AdminPanel/consts.ts`.
 export const ADMIN_MESSAGES_PATH = '/admin/messages';
 
-// Hand-mirrored from `lessonPath` and `placePath` in `client/src/helpers.ts`.
-// The place path omits the slug: `/places/:id` redirects to the full one.
+// Hand-mirrored from `lessonPath` and `placeIdPath` in `client/src/helpers.ts`.
 export const lessonSubjectPath = (lessonId: string, date: string): string =>
   `/lesson/${encodeURIComponent(lessonId)}/${encodeURIComponent(date)}`;
 export const placeSubjectPath = (placeId: string): string => `/places/${encodeURIComponent(placeId)}`;

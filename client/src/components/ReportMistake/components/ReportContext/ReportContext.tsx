@@ -16,11 +16,8 @@ export const ReportContext = styled(({ className, label, lines }: ReportContextP
           {subject}
         </p>
       )}
-      {details.map((line, index) => (
-        // The details are a short, fixed-order list of strings derived from
-        // the page, with no ids and never reordered, so the position is the
-        // only identity they have.
-        <p key={index} className="detail" dir="auto">
+      {details.map((line) => (
+        <p key={line} className="detail" dir="auto">
           {line}
         </p>
       ))}
