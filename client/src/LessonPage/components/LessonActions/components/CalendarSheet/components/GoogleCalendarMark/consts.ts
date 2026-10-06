@@ -1,7 +1,5 @@
 // Google Calendar's mark, the exact export of the Figma component on
-// `99 Components` (510:1808). The colors are literals on purpose, the same
-// exception as the navigation links' Waze and Google Maps marks (0027, 0060):
-// a brand mark never reads the theme.
+// `99 Components` (510:1808).
 export const GOOGLE_CALENDAR_MARK_VIEW_BOX = '0 0 30 32';
 
 export const GOOGLE_CALENDAR_MARK_BACK_PAGE_PATH = 'M2.44031 5.59453C2.44031 2.49448 4.97109 -0.0187378 8.0932 -0.0187378H21.9116C25.0336 -0.0187378 27.5645 2.49448 27.5645 5.59453V11.5195C27.5645 14.6196 25.0336 17.1328 21.9116 17.1328H8.0932C4.97109 17.1328 2.44031 14.6196 2.44031 11.5195V5.59453Z';

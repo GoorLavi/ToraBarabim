@@ -13,6 +13,9 @@ export const GoogleCalendarMark = ({ className }: GoogleCalendarMarkProps) => {
   const url = (name: string): string => `url(#${id(name)})`;
 
   return (
+    // The colors below are literals on purpose, the same exception as the
+    // navigation links' Waze and Google Maps marks (0027, 0060): a brand mark
+    // never reads the theme.
     <svg className={className} viewBox={consts.GOOGLE_CALENDAR_MARK_VIEW_BOX} fill="none" aria-hidden="true">
       <g clipPath={url('clip')}>
         <path d={consts.GOOGLE_CALENDAR_MARK_BACK_PAGE_PATH} fill="#BBE2FF" />

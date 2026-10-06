@@ -109,8 +109,8 @@ const NARROW_PHONE = {
   parameters: { viewport: { options: { narrow: { name: 'Narrow 320', styles: { width: '320px', height: '100%' }, type: 'mobile' } } } },
 } as const;
 
-const LONGEST_DATE = 'יום רביעי, 30 בספטמבר, בשעה 06:00';
-const LONGEST_DATE_PHRASES = ['30 בספטמבר', 'בשעה 06:00'];
+const LONGEST_DATE = occurrenceWhenLabel({ date: '2026-09-30', startTime: '06:00' });
+const LONGEST_DATE_PHRASES = ['30\u00A0בספטמבר', 'בשעה\u00A006:00'];
 
 // The longest date the site can phrase, on the narrowest phone: it wraps
 // between its phrases, never inside one, and never overflows its row.
