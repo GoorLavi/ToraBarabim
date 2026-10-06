@@ -32,13 +32,15 @@ export const MANIFEST_ICONS: readonly ManifestIcon[] = [
 
 // Portrait iPhones only: an installed site that rotates is rare, and every
 // entry costs one PNG in the repo and one link tag on every document. A device
-// with no exact match gets no splash image, only the manifest background, which
-// is the same plain argaman field. Entries are the iPhones iOS 17 and later
-// still runs, newest first.
+// with no exact match gets no splash image. Whether iOS then falls back to the
+// manifest background or shows a white launch screen is unverified; it has
+// historically shown white. Entries are the iPhones iOS 17 and later still
+// runs, newest first.
 export const SPLASH_SCREENS: readonly SplashScreen[] = [
   { width: 440, height: 956, pixelRatio: 3 },
   { width: 430, height: 932, pixelRatio: 3 },
   { width: 428, height: 926, pixelRatio: 3 },
+  { width: 420, height: 912, pixelRatio: 3 },
   { width: 414, height: 896, pixelRatio: 3 },
   { width: 414, height: 896, pixelRatio: 2 },
   { width: 402, height: 874, pixelRatio: 3 },

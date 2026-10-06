@@ -50,8 +50,8 @@ const screenshotHtml = async (page: Page, width: number, height: number, html: s
   return page.screenshot({ omitBackground, animations: 'disabled' });
 };
 
-const iconHtml = (dataUri: string): string =>
-  `<style>html,body{margin:0;background:transparent}img{display:block;width:100vw;height:100vh}</style><img src="${dataUri}" />`;
+const iconHtml = (dataUri: string, fieldColor: string | undefined): string =>
+  `<style>html,body{margin:0;background:${fieldColor ?? 'transparent'}}img{display:block;width:100vw;height:100vh}</style><img src="${dataUri}" />`;
 
 // The master is scaled by device width / 430 and centred vertically on a field
 // of the same argaman, so a device taller than the master gets an invisible gap
@@ -69,8 +69,9 @@ const main = async (): Promise<void> => {
   try {
     const page = await browser.newPage({ deviceScaleFactor: 1 });
 
-    for (const { master, outputPath, size } of ICON_JOBS) {
-      writePng(outputPath, await screenshotHtml(page, size, size, iconHtml(readMasterAsDataUri(master)), true));
+    for (const { master, outputPath, size, fieldColor } of ICON_JOBS) {
+      const html = iconHtml(readMasterAsDataUri(master), fieldColor);
+      writePng(outputPath, await screenshotHtml(page, size, size, html, fieldColor === undefined));
     }
 
     const splashMaster = readMasterAsDataUri(SPLASH_MASTER);
