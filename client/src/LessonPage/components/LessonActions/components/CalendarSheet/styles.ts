@@ -10,13 +10,19 @@ export const CalendarSheet = css(
       gap: ${theme.spacing.md};
 
       > .heading {
+        flex: 1 1 auto;
+        min-inline-size: 0;
         color: ${theme.colors.text};
         font-weight: ${theme.typography.fontWeight.bold};
         font-size: ${theme.typography.sectionHeading.phone.fontSize};
         line-height: ${theme.typography.sectionHeading.phone.lineHeight};
+
+        &:focus {
+          outline: none;
+        }
       }
 
-      > .closeButton {
+      > .roundButton {
         flex-shrink: 0;
         display: flex;
         align-items: center;
@@ -37,6 +43,28 @@ export const CalendarSheet = css(
           inline-size: 24px;
           block-size: 24px;
         }
+      }
+    }
+
+    > .question {
+      color: ${theme.colors.textSecondary};
+      font-size: ${theme.typography.body.phone.fontSize};
+      line-height: ${theme.typography.body.phone.lineHeight};
+    }
+
+    > .chosenCalendar {
+      display: flex;
+      align-items: center;
+      gap: ${theme.spacing.sm};
+      color: ${theme.colors.textSecondary};
+      font-weight: ${theme.typography.fontWeight.semiBold};
+      font-size: ${theme.typography.body.phone.fontSize};
+      line-height: ${theme.typography.body.phone.lineHeight};
+
+      > svg {
+        flex: 0 0 auto;
+        inline-size: 20px;
+        block-size: 20px;
       }
     }
 
@@ -75,6 +103,20 @@ export const CalendarSheet = css(
         > svg {
           inline-size: 20px;
           block-size: 20px;
+        }
+      }
+
+      > .choiceMark {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        inline-size: 40px;
+        block-size: 40px;
+
+        > svg {
+          inline-size: 32px;
+          block-size: 32px;
         }
       }
 

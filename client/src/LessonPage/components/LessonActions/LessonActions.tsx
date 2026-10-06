@@ -9,8 +9,8 @@ import { ShareButton } from '~/components/ShareButton/ShareButton';
 import { lessonActionsOf, lessonShareText, lessonShareUrl, occurrenceWhenLabel } from '../../helpers';
 import { CalendarSheet } from './components/CalendarSheet/CalendarSheet';
 import * as consts from './consts';
-import { addOneEventLink, calendarPlatformOf, opensInNewTab, subscribeToLessonLink } from './helpers';
-import type { CalendarLink, LessonActionsProps } from './models';
+import { calendarLinkOf, calendarPlatformOf, effectiveCalendarOf, opensInNewTab } from './helpers';
+import type { CalendarChoice, CalendarLink, CalendarSheetState, LessonActionsProps } from './models';
 import * as styles from './styles';
 
 const openCalendarLink = (link: CalendarLink): void => {
@@ -25,34 +25,57 @@ const openCalendarLink = (link: CalendarLink): void => {
 // the occurrence on every render: the calendar needs a date to add, and the
 // share needs a pattern or a date to send.
 export const LessonActions = styled(({ className, occurrence }: LessonActionsProps) => {
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [sheet, setSheet] = useState<CalendarSheetState>({ step: 'closed' });
   const { calendarOccurrence } = occurrence;
   const { canShare, canAddToCalendar } = lessonActionsOf(occurrence);
 
   if (!canShare && !canAddToCalendar) return null;
 
-  const addOneEvent = (): void => {
+  const closeSheet = (): void => setSheet({ step: 'closed' });
+
+  const addOneEvent = (calendar: CalendarChoice): void => {
     if (!calendarOccurrence) return;
-    const link = addOneEventLink(calendarOccurrence, calendarPlatformOf(navigator.userAgent));
-    trackEvent(MIXPANEL_EVENTS.calendarAddClick, { kind: 'static', target: link.target });
-    setIsSheetOpen(false);
+    const platform = calendarPlatformOf(navigator.userAgent);
+    const link = calendarLinkOf({ calendar, platform, scope: 'one', occurrence: calendarOccurrence });
+    trackEvent(MIXPANEL_EVENTS.calendarAddClick, { kind: 'static', calendar: effectiveCalendarOf(calendar, platform), target: link.target });
+    closeSheet();
     openCalendarLink(link);
   };
 
-  const subscribe = (): void => {
-    const link = subscribeToLessonLink(occurrence.lessonId, calendarPlatformOf(navigator.userAgent));
-    trackEvent(MIXPANEL_EVENTS.calendarAddClick, { kind: 'subscribe', target: link.target });
-    setIsSheetOpen(false);
+  const subscribe = (calendar: CalendarChoice): void => {
+    const platform = calendarPlatformOf(navigator.userAgent);
+    const link = calendarLinkOf({ calendar, platform, scope: 'all', lessonId: occurrence.lessonId });
+    trackEvent(MIXPANEL_EVENTS.calendarAddClick, { kind: 'subscribe', calendar: effectiveCalendarOf(calendar, platform), target: link.target });
+    closeSheet();
     openCalendarLink(link);
   };
 
-  // A one-time lesson has only the one choice; a weekly one asks which.
+  // Android has no calendar to ask about: a one-time lesson is added at once,
+  // and a weekly one opens the sheet already at its second question.
+  // Everyone else is asked which calendar they use first.
   const handleCalendarClick = (): void => {
-    if (occurrence.schedule.kind === 'once') {
-      addOneEvent();
+    const isOnce = occurrence.schedule.kind === 'once';
+    if (calendarPlatformOf(navigator.userAgent) === 'android') {
+      if (isOnce) {
+        addOneEvent('google');
+        return;
+      }
+      trackEvent(MIXPANEL_EVENTS.calendarSheetOpen, { kind: 'weekly' });
+      setSheet({ step: 'scope', calendar: 'google', canGoBack: false });
       return;
     }
-    setIsSheetOpen(true);
+    trackEvent(MIXPANEL_EVENTS.calendarSheetOpen, { kind: isOnce ? 'once' : 'weekly' });
+    setSheet({ step: 'calendar' });
+  };
+
+  // A one-time lesson has only the one choice left after the calendar, so the
+  // tap adds it; a weekly one asks which.
+  const handleCalendarChosen = (calendar: CalendarChoice): void => {
+    if (occurrence.schedule.kind === 'once') {
+      addOneEvent(calendar);
+      return;
+    }
+    setSheet({ step: 'scope', calendar, canGoBack: true });
   };
 
   return (
@@ -74,8 +97,18 @@ export const LessonActions = styled(({ className, occurrence }: LessonActionsPro
         />
       )}
 
-      {isSheetOpen && calendarOccurrence && (
-        <CalendarSheet {...{ dateLabel: occurrenceWhenLabel(calendarOccurrence), onAddOneEvent: addOneEvent, onSubscribe: subscribe, onDismiss: () => setIsSheetOpen(false) }} />
+      {sheet.step !== 'closed' && calendarOccurrence && (
+        <CalendarSheet
+          {...{
+            dateLabel: occurrenceWhenLabel(calendarOccurrence),
+            step: sheet,
+            onChooseCalendar: handleCalendarChosen,
+            onAddOneEvent: () => sheet.step === 'scope' && addOneEvent(sheet.calendar),
+            onSubscribe: () => sheet.step === 'scope' && subscribe(sheet.calendar),
+            onBack: () => setSheet({ step: 'calendar' }),
+            onDismiss: closeSheet,
+          }}
+        />
       )}
     </div>
   );

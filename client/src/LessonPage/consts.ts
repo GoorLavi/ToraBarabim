@@ -68,6 +68,8 @@ export const RUNNING_TEXT_MAX_INLINE_SIZE = '640px';
 
 export const AT_TIME_PREFIX = 'בשעה';
 
+export const NO_BREAK_SPACE = '\u00A0';
+
 // A single Saturday is "כל שבת", never "כל יום שבת".
 export const SATURDAY: Weekday = 6;
 

@@ -36,6 +36,7 @@ export const MIXPANEL_EVENTS = {
   visitorMessageSent: 'Visitor Message Sent',
   shareClick: 'Share Click',
   calendarAddClick: 'Calendar Add Click',
+  calendarSheetOpen: 'Calendar Sheet Open',
   installCardShown: 'Install Card Shown',
   installCardDismissed: 'Install Card Dismissed',
   installAccepted: 'Install Accepted',
