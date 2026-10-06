@@ -32,4 +32,4 @@ export const ICON_JOBS: readonly IconJob[] = [
   { master: ICON_MASTER, outputPath: APPLE_TOUCH_ICON_PATH, size: TOUCH_ICON_SIZE, fieldColor: argamanVeZahavColors.primary },
 ];
 
-export const MASTER_MIME_TYPES: Record<string, string> = { '.svg': 'image/svg+xml', '.png': 'image/png' };
+export const MASTER_MIME_TYPES: Partial<Record<string, string>> = { '.svg': 'image/svg+xml', '.png': 'image/png' };

@@ -600,7 +600,7 @@ CloudFront serves them from there.
 
 | Path | What it is | Edge behavior | Headers set on the bucket object |
 |---|---|---|---|
-| `/sw.js` | the service worker, version stamped from a hash of the client bundle | `ServiceWorkerCachePolicy`, 60 seconds | `no-cache`, `text/javascript; charset=utf-8` |
+| `/sw.js` | the service worker, version stamped from a hash of the client bundle, the worker source and the offline page | `ServiceWorkerCachePolicy`, 60 seconds | `no-cache`, `text/javascript; charset=utf-8` |
 | `/manifest.webmanifest` | the app's name, colours and icons | `ServiceWorkerCachePolicy`, 60 seconds | `no-cache`, `application/manifest+json` |
 | `/pwa/*` | icons, iOS splash images, the offline page | `CACHING_OPTIMIZED` | `public, max-age=86400` |
 | `/apple-touch-icon.png` | the iOS home screen icon | `CACHING_OPTIMIZED` (unchanged) | `public, max-age=86400` |
