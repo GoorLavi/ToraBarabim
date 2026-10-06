@@ -1058,14 +1058,19 @@ describe('SSR rendering seam', () => {
 
     // Case 13. A shared link is the bare id plus `?s`, so WhatsApp carries no
     // percent-encoded slug. The 301 to the canonical path used to drop the
-    // query string, losing the share tag (and any utm tags) on arrival.
+    // query string, losing the share tag (and any utm tags) on arrival. By
+    // the time the loader reads it the query has been re-serialized, so `?s`
+    // comes back as `?s=` (seen in CI): the guarantee is the parameter, not
+    // the exact bytes.
     describe('a bare-id link keeps its query string through the canonical redirect', () => {
       test('/rabbis/<id>?s answers 301 to the canonical slug path plus ?s', async () => {
         const rabbi = await createRabbi('rav');
 
         const res = await calendarApp.inject({ method: 'GET', url: `/rabbis/${encodeURIComponent(rabbi.id)}?s` });
         assert.equal(res.statusCode, 301);
-        assert.equal(res.headers['location'], `/rabbis/${encodeURIComponent(rabbi.id)}/${encodeURIComponent(toSlug(rabbi.name) || rabbi.id)}?s`);
+        const location = new URL(String(res.headers['location']), SITE_ORIGIN);
+        assert.equal(location.pathname, `/rabbis/${encodeURIComponent(rabbi.id)}/${encodeURIComponent(toSlug(rabbi.name) || rabbi.id)}`);
+        assert.ok(location.searchParams.has('s'), `expected the share tag to survive, got ${location.search}`);
       });
 
       test('/places/<id>?s answers 301 to the canonical slug path plus ?s', async () => {
@@ -1076,7 +1081,9 @@ describe('SSR rendering seam', () => {
 
         const res = await calendarApp.inject({ method: 'GET', url: `/places/${encodeURIComponent(id)}?s` });
         assert.equal(res.statusCode, 301);
-        assert.equal(res.headers['location'], `/places/${encodeURIComponent(place.id)}/${encodeURIComponent(place.slug)}?s`);
+        const location = new URL(String(res.headers['location']), SITE_ORIGIN);
+        assert.equal(location.pathname, `/places/${encodeURIComponent(place.id)}/${encodeURIComponent(place.slug)}`);
+        assert.ok(location.searchParams.has('s'), `expected the share tag to survive, got ${location.search}`);
       });
     });
   });
