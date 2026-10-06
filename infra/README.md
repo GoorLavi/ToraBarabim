@@ -467,6 +467,8 @@ human needs to know to set it up once, approve a migration, and recover from a f
   asset filenames (0023), so they must already be sitting in the bucket before a server
   that names them goes live. Nothing is deleted from the bucket by this step, so the
   still-running previous server keeps resolving its own, older filenames throughout.
+  The worker, the manifest and the icons are uploaded by the same job with their own
+  headers and their own order, see "The installable site" below.
 - Build the server's `runtime` Docker image from that commit, push it to the same ECR
   repository `cdk deploy` already uses, register a new revision of the **already
   deployed** ECS task definition pointing at it, and update the running service, waiting
@@ -588,6 +590,84 @@ request (0023), so this is a different, and more coupled, picture than a static 
   before the deploy, and JavaScript already loaded in an open tab does not refetch it
   mid-session). Keep server API changes additive, the same "add before you remove"
   discipline the root rulebook already asks of a migration.
+
+## The installable site: worker, manifest, icons
+
+The site can be added to a phone's home screen. Four kinds of file make that work, and
+in production none of them is rendered by the container: `npm run build -w client`
+writes them into `client/build/client/`, the deploy puts them in the client bucket, and
+CloudFront serves them from there.
+
+| Path | What it is | Edge behavior | Headers set on the bucket object |
+|---|---|---|---|
+| `/sw.js` | the service worker, version stamped from a hash of the client bundle | `ServiceWorkerCachePolicy`, 60 seconds | `no-cache`, `text/javascript; charset=utf-8` |
+| `/manifest.webmanifest` | the app's name, colours and icons | `ServiceWorkerCachePolicy`, 60 seconds | `no-cache`, `application/manifest+json` |
+| `/pwa/*` | icons, iOS splash images, the offline page | `CACHING_OPTIMIZED` | `public, max-age=86400` |
+| `/apple-touch-icon.png` | the iOS home screen icon | `CACHING_OPTIMIZED` (unchanged) | none |
+
+The 60 second policy is the point of the two new behaviors. `CACHING_OPTIMIZED` would hold
+a fixed worker, or the kill switch below, away from every visitor for up to a day. A
+test in `test/site-stack.test.ts` fails if either path moves back to it or the policy's
+maximum rises above 60 seconds. The worker never stores a document, an API response or
+lesson data; it keeps the hashed assets and one static offline page.
+
+If these behaviors are not deployed yet, `/sw.js` and the others fall through to the
+default behavior and the container answers them with the same headers
+(`server/src/plugins/ssr.ts`), so nothing breaks: it is only slower, and it costs the
+container the requests.
+
+### Deploy order
+
+1. **Infrastructure first, by hand,** from the **primary checkout with this branch checked
+   out** (the one with the root `.env`; `cdk` reads it). Read the diff before applying it:
+
+   ```bash
+   npm run diff -w infra -- TorabarabimSite --profile torabarabim -c domain=torahbarabim.com
+   npm run deploy -w infra -- TorabarabimSite --profile torabarabim -c domain=torahbarabim.com
+   ```
+
+   The diff should show exactly one new cache policy (`ServiceWorkerCachePolicy`) and
+   three new behaviors on the distribution (`/sw.js`, `/manifest.webmanifest`, `/pwa/*`),
+   and no replaced or removed resource. Parameters keep their previous values; do not pass
+   them again. Until the merge below, these paths answer 403 from the bucket, which holds
+   nothing at them yet, and no browser asks for them yet.
+2. **Merge the pull request.** `deploy.yml` then does, in this order inside
+   `deploy-client`: sync the hashed assets and named files, sync `pwa/`, upload the
+   manifest, upload `sw.js`, invalidate `/*`. The order is load bearing: the worker
+   precaches the offline page and the manifest names the icons, so neither goes live
+   before what it refers to. `deploy-server` follows as before, and
+   `verify-install-files` reads the three headers back from the live site.
+3. **Never ship the worker or the manifest before the icons.** The pull request carries
+   the generated PNGs for that reason, and `server/test/ssr.test.ts` checks that every
+   icon in the manifest and every splash image in the document answers.
+
+### Kill switch
+
+A worker that misbehaves has to be removable by someone with only a terminal. The
+replacement, `client/pwa-source/sw-kill-switch.js`, deletes every cache, unregisters
+itself and reloads each open page. A browser re-checks `/sw.js` when a visitor navigates
+(the registration sets `updateViaCache: 'none'`), so the switch reaches active visitors
+within about a minute of the invalidation below, and everyone else on their next visit.
+
+**Emergency, no deploy.** Run from the repo root of any checkout of the branch, so the
+path to the source file resolves. `<ClientBucketName>` and `<DistributionId>` are outputs
+of `TorabarabimSite`.
+
+```bash
+aws s3 cp client/pwa-source/sw-kill-switch.js s3://<ClientBucketName>/sw.js \
+  --cache-control no-cache --content-type 'text/javascript; charset=utf-8' --profile torabarabim
+aws cloudfront create-invalidation --distribution-id <DistributionId> --paths /sw.js --profile torabarabim
+curl -s https://torahbarabim.com/sw.js | head -n 3   # must start with the kill switch's comment
+```
+
+**The next deploy overwrites this**, because `deploy-client` uploads the normal worker on
+every push to `main`. Make it durable straight away: set `SERVICE_WORKER_MODE` to
+`'killSwitch'` in `client/src/pwa/consts.ts` and merge. The build then emits the kill
+switch as `/sw.js` and `registerServiceWorker()` stops registering a new one. Do not
+merge anything else in between.
+
+**Turning the worker back on** is the same constant set back to `'active'` and a deploy:
+visitors who were unregistered register again on their next visit.
 
 ## Attaching the domain, done on 2026-09-13
 
