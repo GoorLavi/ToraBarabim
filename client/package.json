@@ -6,8 +6,9 @@
   "type": "module",
   "scripts": {
     "dev": "node --env-file=../.env ../node_modules/.bin/vite",
-    "build": "tsc --noEmit -p tsconfig.json && vite build",
-    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "build": "npm run typecheck && vite build",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p pwa-source/tsconfig.worker.json",
+    "pwa:rasterise": "node pwa-source/rasterise.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "test": "vitest run"
