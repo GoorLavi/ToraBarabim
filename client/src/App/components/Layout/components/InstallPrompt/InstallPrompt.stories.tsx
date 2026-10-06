@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, spyOn, userEvent, waitFor, within } from 'storybook/test';
+import type { Mock } from 'storybook/test';
 
 import { ContactBar } from '~/CoursePage/components/ContactBar/ContactBar';
 import { atFrameSize } from '~/storyMocks';
@@ -207,13 +208,10 @@ export const InAppBrowserCopyFails: Story = {
 
 // The manual-copy block is for the failure only: a retry that works hides it.
 export const InAppBrowserCopyFailsThenWorks: Story = {
-  args: {
-    flow: open('footer', 'instructions', device({ path: 'inAppBrowser' })),
-    onCopyLink: fn()
-      .mockImplementationOnce(() => Promise.reject(new Error('clipboard blocked')))
-      .mockImplementation(() => Promise.resolve()),
-  },
-  play: async () => {
+  args: { flow: open('footer', 'instructions', device({ path: 'inAppBrowser' })) },
+  play: async ({ args }) => {
+    // The first press is refused, every later one (the meta's own default) works.
+    (args.onCopyLink as Mock).mockRejectedValueOnce(new Error('clipboard blocked'));
     const errorLog = spyOn(console, 'error').mockImplementation(() => {});
     try {
       const dialog = await body().findByRole('dialog', { name: PHONE_ARIA });
