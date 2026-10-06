@@ -17,8 +17,11 @@ export const PinnedHeaderBar = css(
   transform: translateY(-100%);
   transition: transform 160ms ease-out;
 
+  /* No transform at all once shown, not translateY(0): any transform makes
+     the bar the containing block for the fixed catcher inside it, clipping
+     it to the bar's own box instead of the viewport. */
   &.visible {
-    transform: translateY(0);
+    transform: none;
   }
 
   @media (min-width: ${theme.breakpoints.lg}) {

@@ -35,19 +35,7 @@ export const PinnedHeaderBar = styled(({ className, isVisible, ...fieldsProps }:
     wasExpandedRef.current = isExpanded;
   }, [isExpanded]);
 
-  // No scroll lock: scrolling the page closes the panel instead.
-  useEffect(() => {
-    if (!isExpanded) return;
-    const handleScroll = (): void => setIsExpanded(false);
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [isExpanded]);
-
-  // The bar disappearing (scrolled back above the threshold) always closes
-  // whatever panel it was showing, so the two states never disagree.
-  useEffect(() => {
-    if (!isVisible) setIsExpanded(false);
-  }, [isVisible]);
+  const closePanel = (): void => setIsExpanded(false);
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     if (event.key !== 'Escape') return;
@@ -102,7 +90,10 @@ export const PinnedHeaderBar = styled(({ className, isVisible, ...fieldsProps }:
   };
 
   return (
-    <div ref={rootRef} className={classNames(className, { visible: isVisible })}>
+    // Held shown while the panel is open: the page moves without the reader
+    // (the keyboard opening, the jump to the top after a search), and the
+    // bar following its scroll position would carry the open panel away.
+    <div ref={rootRef} className={classNames(className, { visible: isVisible || isExpanded })}>
       {!isExpanded && (
         <div className="collapsedBar">
           <div className="collapsedBarInner">
@@ -114,9 +105,24 @@ export const PinnedHeaderBar = styled(({ className, isVisible, ...fieldsProps }:
 
       {isExpanded && (
         <>
-          {/* Transparent: swallows the first outside tap so it only closes
-              the panel instead of also activating whatever is underneath. */}
-          <div className="catcher" aria-hidden="true" onClick={() => setIsExpanded(false)} />
+          {/* Transparent, covers the viewport: swallows the first outside tap
+              so it only closes the panel instead of also activating whatever
+              is underneath, and a drag or wheel on the page closes it too.
+              A scroll event never does, since the page also scrolls itself.
+              A drag is read as pointercancel, not touchmove: the browser fires
+              it only once it has taken the touch over for scrolling, while a
+              touchmove also fires on a slightly unsteady tap, and closing
+              there would remove the catcher before its click and let that
+              click land on the page. A sheet opened from the panel is
+              portalled to the body above this, so gestures in it never reach
+              the catcher. */}
+          <div
+            className="catcher"
+            aria-hidden="true"
+            onClick={closePanel}
+            onPointerCancel={closePanel}
+            onWheel={closePanel}
+          />
           <div
             className="expandedPanel"
             role="dialog"
