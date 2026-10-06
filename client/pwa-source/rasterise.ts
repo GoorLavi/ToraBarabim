@@ -20,13 +20,9 @@ const ICON_MASTER = 'icon.svg';
 // Full bleed with the mark inside the maskable safe zone. Also the source of
 // the touch icon, which iOS masks itself and so also wants a full-bleed square.
 const MASKABLE_ICON_MASTER = 'icon-maskable.svg';
-// The mark and wordmark on a transparent background; the argaman field behind
-// it is drawn here from the colour token.
+// The approved iOS splash frame, 430 x 932 points (iPhone Pro Max portrait),
+// background included. Each device gets it scaled to its own width.
 const SPLASH_MASTER = 'splash.svg';
-
-// TODO: tora-designer sets the real figure when the splash is approved. Until
-// then the composition is centred at this share of the screen width.
-const SPLASH_MASTER_WIDTH_SHARE = 0.4;
 
 const TOUCH_ICON_SIZE = 180;
 
@@ -81,11 +77,15 @@ const screenshotHtml = async (page: Page, width: number, height: number, html: s
 const iconHtml = (dataUri: string): string =>
   `<style>html,body{margin:0;background:transparent}img{display:block;width:100vw;height:100vh}</style><img src="${dataUri}" />`;
 
+// The master is scaled by device width / 430 and centred vertically on a field
+// of the same argaman, so a device taller than the master gets an invisible gap
+// and a shorter one loses an invisible band at the top and bottom. The field is
+// the colour token, which is also the master's own background.
 const splashHtml = (dataUri: string): string =>
   `<style>
-    html,body{margin:0;height:100%;background:${argamanVeZahavColors.primary}}
+    html,body{margin:0;height:100%;overflow:hidden;background:${argamanVeZahavColors.primary}}
     body{display:flex;align-items:center;justify-content:center}
-    img{width:${SPLASH_MASTER_WIDTH_SHARE * 100}vw;height:auto}
+    img{display:block;flex:none;width:100vw;height:auto}
   </style><img src="${dataUri}" />`;
 
 const main = async (): Promise<void> => {
