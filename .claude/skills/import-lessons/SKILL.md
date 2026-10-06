@@ -32,11 +32,21 @@ protection of hand-edited lessons, and deletion are never learned or bent.
    collection failed and why.
 2. **Plan:** `importer plan <file>`. The server returns the digest, the plan, the
    questions, the new automatic links, and the deletions that would be withheld.
-3. **Apply straight away:** `importer apply <file> --digest <digest>`. Adds, updates
+3. **Check every addition against the rabbi's live lessons first.** The server keys a
+   duplicate on rabbi + day + exact place name, so the same lesson under another
+   spelling ("בהכנ"ס "ספרא"" against "פסגת זאב בית הכנסת ספרא") goes in twice. For each
+   addition in the plan, read that rabbi's lessons with
+   `GET <IMPORT_API_BASE_URL>/v1/lessons?rabbiId=<id>&from=<date>&to=<date>` (the id from
+   `GET /v1/rabbis?q=<name>`) and look for one on the same day at the same start time.
+   If one exists, do not apply: add the spelling to the place-name table in
+   `collect-lessons/source-facts.md`, fix the row, and plan again. The 2026-09-22 and
+   2026-10-04 runs both let a duplicate in this way. This step becomes unnecessary once
+   the server matches on rabbi, day and start time.
+4. **Apply:** `importer apply <file> --digest <digest>`. Adds, updates
    and unblocked deletions go in; a first-time name with exactly one same-named rabbi is
    linked automatically; withheld deletions wait. Questions about names never block this.
    A `plan_changed` answer means the data moved: plan again and apply with the new digest.
-4. **Ask the owner, in one message**, each item with your proposed answer and why:
+5. **Ask the owner, in one message**, each item with your proposed answer and why:
    - a name on a site with two or more of our rabbis, or none: the site and its link,
      the rows' places and times, each candidate's title and cities (use
      `GET /rabbis` through the importer to show candidates);
@@ -46,11 +56,12 @@ protection of hand-edited lessons, and deletion are never learned or bent.
      audience or topic wording).
    If he does not answer, stop here: the rest of the week is already on the site, and the
    withheld deletions simply stay withheld.
-5. **Record only what he confirmed:** `importer decide '<decision json>'` per answer (link,
+6. **Record only what he confirmed.** A `new_rabbi` decision's `name` is the clean first name and surname: no "הרב", "רבי", "הגאון", "שליט"א" or any other title (the honorific is a separate field). The owner's rule, 2026-10-05.
+   Then: `importer decide '<decision json>'` per answer (link,
    ignore, new rabbi, or rule). Never record a guess.
-6. **Apply again** after his answers: plan, then apply with `--ack` for each withheld
+7. **Apply again** after his answers: plan, then apply with `--ack` for each withheld
    deletion he approved.
-7. **Summary, at most ten lines:** added, updated, deleted (by name), new automatic
+8. **Summary, at most ten lines:** added, updated, deleted (by name), new automatic
    links, withheld deletions, not imported and why, `needsReview` rows that were applied,
    rules learned, collection problems, and any question still open. The server returns a
    rabbi's stored name and honorific as separate fields; always write the honorific

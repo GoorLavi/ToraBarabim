@@ -1,24 +1,32 @@
-import type { Area, AudienceScope } from '@torabarabim/common';
+import type { Area, AudienceScope, RabbiHonorific } from '@torabarabim/common';
 import { and, eq, gte, inArray, lte } from 'drizzle-orm';
 
 import { db } from '../../db/client';
 import { cities, lessonExceptions, lessons, places, rabbis } from '../../db/schema';
-import { isLessonInScope, matchesAudienceFilter } from '../shared/audience-scope';
+import { audienceScopeOfRabbi, isLessonInScope, matchesAudienceFilter } from '../shared/audience-scope';
 import { rabbiNameMatcher } from '../shared/rabbi-name-match';
 import { toRabbiSummary as toRabbi } from '../shared/rabbi-summary';
-import { DEFAULT_PAGE } from '../shared/consts';
-import { selectAreaPreview } from './area-preview';
-import { AREA_PREVIEW_FETCH_SIZE, AREA_PREVIEW_LIMIT, DEFAULT_RANGE_DAYS, MAX_RANGE_DAYS } from './consts';
+import { MAX_ITEMS_PER_ROW } from '../shared/consts';
+import { DEFAULT_RANGE_DAYS, MAX_RANGE_DAYS, UPCOMING_OCCURRENCE_WINDOW_DAYS } from './consts';
 import { InvalidDateRangeError, LessonNotFoundError, LessonOccurrenceNotFoundError } from './errors';
 import { addDays, compareIsoDates, daysBetween, todayInIsrael } from './israel-time';
-import type { LessonSearchQuery, LessonSearchResult, ResolvedLessonOccurrence, ResolvedLessonSearchQuery } from './models';
-import { applyException, compareOccurrences, expandLesson, hasLeftPublicListsAt, resolveRecord, toExceptionDomain, toLessonDomain } from './occurrence';
+import { selectAreaPreview, selectRabbiUpcoming } from './lesson-rows';
+import type {
+  AppliedSearchFilters,
+  LessonSearchQuery,
+  LessonSearchResult,
+  OccurrenceQuery,
+  ResolvedLessonOccurrence,
+  ResolvedLessonOccurrenceDetail,
+  ResolvedOccurrenceQuery,
+} from './models';
+import { applyException, compareOccurrences, expandLesson, hasLeftPublicListsAt, occurrenceTimingAt, resolveRecord, toExceptionDomain, toLessonDomain } from './occurrence';
 
 // Hebrew has no case, but lower-casing also lets a stray Latin fragment (a
 // transliterated name) match; a plain substring, never a fuzzy or scored match.
 const includesQuery = (value: string, q: string): boolean => value.toLowerCase().includes(q.toLowerCase());
 
-const resolveRange = (query: LessonSearchQuery, now: Date): ResolvedLessonSearchQuery => {
+const resolveRange = (query: OccurrenceQuery, now: Date): ResolvedOccurrenceQuery => {
   const today = todayInIsrael(now);
   const from = query.from ?? today;
   const to = query.to ?? addDays(from, DEFAULT_RANGE_DAYS);
@@ -37,9 +45,17 @@ const resolveRange = (query: LessonSearchQuery, now: Date): ResolvedLessonSearch
   return { ...query, from, to };
 };
 
-// `now` is read once here, at the edge, and threaded through; nothing else
-// in this module reads the clock directly.
-export const search = async (rawQuery: LessonSearchQuery, now: Date): Promise<LessonSearchResult> => {
+export interface FoundOccurrences {
+  occurrences: ResolvedLessonOccurrence[];
+  appliedFilters: AppliedSearchFilters;
+}
+
+// Every occurrence the query matches, resolved and sorted, with no paging:
+// the one expansion path, shared by the public search (which pages it) and
+// the lesson page's rows (which pick from all of it, so a handful of daily
+// lessons can never push a later lesson out of a capped row). `now` is read
+// once at the edge and threaded through; nothing else here reads the clock.
+export const findOccurrences = async (rawQuery: OccurrenceQuery, now: Date): Promise<FoundOccurrences> => {
   const query = resolveRange(rawQuery, now);
 
   // Rabbis, cities and places are reference tables, loaded whole so that
@@ -73,7 +89,7 @@ export const search = async (rawQuery: LessonSearchQuery, now: Date): Promise<Le
     query.area !== undefined ? cityRows.filter((row) => row.area === query.area).map((row) => row.code) : undefined;
 
   if (eligibleCityCodes?.length === 0) {
-    return { items: [], page: query.page, pageSize: query.pageSize, total: 0, appliedFilters };
+    return { occurrences: [], appliedFilters };
   }
 
   // `q` searches the rabbi's name, the lesson's own venue name (its free
@@ -175,35 +191,58 @@ export const search = async (rawQuery: LessonSearchQuery, now: Date): Promise<Le
   const hasLeftPublicLists = hasLeftPublicListsAt(now);
   occurrences = occurrences.filter((occurrence) => !hasLeftPublicLists(occurrence));
 
-  occurrences = occurrences.sort(compareOccurrences);
+  const sorted = occurrences.sort(compareOccurrences);
 
-  const total = occurrences.length;
-  const start = (query.page - 1) * query.pageSize;
-  const items = occurrences
-    .slice(start, start + query.pageSize)
-    .map((occurrence) => resolveRecord(occurrence, rabbiById, cityByCode, placeById));
-
-  return { items, page: query.page, pageSize: query.pageSize, total, appliedFilters };
+  return {
+    occurrences: sorted.map((occurrence) => resolveRecord(occurrence, rabbiById, cityByCode, placeById)),
+    appliedFilters,
+  };
 };
 
-// The lesson page's area preview: other lessons in the same `Area` (the
-// region enum, never the lesson's own city), soonest first, excluding the
-// lesson the reader is already on. Builds a complete `LessonSearchQuery`
-// itself, leaving `from`/`to` undefined so `resolveRange` applies the
-// default window that `AREA_PREVIEW_FETCH_SIZE` is sized against.
+export const search = async (query: LessonSearchQuery, now: Date): Promise<LessonSearchResult> => {
+  const { occurrences, appliedFilters } = await findOccurrences(query, now);
+  const start = (query.page - 1) * query.pageSize;
+
+  return {
+    items: occurrences.slice(start, start + query.pageSize),
+    page: query.page,
+    pageSize: query.pageSize,
+    total: occurrences.length,
+    appliedFilters,
+  };
+};
+
+// The lesson page's area row: other lessons in the same `Area` (the region
+// enum, never the lesson's own city), soonest first, leaving out every lesson
+// of the viewed lesson's rabbi because the rabbi row above already shows them.
+// `from`/`to` stay undefined so `resolveRange` applies the default window.
 export const searchAreaPreview = async (
-  params: { area: Area; excludeLessonId: string; scope: AudienceScope },
+  params: { area: Area; excludeRabbiId: string; scope: AudienceScope },
   now: Date,
 ): Promise<ResolvedLessonOccurrence[]> => {
-  const query: LessonSearchQuery = {
-    area: params.area,
-    scope: params.scope,
-    page: DEFAULT_PAGE,
-    pageSize: AREA_PREVIEW_FETCH_SIZE,
-  };
+  const { occurrences } = await findOccurrences({ area: params.area, scope: params.scope }, now);
+  return selectAreaPreview(occurrences, params.excludeRabbiId, MAX_ITEMS_PER_ROW);
+};
 
-  const result = await search(query, now);
-  return selectAreaPreview(result.items, params.excludeLessonId, AREA_PREVIEW_LIMIT);
+// The lesson page's rabbi row: this rabbi's coming-up lessons across the
+// shared two-week window, read under the rabbi's own scope so a rabbanit's
+// row is not empty. Keyed by the lesson's own rabbi, so a date taught by a
+// substitute stays in the row of the rabbi whose lesson it is.
+export const searchRabbiUpcoming = async (
+  params: { rabbi: { id: string; honorific: RabbiHonorific }; lessonId: string; date: string },
+  now: Date,
+): Promise<ResolvedLessonOccurrence[]> => {
+  const today = todayInIsrael(now);
+  const { occurrences } = await findOccurrences(
+    {
+      rabbiId: params.rabbi.id,
+      scope: audienceScopeOfRabbi(params.rabbi.honorific),
+      from: today,
+      to: addDays(today, UPCOMING_OCCURRENCE_WINDOW_DAYS - 1),
+    },
+    now,
+  );
+  return selectRabbiUpcoming(occurrences, { lessonId: params.lessonId, date: params.date }, MAX_ITEMS_PER_ROW);
 };
 
 // Resolves one lesson's recurrence rule for a single date, with any
@@ -211,7 +250,7 @@ export const searchAreaPreview = async (
 // so the recurrence rule is only ever expanded in one place; a second
 // expansion here would drift from the search route's, exception handling
 // most of all.
-export const getOccurrence = async (lessonId: string, date: string): Promise<ResolvedLessonOccurrence> => {
+export const getOccurrence = async (lessonId: string, date: string, now: Date): Promise<ResolvedLessonOccurrenceDetail> => {
   const [lessonRow] = await db.select().from(lessons).where(eq(lessons.id, lessonId)).limit(1);
   if (!lessonRow) {
     throw new LessonNotFoundError(lessonId);
@@ -248,5 +287,5 @@ export const getOccurrence = async (lessonId: string, date: string): Promise<Res
   const cityByCode = new Map(cityRows.map((row) => [row.code, row] as const));
   const placeById = new Map(placeRows.map((row) => [row.id, row] as const));
 
-  return resolveRecord(occurrence, rabbiById, cityByCode, placeById);
+  return { ...resolveRecord(occurrence, rabbiById, cityByCode, placeById), timing: occurrenceTimingAt(now)(occurrence) };
 };

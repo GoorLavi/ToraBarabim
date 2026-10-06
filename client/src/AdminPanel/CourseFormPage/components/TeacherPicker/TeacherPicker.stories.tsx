@@ -1,3 +1,4 @@
+import type { AdminRabbiListItem } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
@@ -8,8 +9,8 @@ import { http, jsonResolver } from '../../../../../.storybook/apiMocks';
 import * as consts from './consts';
 import { TeacherPicker } from './TeacherPicker';
 
-const avraham = rabbiFixture({ id: 'rabbi-1', name: 'אברהם כהן' });
-const moshe = rabbiFixture({ id: 'rabbi-2', name: 'משה לוי' });
+const avraham: AdminRabbiListItem = { ...rabbiFixture({ id: 'rabbi-1', name: 'אברהם כהן' }), prominence: 'known', lessonCount: 0 };
+const moshe: AdminRabbiListItem = { ...rabbiFixture({ id: 'rabbi-2', name: 'משה לוי' }), prominence: 'known', lessonCount: 0 };
 
 const rabbisHandler = http.get('/v1/admin/rabbis', jsonResolver({ items: [avraham, moshe], page: 1, pageSize: 200, total: 2 }));
 

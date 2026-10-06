@@ -1,9 +1,10 @@
+import classNames from 'classnames';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { lessonPath } from '~/helpers';
 
-import { rowDateLabel } from './consts';
+import { CANCELLED_TAG_LABEL, rowDateLabel } from './consts';
 import { rowTitle, rowVenueLine } from './helpers';
 import type { LessonRowProps } from './models';
 import * as styles from './styles';
@@ -16,10 +17,13 @@ export const LessonRow = styled(({ className, lesson }: LessonRowProps) => {
   return (
     <Link to={lessonPath(lesson)} className={className}>
       <div className="when">
-        <span className="time">{lesson.startTime}</span>
-        <span className="date" dir="auto">
-          {rowDateLabel(lesson.date)}
-        </span>
+        <span className={classNames('time', { cancelledTime: lesson.status === 'cancelled' })}>{lesson.startTime}</span>
+        <div className="dateGroup">
+          <span className="date" dir="auto">
+            {rowDateLabel(lesson.date)}
+          </span>
+          {lesson.status === 'cancelled' && <span className="cancelledTag">{CANCELLED_TAG_LABEL}</span>}
+        </div>
       </div>
 
       {title && (

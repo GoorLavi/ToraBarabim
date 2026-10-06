@@ -3,7 +3,7 @@ import type { Mixpanel } from 'mixpanel-browser';
 import { BREAKPOINTS } from '~/theme/tokens';
 
 import { MIXPANEL_PROJECT_TOKEN } from '../../consts';
-import { MIXPANEL_QUEUE_CAP } from './consts';
+import { INTERNAL_BROWSER_STORAGE_KEY, MIXPANEL_QUEUE_CAP } from './consts';
 import { isAutomatedBrowser } from './helpers';
 import type { AnalyticsEventName, AnalyticsEventProps, SuperProperties } from './models';
 
@@ -22,7 +22,7 @@ let initStarted = false;
 // Fail open: an ad blocker (decision 0025) rejects the dynamic import below.
 // Once that happens, tracking simply stops for the rest of the session
 // rather than the page doing anything the visitor would notice. Also set
-// when `initAnalytics` finds an automated browser.
+// for an automated browser and for one marked internal.
 let isUnavailable = false;
 const queuedEvents: Array<{ name: string; props?: Parameters<Mixpanel['track']>[1] }> = [];
 let pendingSuperProperties: Partial<SuperProperties> = {};
@@ -41,13 +41,36 @@ const disableTracking = (): void => {
 const readViewport = (): SuperProperties['viewport'] =>
   window.matchMedia(`(min-width: ${BREAKPOINTS.md})`).matches ? 'desktop' : 'mobile';
 
+// Fails open: storage throws when site data is blocked, and then this
+// browser is counted, as it was before the mark.
+const isMarkedInternal = (): boolean => {
+  try {
+    return window.localStorage.getItem(INTERNAL_BROWSER_STORAGE_KEY) !== null;
+  } catch {
+    return false;
+  }
+};
+
+// The mark outlives the admin session on purpose (decision 0052): an admin
+// who signs out and browses the public site is still not a seeker.
+export const markBrowserInternal = (): void => {
+  disableTracking();
+  try {
+    window.localStorage.setItem(INTERNAL_BROWSER_STORAGE_KEY, 'true');
+  } catch (error) {
+    // Fails open: this session already stopped above; only the next one,
+    // with nothing stored, counts again.
+    console.warn('Could not store the internal-browser mark; the next session will be counted', error);
+  }
+};
+
 export const initAnalytics = (): void => {
   if (typeof window === 'undefined' || !import.meta.env.PROD || initStarted) return;
   initStarted = true;
 
   // Disabled outright rather than merely skipped, so `trackEvent` drops
   // events instead of queueing them for an SDK load that never comes.
-  if (isAutomatedBrowser(navigator)) {
+  if (isAutomatedBrowser(navigator) || isMarkedInternal()) {
     disableTracking();
     return;
   }

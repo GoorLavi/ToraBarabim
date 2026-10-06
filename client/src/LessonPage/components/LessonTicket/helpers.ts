@@ -1,7 +1,8 @@
-import type { LessonOccurrence, RabbiHonorific } from '@torabarabim/common';
+import type { LessonOccurrenceDetail, RabbiHonorific } from '@torabarabim/common';
 
 import { LESSON_TOPIC_LABELS } from '~/consts';
 import { TEACHING_RABBI_ROLE_LABEL } from '~/LessonPage/consts';
+import type { RoleTense } from '~/LessonPage/models';
 
 const ISRAEL_TIME_ZONE = 'Asia/Jerusalem';
 const weekdayFormatter = new Intl.DateTimeFormat('he-IL', { weekday: 'long', timeZone: ISRAEL_TIME_ZONE });
@@ -45,12 +46,19 @@ export const endTimeLabel = (endTime: string): string => `עד ${endTime}`;
 // who is teaching: a substitute changes who is speaking, never what the
 // lesson is about, so this stays independent of `roleLabel` below. Both
 // fields are individually optional, so a lesson with neither has no kicker.
-export const kickerLabel = (occurrence: LessonOccurrence): string | undefined =>
+export const kickerLabel = (occurrence: LessonOccurrenceDetail): string | undefined =>
   occurrence.title ?? (occurrence.topic ? LESSON_TOPIC_LABELS[occurrence.topic] : undefined);
+
+// A cancelled date still ahead reads as an ordinary upcoming one ("תעביר את
+// השיעור"); once it is past, "was supposed to" is the only honest tense.
+export const roleTenseOf = (occurrence: LessonOccurrenceDetail): RoleTense => {
+  if (occurrence.status !== 'cancelled') return occurrence.timing;
+  return occurrence.timing === 'upcoming' ? 'upcoming' : 'cancelledPast';
+};
 
 // The label above the rabbi's name, describing whoever is actually teaching
 // this occurrence. A substitute needs no wording of its own: the line below
 // already says `במקומו של <the usual rabbi>`. Its own slot, never sharing one
 // with `kickerLabel`.
-export const roleLabel = (teachingRabbiHonorific: RabbiHonorific): string =>
-  TEACHING_RABBI_ROLE_LABEL[teachingRabbiHonorific];
+export const roleLabel = (teachingRabbiHonorific: RabbiHonorific, tense: RoleTense): string =>
+  TEACHING_RABBI_ROLE_LABEL[teachingRabbiHonorific][tense];

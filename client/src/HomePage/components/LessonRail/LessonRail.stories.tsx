@@ -28,7 +28,7 @@ const baseLesson: LessonOccurrence = {
 // width: the card width is derived from the real viewport (helpers.ts,
 // railCardWidth reads `100vw`), not from a wrapping decorator, so making the
 // row overflow reliably is a matter of item count, not a fixed-width wrapper.
-// 12 items, the row's own cap (`MAX_ITEMS_PER_ROW`, server/src/service/home/consts.ts),
+// 12 items, the row's own cap (`MAX_ITEMS_PER_ROW`, server/src/service/shared/consts.ts),
 // so these stories also exercise the phone-width card peek at the widest a
 // real row ever gets.
 const manyItems: LessonOccurrence[] = Array.from({ length: 12 }, (_, index) => ({

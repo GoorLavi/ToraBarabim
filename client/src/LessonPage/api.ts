@@ -1,4 +1,4 @@
-import type { LessonOccurrence } from '@torabarabim/common';
+import type { LessonOccurrenceDetail } from '@torabarabim/common';
 
 // Carries the HTTP status so a caller can map it to Hebrew copy without
 // parsing `message`, mirroring HomePage/api.ts's HomeApiError. Status 0
@@ -11,13 +11,13 @@ export class LessonPageApiError extends Error {
 }
 
 // GET /v1/lessons/:lessonId/occurrences/:date
-// 200 with a single LessonOccurrence, not wrapped in `{ items }`. A
+// 200 with a single LessonOccurrenceDetail, not wrapped in `{ items }`. A
 // cancelled occurrence is still a 200: cancellation is data, not an error.
 // 400 for a malformed id or date.
 // 404 when the lesson does not exist, or exists with no occurrence on that
 // date: both return the identical body and are not distinguishable here.
 // 5xx for a server or upstream failure.
-export const fetchLessonOccurrence = async (lessonId: string, date: string, signal?: AbortSignal): Promise<LessonOccurrence> => {
+export const fetchLessonOccurrence = async (lessonId: string, date: string, signal?: AbortSignal): Promise<LessonOccurrenceDetail> => {
   const url = new URL(
     `/v1/lessons/${encodeURIComponent(lessonId)}/occurrences/${encodeURIComponent(date)}`,
     window.location.origin,
@@ -39,5 +39,5 @@ export const fetchLessonOccurrence = async (lessonId: string, date: string, sign
     throw new LessonPageApiError(response.status, `GET ${url.toString()} returned ${response.status}`);
   }
 
-  return (await response.json()) as LessonOccurrence;
+  return (await response.json()) as LessonOccurrenceDetail;
 };

@@ -4,6 +4,7 @@ import type {
   AgentImportLessonSummary,
   AgentImportNameQuestion,
   AgentImportNewLink,
+  AgentImportNewPlace,
   AgentImportRabbiCandidate,
   AgentImportSkippedRow,
   AgentImportWithheldDeletion,
@@ -150,6 +151,7 @@ export const applyRequestSchema = z.object({
   file: lessonImportFileSchema,
   digest: z.string().trim().min(1),
   acks: z.array(z.string().trim().min(1)).optional(),
+  ackLessonIds: z.array(z.string().trim().min(1)).optional(),
 });
 export type ApplyRequestInput = z.infer<typeof applyRequestSchema>;
 
@@ -203,6 +205,9 @@ export interface ExistingLessonSnapshot {
   id: string;
   rabbiId: string;
   title: string | null;
+  // Null on the address arm. `addressName` and `addressStreet` below are
+  // the place's own text on the place arm.
+  placeId: string | null;
   addressName: string;
   addressStreet: string;
   cityCode: number;
@@ -231,6 +236,15 @@ export interface RabbiInfo {
   honorific: RabbiHonorific;
 }
 
+// A place as the planner needs it. Inactive places are included: a
+// deactivated synagogue must block creating a second one beside it.
+export interface PlaceSnapshot {
+  id: string;
+  name: string;
+  cityCode: number;
+  isActive: boolean;
+}
+
 export interface PlanCoreInput {
   file: LessonImportFileInput;
   rules: LearnedRules;
@@ -238,27 +252,33 @@ export interface PlanCoreInput {
   rabbiCandidatesByNameKey: Map<string, AgentImportRabbiCandidate[]>;
   rabbiById: Map<string, RabbiInfo>;
   existingLessons: ExistingLessonSnapshot[];
+  places: PlaceSnapshot[];
   dismissedKeys: Set<string>;
   resolveCityCode: (cleanedCityName: string) => number | undefined;
   now: Date;
 }
 
+// Where a written lesson is held: on an existing active place, on a place
+// this run creates (named by its `placeKey` in `PlanCoreResult.newPlaces`),
+// or on its own free-text address.
+export type ResolvedVenue = { kind: 'place'; placeId: string } | { kind: 'newPlace'; placeKey: string } | { kind: 'address' };
+
 export interface ResolvedWrite {
   importKey: string;
   rabbiId: string;
   row: NormalizedRow;
+  venue: ResolvedVenue;
   existingLessonId?: string;
 }
 
-// A row that resolved to a real rabbi, before the duplicate-import-key
-// tie-break decides which of possibly several such rows for the same key
-// wins. Carries `rabbi` directly (fetched once, when the row resolved),
-// so the tie-break and the write it produces never re-look it up.
+// A row that resolved to a real rabbi, before rows naming the same rabbi,
+// day and start time are grouped and one of them wins. Carries `rabbi`
+// directly (fetched once, when the row resolved), so the tie-break and the
+// write it produces never re-look it up.
 export interface ResolvedRowEntry {
   row: NormalizedRow;
   rabbiId: string;
   rabbi: RabbiInfo;
-  importKey: string;
 }
 
 export interface PlanCoreResult {
@@ -271,6 +291,7 @@ export interface PlanCoreResult {
   withheldIfUnacked: AgentImportWithheldDeletion[];
   skipped: AgentImportSkippedRow[];
   resolvedWrites: ResolvedWrite[];
+  newPlaces: AgentImportNewPlace[];
 }
 
 // Whether (and to whom) a row's rabbi name resolved. A discriminated union

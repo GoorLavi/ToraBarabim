@@ -24,12 +24,12 @@ Every design belongs to one of four, split by who opens it and when.
 
 | Page | Screen |
 |---|---|
-| `01 בית` | Home, with its filtered, empty, loading and error states; the dedications section; and the help-tiles section (`474:1770`): the three tiles inside lesson rails at 390, 320 and 1280, the row with the women's-area tile, and the message window in its states, as shipped on 2026-10-02 |
+| `01 בית` | Home: ten interleaved rails with the women's, success and healing bands and the single women's tile, the thin four-rail case, and its filtered, empty, loading and error states; and the help-tiles section (`474:1770`): the three tiles inside lesson rails at 390, 320 and 1280, the row with the women's-area tile, and the message window in its states, as shipped on 2026-10-02 |
 | `02 חיפוש` | Search results, no results, loading, desktop, and the rabbanit name match |
 | `03 עיר` | A city's lessons |
 | `04 רב` | A rabbi's page, including no photo, a sparse record, loading, empty, error |
 | `05 כל הרבנים` | The rabbis index |
-| `06 שיעור` | The lesson ticket page as shipped, its details, and the area preview with its loading, empty and failed states. The ticket's own states are on `99 כרטיס השיעור · כל המצבים` |
+| `06 שיעור` | The lesson ticket page as shipped, its details, and the area preview with its loading, empty and failed states; the past-lesson states (took place, started, the rabbi's lessons row in every state) and the area preview as a rail. The ticket's own states are on `99 כרטיס השיעור · כל המצבים` |
 | `07 אזור הנשים` | `/women`, all six states |
 | `08 רשימת רבניות` | `/women/rabbaniyot` |
 | `09 צור קשר` | Contact, at 390 and 320 and desktop. It loads nothing, so it has no loading, empty or error state |
@@ -40,7 +40,7 @@ Every design belongs to one of four, split by who opens it and when.
 | `14 אזור` | An area's lessons |
 | `15 קורסים` | Courses: the card in every state, the home row with one, two and three-plus courses and a closed course, the course page in every state at 390, 320 and 1280, the photo viewer, and the rabbi, place and women's area pages with a course rail |
 | `99 Components` | The 29 shared components. Only `07` and `08` are built from instances of them; see the widths section below for why |
-| `99 כרטיס השיעור · כל המצבים` | Every lesson card state, side by side |
+| `99 כרטיס השיעור · כל המצבים` | Every lesson card state, side by side, including the past and started states and the cancelled start time struck through |
 
 ## The admin file, page by page
 
@@ -131,16 +131,24 @@ new goes into them. They keep their old names, which is how you can tell.
 Current work that is not part of the map yet, so nobody mistakes it for archive or
 tidies it away:
 
+- **`01 בית · הקדשות · לאישור`** (`323:488`), beside `01 בית`: the home page with the
+  dedication bands drawn at their measured heights, four phone frames and no desktop
+  yet. It waits on the owner, and on the width decision above. Since 2026-10-05 `01 בית`
+  already carries the success and healing bands in their shipped slots (after rails 6
+  and 8), so this page folds into those positions rather than adding bands again.
+- **`01 בית · חלון הקדשה · לאישור`** (`331:690`), beside the page above: the one
+  dedication window every band opens, and the bands' invitation line. Phone at 390 and
+  320, desktop at 1280, and the band's rest, hover and focus states. Aligned to the
+  built code on 2026-09-24; it folds into `01 בית` with the dedication page.
 - **`הקדשות · אזור בדיקה`** (`123:2`), a page at the end of the site file: the
   dedication masters, the notes for directions F to N with the reasoning for each,
   and an archive section. Those notes are the only place that reasoning is written,
   so deleting the page deletes it.
 
-Each folds into the numbered structure when its change ships. The dedication and
-help-tile approval pages did exactly that: on 2026-10-05 the site file's `01 בית`
-gained the dedications section (`470:6317`) and the help-tiles section (`474:1770`),
-the admin file gained `07 הודעות` (`197:2`), and the four approval pages (two rounds
-each) were deleted with the owner's approval.
+Each folds into the numbered structure when its change ships. The help-tile approval
+pages did exactly that on 2026-10-05: `01 בית` gained the help-tiles section
+(`474:1770`), the admin file gained `07 הודעות` (`197:2`), and the four help-tile and
+messages approval pages (two rounds each) were deleted with the owner's approval.
 
 ## Known gaps, on purpose
 
@@ -150,9 +158,8 @@ each) were deleted with the owner's approval.
 - **The colours on migrated pages are raw, not bound to variables.** One binding pass
   closes this, and closes the missing `color/scrim` with it.
 - **`01 בית`'s desktop frame ends at the rails.** It holds the header, the context line
-  and the rails, and nothing after: no contact band and no footer, though the code
-  renders both at every width. No frame on the page shows the women's-area band or a
-  dedication band either, though the code renders both.
+  and the rails, and nothing after: no rabbi row, no city grid, no contact band and no
+  footer, though the code renders all of them at every width.
 - **`06 שיעור` has no footer on any frame**, phone or desktop, though every page
   renders one (from the 2026-09-23 audit).
 - **`07 הודעות` shows the list, the empty states and the note, not the rest.** The

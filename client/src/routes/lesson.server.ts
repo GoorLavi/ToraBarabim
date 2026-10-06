@@ -1,10 +1,9 @@
-import type { AudienceScope, LessonOccurrence } from '@torabarabim/common';
+import type { AudienceScope, LessonOccurrence, LessonOccurrenceDetail } from '@torabarabim/common';
 import { ZodError } from 'zod';
 
-import type { AreaPreviewLessons } from '~/LessonPage/models';
+import type { DeferredLessons } from '~/LessonPage/models';
 
-import { toLessonOccurrence } from '../../../server/src/convertors/lesson';
-import { AREA_PREVIEW_LIMIT } from '../../../server/src/service/lesson/consts';
+import { toLessonOccurrence, toLessonOccurrenceDetail } from '../../../server/src/convertors/lesson';
 import { LessonNotFoundError, LessonOccurrenceNotFoundError } from '../../../server/src/service/lesson/errors';
 import * as lessonService from '../../../server/src/service/lesson/lesson';
 import { lessonOccurrenceParamsSchema } from '../../../server/src/service/lesson/models';
@@ -22,11 +21,15 @@ import { UNCACHEABLE_ERROR_HEADERS } from './consts';
 // service. A lesson that exists but has no occurrence on the requested date
 // is indistinguishable from a lesson that does not exist at all, mirroring
 // the API's own handleError.
-export const loadLessonOccurrence = async (rawLessonId: string, rawDate: string): Promise<LessonOccurrence> => {
+export const loadLessonOccurrence = async (
+  rawLessonId: string,
+  rawDate: string,
+  now: Date,
+): Promise<LessonOccurrenceDetail> => {
   try {
     const { lessonId, date } = lessonOccurrenceParamsSchema.parse({ lessonId: rawLessonId, date: rawDate });
-    const record = await lessonService.getOccurrence(lessonId, date);
-    return toLessonOccurrence(record);
+    const record = await lessonService.getOccurrence(lessonId, date, now);
+    return toLessonOccurrenceDetail(record);
   } catch (error) {
     if (error instanceof ZodError) {
       throw new Response('בקשה לא תקינה', { status: 400, headers: UNCACHEABLE_ERROR_HEADERS });
@@ -73,28 +76,27 @@ const areaPreviewScopeFor = (occurrence: LessonOccurrence): AudienceScope =>
 // behind the `.server` boundary above.
 export const resolveAreaPreviewMeta = (
   occurrence: LessonOccurrence,
-): { areaName: string; areaSlug: string; limit: number } => ({
+): { areaName: string; areaSlug: string } => ({
   areaName: AREA_NAMES_HE[occurrence.venue.area],
   areaSlug: toAreaSlug(occurrence.venue.area),
-  limit: AREA_PREVIEW_LIMIT,
 });
 
-// Deferred by the loader (never awaited there), so this never holds up the
-// ticket. Fails open: a failed area search is a below-the-fold nicety, not a
-// reason for the page itself to fail, so the catch resolves to `unavailable`
-// instead of rejecting; the `try`/`catch` inside this `async` function is
-// what guarantees the returned promise itself never rejects. The area's name
-// and slug are resolved synchronously in the route loader from
-// `occurrence.venue.area`, so this only ever carries the query result.
-export const loadAreaLessonsPreview = async (occurrence: LessonOccurrence): Promise<AreaPreviewLessons> => {
+// Both deferred reads below are never awaited by the loader, so neither holds
+// up the ticket. Each fails open: a failed read is a below-the-fold nicety, not
+// a reason for the page itself to fail, so the catch resolves to `unavailable`
+// instead of rejecting; the `try`/`catch` inside the `async` function is what
+// guarantees the returned promise itself never rejects. The area's name and
+// slug are resolved synchronously in the route loader from
+// `occurrence.venue.area`, so the area read only ever carries the query result.
+export const loadAreaLessonsPreview = async (occurrence: LessonOccurrence, now: Date): Promise<DeferredLessons> => {
   try {
     const items = await lessonService.searchAreaPreview(
       {
         area: occurrence.venue.area,
-        excludeLessonId: occurrence.lessonId,
+        excludeRabbiId: occurrence.rabbi.id,
         scope: areaPreviewScopeFor(occurrence),
       },
-      new Date(),
+      now,
     );
 
     return { kind: 'ready', items: items.map(toLessonOccurrence) };
@@ -102,6 +104,28 @@ export const loadAreaLessonsPreview = async (occurrence: LessonOccurrence): Prom
     console.error('Failed to load area lessons preview', {
       lessonId: occurrence.lessonId,
       area: occurrence.venue.area,
+      error,
+    });
+    return { kind: 'unavailable' };
+  }
+};
+
+export const loadRabbiUpcomingLessons = async (occurrence: LessonOccurrence, now: Date): Promise<DeferredLessons> => {
+  try {
+    const items = await lessonService.searchRabbiUpcoming(
+      {
+        rabbi: { id: occurrence.rabbi.id, honorific: occurrence.rabbi.honorific },
+        lessonId: occurrence.lessonId,
+        date: occurrence.date,
+      },
+      now,
+    );
+
+    return { kind: 'ready', items: items.map(toLessonOccurrence) };
+  } catch (error) {
+    console.error('Failed to load rabbi upcoming lessons', {
+      lessonId: occurrence.lessonId,
+      rabbiId: occurrence.rabbi.id,
       error,
     });
     return { kind: 'unavailable' };

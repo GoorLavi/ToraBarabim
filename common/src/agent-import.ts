@@ -47,18 +47,52 @@ export interface AgentImportLessonSummary {
   startTime: string;
   sources: string[];
   needsReview: boolean;
+  // Only on an addition: the id of a hand-entered (or hand-edited) lesson of
+  // the same rabbi, on the same day, at the same place but at another time.
+  // A hint that the source may have moved that lesson's time, never a match.
+  samePlaceLessonId?: string;
 }
 
-export type AgentImportWithheldReason = 'sharp_drop' | 'over_threshold';
+export type AgentImportWithheldCountReason = 'sharp_drop' | 'over_threshold';
 
-export interface AgentImportWithheldDeletion extends AgentImportLessonSummary {
+// A lesson the plan would delete, held back until the owner approves. Two
+// kinds, told apart by `reason`: a deletion held by the run's size checks,
+// released by acknowledging its sources, and a duplicate of another lesson,
+// released only by that one lesson's id.
+export type AgentImportWithheldDeletion =
+  | (AgentImportLessonSummary & {
+      lessonId: string;
+      reason: AgentImportWithheldCountReason;
+      // The subset of `sources` that actually triggered the hold (a merged
+      // lesson can carry a source that never caused it). `apply`'s `acks`
+      // only releases the hold once every one of these, not merely one of
+      // `sources`, has been acknowledged.
+      causingSources: string[];
+    })
+  | (AgentImportLessonSummary & {
+      lessonId: string;
+      reason: 'duplicate';
+      // The lesson this one duplicates (same rabbi, day and start time), so
+      // the owner sees the pair before approving the deletion.
+      keptLesson: AgentImportKeptLesson;
+    });
+
+export interface AgentImportKeptLesson extends AgentImportLessonSummary {
   lessonId: string;
-  reason: AgentImportWithheldReason;
-  // The subset of `sources` that actually triggered the hold (a merged
-  // lesson can carry a source that never caused it). `apply`'s `acks` only
-  // releases the hold once every one of these, not merely one of
-  // `sources`, has been acknowledged.
-  causingSources: string[];
+  provenance: LessonProvenance;
+}
+
+// A synagogue the import would create as a place, because no place of that
+// name exists in the lesson's city. `placeKey` identifies it inside one run.
+export interface AgentImportNewPlace {
+  placeKey: string;
+  name: string;
+  street: string;
+  cityCode: number;
+}
+
+export interface AgentImportCreatedPlace extends AgentImportNewPlace {
+  placeId: string;
 }
 
 export interface AgentImportNewLink {
@@ -82,6 +116,7 @@ export interface AgentImportCounts {
   deleted: number;
   skipped: number;
   notImported: number;
+  placesCreated: number;
 }
 
 export interface AgentImportPlanResponse {
@@ -94,6 +129,7 @@ export interface AgentImportPlanResponse {
   newLinks: AgentImportNewLink[];
   withheldIfUnacked: AgentImportWithheldDeletion[];
   skipped: AgentImportSkippedRow[];
+  newPlaces: AgentImportNewPlace[];
 }
 
 export interface AgentImportRabbiSearchResult {
@@ -127,6 +163,9 @@ export interface AgentImportApplyRequest {
   digest: string;
   // Source domains whose withheld deletions the owner approved for this run.
   acks?: string[];
+  // Ids of duplicate lessons the owner approved deleting, one by one. A
+  // source ack never releases a duplicate.
+  ackLessonIds?: string[];
 }
 
 export interface AgentImportApplyResult {
@@ -134,4 +173,5 @@ export interface AgentImportApplyResult {
   newLinks: AgentImportNewLink[];
   withheld: AgentImportWithheldDeletion[];
   deleted: AgentImportLessonSummary[];
+  newPlaces: AgentImportCreatedPlace[];
 }

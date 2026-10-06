@@ -17,7 +17,7 @@ import storage from '../src/storage/storage';
 // document's canonical is built from, the honorific a rabbi's name is
 // composed with) rather than a second, hand-typed copy of the domain.
 import { SITE_ORIGIN } from '../../client/consts';
-import { rabbiDisplayName } from '../../client/src/helpers';
+import { lessonPath, rabbiDisplayName } from '../../client/src/helpers';
 import { assertClientBuilt, assertDatabaseReachable, buildApp, rawClient } from './app-harness';
 
 const extractTitle = (html: string): string => {
@@ -228,6 +228,16 @@ describe('SSR rendering seam', () => {
       assert.equal(res.statusCode, 404);
       assert.equal(res.headers['cache-control'], 'no-store');
     });
+
+    // Past dates stay reachable for the days the recurrence produces, so the
+    // only thing keeping junk past URLs out of the index is that a date the
+    // lesson never had is a 404. SEEDED_LESSON_ID has no Saturday lesson.
+    test('a past date the lesson never had is a real 404, never cached', async () => {
+      const lastSaturday = addDays(nextDateOnWeekday(todayInIsrael(new Date()), 6), -7);
+      const res = await app.inject({ method: 'GET', url: `/lesson/${SEEDED_LESSON_ID}/${lastSaturday}` });
+      assert.equal(res.statusCode, 404);
+      assert.equal(res.headers['cache-control'], 'no-store');
+    });
   });
 
   describe('a non-GET request through the SSR catch-all', () => {
@@ -331,6 +341,8 @@ describe('SSR rendering seam', () => {
       const page = await app.inject({ method: 'GET', url: `/lesson/${SEEDED_LESSON_ID}/${date}` });
       assert.equal(page.statusCode, 200);
 
+      assert.doesNotMatch(page.body, /<meta name="robots"/, 'a live lesson page must stay indexable');
+
       const event = extractJsonLd(page.body, 'Event');
       assert.ok(event['description'], 'expected the Event to carry a description');
 
@@ -350,13 +362,25 @@ describe('SSR rendering seam', () => {
       const performer = event['performer'] as Record<string, unknown> | undefined;
       assert.equal(event['image'], performer?.['image']);
     });
+
+    // A date before today stays reachable but must leave the index, and its
+    // Event block would advertise a scheduled event that is already over.
+    test('a lesson page for a date that already passed is noindexed, carries no Event, and keeps its own canonical', async () => {
+      const lastSunday = addDays(nextDateOnWeekday(todayInIsrael(new Date()), 0), -7);
+      const page = await app.inject({ method: 'GET', url: `/lesson/${SEEDED_LESSON_ID}/${lastSunday}` });
+      assert.equal(page.statusCode, 200);
+
+      assert.match(page.body, /<meta name="robots" content="noindex"/);
+      assert.doesNotMatch(page.body, /"@type":\s*"Event"/);
+      assert.equal(extractCanonical(page.body), `${SITE_ORIGIN}${lessonPath({ lessonId: SEEDED_LESSON_ID, date: lastSunday })}`);
+    });
   });
 
   describe("the lesson page's onward links", () => {
     // Test 2 of the plan: the rabbi link and the area link both exist in the
     // fully rendered document, never only after hydration, and the area
-    // link resolves. The area preview itself is deferred behind Suspense,
-    // but the rabbi link is not, so a full-body read is enough either way:
+    // link resolves. Both rails are deferred behind Suspense, but their
+    // heading links are not, so a full-body read is enough either way:
     // `app.inject` only resolves once the response has finished streaming,
     // so `page.body` here is always the complete document, not a partial
     // first chunk.
@@ -372,13 +396,10 @@ describe('SSR rendering seam', () => {
       const rabbiHref = `/rabbis/${encodeURIComponent(occurrence.rabbi.id)}/${encodeURIComponent(occurrence.rabbi.slug)}`;
       const areaHref = `/areas/${encodeURIComponent(toAreaSlug(occurrence.venue.area))}`;
 
-      // The area link in the rendered document only exists because the area
-      // preview resolves to a non-empty list: it renders one `AreaLink` per
-      // preview card, and the preview excludes `SEEDED_LESSON_ID` itself. If
-      // the seed ever leaves this lesson as the only one in its area, that
-      // link disappears and the assertion below would fail pointing at the
-      // rabbi-link/area-link feature rather than at the seed. Confirm the
-      // precondition explicitly first, so a seed change fails here instead.
+      // The area link is the area rail's heading, so it is in the document
+      // whether the rail is loading, empty or full. The precondition below is
+      // therefore not about the link: it keeps the area page the link points
+      // at a real, non-empty one, so the final resolve check proves something.
       const from = todayInIsrael(new Date());
       const areaLessonsRes = await app.inject({
         method: 'GET',
@@ -387,8 +408,8 @@ describe('SSR rendering seam', () => {
       assert.equal(areaLessonsRes.statusCode, 200);
       const areaLessons = areaLessonsRes.json() as LessonSearchResponse;
       assert.ok(
-        areaLessons.items.some((item) => item.lessonId !== SEEDED_LESSON_ID),
-        `expected another lesson in area "${occurrence.venue.area}" besides ${SEEDED_LESSON_ID} for the area preview to be non-empty`,
+        areaLessons.items.length > 0,
+        `expected at least one lesson in area "${occurrence.venue.area}" for the area page to be non-empty`,
       );
 
       const page = await app.inject({ method: 'GET', url: `/lesson/${SEEDED_LESSON_ID}/${date}` });
@@ -398,6 +419,32 @@ describe('SSR rendering seam', () => {
 
       const areaPage = await app.inject({ method: 'GET', url: areaHref });
       assert.equal(areaPage.statusCode, 200);
+    });
+
+    // The rabbi row is deferred, so a loader that never started it would
+    // still render a page that looks complete. The next date is read from
+    // the public API, not computed here, so the test follows the service's
+    // own idea of "next scheduled".
+    test("a past lesson page links the same lesson's next date", async () => {
+      const lastSunday = addDays(nextDateOnWeekday(todayInIsrael(new Date()), 0), -7);
+      const occurrenceRes = await app.inject({
+        method: 'GET',
+        url: `/v1/lessons/${SEEDED_LESSON_ID}/occurrences/${lastSunday}`,
+      });
+      assert.equal(occurrenceRes.statusCode, 200);
+      const { rabbi } = occurrenceRes.json() as LessonOccurrence;
+
+      const searchRes = await app.inject({ method: 'GET', url: `/v1/lessons?rabbiId=${encodeURIComponent(rabbi.id)}` });
+      assert.equal(searchRes.statusCode, 200);
+      const next = (searchRes.json() as LessonSearchResponse).items.find(
+        (item) => item.lessonId === SEEDED_LESSON_ID && item.status === 'scheduled',
+      );
+      assert.ok(next, `expected an upcoming scheduled date of ${SEEDED_LESSON_ID}`);
+
+      const page = await app.inject({ method: 'GET', url: `/lesson/${SEEDED_LESSON_ID}/${lastSunday}` });
+      assert.equal(page.statusCode, 200);
+      const nextHref = lessonPath(next);
+      assert.ok(page.body.includes(`href="${nextHref}"`), `expected the document to link to ${nextHref}`);
     });
   });
 
