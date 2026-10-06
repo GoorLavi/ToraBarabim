@@ -3,68 +3,76 @@ import { css } from 'styled-components';
 export const CalendarSheet = css(
   ({ theme }) => `
   > .panel {
-    > .headingRow {
+    > .headingBlock {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: ${theme.spacing.md};
+      flex-direction: column;
 
-      > .heading {
-        flex: 1 1 auto;
-        min-inline-size: 0;
-        color: ${theme.colors.text};
-        font-weight: ${theme.typography.fontWeight.bold};
-        font-size: ${theme.typography.sectionHeading.phone.fontSize};
-        line-height: ${theme.typography.sectionHeading.phone.lineHeight};
-
-        &:focus {
-          outline: none;
-        }
-      }
-
-      > .roundButton {
-        flex-shrink: 0;
+      > .headingRow {
         display: flex;
         align-items: center;
-        justify-content: center;
-        inline-size: 48px;
-        block-size: 48px;
-        border: 1px solid ${theme.colors.border};
-        border-radius: ${theme.radii.pill};
-        background: transparent;
-        color: ${theme.colors.text};
+        justify-content: space-between;
+        gap: ${theme.spacing.md};
 
-        &:focus-visible {
-          outline: 2px solid ${theme.colors.primary};
-          outline-offset: 2px;
+        > .heading {
+          flex: 1 1 auto;
+          min-inline-size: 0;
+          color: ${theme.colors.text};
+          font-weight: ${theme.typography.fontWeight.bold};
+          font-size: ${theme.typography.sectionHeading.phone.fontSize};
+          line-height: ${theme.typography.sectionHeading.phone.lineHeight};
+
+          &:focus {
+            outline: none;
+          }
         }
 
-        > svg {
-          inline-size: 24px;
-          block-size: 24px;
+        > .roundButton {
+          flex-shrink: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          inline-size: 48px;
+          block-size: 48px;
+          border: 1px solid ${theme.colors.border};
+          border-radius: ${theme.radii.pill};
+          background: transparent;
+          color: ${theme.colors.text};
+
+          &:focus-visible {
+            outline: 2px solid ${theme.colors.primary};
+            outline-offset: 2px;
+          }
+
+          > svg {
+            inline-size: 24px;
+            block-size: 24px;
+          }
         }
       }
-    }
 
-    > .question {
-      color: ${theme.colors.textSecondary};
-      font-size: ${theme.typography.body.phone.fontSize};
-      line-height: ${theme.typography.body.phone.lineHeight};
-    }
+      > .question {
+        color: ${theme.colors.textSecondary};
+        font-size: ${theme.typography.secondary.phone.fontSize};
+        line-height: ${theme.typography.secondary.phone.lineHeight};
+      }
 
-    > .chosenCalendar {
-      display: flex;
-      align-items: center;
-      gap: ${theme.spacing.sm};
-      color: ${theme.colors.textSecondary};
-      font-weight: ${theme.typography.fontWeight.semiBold};
-      font-size: ${theme.typography.body.phone.fontSize};
-      line-height: ${theme.typography.body.phone.lineHeight};
+      /* Starts where the title does: past the back button and its gap. */
+      > .chosenCalendar {
+        display: flex;
+        align-items: center;
+        gap: ${theme.spacing.sm};
+        padding-inline-start: calc(48px + ${theme.spacing.md});
+        color: ${theme.colors.textSecondary};
+        font-weight: ${theme.typography.fontWeight.semiBold};
+        font-size: ${theme.typography.secondary.phone.fontSize};
+        line-height: ${theme.typography.secondary.phone.lineHeight};
 
-      > svg {
-        flex: 0 0 auto;
-        inline-size: 20px;
-        block-size: 20px;
+        > .mark {
+          flex: 0 0 auto;
+          block-size: 20px;
+          inline-size: auto;
+          color: ${theme.colors.primary};
+        }
       }
     }
 
@@ -114,8 +122,8 @@ export const CalendarSheet = css(
         inline-size: 40px;
         block-size: 40px;
 
-        > svg {
-          inline-size: 32px;
+        > .mark {
+          inline-size: 30px;
           block-size: 32px;
         }
       }

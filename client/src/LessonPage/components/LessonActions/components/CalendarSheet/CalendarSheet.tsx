@@ -5,13 +5,10 @@ import styled from 'styled-components';
 import { ResponsiveSheet } from '~/components/ResponsiveSheet/ResponsiveSheet';
 
 import { CALENDAR_ICON_PATH } from '../../consts';
-import type { CalendarChoice } from '../../models';
 import { GoogleCalendarMark } from './components/GoogleCalendarMark/GoogleCalendarMark';
 import * as consts from './consts';
 import type { CalendarSheetProps } from './models';
 import * as styles from './styles';
-
-const CALENDAR_CHOICES: CalendarChoice[] = ['google', 'device'];
 
 // Two questions in one sheet. First which calendar the person uses, then (a
 // recurring lesson only) one date or all of them. Which link each answer
@@ -29,37 +26,52 @@ export const CalendarSheet = styled(({ className, dateLabel, step, onChooseCalen
     headingRef.current?.focus();
   }, [step.step]);
 
-  const chosen = step.step === 'scope' && step.canGoBack ? consts.CALENDAR_CHOICE_COPY[step.calendar] : null;
+  const choice = step.step === 'scope' && step.canGoBack ? step : null;
 
   return (
     <ResponsiveSheet {...{ className, ariaLabel: consts.SHEET_TITLE, onDismiss }}>
-      <div className="headingRow">
-        {chosen && (
-          <button type="button" className="roundButton backButton" aria-label={consts.BACK_LABEL} onClick={onBack}>
+      <div className="headingBlock">
+        <div className="headingRow">
+          {choice && (
+            <button type="button" className="roundButton backButton" aria-label={consts.BACK_LABEL} onClick={onBack}>
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d={consts.BACK_ICON_PATH} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          )}
+          <h2 className="heading" tabIndex={-1} ref={headingRef}>
+            {consts.SHEET_TITLE}
+          </h2>
+          <button type="button" className="roundButton closeButton" aria-label={consts.CLOSE_LABEL} onClick={onDismiss}>
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d={consts.BACK_ICON_PATH} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              <path d={consts.CLOSE_ICON_PATH} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
             </svg>
           </button>
+        </div>
+
+        {step.step === 'calendar' && <p className="question">{consts.CALENDAR_QUESTION}</p>}
+
+        {choice && (
+          <p className="chosenCalendar">
+            {choice.calendar === 'google' ? (
+              <GoogleCalendarMark className="mark" />
+            ) : (
+              <svg className="mark" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d={CALENDAR_ICON_PATH} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+            <span>{consts.CALENDAR_CHOICE_COPY[choice.calendar].title}</span>
+          </p>
         )}
-        <h2 className="heading" tabIndex={-1} ref={headingRef}>
-          {consts.SHEET_TITLE}
-        </h2>
-        <button type="button" className="roundButton closeButton" aria-label={consts.CLOSE_LABEL} onClick={onDismiss}>
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d={consts.CLOSE_ICON_PATH} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-          </svg>
-        </button>
       </div>
 
       {step.step === 'calendar' && (
         <>
-          <p className="question">{consts.CALENDAR_QUESTION}</p>
-
-          {CALENDAR_CHOICES.map((calendar) => (
+          {consts.CALENDAR_CHOICES.map((calendar) => (
             <button key={calendar} type="button" className={classNames('choice', calendar)} onClick={() => onChooseCalendar(calendar)}>
               {calendar === 'google' ? (
                 <span className="choiceMark">
-                  <GoogleCalendarMark />
+                  <GoogleCalendarMark className="mark" />
                 </span>
               ) : (
                 <span className="choiceIcon">
@@ -79,13 +91,6 @@ export const CalendarSheet = styled(({ className, dateLabel, step, onChooseCalen
 
       {step.step === 'scope' && (
         <>
-          {chosen && (
-            <p className="chosenCalendar">
-              {step.calendar === 'google' && <GoogleCalendarMark />}
-              <span>{chosen.title}</span>
-            </p>
-          )}
-
           <button type="button" className="choice addOne" onClick={onAddOneEvent}>
             <span className="choiceIcon">
               <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">

@@ -78,6 +78,16 @@ export const LessonActions = styled(({ className, occurrence }: LessonActionsPro
     setSheet({ step: 'scope', calendar, canGoBack: true });
   };
 
+  const addOneEventOfSheet = (): void => {
+    if (sheet.step !== 'scope') return;
+    addOneEvent(sheet.calendar);
+  };
+
+  const subscribeOfSheet = (): void => {
+    if (sheet.step !== 'scope') return;
+    subscribe(sheet.calendar);
+  };
+
   return (
     <div className={className}>
       {canShare && <ShareButton {...{ className: 'share', text: lessonShareText(occurrence), url: lessonShareUrl(occurrence), tone: 'light', surface: 'lessonPage' }} />}
@@ -103,8 +113,8 @@ export const LessonActions = styled(({ className, occurrence }: LessonActionsPro
             dateLabel: occurrenceWhenLabel(calendarOccurrence),
             step: sheet,
             onChooseCalendar: handleCalendarChosen,
-            onAddOneEvent: () => sheet.step === 'scope' && addOneEvent(sheet.calendar),
-            onSubscribe: () => sheet.step === 'scope' && subscribe(sheet.calendar),
+            onAddOneEvent: addOneEventOfSheet,
+            onSubscribe: subscribeOfSheet,
             onBack: () => setSheet({ step: 'calendar' }),
             onDismiss: closeSheet,
           }}

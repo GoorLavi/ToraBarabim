@@ -4,6 +4,8 @@ export const SHEET_TITLE = 'הוספה ליומן';
 
 export const CALENDAR_QUESTION = 'באיזה יומן אתם משתמשים?';
 
+export const CALENDAR_CHOICES: CalendarChoice[] = ['google', 'device'];
+
 export const CALENDAR_CHOICE_COPY: Record<CalendarChoice, { title: string; line: string }> = {
   google: { title: 'יומן Google', line: 'ייפתח באתר של Google' },
   device: { title: 'היומן בטלפון או במחשב', line: 'יומן האייפון, Outlook ויומנים אחרים' },

@@ -1,7 +1,9 @@
 import type { LessonOccurrenceDetail } from '@torabarabim/common';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, mocked, userEvent, within } from 'storybook/test';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { trackEvent } from '~/analytics/mixpanel';
 import { COPY_FAILED_LINE, SHARE_LABEL } from '~/components/ShareButton/consts';
 import { rabbiFixture } from '~/rabbiFixture';
 import { atFrameSize } from '~/storyMocks';
@@ -109,7 +111,7 @@ export const WeeklyGoogleThenBack: Story = {
 
     await expectScopeRows(dialog);
     await expect(within(dialog).getByText(sheetConsts.CALENDAR_CHOICE_COPY.google.title)).toBeInTheDocument();
-    await expect(dialog.querySelector('.chosenCalendar > svg')).not.toBeNull();
+    await expect(dialog.querySelector('.chosenCalendar > .mark mask')).not.toBeNull();
 
     await userEvent.click(within(dialog).getByRole('button', { name: sheetConsts.BACK_LABEL }));
     await expectCalendarQuestion(dialog);
@@ -124,7 +126,7 @@ export const WeeklyDeviceNamesItsChoice: Story = {
 
     await expectScopeRows(dialog);
     await expect(within(dialog).getByText(sheetConsts.CALENDAR_CHOICE_COPY.device.title)).toBeInTheDocument();
-    await expect(dialog.querySelector('.chosenCalendar > svg')).toBeNull();
+    await expect(dialog.querySelector('.chosenCalendar > .mark path[stroke="currentColor"]')).not.toBeNull();
   },
 };
 
@@ -221,6 +223,36 @@ export const AndroidWeeklyGoesStraightToTheRows: Story = {
 
     await userEvent.click(rowNamed(dialog, sheetConsts.SUBSCRIBE_TITLE));
     await expect(window.open).toHaveBeenCalledWith(expect.stringContaining(GOOGLE_SUBSCRIBE_URL), '_blank', 'noopener,noreferrer');
+  },
+};
+
+// What is reported is the calendar actually used: Android was never asked
+// and always sends google. The device subscription is a webcal link, which
+// leaves the page where it is, so a story can tap it.
+export const AndroidReportsGoogle: Story = {
+  args: { occurrence: weekly },
+  beforeEach: () => {
+    mocked(trackEvent).mockClear();
+    return stubAndroid();
+  },
+  play: async ({ canvasElement }) => {
+    const dialog = await openTheSheet(canvasElement);
+    await userEvent.click(rowNamed(dialog, sheetConsts.SUBSCRIBE_TITLE));
+    await expect(trackEvent).toHaveBeenCalledWith(MIXPANEL_EVENTS.calendarSheetOpen, { kind: 'weekly' });
+    await expect(trackEvent).toHaveBeenCalledWith(MIXPANEL_EVENTS.calendarAddClick, { kind: 'subscribe', calendar: 'google', target: 'google' });
+  },
+};
+
+export const DeviceChoiceReportsDevice: Story = {
+  args: { occurrence: weekly },
+  beforeEach: () => {
+    mocked(trackEvent).mockClear();
+  },
+  play: async ({ canvasElement }) => {
+    const dialog = await openTheSheet(canvasElement);
+    await userEvent.click(rowNamed(dialog, sheetConsts.CALENDAR_CHOICE_COPY.device.title));
+    await userEvent.click(rowNamed(dialog, sheetConsts.SUBSCRIBE_TITLE));
+    await expect(trackEvent).toHaveBeenCalledWith(MIXPANEL_EVENTS.calendarAddClick, { kind: 'subscribe', calendar: 'device', target: 'webcal' });
   },
 };
 

@@ -3,6 +3,8 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { atFrameSize } from '~/storyMocks';
 
+import { occurrenceWhenLabel } from '../../../../helpers';
+
 import * as consts from './consts';
 import { CalendarSheet } from './CalendarSheet';
 
@@ -64,7 +66,7 @@ export const ScopeAfterGoogle: Story = {
   play: async ({ args }) => {
     const dialog = await sheet();
     await expect(within(dialog).getByText(consts.CALENDAR_CHOICE_COPY.google.title)).toBeInTheDocument();
-    await expect(dialog.querySelector('.chosenCalendar > svg')).not.toBeNull();
+    await expect(dialog.querySelector('.chosenCalendar > .mark mask')).not.toBeNull();
     await expect(within(dialog).queryByText(consts.CALENDAR_QUESTION)).toBeNull();
 
     await userEvent.click(rowNamed(dialog, consts.ADD_ONE_TITLE));
@@ -76,13 +78,15 @@ export const ScopeAfterGoogle: Story = {
   },
 };
 
-// The device calendar has no mark of its own, so the subtitle is the title alone.
+// The device calendar has no brand mark: the plum calendar glyph stands in the
+// same slot.
 export const ScopeAfterDevice: Story = {
   args: { step: { step: 'scope', calendar: 'device', canGoBack: true } },
   play: async () => {
     const dialog = await sheet();
     await expect(within(dialog).getByText(consts.CALENDAR_CHOICE_COPY.device.title)).toBeInTheDocument();
-    await expect(dialog.querySelector('.chosenCalendar > svg')).toBeNull();
+    await expect(dialog.querySelector('.chosenCalendar > .mark path[stroke="currentColor"]')).not.toBeNull();
+    await expect(dialog.querySelector('.chosenCalendar > .mark mask')).toBeNull();
     await expect(within(dialog).getByRole('button', { name: consts.BACK_LABEL })).toBeInTheDocument();
   },
 };
@@ -134,8 +138,8 @@ export const CalendarQuestionAt320: Story = {
 };
 
 // From md the sheet is a centred dialog no wider than 480.
-const desktopDialogStory = (step: Story['args']): Story => ({
-  args: step,
+const desktopDialogStory = (args: Story['args']): Story => ({
+  args,
   globals: { viewport: { value: 'desktop', isRotated: false } },
   play: () =>
     atFrameSize(1280, 800, async () => {

@@ -25,10 +25,13 @@ export type CalendarLinkRequest = { calendar: CalendarChoice; platform: Calendar
   | { scope: 'all'; lessonId: string }
 );
 
-// Where the calendar sheet is. `scope` keeps the calendar already chosen, and
-// `canGoBack` is false only where there was no choice to go back to (Android,
-// whose calendar is always Google). Closed is the one state with no step, so
-// every reopening starts at the calendar question.
-export type CalendarSheetStep = { step: 'calendar' } | { step: 'scope'; calendar: CalendarChoice; canGoBack: boolean };
+// Where the calendar sheet is. `scope` keeps the calendar already chosen. Android
+// is never asked, so it opens at `scope` on Google with nothing to go back to:
+// the only state where `canGoBack` is false. Closed is the one state with no
+// step, so every other reopening starts at the calendar question.
+export type CalendarSheetStep =
+  | { step: 'calendar' }
+  | { step: 'scope'; calendar: CalendarChoice; canGoBack: true }
+  | { step: 'scope'; calendar: 'google'; canGoBack: false };
 
 export type CalendarSheetState = { step: 'closed' } | CalendarSheetStep;
