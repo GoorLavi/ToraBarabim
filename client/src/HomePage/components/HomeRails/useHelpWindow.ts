@@ -1,25 +1,28 @@
-import type { VisitorMessageType } from '@torabarabim/common';
+import type { HelpRequestType } from '@torabarabim/common';
 import { useState } from 'react';
 
-import { EMPTY_VISITOR_MESSAGE_DRAFT, EMPTY_VISITOR_MESSAGE_DRAFTS } from './components/HelpWindow/consts';
-import type { HelpWindowState, OpenHelpWindow, VisitorMessageDraft } from './models';
-import { useSendVisitorMessage } from './useSendVisitorMessage';
+import { EMPTY_VISITOR_MESSAGE_DRAFT } from '~/components/HelpWindow/consts';
+import type { VisitorMessageDraft } from '~/components/HelpWindow/models';
+import { useSendVisitorMessage } from '~/components/HelpWindow/useSendVisitorMessage';
+import { EMPTY_HELP_REQUEST_DRAFTS } from '~/HomePage/components/consts';
+
+import type { HelpWindowState, OpenHelpWindow } from './models';
 
 // Lives in `HomeRails`, above every tile and the window, so a refetch that
 // moves a tile to another row (the server places tiles anew on every
 // request) never closes the window or loses what was typed.
 export const useHelpWindow = (): HelpWindowState => {
   const [openWindow, setOpenWindow] = useState<OpenHelpWindow | undefined>(undefined);
-  const [drafts, setDrafts] = useState(EMPTY_VISITOR_MESSAGE_DRAFTS);
+  const [drafts, setDrafts] = useState(EMPTY_HELP_REQUEST_DRAFTS);
 
   const sends = { 'rabbi-request': useSendVisitorMessage(), volunteer: useSendVisitorMessage() };
   const sendStatuses = { 'rabbi-request': sends['rabbi-request'].status, volunteer: sends.volunteer.status };
 
-  const changeDraft = (kind: VisitorMessageType, draft: VisitorMessageDraft): void => {
+  const changeDraft = (kind: HelpRequestType, draft: VisitorMessageDraft): void => {
     setDrafts((current) => ({ ...current, [kind]: draft }));
   };
 
-  const send = (kind: VisitorMessageType): void => {
+  const send = (kind: HelpRequestType): void => {
     const { name, phone, message } = drafts[kind];
     sends[kind].send({ type: kind, name: name.trim(), phone, message: message.trim() });
   };

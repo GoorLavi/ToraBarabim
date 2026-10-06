@@ -1,4 +1,4 @@
-import type { LessonAudience, LessonTopic, LessonVenue, OccurrenceTiming, Rabbi } from '@torabarabim/common';
+import type { LessonAudience, LessonSchedule, LessonTopic, LessonVenue, OccurrenceTiming, Rabbi } from '@torabarabim/common';
 import { z } from 'zod';
 
 import { AREAS, LESSON_TOPICS } from '../../db/schema/enums';
@@ -77,9 +77,20 @@ export interface ResolvedLessonOccurrence {
 }
 
 // What `getOccurrence` returns: the resolved occurrence plus where it stands
-// against the clock.
+// against the clock, the lesson's own schedule, and the occurrence a one-off
+// "add to calendar" should add (see `LessonOccurrenceDetail`).
 export interface ResolvedLessonOccurrenceDetail extends ResolvedLessonOccurrence {
   timing: OccurrenceTiming;
+  schedule: LessonSchedule;
+  calendarOccurrence: ResolvedLessonOccurrence | null;
+}
+
+// One date of a lesson's calendar feed. `revisedAt` is the later of the
+// lesson's and that date's exception's last update, so a change to either
+// reads as a newer revision of the event. Domain shape only: the wire
+// `LessonOccurrence` does not carry it.
+export interface ResolvedCalendarOccurrence extends ResolvedLessonOccurrence {
+  revisedAt: Date;
 }
 
 // The resolved rabbi/place record behind a `rabbiId`/`placeId` filter that

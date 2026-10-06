@@ -1,4 +1,4 @@
-import type { HelpTileKind, HomeLessonRowId, LessonOccurrence, VisitorMessageType } from '@torabarabim/common';
+import type { HelpTileKind, HomeLessonRowId, HelpRequestType, LessonOccurrence } from '@torabarabim/common';
 
 export interface LessonRailProps {
   className?: string;
@@ -20,5 +20,5 @@ export interface LessonRailProps {
   helpTile?: { kind: HelpTileKind; index: number };
   // Opens the one window HomeRails owns. `opener` is the pressed tile, for
   // returning focus to it on close.
-  onOpenHelpTile: (kind: VisitorMessageType, opener: HTMLElement) => void;
+  onOpenHelpTile: (kind: HelpRequestType, opener: HTMLElement) => void;
 }

@@ -8,13 +8,14 @@ import { TYPE_LABELS } from '../../consts';
 import { useUpdateVisitorMessage } from '../../useUpdateVisitorMessage';
 import { HandlingNote } from './components/HandlingNote/HandlingNote';
 import * as consts from './consts';
-import { formatReceivedAt } from './helpers';
+import { formatReceivedAt, reportSubjectLink } from './helpers';
 import type { MessageCardProps } from './models';
 import * as styles from './styles';
 
 export const MessageCard = styled(({ className, message }: MessageCardProps) => {
   const toggle = useUpdateVisitorMessage(message.id);
   const isHandled = message.status === 'handled';
+  const subjectLink = message.type === 'report-mistake' ? reportSubjectLink(message.subject) : undefined;
 
   return (
     <article className={className}>
@@ -38,6 +39,12 @@ export const MessageCard = styled(({ className, message }: MessageCardProps) => 
         <p className="message" dir="auto">
           {message.message}
         </p>
+
+        {subjectLink && (
+          <a className="subject" href={subjectLink.href} target="_blank" rel="noopener noreferrer">
+            {subjectLink.label}
+          </a>
+        )}
 
         <HandlingNote {...{ messageId: message.id, note: message.handlingNote }} />
       </div>

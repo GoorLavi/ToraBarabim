@@ -36,3 +36,9 @@ export type RoleTense = OccurrenceTiming | 'cancelledPast';
 
 // What a page-level notice can announce: every timing except the ordinary one.
 export type PastNoticeTiming = Exclude<OccurrenceTiming, 'upcoming'>;
+
+// Which of the two actions under the ticket the occurrence offers.
+export interface LessonActionsAvailability {
+  canShare: boolean;
+  canAddToCalendar: boolean;
+}

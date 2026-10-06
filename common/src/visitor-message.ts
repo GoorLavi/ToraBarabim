@@ -1,18 +1,30 @@
-export type VisitorMessageType = 'rabbi-request' | 'volunteer';
+// The two requests the home tiles offer. A report is not one of them: it
+// opens from a lesson or a place page, never from a tile.
+export type HelpRequestType = 'rabbi-request' | 'volunteer';
 
-export interface CreateVisitorMessageRequest {
-  type: VisitorMessageType;
+export type VisitorMessageType = HelpRequestType | 'report-mistake';
+
+// What a report is about. A lesson is named by id and date, since a report
+// concerns one occurrence; a place by id. Not a foreign key anywhere: a
+// lesson is hard-deleted and the report must outlive it.
+export type VisitorMessageSubject = { kind: 'lesson'; lessonId: string; date: string } | { kind: 'place'; placeId: string };
+
+interface VisitorMessageFields {
   name: string;
   // As typed by the visitor; the server normalises it to 05XXXXXXXX.
   phone: string;
   message: string;
 }
 
+// Only a report carries a subject; a help request with one is rejected.
+export type CreateVisitorMessageRequest =
+  | (VisitorMessageFields & { type: HelpRequestType })
+  | (VisitorMessageFields & { type: 'report-mistake'; subject: VisitorMessageSubject });
+
 export type VisitorMessageStatusFilter = 'all' | 'unhandled' | 'handled';
 
 interface AdminVisitorMessageBase {
   id: string;
-  type: VisitorMessageType;
   name: string;
   // Stored in local form ('0521234567'); the client renders 052-123-4567.
   phone: string;
@@ -23,9 +35,13 @@ interface AdminVisitorMessageBase {
   handlingNote: string | null;
 }
 
-export type AdminVisitorMessage =
-  | (AdminVisitorMessageBase & { status: 'unhandled' })
-  | (AdminVisitorMessageBase & { status: 'handled'; handledAt: string });
+type AdminVisitorMessageContent =
+  | (AdminVisitorMessageBase & { type: HelpRequestType })
+  | (AdminVisitorMessageBase & { type: 'report-mistake'; subject: VisitorMessageSubject });
+
+type AdminVisitorMessageHandling = { status: 'unhandled' } | { status: 'handled'; handledAt: string };
+
+export type AdminVisitorMessage = AdminVisitorMessageContent & AdminVisitorMessageHandling;
 
 export interface VisitorMessageListResponse {
   items: AdminVisitorMessage[];

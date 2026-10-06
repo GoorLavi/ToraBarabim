@@ -15,16 +15,28 @@ import { LOGIN_RATE_LIMIT_MAX, LOGIN_RATE_LIMIT_WINDOW_MS } from '../service/adm
 // count is how to confirm it after the first deploy.
 const VISITOR_POSITION_FROM_RIGHT = 2;
 
-export const visitorRateLimitKey = (request: FastifyRequest): string => {
-  const header = request.headers['x-forwarded-for'];
+export interface ForwardedForVisitor {
+  componentCount: number;
+  // Undefined when the header has fewer entries than `positionFromRight`.
+  visitor: string | undefined;
+}
+
+// Pure, and shared with the calendar routes' own limit, which counts from
+// the right of the same header but may sit a different number of hops in.
+export const visitorFromForwardedFor = (header: string | string[] | undefined, positionFromRight: number): ForwardedForVisitor => {
   const components = (Array.isArray(header) ? header.join(',') : (header ?? ''))
     .split(',')
     .map((component) => component.trim())
     .filter((component) => component.length > 0);
 
-  request.log.info({ forwardedForComponents: components.length }, 'login rate limit key');
+  return { componentCount: components.length, visitor: components[components.length - positionFromRight] };
+};
 
-  const visitor = components[components.length - VISITOR_POSITION_FROM_RIGHT];
+export const visitorRateLimitKey = (request: FastifyRequest): string => {
+  const { componentCount, visitor } = visitorFromForwardedFor(request.headers['x-forwarded-for'], VISITOR_POSITION_FROM_RIGHT);
+
+  request.log.info({ forwardedForComponents: componentCount }, 'login rate limit key');
+
   return visitor ?? request.ip;
 };
 

@@ -5,16 +5,16 @@ import type { DedicationGroup } from './dedication';
 import type { LessonTopic } from './lesson';
 import type { LessonOccurrence } from './lesson-occurrence';
 import type { Rabbi } from './rabbi';
-import type { VisitorMessageType } from './visitor-message';
+import type { HelpRequestType } from './visitor-message';
 
 // A rabbi's prominence tier drives sort order within a home row and across
 // the "לפי רב" avatar row and the public rabbi directory; it never appears
 // on `Rabbi` or on any occurrence the client receives.
 export type RabbiProminence = 'local' | 'known' | 'sought';
 
-// What a help tile asks of the visitor: a message of one of the two types,
-// or a share of the site, which opens no window.
-export type HelpTileKind = VisitorMessageType | 'share';
+// What a help tile asks of the visitor: a help request of one of the two
+// types, or a share of the site, which opens no window.
+export type HelpTileKind = HelpRequestType | 'share';
 
 // A theme a visitor can browse by: every topic but the catch-all.
 export type HomeTopic = Exclude<LessonTopic, 'other'>;

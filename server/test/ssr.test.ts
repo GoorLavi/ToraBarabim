@@ -2,12 +2,21 @@ import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
 
 import type { CityDirectoryResponse, LessonOccurrence, LessonSearchResponse, RabbiHonorific } from '@torabarabim/common';
-import type { FastifyInstance } from 'fastify';
+import rateLimit from '@fastify/rate-limit';
+import { inArray } from 'drizzle-orm';
+import Fastify, { type FastifyInstance } from 'fastify';
+import { nanoid } from 'nanoid';
 
 import { HEALTH_RENDER_PROBE_PATH } from '../src/api/health/consts';
-import { buildRequestBody } from '../src/plugins/ssr';
+import { db } from '../src/db/client';
+import { cities, lessonExceptions, lessons, places, rabbis } from '../src/db/schema';
+import { registerErrorHandler } from '../src/plugins/error-handler';
+import { CALENDAR_RATE_LIMIT_MAX } from '../src/plugins/consts';
+import { buildRequestBody, registerSsr } from '../src/plugins/ssr';
 import * as courseService from '../src/service/course/course';
+import { CALENDAR_HORIZON_DAYS } from '../src/service/lesson/consts';
 import { addDays, nextDateOnWeekday, todayInIsrael } from '../src/service/lesson/israel-time';
+import * as placeService from '../src/service/place/place';
 import { toAreaSlug } from '../src/service/shared/consts';
 import { toSlug } from '../src/service/shared/slug';
 import storage from '../src/storage/storage';
@@ -17,8 +26,13 @@ import storage from '../src/storage/storage';
 // document's canonical is built from, the honorific a rabbi's name is
 // composed with) rather than a second, hand-typed copy of the domain.
 import { SITE_NAME, SITE_ORIGIN } from '../../client/consts';
-import { lessonPath, rabbiDisplayName } from '../../client/src/helpers';
+import { israelDateTime, lessonPath, rabbiDisplayName } from '../../client/src/helpers';
+import { calendarUtcStamp } from '../../client/src/lessonCalendar/helpers';
+import { CALENDAR_SITE_HOST, STATIC_EVENT_DISCLAIMER } from '../../client/src/lessonCalendar/consts';
+import type { CalendarEvent } from '../../client/src/lessonCalendar/models';
 import { MANIFEST_ICONS, MANIFEST_PATH, MANIFEST_START_URL, OFFLINE_PAGE_PATH, SERVICE_WORKER_PATH, SPLASH_SCREENS } from '../../client/src/pwa/consts';
+import { CALENDAR_CACHE_HEADERS } from '../../client/src/routes/consts';
+import { escapeIcsText, foldIcsLine, serializeCalendar } from '../../client/src/routes/ics.server';
 import { argamanVeZahavColors } from '../../client/src/theme/colors/argamanVeZahav';
 import { assertClientBuilt, assertDatabaseReachable, buildApp, rawClient } from './app-harness';
 
@@ -765,6 +779,314 @@ describe('SSR rendering seam', () => {
       assert.ok(page.body.includes(`href="${courseHref}"`), `expected the rabbi's page to link to ${courseHref}`);
     });
   });
+
+  // The calendar routes, case 7-9 and 11 of the plan. Own app, not
+  // `buildApp`: the rate limit these routes depend on is registered by
+  // `src/index.ts` and `buildApp` deliberately omits it, so the header that
+  // proves the rate-limited route (not the bare catch-all) answers the path
+  // could never appear there. The SSR plugin itself is the production one.
+  describe('the lesson calendar and the link previews', () => {
+    let calendarApp: FastifyInstance;
+    let cityCode: number;
+
+    const rabbiIds: string[] = [];
+    const lessonIds: string[] = [];
+    const placeIds: string[] = [];
+
+    const PHOTO_URL = 'https://photos.example.test/rabbi-with-photo.jpg';
+    const BASE_START_TIME = '19:30';
+    const MODIFIED_START_TIME = '21:15';
+
+    const weekdayOf = (isoDate: string): number => new Date(`${isoDate}T00:00:00Z`).getUTCDay();
+
+    const createRabbi = async (honorific: 'rav' | 'rabbanit', photoUrl?: string): Promise<{ id: string; name: string; honorific: 'rav' | 'rabbanit' }> => {
+      const rabbi = { id: `ssr-test-rabbi-${nanoid(8)}`, name: `רב לבדיקת יומן ${nanoid(6)}`, honorific };
+      await db.insert(rabbis).values({ ...rabbi, photoUrl });
+      rabbiIds.push(rabbi.id);
+      return rabbi;
+    };
+
+    const createLesson = async (fields: {
+      rabbiId: string;
+      audience: 'men' | 'women';
+      recurrence: { kind: 'once'; date: string } | { kind: 'weekly'; weekday: number };
+    }): Promise<string> => {
+      const id = `ssr-test-lesson-${nanoid(8)}`;
+      await db.insert(lessons).values({
+        id,
+        rabbiId: fields.rabbiId,
+        addressName: 'בית מדרש לבדיקת יומן',
+        addressStreet: 'רחוב הבדיקה 1',
+        cityCode,
+        audience: fields.audience,
+        recurrenceKind: fields.recurrence.kind,
+        ...(fields.recurrence.kind === 'once'
+          ? { recurrenceDate: fields.recurrence.date }
+          : { recurrenceWeekdays: [fields.recurrence.weekday] }),
+        startTime: BASE_START_TIME,
+        durationMinutes: 60,
+      });
+      lessonIds.push(id);
+      return id;
+    };
+
+    // Joins what a calendar app joins: a folded line is one logical line.
+    const unfold = (ics: string): string => ics.replace(/\r\n[ \t]/g, '');
+    const eventBlocksOf = (ics: string): string[] => unfold(ics).split('BEGIN:VEVENT\r\n').slice(1);
+    const uidOf = (date: string, lessonId: string): string => `UID:${lessonId}-${date}@${CALENDAR_SITE_HOST}`;
+
+    // Every date of a weekly lesson inside the calendar window, never a
+    // hard-coded count: the window is inclusive of today and today plus the
+    // horizon, so the count is 12 or 13 depending on the weekday.
+    const windowDatesOn = (today: string, weekday: number): string[] =>
+      Array.from({ length: CALENDAR_HORIZON_DAYS + 1 }, (_, offset) => addDays(today, offset)).filter((date) => weekdayOf(date) === weekday);
+
+    // The window starts at today in Israel, so a pair of fetches straddling
+    // midnight there would compare two different windows. Re-runs the whole
+    // body once if the day rolled over underneath it; the ETag assertion
+    // never spans a date change.
+    const withStableDay = async (run: (today: string) => Promise<void>): Promise<void> => {
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        const today = todayInIsrael(new Date());
+        await run(today);
+        if (todayInIsrael(new Date()) === today) return;
+      }
+      assert.fail('the Israel date changed during both attempts of one test');
+    };
+
+    const metaContents = (html: string, attribute: 'name' | 'property', value: string): string[] =>
+      [...html.matchAll(new RegExp(`<meta[^>]*${attribute}="${escapeForRegExp(value)}"[^>]*>`, 'g'))].map(
+        (tag) => /content="([^"]*)"/.exec(tag[0])?.[1] ?? '',
+      );
+
+    let rabbanit: { id: string; name: string; honorific: 'rav' | 'rabbanit' };
+    let weeklyLessonId: string;
+    let weeklyWeekday: number;
+    let cancelledDate: string;
+    let modifiedDate: string;
+
+    before(async () => {
+      calendarApp = Fastify({ logger: false });
+      await calendarApp.register(rateLimit, { global: false });
+      await registerSsr(calendarApp);
+      registerErrorHandler(calendarApp);
+
+      const [city] = await db.select({ code: cities.code }).from(cities).limit(1);
+      assert.ok(city, 'expected at least one seeded city to address the test lessons in');
+      cityCode = city.code;
+
+      const today = todayInIsrael(new Date());
+      weeklyWeekday = weekdayOf(addDays(today, 3));
+      cancelledDate = addDays(today, 3);
+      modifiedDate = addDays(today, 10);
+
+      rabbanit = await createRabbi('rabbanit');
+      weeklyLessonId = await createLesson({ rabbiId: rabbanit.id, audience: 'women', recurrence: { kind: 'weekly', weekday: weeklyWeekday } });
+      await db.insert(lessonExceptions).values([
+        { lessonId: weeklyLessonId, date: cancelledDate, kind: 'cancelled', reason: 'בדיקה' },
+        { lessonId: weeklyLessonId, date: modifiedDate, kind: 'modified', startTime: MODIFIED_START_TIME },
+      ]);
+    });
+
+    after(async () => {
+      await calendarApp.close();
+      await db.delete(lessonExceptions).where(inArray(lessonExceptions.lessonId, lessonIds));
+      await db.delete(lessons).where(inArray(lessons.id, lessonIds));
+      await db.delete(places).where(inArray(places.id, placeIds));
+      await db.delete(rabbis).where(inArray(rabbis.id, rabbiIds));
+    });
+
+    // Case 7. Catches duplicate events on refresh (an unstable UID), a
+    // cancellation that never reaches the calendar, and a body that changes
+    // on every fetch (a DTSTAMP read off the clock), which would defeat the
+    // ETag.
+    test('the feed lists every date in the window with stable UIDs, marks the cancelled one, and answers a repeat with 304', async () => {
+      await withStableDay(async (today) => {
+        const url = `/lesson/${weeklyLessonId}/calendar.ics`;
+        const first = await calendarApp.inject({ method: 'GET', url });
+        assert.equal(first.statusCode, 200);
+        assert.match(first.headers['content-type'] as string, /^text\/calendar/);
+        assert.equal(first.headers['cache-control'], CALENDAR_CACHE_HEADERS['Cache-Control']);
+        const etag = first.headers['etag'] as string | undefined;
+        assert.ok(etag, 'expected the feed to carry an ETag');
+
+        const expectedDates = windowDatesOn(today, weeklyWeekday);
+        const blocks = eventBlocksOf(first.body);
+        assert.equal(blocks.length, expectedDates.length, `expected one VEVENT per date in the window (${expectedDates.join(', ')})`);
+
+        const second = await calendarApp.inject({ method: 'GET', url });
+        const uidsOf = (ics: string): string[] => [...unfold(ics).matchAll(/^UID:.*$/gm)].map((match) => match[0]);
+        assert.deepEqual(uidsOf(second.body), uidsOf(first.body));
+        assert.deepEqual(uidsOf(first.body), expectedDates.map((date) => uidOf(date, weeklyLessonId)));
+        assert.equal(second.body, first.body, 'a feed that changes between two fetches can never be answered with a 304');
+
+        const cancelledBlock = blocks.find((block) => block.includes(uidOf(cancelledDate, weeklyLessonId)));
+        assert.ok(cancelledBlock, 'expected the cancelled date to stay in the feed');
+        assert.match(cancelledBlock, /STATUS:CANCELLED/);
+        assert.match(cancelledBlock, /SUMMARY:מבוטל: /);
+
+        const liveBlocks = blocks.filter((block) => block !== cancelledBlock);
+        assert.ok(liveBlocks.length > 0);
+        for (const block of liveBlocks) {
+          assert.match(block, /STATUS:CONFIRMED/);
+          assert.doesNotMatch(block, /SUMMARY:מבוטל/);
+          assert.ok(block.includes('לנשים'), "expected a rabbanit's women-only lesson to say who it is for");
+          assert.ok(block.includes(rabbiDisplayName(rabbanit)), 'expected the rabbi to be named with the honorific');
+        }
+
+        const revalidated = await calendarApp.inject({ method: 'GET', url, headers: { 'if-none-match': etag } });
+        assert.equal(revalidated.statusCode, 304);
+        assert.equal(revalidated.body, '');
+        assert.equal(revalidated.headers['etag'], etag);
+      });
+    });
+
+    // Case 8. The rate-limit header is the cheap proof that the rate-limited
+    // Fastify route, not the bare catch-all, serves the path; exhausting the
+    // bucket would cost minutes of test time for the same wiring proof.
+    test('an unknown well-formed id is an empty calendar, a malformed id is an uncached 400, and the route is rate limited', async () => {
+      const unknown = await calendarApp.inject({ method: 'GET', url: `/lesson/ssr-test-no-such-lesson/calendar.ics` });
+      assert.equal(unknown.statusCode, 200);
+      assert.match(unknown.body, /^BEGIN:VCALENDAR/);
+      assert.match(unknown.body, /END:VCALENDAR\r\n$/);
+      assert.equal(eventBlocksOf(unknown.body).length, 0);
+      assert.equal(unknown.headers['x-ratelimit-limit'], String(CALENDAR_RATE_LIMIT_MAX));
+
+      const malformed = await calendarApp.inject({ method: 'GET', url: '/lesson/%20/calendar.ics' });
+      assert.equal(malformed.statusCode, 400);
+      assert.equal(malformed.headers['cache-control'], 'no-store');
+    });
+
+    // Case 9.
+    test('event.ics for a date with a modified time is one event at the modified time with the disclaimer, and a date the lesson lacks is a 404', async () => {
+      const res = await calendarApp.inject({ method: 'GET', url: `/lesson/${weeklyLessonId}/${modifiedDate}/event.ics` });
+      assert.equal(res.statusCode, 200);
+      assert.match(res.headers['content-type'] as string, /^text\/calendar/);
+      assert.match(res.headers['content-disposition'] as string, /^attachment; filename="lesson\.ics"$/);
+
+      const blocks = eventBlocksOf(res.body);
+      assert.equal(blocks.length, 1);
+      const [block = ''] = blocks;
+      assert.ok(
+        block.includes(`DTSTART:${calendarUtcStamp(new Date(israelDateTime(modifiedDate, MODIFIED_START_TIME)))}`),
+        `expected the event at the modified ${MODIFIED_START_TIME}, not the base ${BASE_START_TIME}`,
+      );
+      assert.ok(block.includes(escapeIcsText(STATIC_EVENT_DISCLAIMER)), 'expected the one-off event to say it never updates');
+
+      const notALessonDate = addDays(modifiedDate, 1);
+      assert.notEqual(weekdayOf(notALessonDate), weeklyWeekday);
+      const missing = await calendarApp.inject({ method: 'GET', url: `/lesson/${weeklyLessonId}/${notALessonDate}/event.ics` });
+      assert.equal(missing.statusCode, 404);
+      assert.equal(missing.headers['cache-control'], 'no-store');
+    });
+
+    // Case 11. A rabbi's poster or nothing, never the logo, and exactly one
+    // card tag whose size follows the image.
+    describe('link previews', () => {
+      const expectPhotoPreview = (html: string): void => {
+        assert.deepEqual(metaContents(html, 'property', 'og:image'), [PHOTO_URL]);
+        assert.deepEqual(metaContents(html, 'name', 'twitter:card'), ['summary_large_image']);
+      };
+
+      const expectNoImagePreview = (html: string): void => {
+        assert.deepEqual(metaContents(html, 'property', 'og:image'), []);
+        assert.deepEqual(metaContents(html, 'name', 'twitter:card'), ['summary']);
+      };
+
+      test("a lesson page carries its teaching rabbi's photo, or no image at all with the small card", async () => {
+        const date = addDays(todayInIsrael(new Date()), 5);
+        const withPhoto = await createRabbi('rav', PHOTO_URL);
+        const withoutPhoto = await createRabbi('rav');
+        const withPhotoLessonId = await createLesson({ rabbiId: withPhoto.id, audience: 'men', recurrence: { kind: 'once', date } });
+        const withoutPhotoLessonId = await createLesson({ rabbiId: withoutPhoto.id, audience: 'men', recurrence: { kind: 'once', date } });
+
+        const photoPage = await calendarApp.inject({ method: 'GET', url: lessonPath({ lessonId: withPhotoLessonId, date }) });
+        assert.equal(photoPage.statusCode, 200);
+        expectPhotoPreview(photoPage.body);
+
+        const barePage = await calendarApp.inject({ method: 'GET', url: lessonPath({ lessonId: withoutPhotoLessonId, date }) });
+        assert.equal(barePage.statusCode, 200);
+        expectNoImagePreview(barePage.body);
+      });
+
+      // The reviewer's regression guard: reading `occurrence.rabbi.photoUrl`
+      // instead of the teaching rabbi's would pass every case above, because
+      // none of them has a substitute.
+      test("a lesson page takes its image from the substitute who teaches that date, not from the lesson's own rabbi", async () => {
+        const today = todayInIsrael(new Date());
+        const substituteDate = addDays(today, 3);
+        const ordinaryDate = addDays(today, 10);
+        const lessonRabbi = await createRabbi('rav');
+        const substitute = await createRabbi('rav', PHOTO_URL);
+        const lessonId = await createLesson({ rabbiId: lessonRabbi.id, audience: 'men', recurrence: { kind: 'weekly', weekday: weekdayOf(substituteDate) } });
+        await db.insert(lessonExceptions).values({ lessonId, date: substituteDate, kind: 'modified', substituteRabbiId: substitute.id });
+
+        const substitutePage = await calendarApp.inject({ method: 'GET', url: lessonPath({ lessonId, date: substituteDate }) });
+        assert.equal(substitutePage.statusCode, 200);
+        expectPhotoPreview(substitutePage.body);
+
+        const ordinaryPage = await calendarApp.inject({ method: 'GET', url: lessonPath({ lessonId, date: ordinaryDate }) });
+        assert.equal(ordinaryPage.statusCode, 200);
+        expectNoImagePreview(ordinaryPage.body);
+      });
+
+      test('a rabbi page carries the rabbi photo, or no image at all with the small card', async () => {
+        const withPhoto = await createRabbi('rav', PHOTO_URL);
+        const withoutPhoto = await createRabbi('rav');
+        const rabbiUrl = (rabbi: { id: string; name: string }): string => `/rabbis/${encodeURIComponent(rabbi.id)}/${encodeURIComponent(toSlug(rabbi.name) || rabbi.id)}`;
+
+        const photoPage = await calendarApp.inject({ method: 'GET', url: rabbiUrl(withPhoto) });
+        assert.equal(photoPage.statusCode, 200);
+        expectPhotoPreview(photoPage.body);
+
+        const barePage = await calendarApp.inject({ method: 'GET', url: rabbiUrl(withoutPhoto) });
+        assert.equal(barePage.statusCode, 200);
+        expectNoImagePreview(barePage.body);
+      });
+
+      test('a place page with no photo carries no image and the small card', async () => {
+        const id = `ssr-test-place-${nanoid(8)}`;
+        await db.insert(places).values({ id, slug: id, name: `מקום לבדיקת תצוגה ${nanoid(6)}`, street: 'רחוב הבדיקה 1', cityCode });
+        placeIds.push(id);
+
+        const place = await placeService.getById(id);
+        const page = await calendarApp.inject({ method: 'GET', url: `/places/${encodeURIComponent(place.id)}/${encodeURIComponent(place.slug)}` });
+        assert.equal(page.statusCode, 200);
+        expectNoImagePreview(page.body);
+      });
+    });
+
+    // Case 13. A shared link is the bare id plus `?s`, so WhatsApp carries no
+    // percent-encoded slug. The 301 to the canonical path used to drop the
+    // query string, losing the share tag (and any utm tags) on arrival. By
+    // the time the loader reads it the query has been re-serialized, so `?s`
+    // comes back as `?s=` (seen in CI): the guarantee is the parameter, not
+    // the exact bytes.
+    describe('a bare-id link keeps its query string through the canonical redirect', () => {
+      test('/rabbis/<id>?s answers 301 to the canonical slug path plus ?s', async () => {
+        const rabbi = await createRabbi('rav');
+
+        const res = await calendarApp.inject({ method: 'GET', url: `/rabbis/${encodeURIComponent(rabbi.id)}?s` });
+        assert.equal(res.statusCode, 301);
+        const location = new URL(String(res.headers['location']), SITE_ORIGIN);
+        assert.equal(location.pathname, `/rabbis/${encodeURIComponent(rabbi.id)}/${encodeURIComponent(toSlug(rabbi.name) || rabbi.id)}`);
+        assert.ok(location.searchParams.has('s'), `expected the share tag to survive, got ${location.search}`);
+      });
+
+      test('/places/<id>?s answers 301 to the canonical slug path plus ?s', async () => {
+        const id = `ssr-test-place-${nanoid(8)}`;
+        await db.insert(places).values({ id, slug: id, name: `מקום לבדיקת הפניה ${nanoid(6)}`, street: 'רחוב הבדיקה 1', cityCode });
+        placeIds.push(id);
+        const place = await placeService.getById(id);
+
+        const res = await calendarApp.inject({ method: 'GET', url: `/places/${encodeURIComponent(id)}?s` });
+        assert.equal(res.statusCode, 301);
+        const location = new URL(String(res.headers['location']), SITE_ORIGIN);
+        assert.equal(location.pathname, `/places/${encodeURIComponent(place.id)}/${encodeURIComponent(place.slug)}`);
+        assert.ok(location.searchParams.has('s'), `expected the share tag to survive, got ${location.search}`);
+      });
+    });
+  });
 });
 
 // Exercised directly rather than through `app.inject`: no route in the client
@@ -793,5 +1115,77 @@ describe('the SSR catch-all request body', () => {
 
   test('a request with no body forwards none', () => {
     assert.equal(buildRequestBody(undefined, undefined), undefined);
+  });
+});
+
+// Case 10. The calendar's serializer and its time conversion, pure: no
+// database and no client build, so they sit outside the suite's `before`.
+// Each is a defect a calendar app shows as garbage or as the wrong hour.
+describe('the calendar serializer and its time conversion', () => {
+  test('a 20:30 lesson is 18:30 UTC in January and 17:30 UTC in July', () => {
+    assert.equal(calendarUtcStamp(new Date(israelDateTime('2027-01-12', '20:30'))), '20270112T183000Z');
+    assert.equal(calendarUtcStamp(new Date(israelDateTime('2026-07-14', '20:30'))), '20260714T173000Z');
+  });
+
+  test('a long Hebrew line folds under 75 octets without splitting a two-byte letter', () => {
+    const line = `DESCRIPTION:${'שיעור בפרשת השבוע '.repeat(12)}`;
+    const folded = foldIcsLine(line);
+
+    const physicalLines = folded.split('\r\n');
+    assert.ok(physicalLines.length > 1, 'expected a line this long to fold');
+    for (const physical of physicalLines) {
+      assert.ok(Buffer.byteLength(physical, 'utf8') <= 75, `expected at most 75 octets, got ${Buffer.byteLength(physical, 'utf8')}`);
+    }
+    // Every continuation starts with the one space that marks it, and the
+    // unfolded text is the original: no letter was cut or dropped.
+    assert.ok(physicalLines.slice(1).every((physical) => physical.startsWith(' ')));
+    assert.equal(folded.replace(/\r\n /g, ''), line);
+    assert.ok(!folded.includes('�'));
+  });
+
+  // Expectations spell the backslash as a character code, so the test reads
+  // the same whatever happens to a doubled backslash on its way into a file.
+  test('a comma, a semicolon, a backslash and a newline in a text value are escaped', () => {
+    const backslash = String.fromCharCode(92);
+    const escaped = (character: string): string => `${backslash}${character}`;
+
+    assert.equal(escapeIcsText('a,b'), `a${escaped(',')}b`);
+    assert.equal(escapeIcsText('a;b'), `a${escaped(';')}b`);
+    assert.equal(escapeIcsText(`a${backslash}b`), `a${backslash}${backslash}b`);
+    assert.equal(escapeIcsText('a\nb'), `a${escaped('n')}b`);
+    assert.equal(escapeIcsText('a\r\nb'), `a${escaped('n')}b`);
+  });
+
+  const event: CalendarEvent = {
+    uid: `lesson-1-2026-10-13@${CALENDAR_SITE_HOST}`,
+    startUtc: new Date('2026-10-13T17:30:00Z'),
+    endUtc: new Date('2026-10-13T18:30:00Z'),
+    summary: 'שיעור, עם הרב',
+    location: 'בית מדרש; רחוב 1, עיר',
+    description: 'שורה ראשונה\nשורה שנייה',
+    url: 'https://torahbarabim.com/lesson/lesson-1/2026-10-13?utm_source=calendar',
+    isCancelled: false,
+  };
+
+  test('a serialized event ends every line with CRLF, escapes its text, and keeps a URL as it is', () => {
+    const ics = serializeCalendar([{ event, stampedAt: new Date('2026-10-06T00:00:00Z') }]);
+
+    assert.ok(ics.endsWith('END:VCALENDAR\r\n'));
+    assert.ok(!/[^\r]\n/.test(ics), 'expected no bare line feed');
+    const unfolded = ics.replace(/\r\n /g, '');
+    assert.ok(unfolded.includes('SUMMARY:שיעור\\, עם הרב\r\n'));
+    assert.ok(unfolded.includes('DESCRIPTION:שורה ראשונה\\nשורה שנייה\r\n'));
+    assert.ok(unfolded.includes('URL:https://torahbarabim.com/lesson/lesson-1/2026-10-13?utm_source=calendar\r\n'));
+  });
+
+  test('the same data serializes to the same bytes, and a later revision carries a higher SEQUENCE', () => {
+    const entry = (revisedAt: Date) => ({ event, stampedAt: revisedAt, revisedAt });
+    const sequenceOf = (ics: string): number => Number(/SEQUENCE:(\d+)/.exec(ics)?.[1]);
+
+    const earlier = serializeCalendar([entry(new Date('2026-10-06T08:00:00Z'))]);
+    assert.equal(serializeCalendar([entry(new Date('2026-10-06T08:00:00Z'))]), earlier);
+
+    const later = serializeCalendar([entry(new Date('2026-10-06T08:05:00Z'))]);
+    assert.equal(sequenceOf(later), sequenceOf(earlier) + 5);
   });
 });

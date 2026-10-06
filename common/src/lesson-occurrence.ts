@@ -1,4 +1,4 @@
-import type { LessonAudience, LessonTopic } from './lesson';
+import type { LessonAudience, LessonTopic, Weekday } from './lesson';
 import type { LessonVenue } from './venue';
 import type { Rabbi } from './rabbi';
 
@@ -45,10 +45,22 @@ export interface LessonOccurrence {
 // first half hour of a lesson that has begun is still `upcoming`.
 export type OccurrenceTiming = 'upcoming' | 'startedPastGrace' | 'tookPlace';
 
+// A lesson's own recurrence rule and base start time, read off the lesson
+// row and never off an exception: a date moved to another hour must not
+// change what the lesson is said to be.
+export type LessonSchedule = { kind: 'once' } | { kind: 'weekly'; weekdays: Weekday[]; startTime: string };
+
 // What the single-occurrence route returns: the occurrence plus its timing.
 // List responses carry plain `LessonOccurrence` and do not grow.
 export interface LessonOccurrenceDetail extends LessonOccurrence {
   timing: OccurrenceTiming;
+  schedule: LessonSchedule;
+  // The occurrence a one-off "add to calendar" should add, resolved in Israel
+  // time: this one when it is scheduled and still `upcoming`, else for a
+  // weekly lesson the next scheduled date within the calendar horizon. Null
+  // when there is none (a one-time lesson that is cancelled or has begun, or
+  // a weekly lesson with every date in the horizon cancelled).
+  calendarOccurrence: LessonOccurrence | null;
 }
 
 export interface LessonSearchResponse {

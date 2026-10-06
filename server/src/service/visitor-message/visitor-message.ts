@@ -37,10 +37,18 @@ const sendAlert = async (record: VisitorMessageRecord): Promise<VisitorMessageAl
   }
 };
 
+const subjectColumnsOf = (input: CreateVisitorMessageInput): Pick<typeof visitorMessages.$inferInsert, 'subjectKind' | 'subjectId' | 'subjectDate'> => {
+  if (input.type !== 'report-mistake') return {};
+  const { subject } = input;
+  return subject.kind === 'lesson'
+    ? { subjectKind: 'lesson', subjectId: subject.lessonId, subjectDate: subject.date }
+    : { subjectKind: 'place', subjectId: subject.placeId };
+};
+
 export const submit = async (input: CreateVisitorMessageInput): Promise<SubmitVisitorMessageResult> => {
   const [row] = await db
     .insert(visitorMessages)
-    .values({ id: nanoid(), type: input.type, name: input.name, phone: input.phone, message: input.message })
+    .values({ id: nanoid(), type: input.type, name: input.name, phone: input.phone, message: input.message, ...subjectColumnsOf(input) })
     .returning();
   if (!row) throw new Error('insert into visitor_messages returned no row');
 

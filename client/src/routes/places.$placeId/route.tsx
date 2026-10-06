@@ -10,7 +10,7 @@ import { PlacePage } from '~/PlacePage/PlacePage';
 
 import { SITE_ORIGIN } from '../../../consts';
 import { PUBLIC_CACHE_HEADERS, UNCACHEABLE_ERROR_HEADERS } from '../consts';
-import { SITE_WIDE_META_BASE } from '../meta';
+import { entityImageMeta, SITE_WIDE_META_BASE } from '../meta';
 import * as consts from './consts';
 import { loadPlaceDetail } from './place-detail.server';
 import type { PlaceRouteData } from './place-detail.server';
@@ -19,7 +19,7 @@ import type { PlaceRouteData } from './place-detail.server';
 // from its own panel, so a stale slug and a bare-id link both land here and
 // both get the same permanent redirect to the current canonical URL,
 // mirroring rabbis.$rabbiId/route.tsx.
-export const loader = async ({ params }: LoaderFunctionArgs): Promise<PlaceRouteData> => {
+export const loader = async ({ params, request }: LoaderFunctionArgs): Promise<PlaceRouteData> => {
   const { placeId, slug } = params;
   if (!placeId) {
     throw new Response('המקום לא נמצא', { status: 404, headers: UNCACHEABLE_ERROR_HEADERS });
@@ -27,8 +27,10 @@ export const loader = async ({ params }: LoaderFunctionArgs): Promise<PlaceRoute
 
   const data = await loadPlaceDetail(placeId, new Date());
 
+  // The query string travels with the redirect: a shared link is the bare id
+  // plus `?s`, and the tag must survive onto the canonical URL.
   if (slug !== data.place.slug) {
-    throw redirect(placePath(data.place), { status: 301, headers: PUBLIC_CACHE_HEADERS });
+    throw redirect(`${placePath(data.place)}${new URL(request.url).search}`, { status: 301, headers: PUBLIC_CACHE_HEADERS });
   }
 
   return data;
@@ -51,10 +53,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     { property: 'og:description', content: description },
     { property: 'og:url', content: url },
     ...SITE_WIDE_META_BASE,
-    // No fallback to the sitewide logo: a place with no photo of its own
-    // omits `og:image` entirely, so the collapsing photo band on the page
-    // and the social preview agree by construction.
-    ...(place.photoUrl ? [{ property: 'og:image', content: place.photoUrl }] : []),
+    ...entityImageMeta(place.photoUrl),
     { 'script:ld+json': consts.placeJsonLd(place, url) },
   ];
 };
