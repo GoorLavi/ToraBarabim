@@ -6,6 +6,9 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { createRequestHandler } from 'react-router';
 import type { ServerBuild } from 'react-router';
 
+import { calendarRateLimit } from './calendar-rate-limit';
+import { CALENDAR_RATE_LIMITED_MESSAGE } from './consts';
+
 // The client workspace's framework-mode build. Read-only from here: this
 // plugin only ever imports the build output, never client source. Resolved
 // from `__dirname` (this file compiles to CommonJS), which is `dist/plugins`
@@ -69,6 +72,28 @@ export const buildRequestBody = (body: unknown, contentType: string | undefined)
   if (body === undefined) return undefined;
   if (typeof body === 'string' && contentType?.startsWith(TEXT_PLAIN_CONTENT_TYPE)) return { content: body, contentType };
   return { content: JSON.stringify(body), contentType: 'application/json' };
+};
+
+// Exactly the two calendar resource routes (client/src/routes.ts). They get
+// their own Fastify routes, ahead of the catch-all, because the rate limit is
+// a per-route option and the catch-all must stay unlimited for every page.
+const CALENDAR_ROUTE_PATHS = ['/lesson/:lessonId/calendar.ics', '/lesson/:lessonId/:date/event.ics'];
+
+// Any answer other than a success or a revalidation is kept out of the
+// CDN's cache, the 429 included: CloudFront would otherwise hold a throttle
+// for the path's whole default TTL and serve it to every subscriber behind
+// that edge. Applied by an `onSend` hook rather than in the route modules
+// because the 429 never reaches one; the rate-limit hook answers it first.
+// The 429 body is replaced here too, since the app-wide error handler's
+// wording is written for the login form.
+const keepCalendarFailuresUncached = async (_request: FastifyRequest, reply: FastifyReply, payload: unknown): Promise<unknown> => {
+  if (reply.statusCode === 200 || reply.statusCode === 304) return payload;
+
+  reply.header('cache-control', 'no-store');
+  if (reply.statusCode !== 429) return payload;
+
+  reply.type('text/plain; charset=utf-8');
+  return CALENDAR_RATE_LIMITED_MESSAGE;
 };
 
 // No official Fastify adapter exists for React Router 7 (only Express), so
@@ -154,6 +179,17 @@ export const registerSsr = async (app: FastifyInstance): Promise<void> => {
     }
     return reply.send(Readable.fromWeb(response.body as never));
   };
+
+  for (const url of CALENDAR_ROUTE_PATHS) {
+    app.route({
+      method: ['GET', 'HEAD'],
+      url,
+      exposeHeadRoute: false,
+      config: { rateLimit: calendarRateLimit },
+      onSend: keepCalendarFailuresUncached,
+      handler: handleCatchAll,
+    });
+  }
 
   // `.all()` registers every method fastify knows on this one wildcard
   // path, which collides twice with routes already registered elsewhere:

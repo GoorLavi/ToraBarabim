@@ -5,7 +5,7 @@ import type { JsonLdObject } from './models';
 import { TITLE as CONTACT_TITLE } from '~/ContactPage/consts';
 import { kickerLabel } from '~/LessonPage/components/LessonTicket/helpers';
 import { TITLE_UNFILTERED as LESSONS_TITLE } from '~/LessonsPage/consts';
-import { cityPath, lessonPath, placePath, rabbiDisplayName, rabbiPath } from '~/helpers';
+import { cityPath, israelDateTime, lessonPath, placePath, rabbiDisplayName, rabbiPath } from '~/helpers';
 
 import { RABBI_HONORIFIC_LABELS } from '~/consts';
 
@@ -35,6 +35,19 @@ export const PUBLIC_CACHE_HEADERS = { 'Cache-Control': 'public, max-age=60, stal
 // by infra/lib/site-stack.ts's `SitemapCachePolicy`, so local development
 // and the CDN agree on the same window.
 export const SITEMAP_CACHE_HEADERS = { 'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800' };
+
+// The lesson calendar routes' own success caching (lesson-calendar.ts and
+// lesson-event.ts): one hour at the edge bounds how stale a subscriber's
+// calendar can be on top of the calendar app's own polling. Mirrored by
+// infra/lib/site-stack.ts's `CalendarCachePolicy`, whose default TTL is the
+// same hour, so local development and the CDN agree. Failures are never
+// cached: they carry `UNCACHEABLE_ERROR_HEADERS`.
+export const CALENDAR_CACHE_HEADERS = { 'Cache-Control': 'public, max-age=3600' };
+
+// How often a calendar app is told it may poll the feed. Longer than the
+// edge hour on purpose: polling more often than the edge refreshes only
+// fetches the same cached copy.
+export const CALENDAR_FEED_REFRESH_HOURS = 6;
 
 // home.tsx's own ErrorBoundary copy. A loader failure needs a route-level
 // boundary here, not just root.tsx's, so `headers()` sees `errorHeaders` and
@@ -122,27 +135,6 @@ export const lessonPageDescription = (occurrence: LessonOccurrenceDetail, teachi
   }
   return `${subject} עם ${teacherName} ב${occurrence.venue.city}, ${occurrence.venue.name}. פרטים מלאים ב${SITE_NAME}.`;
 };
-
-const JERUSALEM_OFFSET_FORMATTER = new Intl.DateTimeFormat('en-US', {
-  timeZone: 'Asia/Jerusalem',
-  timeZoneName: 'longOffset',
-  hour: 'numeric',
-});
-
-// schema.org's `startDate`/`endDate` need a real UTC offset, not just the
-// bare wall-clock time an occurrence carries: Israel's clock shifts between
-// +02:00 and +03:00 across the DST boundary within the same lesson season,
-// so a fixed offset would misreport roughly half the year. Read off the
-// actual IANA zone for the occurrence's own date rather than hand-coding
-// the transition dates.
-const israelUtcOffset = (isoDate: string): string => {
-  const zoneName = JERUSALEM_OFFSET_FORMATTER.formatToParts(new Date(`${isoDate}T12:00:00Z`)).find(
-    (part) => part.type === 'timeZoneName',
-  )?.value;
-  return zoneName?.replace('GMT', '') || '+00:00';
-};
-
-const israelDateTime = (isoDate: string, clockTime: string): string => `${isoDate}T${clockTime}:00${israelUtcOffset(isoDate)}`;
 
 // lesson.tsx's own structured data. `performer` is whoever actually teaches
 // this occurrence (LessonPage/helpers.ts's `teachingRabbiOf`), never the

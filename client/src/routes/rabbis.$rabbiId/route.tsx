@@ -11,7 +11,7 @@ import { RabbiPage } from '~/RabbiPage/RabbiPage';
 
 import { SITE_ORIGIN } from '../../../consts';
 import { PUBLIC_CACHE_HEADERS, UNCACHEABLE_ERROR_HEADERS } from '../consts';
-import { DEFAULT_OG_IMAGE_META, SITE_WIDE_META_BASE } from '../meta';
+import { entityImageMeta, SITE_WIDE_META_BASE } from '../meta';
 import * as consts from './consts';
 import { loadRabbiDetail } from './rabbi-detail.server';
 
@@ -58,7 +58,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     { property: 'og:description', content: description },
     { property: 'og:url', content: url },
     ...SITE_WIDE_META_BASE,
-    ...DEFAULT_OG_IMAGE_META,
+    ...entityImageMeta(data.photoUrl),
     { 'script:ld+json': consts.personJsonLd(data, url) },
   ];
 };

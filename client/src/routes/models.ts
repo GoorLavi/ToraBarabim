@@ -1,3 +1,5 @@
+import type { CalendarEvent } from '../lessonCalendar/models';
+
 // A JSON-LD value, matching the shape React Router's own `"script:ld+json"`
 // meta descriptor accepts (its `LdJsonObject`/`LdJsonValue` are internal to
 // the library and not exported), so every route building structured data
@@ -10,3 +12,21 @@
 // script tag by hand would silently remove it.
 export type JsonLdValue = string | number | boolean | null | JsonLdValue[] | JsonLdObject;
 export type JsonLdObject = { [key: string]: JsonLdValue };
+
+// One event as the calendar serializer (ics.server.ts) writes it.
+// `stampedAt` is the event's DTSTAMP. `revisedAt` is present only for an
+// event whose revision calendar apps track (the subscribed feed): it adds
+// LAST-MODIFIED and SEQUENCE, so a change counts as a newer version of the
+// event and a one-off file, which is never revised, carries neither.
+export interface IcsEntry {
+  event: CalendarEvent;
+  stampedAt: Date;
+  revisedAt?: Date;
+}
+
+// What only a subscribed feed says about itself: its display name and how
+// often a client may poll.
+export interface IcsFeedHeader {
+  name: string;
+  refreshIntervalHours: number;
+}

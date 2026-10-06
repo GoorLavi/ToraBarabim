@@ -10,7 +10,7 @@ import { PlacePage } from '~/PlacePage/PlacePage';
 
 import { SITE_ORIGIN } from '../../../consts';
 import { PUBLIC_CACHE_HEADERS, UNCACHEABLE_ERROR_HEADERS } from '../consts';
-import { SITE_WIDE_META_BASE } from '../meta';
+import { entityImageMeta, SITE_WIDE_META_BASE } from '../meta';
 import * as consts from './consts';
 import { loadPlaceDetail } from './place-detail.server';
 import type { PlaceRouteData } from './place-detail.server';
@@ -51,10 +51,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     { property: 'og:description', content: description },
     { property: 'og:url', content: url },
     ...SITE_WIDE_META_BASE,
-    // No fallback to the sitewide logo: a place with no photo of its own
-    // omits `og:image` entirely, so the collapsing photo band on the page
-    // and the social preview agree by construction.
-    ...(place.photoUrl ? [{ property: 'og:image', content: place.photoUrl }] : []),
+    ...entityImageMeta(place.photoUrl),
     { 'script:ld+json': consts.placeJsonLd(place, url) },
   ];
 };

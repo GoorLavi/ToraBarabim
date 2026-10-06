@@ -48,3 +48,72 @@ describe('the distribution geographic restriction', () => {
     assert.ok(!BLOCKED_VIEWER_COUNTRIES.includes('IL'), 'IL must never be blocked at the edge');
   });
 });
+
+describe('the lesson calendar behaviors', () => {
+  const CALENDAR_PATH_PATTERNS = ['/lesson/*/calendar.ics', '/lesson/*/*/event.ics'];
+
+  // The behavior points at a cache policy by a logical id, so the policy's
+  // own properties are read through that reference instead of by name.
+  test('both calendar paths have a behavior on the calendar cache policy, with the query string out of the key', () => {
+    const template = buildSiteStackTemplate();
+
+    const calendarPolicies = template.findResources('AWS::CloudFront::CachePolicy', {
+      Properties: {
+        CachePolicyConfig: {
+          DefaultTTL: 3600,
+          MinTTL: 0,
+          MaxTTL: 86400,
+          ParametersInCacheKeyAndForwardedToOrigin: {
+            QueryStringsConfig: { QueryStringBehavior: 'none' },
+            CookiesConfig: { CookieBehavior: 'none' },
+            HeadersConfig: { HeaderBehavior: 'none' },
+          },
+        },
+      },
+    });
+    const calendarPolicyIds = Object.keys(calendarPolicies);
+    assert.equal(calendarPolicyIds.length, 1, 'expected exactly one cache policy shaped like the calendar one');
+
+    const [distribution] = Object.values(template.findResources('AWS::CloudFront::Distribution'));
+    const behaviors = distribution?.Properties.DistributionConfig.CacheBehaviors as Array<{
+      PathPattern: string;
+      CachePolicyId: { Ref: string };
+      ViewerProtocolPolicy: string;
+    }>;
+
+    for (const pathPattern of CALENDAR_PATH_PATTERNS) {
+      const behavior = behaviors.find((candidate) => candidate.PathPattern === pathPattern);
+      assert.ok(behavior, `expected a behavior for ${pathPattern}`);
+      assert.deepEqual(behavior.CachePolicyId, { Ref: calendarPolicyIds[0] }, `expected ${pathPattern} to use the calendar cache policy`);
+      assert.equal(behavior.ViewerProtocolPolicy, 'redirect-to-https');
+    }
+  });
+
+  test('the calendar behaviors forward nothing from the viewer to the origin', () => {
+    const template = buildSiteStackTemplate();
+
+    const forwardNothingPolicies = template.findResources('AWS::CloudFront::OriginRequestPolicy', {
+      Properties: {
+        OriginRequestPolicyConfig: {
+          CookiesConfig: { CookieBehavior: 'none' },
+          HeadersConfig: { HeaderBehavior: 'none' },
+          QueryStringsConfig: { QueryStringBehavior: 'none' },
+        },
+      },
+    });
+    const forwardNothingIds = Object.keys(forwardNothingPolicies);
+    assert.equal(forwardNothingIds.length, 1, 'expected exactly one origin request policy that forwards nothing');
+
+    const [distribution] = Object.values(template.findResources('AWS::CloudFront::Distribution'));
+    const behaviors = distribution?.Properties.DistributionConfig.CacheBehaviors as Array<{
+      PathPattern: string;
+      OriginRequestPolicyId: { Ref: string };
+    }>;
+
+    for (const pathPattern of CALENDAR_PATH_PATTERNS) {
+      const behavior = behaviors.find((candidate) => candidate.PathPattern === pathPattern);
+      assert.ok(behavior, `expected a behavior for ${pathPattern}`);
+      assert.deepEqual(behavior.OriginRequestPolicyId, { Ref: forwardNothingIds[0] });
+    }
+  });
+});
