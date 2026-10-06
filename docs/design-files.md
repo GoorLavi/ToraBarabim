@@ -131,24 +131,17 @@ new goes into them. They keep their old names, which is how you can tell.
 Current work that is not part of the map yet, so nobody mistakes it for archive or
 tidies it away:
 
-- **`01 בית · הקדשות · לאישור`** (`323:488`), beside `01 בית`: the home page with the
-  dedication bands drawn at their measured heights, four phone frames and no desktop
-  yet. It waits on the owner, and on the width decision above. Since 2026-10-05 `01 בית`
-  already carries the success and healing bands in their shipped slots (after rails 6
-  and 8), so this page folds into those positions rather than adding bands again.
-- **`01 בית · חלון הקדשה · לאישור`** (`331:690`), beside the page above: the one
-  dedication window every band opens, and the bands' invitation line. Phone at 390 and
-  320, desktop at 1280, and the band's rest, hover and focus states. Aligned to the
-  built code on 2026-09-24; it folds into `01 בית` with the dedication page.
 - **`הקדשות · אזור בדיקה`** (`123:2`), a page at the end of the site file: the
   dedication masters, the notes for directions F to N with the reasoning for each,
   and an archive section. Those notes are the only place that reasoning is written,
   so deleting the page deletes it.
 
-Each folds into the numbered structure when its change ships. The help-tile approval
-pages did exactly that on 2026-10-05: `01 בית` gained the help-tiles section
-(`474:1770`), the admin file gained `07 הודעות` (`197:2`), and the four help-tile and
-messages approval pages (two rounds each) were deleted with the owner's approval.
+Each folds into the numbered structure when its change ships. The dedication and
+help-tile approval pages did exactly that: `01 בית` carries the dedications section
+(`470:6317`) and, since 2026-10-05, the help-tiles section (`474:1770`); the admin file
+gained `07 הודעות` (`197:2`); and the approval pages for both (the two dedication
+pages, and two rounds each of the help-tile and messages pages) are gone, the latter
+deleted with the owner's approval on 2026-10-05.
 
 ## Known gaps, on purpose
 
