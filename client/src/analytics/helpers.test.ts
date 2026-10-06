@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isAutomatedBrowser, launchModeFrom, posterSourceFrom } from './helpers';
+import { appSurfaceFor, isAutomatedBrowser, launchModeFrom, posterSourceFrom } from './helpers';
 
 describe('posterSourceFrom', () => {
   it('maps the recruiting poster QR value to listers', () => {
@@ -43,6 +43,31 @@ describe('isAutomatedBrowser', () => {
     const userAgent =
       'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36';
     expect(isAutomatedBrowser({ userAgent, webdriver: false })).toBe(false);
+  });
+});
+
+describe('appSurfaceFor', () => {
+  it.each([
+    ['/admin', 'adminPanel'],
+    ['/admin/lessons', 'adminPanel'],
+    ['/rabbi', 'rabbiPanel'],
+    ['/rabbi/lessons', 'rabbiPanel'],
+    ['/place', 'placePanel'],
+    ['/place/lessons', 'placePanel'],
+    ['/login', 'panelLogin'],
+  ] as const)('classifies %s as %s', (pathname, surface) => {
+    expect(appSurfaceFor(pathname)).toBe(surface);
+  });
+
+  it.each(['/', '/rabbis', '/rabbis/abc/some-slug', '/places', '/places/abc/some-slug', '/cities/jerusalem', '/lessons'])(
+    'keeps %s public, since a panel prefix is only matched on a segment boundary',
+    (pathname) => {
+      expect(appSurfaceFor(pathname)).toBe('public');
+    },
+  );
+
+  it('keeps a path that merely starts with the word login public', () => {
+    expect(appSurfaceFor('/loginx')).toBe('public');
   });
 });
 
