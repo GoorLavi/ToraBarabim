@@ -283,6 +283,13 @@ export interface SuperProperties {
   posterSource?: PosterSource;
 }
 
+// Who a signed-in panel account is, as Mixpanel is told. The role decides
+// which id travels, so a rabbi can never be sent with a place id or the
+// reverse. `name` is the display form: a rabbi's carries the honorific.
+export type PanelUserIdentity =
+  | { role: 'rabbi'; accountId: string; name: string; rabbiId: string }
+  | { role: 'place'; accountId: string; name: string; placeId: string };
+
 export type AnalyticsEventName = (typeof MIXPANEL_EVENTS)[keyof typeof MIXPANEL_EVENTS];
 
 // The rabbi and admin panels fire events of their own (login/logout, tab
@@ -306,8 +313,9 @@ export type AnalyticsEventProps = {
   [MIXPANEL_EVENTS.clearFiltersClick]: ClearFiltersClickProps;
   [MIXPANEL_EVENTS.retryClick]: RetryClickProps;
   [MIXPANEL_EVENTS.railScroll]: RailScrollProps;
-  [MIXPANEL_EVENTS.rabbiLogin]: UntypedPanelEventProps;
+  [MIXPANEL_EVENTS.panelLogin]: undefined;
   [MIXPANEL_EVENTS.rabbiLogout]: UntypedPanelEventProps;
+  [MIXPANEL_EVENTS.placeLogout]: undefined;
   [MIXPANEL_EVENTS.panelTabClick]: UntypedPanelEventProps;
   [MIXPANEL_EVENTS.lessonSaved]: UntypedPanelEventProps;
   [MIXPANEL_EVENTS.lessonDeleted]: UntypedPanelEventProps;

@@ -20,7 +20,10 @@ in their panel and read who it was, which a browser id cannot give him.
   honorific, a place's name) and the rabbi or place id. Nothing else: no email, no phone.
 - **The name is read from the live profile**, not from the account's copy of it, and is
   set again on every panel visit, so an edited name follows.
-- **Logging out resets the identity.** The browser is anonymous again from then on.
+- **Logging out resets the identity.** The browser is anonymous again from then on. A
+  login resets it too, before anything else, so a browser that still carries a previous
+  account (a session that expired without a logout, a shared computer) never has the
+  new login attributed to the old account.
 - **Admins are not identified.** [0052](0052-our-own-browsing-is-not-counted.md) keeps
   their browsers out of Mixpanel altogether, and that comes first.
 - **The two missing lifecycle events exist**: `Panel Login` on the shared login door and
@@ -34,8 +37,11 @@ in their panel and read who it was, which a browser id cannot give him.
   also a gap for the panel users, and it is still accepted on purpose.
 - While a rabbi stays signed in (the session cookie outlives the visit) their browsing of
   the public site from the same browser is attributed to them, not to an anonymous
-  seeker. Only a logout ends that. 0052's "rabbis are counted" still holds, under their
-  name rather than a browser id.
+  seeker. Only a logout or the next login ends that: a session that merely expires
+  leaves the identity on the browser until one of them. 0052's "rabbis are counted"
+  still holds, under their name rather than a browser id.
+- Browsing done before a login is not joined to the account: the reset on login starts
+  a fresh anonymous id, and only what follows is merged into the account.
 - Mixpanel's `reset()` also drops the registered super properties, so the logout path
   re-registers them. A later wrapper change that forgets this ships events with no
   `appSurface` after a logout.
