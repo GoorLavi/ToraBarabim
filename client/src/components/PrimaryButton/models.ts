@@ -1,6 +1,9 @@
+import type { ReactNode } from 'react';
+
 interface PrimaryButtonBaseProps {
   className?: string;
   label: string;
+  icon?: ReactNode;
 }
 
 // A navigation action renders as a link, a retry or an in-place action

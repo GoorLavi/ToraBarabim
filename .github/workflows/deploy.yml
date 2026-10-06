@@ -280,7 +280,41 @@ jobs:
       # cleaned up by anything; see the report for that gap.
       - name: Sync the client build to the client bucket
         run: |
-          aws s3 sync client-dist "s3://${{ steps.site-outputs.outputs.ClientBucketName }}"
+          aws s3 sync client-dist "s3://${{ steps.site-outputs.outputs.ClientBucketName }}" \
+            --exclude 'sw.js' --exclude 'manifest.webmanifest' --exclude 'pwa/*' --exclude 'apple-touch-icon.png'
+
+      # The icons, splash images, offline page and the touch icon are named,
+      # not hashed, so they get a day rather than the default the sync above
+      # leaves them with. Mirrors SHORT_LIVED_FILE_CACHE_CONTROL in
+      # server/src/plugins/ssr.ts, which serves the same files with the same
+      # header. Before the two steps below on purpose: the worker precaches the
+      # offline page and the manifest names the icons, so neither may go live
+      # first. `cp` for the touch icon, not `sync`: a changed icon of the same
+      # size would otherwise be skipped.
+      - name: Sync the install icons, splash images and offline page
+        run: |
+          aws s3 sync client-dist/pwa "s3://${{ steps.site-outputs.outputs.ClientBucketName }}/pwa" \
+            --cache-control 'public, max-age=86400'
+          aws s3 cp client-dist/apple-touch-icon.png "s3://${{ steps.site-outputs.outputs.ClientBucketName }}/apple-touch-icon.png" \
+            --cache-control 'public, max-age=86400' --content-type 'image/png'
+
+      # `cp`, not `sync`, for the next two: sync decides by size and time,
+      # and a worker that changed only its version string keeps its size.
+      # `no-cache` is what the browser sees; the edge holds them for 60
+      # seconds regardless (TorabarabimSite's ServiceWorkerCachePolicy). The
+      # explicit content types matter because the worker is refused unless it
+      # is served as JavaScript.
+      - name: Upload the manifest
+        run: |
+          aws s3 cp client-dist/manifest.webmanifest "s3://${{ steps.site-outputs.outputs.ClientBucketName }}/manifest.webmanifest" \
+            --cache-control 'no-cache' --content-type 'application/manifest+json'
+
+      # Last of the client files: a worker that goes live before the offline
+      # page it precaches fails its install.
+      - name: Upload the service worker
+        run: |
+          aws s3 cp client-dist/sw.js "s3://${{ steps.site-outputs.outputs.ClientBucketName }}/sw.js" \
+            --cache-control 'no-cache' --content-type 'text/javascript; charset=utf-8'
 
       # Framework mode emits no `index.html`; documents come from the server
       # origin now, not this bucket. What this bucket holds is hashed assets,
@@ -399,3 +433,58 @@ jobs:
           aws ecs wait services-stable \
             --cluster "${{ steps.server-outputs.outputs.ClusterName }}" \
             --services "${{ steps.server-outputs.outputs.ServiceName }}"
+
+  # Reads back what the visitors' browsers will ask for. Runs last and blocks
+  # nothing, so a failure here is a loud signal, not a rollback: the
+  # most likely cause is that the CloudFront behaviors for these paths are not
+  # deployed yet (infra/README.md, "Installable site"), in which case the
+  # files are answered by the container instead and carry the same headers
+  # from server/src/plugins/ssr.ts, which this check cannot tell apart.
+  # Fails closed on a missing or mistyped header, because a worker served as
+  # anything but JavaScript is silently refused by every browser.
+  verify-install-files:
+    needs: [deploy-server]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Read the site address
+        id: site-outputs
+        run: |
+          SITE_URL=$(aws cloudformation describe-stacks --stack-name "$SITE_STACK" \
+            --query "Stacks[0].Outputs[?OutputKey=='SiteUrl'].OutputValue" --output text)
+          echo "site-url=$SITE_URL" >> "$GITHUB_OUTPUT"
+
+      # The invalidation from `deploy-client` takes a minute or two to reach
+      # every edge, so each check retries before it fails.
+      - name: Check the headers of the worker, the manifest, the offline page and the touch icon
+        run: |
+          SITE_URL="${{ steps.site-outputs.outputs.site-url }}"
+          check() {
+            local path="$1" expected_type="$2" expected_cache="$3"
+            for attempt in 1 2 3 4 5 6; do
+              HEADERS=$(curl -sS -o /dev/null -D - "$SITE_URL$path" | tr -d '\r')
+              STATUS=$(echo "$HEADERS" | head -n 1 | awk '{print $2}')
+              TYPE=$(echo "$HEADERS" | grep -i '^content-type:' | head -n 1)
+              CACHE=$(echo "$HEADERS" | grep -i '^cache-control:' | head -n 1)
+              if [ "$STATUS" = "200" ] && echo "$TYPE" | grep -qi "$expected_type" && echo "$CACHE" | grep -qi "$expected_cache"; then
+                echo "OK $path: $STATUS, $TYPE, $CACHE"
+                return 0
+              fi
+              echo "Attempt $attempt for $path: status '$STATUS', '$TYPE', '$CACHE'"
+              sleep 20
+            done
+            echo "Expected $path to answer 200 with content type matching '$expected_type' and cache control matching '$expected_cache'." >&2
+            return 1
+          }
+          check /sw.js 'javascript' 'no-cache'
+          check /manifest.webmanifest 'application/manifest+json' 'no-cache'
+          check /pwa/offline.html 'text/html' 'max-age=86400'
+          check /apple-touch-icon.png 'image/png' 'max-age=86400'

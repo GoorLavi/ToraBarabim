@@ -16,8 +16,10 @@ import storage from '../src/storage/storage';
 // its own assertions run the site's real conversion logic (the origin a
 // document's canonical is built from, the honorific a rabbi's name is
 // composed with) rather than a second, hand-typed copy of the domain.
-import { SITE_ORIGIN } from '../../client/consts';
+import { SITE_NAME, SITE_ORIGIN } from '../../client/consts';
 import { lessonPath, rabbiDisplayName } from '../../client/src/helpers';
+import { MANIFEST_ICONS, MANIFEST_PATH, MANIFEST_START_URL, OFFLINE_PAGE_PATH, SERVICE_WORKER_PATH, SPLASH_SCREENS } from '../../client/src/pwa/consts';
+import { argamanVeZahavColors } from '../../client/src/theme/colors/argamanVeZahav';
 import { assertClientBuilt, assertDatabaseReachable, buildApp, rawClient } from './app-harness';
 
 const extractTitle = (html: string): string => {
@@ -46,6 +48,20 @@ const extractJsonLd = (html: string, type: string): Record<string, unknown> => {
   const block = blocks.find((candidate) => candidate['@type'] === type);
   assert.ok(block, `expected the document to include a ${type} JSON-LD block`);
   return block;
+};
+
+// Every attribute of every `<tag ...>` in the document, so a test asserts on
+// what a tag carries rather than on the order the renderer happened to write
+// its attributes in.
+const extractTags = (html: string, tagName: string): Record<string, string>[] =>
+  [...html.matchAll(new RegExp(`<${tagName}\\s[^>]*>`, 'g'))].map((tag) =>
+    Object.fromEntries([...tag[0].matchAll(/([\w:-]+)="([^"]*)"/g)].map((attribute) => [attribute[1] ?? '', attribute[2] ?? ''])),
+  );
+
+const extractNamedMeta = (html: string, name: string): string => {
+  const tag = extractTags(html, 'meta').find((attributes) => attributes['name'] === name);
+  assert.ok(tag, `expected the document to include a <meta name="${name}"> tag`);
+  return tag['content'] ?? '';
 };
 
 const escapeForRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -155,6 +171,117 @@ describe('SSR rendering seam', () => {
 
       const doctypeCount = (res.body.match(/<!doctype html>/gi) ?? []).length;
       assert.equal(doctypeCount, 1, `expected exactly one doctype, got ${doctypeCount}`);
+    });
+  });
+
+  describe('the installable site', () => {
+    const getHeader = (headers: Record<string, unknown>, name: string): string => String(headers[name] ?? '');
+
+    // The worker is the one file that must never be served from a cache: a
+    // stale copy is how a fix, or the kill switch, never reaches a visitor.
+    test('sw.js is JavaScript that is never cached, and names an offline page that answers', async () => {
+      const worker = await app.inject({ method: 'GET', url: SERVICE_WORKER_PATH });
+      assert.equal(worker.statusCode, 200);
+      assert.match(getHeader(worker.headers, 'content-type'), /javascript/);
+      assert.equal(getHeader(worker.headers, 'cache-control'), 'no-cache');
+      assert.ok(worker.body.includes(OFFLINE_PAGE_PATH), `expected sw.js to name ${OFFLINE_PAGE_PATH}`);
+      assert.doesNotMatch(worker.body, /__BUILD_VERSION__/, 'expected the build to have stamped a version into sw.js');
+
+      const offline = await app.inject({ method: 'GET', url: OFFLINE_PAGE_PATH });
+      assert.equal(offline.statusCode, 200, `expected the page sw.js precaches to answer, got ${offline.statusCode}`);
+      assert.match(getHeader(offline.headers, 'content-type'), /^text\/html/);
+    });
+
+    test('the manifest is never cached, identifies the app, and every icon it lists is a PNG that answers', async () => {
+      const response = await app.inject({ method: 'GET', url: MANIFEST_PATH });
+      assert.equal(response.statusCode, 200);
+      assert.match(getHeader(response.headers, 'content-type'), /^application\/manifest\+json/);
+      assert.equal(getHeader(response.headers, 'cache-control'), 'no-cache');
+
+      const manifest = response.json() as Record<string, unknown> & { icons: { src: string; purpose: string; sizes: string }[] };
+      assert.equal(manifest['id'], '/');
+      assert.equal(manifest['start_url'], MANIFEST_START_URL);
+      assert.equal(manifest['scope'], '/');
+      assert.equal(manifest['display'], 'standalone');
+      assert.equal(manifest['lang'], 'he');
+      assert.equal(manifest['dir'], 'rtl');
+      assert.equal(manifest['name'], SITE_NAME);
+      assert.equal(manifest['theme_color'], argamanVeZahavColors.primary);
+      assert.equal(manifest['background_color'], argamanVeZahavColors.primary);
+
+      assert.deepEqual(
+        manifest.icons.map((icon) => icon.src),
+        MANIFEST_ICONS.map((icon) => icon.src),
+      );
+      assert.ok(manifest.icons.some((icon) => icon.purpose === 'maskable'), 'expected a maskable icon');
+      assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'), 'expected a 192x192 icon');
+      assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'), 'expected a 512x512 icon');
+
+      for (const icon of manifest.icons) {
+        const image = await app.inject({ method: 'GET', url: icon.src });
+        assert.equal(image.statusCode, 200, `expected ${icon.src} to be served, got ${image.statusCode}`);
+        assert.equal(getHeader(image.headers, 'content-type'), 'image/png', `expected ${icon.src} to be a PNG`);
+      }
+    });
+
+    // The page is cached by the worker and shown with no network at all, so
+    // anything it links to would be a request that fails exactly when the
+    // page is needed.
+    test('the offline page is self-contained: no script, no stylesheet link, nothing fetched from elsewhere', async () => {
+      const response = await app.inject({ method: 'GET', url: OFFLINE_PAGE_PATH });
+      assert.equal(response.statusCode, 200);
+      assert.match(getHeader(response.headers, 'content-type'), /^text\/html/);
+
+      assert.doesNotMatch(response.body, /<script[^>]*\ssrc=/i, 'expected no <script src>');
+      assert.doesNotMatch(response.body, /<link[^>]*rel="stylesheet"/i, 'expected no stylesheet <link>');
+      for (const attribute of response.body.matchAll(/\s(?:src|href)="([^"]*)"/gi)) {
+        assert.doesNotMatch(attribute[1] ?? '', /^(?:https?:)?\/\//i, `expected no external reference, found ${attribute[1]}`);
+      }
+    });
+
+    test('the home page links its manifest and carries the install and splash tags, every splash image answering', async () => {
+      const response = await app.inject({ method: 'GET', url: '/' });
+      assert.equal(response.statusCode, 200);
+
+      const links = extractTags(response.body, 'link');
+      assert.ok(
+        links.some((link) => link['rel'] === 'manifest' && link['href'] === MANIFEST_PATH),
+        `expected <link rel="manifest" href="${MANIFEST_PATH}">`,
+      );
+
+      assert.equal(extractNamedMeta(response.body, 'theme-color'), argamanVeZahavColors.primary);
+      assert.equal(extractNamedMeta(response.body, 'apple-mobile-web-app-capable'), 'yes');
+      assert.equal(extractNamedMeta(response.body, 'mobile-web-app-capable'), 'yes');
+      assert.equal(extractNamedMeta(response.body, 'apple-mobile-web-app-status-bar-style'), 'black');
+      assert.equal(extractNamedMeta(response.body, 'apple-mobile-web-app-title'), SITE_NAME);
+
+      const startupImages = links.filter((link) => link['rel'] === 'apple-touch-startup-image');
+      assert.equal(startupImages.length, SPLASH_SCREENS.length);
+      for (const startupImage of startupImages) {
+        assert.ok(startupImage['media']?.includes('orientation: portrait'), `expected a portrait media query on ${startupImage['href']}`);
+        const image = await app.inject({ method: 'GET', url: startupImage['href'] ?? '' });
+        assert.equal(image.statusCode, 200, `expected ${startupImage['href']} to be served, got ${image.statusCode}`);
+        assert.equal(getHeader(image.headers, 'content-type'), 'image/png');
+      }
+    });
+
+    // `start_url` carries `?source=pwa`, and the query string is part of the
+    // edge cache key, so this is a separate document. It must still say it is
+    // a copy of the home page, never a page of its own.
+    test('the installed app\'s start URL renders and points its canonical at the home page', async () => {
+      const home = await app.inject({ method: 'GET', url: '/' });
+      const launched = await app.inject({ method: 'GET', url: MANIFEST_START_URL });
+      assert.equal(launched.statusCode, 200);
+      assert.equal(extractCanonical(launched.body), extractCanonical(home.body));
+      assert.equal(extractCanonical(launched.body), `${SITE_ORIGIN}/`);
+    });
+
+    // Named, not hashed: a year of caching on an icon that was just replaced
+    // would outlive the change.
+    test('named icons are cached for a day, not the year the hashed assets get', async () => {
+      const response = await app.inject({ method: 'GET', url: '/apple-touch-icon.png' });
+      assert.equal(response.statusCode, 200);
+      assert.equal(getHeader(response.headers, 'cache-control'), 'public, max-age=86400');
     });
   });
 
