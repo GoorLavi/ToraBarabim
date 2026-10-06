@@ -27,3 +27,8 @@ export const DOCKER_BUILD_CONTEXT_EXCLUDES = [
 // ISO 3166-1 alpha-2 codes, as CloudFront expects (0037). Never `US` or
 // `IL`: test/site-stack.test.ts, which CI runs, fails if either is added.
 export const BLOCKED_VIEWER_COUNTRIES: readonly string[] = ['CN', 'RU'];
+
+// How long the edge may serve sw.js and the manifest without asking the
+// origin. Asserted against by test/site-stack.test.ts with its own literal, so
+// raising this fails a test instead of quietly delaying a kill switch.
+export const SERVICE_WORKER_EDGE_TTL_SECONDS = 60;

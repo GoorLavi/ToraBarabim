@@ -1,4 +1,4 @@
-# 0055: The public message form takes mistake reports
+# 0057: The public message form takes mistake reports
 
 - **Status:** accepted
 - **Date:** 2026-10-06

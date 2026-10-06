@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isAutomatedBrowser, posterSourceFrom } from './helpers';
+import { isAutomatedBrowser, launchModeFrom, posterSourceFrom } from './helpers';
 
 describe('posterSourceFrom', () => {
   it('maps the recruiting poster QR value to listers', () => {
@@ -43,5 +43,27 @@ describe('isAutomatedBrowser', () => {
     const userAgent =
       'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36';
     expect(isAutomatedBrowser({ userAgent, webdriver: false })).toBe(false);
+  });
+});
+
+describe('launchModeFrom', () => {
+  it('reports standalone whenever the display mode is standalone', () => {
+    expect(launchModeFrom('', true)).toBe('standalone');
+  });
+
+  it('reports standalone even when the landing URL is the start URL', () => {
+    expect(launchModeFrom('?source=pwa', true)).toBe('standalone');
+  });
+
+  it('reports pwaStartUrl for the start URL opened outside a standalone window', () => {
+    expect(launchModeFrom('?city=jerusalem&source=pwa', false)).toBe('pwaStartUrl');
+  });
+
+  it('reports browser for an ordinary visit', () => {
+    expect(launchModeFrom('', false)).toBe('browser');
+  });
+
+  it('reports browser for a source value that is not the start URL marker', () => {
+    expect(launchModeFrom('?source=newsletter', false)).toBe('browser');
   });
 });

@@ -1,4 +1,4 @@
-# 0056: A link preview shows the real photo or none
+# 0058: A link preview shows the real photo or none
 
 - **Status:** accepted
 - **Date:** 2026-10-06

@@ -1,4 +1,4 @@
-# 0054: Each lesson has a public calendar feed
+# 0056: Each lesson has a public calendar feed
 
 - **Status:** accepted
 - **Date:** 2026-10-06
@@ -6,7 +6,7 @@
 
 ## Context
 
-The subscription in [0053](0053-a-lesson-goes-into-a-calendar-as-a-copy-or-a-subscription.md)
+The subscription in [0055](0055-a-lesson-goes-into-a-calendar-as-a-copy-or-a-subscription.md)
 needs a URL that calendar apps fetch without signing in, for as long as someone stays
 subscribed. Every event title carries the rabbi's name through `rabbiDisplayName`,
 which lives only in the client workspace; the server compiles alone and cannot import

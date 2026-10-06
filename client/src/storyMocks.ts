@@ -193,3 +193,27 @@ export const isoDateOffsetByDays = (days: number): string => {
 // Words that would make a promise or mention money: the visitor message
 // window carries neither, anywhere, whoever opens it (decision 0039).
 export const FORBIDDEN_WINDOW_COPY = /נחזור|ניצור קשר|נפנה|ניצור איתך|₪|עלות|מחיר|תשלום|ש"ח/;
+
+// Makes the display-mode query answer "standalone", the way an installed app
+// runs, and returns the function that restores the real one. A complete
+// stand-in rather than a spread of the real list, whose members live on its
+// prototype; every other query goes to the real `matchMedia`.
+export const stubStandaloneDisplay = (): (() => void) => {
+  const originalMatchMedia = window.matchMedia;
+  window.matchMedia = (query: string): MediaQueryList => {
+    if (!query.includes('standalone')) return originalMatchMedia.call(window, query);
+    return {
+      matches: true,
+      media: query,
+      onchange: null,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      addListener: () => {},
+      removeListener: () => {},
+      dispatchEvent: () => false,
+    };
+  };
+  return () => {
+    window.matchMedia = originalMatchMedia;
+  };
+};

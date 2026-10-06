@@ -1,4 +1,4 @@
-# 0053: A lesson goes into a calendar as a copy or as a subscription
+# 0055: A lesson goes into a calendar as a copy or as a subscription
 
 - **Status:** accepted
 - **Date:** 2026-10-06
@@ -18,7 +18,7 @@ person's calendar app fetches a URL of ours on its own schedule.
   scheduled date when that one has started or is cancelled.
 - **A recurring lesson** offers two choices: "רק שיעור אחד", a copy of one date as
   above, or "כל השיעורים הבאים, עם עדכונים", a subscription to that one lesson's feed
-  ([0054](0054-each-lesson-has-a-public-calendar-feed.md)).
+  ([0056](0056-each-lesson-has-a-public-calendar-feed.md)).
 - **Android gets both choices too.** The subscription goes through Google's subscribe
   link, which may open in the browser rather than the app; the owner accepted that.
 - **Every event links back** to the lesson page and the site, tagged

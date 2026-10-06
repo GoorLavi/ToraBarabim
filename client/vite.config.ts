@@ -2,6 +2,7 @@ import { reactRouter } from '@react-router/dev/vite';
 import { defineConfig, type Plugin } from 'vite';
 
 import { SITE_ORIGIN } from './consts.ts';
+import { pwaFiles } from './pwa-source/pwaPlugin.ts';
 import { srcAlias } from './vite.alias.ts';
 
 const robotsTxt = `User-agent: *
@@ -36,7 +37,7 @@ const seoFiles = (): Plugin => ({
 // workspace's `dev` script wraps vite in `node --env-file=../.env`, the same
 // way every `server` script does.
 export default defineConfig({
-  plugins: [reactRouter(), seoFiles()],
+  plugins: [reactRouter(), seoFiles(), pwaFiles()],
   resolve: {
     alias: srcAlias,
   },

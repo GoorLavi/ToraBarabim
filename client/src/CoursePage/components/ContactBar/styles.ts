@@ -13,6 +13,7 @@ export const ContactBar = css(
     inset-inline: 0;
     inset-block-end: 0;
     z-index: ${theme.zIndex.header};
+    block-size: ${theme.layout.fixedBottomBarBlockSize};
     display: flex;
     gap: ${theme.spacing.sm};
     padding: ${theme.spacing.md} ${theme.spacing.lg};

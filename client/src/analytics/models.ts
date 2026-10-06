@@ -9,6 +9,9 @@ import type {
   CourseSurface,
   FilterCitySource,
   FilterDateSource,
+  InstallPlatformPath,
+  InstallTrigger,
+  LaunchMode,
   LessonSurface,
   NavigationProvider,
   RabbiClickSurface,
@@ -250,10 +253,26 @@ export interface CalendarAddClickProps {
   kind: 'static' | 'subscribe';
   target: 'ics' | 'google' | 'webcal';
 }
+export interface InstallEventContext {
+  platformPath: InstallPlatformPath;
+  trigger: InstallTrigger;
+}
+
+export type InstallCardShownProps = InstallEventContext;
+
+// `nativePrompt` is the browser's own dialog, dismissed after the person
+// accepted our card; `card` is our own card or footer sheet. Reported as one
+// event with a step rather than a fourth event name.
+export type InstallCardDismissedProps = InstallEventContext & {
+  step: 'card' | 'nativePrompt';
+};
+
+export type InstallAcceptedProps = InstallEventContext;
 
 export interface SuperProperties {
   viewport: Viewport;
   appSurface: AppSurface;
+  launchMode: LaunchMode;
   posterSource?: PosterSource;
 }
 
@@ -303,4 +322,7 @@ export type AnalyticsEventProps = {
   [MIXPANEL_EVENTS.visitorMessageSent]: VisitorMessageSentProps;
   [MIXPANEL_EVENTS.shareClick]: ShareClickProps;
   [MIXPANEL_EVENTS.calendarAddClick]: CalendarAddClickProps;
+  [MIXPANEL_EVENTS.installCardShown]: InstallCardShownProps;
+  [MIXPANEL_EVENTS.installCardDismissed]: InstallCardDismissedProps;
+  [MIXPANEL_EVENTS.installAccepted]: InstallAcceptedProps;
 };
