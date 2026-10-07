@@ -4,8 +4,10 @@ import styled from 'styled-components';
 
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
+import { useIdentifyPanelUser } from '~/analytics/useIdentifyPanelUser';
 import { PLACE_ROUTES } from '~/PlacePanel/consts';
 import { usePlaceProfile } from '~/PlacePanel/usePlaceProfile';
+import { usePlaceSession } from '~/PlacePanel/usePlaceSession';
 
 import * as consts from './consts';
 import type { PlaceShellProps } from './models';
@@ -20,7 +22,16 @@ import { usePlaceLogout } from './usePlaceLogout';
 // edits its name.
 export const PlaceShell = styled(({ className }: PlaceShellProps) => {
   const profile = usePlaceProfile();
+  const session = usePlaceSession();
   const logout = usePlaceLogout();
+
+  // Only once both reads are the same account's: the previous account's
+  // profile can still be cached for a moment after a new login on this tab.
+  useIdentifyPanelUser(
+    profile.data && session.data && profile.data.id === session.data.placeId
+      ? { role: 'place', accountId: session.data.id, name: profile.data.name, placeId: session.data.placeId }
+      : undefined,
+  );
 
   return (
     <div className={className}>

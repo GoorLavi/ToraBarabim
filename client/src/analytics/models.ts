@@ -283,14 +283,21 @@ export interface SuperProperties {
   posterSource?: PosterSource;
 }
 
+// Who a signed-in panel account is, as Mixpanel is told. `name` is the
+// display form, never the account's bare copy: a rabbi's carries the
+// honorific.
+export type PanelUserIdentity =
+  | { role: 'rabbi'; accountId: string; name: string; rabbiId: string }
+  | { role: 'place'; accountId: string; name: string; placeId: string };
+
 export type AnalyticsEventName = (typeof MIXPANEL_EVENTS)[keyof typeof MIXPANEL_EVENTS];
 
-// The rabbi and admin panels fire events of their own (login/logout, tab
-// clicks, saves, deletes, occurrence actions) that this change does not
-// touch: each keeps the loose shape `trackEvent` always accepted, so a panel
-// call site that passes no props at all (`trackEvent(MIXPANEL_EVENTS.rabbiLogout)`)
-// still compiles unchanged. Typing these is future work for whoever next
-// touches RabbiPanel or AdminPanel analytics.
+// The rabbi and admin panels fire events of their own (`Rabbi Logout`, tab
+// clicks, saves, deletes, occurrence actions) that keep the loose shape
+// `trackEvent` always accepted, so a panel call site that passes no props at
+// all (`trackEvent(MIXPANEL_EVENTS.rabbiLogout)`) still compiles unchanged.
+// Typing these is future work for whoever next touches RabbiPanel or
+// AdminPanel analytics; `Panel Login` and `Place Logout` are already typed.
 type UntypedPanelEventProps = Record<string, unknown> | undefined;
 
 export type AnalyticsEventProps = {
@@ -306,8 +313,9 @@ export type AnalyticsEventProps = {
   [MIXPANEL_EVENTS.clearFiltersClick]: ClearFiltersClickProps;
   [MIXPANEL_EVENTS.retryClick]: RetryClickProps;
   [MIXPANEL_EVENTS.railScroll]: RailScrollProps;
-  [MIXPANEL_EVENTS.rabbiLogin]: UntypedPanelEventProps;
+  [MIXPANEL_EVENTS.panelLogin]: undefined;
   [MIXPANEL_EVENTS.rabbiLogout]: UntypedPanelEventProps;
+  [MIXPANEL_EVENTS.placeLogout]: undefined;
   [MIXPANEL_EVENTS.panelTabClick]: UntypedPanelEventProps;
   [MIXPANEL_EVENTS.lessonSaved]: UntypedPanelEventProps;
   [MIXPANEL_EVENTS.lessonDeleted]: UntypedPanelEventProps;
