@@ -831,6 +831,105 @@ the icons and splash screens are under "The logo" above.
   shows exactly when nothing else can load. System fonts, and the colours, radii and
   shadow mirrored by hand from the theme, with a comment naming the source.
 
+### The ads (2026-10-07)
+
+The campaign ads, and the closing card every clip ends on, carry a language of their own:
+built from this file's tokens, and allowed a few things no page is. Why, and what was
+rejected: [0064](../docs/decisions/0064-the-ads-have-their-own-brand-language.md).
+Figma: the marketing file, one page per campaign; the first card is `14:63` (9:16) and
+`15:111` (4:5) on `2026-10-rabbi-clips`.
+
+**None of this goes into a page.** The site keeps its own rules. A request to bring one
+of these onto a screen is a request to change the site's language, not to reuse a
+pattern.
+
+**The scale rule.** A 1080-wide frame is the site at 3x on a 360px phone, so every size
+and gap is a token times three: `sm` is 24, the `md` radius is 36, a 1px hairline is 3,
+`Page heading` is 84. **No new colors and no new type:** the nineteen color tokens, the
+logo's fixed brand colors for the mark, and Assistant at the site's three weights. Frank
+Ruhl Libre stays with the dedications.
+
+**What an ad may do that a page may not**, each built from tokens that already exist:
+
+- **The poster leaves its frame and fades into the field.** The rabbi's poster from the
+  site fills the top of the frame edge to edge, cropped freely rather than held at 3:4,
+  and a gradient of `primary` takes it from clear to solid. On 9:16 it fills the top
+  1000, clear to about 460 and solid by 800; on 4:5 it takes the inline-start two thirds
+  (720 by 780) and fades both at its foot and toward the headline at its inline-end
+  edge. The field itself is `primary`, deepening to `primaryStrong` from about the middle
+  of the frame to its foot. Only the fade sits over the poster: it is never tinted or
+  filtered.
+- **One gold line of type.** The promise in the headline is set large in `accentOnDark`,
+  and it is the only gold type on the card; every other line is `textOnPrimary`. It
+  takes `Ticket time` times three, the role that carries the single gold on the lesson
+  ticket. Any other gold on a card is graphic, which is the job the accent already has
+  on the site.
+- **A white button on plum: the site's button inverted.** `surface` fill, its lines in
+  `primary`, radius `md` times three (36). A main line in Bold over a sub line in
+  Regular, centred, with the site's chevron (the `AreaLink` path) in `primary` at the
+  inline end, and an empty slot of the same width at the inline start, so the lines
+  centre on the button rather than on the space beside the arrow.
+- **The gold rule with one diamond**, from the print posters (the language file,
+  `05 כרזות לתלייה`): two tapered strokes in `accentOnDark` either side of a single
+  hollow diamond, between the button and the lockup.
+- **The address in a quiet pill:** `surfaceOnPrimary` fill, a `borderOnPrimary` edge at
+  3, radius `pill`, the address in `textOnPrimary` at 600, left to right, lower case,
+  no `www`.
+
+**Type on the card**, as drawn on the first card. Line heights are the frame's, tighter
+than the role's times three, because a card's lines are set as one block rather than as
+running text.
+
+| Line | 9:16 | Site role times three | 4:5 | Weight |
+|---|---|---|---|---|
+| Opener and continuation | 56 / 64 | None: between `Body` (51) and `Card title` (54) | 44 / 52 | 400 |
+| The gold line | 132 / 136 | `Ticket time` (132) | 104 / 108 | 700 |
+| The name line | 84 / 92 | `Page heading` (84) | 66 / 74 | 700 |
+| Label | 44 / 50 | None: between `Tag and caption` (42) and `Secondary` (45) | 36 / 42 | 600 |
+| Button, main line | 60 / 68 | `Section heading` (60) | 48 / 56 | 700 |
+| Button, sub line | 44 / 54 | None: between `Tag and caption` (42) and `Secondary` (45) | 36 / 44 | 400 |
+| Address | 48 / 60 | None: between `Secondary` (45) and `Body` (51) | 40 / 52 | 600 |
+
+The lockup is the logo, sized as one unit (the wordmark is 72 on 9:16), not a type role.
+
+**Captions on a clip.** Assistant Bold in `textOnPrimary` on a solid `primaryStrong`
+box, centred, two lines at most, inside the safe area below. Its size follows the scale
+rule and is not set yet.
+
+**Safe areas.** Text and the button stay inside these; the poster and the field run to
+every edge.
+
+| Frame | Where it runs | Safe area |
+|---|---|---|
+| 9:16, 1080 x 1920 | WhatsApp status, Reels, TikTok, Stories | 270 from the top, 670 from the bottom, 140 from each side: 140 to 940 across, 270 to 1250 down |
+| 4:5, 1080 x 1350 | The Facebook and Instagram feeds | The central 1080 square (135 to 1215 down), inset by 96: 96 to 984 across, 231 to 1119 down, so a square crop never touches it |
+
+**Reels, TikTok and Stories cover the bottom third** with the platform's own caption,
+name and button, and that is where the first card's button, rule, lockup and address
+sit. The first card accepts this; why, and what it leaves open, is in
+[0064](../docs/decisions/0064-the-ads-have-their-own-brand-language.md).
+
+**Motion.** A staged reveal of about three and a half seconds, then the card holds
+still. The plum field fades in over the clip's last frame, and the rest arrives in
+reading order: the poster and the headline, line by line, then each row below it, a row
+from its inline start. Every element fades in with a short rise and settles with no
+overshoot; nothing moves once it has arrived. A clip's closing card runs six seconds.
+
+**The first card against these rules.** Named here so nobody copies a value from the
+frames thinking it is a rule:
+
+- Four 9:16 sizes fall between two roles, marked "None" above: they are the card's
+  values, not the rule's.
+- Most gaps are within 6px of the scale rather than on it. On it: the 24 between the
+  icon row's items, the 36 between the lockup and the address, the 36 radius and the 3px
+  strokes. The chevron is drawn at 80, where three times the site's 20 is 60.
+- The 4:5 card is the 9:16 card at 80% throughout. That is the rule for 4:5, not drift:
+  [0064](../docs/decisions/0064-the-ads-have-their-own-brand-language.md) fixes the ratio.
+- On 9:16 the icon row's labels end at 1270, inside the bottom zone, and the longest
+  reaches about 70 from the inline-end edge. On 4:5 the name line reaches 50 from the
+  inline-end edge, and the address and lockup end at 1253, below the square, where a
+  square crop cuts them.
+
 ## Open (not decided yet)
 
 - **Who maintains the list of cities.** The city an admin picks must come from a fixed

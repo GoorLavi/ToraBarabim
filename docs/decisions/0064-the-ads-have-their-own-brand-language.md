@@ -28,8 +28,10 @@ what a screen is not:
   (`surfaceOnPrimary` fill, `borderOnPrimary` edge).
 - **Motion**: a staged reveal of about three and a half seconds, fades with a short
   rise, no overshoot, then the card holds. A clip's closing card runs six seconds.
-- **The scale rule**: a 1080-wide frame is the site at 3x on a 360px phone, so every
-  size and gap is a token times three. No new colors and no new type.
+- **The scale rule**: a 1080-wide 9:16 frame is the site at 3x on a 360px phone, so
+  every size and gap is a token times three. A 4:5 card is its 9:16 card at 80%, one
+  fixed ratio, because the side-by-side layout needs the smaller type. No new colors and
+  no new type.
 - The text on a card is a single question broken over lines, in the singular, and the
   card line carries no colon after the rabbi's name.
 
