@@ -26,6 +26,9 @@ nothing.
   needed in Mixpanel, it is the owner's, by hand.
 - **The retro is written from the script's output**, one campaign at a time, and the
   lesson the owner approves goes into `marketing/playbook.md`.
+- **Spend and impressions come from a screenshot of Meta's ads manager**, which the
+  owner attaches per ad set; nobody has read access there. The retro's table says for
+  every number whether it came from the script or from the screenshot.
 
 ## Consequences
 

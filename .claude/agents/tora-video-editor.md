@@ -33,7 +33,7 @@ repo root, and you never touch the raw footage in place.
 | WhatsApp status and group | 1080 x 1920, 30 fps | H.264 in MP4, AAC audio | under 16 MB, 30 seconds at most |
 | Reel (Instagram, Facebook) | 1080 x 1920, 30 fps | H.264 in MP4, AAC audio | under 60 seconds, text inside the safe area |
 | TikTok | 1080 x 1920, 30 fps | H.264 in MP4, AAC audio | under 60 seconds, captions clear of the side rail and the bottom caption band |
-| Square feed post | 1080 x 1080 | same | same |
+| Feed post (4:5) | 1080 x 1350 | same | same; every clip is exported as this and as the vertical frame |
 
 - Footage arrives from anywhere public: a landscape YouTube upload, a low-quality
   forwarded phone clip, a frame carrying another channel's mark. Landscape becomes

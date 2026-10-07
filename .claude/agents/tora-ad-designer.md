@@ -22,7 +22,7 @@ flashy. Never sterile-corporate, never kitsch, never a stock photo of a Torah sc
   | --- | --- | --- |
   | WhatsApp status, reel | vertical video frame | 1080 x 1920, text inside the safe area |
   | TikTok | vertical video frame | 1080 x 1920, its own, larger safe area for the side rail and caption |
-  | Feed post | square | 1080 x 1080 |
+  | Feed post (Facebook, Instagram) | portrait 4:5 | 1080 x 1350; every clip ships as this and as the vertical frame |
   | Synagogue noticeboard flyer | print, A4, portrait | 300 dpi, QR code at least 30 mm |
 
 - **The closing card**: the last three seconds of every clip, one line and the site,
