@@ -3,10 +3,12 @@ import styled from 'styled-components';
 
 import { MIXPANEL_EVENTS } from '~/analytics/consts';
 import { trackEvent } from '~/analytics/mixpanel';
+import { useIdentifyPanelUser } from '~/analytics/useIdentifyPanelUser';
 import { PanelTabNav } from '~/components/PanelTabNav/PanelTabNav';
 import { rabbiDisplayName } from '~/helpers';
 import { RABBI_ROUTES } from '~/RabbiPanel/consts';
 import { useRabbiProfile } from '~/RabbiPanel/useRabbiProfile';
+import { useRabbiSession } from '~/RabbiPanel/useRabbiSession';
 
 import * as consts from './consts';
 import type { RabbiShellProps } from './models';
@@ -29,7 +31,16 @@ const TAB_ITEMS = [
 // must show.
 export const RabbiShell = styled(({ className }: RabbiShellProps) => {
   const profile = useRabbiProfile();
+  const session = useRabbiSession();
   const logout = useRabbiLogout();
+
+  // Only once both reads are the same account's: the previous account's
+  // profile can still be cached for a moment after a new login on this tab.
+  useIdentifyPanelUser(
+    profile.data && session.data && profile.data.id === session.data.rabbiId
+      ? { role: 'rabbi', accountId: session.data.id, name: rabbiDisplayName(profile.data), rabbiId: session.data.rabbiId }
+      : undefined,
+  );
 
   return (
     <div className={className}>

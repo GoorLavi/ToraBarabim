@@ -56,7 +56,7 @@ that came out of measured pain there.
   `ffmpeg`, from the ad designer's brief. Never changes what the rabbi said.
 
 The lane's standing choices (audience, budget, whose clips, who publishes) are in
-[0061](../docs/decisions/0061-the-site-advertises-to-seekers-first-through-rabbis-own-clips.md);
+[0062](../docs/decisions/0062-the-site-advertises-to-seekers-first-through-rabbis-own-clips.md);
 its artifacts live in [marketing/](../marketing/README.md).
 
 **Verify and review (report only, a builder fixes):**
@@ -181,7 +181,7 @@ layer.
 - `ship-pr`: stage, commit, push, and open the pull request in one pass, on the human's
   explicit invocation. Orchestrator only.
 - `scripts/mixpanel-query.sh`: the one read path into Mixpanel, for the growth lane
-  ([0062](../docs/decisions/0062-the-growth-agent-reads-mixpanel-through-a-read-only-service-account.md)).
+  ([0063](../docs/decisions/0063-the-growth-agent-reads-mixpanel-through-a-read-only-service-account.md)).
 - Figma writes go through the `figma-use` and `figma-create-new-file` plugin skills; the
   loading rules and the server id live in `figma-protocol.md`.
 
@@ -214,7 +214,7 @@ not because they are bad ideas:
   orchestrator keeps them current.
 - **From the marketing lane, the buyer voice and the landing benchmark.** The lane
   itself came in on 2026-10-07 as the four agents under Market above
-  ([0061](../docs/decisions/0061-the-site-advertises-to-seekers-first-through-rabbis-own-clips.md));
+  ([0062](../docs/decisions/0062-the-site-advertises-to-seekers-first-through-rabbis-own-clips.md));
   the owner is the audience's voice for now, and the existing designer and editor
   review the creative.
 - **Cloud-session setup**, **OpenSpec**, **move-to-main**, and a **format-on-edit hook**

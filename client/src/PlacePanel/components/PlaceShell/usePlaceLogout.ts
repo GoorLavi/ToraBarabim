@@ -2,6 +2,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { UseMutationResult } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 
+import { MIXPANEL_EVENTS } from '~/analytics/consts';
+import { resetPanelUser, trackEvent } from '~/analytics/mixpanel';
 import { logout, PlaceApiError } from '~/PlacePanel/api';
 import { PLACE_QUERY_KEYS, PLACE_ROUTES } from '~/PlacePanel/consts';
 
@@ -12,6 +14,8 @@ export const usePlaceLogout = (): UseMutationResult<void, PlaceApiError, void> =
   const endSession = (): void => {
     queryClient.removeQueries({ queryKey: PLACE_QUERY_KEYS.session() });
     navigate(PLACE_ROUTES.login, { replace: true });
+    trackEvent(MIXPANEL_EVENTS.placeLogout);
+    resetPanelUser();
   };
 
   return useMutation({

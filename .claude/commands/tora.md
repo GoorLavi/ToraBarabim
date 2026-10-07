@@ -72,7 +72,7 @@ Decide first, and name the flow in your first status line.
 
 - **Team flow**, when the idea needs product decisions before anyone can say what to build: a new or reworked screen the seeker or the rabbi sees, or a new capability whose shape is still open.
 - **Standard flow** (the Pipeline below) for everything else, including a change that touches several workspaces but whose shape is already clear. When it is genuinely unclear which, ask the human; do not default to the heavier one.
-- **Campaign flow**, when the request is about publishing (an ad, a clip, a post, a flyer, where to advertise) rather than changing the product. Its steps are below; the standing choices it never reopens are in `docs/decisions/0061`.
+- **Campaign flow**, when the request is about publishing (an ad, a clip, a post, a flyer, where to advertise) rather than changing the product. Its steps are below; the standing choices it never reopens are in `docs/decisions/0062`.
 - **Fix flow**, when you already hold the root cause and the fix before anyone else is involved: a bug whose cause you have found, or a small change with no open design question. Skip `tora-product` and `tora-architect` and write the plan yourself. Put every open question to the human in one round (scope, test approach, whether to ship the fix alone first); their answers are Gate 2. When a person is blocked by the bug, offer the fix-first split in that same round, not after they ask why it is taking so long.
 
 ## Team flow

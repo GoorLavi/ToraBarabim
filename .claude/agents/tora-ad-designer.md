@@ -37,7 +37,7 @@ flashy. Never sterile-corporate, never kitsch, never a stock photo of a Torah sc
   landscape source, the quality floor below which a clip is not used.
 - **The storyboard and cut brief** for each clip: which seconds of the raw footage, the
   on-screen text per cut, where the closing card comes in. **The clip opens on the
-  Torah and the site comes last** ([0061](../../docs/decisions/0061-the-site-advertises-to-seekers-first-through-rabbis-own-clips.md)):
+  Torah and the site comes last** ([0062](../../docs/decisions/0062-the-site-advertises-to-seekers-first-through-rabbis-own-clips.md)):
   the rabbi's strongest moment is the first frame, the only text over it is a caption
   of what he says, and the closing card is the one place the site speaks. The video editor
   (`tora-video-editor`) cuts from your brief and never guesses it.

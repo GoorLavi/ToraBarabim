@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import type { RabbiSessionUser } from '@torabarabim/common';
 import { Route, Routes } from 'react-router-dom';
 import { expect, waitFor, within } from 'storybook/test';
 
@@ -12,6 +13,8 @@ import { RabbiShell } from './RabbiShell';
 
 const rabbi = rabbiFixture({ id: 'story-rabbi', name: 'אייל עמרמי', title: 'ראש כולל' });
 
+const session: RabbiSessionUser = { id: 'story-account', email: 'rabbi@example.com', name: rabbi.name, rabbiId: rabbi.id };
+
 const withRabbiRoute = (Story: React.ComponentType): React.ReactElement => (
   <Routes location={{ pathname: RABBI_ROUTES.upcoming, search: '', hash: '', state: null, key: 'story' }}>
     <Route path={RABBI_ROUTES.upcoming} element={<Story />} />
@@ -22,7 +25,14 @@ const meta: Meta<typeof RabbiShell> = {
   title: 'RabbiPanel/RabbiShell',
   component: RabbiShell,
   decorators: [withRabbiRoute],
-  parameters: { apiMocks: { handlers: { profile: http.get('/v1/rabbi/profile', jsonResolver(rabbi)) } } },
+  parameters: {
+    apiMocks: {
+      handlers: {
+        session: http.get('/v1/rabbi/me', jsonResolver(session)),
+        profile: http.get('/v1/rabbi/profile', jsonResolver(rabbi)),
+      },
+    },
+  },
 };
 
 export default meta;

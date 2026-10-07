@@ -1,4 +1,4 @@
-# 0062: The growth agent reads Mixpanel through a read-only service account
+# 0063: The growth agent reads Mixpanel through a read-only service account
 
 - **Status:** accepted
 - **Date:** 2026-10-07

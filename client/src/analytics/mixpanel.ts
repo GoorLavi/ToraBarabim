@@ -5,7 +5,7 @@ import { BREAKPOINTS } from '~/theme/tokens';
 import { MIXPANEL_PROJECT_TOKEN } from '../../consts';
 import { INTERNAL_BROWSER_STORAGE_KEY, MIXPANEL_QUEUE_CAP } from './consts';
 import { isAutomatedBrowser } from './helpers';
-import type { AnalyticsEventName, AnalyticsEventProps, SuperProperties } from './models';
+import type { AnalyticsEventName, AnalyticsEventProps, PanelUserIdentity, SuperProperties } from './models';
 
 // `mixpanel-browser` touches `window`/`document` at import time, and this
 // module is imported by components that render during SSR (SearchField,
@@ -26,12 +26,21 @@ let initStarted = false;
 let isUnavailable = false;
 const queuedEvents: Array<{ name: string; props?: Parameters<Mixpanel['track']>[1] }> = [];
 let pendingSuperProperties: Partial<SuperProperties> = {};
+let pendingPanelUser: PanelUserIdentity | null = null;
+// The SDK restores the last identity from localStorage when it loads, so a
+// reset asked for before then has to be replayed after, or an expired
+// session's account comes back under the next login. Accepted cost: events
+// queued before such a reset (the login page's view among them) flush under
+// the identity that follows it, a narrow race on a slow load.
+let isResetPending = false;
 
 // The queue goes with it, so no event sits in memory for the rest of the
-// session with nothing left to drain it.
+// session with nothing left to drain it. So does a pending identity, or an
+// internal browser would identify itself once the SDK finished loading.
 const disableTracking = (): void => {
   isUnavailable = true;
   queuedEvents.splice(0);
+  pendingPanelUser = null;
 };
 
 // Read once per session, on purpose: a session that starts in portrait and
@@ -40,6 +49,15 @@ const disableTracking = (): void => {
 // that the extra listener and cleanup are not worth it here.
 const readViewport = (): SuperProperties['viewport'] =>
   window.matchMedia(`(min-width: ${BREAKPOINTS.md})`).matches ? 'desktop' : 'mobile';
+
+const applyPanelUser = (instance: Mixpanel, identity: PanelUserIdentity): void => {
+  instance.identify(identity.accountId);
+  instance.people.set({
+    $name: identity.name,
+    role: identity.role,
+    ...(identity.role === 'rabbi' ? { rabbiId: identity.rabbiId } : { placeId: identity.placeId }),
+  });
+};
 
 // Fails open: storage throws when site data is blocked, and then this
 // browser is counted, as it was before the mark.
@@ -84,11 +102,20 @@ export const initAnalytics = (): void => {
       });
       mixpanelInstance = mixpanel;
 
+      if (isResetPending) {
+        isResetPending = false;
+        mixpanel.reset();
+      }
+
       // Registered before the queue below is flushed, or the first page
       // view of a session, the one most likely to still be queued, would
       // ship with no super properties at all.
       pendingSuperProperties = { ...pendingSuperProperties, viewport: readViewport() };
       mixpanel.register(pendingSuperProperties);
+
+      // Identified before the flush below, so events queued during the load
+      // ship under the account rather than the anonymous browser id.
+      if (pendingPanelUser) applyPanelUser(mixpanel, pendingPanelUser);
 
       queuedEvents.splice(0).forEach(({ name, props }) => mixpanelInstance?.track(name, props));
     })
@@ -106,6 +133,47 @@ export const registerSuperProperties = (props: Partial<SuperProperties>): void =
   if (typeof window === 'undefined' || !import.meta.env.PROD || isUnavailable) return;
   pendingSuperProperties = { ...pendingSuperProperties, ...props };
   mixpanelInstance?.register(props);
+};
+
+// Called again whenever the name changes, never `set_once`, so an edited
+// name follows.
+export const identifyPanelUser = (identity: PanelUserIdentity): void => {
+  if (typeof window === 'undefined' || !import.meta.env.PROD || isUnavailable) return;
+  pendingPanelUser = identity;
+  if (!mixpanelInstance) return;
+
+  try {
+    applyPanelUser(mixpanelInstance, identity);
+  } catch (error) {
+    // Fails open: this runs in a panel shell's effect, and a throw inside
+    // the SDK must not take the panel down with it. The account may stay
+    // unidentified, or half set, until the next identify (a name change or
+    // the next shell mount) tries again.
+    console.warn('Could not identify the panel account in Mixpanel', error);
+  }
+};
+
+export const resetPanelUser = (): void => {
+  if (typeof window === 'undefined' || !import.meta.env.PROD || isUnavailable) return;
+  pendingPanelUser = null;
+  if (!mixpanelInstance) {
+    isResetPending = true;
+    return;
+  }
+
+  try {
+    mixpanelInstance.reset();
+    // Mixpanel's `reset()` drops the registered super properties along with
+    // the distinct id, so without this every event after a logout would ship
+    // with no `appSurface`, `viewport` or `launchMode`.
+    mixpanelInstance.register(pendingSuperProperties);
+  } catch (error) {
+    // Fails open: this runs inside the login and logout mutations' success
+    // callbacks, where a throw would turn a login the server already
+    // accepted into an error screen. The identity may be left as it was or
+    // partly cleared, depending on where the SDK threw.
+    console.warn('Could not reset the Mixpanel identity', error);
+  }
 };
 
 // `props` stays optional even though most typed events require one: a

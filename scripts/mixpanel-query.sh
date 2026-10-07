@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # One Mixpanel segmentation report, read through the read-only service account in the
-# root .env (decision 0062). The growth lane reads numbers only through this script, so
+# root .env (decision 0063). The growth lane reads numbers only through this script, so
 # no agent ever types a credential into a command line.
 #
 # Usage, from the repo root:

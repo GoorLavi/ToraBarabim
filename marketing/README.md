@@ -4,7 +4,7 @@ Everything the marketing lane produces lives here: campaign plans, copy, creativ
 what past campaigns taught. The lane itself (who does what, and how
 a campaign moves from idea to posted) is described in [.claude/README.md](../.claude/README.md);
 the owner's standing choices about audience and budget are in
-[0061](../docs/decisions/0061-the-site-advertises-to-seekers-first-through-rabbis-own-clips.md).
+[0062](../docs/decisions/0062-the-site-advertises-to-seekers-first-through-rabbis-own-clips.md).
 
 ## Layout
 
@@ -44,5 +44,5 @@ so a plan never assumes an account that does not exist.
   owner's hands; the plan ends with the checklist the owner follows.
 - Numbers come from Mixpanel through `scripts/mixpanel-query.sh`, never pasted from a
   dashboard by hand
-  ([0062](../docs/decisions/0062-the-growth-agent-reads-mixpanel-through-a-read-only-service-account.md)).
+  ([0063](../docs/decisions/0063-the-growth-agent-reads-mixpanel-through-a-read-only-service-account.md)).
 - Raw footage and rendered video are too large for git and are listed in `.gitignore`.

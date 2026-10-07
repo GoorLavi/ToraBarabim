@@ -73,7 +73,7 @@ ships. Read it as history until someone redraws it.
 ## The marketing file
 
 Created empty on 2026-10-07, in the project, for the marketing lane
-([0061](decisions/0061-the-site-advertises-to-seekers-first-through-rabbis-own-clips.md)).
+([0062](decisions/0062-the-site-advertises-to-seekers-first-through-rabbis-own-clips.md)).
 One page per campaign, named after the campaign's slug, and a `99 Components` page for
 the closing card every clip ends on, built once and reused. Nothing from the site file
 is copied here; the lesson-card fallback photos and the print posters stay in the
