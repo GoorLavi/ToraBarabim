@@ -7,9 +7,9 @@ same screen existed in three files, each with a different idea of it.
 The rules about Figma (which project, who writes, what code is canonical for) are in
 [CLAUDE.md](../CLAUDE.md); this page is only the map.
 
-## The four files
+## The five files
 
-Every design belongs to one of four, split by who opens it and when.
+Every design belongs to one of five, split by who opens it and when.
 
 | File | Holds |
 |---|---|
@@ -17,6 +17,7 @@ Every design belongs to one of four, split by who opens it and when.
 | [תורה ברבים · פאנל ניהול](https://www.figma.com/design/z4fVzRjRFwYpLae22BmNKy/) | The admin screens, the weekly import flow, and every panel: the shared login, the place panel and the rabbi panel |
 | [תורה ברבים · פאנל הרב](https://www.figma.com/design/A3Q2jWyeHFvjqgdcMKmKB8/) | Still empty. The rabbi panel was drawn in the panel file above instead, since it shares a login with the place panel and splitting the two would have split one screen across two files |
 | [תורה ברבים · שפה ורכיבים](https://www.figma.com/design/sLBptV1k2ASbu1vKP0caBz/) | Logo, mark, share images, the token board |
+| [תורה ברבים · שיווק](https://www.figma.com/design/WUAOry5dgualCrClTyRI6N/) | Ads, flyers, the clips' closing card, and the cut briefs; one page per campaign. Owned by `tora-ad-designer` |
 
 **A page per screen, numbered.** The number orders the list; it means nothing else.
 
@@ -68,6 +69,15 @@ ships. Read it as history until someone redraws it.
 | `03 טוקנים` | The token board. Behind the code; see Known gaps |
 | `04 פוסטרים חלופיים` | The six lesson-card fallback photos, one frame (`62:3`). Found unlisted on 2026-09-29 |
 | `05 כרזות לתלייה` | The two print posters, final and approved on 2026-09-30. One frame per poster at the originals' 1024 x 1536, with the owner's original image as a locked base layer, the approved changes patched over it (copy fixes, the official mark, בס"ד, real QR codes with a per-poster `utm_source`, the reworked contact panel, the audience glyphs, the tile row and the band order) and a hidden editable vector layer. Beside them, a locked copy of each original and the notes frame that lists every change and the pre-print checks |
+
+## The marketing file
+
+Created empty on 2026-10-07, in the project, for the marketing lane
+([0061](decisions/0061-the-site-advertises-to-seekers-first-through-rabbis-own-clips.md)).
+One page per campaign, named after the campaign's slug, and a `99 Components` page for
+the closing card every clip ends on, built once and reused. Nothing from the site file
+is copied here; the lesson-card fallback photos and the print posters stay in the
+language file.
 
 ## Components are in the site file, not the components file
 
