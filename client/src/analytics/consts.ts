@@ -166,9 +166,9 @@ export const POSTER_SOURCES_BY_UTM_VALUE: ReadonlyMap<string, PosterSource> = ne
 
 // Hand-mirrored from the links of the 2026-10-rabbi-clips campaign
 // (marketing/campaigns/2026-10-rabbi-clips/plan.md): a value published in a
-// post cannot be changed afterwards, and one missing here is dropped from the
-// events silently. A closed list on purpose, never a prefix match, so a
-// mistyped or foreign `utm_source` carries nothing.
+// post cannot be changed afterwards, and one missing here never sets
+// `campaignSource`. A closed list on purpose, never a prefix match, so a
+// mistyped or foreign `utm_source` sets no `campaignSource`.
 export const CAMPAIGN_SOURCES = [
   'c1-yigal-cohen-meta-a',
   'c1-yigal-cohen-meta-b',

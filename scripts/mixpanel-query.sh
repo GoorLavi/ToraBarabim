@@ -7,7 +7,7 @@
 #   bash scripts/mixpanel-query.sh <event> <from YYYY-MM-DD> <to YYYY-MM-DD> [--on <expr>] [--where <expr>] [--unique]
 # --on segments the count by an expression, --where filters it, --unique counts users
 # instead of events. Examples:
-#   bash scripts/mixpanel-query.sh "Lesson Click" 2026-10-01 2026-10-07 --on 'properties["utm_source"]'
+#   bash scripts/mixpanel-query.sh "Lesson Click" 2026-10-01 2026-10-07 --on 'properties["campaignSource"]'
 #   bash scripts/mixpanel-query.sh "Page View" 2026-10-01 2026-10-21 --unique --where '"utm_source=c1-" in properties["path"]'
 set -euo pipefail
 
