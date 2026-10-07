@@ -89,6 +89,12 @@ an agent's, and they change which agents are worth defining.
   sources must learn; each campaign's plan names its values and the client change is
   scheduled before the first post.
 - Raw footage and rendered video stay out of git.
+- The strategist's first trial run (2026-10-07) found two platform facts that bound the
+  plan: TikTok's ad manager has a daily minimum above the monthly ceiling, so TikTok
+  is organic only until the budget changes; and Meta removed religion-based interest
+  targeting in 2022, so a paid clip is aimed by place, age, and gender, and the rabbi's
+  face does the rest. WhatsApp, Telegram, and a rabbi's office are distribution
+  channels, not ad platforms, and are always in.
 
 ## Rejected
 
