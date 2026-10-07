@@ -2,9 +2,16 @@ import type { LessonOccurrence, Rabbi } from '@torabarabim/common';
 
 import { LAUNCH_SOURCE_PARAM, LAUNCH_SOURCE_PWA } from '~/pwa/consts';
 
-import { AUTOMATED_USER_AGENT_PATTERN, POSTER_SOURCE_PARAM, POSTER_SOURCES_BY_UTM_VALUE } from './consts';
+import { AUTOMATED_USER_AGENT_PATTERN, CAMPAIGN_SOURCES, POSTER_SOURCES_BY_UTM_VALUE, UTM_SOURCE_PARAM } from './consts';
 import type { AppSurface, LaunchMode } from './consts';
-import type { ActiveFilters, LessonClickContext, LessonClickProps, NavigationClickProps, PosterSource } from './models';
+import type {
+  ActiveFilters,
+  CampaignSource,
+  LessonClickContext,
+  LessonClickProps,
+  NavigationClickProps,
+  PosterSource,
+} from './models';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -112,9 +119,14 @@ export const isAutomatedBrowser = (browser: Pick<Navigator, 'userAgent' | 'webdr
   browser.webdriver === true || AUTOMATED_USER_AGENT_PATTERN.test(browser.userAgent);
 
 export const posterSourceFrom = (search: string): PosterSource | undefined => {
-  const utmSource = new URLSearchParams(search).get(POSTER_SOURCE_PARAM);
+  const utmSource = new URLSearchParams(search).get(UTM_SOURCE_PARAM);
   if (utmSource === null) return undefined;
   return POSTER_SOURCES_BY_UTM_VALUE.get(utmSource);
+};
+
+export const campaignSourceFrom = (search: string): CampaignSource | undefined => {
+  const utmSource = new URLSearchParams(search).get(UTM_SOURCE_PARAM);
+  return CAMPAIGN_SOURCES.find((source) => source === utmSource);
 };
 
 export const launchModeFrom = (search: string, isStandalone: boolean): LaunchMode => {

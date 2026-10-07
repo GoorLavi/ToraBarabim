@@ -152,7 +152,7 @@ export const AUTOMATED_USER_AGENT_PATTERN = /bot|crawl|spider|headless|\bClaude\
 
 export const INTERNAL_BROWSER_STORAGE_KEY = 'torabarabim:internalBrowser';
 
-export const POSTER_SOURCE_PARAM = 'utm_source';
+export const UTM_SOURCE_PARAM = 'utm_source';
 
 // Hand-mirrored from the QR codes printed on the two posters: the keys are
 // the exact values a scan opens the site with, so changing one here without
@@ -163,3 +163,28 @@ export const POSTER_SOURCES_BY_UTM_VALUE: ReadonlyMap<string, PosterSource> = ne
   ['poster-listers', 'listers'],
   ['poster-seekers', 'seekers'],
 ]);
+
+// Hand-mirrored from the links of the 2026-10-rabbi-clips campaign
+// (marketing/campaigns/2026-10-rabbi-clips/plan.md): a value published in a
+// post cannot be changed afterwards, and one missing here is dropped from the
+// events silently. A closed list on purpose, never a prefix match, so a
+// mistyped or foreign `utm_source` carries nothing.
+export const CAMPAIGN_SOURCES = [
+  'c1-yigal-cohen-meta-a',
+  'c1-yigal-cohen-meta-b',
+  'c1-yigal-cohen-wa',
+  'c1-yigal-cohen-fb',
+  'c1-amrami-meta-a',
+  'c1-amrami-meta-b',
+  'c1-amrami-wa',
+  'c1-amrami-fb',
+  'c1-meir-eliyahu-meta-a',
+  'c1-meir-eliyahu-meta-b',
+  'c1-meir-eliyahu-wa',
+  'c1-meir-eliyahu-fb',
+  'c1-women-meta-a',
+  'c1-women-meta-b',
+  'c1-women-wa',
+  'c1-women-fb',
+  'c1-tiktok-bio',
+] as const;

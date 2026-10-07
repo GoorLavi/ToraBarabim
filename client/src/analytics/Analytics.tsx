@@ -5,7 +5,7 @@ import { isStandaloneDisplay } from '~/pwa/isStandaloneDisplay';
 
 import { MIXPANEL_EVENTS } from './consts';
 import type { AppSurface } from './consts';
-import { appSurfaceFor, launchModeFrom, posterSourceFrom, routePattern } from './helpers';
+import { appSurfaceFor, campaignSourceFrom, launchModeFrom, posterSourceFrom, routePattern } from './helpers';
 import { initAnalytics, registerSuperProperties, trackEvent } from './mixpanel';
 
 // Renders nothing: this only wires Mixpanel into the route tree's lifecycle.
@@ -21,11 +21,15 @@ export const Analytics = (): null => {
   const lastAppSurfaceRef = useRef<AppSurface | undefined>(undefined);
 
   // `location.search` is read once here on purpose: the landing URL, never a
-  // later navigation. The poster query stays in the URL, so keying this
-  // effect on it would fire `Poster Scan` again on every filter change.
+  // later navigation. The poster and campaign queries stay in the URL, so
+  // keying this effect on them would fire `Poster Scan` again on every filter
+  // change. A campaign source only registers; it never fires `Poster Scan`.
   useEffect(() => {
     initAnalytics();
     registerSuperProperties({ launchMode: launchModeFrom(location.search, isStandaloneDisplay()) });
+
+    const campaignSource = campaignSourceFrom(location.search);
+    if (campaignSource) registerSuperProperties({ campaignSource });
 
     const posterSource = posterSourceFrom(location.search);
     if (!posterSource) return;
