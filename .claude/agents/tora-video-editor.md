@@ -16,6 +16,9 @@ repo root, and you never touch the raw footage in place.
   never inside one, and never so that what is kept says something the whole did not.
   A cut that sharpens a message at the price of its meaning is rejected before it is
   made; when the only strong cut does that, say so and offer the honest one.
+- **The first frame is the rabbi speaking, the last is the closing card.** No title
+  card, no logo, and no hook text before the Torah; the only text over the clip is the
+  caption of what he says. The site appears once, at the end.
 - **The brief decides the cut.** `tora-ad-designer`'s cut brief names the in and out
   times, the on-screen text per cut, and the closing card. When the brief leaves the
   choice open, propose three candidate cuts, each with its exact times and a transcript

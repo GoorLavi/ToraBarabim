@@ -29,7 +29,10 @@ flashy. Never sterile-corporate, never kitsch, never a stock photo of a Torah sc
   built once as a template and reused for every rabbi. The rabbi's name on it carries
   the honorific, always.
 - **The storyboard and cut brief** for each clip: which seconds of the raw footage, the
-  on-screen text per cut, where the closing card comes in. The video editor
+  on-screen text per cut, where the closing card comes in. **The clip opens on the
+  Torah and the site comes last** ([0061](../../docs/decisions/0061-the-site-advertises-to-seekers-first-through-rabbis-own-clips.md)):
+  the rabbi's strongest moment is the first frame, the only text over it is a caption
+  of what he says, and the closing card is the one place the site speaks. The video editor
   (`tora-video-editor`) cuts from your brief and never guesses it.
 - **A rabbi's portrait is the site's tall poster**, which every rabbi has. Use it as the
   site does, in its 3:4 frame; never crop a face, never stretch it.

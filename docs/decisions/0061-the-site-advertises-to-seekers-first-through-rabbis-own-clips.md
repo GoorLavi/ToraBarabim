@@ -31,6 +31,18 @@ an agent's, and they change which agents are worth defining.
   a clip to be taken down is taken down, without argument. When the site does speak
   to a rabbi, the framing stays that of a service to the public and זיכוי הרבים, never
   a benefit to him.
+- **National from the start.** No preferred city. A paid clip is aimed at the city
+  where that rabbi teaches, and the campaign as a whole spans rabbis from different
+  cities.
+- **The clip opens on the Torah and the site comes last.** The rabbi's strongest
+  moment leads, with nothing sold over it; the closing card is the only place the site
+  speaks.
+- **Success is visits to the rabbi's page from the campaign**: a page view of the rabbi
+  page, filtered by the asset's source value. Navigation and calendar clicks after it
+  are the second number, the one that says the person also went.
+- **The first campaign tests two promises**, two lead lines every ad returns to, each
+  with its own source values; the strategist recommends one from the numbers, and the
+  winner stands in `marketing/playbook.md` for the campaigns after it.
 - **Agents never publish and never spend.** Posting, boosting, and the ad account are
   the owner's hands. A campaign ends with a checklist the owner follows.
 - **The marketing lane is four agents**: a growth strategist who leads the plan, a
