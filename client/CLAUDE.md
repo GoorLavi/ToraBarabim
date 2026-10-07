@@ -35,6 +35,10 @@ test, in the real Chromium already installed at `PLAYWRIGHT_BROWSERS_PATH`. Neve
 - **A pure helper with no DOM gets a vitest unit test beside it** (`*.test.ts`, the
   `unit` project in `vitest.config.ts`, node, no browser), run alone with
   `npm run test -w client -- --project unit`. `analytics/helpers.test.ts` is the first.
+  **Exception: `src/analytics/` gets no new tests.** The owner decided on 2026-10-07
+  that the measurement layer is not where test effort goes; the existing cases in
+  `helpers.test.ts` stay, nothing is added to them, and a change there is verified by
+  hand in a real browser instead.
 - **A `play` runs in Storybook too**, the moment the story renders interactively, not
   only under the runner. So a story that opens its own popover is already open when you
   look at it, and clicking the trigger yourself closes it again. This costs a wasted
