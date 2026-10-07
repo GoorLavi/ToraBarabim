@@ -26,6 +26,18 @@ Plans, copy, checklists, and retros are written in Hebrew: the owner reads and a
 them, so they are conversation, not code. File names, source values, and event names
 stay exactly as they are in the code.
 
+## Accounts the owner holds
+
+Updated by the owner when it changes; the strategist's checklist starts from this list,
+so a plan never assumes an account that does not exist.
+
+| Platform | State on 2026-10-07 |
+| --- | --- |
+| Facebook | A page exists. No ad account |
+| TikTok | An account exists. No ad account |
+| Instagram | None |
+| Meta ads (Facebook and Instagram) | No ad account; opening one is the owner's first step before any paid asset |
+
 ## What is not here
 
 - Nothing is posted from this folder. Posting, boosting, and the ad account are the
