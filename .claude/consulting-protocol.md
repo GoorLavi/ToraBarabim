@@ -1,8 +1,8 @@
-# Consulting protocol (the three leads)
+# Consulting protocol (the leads)
 
-Shared by `tora-product`, `tora-architect`, and `tora-designer`, the only agents that can
-dispatch another agent. Read it before your first consult. It lives in one file so the
-three cannot drift apart.
+Shared by `tora-product`, `tora-architect`, `tora-designer`, `tora-growth`, and
+`tora-ad-designer`, the only agents that can dispatch another agent. Read it before your first consult. It lives in one file so they
+cannot drift apart.
 
 ## The limits
 
@@ -37,6 +37,12 @@ three cannot drift apart.
 
 The designer's last round includes one consult of `tora-product`, to confirm the design
 still answers the approved spec. If product is not satisfied, report that as a
+disagreement for the human to settle. Do not open a third round to win the argument.
+
+## The ad designer closes with the designer
+
+The ad designer's last round includes one consult of `tora-designer`, to confirm the
+creative still reads as the site. If the designer is not satisfied, report that as a
 disagreement for the human to settle. Do not open a third round to win the argument.
 
 ## Reporting
