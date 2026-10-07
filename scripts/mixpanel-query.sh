@@ -35,9 +35,11 @@ on="${4:-}"
 # The site sends to api-eu.mixpanel.com, so its data is read from the EU query host.
 query_url="https://eu.mixpanel.com/api/query/segmentation"
 
+# The credential reaches curl as a config line on stdin rather than as a --user
+# argument, so it never sits in the process table where any local process could read it.
 args=(
   --get --silent --show-error --fail-with-body
-  --user "$MIXPANEL_SERVICE_ACCOUNT_USERNAME:$MIXPANEL_SERVICE_ACCOUNT_SECRET"
+  --config -
   --data-urlencode "project_id=$MIXPANEL_PROJECT_ID"
   --data-urlencode "event=$event"
   --data-urlencode "from_date=$from"
@@ -48,5 +50,6 @@ if [ -n "$on" ]; then
   args+=(--data-urlencode "on=$on")
 fi
 
-curl "${args[@]}" "$query_url"
+printf 'user = "%s:%s"\n' "$MIXPANEL_SERVICE_ACCOUNT_USERNAME" "$MIXPANEL_SERVICE_ACCOUNT_SECRET" \
+  | curl "${args[@]}" "$query_url"
 echo

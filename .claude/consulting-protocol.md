@@ -1,8 +1,8 @@
-# Consulting protocol (the three leads)
+# Consulting protocol (the leads)
 
 Shared by `tora-product`, `tora-architect`, `tora-designer`, `tora-growth`, and
-`tora-ad-designer`, the only agents that can dispatch another agent. Read it before your first consult. It lives in one file so the
-three cannot drift apart.
+`tora-ad-designer`, the only agents that can dispatch another agent. Read it before your first consult. It lives in one file so they
+cannot drift apart.
 
 ## The limits
 

@@ -84,7 +84,7 @@ For a big feature the work moves through phases, each with a lead who consults a
 3. **GATE: the human approves the spec and the design.** Present each lead's discussion in the Brainstorms shape. Once the spec is approved, planning the data model and API may start in parallel with design; only the UI build waits for the approved design.
 4. **Then the Pipeline from 2. Plan**, led by `tora-architect`.
 
-The token and loop limits hold on their own: only the three leads can dispatch, a peer cannot dispatch at all (`CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH` is 2, counting layers below this session: a lead is layer 1 and its peer is layer 2, the last), and each lead runs at most two rounds of three peers.
+The token and loop limits hold on their own: only the leads can dispatch, a peer cannot dispatch at all (`CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH` is 2, counting layers below this session: a lead is layer 1 and its peer is layer 2, the last), and each lead runs at most two rounds of three peers.
 
 ## Campaign flow
 
