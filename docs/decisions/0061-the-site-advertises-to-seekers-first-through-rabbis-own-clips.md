@@ -17,6 +17,9 @@ an agent's, and they change which agents are worth defining.
 - **The audience is the national-religious and traditional public**, including people
   returning to observance. The Haredi public is not a target for now: it is largely
   off the networks the campaign runs on.
+- **The ad speaks to anyone who follows Torah lessons or wants to**, the regular
+  learner and the person who has not started alike. No level is assumed and none is
+  excluded; the register is open.
 - **Seekers are recruited first, not listers.** The site already carries lessons,
   imported weekly; what it lacks is people who know it exists.
 - **Paid spend is small**, up to a few hundred shekels a month, and the free channels
@@ -31,6 +34,25 @@ an agent's, and they change which agents are worth defining.
   a clip to be taken down is taken down, without argument. When the site does speak
   to a rabbi, the framing stays that of a service to the public and זיכוי הרבים, never
   a benefit to him.
+- **The platforms are Instagram, Facebook, and TikTok.** YouTube Shorts and Google
+  search are not in play for now; the strategist proposes nothing outside this list.
+- **Women are a test audience from the first campaign.** At least one asset with a
+  rabbanit, addressed in the feminine throughout, linking to the women's area; the
+  owner's read is that women are a strong audience nobody addresses enough.
+- **The rabbis come from the site, chosen for reach.** Well-known rabbis listed on the
+  site who have a strong social following, so the people who already watch them can be
+  reached where they watch. The strategist proposes them from the site's public pages
+  and from what it can verify of their channels; the owner approves the list.
+- **Footage is found where it is public**: the rabbi's own channels, YouTube, Telegram,
+  Facebook, forwarded clips. The strategist names the source per rabbi in the plan,
+  and the video editor is built to take any of them, landscape, low quality, or carrying
+  another channel's mark.
+- **The message is general, not timed.** No "tonight" and no lesson day in an ad; the
+  clip has to work on any day it is seen.
+- **The ad always speaks in the site's own voice.** Never in the rabbi's name, never as
+  if he invited or endorsed, because he was not asked.
+- **No בס"ד on ads and clips.** The logo, the closing card, and the rest of the
+  branding are the ad designer's to propose and the owner's to approve.
 - **National from the start.** No preferred city. A paid clip is aimed at the city
   where that rabbi teaches, and the campaign as a whole spans rabbis from different
   cities.
@@ -74,6 +96,10 @@ an agent's, and they change which agents are worth defining.
   listings exist already; the empty side is the public.
 - **Targeting "the rabbi's groups" with paid ads.** Not a thing any platform sells; the
   honest version is the rabbi sharing it himself.
+- **YouTube Shorts and Google search ads**, for now. Both are plausible; the budget
+  and the attention are better concentrated on three platforms first.
+- **Timed posts tied to the lesson day.** Sharper, but every rabbi would need a post
+  per week; a general clip is cut once and keeps working.
 - **An audience-voice agent** that reads an ad as a member of the public. Kept in
   reserve for when many variants are in play; for now the owner is that voice.
 - **One combined creative agent** for stills and video. Different tools and a

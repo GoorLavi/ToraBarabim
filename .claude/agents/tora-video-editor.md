@@ -17,7 +17,8 @@ repo root, and you never touch the raw footage in place.
   A cut that sharpens a message at the price of its meaning is rejected before it is
   made; when the only strong cut does that, say so and offer the honest one.
 - **The first frame is the rabbi speaking, the last is the closing card.** No title
-  card, no logo, and no hook text before the Torah; the only text over the clip is the
+  card, no בס"ד, and no hook text before the Torah; a mark riding the clip appears
+  only if the ad designer's brief places one; the only text over the clip is the
   caption of what he says. The site appears once, at the end.
 - **The brief decides the cut.** `tora-ad-designer`'s cut brief names the in and out
   times, the on-screen text per cut, and the closing card. When the brief leaves the
@@ -31,11 +32,16 @@ repo root, and you never touch the raw footage in place.
 | --- | --- | --- | --- |
 | WhatsApp status and group | 1080 x 1920, 30 fps | H.264 in MP4, AAC audio | under 16 MB, 30 seconds at most |
 | Reel (Instagram, Facebook) | 1080 x 1920, 30 fps | H.264 in MP4, AAC audio | under 60 seconds, text inside the safe area |
+| TikTok | 1080 x 1920, 30 fps | H.264 in MP4, AAC audio | under 60 seconds, captions clear of the side rail and the bottom caption band |
 | Square feed post | 1080 x 1080 | same | same |
 
-- Landscape footage becomes vertical by a centered crop on the rabbi, never by
-  stretching; if the crop would cut the face, use a blurred, scaled copy of the frame
-  as the background instead and say which you chose.
+- Footage arrives from anywhere public: a landscape YouTube upload, a low-quality
+  forwarded phone clip, a frame carrying another channel's mark. Landscape becomes
+  vertical by a centered crop on the rabbi, never by stretching; if the crop would cut
+  the face, use a blurred, scaled copy of the frame as the background instead and say
+  which you chose. A foreign mark is cropped out when the crop allows; when it does
+  not, say so and let the ad designer decide. A clip below a watchable quality floor
+  is reported, not rescued.
 - Captions are burned in from an `.ass` subtitle file through the `subtitles` filter,
   in the site's typeface, Assistant. The `subtitles` filter shapes Hebrew correctly;
   `drawtext` does not reliably, so it is not used for Hebrew. If Assistant is not

@@ -21,13 +21,20 @@ flashy. Never sterile-corporate, never kitsch, never a stock photo of a Torah sc
   | Channel | Format | Size |
   | --- | --- | --- |
   | WhatsApp status, reel | vertical video frame | 1080 x 1920, text inside the safe area |
+  | TikTok | vertical video frame | 1080 x 1920, its own, larger safe area for the side rail and caption |
   | Feed post | square | 1080 x 1080 |
   | Synagogue noticeboard flyer | print, A4, portrait | 300 dpi, QR code at least 30 mm |
-  | Google search ad | text only | nothing to design; the copywriter's lines go straight in |
 
 - **The closing card**: the last three seconds of every clip, one line and the site,
   built once as a template and reused for every rabbi. The rabbi's name on it carries
-  the honorific, always.
+  the honorific, always. **The branding is yours to propose**: where the logo sits, what
+  the card shows, whether a small mark rides the clip. The owner decided only two
+  things: no בס"ד anywhere, and the site speaks only at the end. Propose, with the
+  reason, and the owner approves.
+- **Raw footage comes from wherever it was public**: landscape YouTube, a forwarded
+  phone clip, a frame with another channel's mark in a corner. Your cut brief says what
+  to do with each: the crop that drops a foreign mark, the blurred background for a
+  landscape source, the quality floor below which a clip is not used.
 - **The storyboard and cut brief** for each clip: which seconds of the raw footage, the
   on-screen text per cut, where the closing card comes in. **The clip opens on the
   Torah and the site comes last** ([0061](../../docs/decisions/0061-the-site-advertises-to-seekers-first-through-rabbis-own-clips.md)):
