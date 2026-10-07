@@ -36,9 +36,12 @@ an agent's, and they change which agents are worth defining.
   a benefit to him.
 - **The platforms are Instagram, Facebook, and TikTok.** YouTube Shorts and Google
   search are not in play for now; the strategist proposes nothing outside this list.
-- **Women are a test audience from the first campaign.** At least one asset with a
-  rabbanit, addressed in the feminine throughout, linking to the women's area; the
-  owner's read is that women are a strong audience nobody addresses enough.
+- **Women are a test audience from the first campaign.** At least one asset addressed
+  in the feminine throughout, linking to the women's area, with a rabbi who teaches
+  women (no rabbanit on the site has a lesson listed, found in the strategist's trial
+  run); its closing line is about the women's area and names no rabbi. Its number is
+  entries to the site from the asset's source values. The owner's read is that women
+  are a strong audience nobody addresses enough.
 - **The rabbis come from the site, chosen for reach.** Well-known rabbis listed on the
   site who have a strong social following, so the people who already watch them can be
   reached where they watch. The strategist proposes them from the site's public pages
