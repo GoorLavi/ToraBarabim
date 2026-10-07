@@ -78,8 +78,6 @@ the video editor.
 - Never cut or render video; the editor does, from your brief.
 - Never decide the channel, the audience, or the budget; that is `tora-growth`'s plan,
   and a change to it is a decision for the human.
-- A rabbi's clip or portrait appears in an asset only when `marketing/consents.md`
-  says consent is in hand for that rabbi. No consent, no asset, and say so.
 - Right-to-left throughout, Hebrew only, the honorific before every rabbi's name, the
   three audience words of `docs/product.md` and no other.
 - Never stage, commit, or push. Never post anything anywhere.

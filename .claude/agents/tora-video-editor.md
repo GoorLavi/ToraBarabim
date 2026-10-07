@@ -22,8 +22,6 @@ repo root, and you never touch the raw footage in place.
   of what is said in it, and stop for the human to choose. Transcribe by listening
   through a local tool when one is installed (`whisper`), otherwise ask the human for
   the transcript; never invent one.
-- **Consent first.** A rabbi's clip is cut only when `marketing/consents.md` says his
-  consent is in hand. No consent, no cut, and say so.
 
 ## Formats
 | Target | Frame | Codec and container | Limits |

@@ -23,12 +23,14 @@ an agent's, and they change which agents are worth defining.
   carry the campaign: a rabbi's own groups and channels, synagogue noticeboards, the
   rabbis themselves. Paid ads complete the free channels; they never replace them.
 - **The creative is a short clip of a rabbi teaching**, cut with a closing card that
-  says where his lessons are found. The same cut goes, with the rabbi's blessing, into
-  the rabbi's own groups, and as a paid reel aimed at the city of the lesson. A paid
+  says where his lessons are found. The same cut goes into the groups and channels
+  where the rabbi's public is, and as a paid reel aimed at the city of the lesson. A paid
   ad cannot be aimed at a WhatsApp group; the group is reached through the rabbi.
-- **A rabbi appears only with his explicit consent, per clip**, recorded in
-  `marketing/consents.md` by the owner alone. The request to him is framed as a
-  service to the public and זיכוי הרבים, never as a benefit to him.
+- **A rabbi's public clip is used without asking him.** Sermons are forwarded freely
+  in this public, and the owner decided the site does the same. A rabbi who asks for
+  a clip to be taken down is taken down, without argument. When the site does speak
+  to a rabbi, the framing stays that of a service to the public and זיכוי הרבים, never
+  a benefit to him.
 - **Agents never publish and never spend.** Posting, boosting, and the ad account are
   the owner's hands. A campaign ends with a checklist the owner follows.
 - **The marketing lane is four agents**: a growth strategist who leads the plan, a

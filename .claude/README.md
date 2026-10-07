@@ -55,7 +55,7 @@ that came out of measured pain there.
 - `tora-video-editor`: cuts a rabbi's clip into the finished video per channel with
   `ffmpeg`, from the ad designer's brief. Never changes what the rabbi said.
 
-The lane's standing choices (audience, budget, consent, who publishes) are in
+The lane's standing choices (audience, budget, whose clips, who publishes) are in
 [0061](../docs/decisions/0061-the-site-advertises-to-seekers-first-through-rabbis-own-clips.md);
 its artifacts live in [marketing/](../marketing/README.md).
 

@@ -1,7 +1,7 @@
 # Marketing
 
-Everything the marketing lane produces lives here: campaign plans, copy, creative, the
-consent ledger, and what past campaigns taught. The lane itself (who does what, and how
+Everything the marketing lane produces lives here: campaign plans, copy, creative, and
+what past campaigns taught. The lane itself (who does what, and how
 a campaign moves from idea to posted) is described in [.claude/README.md](../.claude/README.md);
 the owner's standing choices about audience and budget are in
 [0061](../docs/decisions/0061-the-site-advertises-to-seekers-first-through-rabbis-own-clips.md).
@@ -12,7 +12,6 @@ the owner's standing choices about audience and budget are in
 marketing/
   README.md          this file
   voice.md           what an ad says and never says, read by every agent that writes a line
-  consents.md        which rabbis have agreed to appear, maintained by the owner only
   playbook.md        what worked and what did not, one line per lesson, updated after each retro
   raw/               raw footage, never committed
   campaigns/<slug>/

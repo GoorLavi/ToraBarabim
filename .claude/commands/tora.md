@@ -90,7 +90,7 @@ The token and loop limits hold on their own: only the three leads can dispatch, 
 
 A campaign moves through phases like the team flow, with a lead per phase and the human between them. Read `marketing/README.md` first; the plan, the copy, and the checklist are written in Hebrew there, because the owner acts on them.
 
-1. **Strategy, led by `tora-growth`.** It consults product, the copywriter, and the ad designer, and returns the plan: goal and the one number, audience and channels, the asset list with a source value per link, the budget split, the owner's checklist. Present it in the Brainstorms shape. If a rabbi's consent is not in `marketing/consents.md`, the plan says so and the asset waits.
+1. **Strategy, led by `tora-growth`.** It consults product, the copywriter, and the ad designer, and returns the plan: goal and the one number, audience and channels, the asset list with a source value per link, the budget split, the owner's checklist. Present it in the Brainstorms shape.
 2. **GATE: the human approves the plan.** Write it to `marketing/campaigns/<slug>/plan.md`. If the plan names new `utm_source` values, dispatch `tora-client` for the closed list in `client/src/analytics/` now, through the standard pipeline, so it ships before the first post.
 3. **Creative, led by `tora-ad-designer`.** First round: direction per asset type, to the human. After approval: the assets, the copy from `tora-copywriter` (two or three variants, one recommended), and the cut brief per clip; it closes with `tora-designer`. Write the copy to `copy.md` and the stills to `creative/`.
 4. **GATE: the human approves the creative and the copy.** Every Hebrew line goes through `tora-hebrew-editor` before this gate, as always.
