@@ -22,6 +22,12 @@ Build (write code):
 - `tora-client`: the Hebrew RTL front end.
 - `tora-ssr`: the rendering seam, loaders and meta, the Fastify mount, the build.
 
+Market (plan, write, and produce creative; no product code):
+- `tora-growth`: the campaign plan, and the retro after it runs. Lead: may consult peers.
+- `tora-copywriter`: the words of every ad, in Hebrew from scratch.
+- `tora-ad-designer`: the creative in the channel's format, the closing card, the cut brief. Lead: may consult peers.
+- `tora-video-editor`: cuts a rabbi's clip into the finished video per channel.
+
 Verify (report only, a builder fixes):
 - `tora-reviewer`: house rules and correctness, PASS or FIX.
 - `tora-hebrew-editor`: every Hebrew line a user will read, before the human sees it.
@@ -66,6 +72,7 @@ Decide first, and name the flow in your first status line.
 
 - **Team flow**, when the idea needs product decisions before anyone can say what to build: a new or reworked screen the seeker or the rabbi sees, or a new capability whose shape is still open.
 - **Standard flow** (the Pipeline below) for everything else, including a change that touches several workspaces but whose shape is already clear. When it is genuinely unclear which, ask the human; do not default to the heavier one.
+- **Campaign flow**, when the request is about publishing (an ad, a clip, a post, a flyer, where to advertise) rather than changing the product. Its steps are below; the standing choices it never reopens are in `docs/decisions/0061`.
 - **Fix flow**, when you already hold the root cause and the fix before anyone else is involved: a bug whose cause you have found, or a small change with no open design question. Skip `tora-product` and `tora-architect` and write the plan yourself. Put every open question to the human in one round (scope, test approach, whether to ship the fix alone first); their answers are Gate 2. When a person is blocked by the bug, offer the fix-first split in that same round, not after they ask why it is taking so long.
 
 ## Team flow
@@ -78,6 +85,20 @@ For a big feature the work moves through phases, each with a lead who consults a
 4. **Then the Pipeline from 2. Plan**, led by `tora-architect`.
 
 The token and loop limits hold on their own: only the three leads can dispatch, a peer cannot dispatch at all (`CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH` is 2, counting layers below this session: a lead is layer 1 and its peer is layer 2, the last), and each lead runs at most two rounds of three peers.
+
+## Campaign flow
+
+A campaign moves through phases like the team flow, with a lead per phase and the human between them. Read `marketing/README.md` first; the plan, the copy, and the checklist are written in Hebrew there, because the owner acts on them.
+
+1. **Strategy, led by `tora-growth`.** It consults product, the copywriter, and the ad designer, and returns the plan: goal and the one number, audience and channels, the asset list with a source value per link, the budget split, the owner's checklist. Present it in the Brainstorms shape. If a rabbi's consent is not in `marketing/consents.md`, the plan says so and the asset waits.
+2. **GATE: the human approves the plan.** Write it to `marketing/campaigns/<slug>/plan.md`. If the plan names new `utm_source` values, dispatch `tora-client` for the closed list in `client/src/analytics/` now, through the standard pipeline, so it ships before the first post.
+3. **Creative, led by `tora-ad-designer`.** First round: direction per asset type, to the human. After approval: the assets, the copy from `tora-copywriter` (two or three variants, one recommended), and the cut brief per clip; it closes with `tora-designer`. Write the copy to `copy.md` and the stills to `creative/`.
+4. **GATE: the human approves the creative and the copy.** Every Hebrew line goes through `tora-hebrew-editor` before this gate, as always.
+5. **Production.** Dispatch `tora-video-editor` per clip from the cut brief; when the brief leaves the cut open, it proposes three and the human picks. Then `tora-designer` reviews the rendered frames (approved or fix) and `tora-hebrew-editor` reads the burned-in lines. Loop until clean, as in the pipeline.
+6. **GATE: the owner posts.** Hand over the checklist from the plan, the files, and the links with their source values. Nothing is posted by an agent, ever. Commit the plan, the copy, and the small stills to the branch as usual; video and raw footage stay out of git.
+7. **Retro, after the window the plan named.** Dispatch `tora-growth` to read the numbers through `scripts/mixpanel-query.sh` and write the retro; present its lessons as decisions; the ones the human approves go into `marketing/playbook.md`, and the retro to `retro.md` in the campaign folder.
+
+Scale this too. A single WhatsApp message for one rabbi is steps 1, 3, and 6 in one short pass, not a seven-step run.
 
 ## Pipeline
 

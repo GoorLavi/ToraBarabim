@@ -17,7 +17,7 @@ The roster was adapted from the Why's agent system, cut down to the roles this p
 actually needs, and re-aligned with it in September 2026 once it had grown the rules
 that came out of measured pain there.
 
-## Roster (8 specialists + 1 orchestrator)
+## Roster (12 specialists + 1 orchestrator)
 
 **Orchestrate (no code):**
 - `/tora`: the orchestrator command. Clarifies the idea, holds the three human gates,
@@ -44,6 +44,21 @@ that came out of measured pain there.
   workspaces, which is exactly why it is separate: page components stay with
   `tora-client` and business logic stays with `tora-server`.
 
+**Market (plan, write, and produce creative; no product code):**
+- `tora-growth`: the campaign plan, and the retro from Mixpanel after it runs. Instructed
+  in Hebrew. Lead: consults `tora-product`, `tora-copywriter`, and `tora-ad-designer`.
+- `tora-copywriter`: the words of every ad, written in Hebrew from scratch. Instructed in
+  Hebrew. The Hebrew editor corrects after.
+- `tora-ad-designer`: the creative in each channel's format, the closing card, and the cut
+  brief. Owns the marketing Figma file. Lead: consults `tora-copywriter`,
+  `tora-designer`, and `tora-hebrew-editor`, and closes with `tora-designer`.
+- `tora-video-editor`: cuts a rabbi's clip into the finished video per channel with
+  `ffmpeg`, from the ad designer's brief. Never changes what the rabbi said.
+
+The lane's standing choices (audience, budget, consent, who publishes) are in
+[0061](../docs/decisions/0061-the-site-advertises-to-seekers-first-through-rabbis-own-clips.md);
+its artifacts live in [marketing/](../marketing/README.md).
+
 **Verify and review (report only, a builder fixes):**
 - `tora-reviewer`: house-rule compliance and correctness, PASS or FIX. Its golden set
   in [evals/](evals/README.md) is re-run before any edit to its file.
@@ -57,17 +72,18 @@ A cold-started agent that has to hunt for context burns effort you already spent
 reading is assigned, not left to judgment: **read your always list, plus the files your
 brief names, and nothing else.** Do not scan the repository.
 
-| Document | orchestrator | `tora-product` | `tora-architect` | `tora-server` | `tora-client` | `tora-ssr` | `tora-designer` | `tora-reviewer` | `tora-hebrew-editor` |
-| --- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| `CLAUDE.md` (root rulebook) | always | always | always | always | always | always | always | always | always |
-| `docs/product.md` | always | always | when the brief touches product behaviour | when the brief touches product behaviour | when the brief touches product behaviour | when the brief touches product behaviour | always | never | always |
-| `docs/decisions/` | always | the records the brief names | the records the brief names | the records the brief names | the records the brief names | the records the brief names | the records the brief names | the records the brief names | never |
-| `server/CLAUDE.md` | when planning server work | never | when the change touches the server | always | never | always | never | when the diff touches the server | never |
-| `client/CLAUDE.md` | when planning client work | never | when the change touches the client | never | always | always | when reviewing a screen | when the diff touches the client | never |
-| `.claude/design-system.md` | when planning a visual change | never | never | never | always | never | always | never | never |
-| `.claude/consulting-protocol.md` | never | before the first consult | before the first consult | never | never | never | before the first consult | never | never |
-| `.claude/figma-protocol.md` | never | never | never | never | never | never | before the first Figma write | never | never |
-| `.claude/README.md` (this file) | always | never | never | never | never | never | never | never | never |
+| Document | orchestrator | `tora-product` | `tora-architect` | `tora-server` | `tora-client` | `tora-ssr` | `tora-designer` | `tora-reviewer` | `tora-hebrew-editor` | `tora-growth` | `tora-copywriter` | `tora-ad-designer` | `tora-video-editor` |
+| --- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| `CLAUDE.md` (root rulebook) | always | always | always | always | always | always | always | always | always | always | always | always | always |
+| `docs/product.md` | always | always | when the brief touches product behaviour | when the brief touches product behaviour | when the brief touches product behaviour | when the brief touches product behaviour | always | never | always | always | always | always | never |
+| `docs/decisions/` | always | the records the brief names | the records the brief names | the records the brief names | the records the brief names | the records the brief names | the records the brief names | the records the brief names | never | the records the brief names | the records the brief names | the records the brief names | never |
+| `server/CLAUDE.md` | when planning server work | never | when the change touches the server | always | never | always | never | when the diff touches the server | never | never | never | never | never |
+| `client/CLAUDE.md` | when planning client work | never | when the change touches the client | never | always | always | when reviewing a screen | when the diff touches the client | never | never | never | never | never |
+| `.claude/design-system.md` | when planning a visual change | never | never | never | always | never | always | never | never | never | never | always | never |
+| `.claude/consulting-protocol.md` | never | before the first consult | before the first consult | never | never | never | before the first consult | never | never | before the first consult | never | before the first consult | never |
+| `.claude/figma-protocol.md` | never | never | never | never | never | never | before the first Figma write | never | never | never | never | before the first Figma write | never |
+| `.claude/README.md` (this file) | always | never | never | never | never | never | never | never | never | never | never | never | never |
+| `marketing/README.md` and `marketing/voice.md` | when running a campaign | never | never | never | never | never | never | never | when the brief is ad copy | always | always | always | `README.md` only |
 
 `tora-ssr` reads both workspace rulebooks because it is the one agent whose slice spans
 them. That breadth is also why its boundaries are drawn tightly in its own file: it owns
@@ -87,8 +103,8 @@ Rules that hold regardless of the table:
 
 ## Consulting and depth
 
-Three leads (`tora-product`, `tora-architect`, `tora-designer`) can consult peers
-before they report. The limits are in [consulting-protocol.md](consulting-protocol.md):
+Five leads (`tora-product`, `tora-architect`, `tora-designer`, `tora-growth`,
+`tora-ad-designer`) can consult peers before they report. The limits are in [consulting-protocol.md](consulting-protocol.md):
 fixed peers named in the lead's own file, two rounds at most, three peers per round, one
 question per peer, peers advise and never build, a peer's call in its own domain stands,
 and a disagreement goes to the human.
@@ -134,6 +150,15 @@ Standard flow:
 
 Run it with `/tora <your idea>`.
 
+Campaign flow, for an idea about publishing rather than building: strategy led by
+`tora-growth` (output: the plan), a **gate** where the human approves it, creative led
+by `tora-ad-designer` (output: direction, then the assets, the copy, and the cut
+briefs), a **gate** where the human approves them, production by `tora-video-editor`
+with `tora-designer` and `tora-hebrew-editor` reviewing the result, a **gate** where
+the owner posts by hand from the plan's checklist, and after the window the plan
+named, the retro from Mixpanel by `tora-growth`. The exact steps are in
+[commands/tora.md](commands/tora.md).
+
 ## Guard hooks (what each blocks)
 
 All three are `PreToolUse` hooks on Bash in `settings.json`, matching the text of the
@@ -155,6 +180,8 @@ layer.
 - `create-migration`: the safe Drizzle sequence, and the hand-off that names the folder.
 - `ship-pr`: stage, commit, push, and open the pull request in one pass, on the human's
   explicit invocation. Orchestrator only.
+- `scripts/mixpanel-query.sh`: the one read path into Mixpanel, for the growth lane
+  ([0062](../docs/decisions/0062-the-growth-agent-reads-mixpanel-through-a-read-only-service-account.md)).
 - Figma writes go through the `figma-use` and `figma-create-new-file` plugin skills; the
   loading rules and the server id live in `figma-protocol.md`.
 
@@ -183,9 +210,13 @@ not because they are bad ideas:
   result after. With three builders that is still one person's job.
 - **Standards keeper and agent architect.** The retro step and the human do this; the
   golden set is what keeps the one verdict-giving agent honest.
-- **Marketing lane** (growth strategist, copywriter, buyer voice, landing benchmark)
-  and the **docs writer**. There is one product page and a decisions folder, and the
+- **The docs writer.** There is one product page and a decisions folder, and the
   orchestrator keeps them current.
+- **From the marketing lane, the buyer voice and the landing benchmark.** The lane
+  itself came in on 2026-10-07 as the four agents under Market above
+  ([0061](../docs/decisions/0061-the-site-advertises-to-seekers-first-through-rabbis-own-clips.md));
+  the owner is the audience's voice for now, and the existing designer and editor
+  review the creative.
 - **Cloud-session setup**, **OpenSpec**, **move-to-main**, and a **format-on-edit hook**
   (there is no Prettier here to run).
 

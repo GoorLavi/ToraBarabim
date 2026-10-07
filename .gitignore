@@ -22,3 +22,7 @@ scraper/output/
 
 # The orchestrator's living plan for each change, never committed
 .claude/plans/
+
+# Marketing: raw footage and rendered video never committed; plans, copy and small stills are
+/marketing/raw/
+/marketing/campaigns/*/video/
