@@ -915,20 +915,17 @@ reading order: the poster and the headline, line by line, then each row below it
 from its inline start. Every element fades in with a short rise and settles with no
 overshoot; nothing moves once it has arrived. A clip's closing card runs six seconds.
 
-**The first card against these rules.** Named here so nobody copies a value from the
-frames thinking it is a rule:
-
-- Four 9:16 sizes fall between two roles, marked "None" above: they are the card's
-  values, not the rule's.
-- Most gaps are within 6px of the scale rather than on it. On it: the 24 between the
-  icon row's items, the 36 between the lockup and the address, the 36 radius and the 3px
-  strokes. The chevron is drawn at 80, where three times the site's 20 is 60.
-- The 4:5 card is the 9:16 card at 80% throughout. That is the rule for 4:5, not drift:
-  [0064](../docs/decisions/0064-the-ads-have-their-own-brand-language.md) fixes the ratio.
-- On 9:16 the icon row's labels end at 1270, inside the bottom zone, and the longest
-  reaches about 70 from the inline-end edge. On 4:5 the name line reaches 50 from the
-  inline-end edge, and the address and lockup end at 1253, below the square, where a
-  square crop cuts them.
+**The first card against these rules.** Reconciled on 2026-10-07 after the design
+review: every type size on the 9:16 card is now a site role times three (`Card title` 54
+for the opener and continuation, `Secondary` 45 for the labels and the button's sub
+line, `Body` 51 for the address, with 132, 84 and 60 as before), the gaps between
+sections are 36, 36, 24, 24, 36, and the chevron is 60. The 4:5 card is the 9:16 at 80%
+and sits inside its safe area: headline column 96 to 576 across, lower block 666 to 1119
+down. The component on the marketing file's `99 Components` carries two variant axes:
+`name` (`standard` 84, `long` 72, chosen per format when the honorific and name exceed
+the safe width; a name that fits neither stops the work, it is never broken) and
+`portrait` (`poster`, or `last frame` of the clip under the same fade for a rabbi with no
+poster). A source clip that already carries burned-in captions gets no second layer.
 
 ## Open (not decided yet)
 
