@@ -188,4 +188,5 @@ export const CAMPAIGN_SOURCES = [
   'c1-women-fb',
   'c1-tiktok-bio',
   'c1-amrami-card-meta-a',
+  'c1-home-meta-a',
 ] as const;
