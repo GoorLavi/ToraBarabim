@@ -5,7 +5,7 @@ import { isStandaloneDisplay } from '~/pwa/isStandaloneDisplay';
 
 import { MIXPANEL_EVENTS } from './consts';
 import type { AppSurface } from './consts';
-import { appSurfaceFor, launchModeFrom, posterSourceFrom, routePattern } from './helpers';
+import { appSurfaceFor, campaignSourceFrom, launchModeFrom, posterSourceFrom, routePattern } from './helpers';
 import { initAnalytics, registerSuperProperties, trackEvent } from './mixpanel';
 
 // Renders nothing: this only wires Mixpanel into the route tree's lifecycle.
@@ -26,6 +26,9 @@ export const Analytics = (): null => {
   useEffect(() => {
     initAnalytics();
     registerSuperProperties({ launchMode: launchModeFrom(location.search, isStandaloneDisplay()) });
+
+    const campaignSource = campaignSourceFrom(location.search);
+    if (campaignSource) registerSuperProperties({ campaignSource });
 
     const posterSource = posterSourceFrom(location.search);
     if (!posterSource) return;

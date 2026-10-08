@@ -6,6 +6,7 @@ import type { DateFilterOption } from '~/hooks/models';
 import { MIXPANEL_EVENTS } from './consts';
 import type {
   AppSurface,
+  CAMPAIGN_SOURCES,
   CourseSurface,
   FilterCitySource,
   FilterDateSource,
@@ -222,6 +223,10 @@ export interface PosterScanProps {
   posterSource: PosterSource;
 }
 
+// The `utm_source` of a campaign link a visitor landed on. Unlike a poster
+// scan it has no event of its own: it only rides on the events that follow.
+export type CampaignSource = (typeof CAMPAIGN_SOURCES)[number];
+
 // Named for what a visitor pressed, not for the wire's `HelpTileKind`: the
 // request tile's wire value is a hyphenated word, the event's is a plain
 // label, and this stays readable on a dashboard.
@@ -281,6 +286,7 @@ export interface SuperProperties {
   appSurface: AppSurface;
   launchMode: LaunchMode;
   posterSource?: PosterSource;
+  campaignSource?: CampaignSource;
 }
 
 // Who a signed-in panel account is, as Mixpanel is told. `name` is the
